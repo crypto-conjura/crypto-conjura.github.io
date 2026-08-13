@@ -1,0 +1,60 @@
+---
+title: "Exact Full Indifferentiability of 6-Round Feistel Networks"
+status: "open"
+topic: symmetric-key
+---
+
+[View PDF](pdf/main.pdf) · [Download LaTeX source](latex/main.tex)
+
+## Abstract
+
+The Feistel construction is a standard mechanism for converting public random functions into public pseudorandom permutations. While 5-round Feistel is provably non-indifferentiable from a random permutation, and 7-round Feistel is fully indifferentiable (Dachman-Soled et al., CRYPTO 2015; Ito et al., 2021), the exact full indifferentiability status of 6-round Feistel remains one of the longest-standing open problems in symmetric-key theoretical cryptography.
+
+## Formal Setup
+
+Let $\mathcal{F}_n = \{F : \{0,1\}^n \to \{0,1\}^n\}$ denote the set of all $n$-bit to $n$-bit functions, and let $\mathcal{P}_{2n} = \mathrm{Perm}(\{0,1\}^{2n})$ denote the set of all $2n$-bit permutations.
+
+::: {.callout-note title="Definition (Feistel Network)"}
+Given $r$ round functions $\mathbf{F} = (F_1, \dots, F_r) \in (\mathcal{F}_n)^r$, the $r$-round Feistel construction $\Psi^r[\mathbf{F}] : \{0,1\}^{2n} \to \{0,1\}^{2n}$ maps $(L_0, R_0) \mapsto (L_r, R_r)$ via the iterative update rule for $i = 1, \dots, r$:
+
+$$
+L_i = R_{i-1}, \qquad R_i = L_{i-1} \oplus F_i(R_{i-1}).
+$$
+:::
+
+::: {.callout-note title="Definition (Indifferentiability Framework, Maurer et al. 2002)"}
+A construction $C^{\mathbf{F}}$ using oracle access to ideal components $\mathbf{F}$ is **indifferentiable** from an ideal primitive $\mathcal{P}$ if there exists a stateful PPT simulator $\mathcal{S}$ with oracle access to $\mathcal{P}$ such that for every PPT distinguisher $\mathcal{D}$:
+
+$$
+\mathbf{Adv}_{C, \mathcal{S}}^{\mathrm{indiff}}(\mathcal{D}) := \left| \Pr\left[ \mathcal{D}^{C^{\mathbf{F}}, \mathbf{F}}(1^n) = 1 \right] - \Pr\left[ \mathcal{D}^{\mathcal{P}, \mathcal{S}^\mathcal{P}}(1^n) = 1 \right] \right| \le \epsilon(n),
+$$
+
+where $\epsilon(n)$ is negligible in the security parameter $n$.
+:::
+
+## The 6-Round Open Conjecture
+
+::: {.callout-important title="Conjecture (Full Indifferentiability of 6-Round Feistel)"}
+Let $\mathbf{F} = (F_1, \dots, F_6) \stackrel{\$}{\leftarrow} (\mathcal{F}_n)^6$ be independent random functions, and let $\mathcal{P} \stackrel{\$}{\leftarrow} \mathcal{P}_{2n}$ be a uniform random permutation.
+
+There exists an efficient simulator $\mathcal{S}^{\mathcal{P}}$ making at most $\mathrm{poly}(q)$ queries to $\mathcal{P}$ such that for any distinguisher $\mathcal{D}$ making at most $q$ total queries to its oracles:
+
+$$
+\mathbf{Adv}_{\Psi^6, \mathcal{S}}^{\mathrm{indiff}}(\mathcal{D}) \le O\left( \frac{q^k}{2^n} \right),
+$$
+
+for some universal polynomial degree $k \ge 2$.
+:::
+
+## Current Bounds and Theoretical Barrier
+
+| Rounds ($r$) | Status | Security Bound | Reference |
+|---|---|---|---|
+| $r \le 4$ | Attackable | Non-Indifferentiable | Maurer et al. (2002) |
+| $r = 5$ | Attackable | Non-Indifferentiable | Coron et al. (2008) |
+| **$r = 6$** | **OPEN** | **Public / Sequential Indiff. Only** | **Dai et al. (2018)** |
+| $r \ge 7$ | Proven | $O(q^{16}/2^n)$ or better | Ito et al. (2021) |
+
+: Indifferentiability status of $r$-round Feistel networks.
+
+**Key open question:** can a simulator construct consistent responses for queries $F_1, \dots, F_6$ without incurring exponential blowup in query history when handling middle-round path completions ($F_3, F_4$), or does a non-trivial distinguishing attack exist for $r=6$?

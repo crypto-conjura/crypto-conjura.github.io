@@ -1,0 +1,72 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{geometry}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{enumitem}
+
+\geometry{a4paper, margin=25mm}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{conjecture}{Conjecture}
+\newtheorem{definition}{Definition}
+
+\title{\textbf{\Large Open Problem Note:}\\[0.2em] \Large Tight Time-Space Tradeoffs for $k$-Collisions with Auxiliary Input}
+\author{\textbf{Theoretical Cryptography Note}}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Finding collisions in hash functions under preprocessing (the Random Oracle Model with Auxiliary Input, AI-ROM) models realistic adversaries who execute unbounded offline computation to store an $S$-bit summary of a random oracle $H : [N] \to [N]$. While the exact tight tradeoff for 2-collisions ($k=2$) is established as $S \cdot T^2 = \Theta(N)$, determining the exact asymptotic curve $S^a T^b = \Omega(N^c)$ for multicollisions ($k \ge 3$) remains an open problem in provable security.
+\end{abstract}
+
+\section{Formal Model: AI-ROM}
+
+Let $H : [N] \to [N]$ be a uniformly random function, where $N = 2^n$.
+
+\begin{definition}[$k$-Collision Finding with Precomputation]
+A two-stage adversary $\mathcal{A} = (\mathcal{A}_1, \mathcal{A}_2)$ operates as follows:
+\begin{enumerate}[label=\roman*.]
+    \item \textbf{Offline Phase:} $\mathcal{A}_1^H(1^n)$ has unbounded access to $H$ and outputs an advice string $S \in \{0,1\}^S$ of size at most $S$ bits.
+    \item \textbf{Online Phase:} $\mathcal{A}_2^H(S)$ receives $S$, makes at most $T$ query evaluations to $H$, and outputs a tuple of $k$ distinct inputs $(x_1, x_2, \dots, x_k)$.
+\end{enumerate}
+The adversary wins if $H(x_1) = H(x_2) = \dots = H(x_k)$ and $x_i \neq x_j$ for all $1 \le i < j \le k$.
+\end{definition}
+
+\section{The Open $k$-Collision Tradeoff Conjecture}
+
+\begin{conjecture}[Tight $k$-Collision Time-Space Tradeoff]
+Let $H : [N] \to [N]$ be a random oracle. For any $k \ge 3$, any adversary $(\mathcal{A}_1, \mathcal{A}_2)$ with $S$-bit advice and $T$ online queries that finds a $k$-collision with success probability $\epsilon \ge 1/2$ must satisfy:
+\begin{equation}
+S^{k-1} \cdot T^{k} \ge \Omega\left( N^{k-1} \right).
+\end{equation}
+Specifically, for 3-collisions ($k=3$), the optimal trade-off satisfies:
+\begin{equation}
+S^2 \cdot T^3 \ge \Omega\left( N^2 \right).
+\end{equation}
+\end{conjecture}
+
+\section{Comparison of Known Upper and Lower Bounds}
+
+\begin{table}[h!]
+\centering
+\small
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Collision Multiplicity ($k$)} & \textbf{Known Lower Bound} & \textbf{Best Known Attack (Upper Bound)} & \textbf{Status} \\ \midrule
+$k = 2$ (2-Collision) & $S \cdot T^2 = \Omega(N)$ & $S \cdot T^2 = O(N)$ (Hellman / BTH) & Tight \\
+$k = 3$ (3-Collision) & $S \cdot T^3 = \Omega(N)$ & $S^2 \cdot T^3 = O(N^2)$ & \textbf{Gap of $S$} \\
+General $k \ge 3$ & $S \cdot T^k = \Omega(N)$ & $S^{k-1} T^k = O(N^{k-1})$ & \textbf{OPEN} \\ \bottomrule
+\end{tabular}
+\caption{Current state of knowledge for precomputation bounds in AI-ROM.}
+\end{table}
+
+\paragraph{Why the Problem is Hard:}
+Current lower-bound techniques (such as compression arguments or the bit-fixing model) fail to capture the multi-way combinatorial synergy when $S$ advice bits store structural information about hypergraphs of preimages across $k$ distinct points simultaneously.
+
+\end{document}

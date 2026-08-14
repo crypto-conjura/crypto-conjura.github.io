@@ -103,8 +103,22 @@ _GLYPH = {0: "–", 1: "·", 2: "•", 3: "●", 4: "✓"}
 
 _LABEL = {"open": "none yet", "ai": "AI", "human": "human"}
 
+# A full absolute URL, not a relative or root-relative ('/...') path.
+# Two things rule those out: (1) Quarto's HTML post-processing rewrites
+# root-relative hrefs inside raw embedded HTML incorrectly (turns
+# '/open-problems/index.html' into '../open-problems/index.html', a 404);
+# (2) the SAME status_badge string this script writes into a conjecture's
+# frontmatter is also reused verbatim by Quarto's listing table on that
+# conjecture's (shallower) topic-listing page, so no single relative path
+# can be correct in both places at once. An absolute URL is immune to
+# both problems since it's never relative-resolved.
+#
+# Trade-off: clicking a badge under `quarto preview` jumps to the live
+# production site rather than the local preview.
+LEGEND_URL = "https://crypto-conjura.github.io/open-problems/index.html#status-legend"
 
-def render_badge_svg(status):
+
+def render_badge_svg(status, legend_url=LEGEND_URL):
     sigma = compute_sigma(
         status["statement_informal"], status["statement_formal"], status["statement_match"]
     )
@@ -125,7 +139,7 @@ def render_badge_svg(status):
     # site's convention for HTML embedded in a double-quoted YAML string
     # (see e.g. the cj-badge spans elsewhere) -- double quotes here would
     # prematurely terminate the YAML string value.
-    return (
+    svg = (
         "<svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' "
         "xmlns='http://www.w3.org/2000/svg' role='img'>"
         f"<title>{title}</title>"
@@ -136,6 +150,15 @@ def render_badge_svg(status):
         f"<text x='16' y='17' text-anchor='middle' dominant-baseline='central' "
         f"class='cj-glyph' font-size='9'>{glyph}</text>"
         "</svg>"
+    )
+    # Wrapped in a link to the legend so the symbol itself is clickable --
+    # aria-label repeats the caption since a screen reader announces link
+    # text, not the SVG <title>, for an anchor-wrapped image.
+    return (
+        f"<a href='{legend_url}' class='cj-status-link' aria-label='{title} "
+        "Click for the status badge legend.'>"
+        f"{svg}"
+        "</a>"
     )
 
 

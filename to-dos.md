@@ -10,3 +10,7 @@ Give papers the same tag treatment conjectures already have:
 ## 2. UC Encyclopedia content
 
 Every one of the 100 functionality pages (`uc/layer-N-.../<id>/index.qmd`) is still a stub. Fill in real content incrementally, one functionality at a time: precise UC-style definition, known realizations, security properties, and any formal/Lean artifacts.
+
+## 3. Link citations
+
+Add links to each of the citations. Make sure the link works. Prefer links to free versions of the papers.

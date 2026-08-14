@@ -1,4 +1,4 @@
-# Crypto-Conjura
+# Conjura
 
 An open archive of unresolved conjectures in cryptography, precise write-ups that don't necessarily resolve a conjecture (clarifications of existing ideas, or corrections to gaps in existing papers), and reusable prompts/tooling for automating research in theoretical cryptography with AI assistance.
 

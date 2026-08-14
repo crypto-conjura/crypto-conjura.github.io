@@ -11,6 +11,6 @@ Give papers the same tag treatment conjectures already have:
 
 Every one of the 100 functionality pages (`uc/layer-N-.../<id>/index.qmd`) is still a stub. Fill in real content incrementally, one functionality at a time: precise UC-style definition, known realizations, security properties, and any formal/Lean artifacts.
 
-## 3. Link citations
+## 3. Sync corrected citations into LaTeX/PDF sources
 
-Add links to each of the citations. Make sure the link works. Prefer links to free versions of the papers.
+The three real conjecture pages under `open-problems/symmetric-key/` (`generalized-mirror-theory`, `feistel-6-round-indifferentiability`, `k-collisions-auxiliary-input`) had several citations in their `index.qmd` that were fabricated or misattributed (e.g. "Ito et al., 2021" didn't correspond to any real paper; "Dai et al. (2018)" was actually Mandal–Patarin–Seurin 2012). These were corrected and linked to free versions in the `.qmd` pages, but the mirrored `latex/main.tex` sources (and their compiled `pdf/main.pdf`) still have the old, incorrect citation text — recompile once `hyperref` links are wanted there too.

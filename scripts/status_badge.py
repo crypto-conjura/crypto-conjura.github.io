@@ -115,7 +115,7 @@ _LABEL = {"open": "none yet", "ai": "AI", "human": "human"}
 #
 # Trade-off: clicking a badge under `quarto preview` jumps to the live
 # production site rather than the local preview.
-LEGEND_URL = "https://crypto-conjura.github.io/open-problems/index.html#status-legend"
+LEGEND_URL = "https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend"
 
 
 def render_badge_svg(status, legend_url=LEGEND_URL):

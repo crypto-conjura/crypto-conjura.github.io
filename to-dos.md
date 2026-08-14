@@ -14,3 +14,12 @@ Every one of the 100 functionality pages (`uc/layer-N-.../<id>/index.qmd`) is st
 ## 3. Sync corrected citations into LaTeX/PDF sources
 
 The three real conjecture pages under `open-problems/symmetric-key/` (`generalized-mirror-theory`, `feistel-6-round-indifferentiability`, `k-collisions-auxiliary-input`) had several citations in their `index.qmd` that were fabricated or misattributed (e.g. "Ito et al., 2021" didn't correspond to any real paper; "Dai et al. (2018)" was actually Mandal–Patarin–Seurin 2012). These were corrected and linked to free versions in the `.qmd` pages, but the mirrored `latex/main.tex` sources (and their compiled `pdf/main.pdf`) still have the old, incorrect citation text — recompile once `hyperref` links are wanted there too.
+
+## 4. Status symbols for conjectures
+
+Today `status: "open"` is a single plain-text frontmatter value, shown as-is in each topic's listing table. Split it into two independent facets, each shown as its own symbol/badge rather than a plain word:
+
+1. **Resolution:** Open / Partially Solved / Solved.
+2. **Verification:** how that resolution was checked — reviewed by AI, reviewed by a human, or formally checked (a completed Lean proof, not just today's statement-only `lean/Statement.lean`).
+
+Show both wherever status currently appears: the per-topic listing tables (`open-problems/<topic>/index.qmd`) and the conjecture page itself.

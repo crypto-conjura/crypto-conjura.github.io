@@ -139,10 +139,17 @@ def render_badge_svg(status, legend_url=LEGEND_URL):
     # site's convention for HTML embedded in a double-quoted YAML string
     # (see e.g. the cj-badge spans elsewhere) -- double quotes here would
     # prematurely terminate the YAML string value.
+    #
+    # NOTE: deliberately no <title> element inside the <svg>. When this
+    # SVG is wrapped in the <a> below, Quarto/pandoc's raw-HTML-block
+    # parser mis-parses <a><svg><title>...</title><circle/>...</svg></a>
+    # and silently drops every sibling of <title> (the circles/text) from
+    # the rendered output -- reproduced directly against pandoc, not a
+    # caching artifact. Dropping <title> avoids the bug entirely; the
+    # <a>'s aria-label below carries the same text for accessibility.
     svg = (
         "<svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' "
         "xmlns='http://www.w3.org/2000/svg' role='img'>"
-        f"<title>{title}</title>"
         f"{seal_el}"
         f"<circle cx='16' cy='16' r='13' fill='none' stroke-width='4' "
         f"class='cj-ring-{sigma}'{dash_attr}/>"
@@ -152,8 +159,10 @@ def render_badge_svg(status, legend_url=LEGEND_URL):
         "</svg>"
     )
     # Wrapped in a link to the legend so the symbol itself is clickable --
-    # aria-label repeats the caption since a screen reader announces link
-    # text, not the SVG <title>, for an anchor-wrapped image.
+    # aria-label carries the caption since a screen reader announces link
+    # text, not (necessarily) an inner SVG's contents, for an anchor-wrapped
+    # image, and since the <title> workaround above removed the SVG's own
+    # accessible name.
     return (
         f"<a href='{legend_url}' class='cj-status-link' aria-label='{title} "
         "Click for the status badge legend.'>"

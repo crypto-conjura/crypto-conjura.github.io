@@ -157,7 +157,12 @@ def render_caption(status):
     elif p1 == "open":
         proof = "Proof: open -- no attempt yet."
     else:
-        proof = f"Proof: {_LABEL[p1]} draft, {_LABEL[p2]}-reviewed, not yet formalized."
+        # proof_review is a 2-level field (ai|human) whose floor ("ai") means
+        # "not yet reviewed by a human" -- it does NOT assert that an AI
+        # reviewer actually looked at it, only that no human has. Only say
+        # "reviewed" once a human actually has; otherwise say so plainly.
+        review = "human-reviewed" if p2 == "human" else "not yet independently reviewed"
+        proof = f"Proof: {_LABEL[p1]} draft, {review}, not yet formalized."
 
     return f"{stmt} {proof}"
 

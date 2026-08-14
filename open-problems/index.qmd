@@ -23,3 +23,28 @@ Conjectures are organized by topic. Each conjecture has its own page with the cu
 - [Symmetric-Key Cryptography](symmetric-key/index.qmd)
 - [Universal Composability](universal-composability/index.qmd)
 - [Zero-Knowledge](zk/index.qmd)
+
+## The status badge
+
+Each conjecture carries one badge summarizing where it stands. It's a deterministic function of six fields tracked in the page's `status:` frontmatter — never hand-picked. A machine-checked proof of an unmatched formalization certifies nothing about the conjecture itself, so the badge treats *whether the formal statement actually matches the informal one* as a first-class signal, not an afterthought.
+
+**Statement side** (outer ring): `statement_informal` (ai/human — who wrote the informal write-up), `statement_formal` (open/ai/human — has it been formalized in Lean, and by whom), `statement_match` (open/ai/human — has that formalization been checked against the informal statement, and by whom). These combine into a statement grade σ from 0 (AI-written, unformalized) to 5 (human-written, human-formalized, human-matched).
+
+**Proof side** (inner disc): `proof_informal` (open/ai/human), `proof_review` (ai/human — vacuous once a formal proof exists), `proof_formal` (open/ai/human — a completed Lean proof, not just a `sorry`). These combine into a proof grade π from 0 (no attempt) to 4 (machine-checked — once a proof is formally verified, the Lean kernel is the arbiter, so *who* wrote it no longer affects the grade, only a caption detail).
+
+**Reading the badge:** the outer ring's colour is the statement grade; its line style is the match status redundantly (dotted = unmatched, dashed = AI-matched, solid = human-matched) so it survives greyscale. The inner disc's colour is the proof grade, with a centre glyph (`– · • ● ✓`) as a second redundant channel. A thin gold outer halo (a seal) appears only when the statement is human-matched *and* the proof is machine-checked — the fully de-Bruijn-verified state. Hovering any badge shows the full plain-English status as a tooltip.
+
+Four examples, from nothing-done to fully sealed:
+
+```{=html}
+<table class="cj-badge-examples">
+<tbody>
+<tr><td><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><title>Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.</title><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></td><td>Nothing formalized yet (today's default for every new conjecture on this site)</td></tr>
+<tr><td><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><title>Statement: human-written, AI-formalized, not yet matched against the informal statement. Proof: AI draft, AI-reviewed, not yet formalized.</title><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-2' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-1'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>·</text></svg></td><td>Statement autoformalized but <strong>unmatched</strong> — the dangerous cell: don't mistake this for a verified statement</td></tr>
+<tr><td><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><title>Statement: human-written, AI-formalized, AI-matched against the informal statement. Proof: human draft, human-reviewed, not yet formalized.</title><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-3' stroke-dasharray='5,3'/><circle cx='16' cy='16' r='8' class='cj-disc-3'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>●</text></svg></td><td>AI-checked match, human-reviewed informal proof — real progress, still not sealed</td></tr>
+<tr><td><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><title>Statement: human-written, human-formalized, human-matched against the informal statement. Proof: machine-checked (AI-formalized).</title><circle cx='16' cy='16' r='15' fill='none' stroke-width='1.5' class='cj-seal'/><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-5'/><circle cx='16' cy='16' r='8' class='cj-disc-4'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>✓</text></svg></td><td>Human-matched statement, machine-checked proof — sealed</td></tr>
+</tbody>
+</table>
+```
+
+To update a conjecture's status: edit the six `status.*` fields in its `index.qmd` frontmatter, then run `python3 scripts/status_badge.py` from the repo root to regenerate the badge (`status_badge:` in the frontmatter, and the inline copy between the `<!-- status:start -->` / `<!-- status:end -->` markers in the body) — never hand-edit `status_badge:` itself.

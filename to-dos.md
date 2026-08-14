@@ -19,12 +19,13 @@ Papers don't have this yet (deliberately deferred — there's only one, a templa
 - `papers/example-paper/index.qmd` already has the `categories: []` field scaffolded in; populate it the same way conjectures do once there's real content to tag.
 - Decide whether papers get their own per-topic listing pages (mirroring `open-problems/<topic>/index.qmd`), or a single `categories: true` filterable listing on `papers/index.qmd` (mirroring how `blog/index.qmd` already does it) — revisit once there's more than one real paper to justify either.
 
-## 3. UC Encyclopedia 
+## 3. UC Encyclopedia
 
-Add a UC tab on the right, uner which there are the following topics listed as a layer heading. Clicking on each when will open a page containing links to a wepage containing information (functionalities, properties, artifacts) related to that functionlity. 
+Done (structure): a "UC Encyclopedia" nav item (top right, next to the GitHub icon) links to `uc/index.qmd`, an index of the 100 UC ideal functionalities across 9 dependency layers. Each layer (`uc/layer-N-.../index.qmd`) is a Quarto listing showing its functionalities with a status column (S = idealized setup, C = canonical, E = emerging, O = open — no UC formulation); every functionality has its own page (`uc/layer-N-.../<id>/index.qmd`). The sidebar shows only the 9 layers, not all 100 functionalities — same reasoning as why open-problems' sidebar only shows topics, not individual conjectures.
 
-The 100 UC ideal functionalities, in dependency order
-Status: S = idealized setup   C = canonical   E = emerging   O = open (no UC formulation)
+Remaining (content): every functionality page is currently a stub — the real content (precise UC-style definition, known realizations, security properties, formal/Lean artifacts) hasn't been written for any of the 100 yet. Fill these in incrementally, one functionality at a time.
+
+For reference, the original list this was built from:
 
 Layer 0. Idealized setup and resources
   1. F-CRS          Common reference string                                [S]

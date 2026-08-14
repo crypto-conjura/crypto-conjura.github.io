@@ -19,6 +19,10 @@ The three real conjecture pages under `open-problems/symmetric-key/` (`generaliz
 
 The concentric-ring status badge (`scripts/status_badge.py`, `theme-light.scss`/`theme-dark.scss`) had a real bug where the lowest-grade (σ=0/π=0) ring and disc colours were nearly invisible against the light-theme page background — fixed and confirmed via an actual headless-Chrome screenshot. The dark-theme colours were only checked by comparing hex values (RGB distance from `$body-bg`), never with a real screenshot, because the site's dark mode is toggled via a `data-bs-theme="dark"` attribute (not `prefers-color-scheme`), which the available headless-Chrome flags couldn't force. Confirm it actually looks right — ideally by clicking the theme toggle in a real browser, or scripting the attribute switch some other way.
 
+## 5. Finish resolving the LHL conjecture (secret-seed case)
+
+`open-problems/information-theoretic/leftover-hash-lemma-unpredictable-sources/` currently resolves only the *public-seed* half of the page's two conjectures. The *secret-seed* conjecture is still open: the resolution note (`latex/proof.tex`) cites a bound for it from an external "companion note" for comparison only, but that companion note isn't included anywhere in this repo and its claim hasn't been independently checked. Either locate/add that companion note's own statement+resolution (as a citation, or as its own artifact), or treat the secret-seed case as genuinely unresolved and pursue it separately. Separately, neither conjecture has a Lean formalization yet (`status.statement_formal`/`proof_formal` are both `open`) — nobody was asked to write one for this pass.
+
 
 
 

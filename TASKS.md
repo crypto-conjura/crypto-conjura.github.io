@@ -14,6 +14,10 @@ Ordered by priority, highest first.
 
   Two spots still carry a thick colored left-border ("side line") that should go: the `.cj-mission` box on the landing page (`index.qmd`) has an explicit `border-left: 4px solid $link-color` in `theme-light.scss`/`theme-dark.scss`; and the `.callout-note` definition boxes used throughout `c/000X/index.qmd` only override `border-color`, not `border-left`, so they still inherit Quarto/Bootstrap's default `border-left: 5px solid` strip — unlike `.callout-important` (conjecture/theorem boxes), which already explicitly sets `border: none !important`. Fix both to match the borderless/flat style already used for `.callout-important`.
 
+- [ ] **Add a "Resources" section to the sidebar for LaTeX templates and prompts**
+
+  In `_quarto.yml`, `open-problems/latex-templates/index.qmd` currently sits nested under the "Open Problems" section (`_quarto.yml:61`), and "Prompts" is its own top-level sidebar section (`_quarto.yml:63-68`). Pull both out under a new top-level "Resources" section instead.
+
 - [ ] **UC Encyclopedia content**
 
   Every one of the 100 functionality pages (`uc/layer-N-.../<id>/index.qmd`) is still a stub. Fill in real content incrementally, one functionality at a time: precise UC-style definition, known realizations, security properties, and any formal/Lean artifacts.

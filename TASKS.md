@@ -2,10 +2,6 @@
 
 Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions.
 
-- [ ] **Make the UC for Gamers table of contents clickable, jumping to the right PDF page**
-
-  `surveys/uc-for-gamers/index.qmd`'s "Contents" list is currently plain text, one bullet per chapter. Turn each into a link to `pdf/main.pdf#page=N`, most browsers' built-in PDF viewers honor the `#page=` fragment and jump straight there. The page numbers are already sitting in `latex/books/uc-for-gamers/main.toc` (regenerated on every compile) — e.g. Introduction is page 3, Chapter 1 "Functionalities and Systems" is page 6, Chapter 4 "UC Emulation and Composition" is page 27, etc. Note the PDF's own page numbers (1-indexed from the title page) may not line up 1:1 with the physical page a viewer counts if there's front matter before page 1 — spot-check a couple of links after implementing.
-
 - [ ] **Make all pages look like the Papers page**
 
   Only `papers/index.qmd`, `surveys/index.qmd`, `resources/index.qmd`, and the root `index.qmd` explicitly set `page-layout: article`; `papers/_metadata.yml` and `surveys/_metadata.yml` additionally set `title-block-banner: false` and `title-block-style: plain`. Every other page family — `open-problems/**`, `c/000N`, `uc/**`, `prompts/**` — has none of these and falls back to Quarto's site-wide defaults. A quick render-and-diff of the raw HTML didn't turn up an obvious markup difference for the specific pages checked, so before changing anything, actually compare rendered pages side by side in a real browser (screenshots, both themes) to pin down what's actually visibly different, then decide whether to standardize by adding the Papers page's settings everywhere or via a shared `_metadata.yml` at the site root.

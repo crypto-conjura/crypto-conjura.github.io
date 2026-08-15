@@ -1,6 +1,6 @@
 # Tasks
 
-Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Total estimated time: **~150h** (rough; the two research/production-scale items — UC Encyclopedia content and the LHL secret-seed resolution — are especially uncertain and could run well over their estimate).
+Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Total estimated time: **~149h** (rough; the two research/production-scale items — UC Encyclopedia content and the LHL secret-seed resolution — are especially uncertain and could run well over their estimate).
 
 - [ ] **Convert the UC-for-gamers paper to HTML (~12h)**
 
@@ -13,14 +13,6 @@ Ordered by difficulty: web-related tweaks, new web content, new conjectures, new
 - [ ] **UC Encyclopedia content (~75h)**
 
   Every one of the 100 functionality pages (`uc/layer-N-.../<id>/index.qmd`) is still a stub. Fill in real content incrementally, one functionality at a time: precise UC-style definition, known realizations, security properties, and any formal/Lean artifacts.
-
-- [ ] **Explain why reviewing matters, on the Programme Committee page (~0.5h)**
-
-  `papers/programme-committee/index.qmd` currently only describes the mechanics of review (AI use, the `Reviewers` field). Add why it matters: reviewing is hard, often-thankless work that's rarely acknowledged or rewarded the way authorship is. This system makes the reviewer an integral part of the result, not an afterthought — a reviewer vouching for correctness, with or without AI's help, is a key step toward a result's validity and relevance, arguably now more than ever given how easy AI makes it to produce plausible-looking but unchecked claims.
-
-- [ ] **Add a mission statement to the Surveys page about generated interactive learning (~0.5h)**
-
-  `surveys/index.qmd` describes what a survey is but says nothing about where it's headed. Add a mission-style statement: interactive learning material and quizzes (see the UC tutorial task below, currently scoped to the UC-for-gamers book) are meant to eventually be generated from the books and surveys themselves, not just that one — i.e. every survey is a future source for its own interactive tutorial, not only static reading material.
 
 - [ ] **Interactive UC tutorial for the website (~40h)**
 

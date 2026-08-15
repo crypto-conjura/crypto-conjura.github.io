@@ -10,10 +10,6 @@ Ordered by priority, highest first.
 
   Every one of the 100 functionality pages (`uc/layer-N-.../<id>/index.qmd`) is still a stub. Fill in real content incrementally, one functionality at a time: precise UC-style definition, known realizations, security properties, and any formal/Lean artifacts.
 
-- [ ] **Document the future program-committee review process on the papers page**
-
-  Add to `papers/index.qmd`: the site will need a program committee at some point to review papers. Reviewers will be allowed to use AI freely. A reviewer's name is added to the paper's `Reviewers` field once they've reviewed it — this likely means adding a `Reviewers` frontmatter field to the paper template (`papers/example-paper/index.qmd`), alongside the existing `author`/`categories` fields.
-
 - [ ] **Tag papers by topic**
 
   Give papers the same tag treatment conjectures already have:

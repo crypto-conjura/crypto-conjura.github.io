@@ -1,45 +1,37 @@
 % =====================================================================
-%  STATEMENT DOCUMENT.  One page, self-contained, no bibliography.
+%  STATEMENT DOCUMENT.  Informal conjecture upfront, then three
+%  sections -- The setting, The conjecture, Bibliography -- following
+%  exactly the structure and environment conventions of the sibling
+%  groth16 statement (Section -> prose facts with \cite -> formal
+%  \definition/\conjecture/\remark in the conjecture section ->
+%  \conjurabibliography with \bibitem), so the two read as one series.
 %
 %  Single conjecture, curated from main.tex ("Conjectures on Finding a
 %  k-Way Collision with Bounded Memory"): the sharp oblivious sequential
 %  curve at k=3 (BS0+).  Of the three branching-program conjectures
 %  main.tex extracts (BS0+, the oblivious parallel curve BP3', and the
 %  C-fold adaptive statement BS4-C), main.tex's own "Stage by stage"
-%  roadmap (Sec. "Stage 2") ranks closing the factor sqrt(S) gap behind
-%  BS0 as "the smallest open quantity in the note and the only one
-%  whose resolution needs no new technique in either direction" --
-%  strictly easier than BP3' (a larger, harder-to-close factor of q) and
-%  BS4-C (which needs a genuinely new combinatorial estimate).  BS0+ is
-%  kept for that reason; BP3' and BS4-C, and the facts (F3: Joux-Lucks,
-%  Guo-Nan-Yao) that existed only to support BS4-C's tightness, are
-%  dropped along with the parallel model and the "C disjoint triples"
-%  machinery they needed.
+%  roadmap ranks closing the factor sqrt(S) gap behind the oblivious
+%  base case as "the smallest open quantity in the note and the only
+%  one whose resolution needs no new technique in either direction" --
+%  strictly easier than BP3' (a larger, harder-to-close factor of q)
+%  and BS4-C (which needs a genuinely new combinatorial estimate).
+%  BS0+ is kept for that reason; BP3' and BS4-C, and the facts
+%  (Joux-Lucks, Guo-Nan-Yao) that existed only to support BS4-C's
+%  tightness, are dropped along with the parallel model and the "C
+%  disjoint triples" machinery they needed.  The base case itself
+%  (formerly a separate boxed Theorem "BS0") is now folded into the
+%  facts list as~\ref{F3}, matching groth16's convention of stating
+%  prior results as prose facts and reserving the boxed environments
+%  for what this document itself defines and conjectures.
 %
 %  Motivation, proofs, the short-output barrier, and the discarded
 %  conjectures are all in main.tex; none of it is repeated here.
-%  References are given inline, by author and venue, so that no
-%  bibliography is needed.
 %
 %  Built on the shared conjura-conjecture.cls house style -- see
-%  latex/conjectures/_template/.  The "coded" theorem/conjecture
-%  environments below (cthm/conj, printing a code like "BS0+" as
-%  their number) are this document's own, layered on top of the
-%  class; they don't collide with the class's own conjecture/
-%  definition/theorem environments, which this file doesn't use.
+%  latex/conjectures/_template/.
 % =====================================================================
 \documentclass{conjura-conjecture}
-
-% Coded statements print their code as their number.
-\theoremstyle{cjplain}
-\newtheorem{innerthm}{Theorem}
-\newtheorem{innerconj}{Conjecture}
-\newenvironment{cthm}[1]%
-  {\renewcommand{\theinnerthm}{#1}%
-   \def\theHinnerthm{cthm.\arabic{innerthm}}\innerthm}{\endinnerthm}
-\newenvironment{conj}[1]%
-  {\renewcommand{\theinnerconj}{#1}%
-   \def\theHinnerconj{conj.\arabic{innerconj}}\innerconj}{\endinnerconj}
 
 \newcommand{\NN}{[N]}
 
@@ -68,8 +60,15 @@ polylogarithmic $S$, and the query threshold at any memory -- and a matching alg
 curve throughout. The conjecture is that no oblivious algorithm can beat it.
 \end{informalconjecture}
 
+\section{The setting}\label{sec:setting}
+
+Multi-collision search asks how many queries to a random function are needed to name $k$
+points with a common image; this note takes up the case $k = 3$ under a bound on the
+algorithm's working memory, in the model where the query schedule is fixed in advance.
+Section~\ref{sec:conjecture} formalizes the statement above.
+
 \smallskip
-\noindent\textbf{Setting.}
+\noindent\textbf{Notation.}
 Throughout, $N \geq 2$ and $f \colon \NN \to \NN$ is a uniformly random function, available only
 through an oracle answering $x \mapsto f(x)$.  A \emph{$k$-collision} is a set of $k$ distinct
 points of $\NN$ with a common image under $f$; a \emph{$3$-collision} is the case $k = 3$.
@@ -78,57 +77,71 @@ $N$.  Success probabilities are over the choice of $f$ and any coins of the algo
 randomisation need not be allowed for separately, since the input is already random.
 
 \smallskip
+\noindent\textbf{The model.}
+A \emph{branching program} -- the model of Borodin and Cook~\cite{BC82}, specialised to a
+random-function oracle -- queries one point of $\NN$ at a time, with its state between queries
+capped at $S$ bits; the state may encode anything, so one cannot say what a program \emph{knows}.
+It is \emph{oblivious} if its query schedule is fixed in advance, independent of the answers seen
+so far, and \emph{repetition-free} if no point is queried twice.  Definition~\ref{def:bp}
+formalizes the model.
+
+\smallskip
 \noindent\textbf{What is known.}
-Three facts fix the landscape.
+Four facts fix the landscape.
 
 \begin{enumerate}[label=(F\arabic*),ref=F\arabic*,leftmargin=*,itemsep=1pt,topsep=2pt]
 \item\label{F1} \emph{The query threshold is $N^{2/3}$.}  Among $q$ queried points the expected
   number of $3$-collisions is $\binom{q}{3}N^{-2}$, so $q = \Theta(N^{2/3})$ queries are necessary
-  and sufficient for constant success probability (Suzuki, Tonien, Kurosawa and Toyota, ICISC
-  2006).  Quantitatively, an algorithm making $T$ queries and then naming three points succeeds
-  with probability $O\bigl((T^{3}+1)N^{-2}\bigr)$.  This holds for \emph{any} algorithm, at any
-  memory bound, and the conjecture below does not contradict it.
+  and sufficient for constant success probability~\cite{STKT06}.  Quantitatively, an algorithm
+  making $T$ queries and then naming three points succeeds with probability
+  $O\bigl((T^{3}+1)N^{-2}\bigr)$.  This holds for \emph{any} algorithm, at any memory bound, and
+  the conjecture below does not contradict it.
 \item\label{F2} \emph{Without a table, $\Theta(N)$ queries suffice.}  Find a $2$-collision
   $\{u,v\}$ by cycle-finding, retain $u$, $v$ and $y = f(u)$, then sample fresh points until one
-  maps to $y$.  This uses $O(\log N)$ bits of memory.  Between~\ref{F1} and~\ref{F2} lies a gap of
-  $N^{1/3}$, and the conjecture below asserts that memory is what closes it.
-\item\label{F3} \emph{At $k=2$ memory is free.}  Pollard's rho method with Brent's cycle detection
-  finds a $2$-collision in $\Theta(\sqrt N)$ queries using $O(\log N)$ bits, and that count is
-  optimal even with unbounded memory.  Consequently the conjecture below is \emph{false} at
-  $k = 2$, and no proof of it can be indifferent to the collision order.
+  maps to $y$.  This uses $O(\log N)$ bits of memory.
+\item\label{F3} \emph{The oblivious base case is proved.}  Every repetition-free oblivious
+  branching program succeeding with probability at least $\tfrac12$ satisfies
+  $T \cdot \bigl(S + \lceil \log_{2} N \rceil\bigr) = \tilde\Omega(N)$; in particular
+  $T = \tilde\Omega(N)$ at width $N^{O(1)}$.  The only lower bound known at $k=3$, it is tight
+  exactly at $S = \mathrm{polylog}$, matching~\ref{F2}, via the multi-pass streaming switching
+  lemma of Dinur~\cite{Din20} applied to the answer stream.  For \emph{adaptive} programs nothing
+  memory-sensitive is known at $k=3$: the only available lower bound is the query
+  bound~\ref{F1}, which mentions no memory at all.
+\item\label{F4} \emph{At $k=2$ memory is free.}  Pollard's rho method~\cite{Pol75} with Brent's
+  cycle detection~\cite{Bre80} finds a $2$-collision in $\Theta(\sqrt N)$ queries using
+  $O(\log N)$ bits, and that count is optimal even with unbounded memory.  Consequently the
+  conjecture below is \emph{false} at $k = 2$, and no proof of it can be indifferent to the
+  collision order.
 \end{enumerate}
 
 \smallskip
-\noindent\textbf{Model.}
-A \emph{branching program} of length $T$ and width $W$ -- the model of Borodin and Cook (SICOMP
-1982), specialised to a random-function oracle -- is a DAG on levels $0,\dots,T$ with at most $W$
-nodes per level, in which every node below level $T$ carries a label $x \in \NN$ and has one
-outgoing edge for each $y \in \NN$, and every node at level $T$ carries a label in $\NN^{3}$.  It
-is run by starting at the source, querying the label of the current node, following the edge
+\noindent\textbf{The gap.}
+Above $S = \mathrm{polylog}$, fact~\ref{F3} stops being tight: an oblivious program can
+accumulate $P \leq S$ collision pairs at cost $\tilde\Theta(PN/S)$ and then hunt a third preimage
+of one of the $P$ recorded values in $\tilde\Theta(N/P)$ further queries, both phases
+non-adaptively; balancing at $P = \sqrt S$ gives $T = \tilde\Theta(N/\sqrt S)$.  A factor
+$\sqrt S$ thus separates~\ref{F3} from this algorithm, and closing it is the question taken up
+below.
+
+\section{The conjecture}\label{sec:conjecture}
+
+Notation as in Section~\ref{sec:setting}.  Definition~\ref{def:bp} restates the branching-program
+model formally, for self-containment; the conjecture quantifies over all repetition-free
+oblivious branching programs.
+
+\begin{definition}[branching program {\cite{BC82}}]\label{def:bp}
+A \emph{branching program} of length $T$ and width $W$ is a DAG on levels $0,\dots,T$ with at
+most $W$ nodes per level, in which every node below level $T$ carries a label $x \in \NN$ and has
+one outgoing edge for each $y \in \NN$, and every node at level $T$ carries a label in $\NN^{3}$.
+It is run by starting at the source, querying the label of the current node, following the edge
 labelled by the answer, and reading the label of the sink reached; it \emph{succeeds} if that
-label is a $3$-collision.  Its \emph{space} is $S = \log_{2} W$, counted in bits.  The state may
-encode anything, so one cannot say what a program \emph{knows}.  It is \emph{oblivious} if all
-nodes at a level carry the same label, so that the query schedule $w_{1},\dots,w_{T}$ is fixed in
-advance, and \emph{repetition-free} if no point labels two levels.
+label is a $3$-collision.  Its \emph{space} is $S = \log_{2} W$, counted in bits.  It is
+\emph{oblivious} if all nodes at a level carry the same label, so that the query schedule
+$w_{1},\dots,w_{T}$ is fixed in advance, and \emph{repetition-free} if no point labels two
+levels.
+\end{definition}
 
-\smallskip
-\noindent\textbf{The proved base.}
-The only lower bound known is for oblivious programs, where the multi-pass streaming switching
-lemma of Dinur (EUROCRYPT 2020) applies to the answer stream.  For \emph{adaptive} programs
-nothing memory-sensitive is known at $k=3$: the only available lower bound is the query
-bound~\ref{F1}, which mentions no memory at all.
-
-\begin{cthm}{BS0}[oblivious programs]\label{BS0}
-Every repetition-free oblivious branching program succeeding with probability at least $\tfrac12$
-satisfies $T \cdot \bigl(S + \lceil \log_{2} N \rceil\bigr) = \tilde\Omega(N)$; in particular
-$T = \tilde\Omega(N)$ at width $N^{O(1)}$.
-\end{cthm}
-
-\smallskip
-\noindent\textbf{The conjecture.}
-It sharpens this, and is tight against an algorithm.
-
-\begin{conj}{BS0$^{+}$}[the oblivious sequential curve at $k=3$]\label{BS0plus}
+\begin{conjecture}[BS0$^{+}$: the oblivious sequential curve at $k=3$]\label{conj:main}
 Every repetition-free oblivious branching program succeeding with probability at least $\tfrac12$
 satisfies
 \[
@@ -138,15 +151,47 @@ satisfies
   \text{equivalently} \qquad
   T \cdot S^{1/2} \;=\; \tilde\Omega(N) \ \text{ for } S \leq N^{2/3}.
 \]
-\end{conj}
+\end{conjecture}
 
-\noindent
-The first clause is~\ref{F1} and carries no content; all of it is in $T \cdot S^{1/2}$.  The bound
-is tight: an oblivious program can accumulate $P \leq S$ collision pairs at cost
-$\tilde\Theta(PN/S)$ and then hunt a third preimage of one of the $P$ recorded values in
-$\tilde\Theta(N/P)$ further queries, both phases non-adaptively; balancing at $P = \sqrt S$ gives
-$T = \tilde\Theta(N/\sqrt S)$.  So a factor $\sqrt S$ separates \ref{BS0} from the conjecture
-inside its own class.  The two clauses cross at $S = N^{2/3}$, where the curve meets the query
-threshold and the problem closes.
+\begin{remark}[why this is the right curve]\label{rem:tightness}
+The first clause is~\ref{F1} and carries no content; all of it is in $T \cdot S^{1/2}$.  The
+bound is exactly tight against the algorithm of the gap paragraph above: balancing at
+$P = \sqrt S$ gives $T = \tilde\Theta(N/\sqrt S)$, so a factor $\sqrt S$ separates~\ref{F3} from
+the conjecture inside its own class.  The two clauses cross at $S = N^{2/3}$, where the curve
+meets the query threshold and the problem closes.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{STKT06}
+
+\bibitem[BC82]{BC82}
+Allan Borodin and Stephen Cook.
+\emph{A time-space tradeoff for sorting on a general sequential model of computation}.
+SIAM Journal on Computing, 11(2):287--297, 1982.
+
+\bibitem[Bre80]{Bre80}
+Richard P. Brent.
+\emph{An improved Monte Carlo factorization algorithm}.
+BIT Numerical Mathematics, 20(2):176--184, 1980.
+
+\bibitem[Din20]{Din20}
+Itai Dinur.
+\emph{Tight time-space lower bounds for finding multiple collision pairs and their
+applications}.
+In EUROCRYPT 2020, volume 12105 of LNCS, pages 405--434. Springer, 2020.
+Also: Cryptology ePrint Archive, Paper 2020/229.
+
+\bibitem[Pol75]{Pol75}
+John M. Pollard.
+\emph{A Monte Carlo method for factorization}.
+BIT Numerical Mathematics, 15(3):331--334, 1975.
+
+\bibitem[STKT06]{STKT06}
+Kazuhiro Suzuki, Dongvu Tonien, Kaoru Kurosawa and Koji Toyota.
+\emph{Birthday paradox for multi-collisions}.
+In ICISC 2006, volume 4296 of LNCS, pages 29--40. Springer, 2006.
+
+\end{conjurabibliography}
 
 \end{document}

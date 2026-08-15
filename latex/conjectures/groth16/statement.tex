@@ -1,0 +1,438 @@
+% =====================================================================
+%  STATEMENT DOCUMENT.  Informal conjecture upfront, then three
+%  sections; body (everything before the bibliography) fits in at
+%  most 6 pages:
+%    1. The setting -- background, notation, origin of the problem,
+%       related work, and progress to date.
+%    2. The conjectures -- formal, self-contained definitions
+%       (relation generators with hard decisional problems, split
+%       NILPs, affine prover strategies, the purist model) followed
+%       by the two conjectures and remarks.
+%    3. Bibliography.
+%
+%  Built on the shared conjura-conjecture.cls house style (Baskervald
+%  X, 5x8in "screen" page, orange accent, boxed definitions/
+%  conjectures, running heads) -- see latex/conjectures/_template/.
+%
+%  Content: two lower-bound conjectures asserting that Groth's
+%  3-group-element SNARK (EUROCRYPT 2016) is proof-size optimal in
+%  the *pure* generic bilinear group model (Maurer-style genericity,
+%  no auxiliary oracles: no random oracle, no channel from group
+%  elements to bits; verifier checks proof-independent pairing
+%  product equations).  Conjecture 1 is the information-theoretic
+%  core (no two-element split NILP sound against affine provers);
+%  Conjecture 2 is the compiled statement; 1 implies 2 (in the
+%  PPE-verifier form; a strong form with arbitrary generic verifiers
+%  is also recorded).
+%
+%  Revised against the full text of Arnon-Dujmovic-Yogev (ePrint
+%  2025/2160, version of 2026-02-12): their pure-GGM one-element
+%  bound assumes OWFs and arbitrary generic verifiers (Lemma 6.11);
+%  their GGM+ROM is Maurer's model plus an oracle taking group
+%  elements to bits (no encodings exist to hash); their 2xG1
+%  construction has imperfect completeness (single-query linear PCPs
+%  with accepting set 1); interaction [BIOW20] and designated
+%  verifiers [ADI25] are further load-bearing restrictions.
+%  Completeness is now a parameter (error at most 1 - 1/poly), as in
+%  their lower-bound statements.
+%
+%  All citations verified against the cited sources (2026-08-15).
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+% ---- document-specific macros
+\newcommand{\Gone}{\mathbb{G}_1}
+\newcommand{\Gtwo}{\mathbb{G}_2}
+\newcommand{\GTt}{\mathbb{G}_T}
+\newcommand{\FF}{\mathbb{F}}
+\newcommand{\bsig}{\boldsymbol{\sigma}}
+\newcommand{\bpi}{\boldsymbol{\pi}}
+\newcommand{\LR}{L_R}
+\newcommand{\Yes}{\mathsf{Yes}}
+\newcommand{\No}{\mathsf{No}}
+\newcommand{\Setup}{\mathsf{Setup}}
+\newcommand{\Prove}{\mathsf{Prove}}
+\newcommand{\Vfy}{\mathsf{Vfy}}
+\newcommand{\Test}{\mathsf{Test}}
+\newcommand{\ProofMatrix}{\mathsf{ProofMatrix}}
+
+\runninghead{GROTH16 IS THE LIMIT}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{Groth16 Is the Limit in the Pure Generic Group Model}
+\cjsubtitle{Two lower-bound conjectures on pairing-based SNARGs}
+\cjstatus{Statement: AI-written, not yet formalized.}
+\cjcategory{Proof Systems \& Succinct Arguments.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+In the pure generic bilinear group model --- no random
+oracle or any other channel from group elements to bits; the prover
+can only apply group operations to reference-string elements; the
+verifier checks pairing product equations fixed by the statement ---
+every sound, nontrivially complete pairing-based SNARG for a hard
+language has at least three group elements.  Groth16 is proof-size
+optimal.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+In a pairing-based succinct non-interactive argument (SNARG) the
+prover publishes a few group elements and the verifier checks
+pairing equations; no shorter proof systems are known.
+Groth's argument for arithmetic circuit satisfiability~\cite{Gro16}
+--- Groth16 --- needs only three: two elements of $\Gone$ and one of
+$\Gtwo$, verified by a single pairing product equation,
+knowledge-sound against generic adversaries.  The same paper rules
+out single-element proofs and closes with the problem taken up here:
+whether the bound extends to two elements, ``which would prove
+optimality of our 3 element construction''~\cite{Gro16}.
+Section~\ref{sec:conjectures} formalizes the statement above: in the
+\emph{purist} reading of the model, where Groth16's own security
+proof lives, the answer is negative.
+
+\smallskip
+\noindent\textbf{Notation.}
+$(p,\Gone,\Gtwo,\GTt,e,[1]_1,[1]_2)$ is an asymmetric (Type III)
+bilinear group of prime order $p$: no efficient homomorphism exists
+in either direction between $\Gone$ and $\Gtwo$.  Brackets denote
+discrete logarithms: $[a]_i \in \mathbb{G}_i$ for
+$a \in \FF := \mathbb{Z}_p$, groups are written additively,
+$[a]_1 \cdot [b]_2 = [ab]_T$, and linear algebra lifts entrywise,
+$M[\boldsymbol{a}]_i = [M\boldsymbol{a}]_i$; $\langle
+\cdot,\cdot \rangle$ is the inner product and
+$(\boldsymbol{a};\boldsymbol{b})$ vertical concatenation.
+Everything below is publicly verifiable; nothing assumes zero
+knowledge --- impossibilities are for plain soundness, a fortiori
+for stronger notions.
+
+\smallskip
+\noindent\textbf{The purist model.}
+In Shoup's generic group model~\cite{Sho97} elements are random
+strings an adversary may compare, hash, or take apart bit by bit; in
+Maurer's~\cite{Mau05} they live behind handles, touchable only
+through the group oracles --- no channel from group elements back to
+bits.  Groth's construction and lower
+bounds~\cite{Gro16} concern provers that pick matrices and apply
+them to the CRS ``in the exponent'', and verifiers that check
+pairing product equations with proof-independent coefficients.  We
+call such a scheme \emph{purist} when the prover is generic in
+Maurer's sense with no auxiliary oracles (the name \emph{pure GGM}
+follows~\cite{ADY25}): in particular, no random oracle.  Groth flags
+the CRS-side analogue (a reference string $G^b$ encoding bits
+$b$)~\cite{Gro16}; fact~(\ref{F3}b) shows that restoring the
+prover-side channel collapses the proof to two elements.
+Definition~\ref{def:purist} formalizes the model.
+
+\smallskip
+\noindent\textbf{What is known.}
+Four facts fix the landscape.
+
+\begin{enumerate}[label=(F\arabic*),ref=F\arabic*,leftmargin=*,itemsep=1pt,topsep=2pt]
+\item\label{F1} \emph{Three elements suffice.}  Groth16 is, at its
+  core, a split non-interactive linear proof
+  (Definition~\ref{def:nilp}) of dimension $(2,1)$ for quadratic
+  arithmetic programs: perfectly complete, perfectly zero-knowledge,
+  statistically knowledge-sound against affine provers
+  (Definition~\ref{def:affine})~\cite{Gro16}, in the formalism
+  of~\cite{BCIOP13}.  Compiled: $2\,\Gone + 1\,\Gtwo$ ($1536$ bits
+  over BLS12-381), one pairing product equation.
+\item\label{F2} \emph{One element is impossible --- robustly.}  NILPs
+  with a degree-$1$ decision procedure do not exist for relation
+  generators with hard decisional problems
+  (Definition~\ref{def:hard}), so a purist proof needs elements of
+  both source groups, $k_1,k_2 \geq 1$: at least two
+  elements~\cite[Thms.~3--4]{Gro16}.  Assuming one-way functions,
+  Arnon, Dujmovic and Yogev~\cite{ADY25} extend the one-element
+  impossibility to \emph{arbitrary} Maurer-generic verifiers
+  (restriction (iii) of Definition~\ref{def:purist} dropped) and,
+  for non-adaptive verifier queries and oracle-free setups, to the
+  GGM${}+{}$ROM.
+\item\label{F3} \emph{Every purist restriction is load-bearing.}
+  (a)~\emph{Symmetry.}  In Type I groups ($\Gone = \Gtwo$) two
+  elements suffice: squaring gates force $u_i = v_i$, so
+  $B = A + \beta - \alpha$ and the verifier recomputes $[B]$ itself,
+  leaving $(A,C)$~\cite[Sect.~3.1]{Gro16}.  Two \emph{field} elements
+  likewise suffice at the bare NILP level, so no dimension count
+  over $\FF$ can prove the conjectures: the split is the crux.
+  (b)~\emph{Random oracles.}  In the GGM${}+{}$ROM --- Maurer's
+  model plus an oracle taking group elements to bits --- two
+  elements suffice, both in $\Gone$ ($768$ bits over BLS12-381): the
+  prover of~\cite{ADY25} feeds its first proof element through the
+  oracle to derive the verifier's otherwise-unpredictable query ---
+  exactly the channel the purist model lacks --- and the underlying
+  PCP has accepting set of size $1$, so no answer is sent.
+  (Completeness becomes imperfect; negligible errors need
+  $\lambda \leq \log^c n$, or Khot's Unique Games
+  Conjecture~\cite{Kho02}, used for completeness, not soundness.)
+  (c)~\emph{Non-group data.}  Field elements in the proof buy fewer
+  bits with more elements: Polymath, $3\,\Gone + 1\,\FF \approx 1408$
+  bits~\cite{Lip24}; Pari, $2\,\Gone + 2\,\FF \approx 1280$
+  bits~\cite{DMS24}.  Element count and bit count thus part ways;
+  the conjectures concern the former.
+  (d)~\emph{Interaction; designated verifiers.}  One round of
+  interaction yields one-element proofs~\cite{BIOW20};
+  designated-verifier SNARGs reach one element plus $O(\lambda)$
+  bits~\cite{ADI25}.  Non-interactivity and public verifiability are
+  load-bearing too.
+\item\label{F4} \emph{Simulation extractability is settled.}
+  Pairing-based simulation-extractable SNARKs need at least $3$
+  elements and $2$ verification equations, matched by~\cite{GM17};
+  Groth16 proofs are perfectly rerandomizable, so simulation
+  extractability is strictly stronger and the bound does not
+  transfer.
+\end{enumerate}
+
+\smallskip
+\noindent\textbf{The gap.}
+By~\ref{F2} a two-element purist proof is exactly
+$\pi = ([A]_1,[B]_2)$, and in the exponent each verification equation
+reads
+\[
+  c_i \cdot AB \;+\; A\,\langle \boldsymbol{u}_i, \bsig_2\rangle
+  \;+\; \langle \boldsymbol{v}_i, \bsig_1\rangle\, B
+  \;+\; \bsig_1^{\!\top} M_i\, \bsig_2 \;=\; 0 .
+\]
+Every term is affine in the prover's coefficients except the single
+bilinear monomial $AB$ --- and the sampling attacks
+behind~\cite[Thms.~3--4]{Gro16} and the one-element bound
+of~\cite{ADY25} die on exactly that monomial (Remark~1).  The no-ROM
+two-element question is~\cite{ADY25}'s first open problem; the
+conjectures assert the negative answer.
+
+\section{The conjectures}\label{sec:conjectures}
+
+Notation as in Section~\ref{sec:setting}; $\lambda$ is the security
+parameter.  Definitions follow~\cite{Gro16}, restated for
+self-containment; the conjectures quantify over all relation
+generators.
+
+\begin{definition}[relation generator; hard decisional problems {\cite[Def.~5]{Gro16}}]\label{def:hard}
+A \emph{relation generator} $\mathcal{R}$ returns on $1^\lambda$ a
+polynomial-time decidable binary relation $R$ (with statements
+$\phi$, witnesses $w$, and language
+$\LR := \{\phi : \exists w,\ (\phi,w) \in R\}$) together with
+auxiliary input $z$.  It has \emph{hard decisional problems} if there
+are polynomial-time samplers with $\Yes(R) \to (\phi,w) \in R$ and
+$\No(R) \to \phi \notin \LR$ (with overwhelming probability), such
+that for all polynomial-time distinguishers $\mathcal{A}$, over
+$\phi_0 \sample \No(R)$, $(\phi_1,w_1) \sample \Yes(R)$ and
+$b \sample \{0,1\}$,
+\[
+  \Pr\bigl[\mathcal{A}(R,z,\phi_b) = b\bigr] \;\approx\; \tfrac12 .
+\]
+Any NP-complete relation qualifies if one-way functions
+exist~\cite{Gro16}.
+\end{definition}
+
+\begin{definition}[split NILP of proof dimension $(k_1,k_2)$ {\cite[Sect.~2.5]{Gro16}}]\label{def:nilp}
+A \emph{split non-interactive linear proof} for $\mathcal{R}$ is a
+triple $(\Setup,\Prove,\Vfy)$ of the following form.  $\Setup(R)$
+outputs $\bsig = (\bsig_1,\bsig_2) \in \FF^{m_1} \times \FF^{m_2}$,
+each part containing $1$ as an entry, and a simulation trapdoor
+$\boldsymbol{\tau} \in \FF^{n}$.  $\Prove(R,\bsig,\phi,w)$ samples
+$(\Pi_1,\Pi_2) \sample \ProofMatrix(R,\phi,w)$ with
+$\Pi_j \in \FF^{k_j \times m_j}$ and outputs
+$\bpi = (\bpi_1,\bpi_2) = (\Pi_1\bsig_1,\, \Pi_2\bsig_2)$.
+$\Vfy(R,\bsig,\phi,\bpi)$ derives deterministic tests
+$(T_1,\dots,T_\eta) \sample \Test(R,\phi)$ with
+$T_i \in \FF^{(m_1+k_1)\times(m_2+k_2)}$, and accepts if and only if
+\[
+  (\bsig_1;\bpi_1)^{\!\top}\, T_i\, (\bsig_2;\bpi_2) \;=\; 0
+  \quad \text{for all } i = 1,\dots,\eta .
+\]
+The NILP has \emph{completeness error} $\sigma$ if honest proofs for
+$(\phi,w) \in R$ verify with probability at least $1 - \sigma$;
+Groth16's NILP is perfectly complete, $\sigma = 0$.
+\end{definition}
+
+\begin{definition}[statistical soundness against affine prover strategies {\cite[Def.~6]{Gro16}}]\label{def:affine}
+An \emph{affine prover strategy} chooses $(\phi,\Pi_1,\Pi_2)$ given
+only $(R,z)$ --- in particular, independently of $\bsig$.  A split
+NILP is \emph{statistically sound against affine prover strategies}
+if for all (unbounded) adversaries $\mathcal{A}$, over
+$(R,z) \sample \mathcal{R}(1^\lambda)$,
+$(\bsig,\boldsymbol{\tau}) \sample \Setup(R)$ and
+$(\phi,\Pi_1,\Pi_2) \sample \mathcal{A}(R,z)$,
+\[
+  \Pr\Bigl[\phi \notin \LR \,\wedge\,
+  \Vfy\bigl(R,\bsig,\phi,(\Pi_1\bsig_1,\Pi_2\bsig_2)\bigr) = 1\Bigr]
+  \;\approx\; 0 .
+\]
+\end{definition}
+
+\begin{definition}[purist pairing-based argument]\label{def:purist}
+A \emph{purist} pairing-based non-interactive argument for
+$\mathcal{R}$ is a publicly verifiable argument system in which
+(i)~the reference string is a group description plus group elements
+only, $\sigma = ([\bsig_1]_1,\allowbreak [\bsig_2]_2,\allowbreak
+[\bsig_T]_T)$;
+(ii)~the prover is generic in Maurer's sense~\cite{Mau05} --- it
+touches group elements only through the group, pairing and equality
+oracles, and never sees an encoding --- so its proof is
+\[
+  \pi \;=\; \bigl([\Pi_1\bsig_1]_1,\; [\Pi_2\bsig_2]_2,\;
+  [\Pi_T\bsig_T]_T\bigr)
+\]
+with matrices depending only on $R$, $\phi$ and the observed equality
+pattern; there are no auxiliary oracles: no random oracle, no channel
+from group elements to bits;
+and (iii)~from $\phi$ alone the verifier derives matrices $T_i$ and
+vectors $\boldsymbol{t}_i$ --- pairing product equations with
+proof-independent coefficients --- and accepts if and only if
+\[
+  [\bsig_1;\bpi_1]_1^{\!\top} \, T_i \, [\bsig_2;\bpi_2]_2
+  \;=\; [\boldsymbol{t}_i \cdot (\bsig_T;\bpi_T)]_T
+  \quad \text{for all } i .
+\]
+The \emph{proof size} is $k_1 + k_2 + k_T$;
+completeness error is as for split NILPs; \emph{soundness}: every
+polynomial-query purist prover outputs an accepted $(\phi,\pi)$ with
+$\phi \notin \LR$ with negligible probability.  Groth16 is a sound,
+perfectly complete purist argument of size $(2,1,0)$~\cite{Gro16}.
+\end{definition}
+
+\begin{conjecture}[no two-element split NILPs]\label{conj:nilp}
+There are no split NILPs with proof dimension $k_1 = k_2 = 1$ and
+completeness error at most $1 - 1/\poly(\lambda)$ for relation
+generators with hard decisional problems.  Concretely: any such
+candidate (Definition~\ref{def:nilp}) yields either an affine prover
+strategy breaking soundness (Definition~\ref{def:affine}), or a
+polynomial-time algorithm distinguishing the $\Yes$- and
+$\No$-samplers of Definition~\ref{def:hard} with noticeable
+advantage.
+\end{conjecture}
+
+\begin{conjecture}[Groth16 optimality in the pure GGM]\label{conj:ggm}
+Every sound purist pairing-based non-interactive argument
+(Definition~\ref{def:purist}) with completeness error at most
+$1 - 1/\poly(\lambda)$ for a relation generator with hard decisional
+problems has proof size at least three.  Equivalently:
+two-group-element purist SNARGs do not exist, and Groth16 is
+proof-size optimal in the pure GGM.
+\end{conjecture}
+
+\noindent
+An affine strategy is a purist prover making no equality tests, so
+Conjecture~\ref{conj:nilp} implies Conjecture~\ref{conj:ggm}; the
+converse could fail only via reference strings that are not
+disclosure-free~\cite[Def.~4, Lemma~1]{Gro16}.  A $(1,1)$ split
+NILP for a hard relation generator refutes
+Conjecture~\ref{conj:nilp} --- and Conjecture~\ref{conj:ggm} if
+disclosure-free; no zero knowledge is required.  Dropping (iii) as
+well --- arbitrary Maurer-generic verifiers, as in~\cite{ADY25} ---
+gives a stronger form we also conjecture.
+
+\begin{remark}[why the model should have no room for two]
+Groth16's third element $C$ absorbs the cross terms
+$As + rB - rs\delta$ from randomizing $A$ and $B$, while
+$\alpha\beta$, $\gamma$ and $\delta$ separate statement- from
+witness-consistency in one equation.  The ROM
+route~\textup{(\ref{F3}b)} is hide-then-reveal --- commit to the
+first element \emph{before} the test is drawn --- while the purist
+$T_i$ are fixed by $\phi$.  The one-element bounds run on
+uniqueness: a proof-dependent zero-test is affine in the lone
+element and pins a single accepting value, which yes-instance
+sampling learns~\cite{Gro16,ADY25}; with $k_1 = k_2 = 1$ it pins
+only a M\"obius curve of pairs $(A,B)$, which the sampling attack no
+longer isolates.  The conjecture: $AB$ still cannot both couple the
+sides' witness dependence and resist sampling.
+\end{remark}
+
+\begin{remark}[a half-remembered lead, recorded with low confidence]
+The author recalls, but cannot reconstruct, a sketch by which a
+two-element scheme would contradict a complexity conjecture ---
+possibly about \emph{unique witnesses}, \`a la
+Valiant--Vazirani~\cite{VV86}; a lead, not a claim.  Two facts orbit
+it: the all-parameter construction of~\cite{ADY25} assumes the
+Unique Games Conjecture~\cite{Kho02} (a ``unique''-flavoured
+conjecture on the \emph{constructive} side; the memory may be that,
+reversed), and by Remark~1 a $(1,1)$ scheme flirts with unique
+accepting proofs; making this precise --- or refuting it --- is part
+of the problem.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{BCIOP13}
+
+\bibitem[ADI25]{ADI25}
+Gal Arnon, Jesko Dujmovic and Yuval Ishai.
+\emph{Designated-verifier SNARGs with one group element}.
+In CRYPTO 2025, pages 192--224. Springer, 2025.
+
+\bibitem[ADY25]{ADY25}
+Gal Arnon, Jesko Dujmovic and Eylon Yogev.
+\emph{Pairing-based SNARGs with two group elements}.
+Cryptology ePrint Archive, Paper 2025/2160, November 2025 (revised
+February 12, 2026).
+\url{https://eprint.iacr.org/2025/2160}
+
+\bibitem[BCIOP13]{BCIOP13}
+Nir Bitansky, Alessandro Chiesa, Yuval Ishai, Rafail Ostrovsky and
+Omer Paneth.
+\emph{Succinct non-interactive arguments via linear interactive
+proofs}.
+In TCC 2013, volume 7785 of LNCS, pages 315--333. Springer, 2013.
+
+\bibitem[BIOW20]{BIOW20}
+Ohad Barta, Yuval Ishai, Rafail Ostrovsky and David J. Wu.
+\emph{On succinct arguments and witness encryption from groups}.
+In CRYPTO 2020, pages 776--806. Springer, 2020.
+
+\bibitem[DMS24]{DMS24}
+Michel Dellepere, Pratyush Mishra and Alireza Shirzad.
+\emph{Garuda and Pari: faster and smaller SNARKs via equifficient
+polynomial commitments}.
+Cryptology ePrint Archive, Paper 2024/1245, 2024.
+\url{https://eprint.iacr.org/2024/1245}
+
+\bibitem[GM17]{GM17}
+Jens Groth and Mary Maller.
+\emph{Snarky signatures: minimal signatures of knowledge from
+simulation-extractable SNARKs}.
+In CRYPTO 2017. Springer, 2017.
+Also: Cryptology ePrint Archive, Paper 2017/540.
+
+\bibitem[Gro16]{Gro16}
+Jens Groth.
+\emph{On the size of pairing-based non-interactive arguments}.
+In EUROCRYPT 2016, pages 305--326. Springer, 2016.
+\url{https://doi.org/10.1007/978-3-662-49896-5_11};
+also: Cryptology ePrint Archive, Paper 2016/260.
+
+\bibitem[Kho02]{Kho02}
+Subhash Khot.
+\emph{On the power of unique 2-prover 1-round games}.
+In STOC 2002. ACM, 2002.
+
+\bibitem[Lip24]{Lip24}
+Helger Lipmaa.
+\emph{Polymath: Groth16 is not the limit}.
+In CRYPTO 2024, volume 14929 of LNCS, pages 170--206. Springer,
+2024.
+Also: Cryptology ePrint Archive, Paper 2024/916.
+
+\bibitem[Mau05]{Mau05}
+Ueli Maurer.
+\emph{Abstract models of computation in cryptography}.
+In Cryptography and Coding (IMACC 2005), volume 3796 of LNCS,
+pages 1--12. Springer, 2005.
+
+\bibitem[Sho97]{Sho97}
+Victor Shoup.
+\emph{Lower bounds for discrete logarithms and related problems}.
+In EUROCRYPT 1997, volume 1233 of LNCS, pages 256--266.
+Springer, 1997.
+
+\bibitem[VV86]{VV86}
+Leslie G. Valiant and Vijay V. Vazirani.
+\emph{NP is as easy as detecting unique solutions}.
+Theoretical Computer Science, 47:85--93, 1986.
+
+\end{conjurabibliography}
+
+\end{document}

@@ -14,6 +14,10 @@ Ordered by difficulty: web-related tweaks, new web content, new conjectures, new
 
   Only `papers/index.qmd`, `surveys/index.qmd`, `resources/index.qmd`, `blog/index.qmd`, and the root `index.qmd` explicitly set `page-layout: article`; `papers/_metadata.yml` and `surveys/_metadata.yml` additionally set `title-block-banner: false` and `title-block-style: plain`. Every other page family — `open-problems/**`, `c/000N`, `uc/**`, `prompts/**` — has none of these and falls back to Quarto's site-wide defaults. A quick render-and-diff of the raw HTML didn't turn up an obvious markup difference for the specific pages checked, so before changing anything, actually compare rendered pages side by side in a real browser (screenshots, both themes) to pin down what's actually visibly different, then decide whether to standardize by adding the Papers page's settings everywhere or via a shared `_metadata.yml` at the site root.
 
+- [ ] **Remove Blog for now**
+
+  `blog/index.qmd` is a listing with no actual posts (`blog/posts/` has only a `.gitkeep`) and no sidebar section of its own — just a lone navbar entry (`_quarto.yml:31`). Drop it from the navbar (and the folder, if not worth keeping around empty) until there's real content to put there; bring it back then.
+
 - [ ] **Tag papers by topic**
 
   Give papers the same tag treatment conjectures already have:

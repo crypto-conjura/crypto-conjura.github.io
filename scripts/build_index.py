@@ -27,6 +27,9 @@ from pathlib import Path
 
 import yaml
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from status_badge import compute_sigma, compute_pi, render_caption, _DASH, _GLYPH, LEGEND_URL  # noqa: E402
+
 ROOT = Path(__file__).resolve().parent.parent
 STATEMENTS_DIR = ROOT / "c"
 PROBLEMS_DIR = ROOT / "p"
@@ -161,12 +164,32 @@ def validate_leaf(fm, path, errors):
 
 
 def listing_item(leaf_id, fm):
+    # The listing template renders the badge from these small primitive
+    # values (mirroring status_badge.py's render_badge_svg) rather than from
+    # a pre-rendered HTML string: Quarto's custom-listing pipeline escapes
+    # (and applies smart-typography to) whole string field values loaded
+    # from a contents YAML file before a template ever sees them, so passing
+    # a full <a><svg>...</svg></a> blob through as one field renders as
+    # literal escaped text, not the badge. Small values substituted into
+    # markup that's otherwise static in the .ejs.md template don't have this
+    # problem, the same way item.model/item.form already render correctly.
+    status = fm.get("status") or {}
+    sigma = compute_sigma(
+        status.get("statement_informal"), status.get("statement_formal"), status.get("statement_match")
+    )
+    pi = compute_pi(status.get("proof_informal"), status.get("proof_review"), status.get("proof_formal"))
     return {
         "id": leaf_id,
         "title": fm["title"],
         "short_title": fm.get("short_title", fm["title"]),
         "path": f"/c/{leaf_id}/",
-        "status_badge": fm.get("status_badge", ""),
+        "badge_sigma": sigma,
+        "badge_pi": pi,
+        "badge_sealed": pi == 4 and sigma >= 4,
+        "badge_dash": _DASH[status.get("statement_match")] or "",
+        "badge_glyph": _GLYPH[pi],
+        "badge_caption": render_caption(status),
+        "badge_legend_url": LEGEND_URL,
         "status_summary": fm["status_summary"],
         "model": fm["model"],
         "form": fm["form"],

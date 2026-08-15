@@ -2,6 +2,10 @@
 
 Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions.
 
+- [ ] **Add time estimates to every task, and a total at the top**
+
+  Each task below should carry an estimated time to complete it, and this file should show the sum of all estimates at the top (near the "Ordered by difficulty" line). Keep the total updated as tasks are added or removed — this file's existing convention is to delete finished tasks outright rather than leave a "done" marker, so a stale total is worse than no total.
+
 - [ ] **Make all pages look like the Papers page**
 
   Only `papers/index.qmd`, `surveys/index.qmd`, `resources/index.qmd`, and the root `index.qmd` explicitly set `page-layout: article`; `papers/_metadata.yml` and `surveys/_metadata.yml` additionally set `title-block-banner: false` and `title-block-style: plain`. Every other page family — `open-problems/**`, `c/000N`, `uc/**`, `prompts/**` — has none of these and falls back to Quarto's site-wide defaults. A quick render-and-diff of the raw HTML didn't turn up an obvious markup difference for the specific pages checked, so before changing anything, actually compare rendered pages side by side in a real browser (screenshots, both themes) to pin down what's actually visibly different, then decide whether to standardize by adding the Papers page's settings everywhere or via a shared `_metadata.yml` at the site root.

@@ -84,7 +84,7 @@ def load_frontmatter(path):
 def parse_obligations(path):
     text = path.read_text(encoding="utf-8")
     m = re.search(
-        r"^###\s+Open obligations\s*\n(.*?)(?=^#{1,6}\s|\Z)", text, re.MULTILINE | re.DOTALL
+        r"^##\s+Open obligations\s*\n(.*?)(?=^#{1,6}\s|\Z)", text, re.MULTILINE | re.DOTALL
     )
     if not m:
         return []

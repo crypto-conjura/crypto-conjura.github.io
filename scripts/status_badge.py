@@ -39,10 +39,11 @@ colour.
 Seal (de Bruijn-complete): pi == 4 and sigma >= 4.
 
 Beyond the badge, every leaf under c/ also carries a required `status_summary`
-frontmatter field and a `## Status` body section (checked, never generated,
-here). `statement_sha` is a hash of the leaf's `## Statement` block: if it no
-longer matches what's on disk, the informal statement changed since the
-formalization was last checked against it, so `statement_match` is forced
+frontmatter field and an `## Open obligations` body section (checked, never
+generated, here). `statement_sha` is a hash of the leaf's `## Statement`
+block: if it no longer matches what's on disk, the informal statement
+changed since the formalization was last checked against it, so
+`statement_match` is forced
 back to `open`, `statement_sha` is rewritten, and `revision` is bumped -- a
 match can never be silently invalidated. Run with `--check` (no writes) to
 use this as a CI gate.
@@ -69,7 +70,7 @@ FREE_TEXT_FIELDS = ("statement_by", "proof_by")
 START_MARKER = "<!-- status:start -->"
 END_MARKER = "<!-- status:end -->"
 
-STATUS_HEADING_RE = re.compile(r"^##\s+Status\s*$", re.MULTILINE)
+OBLIGATIONS_HEADING_RE = re.compile(r"^##\s+Open obligations\s*$", re.MULTILINE)
 STATEMENT_BLOCK_RE = re.compile(
     r"^##\s+Statement\s*\n(.*?)(?=^##\s+\S|\Z)", re.MULTILINE | re.DOTALL
 )
@@ -349,8 +350,8 @@ def process_file(path, check=False):
     errors = []
     if not (get_scalar_field(frontmatter, "status_summary") or "").strip():
         errors.append(f"{path}: missing or empty status_summary")
-    if not STATUS_HEADING_RE.search(body):
-        errors.append(f"{path}: missing a '## Status' section in the body")
+    if not OBLIGATIONS_HEADING_RE.search(body):
+        errors.append(f"{path}: missing an '## Open obligations' section in the body")
 
     computed_sha = compute_statement_sha(body)
     if computed_sha is None:

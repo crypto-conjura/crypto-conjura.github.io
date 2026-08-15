@@ -28,7 +28,16 @@ from pathlib import Path
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from status_badge import compute_sigma, compute_pi, render_caption, _DASH, _GLYPH, LEGEND_URL  # noqa: E402
+from status_badge import (  # noqa: E402
+    compute_sigma,
+    compute_pi,
+    render_caption,
+    render_statement_caption,
+    render_proof_caption,
+    _DASH,
+    _GLYPH,
+    LEGEND_URL,
+)
 
 ROOT = Path(__file__).resolve().parent.parent
 STATEMENTS_DIR = ROOT / "c"
@@ -189,6 +198,8 @@ def listing_item(leaf_id, fm):
         "badge_dash": _DASH[status.get("statement_match")] or "",
         "badge_glyph": _GLYPH[pi],
         "badge_caption": render_caption(status),
+        "badge_statement_caption": render_statement_caption(status),
+        "badge_proof_caption": render_proof_caption(status),
         "badge_legend_url": LEGEND_URL,
         "status_summary": fm["status_summary"],
         "model": fm["model"],

@@ -1,6 +1,6 @@
 # Tasks
 
-Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates assume the work is done with Claude (Premium) doing the bulk of it, not a human working unassisted — keep new estimates calibrated the same way. Total estimated time: **~76h** (rough; the two research/production-scale items — UC Encyclopedia content and the LHL secret-seed resolution — are especially uncertain and could run well over their estimate, or in the LHL case, not resolve at all regardless of tooling).
+Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates assume the work is done with Claude (Premium) doing the bulk of it, not a human working unassisted — keep new estimates calibrated the same way. Total estimated time: **~77h** (rough; the two research/production-scale items — UC Encyclopedia content and the LHL secret-seed resolution — are especially uncertain and could run well over their estimate, or in the LHL case, not resolve at all regardless of tooling).
 
 - [ ] **Simplify the conjecture-listing tables (~2h)**
 
@@ -21,9 +21,11 @@ Ordered by difficulty: web-related tweaks, new web content, new conjectures, new
   - **Sub-links listed on each page.** A section's own index page should list links to its children the same way everywhere — `index.qmd`'s "Explore" grid and `papers/index.qmd`'s "Browse" links (Archive/Committee) are the current model; check whether `surveys/index.qmd`, `resources/index.qmd`, `open-problems/index.qmd`, and `uc/index.qmd` all surface their sub-pages the same way, or whether some just rely on the sidebar and say nothing in the body.
   - **Look and feel across pages.** `page-layout`, `title-block-banner`/`title-block-style`, and related metadata should be applied consistently rather than page-by-page as an afterthought (a version of this was fixed once already for the Papers page specifically) — worth a real side-by-side visual comparison, both themes, rather than just diffing frontmatter.
 
-- [ ] **Add a "Proposals" section under Papers (~1h)**
+- [ ] **Add a "Proposals" section under Papers (~2h)**
 
-  `papers/index.qmd`'s "## Browse" section currently links to two things: [Archive](/papers/example-paper/index.qmd) and [Committee](/papers/programme-committee/index.qmd) (`_quarto.yml:69-73` mirrors the same two under the Papers sidebar section). Add a third: "Proposals" — a place for paper ideas/topics worth writing up but not yet claimed by anyone, the papers analogue of an open conjecture. Needs a new `papers/proposals/index.qmd` (mirroring the `example-paper`/`programme-committee` pattern), a third `_quarto.yml` sidebar entry, and a third Browse link. Exact scope (a simple list vs. something with its own per-proposal pages) is an open call — decide when picked up.
+  `papers/index.qmd`'s "## Browse" section currently links to two things: [Archive](/papers/example-paper/index.qmd) and [Committee](/papers/programme-committee/index.qmd) (`_quarto.yml:69-73` mirrors the same two under the Papers sidebar section). Add a third: "Proposals". Needs a new `papers/proposals/index.qmd` (mirroring the `example-paper`/`programme-committee` pattern), a third `_quarto.yml` sidebar entry, and a third Browse link.
+
+  The concept, to write up on that page: a proposal names a *focused research topic*, not a full statement — like a grant proposal, but narrower and more concrete. Example: "When is a problem in the Uber assumption family random self-reducible?" An AI (potentially multi-agent, potentially distributed across machines) is then tasked with working the topic: surveying the area, generating candidate statements, checking its own results, and autoformalizing what holds up. A proposal is the seed of a Paper (or an Open Problem, if what comes out is a precise unresolved statement rather than a resolved write-up) — decide on that relationship, and on the exact page format (a simple list vs. per-proposal pages with their own status), when picked up.
 
 - [ ] **Convert the UC-for-gamers paper to HTML (~5h)**
 

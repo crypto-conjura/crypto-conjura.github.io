@@ -33,7 +33,8 @@ an empty cell is a research prompt).
 
 - **Same identifier, `revision` bump**: a change to wording, notation, or
   exposition only -- the truth conditions of the statement don't move.
-  Record the diff in the leaf's `## Changelog` section.
+  Record the diff in the commit message, not on the page -- there's no
+  in-page changelog section; `git log -- c/<id>/` is the changelog.
 - **New identifier**: a change to the truth conditions themselves (an added
   hypothesis, a changed quantifier order, a different parameter regime). The
   old page stays up, its `category` becomes `withdrawn`, it gets a
@@ -46,11 +47,11 @@ it force `statement_match` back to `open` and bump `revision` for you if the
 hash no longer matches what's on disk -- that's the mechanism that stops a
 formalization match from being silently invalidated by a later wording edit.
 
-## Classifying a misformalization in the changelog
+## Classifying a misformalization
 
 When a revision's diff exists because a *formalization* was found to be
-defective (not just re-worded), classify it in the `## Changelog` entry using
-the Formal Conjectures misformalization taxonomy (Firsching et al.,
+defective (not just re-worded), classify it in the commit message using the
+Formal Conjectures misformalization taxonomy (Firsching et al.,
 "Formal Conjectures: An Open and Evolving Benchmark for Verified Discovery in
 Mathematics", arXiv:2605.13171):
 
@@ -61,7 +62,7 @@ Mathematics", arXiv:2605.13171):
 - **Type** -- what kind of defect: `syntactic`, `semantic`,
   `misrepresentation`, `implicit conventions`, `reporting`, `mathematical`.
 
-Write it as `misformalization: <level>/<type>` in the changelog line, e.g.
+Write it as `misformalization: <level>/<type>` in the commit message, e.g.
 `misformalization: Translation/semantic`. Check the paper directly if the
 level/type distinction for a given case isn't obvious from this summary --
 this file paraphrases it, and paraphrases drift.

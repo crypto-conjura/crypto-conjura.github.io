@@ -10,15 +10,6 @@ Ordered by priority, highest first.
 
   The concentric-ring status badge (`scripts/status_badge.py`, `theme-light.scss`/`theme-dark.scss`) had a real bug where the lowest-grade (σ=0/π=0) ring and disc colours were nearly invisible against the light-theme page background — fixed and confirmed via an actual headless-Chrome screenshot. The dark-theme colours were only checked by comparing hex values (RGB distance from `$body-bg`), never with a real screenshot, because the site's dark mode is toggled via a `data-bs-theme="dark"` attribute (not `prefers-color-scheme`), which the available headless-Chrome flags couldn't force. Confirm it actually looks right — ideally by clicking the theme toggle in a real browser, or scripting the attribute switch some other way.
 
-- [ ] **Align the site's color/font theme with the problem-statement PDFs**
-
-  Sample: `latex/conjectures/k-cr/statement.pdf`. Revisit the whole site's theme (`theme-light.scss`, `theme-dark.scss`, heading/callout rules) to bring it as close as possible to that PDF house style:
-
-  - PDF titles are large italic serif in a warm orange/amber, with a plain black italic serif subtitle underneath — the site currently sets headings in `$body-color` (near-black), not the accent color.
-  - PDF has a small-caps running header (`CONJURA · OPEN PROBLEM`) and cross-reference links (`F1`, `BC82`, ...) rendered in the same orange as the title, not the body text color.
-  - PDF's conjecture/definition boxes use a soft cream/amber fill (`#f8ecd4`-ish) with no left border rule, distinct from the site's `.cj-mission` box (`#f3efe4` fill + `$link-color` left border).
-  - The site's existing palette (`$link-color: #a34f2a`, serif `Hoefler Text`/`Baskerville`/`Palatino` stack) is already close in spirit to the PDF, so this is a refinement pass, not a rebuild — check both light and dark themes, since the PDF only has one (light) mode to match against.
-
 - [ ] **UC Encyclopedia content**
 
   Every one of the 100 functionality pages (`uc/layer-N-.../<id>/index.qmd`) is still a stub. Fill in real content incrementally, one functionality at a time: precise UC-style definition, known realizations, security properties, and any formal/Lean artifacts.

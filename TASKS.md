@@ -1,6 +1,6 @@
 # Tasks
 
-Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates assume the work is done with Claude (Premium) doing the bulk of it, not a human working unassisted — keep new estimates calibrated the same way. Total estimated time: **~66h** (rough; the two research/production-scale items — UC Encyclopedia content and the LHL secret-seed resolution — are especially uncertain and could run well over their estimate, or in the LHL case, not resolve at all regardless of tooling).
+Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates assume the work is done with Claude (Premium) doing the bulk of it, not a human working unassisted — keep new estimates calibrated the same way. Total estimated time: **~70h** (rough; the two research/production-scale items — UC Encyclopedia content and the LHL secret-seed resolution — are especially uncertain and could run well over their estimate, or in the LHL case, not resolve at all regardless of tooling).
 
 - [ ] **Convert the UC-for-gamers paper to HTML (~5h)**
 
@@ -13,6 +13,14 @@ Ordered by difficulty: web-related tweaks, new web content, new conjectures, new
 - [ ] **UC Encyclopedia content (~30h)**
 
   Every one of the 100 functionality pages (`uc/layer-N-.../<id>/index.qmd`) is still a stub. Fill in real content incrementally, one functionality at a time: precise UC-style definition, known realizations, security properties, and any formal/Lean artifacts.
+
+- [ ] **Port the functionalities already defined in uc-for-gamers into the UC Encyclopedia (~4h)**
+
+  `surveys/uc-for-gamers/latex/main.tex` gives full, concrete pseudocode definitions (not just names) for seven functionalities, each in its own chapter with a "Functionality" section: F-Rand (Ch. "Randomness"), F-Store (Ch. "Storage"), F-Sig (Ch. "Digital Signatures", plus a whole deep-dive chapter), G-PKI (Ch. "Public-Key Infrastructure"), G-Clock (Ch. "Global Clock"), F-Net (Ch. "Δ-Delayed Network"), and F-AC (Ch. "Δ-Delayed Authenticated Channel"). Note: F-Diffuse and F-IO are only *named* in the book (line ~932: "functionalities we do not give"), not actually defined — don't port those as if they were.
+
+  - `f-sig`, `g-clock`, and `g-pki` already have encyclopedia pages (`uc/layer-3-public-key-primitives/f-sig`, `uc/layer-0-idealized-setup/g-clock`, `uc/layer-0-idealized-setup/g-pki`) but are currently thin stubs (title, status, one-liner, external references only) — fill them in with the book's actual definitions.
+  - `f-rand`, `f-store`, `f-net`, and `f-ac` have no encyclopedia page at all yet. `f-rand`/`f-store` likely belong under `uc/layer-0-idealized-setup/` alongside `g-clock`/`g-pki`. `f-net`/`f-ac` likely belong under `uc/layer-1-channels-agreement-ledgers/`, but that layer already has `f-auth` and `f-sc` (non-delayed authenticated/secure channel) — decide whether `f-net`/`f-ac` are new, distinct entries (the book's variants are Δ-delayed) or should fold into/rename those existing stubs, before creating new folders.
+  - Overlaps with the broader "UC Encyclopedia content" task above; this is the slice of it with a ready-made source to adapt from rather than starting from a blank stub.
 
 - [ ] **Interactive UC tutorial for the website (~18h)**
 

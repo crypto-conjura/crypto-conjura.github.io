@@ -1,8 +1,8 @@
 # Tasks
 
-Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Keep new estimates calibrated the same way. Total estimated time: **~8h** (rough; the UC Encyclopedia content item is especially uncertain and could run well over its estimate).
+Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~11.75h** (rough; the UC Encyclopedia content item is especially uncertain and could run well over its estimate).
 
-- [ ] **Usability on iPhone, Android, and other handheld devices (~25 min)**
+- [ ] **Usability on iPhone, Android, and other handheld devices (~1h — manual: needs real physical devices, not just emulation)**
 
   A real-device (or accurate emulation, not just a resized desktop browser) pass across the site. The one concrete problem previously found here -- the 6-column statement-listing tables squeezing unreadably on narrow screens -- is fixed (they're now a 3-column Status/Statement/Tags layout, with Model/Form/Category collapsed into wrapping pills and the open-obligations count folded into the status line; verified at 390px width). What's left:
 
@@ -10,7 +10,7 @@ Ordered by difficulty: web-related tweaks, new web content, new conjectures, new
   - A broader real-device pass beyond that one fixed table -- touch targets, the sidebar/navbar at narrow widths, etc. -- hasn't been done yet.
   - Note this is distinct from the "Site-wide uniformity audit" task below — that one is about consistency across pages regardless of screen size; this one is specifically about narrow/touch viewports.
 
-- [ ] **Site-wide uniformity audit: how a page relates to its position in the site (~45 min)**
+- [ ] **Site-wide uniformity audit: how a page relates to its position in the site (~50 min — minor manual: eyeballing the side-by-side visual comparison)**
 
   A general consistency pass across every page family (`open-problems/**`, `papers/**`, `surveys/**`, `resources/**`, `uc/**`, `c/000N`, `prompts/**`), not tied to one specific page. Three concrete dimensions:
 
@@ -30,14 +30,14 @@ Ordered by difficulty: web-related tweaks, new web content, new conjectures, new
 
   `papers/programme-committee/index.qmd`'s "## How reviewing works" section currently only describes the human-committee step (a member reviews, their name joins the `Reviewers` field). Add what happens *before* that: every paper first goes through agentic "stress tests" — meticulous, adversarial scrutiny for mistakes, run via topic-specific prompts that check for the fatal errors and gaps known to recur in that area's literature. Only after that does an editorial pass improve the writing itself against best practice for mathematical exposition (style manuals, standard conventions), and only after *that* is a paper in a position for a human reviewer to look at it — the agentic stages are a filter, not a replacement for the human step described above. Also worth stating as a standing constraint: a paper's focus is kept to its specific conjecture (not broadened into a survey or multi-result piece) precisely to keep this whole pipeline, human review included, tractable.
 
-- [ ] **A Philosophy page, with an audio read-out and a podcast (~35 min)**
+- [ ] **A Philosophy page, with an audio read-out and a podcast (~1.5h — manual: actual audio/podcast production, not just text generation)**
 
   A new page on the site's philosophy — distinct from `vision/index.qmd` ("why Conjura exists, where it's headed"), this is about the underlying worldview/reasoning rather than the roadmap; decide on the relationship between the two (separate page vs. a section of Vision) and where it sits in the nav (top-level like Vision, or nested under Resources) when picked up. Two things accompany the written page:
 
   - **An audio read-out** — a straight narrated version of the page's own text.
   - **A podcast** — a produced discussion-format episode, distinct from the read-out. Note the removed Blog section's old description ("informal write-ups — and eventually podcasts and videos — for resolved conjectures," `README.md:17`) was about individual resolved conjectures; this is scoped to the site's philosophy specifically, not that.
 
-- [ ] **Convert the UC-for-gamers paper to HTML (~50 min)**
+- [ ] **Convert the UC-for-gamers paper to HTML (~1.25h — manual: trial-and-error against third-party LaTeX toolchains)**
 
   Needed as a prerequisite (or at least a shared source) for the interactive UC tutorial task below: that tutorial quotes functionality excerpts from the paper, and an HTML version is what makes those excerpts reusable as live web content instead of screenshotted PDF pages.
 
@@ -46,11 +46,11 @@ Ordered by difficulty: web-related tweaks, new web content, new conjectures, new
   - Decide up front whether the target is (a) one faithful HTML mirror of the whole paper, or (b) just the excerpted figures/boxes the tutorial task needs pulled out individually — the two have very different toolchains (whole-document converter vs. per-box snippet export) and it's worth picking before starting rather than defaulting into whichever is easier to try first.
 
 
-- [ ] **UC Encyclopedia content (~3h)**
+- [ ] **UC Encyclopedia content (~5h — manual: sourcing and verifying real citations per functionality, not just drafting text)**
 
   93 of the 100 functionality pages (`uc/layer-N-.../<id>/index.qmd`) are still stubs (F-Rand, F-Store, F-Sig, G-PKI, G-Clock, F-Net, and F-AC are now filled in, ported from `surveys/uc-for-gamers/latex/main.tex`). Fill in the rest incrementally, one functionality at a time: precise UC-style definition, known realizations, security properties, and any formal/Lean artifacts. No other functionality currently has a ready-made source of this quality to adapt from, so expect this to mean drafting from the literature directly rather than porting.
 
-- [ ] **Interactive UC tutorial for the website (~2h)**
+- [ ] **Interactive UC tutorial for the website (~2.25h — minor manual: clicking through the drag/interactive slides by hand to check they actually work)**
 
   Based on the UC-for-gamers paper; depends on the HTML-conversion task above.
 

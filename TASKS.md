@@ -10,6 +10,10 @@ Ordered by priority, highest first.
 
   The concentric-ring status badge (`scripts/status_badge.py`, `theme-light.scss`/`theme-dark.scss`) had a real bug where the lowest-grade (σ=0/π=0) ring and disc colours were nearly invisible against the light-theme page background — fixed and confirmed via an actual headless-Chrome screenshot. The dark-theme colours were only checked by comparing hex values (RGB distance from `$body-bg`), never with a real screenshot, because the site's dark mode is toggled via a `data-bs-theme="dark"` attribute (not `prefers-color-scheme`), which the available headless-Chrome flags couldn't force. Confirm it actually looks right — ideally by clicking the theme toggle in a real browser, or scripting the attribute switch some other way.
 
+- [ ] **Remove the thick side line from boxes on the landing page and conjecture statements**
+
+  Two spots still carry a thick colored left-border ("side line") that should go: the `.cj-mission` box on the landing page (`index.qmd`) has an explicit `border-left: 4px solid $link-color` in `theme-light.scss`/`theme-dark.scss`; and the `.callout-note` definition boxes used throughout `c/000X/index.qmd` only override `border-color`, not `border-left`, so they still inherit Quarto/Bootstrap's default `border-left: 5px solid` strip — unlike `.callout-important` (conjecture/theorem boxes), which already explicitly sets `border: none !important`. Fix both to match the borderless/flat style already used for `.callout-important`.
+
 - [ ] **UC Encyclopedia content**
 
   Every one of the 100 functionality pages (`uc/layer-N-.../<id>/index.qmd`) is still a stub. Fill in real content incrementally, one functionality at a time: precise UC-style definition, known realizations, security properties, and any formal/Lean artifacts.

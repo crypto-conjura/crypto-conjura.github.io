@@ -1,6 +1,6 @@
 # Tasks
 
-Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates assume the work is done with Claude (Premium) doing the bulk of it, not a human working unassisted — keep new estimates calibrated the same way. Total estimated time: **~77h** (rough; the two research/production-scale items — UC Encyclopedia content and the LHL secret-seed resolution — are especially uncertain and could run well over their estimate, or in the LHL case, not resolve at all regardless of tooling).
+Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates assume the work is done with Claude (Premium) doing the bulk of it, not a human working unassisted — keep new estimates calibrated the same way. Total estimated time: **~80h** (rough; the two research/production-scale items — UC Encyclopedia content and the LHL secret-seed resolution — are especially uncertain and could run well over their estimate, or in the LHL case, not resolve at all regardless of tooling).
 
 - [ ] **Simplify the conjecture-listing tables (~2h)**
 
@@ -34,6 +34,12 @@ Ordered by difficulty: web-related tweaks, new web content, new conjectures, new
   - The main conversion risk is the paper's heavy custom LaTeX: `tcolorbox` (the property/game boxes, saturated header + coloured body), `algpseudocode` (the operation listings), and extensive `\hypertarget`/`\hyperlink` cross-referencing (line numbering across shell/finalization boxes, `\opdef`/`\op` targets) — none of these survive a naive converter untouched. Check LaTeXML and `make4ht`/tex4ht against a representative box (e.g. one of `F-Net`, `F-AC`, `G-Clock`) early, before committing to a toolchain, to see which one preserves the box styling and internal hyperlinks rather than flattening them to plain text.
   - Whatever the box markup degrades to in HTML, math and cross-reference links must not: the per-box line numbering and cross-box hyperlinks are load-bearing for how the paper is read, so a conversion that silently drops or renumbers them is a regression, not an acceptable simplification.
   - Decide up front whether the target is (a) one faithful HTML mirror of the whole paper, or (b) just the excerpted figures/boxes the tutorial task needs pulled out individually — the two have very different toolchains (whole-document converter vs. per-box snippet export) and it's worth picking before starting rather than defaulting into whichever is easier to try first.
+
+- [ ] **Show the actual functionality code on each uc-for-gamers-ported page (~3h)**
+
+  `uc/layer-3-public-key-primitives/f-sig/index.qmd`'s "## Functionality" section only paraphrases the operations in prose/bullet form (e.g. "**Sign(msg)**, from party P: if P has no key yet, return ⊥..."). The book itself (`surveys/uc-for-gamers/latex/main.tex`, around line 6549: `\begin{interface}[nofloat]{Functionality $\Fsig$ ...}`) has the actual pseudocode — a line-numbered `algorithmic` listing of Initialize/Gen/Sign/Verify/Leak — and that code isn't shown on the page at all, only described. Same gap on the other six pages ported from the book: F-Rand, F-Store, G-PKI, G-Clock, F-Net, F-AC.
+
+  - Overlaps with "Convert the UC-for-gamers paper to HTML" below, which already flags the difficulty of preserving `tcolorbox`/`algpseudocode` styling — but this doesn't have to wait on a full paper conversion; transcribing each box's pseudocode directly into its encyclopedia page (as a code block, or a faithfully-formatted equivalent) is a lighter-weight, page-by-page alternative.
 
 - [ ] **UC Encyclopedia content (~28h)**
 

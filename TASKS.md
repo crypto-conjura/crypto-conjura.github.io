@@ -1,23 +1,8 @@
 # Tasks
 
-Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions.
+Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Total estimated time: **~150h** (rough; the two research/production-scale items — UC Encyclopedia content and the LHL secret-seed resolution — are especially uncertain and could run well over their estimate).
 
-- [ ] **Add time estimates to every task, and a total at the top**
-
-  Each task below should carry an estimated time to complete it, and this file should show the sum of all estimates at the top (near the "Ordered by difficulty" line). Keep the total updated as tasks are added or removed — this file's existing convention is to delete finished tasks outright rather than leave a "done" marker, so a stale total is worse than no total.
-
-- [ ] **Tag papers by topic**
-
-  Give papers the same tag treatment conjectures already have:
-
-  - `papers/example-paper/index.qmd` already has the `categories: []` field scaffolded in; populate it once there's real content to tag.
-  - Decide whether papers get their own per-topic listing pages (mirroring `open-problems/areas/<area>/index.qmd`), or a single `categories: true` filterable listing on `papers/index.qmd` (mirroring `blog/index.qmd`) — revisit once there's more than one real paper to justify either.
-
-- [ ] **Tag surveys by keywords**
-
-  Same treatment as the papers-tagging task above, applied to `surveys/`: `surveys/uc-for-gamers/index.qmd` already has a `categories: []` field scaffolded in; populate it once there's a real keyword set to tag with. Same open question about per-topic listing pages vs. a single filterable `surveys/index.qmd` listing, revisited once there's more than one survey to justify either.
-
-- [ ] **Convert the UC-for-gamers paper to HTML**
+- [ ] **Convert the UC-for-gamers paper to HTML (~12h)**
 
   Needed as a prerequisite (or at least a shared source) for the interactive UC tutorial task below: that tutorial quotes functionality excerpts from the paper, and an HTML version is what makes those excerpts reusable as live web content instead of screenshotted PDF pages.
 
@@ -25,19 +10,19 @@ Ordered by difficulty: web-related tweaks, new web content, new conjectures, new
   - Whatever the box markup degrades to in HTML, math and cross-reference links must not: the per-box line numbering and cross-box hyperlinks are load-bearing for how the paper is read, so a conversion that silently drops or renumbers them is a regression, not an acceptable simplification.
   - Decide up front whether the target is (a) one faithful HTML mirror of the whole paper, or (b) just the excerpted figures/boxes the tutorial task needs pulled out individually — the two have very different toolchains (whole-document converter vs. per-box snippet export) and it's worth picking before starting rather than defaulting into whichever is easier to try first.
 
-- [ ] **UC Encyclopedia content**
+- [ ] **UC Encyclopedia content (~75h)**
 
   Every one of the 100 functionality pages (`uc/layer-N-.../<id>/index.qmd`) is still a stub. Fill in real content incrementally, one functionality at a time: precise UC-style definition, known realizations, security properties, and any formal/Lean artifacts.
 
-- [ ] **Explain why reviewing matters, on the Programme Committee page**
+- [ ] **Explain why reviewing matters, on the Programme Committee page (~0.5h)**
 
   `papers/programme-committee/index.qmd` currently only describes the mechanics of review (AI use, the `Reviewers` field). Add why it matters: reviewing is hard, often-thankless work that's rarely acknowledged or rewarded the way authorship is. This system makes the reviewer an integral part of the result, not an afterthought — a reviewer vouching for correctness, with or without AI's help, is a key step toward a result's validity and relevance, arguably now more than ever given how easy AI makes it to produce plausible-looking but unchecked claims.
 
-- [ ] **Add a mission statement to the Surveys page about generated interactive learning**
+- [ ] **Add a mission statement to the Surveys page about generated interactive learning (~0.5h)**
 
   `surveys/index.qmd` describes what a survey is but says nothing about where it's headed. Add a mission-style statement: interactive learning material and quizzes (see the UC tutorial task below, currently scoped to the UC-for-gamers book) are meant to eventually be generated from the books and surveys themselves, not just that one — i.e. every survey is a future source for its own interactive tutorial, not only static reading material.
 
-- [ ] **Interactive UC tutorial for the website**
+- [ ] **Interactive UC tutorial for the website (~40h)**
 
   Based on the UC-for-gamers paper; depends on the HTML-conversion task above.
 
@@ -56,10 +41,10 @@ Ordered by difficulty: web-related tweaks, new web content, new conjectures, new
   - **Deep-dive quizzes as combinatorial retrieval, not just recall.** The puzzle tier should force recombining a later chapter's functionality with an earlier chapter's property or shell.
   - **Light gamification paired with spaced review, not gamification alone.** Streaks/XP/progress bars alone are a weak retention lever; the literature's stronger result is spaced repetition *combined* with light game mechanics. Concretely: resurface a prior chapter's quiz question (in a new combination) a chapter or two later rather than only in that chapter's own quiz, and track a streak across that resurfacing rather than only within one session.
 
-- [ ] **Finish and publish the uber-groups-rsr paper**
+- [ ] **Finish and publish the uber-groups-rsr paper (~4h)**
 
   `latex/papers/uber-groups-rsr/main.tex` — "The Uber Assumption and its Random Self-Reducibility (in Non-Bilinear and Type 1, 2, 3 Bilinear Groups)" — is a working draft under `/latex/` (local-only, not on GitHub per `latex/README.md`). Finish the draft, then publish it following `latex/README.md`'s "Publishing a draft" flow: create `papers/uber-groups-rsr/` from the `papers/example-paper/index.qmd` template, move the `.tex` source and compiled PDF into its `latex/`/`pdf/` subfolders, and transcribe the statement into `index.qmd`.
 
-- [ ] **Finish resolving the LHL conjecture (secret-seed case)**
+- [ ] **Finish resolving the LHL conjecture (secret-seed case) (~20h)**
 
   `c/0004` (public seed) is proven; `c/0005` (secret seed) is still open. Its resolution note (`c/0004/latex/proof.tex`) cites a bound for the secret-seed case from an external "companion note," for comparison only: that note isn't included anywhere in this repo and its claim hasn't been independently checked. Either locate/add that companion note's own statement and resolution (as a citation, or as its own artifact), or treat the secret-seed case as genuinely unresolved and pursue it separately. Separately, neither statement has a Lean formalization yet (`status.statement_formal`/`proof_formal` are both `open` on both).

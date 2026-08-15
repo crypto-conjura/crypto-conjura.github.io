@@ -1,6 +1,6 @@
 # Tasks
 
-Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates assume the work is done with Claude (Premium) doing the bulk of it, not a human working unassisted — keep new estimates calibrated the same way. Total estimated time: **~63h** (rough; the UC Encyclopedia content item is especially uncertain and could run well over its estimate).
+Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates assume the work is done with Claude (Premium) doing the bulk of it, not a human working unassisted — keep new estimates calibrated the same way. Total estimated time: **~64.5h** (rough; the UC Encyclopedia content item is especially uncertain and could run well over its estimate).
 
 - [ ] **Usability on iPhone, Android, and other handheld devices (~3h)**
 
@@ -23,6 +23,10 @@ Ordered by difficulty: web-related tweaks, new web content, new conjectures, new
   `papers/index.qmd`'s "## Browse" section currently links to two things: [Archive](/papers/example-paper/index.qmd) and [Committee](/papers/programme-committee/index.qmd) (`_quarto.yml:69-73` mirrors the same two under the Papers sidebar section). Add a third: "Proposals". Needs a new `papers/proposals/index.qmd` (mirroring the `example-paper`/`programme-committee` pattern), a third `_quarto.yml` sidebar entry, and a third Browse link.
 
   The concept, to write up on that page: a proposal names a *focused research topic*, not a full statement — like a grant proposal, but narrower and more concrete. Example: "When is a problem in the Uber assumption family random self-reducible?" An AI (potentially multi-agent, potentially distributed across machines) is then tasked with working the topic: surveying the area, generating candidate statements, checking its own results, and autoformalizing what holds up. A proposal is the seed of a Paper (or an Open Problem, if what comes out is a precise unresolved statement rather than a resolved write-up) — decide on that relationship, and on the exact page format (a simple list vs. per-proposal pages with their own status), when picked up.
+
+- [ ] **Document the pre-human review pipeline on the Programme Committee page (~1.5h)**
+
+  `papers/programme-committee/index.qmd`'s "## How reviewing works" section currently only describes the human-committee step (a member reviews, their name joins the `Reviewers` field). Add what happens *before* that: every paper first goes through agentic "stress tests" — meticulous, adversarial scrutiny for mistakes, run via topic-specific prompts that check for the fatal errors and gaps known to recur in that area's literature. Only after that does an editorial pass improve the writing itself against best practice for mathematical exposition (style manuals, standard conventions), and only after *that* is a paper in a position for a human reviewer to look at it — the agentic stages are a filter, not a replacement for the human step described above. Also worth stating as a standing constraint: a paper's focus is kept to its specific conjecture (not broadened into a survey or multi-result piece) precisely to keep this whole pipeline, human review included, tractable.
 
 - [ ] **Convert the UC-for-gamers paper to HTML (~5h)**
 

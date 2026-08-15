@@ -47,7 +47,13 @@ covariantly. The four settings differ only through the product structure the pai
 in Type 2, the homomorphism $\psi$) makes available, and this difference is exactly what
 enlarges or shrinks the self-reducible subclass. We give a worked self-reducible assumption
 in each setting and exhibit a target that is self-reducible in Type 2 but not, by any
-affine reparametrization, in Type 3.
+affine reparametrization, in Type 3. A final section places the theorem against classical
+random self-reducibility: the affine condition is the one-query case of the non-adaptive
+condition of Feigenbaum and Fortnow, and the classical multi-query interpolation of Lipton,
+which the group encoding admits unchanged, does reach the separating target --- but only its
+computational form, and only against a high-advantage solver. The two techniques are
+incomparable, and the decisional, negligible-advantage regime that cryptography works in is
+the one where only the affine route survives.
 \end{abstract}
 
 \section{Introduction}
@@ -58,6 +64,9 @@ average-case solver by subtracting $r$. This note carries the underlying idea, i
 uniform reparametrization of the secret and undo it on the answer, across the standard
 group settings and states it uniformly. Throughout, $p$ is a prime and all groups have
 order $p$. We use implicit (bracket) notation in the style of~\cite{EHKRV13}.
+Section~\ref{sec:classical} relates the resulting condition to the classical form of the
+same idea, in which the undoing is done by polynomial interpolation across several
+correlated queries rather than in closed form on one~\cite{Lipton91,FF93}.
 
 \section{Group settings}
 
@@ -442,9 +451,154 @@ covariance defect necessarily contains $X_2^{2}$, a product of two $\Gtwo$ expon
 Type 2 the homomorphism $\psi$ places $X_2^{2}$ in $\LL_T$ and translation works; in Type 3
 it is generically uncomputable, and forcing it out of the defect collapses the
 reparametrization on the $\Gone$ coordinate. Proposition~\ref{prop:sep} rules out the
-affine technique, which is the general tool behind all positive results here; a proof that
-no reduction whatsoever exists would additionally require a lower-bound argument such as a
-meta-reduction, but the structural gap is genuine.
+single-reparametrization affine technique, which is the tool behind every positive result
+above, but it does not rule out every reduction. Section~\ref{sec:classical} shows that a
+multi-query interpolation reduction, of the kind classical random self-reducibility has used
+since Lipton~\cite{Lipton91}, does solve the \emph{computational} problem here; the Type-2
+versus Type-3 gap for this target is therefore a gap for the decisional problem and for
+tight reductions, not a structural one. Ruling out every reduction for the decisional
+problem would additionally require a lower-bound argument such as a meta-reduction.
+
+\section{Relation to classical random self-reducibility}
+\label{sec:classical}
+
+Random self-reducibility long predates its use on group-based assumptions, and the classical
+technique differs from Theorem~\ref{thm:master} in one respect that decides exactly what
+Proposition~\ref{prop:sep} does and does not rule out. This section isolates the difference,
+shows that the two techniques are incomparable, and uses the classical one to reach a target
+the affine one cannot.
+
+\subsection{The multi-query condition}
+
+Condition (C2) asks a single reparametrized challenge to be a scalar multiple of the original
+up to a computable defect. The general \emph{non-adaptive} condition, in the sense of
+Feigenbaum and Fortnow~\cite{FF93}, asks instead that the original challenge be a
+$\Zp$-combination of \emph{several} reparametrized ones:
+\begin{enumerate}[label=\textup{(C2$'$)},leftmargin=3.9em]
+  \item there are $\tau_1,\dots,\tau_m\in\mathcal T$, coefficients $c_1,\dots,c_m\in\Zp$, and a
+        polynomial $h\in\LL_\star$, all computable from the sampled data, with
+        \[
+          f=\sum_{i=1}^{m}c_i\,(f\circ\tau_i)+h.
+        \]
+\end{enumerate}
+Condition (C2) is the case $m=1$: from $f\circ\tau=\lambda_\tau f+h_\tau$ one gets
+$f=\lambda_\tau^{-1}(f\circ\tau)-\lambda_\tau^{-1}h_\tau$, which is (C2$'$) with
+$c_1=\lambda_\tau^{-1}$ and $h=-\lambda_\tau^{-1}h_\tau$.
+
+Suppose (C1) and (C3) hold for each $\tau_i$ separately. Then (C2$'$) suffices for the
+\emph{computational} problem: the reduction rebuilds $\Inst(\tau_i(\vx_0))$ for each $i$ as in
+the proof of Theorem~\ref{thm:master}, queries the solver on all $m$ of them to get
+$W_1,\dots,W_m$, and returns
+\[
+  \prod_{i=1}^{m}W_i^{\,c_i}\cdot[h(\vx_0)]_\star
+  =\Bigl[\sum_{i=1}^{m}c_i\,f(\tau_i(\vx_0))+h(\vx_0)\Bigr]_\star=[f(\vx_0)]_\star .
+\]
+The step that makes this go through is that a $\Zp$-linear combination of \emph{exponents} is
+realized by group operations on their encodings, so arbitrary linear post-processing of the
+solver's answers is available to the reduction for free. Encodings are transparent to it: the
+map $\vx\mapsto[f(\vx)]_\star$ is a Reed--Muller codeword read through the encoding, and a
+linear local-decoding procedure for that code never notices the encoding is there. The whole
+Lipton~\cite{Lipton91} toolkit therefore applies to computational Uber problems verbatim.
+
+Two costs come with $m>1$. The reparametrizations $\tau_i$ must be correlated for the
+interpolation identity to hold --- in Lipton's instantiation they are the translations along a
+single random line, uniform marginally but not jointly --- so the reduction's success
+probability is controlled by a union bound rather than transferred exactly. And, as
+Section~\ref{sec:mqdec} records, the technique does not reach decisional problems at all.
+
+\subsection{Interpolation reaches a Type-3 target the affine technique cannot}
+
+\begin{proposition}[interpolation in Type 3]
+\label{prop:interp}
+Let $p>4$ and take the Type-3 instance of Proposition~\ref{prop:sep}: $R=(1,X_1)$ in $\Gone$,
+$S=(1,X_2)$ in $\Gtwo$, $T=(1)$, and $f=X_1X_2^{2}$ with challenge in $\GT$. The
+\emph{computational} $(R,S,T,f;\GT)$-Uber problem is random self-reducible by a non-adaptive
+four-query reduction $\mathcal B^{\mathcal A}$ satisfying, for every $\vx_0\in\Zp^{2}$,
+\[
+  \Succ(\mathcal B;\vx_0)\ \ge\ 1-4\bigl(1-\Succ_{\mathrm{avg}}(\mathcal A)\bigr).
+\]
+\end{proposition}
+\begin{proof}
+Draw $\vb=(b_1,b_2)\rsample\Zp^{2}$ and fix four distinct nonzero $t_1,\dots,t_4\in\Zp$, which
+exist as $p>4$. Let $\tau_i\colon\vx\mapsto\vx+t_i\vb$.
+
+\emph{Rebuild.} Each $\tau_i$ is a translation, so $X_1\circ\tau_i=X_1+t_ib_1\in\LL_1=
+\Span{1,X_1}$ and $X_2\circ\tau_i=X_2+t_ib_2\in\LL_2=\Span{1,X_2}$, which is (C1); the
+$\GT$ tuple is the constant $1$ and needs nothing. Explicitly
+$\Inst(\vx_0+t_i\vb)=\bigl([1]_1,\ [x_1]_1[1]_1^{t_ib_1},\ [1]_2,\ [x_2]_2[1]_2^{t_ib_2},\
+[1]_T\bigr)$, computable from $\Inst(\vx_0)$ with no pairing and no $\psi$.
+
+\emph{Uniformity.} For each fixed $i$, $t_i\neq 0$ and $\vb$ uniform make $\vx_0+t_i\vb$
+uniform on $\Zp^{2}$, which is (C3) for each $\tau_i$ separately. The four are not jointly
+independent: they lie on one line.
+
+\emph{Interpolate.} Put $g(t)\coloneqq f(\vx_0+t\vb)=(x_1+tb_1)(x_2+tb_2)^{2}$, a polynomial in
+$t$ of degree at most $3$, and let $c_i\coloneqq\prod_{j\neq i}(-t_j)(t_i-t_j)^{-1}$ be the
+Lagrange coefficients at $0$, so that $q(0)=\sum_i c_i q(t_i)$ for every $q$ of degree at most
+$3$. This is (C2$'$) with $m=4$ and $h=0$. Query $W_i\leftarrow\mathcal A(\Inst(\vx_0+t_i\vb))$
+and output $Y\coloneqq\prod_{i=1}^{4}W_i^{\,c_i}$. If every $W_i=[g(t_i)]_T$ then
+\[
+  Y=\Bigl[\sum_{i=1}^{4}c_i\,g(t_i)\Bigr]_T=[g(0)]_T=[f(\vx_0)]_T .
+\]
+Each query is marginally a fresh average-case instance, so $\mathcal A$ errs on any fixed one
+with probability $1-\Succ_{\mathrm{avg}}(\mathcal A)$, and a union bound over the four gives
+the stated bound.
+\end{proof}
+
+The reduction never computes $[x_2^{2}]_T$, the element Proposition~\ref{prop:sep} shows to be
+out of reach. It does not have to: it never rebuilds the covariance defect, because the solver
+returns that defect implicitly inside its own answers, and recovering $f(\vx_0)$ from those
+answers is a $\Zp$-linear operation the encoding permits.
+
+\subsection{The decisional problem stays blocked}
+\label{sec:mqdec}
+
+\begin{remark}
+\label{rem:decblock}
+Interpolation does not transfer to the decisional problem of Proposition~\ref{prop:sep}. There
+the reduction must map its own challenge $Z$ to a challenge $Z_i$ for each rebuilt instance,
+so it needs the encodings of the coefficients of
+\[
+  g(t)=\underbrace{x_1x_2^{2}}_{t^{0}}
+  +\underbrace{\bigl(b_1x_2^{2}+2b_2x_1x_2\bigr)}_{t^{1}}t
+  +\underbrace{\bigl(b_2^{2}x_1+2b_1b_2x_2\bigr)}_{t^{2}}t^{2}
+  +\underbrace{b_1b_2^{2}}_{t^{3}}t^{3}.
+\]
+The $t^{2}$ and $t^{3}$ coefficients lie in $\LL_T=\Span{1,X_1,X_2,X_1X_2}$, but the $t^{1}$
+coefficient carries $b_1X_2^{2}$, and $X_2^{2}\notin\LL_T$ in Type 3. Setting $b_1=0$ removes
+it at the cost of freezing the first coordinate, destroying (C3) exactly as in the proof of
+Proposition~\ref{prop:sep}. The asymmetry is structural rather than incidental: interpolation
+runs from the solver's answers to the target, which is linear and hence free in the exponent,
+whereas a decisional reduction must also run from the target to the solver's challenges, and
+that direction needs the intermediate coefficients themselves.
+\end{remark}
+
+\subsection{What each technique buys}
+
+The two reductions are incomparable, and the axes trade against each other.
+Theorem~\ref{thm:master} admits every $\tau\in\AGL_n(\Zp)$, including the multiplicative
+scaling that Proposition~\ref{prop:cocdh} shows to be forced for co-CDH and that no reduction
+restricted to translations along a line could supply; interpolation admits any $f$ of degree
+less than $p$ whose line restriction rebuilds, with no covariance requirement at all. In
+exchange, Theorem~\ref{thm:master} transfers advantage exactly, in both the search and the
+decisional problem, whereas Proposition~\ref{prop:interp} needs
+$\Succ_{\mathrm{avg}}(\mathcal A)>3/4$ before its bound says anything and says nothing about
+decisional problems. The threshold is an artifact of naive interpolation rather than of the
+approach --- Berlekamp--Welch decoding and its list-decoding successors push it down to a
+constant and then to $\mathrm{poly}(1/\epsilon)$~\cite{GS92,BT06} --- but no version of it
+reaches negligible advantage, and none reaches a decisional problem. Cryptographic assumptions
+are stated overwhelmingly in the decisional form and at negligible advantage, which is
+precisely the regime where the covariance route is the only one available; that is why
+Theorem~\ref{thm:master}, and not interpolation, is the tool used throughout this note.
+
+Two further points of contact are worth recording. The translation reduction for CDH and DDH
+is the group-theoretic form of Blum--Luby--Rubinfeld self-correction~\cite{BLR93}: the shift
+$\vx\mapsto\vx+\vb$ is their shift, with the group law supplying the linearity their argument
+needs. And the worst-case-to-average-case reductions of lattice cryptography, from
+Ajtai~\cite{Ajtai96} to Regev~\cite{Regev09}, share the motivation of this note --- basing an
+average-case assumption on a worst-case one --- but are reductions \emph{between distinct
+problems} rather than self-reductions, and their mechanism, Gaussian sampling over a lattice,
+has nothing to do with the polynomial structure exploited here.
 
 \section{Discussion}
 \label{sec:discussion}
@@ -459,7 +613,10 @@ space $\LL_\star$ grows with the available products:
 A larger $\LL_\star$ makes the covariance condition (C2) easier to meet, so the
 affine-self-reducible subclass is largest in Type 1 and smallest in Type 3, with the
 non-bilinear case the degenerate product-free floor. Proposition~\ref{prop:sep} witnesses
-the strict gap between Type 2 and Type 3.
+the strict gap between Type 2 and Type 3 for the affine technique; by
+Proposition~\ref{prop:interp} the gap closes for that target once several correlated queries
+are allowed and only the computational problem is asked, so what the taxonomy of
+Lemma~\ref{lem:comp} constrains is the reach of tight and decisional reductions.
 
 Self-reducibility is orthogonal to hardness. The master theorem
 of~\cite{BBG05,Boyen08} makes an assumption hard exactly when $f\notin\LL_\star$, whereas
@@ -482,6 +639,33 @@ Random self-reducibility and zero knowledge interactive proofs of possession of
 information.
 In \emph{28th Annual Symposium on Foundations of Computer Science (FOCS 1987)},
 pages 472--482. IEEE, 1987.
+
+\bibitem[Lipton91]{Lipton91}
+R.~J.~Lipton.
+New directions in testing.
+In \emph{Distributed Computing and Cryptography}, volume 2 of \emph{DIMACS Series in
+Discrete Mathematics and Theoretical Computer Science}, pages 191--202. AMS, 1991.
+
+\bibitem[BLR93]{BLR93}
+M.~Blum, M.~Luby, and R.~Rubinfeld.
+Self-testing/correcting with applications to numerical problems.
+\emph{Journal of Computer and System Sciences}, 47(3):549--595, 1993.
+Preliminary version in \emph{STOC 1990}, pages 73--83.
+
+\bibitem[FF93]{FF93}
+J.~Feigenbaum and L.~Fortnow.
+Random-self-reducibility of complete sets.
+\emph{SIAM Journal on Computing}, 22(5):994--1005, 1993.
+
+\bibitem[GS92]{GS92}
+P.~Gemmell and M.~Sudan.
+Highly resilient correctors for polynomials.
+\emph{Information Processing Letters}, 43(4):169--174, 1992.
+
+\bibitem[BT06]{BT06}
+A.~Bogdanov and L.~Trevisan.
+Average-case complexity.
+\emph{Foundations and Trends in Theoretical Computer Science}, 2(1):1--106, 2006.
 
 \bibitem[GPS08]{GPS08}
 S.~D.~Galbraith, K.~G.~Paterson, and N.~P.~Smart.
@@ -519,6 +703,18 @@ Revisiting the uber assumption in the algebraic group model: fine-grained bounds
 hidden-order groups and improved reductions in bilinear groups.
 In \emph{3rd Conference on Information-Theoretic Cryptography (ITC 2022)},
 volume 230 of \emph{LIPIcs}, article 13. Schloss Dagstuhl, 2022.
+
+\bibitem[Ajtai96]{Ajtai96}
+M.~Ajtai.
+Generating hard instances of lattice problems.
+In \emph{28th Annual ACM Symposium on Theory of Computing (STOC 1996)}, pages 99--108.
+ACM, 1996.
+
+\bibitem[Regev09]{Regev09}
+O.~Regev.
+On lattices, learning with errors, random linear codes, and cryptography.
+\emph{Journal of the ACM}, 56(6):article 34, 2009.
+Preliminary version in \emph{STOC 2005}, pages 84--93.
 
 \end{conjurabibliography}
 

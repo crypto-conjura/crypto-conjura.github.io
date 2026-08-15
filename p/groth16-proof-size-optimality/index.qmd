@@ -1,0 +1,30 @@
+---
+title: "Groth16 proof-size optimality"
+subtitle: "Is three group elements actually the minimum for a pairing-based SNARG?"
+---
+
+## Motivation
+
+Groth's 3-group-element SNARK (EUROCRYPT 2016) is the shortest known pairing-based proof system and is widely deployed, so its proof size sets a practical floor on verification cost and on-chain footprint for a large class of real systems. Groth's own paper proves one element is impossible and asks, as its closing open problem, whether two elements can be ruled out too, which would prove the construction proof-size optimal. Whether that gap can be closed, and exactly which structural restrictions of the model are doing the work, is still open a decade later.
+
+## Provenance and history
+
+Groth (EUROCRYPT 2016) gives the 3-element construction, proves 1 element is impossible, and poses the 2-element question. Subsequent work shows every restriction of that question's "pure" model is load-bearing: allowing non-group field elements in the proof breaks the 3-element floor entirely (Lipmaa's Polymath, CRYPTO 2024, $3\,\mathbb{G}_1 + 1\,\mathbb{F} \approx 1408$ bits; Dellepere, Mishra and Shirzad's Garuda/Pari, ePrint 2024/1245, $2\,\mathbb{G}_1 + 2\,\mathbb{F} \approx 1280$ bits); one round of interaction yields a 1-element proof (Barta, Ishai, Ostrovsky and Wu, CRYPTO 2020); restricting to a designated verifier also reaches 1 element (Arnon, Dujmovic and Ishai, CRYPTO 2025); and adding a random oracle to the pure generic group model both extends the 1-element impossibility to arbitrary generic verifiers (assuming one-way functions) and yields a 2-element construction (Arnon, Dujmovic and Yogev, ePrint 2025/2160). The two statements gathered here (by the same line of work as the companion LaTeX draft; not yet attributed to a specific author in this repo) target the one cell those results don't touch: no random oracle, a publicly verifiable proof-independent verifier, and exactly two group elements.
+
+## Parameter lattice
+
+Two independent axes: which restrictions of the "purist" pure-GGM model are in force, and the target proof size.
+
+| | 1 element | 2 elements | 3 elements |
+|---|---|---|---|
+| **pure GGM, non-interactive, public verifier** | impossible, robustly (Groth16) | [c/0008](/c/0008/) / [c/0009](/c/0009/) -- conjectured impossible | achieved: Groth16 |
+| **GGM + random oracle** | impossible, assuming OWFs (Arnon-Dujmovic-Yogev 2025) | achieved, assuming OWFs (Arnon-Dujmovic-Yogev 2025) | *unstated* |
+| **designated verifier, pure GGM** | achieved (Arnon-Dujmovic-Ishai 2025) | *unstated* | *unstated* |
+| **one round of interaction** | achieved (Barta-Ishai-Ostrovsky-Wu 2020) | *unstated* | *unstated* |
+
+Only the pure-GGM row has leaves on this site; the other rows are cited results from the literature, included for context, not separate statements here.
+
+## Statements in this hub
+
+- [No 2-element split NILPs](/c/0008/) -- open, the information-theoretic core
+- [Groth16 optimality (pure GGM)](/c/0009/) -- open, implied by the statement above

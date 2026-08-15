@@ -1,8 +1,8 @@
 # Tasks
 
-Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Total estimated time: **~149h** (rough; the two research/production-scale items — UC Encyclopedia content and the LHL secret-seed resolution — are especially uncertain and could run well over their estimate).
+Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates assume the work is done with Claude (Premium) doing the bulk of it, not a human working unassisted — keep new estimates calibrated the same way. Total estimated time: **~65h** (rough; the two research/production-scale items — UC Encyclopedia content and the LHL secret-seed resolution — are especially uncertain and could run well over their estimate, or in the LHL case, not resolve at all regardless of tooling).
 
-- [ ] **Convert the UC-for-gamers paper to HTML (~12h)**
+- [ ] **Convert the UC-for-gamers paper to HTML (~5h)**
 
   Needed as a prerequisite (or at least a shared source) for the interactive UC tutorial task below: that tutorial quotes functionality excerpts from the paper, and an HTML version is what makes those excerpts reusable as live web content instead of screenshotted PDF pages.
 
@@ -10,11 +10,11 @@ Ordered by difficulty: web-related tweaks, new web content, new conjectures, new
   - Whatever the box markup degrades to in HTML, math and cross-reference links must not: the per-box line numbering and cross-box hyperlinks are load-bearing for how the paper is read, so a conversion that silently drops or renumbers them is a regression, not an acceptable simplification.
   - Decide up front whether the target is (a) one faithful HTML mirror of the whole paper, or (b) just the excerpted figures/boxes the tutorial task needs pulled out individually — the two have very different toolchains (whole-document converter vs. per-box snippet export) and it's worth picking before starting rather than defaulting into whichever is easier to try first.
 
-- [ ] **UC Encyclopedia content (~75h)**
+- [ ] **UC Encyclopedia content (~30h)**
 
   Every one of the 100 functionality pages (`uc/layer-N-.../<id>/index.qmd`) is still a stub. Fill in real content incrementally, one functionality at a time: precise UC-style definition, known realizations, security properties, and any formal/Lean artifacts.
 
-- [ ] **Interactive UC tutorial for the website (~40h)**
+- [ ] **Interactive UC tutorial for the website (~18h)**
 
   Based on the UC-for-gamers paper; depends on the HTML-conversion task above.
 
@@ -33,10 +33,10 @@ Ordered by difficulty: web-related tweaks, new web content, new conjectures, new
   - **Deep-dive quizzes as combinatorial retrieval, not just recall.** The puzzle tier should force recombining a later chapter's functionality with an earlier chapter's property or shell.
   - **Light gamification paired with spaced review, not gamification alone.** Streaks/XP/progress bars alone are a weak retention lever; the literature's stronger result is spaced repetition *combined* with light game mechanics. Concretely: resurface a prior chapter's quiz question (in a new combination) a chapter or two later rather than only in that chapter's own quiz, and track a streak across that resurfacing rather than only within one session.
 
-- [ ] **Finish and publish the uber-groups-rsr paper (~4h)**
+- [ ] **Finish and publish the uber-groups-rsr paper (~2h)**
 
   `latex/papers/uber-groups-rsr/main.tex` — "The Uber Assumption and its Random Self-Reducibility (in Non-Bilinear and Type 1, 2, 3 Bilinear Groups)" — is a working draft under `/latex/` (local-only, not on GitHub per `latex/README.md`). Finish the draft, then publish it following `latex/README.md`'s "Publishing a draft" flow: create `papers/uber-groups-rsr/` from the `papers/example-paper/index.qmd` template, move the `.tex` source and compiled PDF into its `latex/`/`pdf/` subfolders, and transcribe the statement into `index.qmd`.
 
-- [ ] **Finish resolving the LHL conjecture (secret-seed case) (~20h)**
+- [ ] **Finish resolving the LHL conjecture (secret-seed case) (~10h)**
 
   `c/0004` (public seed) is proven; `c/0005` (secret seed) is still open. Its resolution note (`c/0004/latex/proof.tex`) cites a bound for the secret-seed case from an external "companion note," for comparison only: that note isn't included anywhere in this repo and its claim hasn't been independently checked. Either locate/add that companion note's own statement and resolution (as a citation, or as its own artifact), or treat the secret-seed case as genuinely unresolved and pursue it separately. Separately, neither statement has a Lean formalization yet (`status.statement_formal`/`proof_formal` are both `open` on both).

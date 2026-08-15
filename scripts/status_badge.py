@@ -43,10 +43,9 @@ frontmatter field and an `## Open obligations` body section (checked, never
 generated, here). `statement_sha` is a hash of the leaf's `## Statement`
 block: if it no longer matches what's on disk, the informal statement
 changed since the formalization was last checked against it, so
-`statement_match` is forced
-back to `open`, `statement_sha` is rewritten, and `revision` is bumped -- a
-match can never be silently invalidated. Run with `--check` (no writes) to
-use this as a CI gate.
+`statement_match` is forced back to `open`, `statement_sha` is rewritten,
+and `revision` is bumped -- a match can never be silently invalidated. Run
+with `--check` (no writes) to use this as a CI gate.
 """
 
 import hashlib
@@ -67,22 +66,12 @@ FIELD_SPECS = {
 }
 FREE_TEXT_FIELDS = ("statement_by", "proof_by")
 
-STATEMENT_START_MARKER = "<!-- statement-status:start -->"
-STATEMENT_END_MARKER = "<!-- statement-status:end -->"
-PROOF_START_MARKER = "<!-- proof-status:start -->"
-PROOF_END_MARKER = "<!-- proof-status:end -->"
+START_MARKER = "<!-- status:start -->"
+END_MARKER = "<!-- status:end -->"
 
 OBLIGATIONS_HEADING_RE = re.compile(r"^##\s+Open obligations\s*$", re.MULTILINE)
 STATEMENT_BLOCK_RE = re.compile(
     r"^##\s+Statement\s*\n(.*?)(?=^##\s+\S|\Z)", re.MULTILINE | re.DOTALL
-)
-# The statement-status badge markers sit inside the '## Statement' tab (that's
-# the only way to place them "between the tab bar and Setting"), so they'd
-# otherwise be swept into what STATEMENT_BLOCK_RE captures. Strip them before
-# hashing -- statement_sha must reflect the actual statement, not whatever
-# badge markup happens to be generated there at the time.
-STATEMENT_STATUS_BLOCK_RE = re.compile(
-    re.escape(STATEMENT_START_MARKER) + r".*?" + re.escape(STATEMENT_END_MARKER), re.DOTALL
 )
 
 
@@ -197,102 +186,32 @@ def render_badge_svg(status, legend_url=LEGEND_URL):
     )
 
 
-def render_statement_badge_svg(status, legend_url=LEGEND_URL):
-    # Ring only, no disc/glyph -- shown on the Statement tab, since the disc
-    # and glyph both encode the proof grade, not the statement grade.
-    sigma = compute_sigma(
-        status["statement_informal"], status["statement_formal"], status["statement_match"]
-    )
-    pi = compute_pi(status["proof_informal"], status["proof_review"], status["proof_formal"])
-    sealed = pi == 4 and sigma >= 4
-
-    dash = _DASH[status["statement_match"]]
-    dash_attr = f" stroke-dasharray='{dash}'" if dash else ""
-    seal_el = (
-        "<circle cx='16' cy='16' r='15' fill='none' stroke-width='1.5' class='cj-seal'/>"
-        if sealed
-        else ""
-    )
-    title = render_statement_caption(status)
-
-    svg = (
-        "<svg class='cj-status-badge cj-status-badge-statement' viewBox='0 0 32 32' "
-        "width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'>"
-        f"{seal_el}"
-        f"<circle cx='16' cy='16' r='13' fill='none' stroke-width='4' "
-        f"class='cj-ring-{sigma}'{dash_attr}/>"
-        "</svg>"
-    )
-    return (
-        f"<a href='{legend_url}' class='cj-status-link' aria-label='{title} "
-        "Click for the status badge legend.'>"
-        f"{svg}"
-        "</a>"
-    )
-
-
-def render_proof_badge_svg(status, legend_url=LEGEND_URL):
-    # Disc + glyph only, no ring -- shown on the Proof tab, since the ring
-    # encodes the statement grade, not the proof grade.
-    sigma = compute_sigma(
-        status["statement_informal"], status["statement_formal"], status["statement_match"]
-    )
-    pi = compute_pi(status["proof_informal"], status["proof_review"], status["proof_formal"])
-    sealed = pi == 4 and sigma >= 4
-
-    seal_el = (
-        "<circle cx='16' cy='16' r='15' fill='none' stroke-width='1.5' class='cj-seal'/>"
-        if sealed
-        else ""
-    )
-    glyph = _GLYPH[pi]
-    title = render_proof_caption(status)
-
-    svg = (
-        "<svg class='cj-status-badge cj-status-badge-proof' viewBox='0 0 32 32' "
-        "width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'>"
-        f"{seal_el}"
-        f"<circle cx='16' cy='16' r='8' class='cj-disc-{pi}'/>"
-        f"<text x='16' y='17' text-anchor='middle' dominant-baseline='central' "
-        f"class='cj-glyph' font-size='9'>{glyph}</text>"
-        "</svg>"
-    )
-    return (
-        f"<a href='{legend_url}' class='cj-status-link' aria-label='{title} "
-        "Click for the status badge legend.'>"
-        f"{svg}"
-        "</a>"
-    )
-
-
-def render_statement_caption(status):
-    s1, s2, s3 = status["statement_informal"], status["statement_formal"], status["statement_match"]
-    if s2 == "open":
-        return f"Statement: {_LABEL[s1]}-written, not yet formalized."
-    stmt = f"Statement: {_LABEL[s1]}-written, {_LABEL[s2]}-formalized"
-    if s3 == "open":
-        stmt += ", not yet matched against the informal statement."
-    else:
-        stmt += f", {_LABEL[s3]}-matched against the informal statement."
-    return stmt
-
-
-def render_proof_caption(status):
-    p1, p2, p3 = status["proof_informal"], status["proof_review"], status["proof_formal"]
-    if p3 != "open":
-        return f"Proof: machine-checked ({_LABEL[p3]}-formalized)."
-    if p1 == "open":
-        return "Proof: open -- no attempt yet."
-    # proof_review is a 2-level field (ai|human) whose floor ("ai") means
-    # "not yet reviewed by a human" -- it does NOT assert that an AI
-    # reviewer actually looked at it, only that no human has. Only say
-    # "reviewed" once a human actually has; otherwise say so plainly.
-    review = "human-reviewed" if p2 == "human" else "not yet independently reviewed"
-    return f"Proof: {_LABEL[p1]} draft, {review}, not yet formalized."
-
-
 def render_caption(status):
-    return f"{render_statement_caption(status)} {render_proof_caption(status)}"
+    s1, s2, s3 = status["statement_informal"], status["statement_formal"], status["statement_match"]
+    p1, p2, p3 = status["proof_informal"], status["proof_review"], status["proof_formal"]
+
+    if s2 == "open":
+        stmt = f"Statement: {_LABEL[s1]}-written, not yet formalized."
+    else:
+        stmt = f"Statement: {_LABEL[s1]}-written, {_LABEL[s2]}-formalized"
+        if s3 == "open":
+            stmt += ", not yet matched against the informal statement."
+        else:
+            stmt += f", {_LABEL[s3]}-matched against the informal statement."
+
+    if p3 != "open":
+        proof = f"Proof: machine-checked ({_LABEL[p3]}-formalized)."
+    elif p1 == "open":
+        proof = "Proof: open -- no attempt yet."
+    else:
+        # proof_review is a 2-level field (ai|human) whose floor ("ai") means
+        # "not yet reviewed by a human" -- it does NOT assert that an AI
+        # reviewer actually looked at it, only that no human has. Only say
+        # "reviewed" once a human actually has; otherwise say so plainly.
+        review = "human-reviewed" if p2 == "human" else "not yet independently reviewed"
+        proof = f"Proof: {_LABEL[p1]} draft, {review}, not yet formalized."
+
+    return f"{stmt} {proof}"
 
 
 def self_test():
@@ -411,8 +330,7 @@ def compute_statement_sha(body):
     m = STATEMENT_BLOCK_RE.search(body)
     if not m:
         return None
-    statement_text = STATEMENT_STATUS_BLOCK_RE.sub("", m.group(1))
-    normalized = normalize_statement_text(statement_text)
+    normalized = normalize_statement_text(m.group(1))
     return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
 
 
@@ -456,9 +374,6 @@ def process_file(path, check=False):
             frontmatter = set_scalar_field(frontmatter, "statement_sha", computed_sha, quote=True)
 
     validate(status, str(path))
-    # status_badge: in the frontmatter stays the combined ring+disc badge --
-    # a stable single-value summary for conjura.json/tooling -- even though
-    # the body now shows it split across the two tabs.
     badge = render_badge_svg(status)
     caption = render_caption(status)
 
@@ -468,20 +383,15 @@ def process_file(path, check=False):
 
     new_text = text[: fm_match.start(1)] + new_frontmatter + text[fm_match.end(1) :]
 
-    statement_badge = render_statement_badge_svg(status)
-    statement_caption = render_statement_caption(status)
-    proof_badge = render_proof_badge_svg(status)
-    proof_caption = render_proof_caption(status)
-
-    for start_marker, end_marker, mini_badge, mini_caption in (
-        (STATEMENT_START_MARKER, STATEMENT_END_MARKER, statement_badge, statement_caption),
-        (PROOF_START_MARKER, PROOF_END_MARKER, proof_badge, proof_caption),
-    ):
-        block = f"{start_marker}\n{mini_badge}\n\n*{mini_caption}*\n{end_marker}"
-        marker_re = re.compile(re.escape(start_marker) + r".*?" + re.escape(end_marker), re.DOTALL)
-        if not marker_re.search(new_text):
-            raise ValueError(f"{path}: no {start_marker} ... {end_marker} markers found in body")
-        new_text = marker_re.sub(block, new_text)
+    body_block = f"{START_MARKER}\n{badge}\n\n*{caption}*\n{END_MARKER}"
+    marker_re = re.compile(
+        re.escape(START_MARKER) + r".*?" + re.escape(END_MARKER), re.DOTALL
+    )
+    if not marker_re.search(new_text):
+        raise ValueError(
+            f"{path}: no {START_MARKER} ... {END_MARKER} markers found in body"
+        )
+    new_text = marker_re.sub(body_block, new_text)
 
     changed = new_text != text
     if changed and not check:

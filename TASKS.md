@@ -21,6 +21,10 @@ Ordered by priority, highest first.
   - `papers/example-paper/index.qmd` already has the `categories: []` field scaffolded in; populate it once there's real content to tag.
   - Decide whether papers get their own per-topic listing pages (mirroring `open-problems/areas/<area>/index.qmd`), or a single `categories: true` filterable listing on `papers/index.qmd` (mirroring `blog/index.qmd`) — revisit once there's more than one real paper to justify either.
 
+- [ ] **Tag surveys by keywords**
+
+  Same treatment as the papers-tagging task above, applied to `surveys/`: `surveys/uc-for-gamers/index.qmd` already has a `categories: []` field scaffolded in; populate it once there's a real keyword set to tag with. Same open question about per-topic listing pages vs. a single filterable `surveys/index.qmd` listing, revisited once there's more than one survey to justify either.
+
 - [ ] **Convert the UC-for-gamers paper to HTML**
 
   Needed as a prerequisite (or at least a shared source) for the interactive UC tutorial task below: that tutorial quotes functionality excerpts from the paper, and an HTML version is what makes those excerpts reusable as live web content instead of screenshotted PDF pages.

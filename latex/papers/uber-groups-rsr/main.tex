@@ -1,0 +1,535 @@
+\documentclass[11pt]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+
+% ---------- notation ----------
+\newcommand{\G}{\mathbb{G}}
+\newcommand{\Gone}{\mathbb{G}_1}
+\newcommand{\Gtwo}{\mathbb{G}_2}
+\newcommand{\GT}{\mathbb{G}_T}
+\newcommand{\Zp}{\mathbb{Z}_p}
+\newcommand{\Zpx}{\mathbb{Z}_p^{\times}}
+\newcommand{\vx}{\vec{x}}
+\newcommand{\vX}{\vec{X}}
+\newcommand{\vb}{\vec{b}}
+\newcommand{\Inst}{\mathsf{Inst}}
+\newcommand{\Succ}{\mathsf{Succ}}
+\newcommand{\Ex}{\mathbb{E}}
+\newcommand{\LL}{\mathcal{L}}
+\newcommand{\Span}[1]{\langle #1 \rangle}
+\newcommand{\rsample}{\leftarrow_{\$}}
+\newcommand{\GL}{\mathrm{GL}}
+\newcommand{\AGL}{\mathrm{AGL}}
+\newcommand{\bg}{\mathcal{BG}}
+\newcommand{\ch}{\mathrm{ch}}
+
+% ---------- theorem environments ----------
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{proposition}{Proposition}
+\newtheorem{corollary}{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+\theoremstyle{remark}
+\newtheorem*{remark}{Remark}
+
+\title{The Uber Assumption and its Random Self-Reducibility\\
+in Non-Bilinear and Type 1, 2, 3 Bilinear Groups}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+\vspace{-3.2em}
+
+\begin{abstract}
+We fix notation for prime-order groups without a pairing and for bilinear groups in each
+of the three Galbraith--Paterson--Smart types, formally define the Uber assumption in all
+four settings, and treat random self-reducibility in each. A single generic-computability
+lemma isolates, per setting, the space of exponents a reduction can realize; a single
+affine-reparametrization theorem then yields random self-reducibility whenever the source
+data are stable under the reparametrization and the challenge polynomial transforms
+covariantly. The four settings differ only through the product structure the pairing (and,
+in Type 2, the homomorphism $\psi$) makes available, and this difference is exactly what
+enlarges or shrinks the self-reducible subclass. We give a worked self-reducible assumption
+in each setting and exhibit a target that is self-reducible in Type 2 but not, by any
+affine reparametrization, in Type 3.
+\end{abstract}
+
+\section{Introduction}
+
+The discrete-logarithm problem is random self-reducible by the shift $g^{x}\mapsto
+g^{x}g^{r}$~\cite{TW87}; the answer for a worst-case instance is recovered from an
+average-case solver by subtracting $r$. This note carries the underlying idea, inject a
+uniform reparametrization of the secret and undo it on the answer, across the standard
+group settings and states it uniformly. Throughout, $p$ is a prime and all groups have
+order $p$. We use implicit (bracket) notation in the style of~\cite{EHKRV13}.
+
+\section{Group settings}
+
+\subsection{Non-bilinear groups}
+
+\begin{definition}[prime-order group]
+A \emph{(non-bilinear) group generator} outputs $\mathcal G=(p,\G,g)$ where $\G$ is a
+cyclic group of prime order $p$, $g$ a generator, and the group law and equality are
+computable in probabilistic polynomial time. For $a\in\Zp$ write $[a]\coloneqq g^{a}$, so
+$[a]\cdot[b]=[a+b]$ and $[a]^{c}=[ca]$. There is no pairing.
+\end{definition}
+
+\subsection{Bilinear groups and the GPS taxonomy}
+
+\begin{definition}[bilinear group]
+A \emph{bilinear group generator} outputs
+$\bg=(p,\Gone,\Gtwo,\GT,e,g_1,g_2)$ where $\Gone,\Gtwo,\GT$ are cyclic of prime order $p$,
+$g_1,g_2$ generate $\Gone,\Gtwo$, all group laws and equalities are efficient, and
+$e\colon\Gone\times\Gtwo\to\GT$ is an efficiently computable, non-degenerate bilinear map.
+For $a\in\Zp$ write $[a]_1\coloneqq g_1^{a}$, $[a]_2\coloneqq g_2^{a}$, and
+$[a]_T\coloneqq e(g_1,g_2)^{a}$, so that
+\[
+  e\bigl([a]_1,[b]_2\bigr)=[ab]_T,\qquad [a]_i\cdot[b]_i=[a+b]_i,\qquad [a]_i^{c}=[ca]_i.
+\]
+\end{definition}
+
+Following Galbraith, Paterson, and Smart~\cite{GPS08}, bilinear groups come in three types,
+distinguished by the efficiently computable isomorphisms between $\Gone$ and $\Gtwo$:
+\begin{enumerate}[label=\textup{Type~\arabic*.},leftmargin=4.4em,itemsep=3pt]
+  \item $\Gone=\Gtwo=\G$ and $e$ is symmetric, $e(u,v)=e(v,u)$. One source group.
+  \item $\Gone\neq\Gtwo$, with an efficiently computable isomorphism
+        $\psi\colon\Gtwo\to\Gone$ (so $\psi([a]_2)=[a]_1$), but none known in the reverse
+        direction.
+  \item $\Gone\neq\Gtwo$, with no efficiently computable isomorphism in either direction.
+\end{enumerate}
+Type 3 is the most efficient and most used in practice; Type 1 is the most permissive
+algebraically. The only structural difference for what follows is which group elements can
+be moved between $\Gone$ and $\Gtwo$, and hence which products the pairing can form.
+
+\section{The generic-computability calculus}
+
+Fix a setting and an instance consisting of encodings of finite polynomial tuples
+$R\subseteq\Zp[\vX]$ in $\Gone$, $S\subseteq\Zp[\vX]$ in $\Gtwo$, and $T\subseteq\Zp[\vX]$
+in $\GT$ (in a single-group setting only $R$ and, if applicable, $T$ occur). Each tuple is
+assumed to contain the constant $1$, since the generators are public. For $\vX=(X_1,\dots,X_n)$
+and a secret $\vx\in\Zp^{n}$, the instance is the collection of $[r_i(\vx)]_1$,
+$[s_j(\vx)]_2$, $[t_k(\vx)]_T$.
+
+For a group $\gamma\in\{\Gone,\Gtwo,\GT\}$ (or $\G$) let $\LL_\gamma\subseteq\Zp[\vX]$
+denote the polynomials $q$ for which $[q(\vx)]_\gamma$ is computable in probabilistic
+polynomial time from the instance and public parameters, uniformly in $\vx$. Write
+$A\cdot B=\{ab:a\in A,\,b\in B\}$ and let $\Span{\cdot}$ be $\Zp$-linear span.
+
+\begin{lemma}[computable exponents]
+\label{lem:comp}
+With the conventions above,
+\[
+\begin{aligned}
+  \text{non-bilinear:}\quad & \LL_{\G}=\Span{R};\\[2pt]
+  \text{Type 1 } (\Gone=\Gtwo=\G,\ \text{source tuple }R):\quad
+      & \LL_{\G}=\Span{R},\quad \LL_{\GT}=\Span{R\cdot R\ \cup\ T};\\[2pt]
+  \text{Type 2 } (\psi\colon\Gtwo\to\Gone):\quad
+      & \LL_{1}=\Span{R\cup S},\quad \LL_{2}=\Span{S},\quad
+        \LL_{T}=\Span{(R\cup S)\cdot S\ \cup\ T};\\[2pt]
+  \text{Type 3:}\quad
+      & \LL_{1}=\Span{R},\quad \LL_{2}=\Span{S},\quad
+        \LL_{T}=\Span{R\cdot S\ \cup\ T}.
+\end{aligned}
+\]
+The inclusions ``$\supseteq$'' hold unconditionally: every listed polynomial's encoding is
+computable by group operations and pairings. The reverse inclusions hold in the generic
+bilinear group model, where these are exactly the computable encodings~\cite{BBG05,Boyen08}.
+\end{lemma}
+
+\begin{proof}[Justification]
+The group law realizes all $\Zp$-linear combinations, giving $\Span{\cdot}$ in each group.
+The pairing sends a computable $\Gone$-exponent $a\in\LL_1$ and a computable
+$\Gtwo$-exponent $b\in\LL_2$ to $ab\in\LL_T$; pairing against the generator ($b=1$ or
+$a=1$) shows $\LL_1,\LL_2\subseteq\LL_T$. In Type 1 both pairing arguments range over
+$\Span{R}$, producing all products $R\cdot R$. In Type 2, $\psi$ moves each $\Gtwo$
+encoding into $\Gone$, so $\LL_1$ gains $S$, and the pairable products become
+$\LL_1\cdot\LL_2=(R\cup S)\cdot S$; the missing products $R\cdot R$ would require an
+element of $\Gtwo$ with an $R$-exponent, which $\psi$ cannot supply. In Type 3 neither
+group maps to the other, so $\LL_1=\Span{R}$, $\LL_2=\Span{S}$, and only cross products
+$R\cdot S$ arise. The generic-model converse is the master lemma
+of~\cite{BBG05,Boyen08}.
+\end{proof}
+
+The single distinction across the four rows is the set of $\GT$-products: none (no pairing),
+$R\cdot R$ (Type 1), $R\cdot S\cup S\cdot S$ (Type 2), $R\cdot S$ (Type 3). Everything below
+is a consequence of this.
+
+\section{The Uber assumption}
+
+\begin{definition}[bilinear Uber problem]
+\label{def:uber}
+Fix a bilinear setting, source tuples $R$ (in $\Gone$), $S$ (in $\Gtwo$), $T$ (in $\GT$),
+each containing $1$, a challenge polynomial $f\in\Zp[\vX]$, and a challenge group
+$\ch\in\{\Gone,\Gtwo,\GT\}$; write $\LL_\star\coloneqq\LL_{\ch}$ (Lemma~\ref{lem:comp}).
+For a secret $\vx\in\Zp^{n}$ the instance is
+\[
+  \Inst(\vx)=\bigl(\{[r_i(\vx)]_1\}_i,\ \{[s_j(\vx)]_2\}_j,\ \{[t_k(\vx)]_T\}_k\bigr).
+\]
+\begin{itemize}[leftmargin=1.4em,itemsep=2pt]
+  \item \emph{Computational} $(R,S,T,f;\ch)$-Uber: given $\Inst(\vx)$, output
+        $[f(\vx)]_\star$.
+  \item \emph{Decisional} $(R,S,T,f;\ch)$-Uber: given $\Inst(\vx)$ and $Z$, decide whether
+        $Z=[f(\vx)]_\star$ (real) or $Z\rsample\ch$ (random).
+\end{itemize}
+The \emph{average case} draws $\vx\rsample\Zp^{n}$; the \emph{worst case} quantifies over
+all $\vx$. For a decision algorithm $\mathcal A$ put
+\[
+  \delta(\mathcal A;\vx)=\Pr\bigl[\mathcal A(\Inst(\vx),[f(\vx)]_\star)=1\bigr]
+  -\Pr\bigl[\mathcal A(\Inst(\vx),U)=1\bigr],\quad U\rsample\ch,
+\]
+and $\delta_{\mathrm{avg}}(\mathcal A)=\Ex_{\vx\rsample\Zp^{n}}[\delta(\mathcal A;\vx)]$;
+for a search algorithm put $\Succ(\mathcal A;\vx)=\Pr[\mathcal A(\Inst(\vx))=[f(\vx)]_\star]$
+and $\Succ_{\mathrm{avg}}(\mathcal A)=\Ex_{\vx}[\Succ(\mathcal A;\vx)]$. The assumption
+asserts that $\delta_{\mathrm{avg}}$ (resp.\ $\Succ_{\mathrm{avg}}$) is negligible for all
+probabilistic polynomial-time $\mathcal A$.
+\end{definition}
+
+The four settings are Definition~\ref{def:uber} with the computable spaces of
+Lemma~\ref{lem:comp}. We record each explicitly.
+
+\begin{definition}[non-bilinear Uber]
+Setting $\mathcal G=(p,\G,g)$; source tuple $R$ (in $\G$, containing $1$); challenge
+$f\in\Zp[\vX]$ in $\G$. Instance $\Inst(\vx)=\{[r_i(\vx)]\}_i$; goal, compute or distinguish
+$[f(\vx)]$. Computable space $\LL_\star=\LL_{\G}=\Span{R}$; no pairing, hence no products.
+\end{definition}
+
+\begin{definition}[Type-1 Uber]
+Setting $\bg$ of Type 1, $\Gone=\Gtwo=\G$; source tuple $R$ (in $\G$), target tuple $T$
+(in $\GT$), each containing $1$; challenge $f$ in $\ch\in\{\G,\GT\}$. Computable spaces
+$\LL_{\G}=\Span{R}$ and $\LL_{\GT}=\Span{R\cdot R\cup T}$.
+\end{definition}
+
+\begin{definition}[Type-2 Uber]
+Setting $\bg$ of Type 2 with $\psi\colon\Gtwo\to\Gone$; source tuples $R$ (in $\Gone$),
+$S$ (in $\Gtwo$), $T$ (in $\GT$); challenge $f$ in $\ch\in\{\Gone,\Gtwo,\GT\}$. Computable
+spaces $\LL_1=\Span{R\cup S}$, $\LL_2=\Span{S}$,
+$\LL_T=\Span{(R\cup S)\cdot S\cup T}$.
+\end{definition}
+
+\begin{definition}[Type-3 Uber]
+Setting $\bg$ of Type 3; source tuples $R$ (in $\Gone$), $S$ (in $\Gtwo$), $T$ (in $\GT$);
+challenge $f$ in $\ch\in\{\Gone,\Gtwo,\GT\}$. Computable spaces $\LL_1=\Span{R}$,
+$\LL_2=\Span{S}$, $\LL_T=\Span{R\cdot S\cup T}$.
+\end{definition}
+
+\begin{remark}[hardness]
+The master theorem of~\cite{BBG05,Boyen08} states, informally, that the decisional
+$(R,S,T,f;\ch)$-Uber problem is hard in the generic bilinear group model if and only if
+$f\notin\LL_\star$, that is, the challenge exponent is linearly independent of the
+computable ones. Random self-reducibility is a separate property and does not require
+hardness; the two interact through Lemma~\ref{lem:comp}, as discussed in
+Section~\ref{sec:discussion}.
+\end{remark}
+
+\section{An affine random-self-reducibility theorem}
+
+Let $\AGL_n(\Zp)$ be the affine group of maps $\tau_{A,\vb}\colon\vx\mapsto A\vx+\vb$ with
+$A\in\GL_n(\Zp)$, acting on polynomials by $(q\circ\tau)(\vX)=q(A\vX+\vb)$. The following
+theorem is setting-agnostic: it refers only to the computable spaces of
+Lemma~\ref{lem:comp}.
+
+\begin{theorem}[master reduction]
+\label{thm:master}
+Consider any of the four settings, an instance with source tuples $R,S,T$ and challenge
+$(f;\ch)$, and computable spaces $\{\LL_\gamma\}$ with $\LL_\star=\LL_{\ch}$. Suppose there
+is an efficiently sampleable distribution $\mathcal D$ on a subgroup
+$\mathcal T\le\AGL_n(\Zp)$ such that, for every $\tau\in\mathcal T$,
+\begin{enumerate}[label=\textup{(C\arabic*)},leftmargin=3.4em,itemsep=3pt]
+  \item $r_i\circ\tau\in\LL_1$, $s_j\circ\tau\in\LL_2$, and $t_k\circ\tau\in\LL_T$ for all
+        $i,j,k$ (with $\LL_1=\LL_{\G}$ in the single-group settings);
+  \item $f\circ\tau=\lambda_\tau f+h_\tau$ for a scalar $\lambda_\tau\in\Zpx$ and a
+        polynomial $h_\tau\in\LL_\star$, both computable from $\tau$ and the parameters;
+\end{enumerate}
+and, moreover,
+\begin{enumerate}[label=\textup{(C\arabic*)},leftmargin=3.4em,start=3]
+  \item $\tau(\vx)$ is uniform on $\Zp^{n}$ for every fixed $\vx$ when $\tau\leftarrow\mathcal D$.
+\end{enumerate}
+Then the computational and decisional $(R,S,T,f;\ch)$-Uber problems are random
+self-reducible: there is a probabilistic polynomial-time reduction $\mathcal B^{\mathcal A}$,
+using one draw from $\mathcal D$ and one oracle call, with
+$\Succ(\mathcal B;\vx_0)=\Succ_{\mathrm{avg}}(\mathcal A)$ and
+$\delta(\mathcal B;\vx_0)=\delta_{\mathrm{avg}}(\mathcal A)$ for every $\vx_0\in\Zp^{n}$.
+\end{theorem}
+
+\begin{proof}
+On input $\Inst(\vx_0)$ (and a challenge $Z$ in the decisional case) the reduction proceeds
+as follows.
+
+\emph{Reparametrize.} Draw $\tau\leftarrow\mathcal D$ and set $\vx'\coloneqq\tau(\vx_0)$,
+which is unknown to $\mathcal B$ but uniform on $\Zp^{n}$ by (C3).
+
+\emph{Rebuild the instance.} By (C1), each rebuilt exponent lies in the computable space of
+its group, so by the ``$\supseteq$'' part of Lemma~\ref{lem:comp} its encoding is
+computable from $\Inst(\vx_0)$. Concretely, writing $r_i\circ\tau=\sum_a c_a\,g_a$ as a
+$\Zp$-combination of the generators of $\LL_1$, one has
+$[r_i(\vx')]_1=[(r_i\circ\tau)(\vx_0)]_1=\prod_a[g_a(\vx_0)]_1^{c_a}$, and similarly for
+$S$ (using $\psi$ in Type 2 to realize any $S$-exponent in $\Gone$) and for $T$ (using
+pairings $e([\cdot]_1,[\cdot]_2)$ to realize products). This yields $\Inst(\vx')$,
+distributed exactly as a fresh average-case instance.
+
+\emph{Transport the challenge.} By (C2) compute $\lambda_\tau,h_\tau$ and the element
+$[h_\tau(\vx_0)]_\star$ (computable since $h_\tau\in\LL_\star$).
+
+\emph{Decisional case.} Set $Z'\coloneqq Z^{\lambda_\tau}\cdot[h_\tau(\vx_0)]_\star$ and
+output $\mathcal A(\Inst(\vx'),Z')$. If $Z=[f(\vx_0)]_\star$ then
+\[
+  Z'=[\lambda_\tau f(\vx_0)+h_\tau(\vx_0)]_\star=[(f\circ\tau)(\vx_0)]_\star=[f(\vx')]_\star,
+\]
+the real challenge for $\vx'$. If $Z$ is uniform on $\ch$, then $Z^{\lambda_\tau}$ is
+uniform because $z\mapsto z^{\lambda_\tau}$ is a bijection of the order-$p$ cyclic group
+$\ch$ (as $\gcd(\lambda_\tau,p)=1$), so $Z'$ is uniform and independent of $\Inst(\vx')$.
+Writing $p_1,p_0$ for $\mathcal A$'s acceptance probabilities on real and random challenges,
+\[
+  \delta(\mathcal B;\vx_0)
+  =\Ex_{\tau}[p_1(\tau(\vx_0))]-\Ex_{\tau}[p_0(\tau(\vx_0))]
+  \overset{\text{(C3)}}{=}\Ex_{\vx'}[p_1]-\Ex_{\vx'}[p_0]
+  =\delta_{\mathrm{avg}}(\mathcal A).
+\]
+
+\emph{Search case.} Run $W\leftarrow\mathcal A(\Inst(\vx'))$. On success
+$W=[f(\vx')]_\star=[\lambda_\tau f(\vx_0)+h_\tau(\vx_0)]_\star$, so output
+$Y\coloneqq(W\cdot[h_\tau(\vx_0)]_\star^{-1})^{\lambda_\tau^{-1}\bmod p}=[f(\vx_0)]_\star$.
+Since $\vx'$ is uniform, the success probability equals $\Succ_{\mathrm{avg}}(\mathcal A)$.
+\end{proof}
+
+\begin{remark}[relaxing (C3)]
+\label{rem:c3}
+When $\mathcal D$ makes $\tau(\vx)$ uniform only on a subset $\Omega\subseteq\Zp^{n}$ (for
+instance $\Zpx\times\Zp$ under a multiplicative reparametrization of one coordinate), the
+transfer holds with the average taken over $\Omega$. If the complement $\Zp^{n}\setminus
+\Omega$ is a proper affine subvariety on which $f(\vx)$ takes a value the reduction can
+compute directly from $\Inst(\vx_0)$ (a common case is $f(\vx)=0$ there), the reduction
+detects that case by an equality test on the given encodings and answers it without an
+oracle call, recovering full worst-case coverage.
+\end{remark}
+
+\section{Random self-reducibility: non-bilinear groups}
+
+Here $\LL_\star=\LL_{\G}=\Span{R}$ and no pairing exists, so (C2) demands the covariance
+defect to be a $\Zp$-combination of the source exponents themselves. The motivating
+scalar case is discrete log: to solve $g^{x}$ query the solver on $g^{x+r}$ and subtract
+$r$~\cite{TW87}; its group-valued cousins fit Definition~\ref{def:uber}.
+
+\begin{proposition}[CDH and DDH]
+Let $R=(1,X_1,X_2)$, so $\LL_{\G}=\Span{1,X_1,X_2}$, and $f=X_1X_2$ with challenge in $\G$.
+The translation group $\mathcal T=\{\vx\mapsto\vx+\vb\}$ with $\vb\rsample\Zp^{2}$ satisfies
+\textup{(C1)--(C3)}, so computational CDH and decisional DDH are random self-reducible.
+\end{proposition}
+\begin{proof}
+$X_i\circ\tau=X_i+b_i\in\LL_{\G}$ gives (C1). For (C2),
+$f\circ\tau=(X_1+b_1)(X_2+b_2)=f+(b_2X_1+b_1X_2+b_1b_2)$, so $\lambda_\tau=1$ and
+$h_\tau=b_2X_1+b_1X_2+b_1b_2\in\Span{1,X_1,X_2}=\LL_\star$. Translation gives exact
+uniformity, (C3). Explicitly the reduction returns
+$[f(\vx_0)]=W\cdot[x_1]^{-b_2}[x_2]^{-b_1}[1]^{-b_1b_2}$ in the search case.
+\end{proof}
+
+With $R=(1,X_1,\dots,X_n)$ we have $\LL_\star=V_{\le 1}$ (affine polynomials), and
+translating a degree-$d$ monomial leaves monomials of degree at most $d-1$; hence (C2)
+holds under translation exactly when $\deg f\le 2$. Without a pairing, degree $2$ is the
+ceiling: a product target is the most that is randomizable, and it is.
+
+\section{Random self-reducibility: Type 1}
+
+Here $\LL_\star=\LL_{\GT}=\Span{R\cdot R\cup T}$: the pairing supplies all products of source
+exponents, so the covariance defect may use any degree-$2$ combination of them.
+
+\begin{proposition}[BDDH]
+Let $R=(1,X_1,X_2,X_3)$, $T=(1)$, so $\LL_{\GT}=V_{\le 2}$, and $f=X_1X_2X_3$ with challenge
+in $\GT$. Translation satisfies \textup{(C1)--(C3)}, so decisional and computational BDDH are
+random self-reducible.
+\end{proposition}
+\begin{proof}
+$X_i\circ\tau=X_i+b_i\in\LL_{\G}=\Span{R}$ gives (C1). Expanding,
+\[
+  f\circ\tau=X_1X_2X_3+\bigl[b_3X_1X_2+b_2X_1X_3+b_1X_2X_3+(\deg\le 1)\bigr],
+\]
+so $\lambda_\tau=1$ and $h_\tau$ has total degree at most $2$, hence lies in
+$V_{\le 2}=\LL_\star$; each of its monomials is realized by a single pairing, for instance
+$[x_1x_2]_T=e([x_1]_1,[x_2]_2)$. Translation gives (C3).
+\end{proof}
+
+With coordinate source $R=(1,X_1,\dots,X_n)$ we get $\LL_\star=V_{\le 2}$, so the same
+degree count gives translation-randomizability for every $f$ with $\deg f\le 3$. The
+pairing has raised the ceiling from $2$ (no pairing) to $3$.
+
+\section{Random self-reducibility: Type 2}
+
+Here $\LL_1=\Span{R\cup S}$ and $\LL_T=\Span{(R\cup S)\cdot S\cup T}$: relative to Type 3
+the homomorphism $\psi$ adds the right-hand products $S\cdot S$ to the target space. This
+extra room is what makes the following target randomizable.
+
+\begin{proposition}
+\label{prop:type2}
+In a Type-2 group let $R=(1,X_1)$ in $\Gone$, $S=(1,X_2)$ in $\Gtwo$, $T=(1)$, and
+$f=X_1X_2^{2}$ with challenge in $\GT$. Then $f\notin\LL_\star$ (so the assumption is
+generically hard), and translation satisfies \textup{(C1)--(C3)}; the problem is random
+self-reducible.
+\end{proposition}
+\begin{proof}
+Here $\LL_T=\Span{(R\cup S)\cdot S}=\Span{1,X_1,X_2,X_1X_2,X_2^{2}}$, and $X_1X_2^{2}$ is
+not in this span, giving generic hardness. Under $\tau\colon\vx\mapsto\vx+\vb$ one has
+$X_1\circ\tau=X_1+b_1\in\LL_1=\Span{1,X_1}$ and $X_2\circ\tau=X_2+b_2\in\LL_2=\Span{1,X_2}$,
+which is (C1). Expanding,
+\[
+  f\circ\tau=(X_1+b_1)(X_2+b_2)^{2}
+  =f+\underbrace{2b_2X_1X_2+b_2^{2}X_1+b_1X_2^{2}+2b_1b_2X_2+b_1b_2^{2}}_{h_\tau},
+\]
+so $\lambda_\tau=1$ and every monomial of $h_\tau$ lies in $\LL_\star$. The term $X_2^{2}$
+is realized using $\psi$: $[x_2^{2}]_T=e\bigl(\psi([x_2]_2),[x_2]_2\bigr)$. Translation gives
+(C3).
+\end{proof}
+
+The point is precisely the $X_2^{2}$ term of $h_\tau$: it is a product of two $\Gtwo$
+exponents, which the pairing can form only after $\psi$ has moved one of them into $\Gone$.
+In Type 1 this term is free; in Type 3 it is unavailable, as the next section shows.
+
+\section{Random self-reducibility: Type 3}
+
+Here $\LL_1=\Span{R}$, $\LL_2=\Span{S}$, and $\LL_T=\Span{R\cdot S\cup T}$: the target space
+contains only cross products. This is the most restrictive setting, and reparametrizations
+must respect which coordinates are reachable in the challenge group.
+
+\begin{proposition}[co-CDH]
+\label{prop:cocdh}
+In a Type-3 group let $R=(1,X_1)$ in $\Gone$, $S=(1,X_2)$ in $\Gtwo$, and $f=X_1X_2$ with
+challenge in $\Gone$. Then $f\notin\LL_\star$ (generically hard), and the reparametrization
+$\tau\colon(x_1,x_2)\mapsto(\alpha x_1,\ x_2+b_2)$ with $\alpha\rsample\Zpx$,
+$b_2\rsample\Zp$ satisfies \textup{(C1),(C2)} and makes $\tau(\vx)$ uniform on
+$\Zpx\times\Zp$; the problem is random self-reducible, with the slice $x_1=0$ handled
+directly.
+\end{proposition}
+\begin{proof}
+Here $\LL_\star=\LL_1=\Span{1,X_1}$, which contains no $\Gtwo$ variable; and $X_1X_2\notin
+\Span{1,X_1}$, giving hardness. For (C1), $X_1\circ\tau=\alpha X_1\in\LL_1$ and
+$X_2\circ\tau=X_2+b_2\in\LL_2=\Span{1,X_2}$. For (C2),
+$f\circ\tau=\alpha X_1(X_2+b_2)=\alpha f+\alpha b_2X_1$, so $\lambda_\tau=\alpha\in\Zpx$ and
+$h_\tau=\alpha b_2X_1\in\LL_\star$. The image $\tau(\vx)=(\alpha x_1,x_2+b_2)$ is uniform on
+$\Zpx\times\Zp$ for every fixed $x_1\neq 0$. If $x_1=0$ then $f(\vx)=0$ and the answer is
+the identity of $\Gone$; the reduction detects this by testing $[x_1]_1=[0]_1$ and outputs
+the identity, per Remark~\ref{rem:c3}. A multiplicative reparametrization of $x_1$ is forced
+because an additive shift $x_1\mapsto x_1+b_1$ would put $b_1X_2$ into $h_\tau$, and
+$X_2\notin\LL_1$ in Type 3.
+\end{proof}
+
+The next result shows the Type-3 restriction genuinely bites: the target of
+Proposition~\ref{prop:type2}, self-reducible in Type 2, is not affine-randomizable in
+Type 3.
+
+\begin{proposition}[a Type-2 versus Type-3 separation]
+\label{prop:sep}
+In a Type-3 group let $R=(1,X_1)$ in $\Gone$, $S=(1,X_2)$ in $\Gtwo$, $T=(1)$, and
+$f=X_1X_2^{2}$ with challenge in $\GT$. The assumption is generically hard, and no
+$\tau\in\AGL_2(\Zp)$ satisfies \textup{(C1)--(C3)}; hence the affine reduction of
+Theorem~\ref{thm:master} does not apply, in contrast to Type 2
+(Proposition~\ref{prop:type2}).
+\end{proposition}
+\begin{proof}
+Hardness holds as $\LL_\star=\LL_T=\Span{R\cdot S}=\Span{1,X_1,X_2,X_1X_2}$ and
+$X_1X_2^{2}\notin\Span{1,X_1,X_2,X_1X_2}$. Suppose $\tau\in\AGL_2(\Zp)$ satisfies (C1).
+Condition (C1) for $r=X_1$ forces the first coordinate map $\tau_1=X_1\circ\tau$ to lie in
+$\LL_1=\Span{1,X_1}$, that is $\tau_1=e_1X_1+e_0$ with no $X_2$; likewise (C1) for $s=X_2$
+forces $\tau_2=aX_2+a_0$ with no $X_1$. Invertibility requires $e_1,a\in\Zpx$. Then
+\[
+  f\circ\tau=(e_1X_1+e_0)(aX_2+a_0)^{2}
+  =(e_1X_1+e_0)\bigl(a^{2}X_2^{2}+2aa_0X_2+a_0^{2}\bigr).
+\]
+The coefficient of the monomial $X_2^{2}$ (which carries no $X_1$) is $e_0a^{2}$. Since
+$X_2^{2}\notin\LL_\star$ and $\lambda_\tau f=\lambda_\tau X_1X_2^{2}$ contributes no pure
+$X_2^{2}$ term, condition (C2) forces $e_0a^{2}=0$, hence $e_0=0$. But then
+$\tau_1=e_1X_1$, so $\tau(\vx)_1=e_1x_1$, which cannot be uniform on $\Zp$ for a fixed
+$x_1$ (it never realizes uniformity across the value $0$), so (C3) fails. Therefore no
+$\tau$ meets (C1)--(C3) simultaneously.
+\end{proof}
+
+The obstruction is exactly the one flagged after Proposition~\ref{prop:type2}: the
+covariance defect necessarily contains $X_2^{2}$, a product of two $\Gtwo$ exponents. In
+Type 2 the homomorphism $\psi$ places $X_2^{2}$ in $\LL_T$ and translation works; in Type 3
+it is generically uncomputable, and forcing it out of the defect collapses the
+reparametrization on the $\Gone$ coordinate. Proposition~\ref{prop:sep} rules out the
+affine technique, which is the general tool behind all positive results here; a proof that
+no reduction whatsoever exists would additionally require a lower-bound argument such as a
+meta-reduction, but the structural gap is genuine.
+
+\section{Discussion}
+\label{sec:discussion}
+
+Across the four settings the reduction of Theorem~\ref{thm:master} is one and the same;
+only the admissibility conditions move, and they move only because the computable target
+space $\LL_\star$ grows with the available products:
+\[
+  \text{none}\ \subsetneq\ R\cdot S\ (\text{Type 3})\ \subsetneq\ R\cdot S\cup S\cdot S\
+  (\text{Type 2})\ \subseteq\ R\cdot R\ (\text{Type 1, single group}).
+\]
+A larger $\LL_\star$ makes the covariance condition (C2) easier to meet, so the
+affine-self-reducible subclass is largest in Type 1 and smallest in Type 3, with the
+non-bilinear case the degenerate product-free floor. Proposition~\ref{prop:sep} witnesses
+the strict gap between Type 2 and Type 3.
+
+Self-reducibility is orthogonal to hardness. The master theorem
+of~\cite{BBG05,Boyen08} makes an assumption hard exactly when $f\notin\LL_\star$, whereas
+Theorem~\ref{thm:master} needs the defect $f\circ\tau-\lambda_\tau f$ to lie \emph{in}
+$\LL_\star$. These constrain different objects, so hard yet self-reducible assumptions
+abound: CDH and DDH (non-bilinear), BDDH (Type 1), $X_1X_2^{2}$ (Type 2), and co-CDH
+(Type 3) are all of this kind. Quantitatively, Bauer, Fuchsbauer, and
+Loss~\cite{BFL20} show that in the algebraic group model every member of the Uber family is
+implied by the $q$-discrete-logarithm assumption, with $q$ governed by the degrees of the
+defining polynomials, and Rotem~\cite{Rotem22} refines $q$ to the maximal degree in which a
+single variable occurs and gives improved bilinear reductions.
+
+\begin{thebibliography}{9}
+
+\bibitem{TW87}
+M.~Tompa and H.~Woll.
+Random self-reducibility and zero knowledge interactive proofs of possession of
+information.
+In \emph{28th Annual Symposium on Foundations of Computer Science (FOCS 1987)},
+pages 472--482. IEEE, 1987.
+
+\bibitem{GPS08}
+S.~D.~Galbraith, K.~G.~Paterson, and N.~P.~Smart.
+Pairings for cryptographers.
+\emph{Discrete Applied Mathematics}, 156(16):3113--3121, 2008.
+
+\bibitem{BBG05}
+D.~Boneh, X.~Boyen, and E.-J.~Goh.
+Hierarchical identity based encryption with constant size ciphertext.
+In \emph{Advances in Cryptology -- EUROCRYPT 2005},
+volume 3494 of \emph{Lecture Notes in Computer Science}, pages 440--456. Springer, 2005.
+
+\bibitem{Boyen08}
+X.~Boyen.
+The uber-assumption family: a unified complexity framework for bilinear groups.
+In \emph{Pairing-Based Cryptography -- Pairing 2008},
+volume 5209 of \emph{Lecture Notes in Computer Science}, pages 39--56. Springer, 2008.
+
+\bibitem{EHKRV13}
+A.~Escala, G.~Herold, E.~Kiltz, C.~R\`afols, and J.~Villar.
+An algebraic framework for Diffie-Hellman assumptions.
+In \emph{Advances in Cryptology -- CRYPTO 2013},
+volume 8043 of \emph{Lecture Notes in Computer Science}, pages 129--147. Springer, 2013.
+Journal version: \emph{Journal of Cryptology} 30(1):242--288, 2017.
+
+\bibitem{BFL20}
+B.~Bauer, G.~Fuchsbauer, and J.~Loss.
+A classification of computational assumptions in the algebraic group model.
+In \emph{Advances in Cryptology -- CRYPTO 2020},
+volume 12171 of \emph{Lecture Notes in Computer Science}, pages 121--151. Springer, 2020.
+
+\bibitem{Rotem22}
+L.~Rotem.
+Revisiting the uber assumption in the algebraic group model: fine-grained bounds in
+hidden-order groups and improved reductions in bilinear groups.
+In \emph{3rd Conference on Information-Theoretic Cryptography (ITC 2022)},
+volume 230 of \emph{LIPIcs}, article 13. Schloss Dagstuhl, 2022.
+
+\end{thebibliography}
+
+\end{document}

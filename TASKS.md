@@ -1,6 +1,14 @@
 # Tasks
 
-Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates assume the work is done with Claude (Premium) doing the bulk of it, not a human working unassisted — keep new estimates calibrated the same way. Total estimated time: **~69h** (rough; the two research/production-scale items — UC Encyclopedia content and the LHL secret-seed resolution — are especially uncertain and could run well over their estimate, or in the LHL case, not resolve at all regardless of tooling).
+Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates assume the work is done with Claude (Premium) doing the bulk of it, not a human working unassisted — keep new estimates calibrated the same way. Total estimated time: **~75h** (rough; the two research/production-scale items — UC Encyclopedia content and the LHL secret-seed resolution — are especially uncertain and could run well over their estimate, or in the LHL case, not resolve at all regardless of tooling).
+
+- [ ] **Site-wide uniformity audit: how a page relates to its position in the site (~6h)**
+
+  A general consistency pass across every page family (`open-problems/**`, `papers/**`, `surveys/**`, `resources/**`, `uc/**`, `c/000N`, `prompts/**`), not tied to one specific page. Three concrete dimensions:
+
+  - **Names matching the links that lead to them.** A sidebar/navbar label and the destination page's own title should read as the same thing once you click through — this has already been fixed once for the Papers section (Archive/Committee vs. Example Paper/Programme Committee); check the rest of `_quarto.yml` and every section index for the same drift recurring.
+  - **Sub-links listed on each page.** A section's own index page should list links to its children the same way everywhere — `index.qmd`'s "Explore" grid and `papers/index.qmd`'s "Browse" links (Archive/Committee) are the current model; check whether `surveys/index.qmd`, `resources/index.qmd`, `open-problems/index.qmd`, and `uc/index.qmd` all surface their sub-pages the same way, or whether some just rely on the sidebar and say nothing in the body.
+  - **Look and feel across pages.** `page-layout`, `title-block-banner`/`title-block-style`, and related metadata should be applied consistently rather than page-by-page as an afterthought (a version of this was fixed once already for the Papers page specifically) — worth a real side-by-side visual comparison, both themes, rather than just diffing frontmatter.
 
 - [ ] **Convert the UC-for-gamers paper to HTML (~5h)**
 

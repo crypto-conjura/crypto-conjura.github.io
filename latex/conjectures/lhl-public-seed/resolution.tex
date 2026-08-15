@@ -7,6 +7,13 @@
 %  game is shown false (Proposition~\ref{prop:false}), which is what
 %  motivates the corrected bound.
 %
+%  The note opens with an unnumbered "The conjecture, as posed"
+%  section reproducing both conjectures of statement.tex verbatim,
+%  with that note's numbering preserved: Conjectures 1 and 2 here ARE
+%  Conjectures 1 and 2 there, so this document's own transposed
+%  variant numbers as Conjecture 3.  Keep the two files in sync -- if
+%  statement.tex changes, that section must be re-copied.
+%
 %  Built on the shared conjura-solution.cls house style (inherits
 %  conjura-conjecture.cls's fonts/colors, widened to a book-trim page)
 %  -- see latex/conjectures/_template/.  `fact` and the unnumbered
@@ -70,12 +77,76 @@ from Unpredictable Random-Oracle Sources: Two Leftover-Hash-Lemma
 Conjectures} (see \texttt{statement.tex} in this folder) --- proven true.
 Conjecture 1 (secret seed) is not addressed and remains open; a
 natural but false transposition of it to the public-seed game is
-also disproven here (Proposition~\ref{prop:false}).}
+also disproven here (Proposition~\ref{prop:false}). Both conjectures
+are reproduced verbatim below.}
 
 \vspace{0.6em}
 \AIDisclosure
 
 \vspace{1em}
+
+\section*{The conjecture, as posed}\label{sec:posed}
+
+The two conjectures below are reproduced verbatim from the statement note
+\emph{Randomness Extraction from Unpredictable Random-Oracle Sources: Two
+Leftover-Hash-Lemma Conjectures} (\texttt{statement.tex} in this folder), whose numbering is
+preserved: Conjectures~\ref{conj:stmt-secret} and~\ref{conj:stmt-pub} here are Conjectures 1
+and 2 there. The setting they are posed in is that note's, summarised first and then given in
+full, in the form used throughout the proof, in Section~\ref{sec:setting}.
+
+\medskip
+\noindent\textbf{Setting.}
+Fix nonempty finite sets $\calK$ (seeds), $\calD$ (inputs), $\calR$ (outputs), and write
+$K := |\calK|$, $D := |\calD|$, $R := |\calR|$. Let $\Fun(\calK \times \calD, \calR)$ be the set of
+all functions $\calK \times \calD \to \calR$, let $\SD(\cdot,\cdot)$ denote statistical distance and
+$U_{\calR}$ the uniform distribution on $\calR$. The source $S$, the predictor $P$ and the
+distinguisher $\mathsf{D}$ are computationally unbounded and receive the \emph{entire} function
+table of $H$ as an explicit input. In the prediction game $\Gm\ \Pred^{S}_{P}$ the predictor is
+to guess the source's output $x$ from $H$ and the source's auxiliary output $z$; in the two
+extraction games a seed $\sd \sample \calK$ is drawn after $S$ has terminated and $\mathsf{D}$ is
+to tell $H(\sd,x)$ from uniform, given $H$ and $z$. The two extraction games differ only in
+whether the seed $\sd$ is kept secret from $\mathsf{D}$ (the game $\Gm\ \Ext$) or given to it
+(the game $\Gm\ \Extp$); $\Gm\ \Pred$ and $\Gm\ \Extp$ are written out in
+Figure~\ref{fig:games} and Definition~\ref{def:games} below.
+
+\medskip
+\noindent\textbf{Advantages.}
+Set $\Adv^{\pred}_{\calK,\calD,\calR,S}(P) := \Pr[\Pred^{S}_{P} \Rightarrow 1]$ and
+\[
+  \Adv^{\ext}_{\calK,\calD,\calR}(S,\mathsf{D}) := 2\Pr[\Ext^{S}_{\mathsf{D}} \Rightarrow 1] - 1 ,
+  \qquad
+  \Adv^{\extp}_{\calK,\calD,\calR}(S,\mathsf{D}) := 2\Pr[\Extp^{S}_{\mathsf{D}} \Rightarrow 1] - 1 .
+\]
+A source $S$ is \emph{$\epsilon$-unpredictable} if
+$\Adv^{\pred}_{\calK,\calD,\calR,S}(P) \le \epsilon$ for every unbounded predictor $P$.
+
+\begin{conjecture}[Secret seed]\label{conj:stmt-secret}
+There is a universal constant $c > 0$, independent of $\calK$, $\calD$, $\calR$ and $\epsilon$, such
+that for all nonempty finite $\calK, \calD, \calR$, all $\epsilon \in (0,1]$, every
+$\epsilon$-unpredictable source $S$ and every unbounded distinguisher $\mathsf{D}$,
+\[
+  \Adv^{\ext}_{\calK,\calD,\calR}(S,\mathsf{D})
+  \;\le\; \delta(\epsilon, K, D, R)
+  \;:=\; c \cdot \sqrt{\frac{\epsilon R + \log_2 D}{K}} \; .
+\]
+\end{conjecture}
+
+\begin{conjecture}[Public seed]\label{conj:stmt-pub}
+There is a universal constant $c > 0$, independent of $\calK$, $\calD$, $\calR$ and $\epsilon$, such
+that for all nonempty finite $\calK, \calD, \calR$, all $\epsilon \in (0,1]$, every
+$\epsilon$-unpredictable source $S$ and every unbounded distinguisher $\mathsf{D}$,
+\[
+  \Adv^{\extp}_{\calK,\calD,\calR}(S,\mathsf{D})
+  \;\le\; \delta_{\mathrm{pub}}(\epsilon, K, D, R)
+  \;:=\; c \cdot \Bigl( \sqrt{\epsilon R} + \sqrt{\frac{\log_2 D}{K}} \,\Bigr) .
+\]
+\end{conjecture}
+
+\noindent
+Conjecture~\ref{conj:stmt-pub} is what this note settles: it holds with $c = 2$
+(Corollary~\ref{cor:pub}), as a consequence of the sharper Theorem~\ref{thm:main}.
+Conjecture~\ref{conj:stmt-secret} is a statement about the hidden-seed game $\Gm\ \Ext$, is not
+addressed here, and remains open.
 
 \section{Introduction}\label{sec:intro}
 
@@ -83,12 +154,13 @@ This note revisits the secret-seed conjecture of the statement note under the on
 seed $\sd$ is given to the distinguisher. That game is written $\Gm\ \Extp$ and its advantage
 $\Adv^{\extp}$, with the suffix carried everywhere, so that no statement here can be mistaken for
 a statement about the hidden-seed game $\Gm\ \Ext$ of the companion notes; both are set out in
-Figure~\ref{fig:games} and Definition~\ref{def:games}. The conjecture below is the statement
-note's secret-seed conjecture, stated there for $\Adv^{\ext}$, transposed verbatim to
-$\Adv^{\extp}$. The statement note also poses a separate, weaker conjecture for the public-seed
-game; that one is treated in Corollary~\ref{cor:pub} and is not refuted.
+Figure~\ref{fig:games} and Definition~\ref{def:games}. The conjecture below is
+Conjecture~\ref{conj:stmt-secret}, the statement note's secret-seed conjecture, stated there for
+$\Adv^{\ext}$ and transposed verbatim to $\Adv^{\extp}$. It is not
+Conjecture~\ref{conj:stmt-pub}, the separate and weaker conjecture that note poses for the
+public-seed game; that one is treated in Corollary~\ref{cor:pub} and is not refuted.
 
-\begin{conjecture}[companion note, transposed to the public-seed game]\label{conj:main}
+\begin{conjecture}[Conjecture~\ref{conj:stmt-secret} transposed to the public-seed game]\label{conj:main}
 There is a universal constant $c > 0$, independent of $\calK$, $\calD$, $\calR$ and $\epsilon$, such
 that for all nonempty finite $\calK, \calD, \calR$, all $\epsilon \in (0,1]$, every
 $\epsilon$-unpredictable source $S$ and every unbounded distinguisher $\mathsf{D}$,
@@ -116,9 +188,9 @@ hidden-seed argument; the second is sensitive to the source's entropy and is the
 whenever $D$ is large or $\epsilon$ is near its minimum $1/D$, where it has no $\log D$ in it at
 all. In the closed form of Conjecture~\ref{conj:main} the correct statement is
 $\Adv^{\extp} \le c\sqrt{\epsilon R + \log_2 D / K}$, with the $1/K$ attached to the selection term
-alone, and $c = 2$ still suffices. Third, the statement note's own public-seed conjecture, which
-already attaches the $1/K$ to the selection term, follows from Theorem~\ref{thm:main} with
-$c = 2$ (Corollary~\ref{cor:pub}); so what
+alone, and $c = 2$ still suffices. Third, Conjecture~\ref{conj:stmt-pub}, the statement note's own
+public-seed conjecture, which already attaches the $1/K$ to the selection term, follows from
+Theorem~\ref{thm:main} with $c = 2$ (Corollary~\ref{cor:pub}); so what
 Proposition~\ref{prop:false} refutes is the transposition, not that conjecture. Sections and lemmas are kept in one-to-one correspondence with
 the hidden-seed note so that the two can be read against each other.
 
@@ -412,8 +484,10 @@ entropy-sensitive $\ln(2eD\epsilon)$, and \eqref{eq:main-sharp} pays an additive
 $\tfrac{9}{10\sqrt{K}}$ for the exchange.
 \end{theoremstar}
 
-The statement note poses two conjectures, one for each game, and only the first is refuted here.
-Its public-seed conjecture is not Conjecture~\ref{conj:main} but the weaker
+The statement note poses two conjectures, one for each game, and neither of them is refuted here:
+what Proposition~\ref{prop:false} kills is Conjecture~\ref{conj:main}, the transposition of the
+secret-seed Conjecture~\ref{conj:stmt-secret} to the public-seed game. That note's own
+public-seed conjecture is the weaker Conjecture~\ref{conj:stmt-pub},
 \begin{equation}\label{eq:pubconj}
   \Adv^{\extp}_{\calK,\calD,\calR}(S,\mathsf{D})
   \;\le\; c\Bigl(\sqrt{\epsilon R} \;+\; \sqrt{\tfrac{\log_2 D}{K}}\Bigr) ,

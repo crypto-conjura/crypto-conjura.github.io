@@ -114,6 +114,37 @@ code {
   min-width: 0;
 }
 
+// Same grid min-width:auto issue, on page-layout:article pages instead
+// (every c/000N statement, open-problems/papers/uc leaf page): a wide
+// element (a long display equation, a data table) stops the main content
+// grid track from shrinking to the viewport, widening the whole page
+// rather than letting the offending element scroll on its own.
+.page-columns.page-layout-article main.content {
+  min-width: 0;
+}
+
+// Fix: a MathJax display equation wider than its column (common on narrow
+// mobile viewports -- e.g. the corrected-bound theorem on c/0004) renders
+// its inner mjx-math box past the mjx-container's own width with
+// overflow-x left at the browser default of visible, which widens the
+// whole page rather than just that equation. Scope the scrollbar to the
+// equation itself instead.
+mjx-container[jax="CHTML"][display="true"] {
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+}
+
+// Fix: a plain markdown/pandoc table wider than its column (e.g. the
+// parameter-lattice tables on c/0001-c/0003) doesn't wrap or scroll on its
+// own by default, widening the whole page on narrow viewports instead.
+// display:block lets a table establish its own scrollable box; the
+// header/body/row children still render as an ordinary table internally.
+table.table {
+  display: block;
+  overflow-x: auto;
+}
+
 // Landing page only: cap the hero and intro paragraph at a readable
 // measure even though the page itself is full-width (no sidebar/TOC).
 .cj-hero {

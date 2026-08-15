@@ -1,0 +1,1222 @@
+% ============================================================================
+% uc-functionalities-standalone.tex
+%
+% An encyclopedia of UC ideal functionalities, ordered by dependency depth.
+%
+% SELF-CONTAINED.  No .bib file and no bibtex run are required.
+%
+% Compile with:  pdflatex uc-functionalities-standalone
+%                pdflatex uc-functionalities-standalone
+%
+% Two passes are needed: the first writes citation labels and longtable column
+% widths to the .aux, the second consumes them.  A single pass leaves citation
+% marks as [?] and may misalign the table.
+%
+% The bibliography is inlined as a thebibliography environment at the end of
+% this file.  Each \bibitem carries a trailing comment recording how its
+% bibliographic data was checked:
+%
+%   status:verified      cross-checked against DBLP, the publisher record,
+%                        or the IACR ePrint archive
+%   status:cross-checked two independent published bibliographies agree
+%   status:from-canon    transcribed from the UC framework reference list
+%   status:from-list2    transcribed from the IITM model reference list
+%   status:UNVERIFIED    one or more fields need checking before use
+%
+% Grep for UNVERIFIED to list the entries that still need attention.
+% ============================================================================
+
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=2.2cm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+
+% ---------------------------------------------------------------------------
+% Macros
+% ---------------------------------------------------------------------------
+
+% A functionality name.  \Func{COM} typesets F_COM in the standard style.
+\newcommand{\Func}[1]{\ensuremath{\mathcal{F}_{\mathsf{#1}}}}
+
+% A global (shared-state) functionality.
+\newcommand{\GFunc}[1]{\ensuremath{\mathcal{G}_{\mathsf{#1}}}}
+
+% A modifier applied to a functionality, for the modifier index.
+\newcommand{\Mod}[1]{\textsc{#1}}
+
+% Status markers.  Redefine these to change the notation globally.
+\newcommand{\StS}{\ensuremath{\mathsf{S}}}   % idealized setup
+\newcommand{\StC}{\ensuremath{\mathsf{C}}}   % canonical
+\newcommand{\StE}{\ensuremath{\mathsf{E}}}   % emerging
+\newcommand{\StO}{\ensuremath{\mathsf{O}}}   % open
+
+% Table layout.
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+
+\title{Ideal Functionalities in the {UC} Framework:\\
+       An Encyclopedia in Dependency Order}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section{Scope and ordering principle}
+
+This document indexes 100 ideal functionalities of the universal composability
+framework \cite{c01,c20}. Entries are ordered by \emph{dependency depth}
+rather than by importance or by chronology: Layer 0 collects what must be
+assumed, and each subsequent layer is realizable, at least in principle, from
+functionalities appearing earlier.
+
+Two conventions require comment.
+
+First, a primitive earns an entry when it exposes a party-facing interface
+whose ideal behavior can be stated independently of any implementation. Local
+hardness-based primitives such as one-way functions and pseudorandom
+generators fail this test: there is no cross-party interface to idealize, and
+the composition theorem yields nothing that a hybrid argument does not already
+give. They appear below only so that their absence is recorded explicitly. The
+partial exception is \Func{crypto} \cite{kt11,bpw03}, which is worth having
+precisely because keys are reused across sessions, that is, only once joint
+state is present.
+
+Second, several entries in the framework literature are not functionalities
+but \emph{modifiers} applied to existing ones. These are collected separately
+in Section~\ref{sec:modifiers}, because the cross product of modifiers and
+functionalities generates coverage far more economically than a flat list.
+
+\subsection*{Status markers}
+
+\begin{description}[leftmargin=2.4em,style=nextline,itemsep=0.15em]
+  \item[\StS] Idealized setup. Not realizable in the plain model; assumed
+    rather than constructed.
+  \item[\StC] Canonical. An established functionality with a widely cited
+    reference definition.
+  \item[\StE] Emerging. A UC treatment exists but the formulation is not yet
+    standardized, or competing formulations coexist.
+  \item[\StO] Open. No established UC formulation. Writing one is a research
+    contribution, not a citation.
+\end{description}
+
+\noindent
+Entries marked \StO{} carry no reference. Where a reference is marked with a
+dagger ($\dagger$), the bibliography entry needs independent verification
+before use; see the \texttt{note} fields in the companion \texttt{.bib} file.
+
+% ---------------------------------------------------------------------------
+\section{The index}
+
+{\small
+\begin{longtable}{@{}r L{3.1cm} L{5.5cm} c L{4.0cm}@{}}
+\toprule
+\# & Functionality & Reading & St. & References \\
+\midrule
+\endfirsthead
+\toprule
+\# & Functionality & Reading & St. & References \\
+\midrule
+\endhead
+\midrule
+\multicolumn{5}{r}{\itshape continued on next page} \\
+\endfoot
+\bottomrule
+\endlastfoot
+
+\multicolumn{5}{@{}l}{\textbf{Layer 0. Idealized setup and resources}} \\[0.3em]
+1  & \Func{CRS}       & Common reference string            & \StS & \cite{c01,clos02} \\
+2  & \Func{ACRS}      & Augmented CRS, ``sunspots''        & \StS & \cite{cdpw07} \\
+3  & \Func{PKI}       & Public-key infrastructure          & \StS & \cite{c04} \\
+4  & \GFunc{PKI}      & Global, non-encapsulated PKI       & \StS & \cite{csv16} \\
+5  & \Func{REG}, \Func{KRK} & Key registration, with knowledge & \StS & \cite{bcnp04} \\
+6  & \Func{CERT}      & Certification authority            & \StS & \cite{c04} \\
+7  & \Func{RO}        & Local random oracle                & \StS & \cite{n02} \\
+8  & \GFunc{RO}       & Global RO: observable, programmable, restricted & \StC & \cite{cjs14,cdgln18} \\
+9  & \GFunc{clock}    & Clock                              & \StS & \cite{kmtz13} \\
+10 & \Func{syn}       & Bounded-delay network              & \StS & \cite{kmtz13} \\
+11 & \Func{clocksync} & Dynamic ad hoc clock synchronization & \StC & \cite{bgkrz21} \\
+12 & \Func{nettime}   & Attackable network time service    & \StC & \cite{chmv17} \\
+13 & \Func{RP}        & Ideal cipher, two-sided permutation & \StS & --- \\
+14 & \GFunc{GG}       & Generic group, global observable variant; bilinear types 1--3 & \StS & \cite{bfkt24} \\
+15 & \Func{wrap}      & Tamper-proof hardware token        & \StS & \cite{glmmr04,katz07} \\
+16 & \Func{PUF}       & Physically uncloneable function    & \StS & \cite{bfsk11} \\
+17 & \Func{leak}      & Leakage, physically observable computation & \StS & \cite{mr04,bch12} \\
+\addlinespace[0.5em]
+
+\multicolumn{5}{@{}l}{\textbf{Layer 1. Channels, agreement, ledgers}} \\[0.3em]
+18 & \Func{auth}      & Authenticated transmission         & \StC & \cite{c04,bck98} \\
+19 & \Func{smt}       & Secure message transmission        & \StC & \cite{pw01,c01} \\
+20 & \Func{sc}        & Session secure channel             & \StC & \cite{ck02} \\
+21 & \Func{split}     & Unauthenticated channels, split adversary & \StC & \cite{bclpr11} \\
+22 & \Func{dauth}     & On-line deniable authentication    & \StC & \cite{dksw09} \\
+23 & \Func{diffuse}   & Diffusion, gossip channel          & \StC & \cite{bgkrz18} \\
+24 & \Func{rbc}       & Reliable broadcast                 & \StC & \cite{bcg93} \\
+25 & \Func{BC}        & Broadcast                          & \StC & \cite{c01,hz10,gkkz11} \\
+26 & \Func{BA}        & Byzantine agreement                & \StC & \cite{llr02} \\
+27 & \Func{ABA}       & Asynchronous Byzantine agreement   & \StC & \cite{cr93} \\
+28 & \Func{ledger}    & Transaction ledger                 & \StC & \cite{bmtz17} \\
+29 & \GFunc{ledger}   & Global ledger, irreplaceability    & \StC & \cite{bhz21} \\
+30 & \Func{certmail}  & Certified mail                     & \StE & \cite{psw00a} \\
+\addlinespace[0.5em]
+
+\multicolumn{5}{@{}l}{\textbf{Layer 2. Cryptographic library and symmetric primitives}} \\[0.3em]
+31 & \Func{crypto}    & Joint-state cryptographic library  & \StC & \cite{kt11,kt08,bpw03,ch11} \\
+32 & \Func{SE}        & Symmetric encryption, stream cipher & \StC & \cite{kt09,bpw03} \\
+33 & \Func{AE}        & Authenticated encryption, on-line AE & \StC & \cite{bpw03} \\
+34 & \Func{fsAEAD}    & Forward-secure AEAD                & \StC & \cite{cjsv22} \\
+35 & \Func{MAC}       & Message authentication code        & \StC & \cite{bpw03} \\
+36 & \Func{KDF}       & Key derivation                     & \StC & \cite{kt11} \\
+37 & \Func{OWF}       & One-way function                   & \StO & --- \\
+38 & \Func{PRG}       & Pseudorandom generator             & \StO & --- \\
+39 & \Func{PRF}, \Func{PRP} & Pseudorandom function, permutation & \StE & \cite{kt11} \\
+40 & \Func{CRHF}      & Collision-resistant hashing        & \StO & --- \\
+41 & \Func{MHF}       & Memory-hard function, password hashing & \StO & --- \\
+\addlinespace[0.5em]
+
+\multicolumn{5}{@{}l}{\textbf{Layer 3. Public-key primitives, key exchange, messaging}} \\[0.3em]
+42 & \Func{PKE}       & Public-key encryption, KEM         & \StC & \cite{c01,gm84,kt08} \\
+43 & \Func{rPKE}      & Replayable CCA relaxation          & \StC & \cite{ckn03} \\
+44 & \Func{NCE}       & Non-committing encryption          & \StC & \cite{cfgn96,b97,n02} \\
+45 & \Func{aPKE}      & Adaptively secure non-interactive PKE & \StC & \cite{chk05} \\
+46 & \Func{SIG}       & Digital signature                  & \StC & \cite{c04,bh04,kt08} \\
+47 & \Func{adsig}     & Adaptor signature                  & \StC & \cite{grs25} \\
+48 & \Func{KE}        & Key exchange, authenticated KE     & \StC & \cite{ck01,br93} \\
+49 & \Func{DH}        & Ideal Diffie-Hellman exponentiation & \StC & \cite{kr17} \\
+50 & \Func{pwKE}      & Password-authenticated KE          & \StC & \cite{chklm05,gl01} \\
+51 & \Func{aPAKE}     & Asymmetric PAKE                    & \StC & \cite{jkx18} \\
+52 & \Func{saPAKE}    & Strong asymmetric PAKE             & \StC & \cite{jkx18} \\
+53 & \Func{PHE}       & Password-hardened encryption, threshold, key rotation & \StC & \cite{abgg25} \\
+54 & \Func{CKE}       & Continuous KE, asymmetric ratchet  & \StC & \cite{cjsv22} \\
+55 & \Func{secmsg}    & End-to-end secure messaging        & \StC & \cite{cjsv22} \\
+56 & \Func{CGKA}      & Continuous group key agreement     & \StE & \cite{acdt20}$\dagger$ \\
+57 & \Func{IBE}       & Identity-based encryption          & \StE & --- \\
+58 & \Func{ABE}       & Attribute-based encryption         & \StE & --- \\
+59 & \Func{FE}        & Functional, predicate encryption   & \StO & \cite{bsw11} \\
+60 & \Func{FHE}       & Threshold FHE decryption & \StC & \cite{zzlp25} \\
+61 & \Func{obf}       & Obfuscation, split VBB, iO         & \StO & \cite{barakvbb01,cgp15} \\
+\addlinespace[0.5em]
+
+\multicolumn{5}{@{}l}{\textbf{Layer 4. Commitments and proofs}} \\[0.3em]
+62 & \Func{COM}       & Commitment                         & \StC & \cite{cf01} \\
+63 & \Func{MCOM}      & Multi-session commitment           & \StC & \cite{cf01} \\
+64 & \Func{NMCOM}     & Non-malleable commitment           & \StC & \cite{dio98,ff00} \\
+65 & \Func{eqv}       & Equivocal, adaptively secure commitment & \StC & \cite{b96} \\
+66 & \Func{CP}        & Commit-and-prove                   & \StC & \cite{clos02} \\
+67 & \Func{ZK}        & Zero knowledge                     & \StC & \cite{clos02,gmra89} \\
+68 & \Func{NIZK}      & Non-interactive zero knowledge     & \StC & \cite{gos12,rs91} \\
+69 & \Func{SNARK}     & Witness-succinct UC NIZK & \StC & \cite{gkoptt23,cf24,cocoa15} \\
+70 & \Func{acc}       & Accumulator, vector commitment     & \StC & \cite{bcy20} \\
+\addlinespace[0.5em]
+
+\multicolumn{5}{@{}l}{\textbf{Layer 5. Oblivious transfer and correlated randomness}} \\[0.3em]
+71 & \Func{OT}        & Oblivious transfer                 & \StC & \cite{r81,egl85,gm00,pvw08} \\
+72 & \Func{COT}, \Func{ROT} & Correlated, random OT        & \StC & \cite{kos16}$\dagger$ \\
+73 & \Func{OLE}       & Oblivious linear evaluation        & \StE & \cite{bcgi18}$\dagger$ \\
+74 & \Func{OPRF}      & Oblivious PRF                      & \StC & \cite{jkk14}$\dagger$ \\
+75 & \Func{GC}        & Garbled circuit                    & \StE & --- \\
+76 & \Func{PSI}       & Private set intersection           & \StE & --- \\
+77 & \Func{PIR}       & Private information retrieval      & \StO & --- \\
+78 & \Func{ORAM}      & Oblivious RAM                      & \StO & --- \\
+\addlinespace[0.5em]
+
+\multicolumn{5}{@{}l}{\textbf{Layer 6. Secret sharing, threshold cryptography, MPC}} \\[0.3em]
+79 & \Func{VSS}       & Verifiable secret sharing          & \StC & \cite{af04,grr98} \\
+80 & \Func{DKG}       & Distributed key generation         & \StC & \cite{wikstrom04} \\
+81 & \Func{thdec}     & Threshold decryption               & \StC & \cite{af04,dn03} \\
+82 & \Func{TSIG}      & Threshold signature                & \StC & \cite{cggmp20} \\
+83 & \Func{ABB}       & Arithmetic black box               & \StC & \cite{dn03}$\dagger$ \\
+84 & \Func{SFE}       & Two-party secure function evaluation & \StC & \cite{y82b,gmw87} \\
+85 & \Func{MPC}       & $n$-party secure computation       & \StC & \cite{clos02,bgw88} \\
+86 & \Func{fairSFE}   & Guaranteed output delivery         & \StC & \cite{gl90,hm00} \\
+87 & \Func{asyncMPC}  & Asynchronous MPC                   & \StC & \cite{bcg93,bkr94} \\
+88 & \Func{incoerc}   & Incoercible, receipt-free computation & \StC & \cite{cg96} \\
+89 & \Func{coin}      & Coin tossing                       & \StC & \cite{b82} \\
+90 & \Func{beacon}    & Randomness beacon                  & \StC & \cite{craft23}$\dagger$ \\
+\addlinespace[0.5em]
+
+\multicolumn{5}{@{}l}{\textbf{Layer 7. Privacy and anonymity}} \\[0.3em]
+91 & \Func{mix}       & Mix-net, verifiable shuffle        & \StC & \cite{w05} \\
+92 & \Func{gsig}      & Group signature                    & \StE & \cite{w05} \\
+93 & \Func{bsig}      & Blind signature & \StC & \cite{fischlin06,ao12} \\
+94 & \Func{rsig}      & Ring signature & \StC & \cite{yo07}$\dagger$, \cite{bdw22} \\
+95 & \Func{cred}      & Anonymous credential, DAA          & \StC & \cite{cdl16} \\
+96 & \Func{onion}     & Onion routing                      & \StC & \cite{cl05} \\
+97 & \Func{VRF}       & Verifiable random function         & \StC & \cite{dgkr18} \\
+\addlinespace[0.5em]
+
+\multicolumn{5}{@{}l}{\textbf{Layer 8. Time and application composites}} \\[0.3em]
+98 & \Func{TLP}       & Time-lock puzzle, verifiable delay function & \StC & \cite{tardis21,rsw96} \\
+99 & \Func{chan}     & State channel, virtual channel     & \StC & \cite{dfh18,defhh19} \\
+100& \Func{vote}      & Self-tallying election & \StC & \cite{ecclesia25} \\
+\end{longtable}
+}
+
+% ---------------------------------------------------------------------------
+\section{Modifier index}
+\label{sec:modifiers}
+
+Each modifier is a transformation on functionalities rather than a
+functionality in its own right. Applied to the index above, the seven entries
+below generate several hundred distinct specifications, which is why they
+belong in a separate table.
+
+\begin{center}
+\begin{tabular}{@{}L{3.4cm} L{7.4cm} L{3.6cm}@{}}
+\toprule
+Modifier & Effect on \Func{X} & References \\
+\midrule
+\Mod{split} & Replicates \Func{X} across adversarial network partitions; no
+  authenticated setup & \cite{bclpr11} \\
+\Mod{leaky} & Adds a leakage interface exposing a bounded function of honest
+  state & \cite{bch12,mr04} \\
+\Mod{incoercible} & Adds a fake-transcript interface so that inputs cannot be
+  proved after the fact & \cite{cg96} \\
+\Mod{deniable} & Removes simulator-side evidence of participation &
+  \cite{dksw09} \\
+\Mod{fair} & Removes adversarial abort; guarantees output delivery &
+  \cite{gl90,hm00} \\
+\Mod{adaptive} & Admits post-hoc corruption with state disclosure &
+  \cite{cfgn96,b96} \\
+\Mod{replayable} & Weakens the security relation, for example CCA to rCCA &
+  \cite{ckn03} \\
+\Mod{joint state} & Lets many sessions share one instance of \Func{X}, with
+  local computation & \cite{cr03,kt08} \\
+\Mod{SID-free} & Removes the pre-established session identifier that joint-state
+  composition normally assumes & \cite{kt11ccs,blr04} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+% ---------------------------------------------------------------------------
+\section{Notes on coverage}
+
+\paragraph{Where the open entries cluster.}
+The \StO{} markers fall almost entirely in Layer 2 and in the functional
+encryption band of Layer 3. This is structural rather than accidental. Layer 2
+consists of local computations with no inter-party interface. The functional
+encryption band concerns what a key holder learns from a ciphertext, and
+simulation-based security there is impossible in general for unbounded key
+queries \cite{bsw11}. Entry 42 sits on the boundary between the two: the
+security statement for a memory-hard function is a cost lower bound rather
+than an indistinguishability, so it resists UC formulation for a third reason
+again.
+
+\paragraph{Realizability boundaries worth recording alongside each entry.}
+\Func{COM}, \Func{ZK}, \Func{OT} and most of \Func{SFE} are unrealizable in
+the plain model \cite{cf01,ckl06}. \Func{BC} as usually written is not
+realizable against adaptive adversaries, and must be weakened
+\cite{hz10,gkkz11}. \Func{coin} with guaranteed output is unrealizable for two
+parties, so the abort variant is the operative one. \Func{smt} under adaptive
+corruption requires non-committing encryption \cite{cfgn96}, which is the same
+commitment problem that blocks naive symmetric-encryption functionalities.
+
+\paragraph{Coverage sweep, 2022 to 2026.}
+Recent work was located by web search and by querying the IACR ePrint archive;
+Google Scholar blocks automated queries, so no claim of exhaustiveness is made
+here, and the sweep is biased toward papers whose titles announce composability.
+It changed the table in five places rather than merely adding rows. Threshold
+FHE decryption \cite{zzlp25} moves \Func{FHE} from open to canonical, retiring one
+of the longest-standing gaps. Password-hardened encryption \cite{abgg25} enters
+as a new category adjacent to \Func{MHF}: it is the one
+recent functionality that touches password hashing, and the same paper reports a
+flaw in the proof of an earlier threshold construction. Adaptor signatures
+\cite{grs25} enter as \Func{adsig}. Ring signatures \cite{yo07,bdw22} and
+self-tallying elections \cite{ecclesia25} acquire anchors they previously
+lacked. Most consequentially, the global restricted observable generic group of
+\cite{bfkt24} now anchors \GFunc{GG}, which had no reference at all: it stands to
+the plain generic group exactly as \GFunc{RO} stands to \Func{RO}, and it
+establishes UC security of a deployed proof system without asymptotic overhead.
+The complementary result that some deployed zkSNARKs are unconditionally
+UC-secure in the random oracle model \cite{cf24} strengthens \Func{SNARK}.
+
+Two merges preserved the count. The bilinear group models fold into \GFunc{GG},
+since a bilinear group is a generic group with a pairing and the observable
+global functionality generalizes both. Verifiable delay functions fold into
+\Func{TLP}. Both follow the practice already used for
+\Func{PRF} with \Func{PRP} and for \Func{COT} with \Func{ROT}. The merges are
+lossy in one respect worth recording: a verifiable delay function is publicly
+verifiable and a time-lock puzzle need not be, so the row understates a real
+distinction.
+
+\paragraph{Deliberate exclusions.}
+Witness encryption, aggregate and multi-signatures, fair exchange, electronic
+cash, cross-chain bridges, and composable analyses of operating-system
+services \cite{cplus11} were cut to hold the count at 100. Each is a
+reasonable candidate; none has a settled functionality that would displace an
+entry above.
+
+\paragraph{Two source bibliographies.}
+Entries are anchored against two published reference lists: that of the UC
+framework paper \cite{c01,c20}, and that of the IITM model paper
+\cite{kt13,k06}. The second contributes one new functionality, ideal
+Diffie-Hellman exponentiation \cite{kr17}, which is the realizable counterpart
+to assuming a generic-group setup and therefore now anchors \GFunc{GG} as well as
+\Func{DH}. It also supplies the joint-state theorems for encryption and
+signatures with local computation \cite{kt08} and their
+session-identifier-free refinement \cite{kt11ccs}, both of which enter the
+modifier index rather than the main table. Where the two lists overlap they
+agree on page and volume data for seven entries, which are marked
+\texttt{status:cross-checked} in the companion \texttt{.bib} file. They diverge
+once: the UC list cites Canetti and Herzog's J. Cryptology 24(1) article, the
+IITM list a distinct TCC 2006 paper \cite{ch06}. Both are retained.
+
+Two entries were displaced to hold the count at 100. Quantum and classical
+composability \cite{bm04} is a framework variant rather than a functionality and
+moves to the paragraph above. Witness encryption remains excluded for the reason
+given earlier.
+
+\paragraph{Defects in the source reference list.}
+Four issues in the attached UC bibliography affect anyone mining it for
+citation keys. The entry keyed \texttt{[b01]} has an empty author surname; the
+author is Barak \cite{barak01}. The key \texttt{[y82]} is used twice, for
+\emph{Theory and Applications of Trapdoor Functions} and for \emph{Protocols
+for Secure Computation}, both FOCS 1982; they are split here into
+\texttt{y82a} and \texttt{y82b}. The entry \texttt{[bpw07]} appears twice
+verbatim across a page break. Finally, \texttt{[cdpw07]} is titled
+\emph{Universally Composable Security with Pre-Existing Setup}, whereas the
+published TCC 2007 title reads \emph{with Global Setup}; a title variant
+rather than an error, but it will not match a DBLP lookup.
+
+\paragraph{Framework variants and further limitations.}
+Retained in the bibliography without a table entry, since they bear on how any
+of the above is stated rather than on what is stated: joint-state composition
+\cite{cr03,kt08} and its session-identifier-free refinement
+\cite{kt11ccs,blr04}, global subroutines \cite{bchtz20}, the simplified variant
+for standard MPC \cite{ccl15}, the IITM model \cite{k06,kt13}, GNUC \cite{hs11}
+and SUC \cite{w16}, RSIM \cite{bpw07}, task-PIOAs \cite{cckllps06}, abstract and
+constructive cryptography \cite{mr11,maurer11}, local adversaries \cite{cv12},
+quantum and classical composability \cite{bm04}, the runtime notions
+\cite{hmqu05}, the comparison of simulatability notions \cite{kdmr08}, the
+realizability obstruction for game-derived functionalities \cite{ddmrs06}, the
+incompleteness of oblivious transfer in a synchronous model \cite{hm04a}, the
+trusted-setup-free relaxations \cite{ps04,bs05}, and symbolic analysis
+\cite{ch06}. Trapdoor functions \cite{y82a} are listed to resolve the key
+collision noted above.
+
+% ---------------------------------------------------------------------------
+% Bibliography, inlined.  Generated by bibtex from uc-functionalities.bib
+% with bibliographystyle{plain}, then annotated with verification status.
+% To regenerate: restore \bibliographystyle/\bibliography and rerun bibtex.
+% ---------------------------------------------------------------------------
+
+\begin{thebibliography}{100}
+
+\bibitem{abgg25}                % status:verified
+Behzad Abdolmaleki, Ruben Baecker, Paul Gerhart, Mike Graf, Mojtaba Khalili,
+  Daniel Rausch, and Dominique Schr{\"o}der.
+\newblock Universally composable password-hardened encryption.
+\newblock Cryptology ePrint Archive, Paper 2025/1647, 2025.
+
+\bibitem{af04}                  % status:verified
+Masayuki Abe and Serge Fehr.
+\newblock Adaptively secure feldman {VSS} and applications to
+  universally-composable threshold cryptography.
+\newblock In {\em Advances in Cryptology -- CRYPTO 2004}, pages 317--334, 2004.
+
+\bibitem{ao12}                  % status:verified
+Masayuki Abe and Miyako Ohkubo.
+\newblock A framework for universally composable non-committing blind
+  signatures.
+\newblock {\em International Journal of Applied Cryptography}, 2(3):229--249,
+  2012.
+
+\bibitem{ecclesia25}            % status:verified
+L{\'e}o Ackermann, Myrto Arapinis, Pavlos Georgiou, Nikolaos Lamprou, Lenka
+  Mare{\v k}ov{\'a}, and Thomas Zacharias.
+\newblock E-cclesia: Universally composable self-tallying elections over
+  anonymous broadcast.
+\newblock {\em IACR Communications in Cryptology}, 2(3), 2025.
+
+\bibitem{acdt20}                % status:UNVERIFIED
+Jo{\"e}l Alwen, Sandro Coretti, Yevgeniy Dodis, and Yiannis Tselekounis.
+\newblock Security analysis and improvements for the {IETF} {MLS} standard for
+  group messaging.
+\newblock In {\em Advances in Cryptology -- CRYPTO 2020}, 2020.
+
+\bibitem{bh04}                  % status:verified
+Michael Backes and Dennis Hofheinz.
+\newblock How to break and repair a universally composable signature
+  functionality.
+\newblock In {\em Information Security Conference (ISC)}, 2004.
+
+\bibitem{bpw03}                 % status:from-canon
+Michael Backes, Birgit Pfitzmann, and Michael Waidner.
+\newblock A composable cryptographic library with nested operations.
+\newblock In {\em 10th ACM Conference on Computer and Communications Security
+  (CCS)}, 2003.
+\newblock Extended version: ePrint 2003/015.
+
+\bibitem{bpw07}                 % status:from-canon
+Michael Backes, Birgit Pfitzmann, and Michael Waidner.
+\newblock The reactive simulatability ({RSIM}) framework for asynchronous
+  systems.
+\newblock {\em Information and Computation}, 205(12):1685--1720, 2007.
+
+\bibitem{bchtz20}               % status:verified
+Christian Badertscher, Ran Canetti, Julia Hesse, Bj{\"o}rn Tackmann, and
+  Vassilis Zikas.
+\newblock Universal composition with global subroutines: Capturing global setup
+  within plain {UC}.
+\newblock In {\em 18th Theory of Cryptography Conference (TCC), Part III},
+  volume 12552 of {\em LNCS}, pages 1--30, 2020.
+
+\bibitem{bgkrz18}               % status:verified
+Christian Badertscher, Peter Ga{\v z}i, Aggelos Kiayias, Alexander Russell, and
+  Vassilis Zikas.
+\newblock Ouroboros genesis: Composable proof-of-stake blockchains with dynamic
+  availability.
+\newblock In {\em ACM Conference on Computer and Communications Security
+  (CCS)}, pages 913--930, 2018.
+
+\bibitem{bgkrz21}               % status:verified
+Christian Badertscher, Peter Ga{\v z}i, Aggelos Kiayias, Alexander Russell, and
+  Vassilis Zikas.
+\newblock Dynamic ad hoc clock synchronization.
+\newblock In {\em Advances in Cryptology -- EUROCRYPT 2021}, volume 12698 of
+  {\em LNCS}, pages 399--428, 2021.
+
+\bibitem{bhz21}                 % status:verified
+Christian Badertscher, Julia Hesse, and Vassilis Zikas.
+\newblock On the (ir)replaceability of global setups, or how (not) to use a
+  global ledger.
+\newblock In {\em 19th Theory of Cryptography Conference (TCC), Part II}, 2021.
+\newblock ePrint 2020/1489.
+
+\bibitem{bmtz17}                % status:verified
+Christian Badertscher, Ueli Maurer, Daniel Tschudi, and Vassilis Zikas.
+\newblock Bitcoin as a transaction ledger: A composable treatment.
+\newblock In {\em Advances in Cryptology -- CRYPTO 2017}, 2017.
+
+\bibitem{bcy20}                 % status:verified
+Foteini Baldimtsi, Ran Canetti, and Sophia Yakoubov.
+\newblock Universally composable accumulators.
+\newblock In {\em Topics in Cryptology -- CT-RSA 2020}, volume 12006 of {\em
+  LNCS}, pages 638--666, 2020.
+\newblock ePrint 2018/1241. Proves equivalence with the game-based accumulator
+  definitions.
+
+\bibitem{barak01}               % status:verified
+Boaz Barak.
+\newblock How to go beyond the black-box simulation barrier.
+\newblock In {\em 42nd IEEE Symposium on Foundations of Computer Science
+  (FOCS)}, pages 106--115, 2001.
+
+\bibitem{bclpr11}               % status:from-canon
+Boaz Barak, Ran Canetti, Yehuda Lindell, Rafael Pass, and Tal Rabin.
+\newblock Secure computation without authentication.
+\newblock {\em Journal of Cryptology}, 24(4):720--760, 2011.
+
+\bibitem{bcnp04}                % status:from-canon
+Boaz Barak, Ran Canetti, Jesper~Buus Nielsen, and Rafael Pass.
+\newblock Universally composable protocols with relaxed set-up assumptions.
+\newblock In {\em 45th IEEE Symposium on Foundations of Computer Science
+  (FOCS)}, pages 186--195, 2004.
+
+\bibitem{barakvbb01}            % status:verified
+Boaz Barak, Oded Goldreich, Russell Impagliazzo, Steven Rudich, Amit Sahai,
+  Salil~P. Vadhan, and Ke~Yang.
+\newblock On the (im)possibility of obfuscating programs.
+\newblock In {\em Advances in Cryptology -- CRYPTO 2001}, 2001.
+\newblock Journal version: J. ACM 59(2), 2012.
+
+\bibitem{blr04}                 % status:from-list2
+Boaz Barak, Yehuda Lindell, and Tal Rabin.
+\newblock Protocol initialization for the framework of universal composability.
+\newblock Cryptology ePrint Archive, Report 2004/006, 2004.
+
+\bibitem{bs05}                  % status:from-canon
+Boaz Barak and Amit Sahai.
+\newblock How to play almost any mental game over the net: Concurrent
+  composition via super-polynomial simulation.
+\newblock In {\em 46th IEEE Symposium on Foundations of Computer Science
+  (FOCS)}, 2005.
+
+\bibitem{craft23}               % status:UNVERIFIED
+Carsten Baum, Bernardo David, Rafael Dowsley, Ravi Kishore, Jesper~Buus
+  Nielsen, and Sabine Oechsner.
+\newblock {CRAFT}: Composable randomness beacons and output-independent abort
+  {MPC} from time.
+\newblock In {\em Public-Key Cryptography (PKC)}, 2023.
+
+\bibitem{tardis21}              % status:verified
+Carsten Baum, Bernardo David, Rafael Dowsley, Jesper~Buus Nielsen, and Sabine
+  Oechsner.
+\newblock {TARDIS}: A foundation of time-lock puzzles in {UC}.
+\newblock In {\em Advances in Cryptology -- EUROCRYPT 2021, Part III}, volume
+  12698 of {\em LNCS}, pages 429--459, 2021.
+
+\bibitem{b96}                   % status:from-canon
+Donald Beaver.
+\newblock Adaptive zero-knowledge and computational equivocation.
+\newblock In {\em 28th ACM Symposium on Theory of Computing (STOC)}, 1996.
+
+\bibitem{b97}                   % status:from-canon
+Donald Beaver.
+\newblock Plug and play encryption.
+\newblock In {\em Advances in Cryptology -- CRYPTO 1997}, 1997.
+
+\bibitem{bck98}                 % status:from-canon
+Mihir Bellare, Ran Canetti, and Hugo Krawczyk.
+\newblock A modular approach to the design and analysis of authentication and
+  key exchange protocols.
+\newblock In {\em 30th ACM Symposium on Theory of Computing (STOC)}, 1998.
+
+\bibitem{br93}                  % status:from-canon
+Mihir Bellare and Phillip Rogaway.
+\newblock Entity authentication and key distribution.
+\newblock In {\em Advances in Cryptology -- CRYPTO 1993}, volume 773 of {\em
+  LNCS}, pages 232--249, 1994.
+
+\bibitem{bcg93}                 % status:from-canon
+Michael Ben-Or, Ran Canetti, and Oded Goldreich.
+\newblock Asynchronous secure computation.
+\newblock In {\em 25th ACM Symposium on Theory of Computing (STOC)}, pages
+  52--61, 1993.
+
+\bibitem{bgw88}                 % status:from-canon
+Michael Ben-Or, Shafi Goldwasser, and Avi Wigderson.
+\newblock Completeness theorems for non-cryptographic fault-tolerant
+  distributed computation.
+\newblock In {\em 20th ACM Symposium on Theory of Computing (STOC)}, pages
+  1--10, 1988.
+
+\bibitem{bkr94}                 % status:from-canon
+Michael Ben-Or, Boaz Kelmer, and Tal Rabin.
+\newblock Asynchronous secure computations with optimal resilience.
+\newblock In {\em 13th ACM Symposium on Principles of Distributed Computing
+  (PODC)}, pages 183--192, 1994.
+
+\bibitem{bm04}                  % status:from-canon
+Michael Ben-Or and Dominic Mayers.
+\newblock General security definition and composability for quantum and
+  classical protocols.
+\newblock arXiv:quant-ph/0409062, 2004.
+
+\bibitem{bch12}                 % status:from-canon
+Nir Bitansky, Ran Canetti, and Shai Halevi.
+\newblock Leakage-tolerant interactive protocols.
+\newblock In {\em 9th Theory of Cryptography Conference (TCC)}, pages 266--284,
+  2012.
+
+\bibitem{b82}                   % status:from-canon
+Manuel Blum.
+\newblock Coin flipping by telephone.
+\newblock In {\em IEEE Spring COMPCON}, pages 133--137, 1982.
+
+\bibitem{bfkt24}                % status:verified
+Jan Bobolz, Pooya Farshim, Markulf Kohlweiss, and Akira Takahashi.
+\newblock The brave new world of global generic groups and {UC}-secure
+  zero-overhead {SNARKs}.
+\newblock In {\em 22nd Theory of Cryptography Conference (TCC), Part I}, volume
+  15364 of {\em LNCS}, pages 90--124, 2024.
+\newblock ePrint 2024/818.
+
+\bibitem{bsw11}                 % status:verified
+Dan Boneh, Amit Sahai, and Brent Waters.
+\newblock Functional encryption: Definitions and challenges.
+\newblock In {\em 8th Theory of Cryptography Conference (TCC)}, 2011.
+
+\bibitem{bcgi18}                % status:UNVERIFIED
+Elette Boyle, Geoffroy Couteau, Niv Gilboa, and Yuval Ishai.
+\newblock Compressing vector {OLE}.
+\newblock In {\em ACM Conference on Computer and Communications Security
+  (CCS)}, 2018.
+
+\bibitem{bdw22}                 % status:verified
+Pedro Branco, Nico D{\"o}ttling, and Stella Wohnig.
+\newblock Universal ring signatures in the standard model.
+\newblock In {\em Advances in Cryptology -- ASIACRYPT 2022, Part IV}, volume
+  13794 of {\em LNCS}, pages 249--278, 2022.
+
+\bibitem{bfsk11}                % status:verified
+Christina Brzuska, Marc Fischlin, Heike Schr{\"o}der, and Stefan Katzenbeisser.
+\newblock Physically uncloneable functions in the universal composition
+  framework.
+\newblock In {\em Advances in Cryptology -- CRYPTO 2011}, 2011.
+
+\bibitem{cdgln18}               % status:verified
+Jan Camenisch, Manu Drijvers, Tommaso Gagliardoni, Anja Lehmann, and Gregory
+  Neven.
+\newblock The wonderful world of global random oracles.
+\newblock In {\em Advances in Cryptology -- EUROCRYPT 2018}, 2018.
+
+\bibitem{cdl16}                 % status:verified
+Jan Camenisch, Manu Drijvers, and Anja Lehmann.
+\newblock Universally composable direct anonymous attestation.
+\newblock In {\em Public-Key Cryptography (PKC)}, 2016.
+
+\bibitem{cl05}                  % status:verified
+Jan Camenisch and Anna Lysyanskaya.
+\newblock A formal treatment of onion routing.
+\newblock In {\em Advances in Cryptology -- CRYPTO 2005}, 2005.
+
+\bibitem{c01}                   % status:verified
+Ran Canetti.
+\newblock Universally composable security: A new paradigm for cryptographic
+  protocols.
+\newblock In {\em 42nd IEEE Symposium on Foundations of Computer Science
+  (FOCS)}, pages 136--145, 2001.
+\newblock Journal version: J. ACM 67(5), 2020.
+
+\bibitem{c04}                   % status:verified
+Ran Canetti.
+\newblock Universally composable signature, certification, and authentication.
+\newblock In {\em 17th IEEE Computer Security Foundations Workshop (CSFW)},
+  pages 219--233, 2004.
+\newblock Long version: ePrint 2003/239.
+
+\bibitem{c20}                   % status:verified
+Ran Canetti.
+\newblock Universally composable security.
+\newblock {\em Journal of the ACM}, 67(5):1--94, 2020.
+
+\bibitem{cplus11}               % status:from-canon
+Ran Canetti, Suresh Chari, Shai Halevi, Birgit Pfitzmann, Arnab Roy, Michael
+  Steiner, and Wietse Venema.
+\newblock Composable security analysis of {OS} services.
+\newblock In {\em Applied Cryptography and Network Security (ACNS)}, pages
+  431--448, 2011.
+
+\bibitem{cckllps06}             % status:from-list2
+Ran Canetti, Ling Cheung, Dilsun Kaynar, Moses Liskov, Nancy Lynch, Olivier
+  Pereira, and Roberto Segala.
+\newblock Time-bounded task-{PIOA}s: A framework for analyzing security
+  protocols.
+\newblock In {\em 20th International Symposium on Distributed Computing
+  (DISC)}, pages 238--253, 2006.
+
+\bibitem{ccl15}                 % status:cross-checked
+Ran Canetti, Asaf Cohen, and Yehuda Lindell.
+\newblock A simpler variant of universally composable security for standard
+  multiparty computation.
+\newblock In {\em Advances in Cryptology -- CRYPTO 2015, Part II}, volume 9216
+  of {\em LNCS}, pages 3--22, 2015.
+\newblock See also ePrint 2014/553.
+
+\bibitem{cdpw07}                % status:cross-checked
+Ran Canetti, Yevgeniy Dodis, Rafael Pass, and Shabsi Walfish.
+\newblock Universally composable security with global setup.
+\newblock In {\em 4th Theory of Cryptography Conference (TCC)}, volume 4392 of
+  {\em LNCS}, pages 61--85, 2007.
+
+\bibitem{cfgn96}                % status:from-canon
+Ran Canetti, Uriel Feige, Oded Goldreich, and Moni Naor.
+\newblock Adaptively secure multi-party computation.
+\newblock In {\em 28th ACM Symposium on Theory of Computing (STOC)}, 1996.
+
+\bibitem{cf01}                  % status:verified
+Ran Canetti and Marc Fischlin.
+\newblock Universally composable commitments.
+\newblock In {\em Advances in Cryptology -- CRYPTO 2001}, 2001.
+
+\bibitem{cg96}                  % status:from-canon
+Ran Canetti and Rosario Gennaro.
+\newblock Incoercible multiparty computation.
+\newblock In {\em 37th IEEE Symposium on Foundations of Computer Science
+  (FOCS)}, 1996.
+
+\bibitem{cggmp20}               % status:verified
+Ran Canetti, Rosario Gennaro, Steven Goldfeder, Nikolaos Makriyannis, and Udi
+  Peled.
+\newblock {UC} non-interactive, proactive, threshold {ECDSA} with identifiable
+  aborts.
+\newblock In {\em ACM Conference on Computer and Communications Security
+  (CCS)}, 2020.
+
+\bibitem{cgp15}                 % status:from-canon
+Ran Canetti, Shafi Goldwasser, and Oxana Poburinnaya.
+\newblock Adaptively secure two-party computation from indistinguishability
+  obfuscation.
+\newblock In {\em 12th Theory of Cryptography Conference (TCC), Part II}, pages
+  557--585, 2015.
+\newblock See also ePrint 2014/845.
+
+\bibitem{chk05}                 % status:from-canon
+Ran Canetti, Shai Halevi, and Jonathan Katz.
+\newblock Adaptively secure non-interactive public-key encryption.
+\newblock In {\em 2nd Theory of Cryptography Conference (TCC)}, 2005.
+
+\bibitem{chklm05}               % status:cross-checked
+Ran Canetti, Shai Halevi, Jonathan Katz, Yehuda Lindell, and Philip MacKenzie.
+\newblock Universally composable password-based key exchange.
+\newblock In {\em Advances in Cryptology -- EUROCRYPT 2005}, volume 3494 of
+  {\em LNCS}, pages 404--421, 2005.
+
+\bibitem{ch06}                  % status:from-list2
+Ran Canetti and Jonathan Herzog.
+\newblock Universally composable symbolic analysis of mutual authentication and
+  key-exchange protocols.
+\newblock In {\em 3rd Theory of Cryptography Conference (TCC)}, volume 3876 of
+  {\em LNCS}, pages 380--403, 2006.
+
+\bibitem{ch11}                  % status:cross-checked
+Ran Canetti and Jonathan Herzog.
+\newblock Universally composable symbolic analysis of cryptographic protocols.
+\newblock {\em Journal of Cryptology}, 24(1):83--147, 2011.
+
+\bibitem{chmv17}                % status:from-canon
+Ran Canetti, Kyle Hogan, Aanchal Malhotra, and Mayank Varia.
+\newblock Universally composable network time.
+\newblock In {\em IEEE Computer Security Foundations Symposium (CSF)}, 2017.
+
+\bibitem{cjs14}                 % status:verified
+Ran Canetti, Abhishek Jain, and Alessandra Scafuro.
+\newblock Practical {UC} security with a global random oracle.
+\newblock In {\em ACM Conference on Computer and Communications Security
+  (CCS)}, pages 597--608, 2014.
+
+\bibitem{cjsv22}                % status:verified
+Ran Canetti, Palak Jain, Marika Swanberg, and Mayank Varia.
+\newblock Universally composable end-to-end secure messaging.
+\newblock In {\em Advances in Cryptology -- CRYPTO 2022}, volume 13508 of {\em
+  LNCS}, 2022.
+\newblock ePrint 2022/376. Decomposes Signal into
+  $\mathcal{F}_{\mathsf{SecMsg}}$, a continuous-key-exchange functionality,
+  epoch-level symmetric ratchets, and a forward-secure AEAD functionality.
+
+\bibitem{ck01}                  % status:verified
+Ran Canetti and Hugo Krawczyk.
+\newblock Analysis of key-exchange protocols and their use for building secure
+  channels.
+\newblock In {\em Advances in Cryptology -- EUROCRYPT 2001}, volume 2045 of
+  {\em LNCS}, pages 453--474, 2001.
+\newblock Extended version: ePrint 2001/040.
+
+\bibitem{ck02}                  % status:verified
+Ran Canetti and Hugo Krawczyk.
+\newblock Universally composable notions of key exchange and secure channels.
+\newblock In {\em Advances in Cryptology -- EUROCRYPT 2002}, volume 2332 of
+  {\em LNCS}, pages 337--351, 2002.
+\newblock Extended version: ePrint 2002/059.
+
+\bibitem{ckn03}                 % status:from-canon
+Ran Canetti, Hugo Krawczyk, and Jesper~Buus Nielsen.
+\newblock Relaxing chosen-ciphertext security.
+\newblock In {\em Advances in Cryptology -- CRYPTO 2003}, 2003.
+\newblock ePrint 2003/174.
+
+\bibitem{ckl06}                 % status:UNVERIFIED
+Ran Canetti, Eyal Kushilevitz, and Yehuda Lindell.
+\newblock On the limitations of universally composable two-party computation
+  without set-up assumptions.
+\newblock {\em Journal of Cryptology}, 19(2):135--167, 2006.
+
+\bibitem{clos02}                % status:verified
+Ran Canetti, Yehuda Lindell, Rafail Ostrovsky, and Amit Sahai.
+\newblock Universally composable two-party and multi-party secure computation.
+\newblock In {\em 34th ACM Symposium on Theory of Computing (STOC)}, pages
+  494--503, 2002.
+
+\bibitem{cr93}                  % status:from-canon
+Ran Canetti and Tal Rabin.
+\newblock Optimal asynchronous byzantine agreement.
+\newblock In {\em 25th ACM Symposium on Theory of Computing (STOC)}, pages
+  42--51, 1993.
+
+\bibitem{cr03}                  % status:cross-checked
+Ran Canetti and Tal Rabin.
+\newblock Universal composition with joint state.
+\newblock In {\em Advances in Cryptology -- CRYPTO 2003}, volume 2729 of {\em
+  LNCS}, pages 265--281, 2003.
+
+\bibitem{csv16}                 % status:cross-checked
+Ran Canetti, Daniel Shahaf, and Margarita Vald.
+\newblock Universally composable authentication and key-exchange with global
+  {PKI}.
+\newblock In {\em Public-Key Cryptography (PKC), Part II}, volume 9615 of {\em
+  LNCS}, pages 265--296, 2016.
+\newblock See also ePrint 2014/432.
+
+\bibitem{cv12}                  % status:from-canon
+Ran Canetti and Margarita Vald.
+\newblock Universally composable security with local adversaries.
+\newblock In {\em Security and Cryptography for Networks (SCN)}, pages
+  281--301, 2012.
+\newblock See also ePrint 2012/117.
+
+\bibitem{cf24}                  % status:verified
+Alessandro Chiesa and Giacomo Fenzi.
+\newblock {zkSNARKs} in the {ROM} with unconditional {UC}-security.
+\newblock In {\em 22nd Theory of Cryptography Conference (TCC), Part I}, volume
+  15364 of {\em LNCS}, 2024.
+\newblock ePrint 2024/724.
+
+\bibitem{dio98}                 % status:from-canon
+Giovanni~Di Crescenzo, Yuval Ishai, and Rafail Ostrovsky.
+\newblock Non-interactive and non-malleable commitment.
+\newblock In {\em 30th ACM Symposium on Theory of Computing (STOC)}, pages
+  141--150, 1998.
+
+\bibitem{dn03}                  % status:UNVERIFIED
+Ivan Damg{\aa}rd and Jesper~Buus Nielsen.
+\newblock Universally composable efficient multiparty computation from
+  threshold homomorphic encryption.
+\newblock In {\em Advances in Cryptology -- CRYPTO 2003}, 2003.
+
+\bibitem{ddmrs06}               % status:from-canon
+Anupam Datta, Ante Derek, John~C. Mitchell, Ajith Ramanathan, and Andre
+  Scedrov.
+\newblock Games and the impossibility of realizable ideal functionality.
+\newblock In {\em 3rd Theory of Cryptography Conference (TCC)}, 2006.
+
+\bibitem{dgkr18}                % status:verified
+Bernardo David, Peter Ga{\v z}i, Aggelos Kiayias, and Alexander Russell.
+\newblock Ouroboros praos: An adaptively-secure, semi-synchronous
+  proof-of-stake blockchain.
+\newblock In {\em Advances in Cryptology -- EUROCRYPT 2018}, 2018.
+
+\bibitem{dksw09}                % status:from-canon
+Yevgeniy Dodis, Jonathan Katz, Adam~D. Smith, and Shabsi Walfish.
+\newblock Composability and on-line deniability of authentication.
+\newblock In {\em 6th Theory of Cryptography Conference (TCC)}, pages 146--162,
+  2009.
+
+\bibitem{defhh19}               % status:verified
+Stefan Dziembowski, Lisa Eckey, Sebastian Faust, Julia Hesse, and Kristina
+  Host{\'a}kov{\'a}.
+\newblock Multi-party virtual state channels.
+\newblock In {\em Advances in Cryptology -- EUROCRYPT 2019}, volume 11476 of
+  {\em LNCS}, pages 625--656, 2019.
+
+\bibitem{dfh18}                 % status:verified
+Stefan Dziembowski, Sebastian Faust, and Kristina Host{\'a}kov{\'a}.
+\newblock General state channel networks.
+\newblock In {\em ACM Conference on Computer and Communications Security
+  (CCS)}, pages 949--966, 2018.
+\newblock ePrint 2018/320.
+
+\bibitem{egl85}                 % status:from-canon
+Shimon Even, Oded Goldreich, and Abraham Lempel.
+\newblock A randomized protocol for signing contracts.
+\newblock {\em Communications of the ACM}, 28(6):637--647, 1985.
+
+\bibitem{fischlin06}            % status:verified
+Marc Fischlin.
+\newblock Round-optimal composable blind signatures in the common reference
+  string model.
+\newblock In {\em Advances in Cryptology -- CRYPTO 2006}, 2006.
+
+\bibitem{ff00}                  % status:from-canon
+Marc Fischlin and Roger Fischlin.
+\newblock Efficient non-malleable commitment schemes.
+\newblock In {\em Advances in Cryptology -- CRYPTO 2000}, volume 1880 of {\em
+  LNCS}, pages 413--428, 2000.
+
+\bibitem{gkoptt23}              % status:verified
+Chaya Ganesh, Yashvanth Kondi, Claudio Orlandi, Mahak Pancholi, Akira
+  Takahashi, and Daniel Tschudi.
+\newblock Witness-succinct universally-composable {SNARK}s.
+\newblock In {\em Advances in Cryptology -- EUROCRYPT 2023, Part II}, volume
+  14005 of {\em LNCS}, pages 315--346, 2023.
+\newblock ePrint 2022/1618.
+
+\bibitem{gkkz11}                % status:verified
+Juan~A. Garay, Jonathan Katz, Ranjit Kumaresan, and Hong-Sheng Zhou.
+\newblock Adaptively secure broadcast, revisited.
+\newblock In {\em 30th ACM Symposium on Principles of Distributed Computing
+  (PODC)}, 2011.
+
+\bibitem{gm00}                  % status:from-canon
+Juan~A. Garay and Philip MacKenzie.
+\newblock Concurrent oblivious transfer.
+\newblock In {\em 41st IEEE Symposium on Foundations of Computer Science
+  (FOCS)}, 2000.
+
+\bibitem{glmmr04}               % status:from-canon
+Rosario Gennaro, Anna Lysyanskaya, Tal Malkin, Silvio Micali, and Tal Rabin.
+\newblock Algorithmic tamper-proof ({ATP}) security: Theoretical foundations
+  for security against hardware tampering.
+\newblock In {\em 1st Theory of Cryptography Conference (TCC)}, volume 2951 of
+  {\em LNCS}, 2004.
+
+\bibitem{grr98}                 % status:from-canon
+Rosario Gennaro, Michael~O. Rabin, and Tal Rabin.
+\newblock Simplified {VSS} and fast-track multiparty computations with
+  applications to threshold cryptography.
+\newblock In {\em 17th ACM Symposium on Principles of Distributed Computing
+  (PODC)}, pages 101--112, 1998.
+
+\bibitem{grs25}                 % status:verified
+Paul Gerhart, Daniel Rausch, and Dominique Schr{\"o}der.
+\newblock Universally composable adaptor signatures.
+\newblock Cryptology ePrint Archive, Paper 2025/1363, 2025.
+
+\bibitem{gl01}                  % status:from-canon
+Oded Goldreich and Yehuda Lindell.
+\newblock Session-key generation using human passwords only.
+\newblock In {\em Advances in Cryptology -- CRYPTO 2001}, 2001.
+
+\bibitem{gmw87}                 % status:from-canon
+Oded Goldreich, Silvio Micali, and Avi Wigderson.
+\newblock How to play any mental game.
+\newblock In {\em 19th ACM Symposium on Theory of Computing (STOC)}, pages
+  218--229, 1987.
+
+\bibitem{gl90}                  % status:from-canon
+Shafi Goldwasser and Leonid~A. Levin.
+\newblock Fair computation of general functions in presence of immoral
+  majority.
+\newblock In {\em Advances in Cryptology -- CRYPTO 1990}, volume 537 of {\em
+  LNCS}, 1990.
+
+\bibitem{gm84}                  % status:from-canon
+Shafi Goldwasser and Silvio Micali.
+\newblock Probabilistic encryption.
+\newblock {\em Journal of Computer and System Sciences}, 28(2):270--299, 1984.
+
+\bibitem{gmra89}                % status:from-canon
+Shafi Goldwasser, Silvio Micali, and Charles Rackoff.
+\newblock The knowledge complexity of interactive proof systems.
+\newblock {\em SIAM Journal on Computing}, 18(1):186--208, 1989.
+
+\bibitem{gos12}                 % status:from-canon
+Jens Groth, Rafail Ostrovsky, and Amit Sahai.
+\newblock New techniques for noninteractive zero-knowledge.
+\newblock {\em Journal of the ACM}, 59(3):11:1--11:35, 2012.
+
+\bibitem{hm00}                  % status:from-canon
+Martin Hirt and Ueli Maurer.
+\newblock Complete characterization of adversaries tolerable in secure
+  multi-party computation.
+\newblock {\em Journal of Cryptology}, 13(1):31--60, 2000.
+
+\bibitem{hz10}                  % status:verified
+Martin Hirt and Vassilis Zikas.
+\newblock Adaptively secure broadcast.
+\newblock In {\em Advances in Cryptology -- EUROCRYPT 2010}, 2010.
+
+\bibitem{hm04a}                 % status:from-canon
+Dennis Hofheinz and J{\"o}rn M{\"u}ller-Quade.
+\newblock A synchronous model for multi-party computation and the
+  incompleteness of oblivious transfer.
+\newblock Cryptology ePrint Archive, Report 2004/016, 2004.
+
+\bibitem{hmqu05}                % status:from-list2
+Dennis Hofheinz, J{\"o}rn M{\"u}ller-Quade, and Dominique Unruh.
+\newblock Polynomial runtime in simulatability definitions.
+\newblock In {\em 18th IEEE Computer Security Foundations Workshop (CSFW)},
+  pages 156--169, 2005.
+
+\bibitem{hs11}                  % status:from-canon
+Dennis Hofheinz and Victor Shoup.
+\newblock {GNUC}: A new universal composability framework.
+\newblock {\em Journal of Cryptology}, 28(3):423--508, 2015.
+
+\bibitem{jkk14}                 % status:UNVERIFIED
+Stanislaw Jarecki, Aggelos Kiayias, and Hugo Krawczyk.
+\newblock Round-optimal password-protected secret sharing and {T-PAKE} in the
+  password-only model.
+\newblock In {\em Advances in Cryptology -- ASIACRYPT 2014}, 2014.
+
+\bibitem{jkx18}                 % status:verified
+Stanislaw Jarecki, Hugo Krawczyk, and Jiayu Xu.
+\newblock {OPAQUE}: An asymmetric {PAKE} protocol secure against
+  pre-computation attacks.
+\newblock In {\em Advances in Cryptology -- EUROCRYPT 2018}, volume 10822 of
+  {\em LNCS}, pages 456--486, 2018.
+\newblock ePrint 2018/163. Defines $\mathcal{F}_{\mathsf{aPAKE}}$ and
+  $\mathcal{F}_{\mathsf{saPAKE}}$.
+
+\bibitem{katz07}                % status:verified
+Jonathan Katz.
+\newblock Universally composable multi-party computation using tamper-proof
+  hardware.
+\newblock In {\em Advances in Cryptology -- EUROCRYPT 2007}, 2007.
+
+\bibitem{kmtz13}                % status:verified
+Jonathan Katz, Ueli Maurer, Bj{\"o}rn Tackmann, and Vassilis Zikas.
+\newblock Universally composable synchronous computation.
+\newblock In {\em 10th Theory of Cryptography Conference (TCC)}, pages
+  477--498, 2013.
+
+\bibitem{kos16}                 % status:UNVERIFIED
+Marcel Keller, Emmanuela Orsini, and Peter Scholl.
+\newblock {MASCOT}: Faster malicious arithmetic secure computation with
+  oblivious transfer.
+\newblock In {\em ACM Conference on Computer and Communications Security
+  (CCS)}, 2016.
+
+\bibitem{cocoa15}               % status:UNVERIFIED
+Ahmed~E. Kosba, Zhichao Zhao, Andrew Miller, Yi~Qian, T-H.~Hubert Chan,
+  Charalampos Papamanthou, Rafael Pass, Abhi Shelat, and Elaine Shi.
+\newblock {C0C0}: A framework for building composable zero-knowledge proofs.
+\newblock Cryptology ePrint Archive, Paper 2015/1093, 2015.
+
+\bibitem{k06}                   % status:from-list2
+Ralf K{\"u}sters.
+\newblock Simulation-based security with inexhaustible interactive turing
+  machines.
+\newblock In {\em 19th IEEE Computer Security Foundations Workshop (CSFW)},
+  pages 309--320, 2006.
+\newblock Full and revised version: ePrint 2013/025.
+
+\bibitem{kdmr08}                % status:from-list2
+Ralf K{\"u}sters, Anupam Datta, John~C. Mitchell, and Ajith Ramanathan.
+\newblock On the relationships between notions of simulation-based security.
+\newblock {\em Journal of Cryptology}, 21(4):492--546, 2008.
+
+\bibitem{kr17}                  % status:from-list2
+Ralf K{\"u}sters and Daniel Rausch.
+\newblock A framework for universally composable diffie-hellman key exchange.
+\newblock In {\em 38th IEEE Symposium on Security and Privacy (S\&P)}, pages
+  881--900, 2017.
+
+\bibitem{kt08}                  % status:from-list2
+Ralf K{\"u}sters and Max Tuengerthal.
+\newblock Joint state theorems for public-key encryption and digital signature
+  functionalities with local computation.
+\newblock In {\em 21st IEEE Computer Security Foundations Symposium (CSF)},
+  pages 270--284, 2008.
+\newblock Full version: ePrint 2008/006.
+
+\bibitem{kt09}                  % status:verified
+Ralf K{\"u}sters and Max Tuengerthal.
+\newblock Universally composable symmetric encryption.
+\newblock In {\em IEEE Computer Security Foundations Symposium (CSF)}, pages
+  293--307, 2009.
+
+\bibitem{kt11ccs}               % status:from-list2
+Ralf K{\"u}sters and Max Tuengerthal.
+\newblock Composition theorems without pre-established session identifiers.
+\newblock In {\em 18th ACM Conference on Computer and Communications Security
+  (CCS)}, pages 41--50, 2011.
+
+\bibitem{kt11}                  % status:cross-checked
+Ralf K{\"u}sters and Max Tuengerthal.
+\newblock Ideal key derivation and encryption in simulation-based security.
+\newblock In {\em Topics in Cryptology -- CT-RSA 2011}, volume 6558 of {\em
+  LNCS}, pages 161--179, 2011.
+\newblock ePrint 2010/295. Gives $\mathcal{F}_{\mathsf{crypto}}$ covering
+  public-key and symmetric encryption, MACs, signatures, key derivation, and
+  nonce generation.
+
+\bibitem{kt13}                  % status:from-canon
+Ralf K{\"u}sters and Max Tuengerthal.
+\newblock The {IITM} model: A simple and expressive model for universal
+  composability.
+\newblock {\em IACR Cryptology ePrint Archive}, 2013/025, 2013.
+
+\bibitem{llr02}                 % status:from-canon
+Yehuda Lindell, Anna Lysyanskaya, and Tal Rabin.
+\newblock On the composition of authenticated byzantine agreement.
+\newblock In {\em 34th ACM Symposium on Theory of Computing (STOC)}, 2002.
+
+\bibitem{maurer11}              % status:from-list2
+Ueli Maurer.
+\newblock Constructive cryptography: A new paradigm for security definitions
+  and proofs.
+\newblock In {\em Theory of Security and Applications (TOSCA)}, volume 6993 of
+  {\em LNCS}, pages 33--56, 2011.
+
+\bibitem{mr11}                  % status:from-canon
+Ueli Maurer and Renato Renner.
+\newblock Abstract cryptography.
+\newblock In {\em Innovations in Computer Science (ICS)}, pages 1--21, 2011.
+
+\bibitem{mr04}                  % status:from-canon
+Silvio Micali and Leonid Reyzin.
+\newblock Physically observable cryptography.
+\newblock In {\em 1st Theory of Cryptography Conference (TCC)}, volume 2951 of
+  {\em LNCS}, 2004.
+
+\bibitem{n02}                   % status:from-canon
+Jesper~Buus Nielsen.
+\newblock Separating random oracle proofs from complexity theoretic proofs: The
+  non-committing encryption case.
+\newblock In {\em Advances in Cryptology -- CRYPTO 2002}, pages 111--126, 2002.
+
+\bibitem{pvw08}                 % status:verified
+Chris Peikert, Vinod Vaikuntanathan, and Brent Waters.
+\newblock A framework for efficient and composable oblivious transfer.
+\newblock In {\em Advances in Cryptology -- CRYPTO 2008}, 2008.
+
+\bibitem{psw00a}                % status:from-canon
+Birgit Pfitzmann, Matthias Schunter, and Michael Waidner.
+\newblock Provably secure certified mail.
+\newblock Technical Report RZ 3207 (\#93253), IBM Research, Zurich, 2000.
+
+\bibitem{pw01}                  % status:cross-checked
+Birgit Pfitzmann and Michael Waidner.
+\newblock A model for asynchronous reactive systems and its application to
+  secure message transmission.
+\newblock In {\em IEEE Symposium on Security and Privacy}, pages 184--201,
+  2001.
+\newblock See also ePrint 2000/066.
+
+\bibitem{ps04}                  % status:from-canon
+Manoj Prabhakaran and Amit Sahai.
+\newblock New notions of security: Achieving universal composability without
+  trusted setup.
+\newblock In {\em 36th ACM Symposium on Theory of Computing (STOC)}, pages
+  242--251, 2004.
+
+\bibitem{r81}                   % status:from-canon
+Michael~O. Rabin.
+\newblock How to exchange secrets by oblivious transfer.
+\newblock Technical Report TR-81, Aiken Computation Laboratory, Harvard
+  University, 1981.
+
+\bibitem{rs91}                  % status:from-canon
+Charles Rackoff and Daniel~R. Simon.
+\newblock Non-interactive zero-knowledge proof of knowledge and chosen
+  ciphertext attack.
+\newblock In {\em Advances in Cryptology -- CRYPTO 1991}, 1991.
+
+\bibitem{rsw96}                 % status:from-list2
+Ronald~L. Rivest, Adi Shamir, and David~A. Wagner.
+\newblock Time-lock puzzles and timed-release crypto.
+\newblock Technical Report MIT/LCS/TR-684, MIT, 1996.
+
+\bibitem{w05}                   % status:from-canon
+Douglas Wikstr{\"o}m.
+\newblock {\em On the Security of Mix-Nets and Hierarchical Group Signatures}.
+\newblock PhD thesis, KTH Royal Institute of Technology, 2005.
+
+\bibitem{wikstrom04}            % status:verified
+Douglas Wikstr{\"o}m.
+\newblock Universally composable {DKG} with linear number of exponentiations.
+\newblock In {\em Security in Communication Networks (SCN)}, volume 3352 of
+  {\em LNCS}, pages 263--277, 2005.
+\newblock SCN 2004 proceedings, published 2005.
+
+\bibitem{w16}                   % status:from-canon
+Douglas Wikstr{\"o}m.
+\newblock Simplified universal composability framework.
+\newblock In {\em 13th Theory of Cryptography Conference (TCC), Part A1}, pages
+  566--595, 2016.
+
+\bibitem{y82b}                  % status:from-canon
+Andrew~C. Yao.
+\newblock Protocols for secure computations.
+\newblock In {\em 23rd IEEE Symposium on Foundations of Computer Science
+  (FOCS)}, pages 160--164, 1982.
+
+\bibitem{y82a}                  % status:from-canon
+Andrew~C. Yao.
+\newblock Theory and applications of trapdoor functions.
+\newblock In {\em 23rd IEEE Symposium on Foundations of Computer Science
+  (FOCS)}, pages 80--91, 1982.
+
+\bibitem{yo07}                  % status:UNVERIFIED
+Kazuki Yoneyama and Kazuo Ohta.
+\newblock Ring signatures: Universally composable definitions and
+  constructions.
+\newblock {\em Information and Media Technologies}, 2(4):1038--1051, 2007.
+
+\bibitem{zzlp25}                % status:verified
+Guy Zyskind, Doron Zarchy, Max Leibovich, and Chris Peikert.
+\newblock High-throughput universally composable threshold {FHE} decryption.
+\newblock In {\em ACM Conference on Computer and Communications Security
+  (CCS)}, 2025.
+\newblock ePrint 2025/1781. CCS 2025 distinguished paper.
+
+\end{thebibliography}
+
+\end{document}

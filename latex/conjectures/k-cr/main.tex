@@ -1,0 +1,2103 @@
+% =====================================================================
+%  Conjectures on finding a k-way collision with bounded memory.
+%  Standalone; compiles with pdflatex, no external files needed.
+%
+%  LABELLING.  Every theorem, conjecture and problem below is named by a
+%  code, and the code is also its \label, so \cref{RS4} prints
+%  "Conjecture RS4".  A code is <model><mode><rank>:
+%
+%      model   U = unconstrained (no space bound)
+%              R = register machine (state holds points only)
+%              B = branching program (state arbitrary, width bounded)
+%              G = general adversary (state arbitrary, cumulative
+%                  memory charged)
+%      mode    S = sequential (one query per step)
+%              P = parallel (q queries per round)
+%      rank    index within the class, increasing in logical strength
+%      -k      suffix marking the general-k counterpart of a k=3 code
+%
+%  CONCORDANCE with the previous draft, in which the conjectures were
+%  C1-C7 and G1-G5 and the ladder rungs were R1-R6, B1-B5, M1-M4,
+%  P1-P3, Q1-Q3:
+%
+%      C1 -> RS2     C2 -> RS3     C3 -> RS4     C4 -> BS4    C5 -> GS3
+%      C6 -> GP3     C7 -> BP3
+%      G1 -> RS2-k   G2 -> RS3-k   G4 -> BS4-k   G5 -> GS3-k
+%      Problem (register curve, k >= 4)  ->  Problem RS4-k
+%      R1 -> RS0 (now a theorem with a proof)    R2 -> RS1   R6 -> RS5
+%      B1 -> BS0   B2 -> BS1   B3 -> BS2   B4 -> BS3   B5 -> BS4
+%      M1 -> GS1   M2 -> GS2   M3 -> GS3   M4 -> GS4
+%      P1 -> GP1   P2 -> GP2   P3 -> GP3
+%      Q1 -> BP1   Q2 -> BP2   Q3 -> BP3
+%      new formal statements: GP3-k and BP3-k, which the previous draft
+%      gave only in prose, and RS5, BS0-BS3, GS1-GS2, GS4, GP1-GP2,
+%      BP1-BP2, which it gave only as ladder rungs.
+%
+%      SECOND REVISION.  Five codes are now theorems and one Problem has
+%      become a Conjecture, after Dinur's streaming switching lemma
+%      (eprint 2019/413), Beame-Kornerup (ICALP 2023), Guo-Nan-Yao
+%      (Asiacrypt 2025) and Hao-Huang-Liu (arXiv 2602.23763):
+%          BS0  now a theorem, and strengthened to the whole curve
+%          RS5' new: RS5 proved for lifting machines
+%          BP0  new: BS0 for oblivious parallel programs
+%          GP0  new: the same in cumulative memory
+%          BS4-C, GS3-C new: the C-fold statements, where the known
+%                       technique applies
+%          RS4-k  Problem -> Conjecture; the upper bound is now attained
+%
+%      THIRD REVISION.  Motivation added, the register model grounded in
+%      Maurer's abstract models, and three neighbouring models that do
+%      not exhibit the phenomenon recorded in a new remark (advice,
+%      decision, comparison-based).  No code changed meaning.
+%
+%  The ladders are no longer a separate section: each class now presents
+%  its own ladder in rank order, Section 5 indexes all codes, and
+%  Section 6 orders them by how hard they are to resolve, and Appendix A
+%  gives all of the models as code-based games.
+%
+%      FOURTH REVISION.  Appendix A added: the classes as restrictions on
+%      the type of one transition function, the execution as a game
+%      against a lazily sampled oracle, the two transforms that
+%      segmentation proofs use, and four conventions that the prose model
+%      boxes leave implicit.  The feedback channel of the register model
+%      is now specified in Section 2.1 rather than left to the phrase
+%      "what it was last told"; see Remark A on why the choice matters.
+% =====================================================================
+\documentclass[11pt]{article}
+\usepackage[margin=1.15in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage[most]{tcolorbox}
+\usepackage[colorlinks,linkcolor=blue!55!black,citecolor=blue!60!black,urlcolor=blue!60!black,bookmarksnumbered,bookmarksopen]{hyperref}
+\usepackage[capitalise,nameinlink,nosort]{cleveref}
+
+% --- theorem environments -------------------------------------------
+% Coded statements (about the collision problem) print their code as
+% their number; uncoded ones (about the models) are numbered normally.
+\theoremstyle{plain}
+\newtheorem{innerthm}{Theorem}
+\newtheorem{innerconj}{Conjecture}
+\newtheorem{proposition}{Proposition}
+\newtheorem{corollary}{Corollary}
+\newtheorem{lemma}{Lemma}
+\theoremstyle{definition}
+\newtheorem{innerprob}{Problem}
+\newtheorem{remark}{Remark}
+\newtheorem{definition}{Definition}
+\newtheorem{convention}{Convention}
+
+\newenvironment{cthm}[1]%
+  {\renewcommand{\theinnerthm}{#1}%
+   \def\theHinnerthm{cthm.\arabic{innerthm}}\innerthm}{\endinnerthm}
+\newenvironment{conj}[1]%
+  {\renewcommand{\theinnerconj}{#1}%
+   \def\theHinnerconj{conj.\arabic{innerconj}}\innerconj}{\endinnerconj}
+\newenvironment{cprob}[1]%
+  {\renewcommand{\theinnerprob}{#1}%
+   \def\theHinnerprob{cprob.\arabic{innerprob}}\innerprob}{\endinnerprob}
+
+\crefname{innerthm}{Theorem}{Theorems}
+\Crefname{innerthm}{Theorem}{Theorems}
+\crefname{innerconj}{Conjecture}{Conjectures}
+\Crefname{innerconj}{Conjecture}{Conjectures}
+\crefname{innerprob}{Problem}{Problems}
+\Crefname{innerprob}{Problem}{Problems}
+\crefname{proposition}{Proposition}{Propositions}
+\Crefname{proposition}{Proposition}{Propositions}
+\crefname{corollary}{Corollary}{Corollaries}
+\Crefname{corollary}{Corollary}{Corollaries}
+\crefname{remark}{Remark}{Remarks}
+\Crefname{remark}{Remark}{Remarks}
+\crefname{lemma}{Lemma}{Lemmas}
+\Crefname{lemma}{Lemma}{Lemmas}
+\crefname{definition}{Definition}{Definitions}
+\Crefname{definition}{Definition}{Definitions}
+\crefname{convention}{Convention}{Conventions}
+\Crefname{convention}{Convention}{Conventions}
+\crefname{figure}{Figure}{Figures}
+\Crefname{figure}{Figure}{Figures}
+
+\newcommand{\NN}{[N]}
+\newcommand{\advers}{\mathcal{A}}
+\newcommand{\cmcs}{\mathrm{cmc}^{*}}
+\newcommand{\eCMCs}{\mathrm{eCMC}^{*}}
+\newcommand{\CMCs}{\mathrm{CMC}^{*}}
+\newcommand{\Advance}{\mathsf{Advance}}
+\newcommand{\Next}{\mathsf{Next}}
+\newcommand{\Copy}{\mathsf{Copy}}
+\newcommand{\Update}{\mathsf{Update}}
+\newcommand{\cls}[1]{\textsf{#1}}   % a class, e.g. \cls{RS}
+\newcommand{\Halt}{\mathsf{Halt}}
+\newcommand{\getsr}{\mathrel{\xleftarrow{\raisebox{-0.15ex}{\tiny\$}}}}
+\newcommand{\qry}{\mathsf{qry}}
+\newcommand{\nxt}{\mathsf{nxt}}
+\newcommand{\outp}{\mathsf{out}}
+\newcommand{\stp}{\mathsf{step}}
+\newcommand{\Exec}{\mathrm{EXEC}}
+\newcommand{\Col}{\mathrm{3COL}}
+\newcommand{\RO}{\mathsf{RO}}
+\newcommand{\Fin}{\mathsf{Fin}}
+\newcommand{\Ver}{\mathsf{Ver}}
+\newcommand{\Adv}{\mathbf{Adv}}
+
+% pseudocode lists and game boxes, used in Appendix A
+\newlist{pc}{enumerate}{1}
+\setlist[pc]{label=\scriptsize\arabic*:,ref=\arabic*,leftmargin=2.0em,
+  itemsep=1.5pt,topsep=3pt,parsep=0pt,partopsep=0pt}
+\newcommand{\gname}[1]{\underline{\smash{#1}}\vspace{2pt}}
+
+\newtcolorbox{cbox}{colback=black!3,colframe=black!55,boxrule=0.5pt,
+  arc=2pt,left=7pt,right=7pt,top=6pt,bottom=6pt}
+\newtcolorbox{gbox}{colback=black!2,colframe=black!60,boxrule=0.5pt,
+  arc=2pt,left=6pt,right=6pt,top=5pt,bottom=5pt}
+
+\title{Conjectures on Finding a $k$-Way Collision\\ with Bounded Memory}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+\vspace{-4em}
+
+\begin{abstract}
+\noindent
+A random function $f\colon \NN \to \NN$ has three-way collisions in
+abundance, and $\Theta(N^{2/3})$ oracle queries find one.  Every algorithm
+achieving that count stores a table of size $N^{1/3}$, and the best known
+algorithm using no table needs $\Theta(N)$ queries.  Whether the table is
+necessary is open.  This note states the conjectures to that effect as a
+single labelled family.  A code names each one: the letters give its
+\emph{class}, a memory model (register machine, branching program, or
+general adversary charged for cumulative memory) crossed with a mode
+(sequential or parallel); the index gives its \emph{rank} within the
+class, ordered by logical strength; and a suffix \textsf{-k} marks the
+general-$k$ counterpart.  Every code names a formal statement.  Five are
+theorems, proved here or assembled from the literature, and
+\cref{sec:route} orders the rest by how hard they look to resolve, which is
+not the order of logical strength.  All of the conjectures are \emph{false}
+for two-way collisions, which is the one thing every proof attempt must
+respect.
+\end{abstract}
+
+% ---------------------------------------------------------------------
+\section{Setup, and what is unconditional}
+% ---------------------------------------------------------------------
+
+Throughout, $N \geq 2$ and $f \colon \NN \to \NN$ is a uniformly random
+function, available only through an oracle answering $x \mapsto f(x)$.  A
+\emph{$k$-collision} is a set of $k$ distinct points of $\NN$ with the same
+image under $f$; a \emph{$3$-collision} is the case $k=3$.  Asymptotic
+notation $\tilde O, \tilde\Omega, \tilde\Theta$ suppresses factors
+polylogarithmic in $N$.  Three facts are theorems and frame everything
+below.
+
+\begin{enumerate}[label=(F\arabic*),ref=F\arabic*,leftmargin=*]\itemsep2pt
+\item\label{F1} \emph{The query threshold is $N^{2/3}$.}  Among $q$
+  queried points the expected number of $3$-collisions is
+  $\binom{q}{3}N^{-2}$, so $q = \Theta(N^{2/3})$ is necessary and
+  sufficient for constant success probability, with the sharp constant
+  $(3!)^{1/3}$ \cite{STKT06}.  Quantitatively, an algorithm making $T$
+  queries and then naming three points succeeds with probability
+  $O\bigl((T^{3}+1)N^{-2}\bigr)$, by Markov's inequality together with a
+  term for naming points it never queried.  This holds for \emph{any}
+  algorithm and no conjecture below contradicts it.
+\item\label{F2} \emph{Without a table, $O(N)$ suffices.}  Find a
+  $2$-collision $\{u,v\}$ by cycle-finding, retain $u$, $v$ and
+  $y=f(u)$, then sample fresh points until one maps to $y$.  This uses
+  $O(\log N)$ bits of memory and $\Theta(N)$ queries.
+\item\label{F3} \emph{At $k=2$ memory is free.}  Pollard's rho
+  method~\cite{Pollard75}, with Floyd's or Brent's cycle
+  detection~\cite{Brent80}, finds a $2$-collision in $\Theta(\sqrt N)$
+  queries with $O(\log N)$ bits, because a random trajectory closes on
+  itself after $\Theta(\sqrt N)$ steps~\cite{FO90} and the cycle-entry
+  vertex then has two discovered preimages.  That count is optimal even
+  with unbounded memory.  Adaptivity is what buys it: on a query sequence
+  fixed in advance, no algorithm with $O(\log N)$ bits comes near
+  $\sqrt N$, a separation quantified by the streaming bounds
+  of~\cite{JT19,Din20b} and pursued for preprocessing adversaries
+  in~\cite{DKM25}.
+\end{enumerate}
+
+Between~\ref{F1} and~\ref{F2} lies a gap of $N^{1/3}$, and the conjectures
+assert that memory is what closes it.  Interpolating, Joux and
+Lucks~\cite{JL09} achieve $T = \tilde O(N/S)$ with a table of $S$
+collisions for every $S \leq N^{1/3}$, so every conjecture below is
+tight if true.  Fact~\ref{F3} is the constraint: \emph{every} conjecture
+here is false at $k=2$, so no proof of any of them can be indifferent to
+the collision order.
+
+Three reasons to want the gap explained.  Memory-hard proof of work rests
+on claims of this shape: Equihash~\cite{BK16} fixes its parameters from the
+presumed time--memory behaviour of Wagner's generalised birthday
+algorithm~\cite{Wag02}, which is a $k$-collision search, and the cumulative
+measure of \cref{sec:cmc} was introduced to make such claims
+precise~\cite{AS15}.  Second, whether $k$-collision resistance is strictly
+weaker than collision resistance has different answers in different models:
+in the standard model it is barely weaker, since collision resistance
+follows from $k$-collision resistance for every constant
+$k$~\cite{RV22,BT24}, and against Merkle--Damg\aa{}rd hashing with $S$ bits
+of preprocessed advice the $m$-way advantage falls below the $2$-way one by
+a factor $m$ and no more~\cite{Aks24}.  The conjectures here say that
+against bounded \emph{working} memory the separation is instead a power of
+$N$.  Third, $k=3$ at $S=O(1)$ is the smallest instance for which no proved
+bound mentions memory at all.
+
+\subsection{The label alphabet}\label{sec:labels}
+
+A statement about this problem is fixed by three choices: what the
+algorithm's memory may contain, whether it queries one point at a time or
+$q$ at once, and how much it is asked to prove.  The first two choices name
+a \emph{class} and are recorded in the letters of a code; the third is
+recorded in the index.
+
+\begin{center}
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+\multicolumn{2}{@{}l}{\emph{first letter: what the memory may contain}}\\
+\cls{U} & unconstrained: no bound on memory \\
+\cls{R} & register machine: the state holds points, and nothing else \\
+\cls{B} & branching program: the state is arbitrary, the width bounded \\
+\cls{G} & general adversary: the state is arbitrary, cumulative memory charged \\
+\addlinespace[3pt]
+\multicolumn{2}{@{}l}{\emph{second letter: how queries are issued}}\\
+\cls{S} & sequential: one query per step \\
+\cls{P} & parallel: $q$ queries per round, $r$ rounds, $T = rq$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\medskip\noindent
+So \cls{RS} is the sequential register machine of
+\cref{sec:reg}, \cls{BP} the parallel branching program of
+\cref{sec:GP}, and \cls{GP} the general parallel adversary measured
+by cumulative memory.  Within a class the index increases with logical
+strength, so \textsf{RS1} is the weakest statement of class \cls{RS} and
+\textsf{RS5} the strongest; \cref{p:ladders} proves the ordering.  The
+suffix \textsf{-k} marks the general-$k$ counterpart of a $k=3$ statement,
+as in \textsf{BS4-k}, and the suffix \textsf{-C} the $C$-fold counterpart,
+in which $C$ disjoint $3$-collisions are asked for instead of one.  Two
+further marks record a restriction of the \emph{algorithms} rather than of
+the conclusion, and every statement carrying one is a theorem: index~$0$,
+as in \textsf{BS0}, and a prime, as in \textsf{RS5'}, which is the
+conclusion of \textsf{RS5} proved for a subclass.  Codes are also
+\LaTeX{} labels, so \textsf{RS4} is \cref{RS4}.
+
+The eight classes, with the state of play at $k=3$:
+
+\begin{center}
+\small
+\begin{tabular}{@{}lllll@{}}
+\toprule
+class & memory constraint & mode & best algorithm & statements \\
+\midrule
+\cls{US} & none                  & seq. & $\Theta(N^{2/3})$ & settled,~\ref{F1} \\
+\cls{UP} & none                  & par. & $T=\Theta(N^{2/3})$, $r=1$ & settled, \cref{p:onerou} \\
+\cls{RS} & $S$ registers of points & seq. & $\tilde O(N/S)$ & \textsf{RS0}--\textsf{RS5}, \textsf{RS5'} \\
+\cls{RP} & the same              & par. & $\tilde O(N/S)$ & none, \cref{p:costfree} \\
+\cls{BS} & $S = \log_{2} W$ bits & seq. & $\tilde O(N/S)$ & \textsf{BS0}--\textsf{BS4}, \textsf{BS4-C} \\
+\cls{BP} & the same              & par. & $\min\{N,\tilde\Theta(N^{2}/q^{2})\}$ & \textsf{BP0}--\textsf{BP3} \\
+\cls{GS} & none, $\cmcs$ charged & seq. & $\tilde\Theta(N)$ & \textsf{GS1}--\textsf{GS4}, \textsf{GS3-C} \\
+\cls{GP} & none, $\cmcs$ charged & par. & $\tilde\Theta(\max\{N^{2/3},N/q\})$ & \textsf{GP0}--\textsf{GP3} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\medskip\noindent
+In every constrained class, the best lower bound proved for \emph{all}
+algorithms is the query bound of~\ref{F1}, which does not mention memory at
+all.  Memory-sensitive bounds are proved only for restricted subclasses:
+non-adaptive machines in \cref{RS0}, lifting ones in \cref{RS5'}, and
+oblivious algorithms in \cref{BS0,BP0,GP0}.  Two classes are settled
+because their algorithm meets the query bound, one is reducible, and five
+carry ladders.
+
+\begin{proposition}[one round is enough without a space bound]\label{p:onerou}
+Querying $\Theta(N^{2/3})$ points at once and reading off a collision
+succeeds with constant probability at $r = 1$.  So class \cls{UP} is
+settled, at $T = \Theta(N^{2/3})$ and $r=1$, and nothing is open in it.
+\end{proposition}
+
+\noindent The one-round program of \cref{p:onerou} settles class \cls{UP}; the settled class \cls{US} is~\ref{F1}, and the reducible class \cls{RP} is \cref{sec:RP}.
+
+\subsection{What is open, at a glance}
+
+The rows below are ordered by how hard the lower bound is to prove, not by
+how strong it is: the register-machine row is the easiest place to work and
+the query-complexity row is already a theorem.  Every entry in the $k=2$
+column is settled, and every entry to the right of it is open with the same
+gap, namely the ratio between the best algorithm and the best proved lower
+bound.
+
+\begin{center}
+\small
+\begin{tabular}{@{}llll@{}}
+\toprule
+constraint & $k=2$ & $k=3$ & $k \geq 4$ \\
+\midrule
+none: query complexity
+  & $\Theta(N^{1/2})$ \checkmark
+  & $\Theta(N^{2/3})$ \checkmark
+  & $\Theta(N^{(k-1)/k})$ \checkmark \\
+register machine, $S = O(1)$
+  & free \checkmark
+  & gap $N^{1/3}$, \textsf{RS0}--\textsf{RS5}
+  & gap $N^{1/k}$, \textsf{RS2-k}, \textsf{RS3-k} \\
+branching program, $S = O(\log N)$
+  & free \checkmark
+  & gap $N^{1/3}$, \textsf{BS0}--\textsf{BS4}
+  & gap $N^{1/k}$, \textsf{BS4-k} \\
+cumulative memory, any $S$
+  & $\tilde\Theta(N^{1/2})$ \checkmark
+  & gap $N^{1/3}$, \textsf{GS1}--\textsf{GS4}
+  & gap $N^{1/k}$, \textsf{GS3-k} \\
+\addlinespace[2pt]
+parallel, cumulative memory
+  & free \checkmark
+  & \textbf{open}, \textsf{GP0}--\textsf{GP3}
+  & \textbf{open}, \textsf{GP3-k} \\
+parallel, branching program
+  & free \checkmark
+  & \textbf{open}, \textsf{BP0}--\textsf{BP3}
+  & \textbf{open}, \textsf{BP3-k} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\medskip\noindent
+Three readings.  \emph{The $k=2$ column is settled everywhere} because
+rho attains the query bound with $O(\log N)$ bits, which is
+Fact~\ref{F3}; that is why no conjecture here can be proved by an
+argument indifferent to $k$.  \emph{The gap is $N^{1/k}$}, so it is widest
+at $k=3$ and closes as $k$ grows, since the table-free recursion stays at
+$\tilde O(N)$ while the query threshold rises.  And \emph{the three
+constrained rows have identical known bounds}: they differ not in what is
+proved but in how much room a proof has, which is the subject of
+\cref{r:leverage}.
+
+One memory-bounded cell is settled, and it is worth isolating because it is
+the only one: for $C$ collision \emph{pairs} at $k=2$, Dinur~\cite{Din20}
+proved $T^{2}S = \tilde\Theta(C^{2}N)$ in the branching-program model, in
+the regime $S = \tilde O(C)$.  Every other proved lower bound in the table
+is the query bound.
+
+Filling in the $k=3$ column across the whole range of $S$, with the
+Joux--Lucks algorithm as the upper bound:
+
+\begin{center}
+\small
+\begin{tabular}{@{}lllll@{}}
+\toprule
+$S$ (cells) & best algorithm & proved lower bound & conjectured & status \\
+\midrule
+$O(1)$          & $\tilde O(N)$       & $\tilde\Omega(N^{2/3})$ & $\tilde\Theta(N)$       & open \\
+$N^{1/6}$       & $\tilde O(N^{5/6})$ & $\tilde\Omega(N^{2/3})$ & $\tilde\Theta(N^{5/6})$ & open \\
+$N^{1/4}$       & $\tilde O(N^{3/4})$ & $\tilde\Omega(N^{2/3})$ & $\tilde\Theta(N^{3/4})$ & open \\
+$\geq N^{1/3}$  & $\tilde O(N^{2/3})$ & $\Omega(N^{2/3})$       & ---                     & settled \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\medskip\noindent
+The proved column is constant because the only available bound is the
+$S$-free one; the conjectured column is the algorithm, which is what
+\cref{RS4} asserts to be optimal.  At $S = N^{1/3}$ the algorithm
+meets the query bound and the row closes, so all of the content lies to the
+left of that.
+
+% ---------------------------------------------------------------------
+% ---------------------------------------------------------------------
+\section{Register machines}\label{sec:R}
+% ---------------------------------------------------------------------
+
+The register machine is the most tractable of the three models, for the
+reason \cref{r:leverage} makes precise: its state holds points reached by
+applying $f$, so one may reason in the functional graph of $f$ about what
+the machine knows.  It is also, by \cref{app:classes}, an abstract model of
+computation in Maurer's sense, the generic group model being the familiar
+instance.  We treat the sequential machine first and in full; the parallel
+machine, \cref{sec:RP}, reduces to it.
+
+\subsection{Sequential: class \cls{RS}}\label{sec:reg}
+
+\begin{cbox}
+\textbf{Model.}  Fix $S$, $\beta$, and a sequence $w_1, w_2, \dots \in \NN$
+chosen before $f$ is drawn.  A game holds a register file $Z[1..S]$ over
+$\NN \cup \{\bot\}$, a control state $b \in \{0,1\}^{\beta}$, a head $hd$
+into the sequence, and a cost counter; the algorithm holds nothing and acts
+only through
+\[
+  \begin{array}{ll}
+  \Advance(i,j)\colon & Z[j] \gets f(Z[i]) \quad\text{(charged)},\\
+  \Next(j)\colon      & Z[j] \gets w_{hd},\quad hd \gets hd+1
+                        \quad\text{(charged)},\\
+  \Copy(i,j)\colon    & Z[j] \gets Z[i],\\
+  \Update(b')\colon   & b \gets b' ,
+  \end{array}
+\]
+halting by naming three register indices.  The algorithm is
+\emph{stateless}: one function, fixed before $f$ is drawn, from the pair
+$(b, v)$ to its next call, where $v \in \NN \cup \{\bot\}$ is the value
+written by the operation it last issued, namely $f(Z[i])$ after
+$\Advance(i,j)$, the cell $w_{hd}$ after $\Next(j)$, and $\bot$ otherwise.
+Its \emph{cost} $T$ is the number of $\Advance$ and $\Next$ calls, and its
+\emph{space} is $S$, counted in registers, each holding one point.  It
+\emph{succeeds} if the three named registers hold a $3$-collision.
+\Cref{app:models} gives the same model as code, and \cref{r:feedback} says
+why the choice of $v$ as the report, rather than something weaker, is what
+makes the algorithms of~\cite{JL09,OW99} legal in this class.
+\end{cbox}
+
+\medskip\noindent
+Two clauses carry the model.  A register is written only by the three
+charged or copying operations, so a point enters a register only as $f$ of
+a point already present or as the next cell of the fixed sequence; and
+$\Next$ is charged with a one-way head, so reaching the $m$-th cell costs
+$m$.  Were $\Next$ free the machine could hold a desired index in its
+control state, advance to it at no cost and query a point of its own
+devising, which would collapse the model.  Everything else is free.
+\Cref{app:models} gives the same model as code, and \cref{r:feedback} says
+why the value written by the previous operation, rather than something
+weaker, is the right report.
+
+\begin{remark}[Where the leverage is]\label{r:leverage}
+Class \cls{RS} is easier than class \cls{BS} for a structural reason.  In
+a branching program the $S$ bits of state may encode anything, so one
+cannot say what the program knows.  In a register machine the contents of
+the state are points reached by applying $f$, so one may reason in the
+functional graph of $f$: a $3$-collision is a vertex with three discovered
+preimages, a single trajectory supplies two of them free at its own
+cycle entry, and no trajectory supplies a third.  Quantitatively, for
+trajectories of length $\ell$ a triple meets at a \emph{common} vertex with
+probability $\approx \ell^3/N^2$ but merely fuses pairwise with probability
+$\approx \ell^4/N^2$, a factor $\ell$ more often; the content of
+\cref{RS3,RS4} is that this factor cannot be evaded.  Dinur's proof of
+$T^2S = \tilde\Theta(C^2N)$ for finding $C$ collision
+\emph{pairs}~\cite{Din20} is in the branching-program model and is the
+technique to try for \cref{BS4}; he needed many pairs because for a single
+pair, by~\ref{F3}, there is nothing to prove.
+\end{remark}
+
+\paragraph{The three-collision conjectures, $k=3$.}
+The proved base is a counting bound and its lifting-machine strengthening;
+the five conjectures then run from the weakest separation to the whole
+advantage curve, which is also, by \cref{sec:route}, their order of
+difficulty.
+
+\begin{cthm}{RS0}[non-adaptive machines fail]\label{RS0}
+Call a register machine \emph{non-adaptive} if its sequence of operations
+and its halting time are fixed in advance, so that only the three indices
+named on halting may depend on the register contents.  Then for every $S$,
+every $\beta$ and every cost $T$, a non-adaptive machine succeeds with
+probability $O(S^{3}/N^{2})$, which is $O(N^{-2})$ at $S = O(1)$.
+\end{cthm}
+
+\Cref{RS0} is why adaptivity is needed even to run the $\tilde O(N)$
+algorithm of~\ref{F2}, which must stop when it finds its match.  It does not
+separate the collision orders: the same count gives $O(S^{2}/N)$ at $k=2$,
+where rho is likewise adaptive.
+
+\begin{cthm}{RS5'}[lifting machines]\label{RS5'}
+Call a successful run \emph{lifting} if, at the instant the last of the
+three named points is first written into a register, the other two are
+already present and their common image has been computed; that is, the run
+finds a $2$-collision and then lifts it.  Call a machine lifting if all its
+successful runs are.  A lifting register machine with $S$ registers and
+cost $T$ succeeds with probability $O(TS/N)$, so \cref{RS5}, and hence
+\cref{RS4}, hold for lifting machines.
+\end{cthm}
+
+\begin{proof}
+Say a point is \emph{revealed} once the run has computed its image, and call
+a value $y$ \emph{doubly covered} at a given time if the file then holds two
+distinct revealed points with image $y$.  At most $\lfloor S/2 \rfloor$
+values are doubly covered at any time, since each consumes two registers.
+In a lifting run the last named point $x_3$ has $f(x_3) = y$ for some $y$
+doubly covered just before $x_3$ is written.  Each charged operation reveals
+the image of at most one point not revealed before, and conditioned on the
+history that image is uniform on $\NN$, so it lands on a doubly covered
+value with probability at most $S/2N$; if $x_3$ is never revealed its image
+is uniform and independent as well, contributing $S/2N$ once.  A union bound
+over the $T$ charged operations and the final naming gives $O(TS/N)$.
+\end{proof}
+
+\Cref{RS5'} covers every algorithm in the literature, including the
+preimage-hunting machine that \cref{r:barrier} records as the obstruction in
+class \cls{BS}: it is lifting with a single doubly covered value.  What
+remains of the conjectures below is the runs that are \emph{not} lifting,
+where one structure delivers all three preimages together, as a single
+trajectory delivers two at its cycle entry by~\ref{F3}.
+
+\medskip\noindent
+The conjectures, weakest first.
+
+\begin{conj}{RS1}[simplest unresolved]\label{RS1}
+For every constant $S$ and every $\beta = O(\log N)$, a register machine
+succeeding with probability $1-o(1)$ over the choice of $f$ has cost
+$T = \omega\bigl(N^{2/3}\bigr)$.
+\end{conj}
+\begin{conj}{RS2}[qualitative]\label{RS2}
+For every constant $S$ and every $\beta = O(\log N)$, a register machine
+succeeding with probability at least $\tfrac12$ over the choice of $f$ has
+cost $T = \omega\bigl(N^{2/3}\bigr)$.
+\end{conj}
+\begin{conj}{RS3}[memoryless]\label{RS3}
+Under the hypotheses of \cref{RS2}, $T = N^{1-o(1)}$.
+\end{conj}
+\begin{conj}{RS4}[the whole curve]\label{RS4}
+For every $S = S(N)$ and every $\beta = O(S\log N)$, a register machine
+succeeding with probability at least $\tfrac12$ has cost
+$T = \tilde\Omega\bigl(\max\{N^{2/3},\, N/S\}\bigr)$.
+\end{conj}
+\begin{conj}{RS5}[advantage at every cost]\label{RS5}
+For every $S = S(N)$, every $\beta = O(S\log N)$ and every $T$, a register
+machine of cost $T$ succeeds with probability $\tilde O(TS/N)$.
+\end{conj}
+
+\Cref{RS1} is the natural first target: a success probability of $1-o(1)$
+lets one argue about typical executions rather than tail events, and the
+qualitative form asks for no exponent.  \Cref{RS2} asks the same at constant
+probability, \cref{RS3} pins the exponent and is tight by~\ref{F2}, and
+\cref{RS4} replaces the point $S=O(1)$ by the whole curve and is tight by
+Joux--Lucks; at $S \geq N^{1/3}$ it degenerates to~\ref{F1}, so all its
+content lies below that.  \Cref{RS5} is the strongest: with the
+unconditional $O\bigl((T^{3}+1)N^{-2}\bigr)$ of~\ref{F1} it bounds the
+advantage by $\tilde O\bigl(\min\{TS/N,\ T^{3}/N^{2}\}\bigr)$, of which
+\cref{RS4} is the constant-probability shadow.
+
+\paragraph{General $k$.}
+The counterparts replace $N^{2/3}$ by $N^{(k-1)/k}$ throughout; two are
+worth stating, together with the whole-curve form, whose upper bound is now
+attained by~\cite{GNY25}.
+
+\begin{conj}{RS2-k}[qualitative, general $k$]\label{RS2-k}
+For every constant $k \geq 3$, every constant $S$ and every
+$\beta = O(\log N)$, a register machine succeeding with probability at
+least $\tfrac12$ has cost $T = \omega\bigl(N^{(k-1)/k}\bigr)$.
+\end{conj}
+\begin{conj}{RS3-k}[memoryless, general $k$]\label{RS3-k}
+Under the hypotheses of \cref{RS2-k}, $T = N^{1-o(1)}$.
+\end{conj}
+\begin{conj}{RS4-k}[the register curve, general $k$]\label{RS4-k}
+For every constant $k \geq 3$, every $S = S(N)$ and every
+$\beta = O(S\log N)$, a register machine succeeding with probability at
+least $\tfrac12$ has cost
+$T = \tilde\Omega\bigl(\max\{N^{(k-1)/k},\ N S^{-1/(k-2)}\}\bigr)$.
+\end{conj}
+
+Two cautions attach to the tightness of \cref{RS4-k}.  The upper bound is
+specific to a domain and codomain of equal size: for $f\colon[N]\to[M]$ with
+$M>N$ the curve breaks into two branches at $S=\tilde\Theta(N^{(k-2)/k})$,
+and only the lower branch carries the exponent $1/(k-2)$~\cite{GNY25}.  And
+the construction re-randomises its chains with auxiliary hash functions,
+which class \cls{RS} does not supply; at $M=N$ these are replaceable by
+fresh start points in the functional graph of $f$, as in parallel collision
+search~\cite{OW99}, but the replacement has to be carried out before
+\cref{RS4-k} may be called tight in this class.  The slack $N^{1/k}$ shrinks
+as $k$ grows, so $k=3$ remains the easiest instance rather than merely the
+first.
+
+\subsection{Parallel: class \cls{RP}}\label{sec:RP}
+
+For register machines parallelism is free, so class \cls{RP} carries no
+conjecture of its own: it reduces to \cls{RS}.  A round issues $q$
+operations on a file of $S$ cells.
+
+\begin{proposition}[width is paid for in cells]\label{p:qcap}
+The sources of the query operations in a round lie among the $S$ cells, so
+a round issues at most $S$ distinct queries and one may assume
+$q \leq S$.
+\end{proposition}
+\begin{proposition}[cost is unaffected by width]\label{p:costfree}
+Running the $q$ operations of each round one at a time turns a $q$-parallel
+register machine into a sequential one of the same cost and success
+probability.  Hence \cref{RS4} covers every $q$, and class \cls{RP} carries
+no statement of its own.
+\end{proposition}
+\begin{corollary}[depth]\label{cor:depth}
+If \cref{RS4} holds then every $q$-parallel register machine succeeding
+with probability at least $\tfrac12$ runs for
+$r = \tilde\Omega\bigl(\max\{N^{2/3}/S,\; N/S^{2}\}\bigr)$ rounds.
+\end{corollary}
+
+\begin{proof}
+Combine \cref{p:costfree} with $r=T/q$ and $q \leq S$ from \cref{p:qcap}.
+\end{proof}
+
+So for register machines parallelism buys latency and nothing else, and the
+only quantity that genuinely depends on the width is cumulative memory,
+class \cls{GP} of \cref{sec:GP}.
+
+% ---------------------------------------------------------------------
+\section{Branching programs}\label{sec:B}
+% ---------------------------------------------------------------------
+
+Dropping the restriction on \emph{which} point may be queried gives the
+classical time--space model of Borodin and Cook~\cite{BC82}.  The state may
+now encode anything, so one can no longer say what the program knows, which
+is the source of the short-output barrier of \cref{r:barrier} and the reason
+this model is harder to work in than the last.  Here the two modes genuinely
+differ: \cref{r:asym} shows that a wide round changes the achievable bound,
+so \cref{sec:BP} is not a reduction.
+
+\subsection{Sequential: class \cls{BS}}\label{sec:bp}
+
+\begin{cbox}
+\textbf{Model.}  A \emph{branching program} of length $T$ and width $W$ is
+a DAG on levels $0,\dots,T$ with at most $W$ nodes per level, in which
+every node below level $T$ carries a label $x \in \NN$ and has one
+outgoing edge for each $y \in \NN$, and every node at level $T$ carries a
+label in $\NN^{3}$.  It is run by starting at the source, querying the
+label of the current node, following the edge labelled by the answer, and
+reading the label of the sink reached; it \emph{succeeds} if that label is
+a $3$-collision.  Its \emph{space} is $S = \log_2 W$, counted in bits.  It
+is \emph{oblivious} if all nodes at a level carry the same label, and
+\emph{repetition-free} if no point labels two levels.  \Cref{app:models}
+gives the same model as code, where these two restrictions become
+statements about the type of one function.
+\end{cbox}
+
+\paragraph{The three-collision conjectures, $k=3$.}
+The proved base is the oblivious curve, from the streaming switching lemma.
+The genuinely open statements begin at \cref{BS1}; but the easiest thing to
+attack in this class is not the weakest of them, it is the $C$-fold
+statement below, the only one existing technique can address.
+
+\begin{cthm}{BS0}[oblivious programs]\label{BS0}
+Every repetition-free oblivious branching program succeeding with
+probability at least $\tfrac12$ satisfies
+$T \cdot \bigl(S + \lceil \log_2 N \rceil\bigr) = \tilde\Omega(N)$; in
+particular $T = \tilde\Omega(N)$ at width $N^{O(1)}$.
+\end{cthm}
+
+\begin{proof}
+The schedule $w_1,\dots,w_T$ is fixed in advance and its points are
+distinct, so the answers arrive as a stream of $T$ elements drawn from $\NN$
+uniformly with replacement.  Drawn instead without replacement, that is from
+a random permutation, the stream would contain no repeated value and a
+fortiori no $3$-collision.  Both distributions are invariant under permuting
+positions, so the stream may be taken in schedule order.  Build a two-pass
+distinguisher using $S+O(\log N)$ bits: the first pass runs the program and
+retains the three points it names, the second reads their values and accepts
+iff the three agree.  It never accepts a permutation stream, and it accepts
+a function stream whenever the program succeeds, except for the $O(N^{-2})$
+of~\ref{F1}.  The multi-pass streaming switching lemma
+\cite[Thm.~5]{Din20b} bounds the advantage of a $P$-pass $S'$-bit
+distinguisher on a stream of $T\leq N/3$ elements by $O\bigl(\log T\cdot
+T(PS'+\log N)/N\bigr)$; with $P=2$ and $S'=S+O(\log N)$, an advantage of
+$\tfrac12-O(N^{-2})$ forces $T(S+\lceil\log_2 N\rceil)=\tilde\Omega(N)$.
+For $T>N/3$ the conclusion holds outright.
+\end{proof}
+
+At $k=3$, \cref{BS0} is tight only at $S=\mathrm{polylog}$; above that an
+oblivious program can accumulate $P\leq S$ collision pairs at cost
+$\tilde\Theta(PN/S)$ and hunt a third preimage in $\tilde\Theta(N/P)$, which
+at $P=\sqrt S$ gives $T=\tilde\Theta(N/\sqrt S)$: a factor $\sqrt S$
+separates \cref{BS0} from the truth in its own class, and closing it is the
+smallest open quantity in this note.
+
+\medskip\noindent
+The genuinely open conjectures, in order of logical strength.
+
+\begin{conj}{BS1}[weakest rung]\label{BS1}
+Every branching program of width $N^{O(1)}$ succeeding with probability
+$1-o(1)$ has length $T = \omega\bigl(N^{2/3}\bigr)$.
+\end{conj}
+\begin{conj}{BS2}\label{BS2}
+The same at success probability at least $\tfrac12$.
+\end{conj}
+\begin{conj}{BS3}[polynomial width]\label{BS3}
+Every branching program of width $N^{O(1)}$ succeeding with probability at
+least $\tfrac12$ has length $T = N^{1-o(1)}$.
+\end{conj}
+\begin{conj}{BS4}[the whole curve]\label{BS4}
+Every branching program succeeding with probability at least $\tfrac12$
+over the choice of $f$ satisfies
+$T \cdot S = \tilde\Omega(N)$ and $T = \tilde\Omega\bigl(N^{2/3}\bigr)$.
+\end{conj}
+
+The second clause of \cref{BS4} is~\ref{F1}; all the content is in
+$T\cdot S$.  \Cref{BS3} is its polynomial-width case and reads simply: a
+branching program of polynomial width needs length $N^{1-o(1)}$.
+Randomisation need not be allowed for, since the input is already random.
+
+\begin{remark}[Shapes]\label{r:shapes}
+Comparing \cref{BS4} with what is proved is instructive.  Dinur's bound is
+$T^2 S$; the conjecture here is $T S$.  The two agree at $k=2$ with one
+pair, where $S = \tilde O(1)$ is inside his regime and $T^2S =
+\tilde\Omega(N)$ gives $T = \tilde\Omega(\sqrt N)$, which is~\ref{F3}.
+They differ in that the conjectured $k=3$ bound is linear in $S$ rather
+than quadratic in $T$, which is exactly why $S = O(\log N)$ already forces
+$T = \tilde\Omega(N)$ at $k=3$ and forces nothing at $k=2$.
+\end{remark}
+But none of \cref{BS1,BS2,BS3,BS4} is where to begin: by \cref{r:barrier}
+each stands behind the same short-output wall, so the weakest is no easier
+than the strongest.  The way in is to ask for many collisions.
+
+
+\paragraph{The attackable case: many collisions.}\label{sec:cfold}
+The Borodin--Cook method that \cref{BS4} would need cuts time into blocks and pays
+a union bound over the $2^S$ nodes at a block boundary, affordable only if
+producing a block's quota of outputs is improbable to a degree exponential
+in the number of outputs.  A target of one triple offers no quota to be
+improbable about; $C$ of them restore one.
+
+\begin{conj}{BS4-C}[$C$ disjoint triples]\label{BS4-C}
+For every $C \geq 1$, every branching program that outputs $C$ pairwise
+disjoint $3$-collisions with probability at least $\tfrac12$ satisfies
+\[
+  T \;=\; \tilde\Omega\bigl(\max\{C^{1/3}N^{2/3},\ CN/S\}\bigr).
+\]
+\end{conj}
+
+At $C=1$ this is \cref{BS4}.  It is tight: \cite{GNY25} find $C$ triples in
+$\tilde O(CN/S)$ for every $S\leq\tilde O(C^{2/3}N^{1/3})$, and there the
+query threshold $\Theta((CN^2)^{1/3})$ is reached, so the two clauses cross
+where the two regimes meet.  The reason to state it is that it is the first
+statement of class \cls{BS} existing technique can address at all: the block
+union bound needs $\tilde\Omega(S)$ outputs per block, so the method is
+available once $C=\tilde\Omega(S)$, and $C=S=\mathrm{polylog}$ lies inside
+that while $C=1$ does not.  The companion note \cite{Note2} works this case
+and shows that segmentation delivers the weaker
+$T\cdot S^{2/3}=\tilde\Omega(CN^{2/3})$, short of \cref{BS4-C} by the same
+$N^{1/3}$ that separates query bound from algorithm at $C=1$; what is
+missing is an argument that a short program cannot \emph{hold} many pairs,
+as opposed to \emph{find} them.
+
+\paragraph{General $k$.}
+
+\begin{conj}{BS4-k}[branching programs, general $k$]\label{BS4-k}
+For every constant $k \geq 3$, every branching program succeeding with
+probability at least $\tfrac12$ satisfies
+\[
+  T \cdot S^{1/(k-2)} \;=\; \tilde\Omega(N)
+  \qquad\text{and}\qquad
+  T \;=\; \tilde\Omega\bigl(N^{(k-1)/k}\bigr).
+\]
+\end{conj}
+
+\Cref{BS4-k} is tight at both attested endpoints for every $k$, and
+throughout for $k=3$; for $k\geq4$ its interior rests on the power law
+$T=\tilde\Theta(NS^{-1/(k-2)})$ and should be read as the natural guess
+rather than as calibrated against an algorithm.  The remaining rungs have
+the counterparts got by replacing $N^{2/3}$ with $N^{(k-1)/k}$, and are not
+restated.
+
+\subsection{Parallel: class \cls{BP}}\label{sec:BP}
+
+Here a node carries a $q$-tuple and branches on the whole answer tuple, so
+it may name any number of points regardless of the width; width is free, and
+that changes the answer.
+
+\begin{proposition}[width is free, and lowers the cost]\label{p:parbp}
+There is a one-round parallel branching program of width $O(N^{2})$ that
+queries $T = \Theta(N^{2/3})$ points and succeeds with constant
+probability: query $T$ fixed points, keep one sink per candidate triple, and
+route each answer tuple to a sink that collides under it.
+\end{proposition}
+\begin{remark}[Where the asymmetry comes from]\label{r:asym}
+A wide round lets a program \emph{select} its output from the whole answer
+batch, and selecting is cheap.  A register machine must instead \emph{hold}
+its output in cells, and by \cref{p:qcap} the cell count caps how much of a
+batch it can hold, so buying width costs memory.  This is why
+\cref{p:costfree} has no analogue in class \cls{BP}, and it is the third
+reason, after tractability and the leverage of \cref{r:leverage}, to prefer
+the register model.
+\end{remark}
+
+\paragraph{What the parallel programs achieve.}
+For a program of polynomial width, two strategies are available, each with
+$O(\log N)$ bits between rounds.  One holds a $2$-collision and hunts $q$
+fresh points per round, costing $T=\Theta(N)$ at any $q$.  The other detects
+a $3$-collision inside a single batch, which routing permits once the width
+exceeds $\binom{q}{3}$; the probability is $\approx q^3/N^2$ per round, so
+$r\approx N^2/q^3$ and $T=\tilde\Theta(N^2/q^2)$.  Taking the better of the
+two, the crossover is at $q=\sqrt N$.
+
+\paragraph{The three-collision conjectures, $k=3$.}
+The proved base is again the oblivious curve; the conjectures then run from
+one width to the whole range.
+
+\begin{cthm}{BP0}[oblivious parallel programs]\label{BP0}
+Every repetition-free oblivious parallel branching program of space $S$ and
+query width $q$ succeeding with probability at least $\tfrac12$ satisfies
+$T \cdot \bigl(S + q\lceil\log_2 N\rceil\bigr) = \tilde\Omega(N)$; in
+particular $T = \tilde\Omega(N/q)$ at width $N^{O(1)}$.
+\end{cthm}
+
+\begin{proof}
+As in \cref{BS0}.  A round branches on its whole answer tuple, so read one
+element at a time the program is a streaming algorithm carrying
+$S+q\lceil\log_2N\rceil$ bits across the interior of a round; the verifying
+second pass needs $O(\log N)$ more.
+\end{proof}
+
+\Cref{BP0} settles the oblivious case and falls short of \cref{BP3} below by
+a factor $q$ even there.  The conjectures, weakest first.
+
+\begin{conj}{BP1}[the crossing width]\label{BP1}
+Every parallel branching program of width $N^{O(1)}$ and query width
+$q = \sqrt N$ succeeding with probability at least $\tfrac12$ satisfies
+$T = \tilde\Omega(N)$, that is $r = \tilde\Omega(\sqrt N)$ rounds.
+\end{conj}
+\begin{conj}{BP2}[the hold-and-hunt range]\label{BP2}
+The same for every $q \leq \sqrt N$, where hold-and-hunt is the better
+strategy and the target is $\tilde\Omega(N)$ throughout.
+\end{conj}
+\begin{conj}{BP3}[every width]\label{BP3}
+For every $q$, every parallel branching program of width $N^{O(1)}$
+succeeding with probability at least $\tfrac12$ satisfies
+$T = \tilde\Omega\bigl(\min\{\, N,\; N^{2}/q^{2} \,\}\bigr)$.
+\end{conj}
+
+\Cref{BP1} is the logically weakest but not the easiest instance: $q=\sqrt
+N$ is where the two strategies cross and the curve is hardest, whereas on
+either side one strategy is comfortably better and an argument has more
+room, which is \cref{r:parbase}.  \Cref{BP3} at $q=1$ is the
+polynomial-width case of \cref{BS4}, so it is stronger.  Beyond polynomial
+width the shape is unclear, since a larger width both permits a table and
+permits naming more triples per batch; we state no conjecture there, and
+note that the naive $T\cdot(S+q\lceil\log_2N\rceil)=\tilde\Omega(N)$ is
+proved only in the oblivious case (\cref{BP0}) and is loose regardless, by
+\cref{r:notconj}.
+
+\begin{remark}[What is not conjectured]\label{r:notconj}
+For branching programs of width beyond polynomial the shape is unclear,
+because the two strategies interact: a larger width both permits a table,
+as in the sequential case, and permits naming more triples per batch.  We
+state no conjecture there.  Note also that the bound
+$T \cdot (S + q\lceil\log_2 N\rceil) = \tilde\Omega(N)$, which is the first
+thing one writes down, is established only in the oblivious case, where it
+is \cref{BP0}; for adaptive programs it follows from \cref{BS4} and from
+nothing else proved here.  Either way it is loose: at $q = N^{1/2}$ it
+gives $T = \tilde\Omega(N^{1/2})$ against a truth of $\tilde\Theta(N)$, so
+even \cref{BP0} leaves a factor $\sqrt N$ inside its own class at the
+crossing width.
+\end{remark}
+
+\begin{remark}[Which base rung to attack]\label{r:parbase}
+\Cref{GP1} is stated at $q = N^{1/6}$ merely as a clean interior point; any
+$1 \ll q \ll N^{1/3}$ would do, the endpoints being respectively
+\cref{GS3} and the query charge.  \Cref{BP1} is different: it is the
+logically weakest statement of its class, being a single width, but it is
+not the easiest instance, since $q = \sqrt N$ is where the two strategies
+of \cref{sec:BP} cross and the curve is hardest.  On either side of that
+width one strategy is comfortably better than the other, so an argument
+that need only rule out near-optimal programs has more room there.
+\end{remark}
+
+\paragraph{General $k$.}
+
+\begin{conj}{BP3-k}[parallel branching programs, general $k$]\label{BP3-k}
+For every constant $k \geq 3$ and every $q$, every parallel branching
+program of width $N^{O(1)}$ succeeding with probability at least $\tfrac12$
+satisfies
+$T = \tilde\Omega\bigl(\min\{\, N,\; N^{k-1}/q^{k-1} \,\}\bigr)$.
+\end{conj}
+
+The batch-detection strategy becomes $r\approx N^{k-1}/q^k$ and hence
+$T=\tilde\Theta(N^{k-1}/q^{k-1})$, so the two strategies cross at
+$q=N^{(k-2)/(k-1)}$, which is $\sqrt N$ at $k=3$.
+
+% ---------------------------------------------------------------------
+\section{Cumulative memory}\label{sec:G}
+% ---------------------------------------------------------------------
+
+The models above bound the memory available at each step; cumulative memory
+integrates memory over time, which is the measure under which
+memory-hardness is normally stated~\cite{AS15}.  By \cref{r:transfer} a
+Borodin--Cook proof in class \cls{BS} transfers here with only a constant or
+logarithmic loss, so class \cls{GS} is strictly stronger than \cls{BS} and
+no harder to work in; the two are one stage of \cref{sec:route}, not two.
+
+\subsection{Sequential: class \cls{GS}}\label{sec:cmc}
+
+\begin{cbox}
+\textbf{Model.}  A sequential adversary is a sequence of functions
+$\advers_i$ carrying a state $\sigma_i \in \{0,1\}^{*}$ from one query to
+the next; after $T$ queries it outputs three points.  Its \emph{charged
+cumulative memory} on a given run is
+\[
+  \cmcs \;=\; \sum_{i=1}^{T} |\sigma_i| \;+\; T\lceil \log_2 N \rceil ,
+\]
+its \emph{expected} charged cumulative memory $\eCMCs$ is the expectation
+of $\cmcs$ over $f$ and the adversary's coins, and its \emph{worst-case}
+charged cumulative memory $\CMCs$ is the supremum of $\cmcs$ over $f$ and
+those coins; so $\eCMCs \leq \CMCs$.  Its \emph{peak space} is
+$\max_i |\sigma_i|$, and a peak space of $S$ \emph{cells} means
+$S\lceil\log_2 N\rceil$ bits, the distinction being absorbed by
+$\tilde\Omega$.  The second term of $\cmcs$ charges the queries
+themselves; without it the measure admits no lower bound, since an
+adversary may issue all its queries in one batch while carrying no state.
+\Cref{app:models} gives the measure as an accumulator inside the execution
+game.
+\end{cbox}
+
+\paragraph{The three-collision conjectures, $k=3$.}
+There is no proved base in this class: the conversion of \cref{r:transfer}
+delivers one as soon as \cref{BS4-C} is proved, but nothing is proved
+unconditionally beyond the query bound.  The conjectures run from one
+interior peak space in the worst-case metric to the advantage form; and,
+as in class \cls{BS}, the attackable statement is the $C$-fold one.
+
+\begin{conj}{GS1}[one interior peak space, worst case]\label{GS1}
+Every sequential adversary of peak space $S = N^{1/6}$ succeeding with
+probability at least $\tfrac12$ satisfies $\CMCs = \tilde\Omega(N)$.
+\end{conj}
+\begin{conj}{GS2}[the same in the expected metric]\label{GS2}
+Every sequential adversary of peak space $S = N^{1/6}$ succeeding with
+probability at least $\tfrac12$ satisfies $\eCMCs = \tilde\Omega(N)$.
+\end{conj}
+\begin{conj}{GS3}[every peak space]\label{GS3}
+Every sequential adversary succeeding with probability at least $\tfrac12$
+satisfies $\eCMCs = \tilde\Omega(N)$.
+\end{conj}
+\begin{conj}{GS4}[advantage]\label{GS4}
+For every $\epsilon \in (0,1]$, every sequential adversary succeeding with
+probability at least $\epsilon$ satisfies $\eCMCs=\tilde\Omega(\epsilon N)$.
+\end{conj}
+
+\Cref{GS3} is tight by~\ref{F2} and by Joux--Lucks at every point of its
+curve, since $T\cdot S=\tilde\Theta(N)$ there and the state is held for
+essentially the whole run; that the whole family sits at one value of
+$\cmcs$ is the reason to prefer this measure.  \Cref{GS1,GS2} must be stated
+at an interior $S$: at $S=O(\log N)$ bits cumulative memory degenerates into
+the query charge and the statement there is \cref{BS3}.  In the expected
+metric the linear factor of \cref{GS4} is necessary, by \cref{r:eps}.
+
+\begin{remark}[The factor $\epsilon$]\label{r:eps}
+In the expected metric the linear factor of \cref{GS4} is necessary: an
+adversary that runs the algorithm of~\ref{F2} with probability $\epsilon$
+and halts at once otherwise succeeds with probability
+$\Omega(\epsilon)$ and has $\eCMCs = \tilde\Theta(\epsilon N)$.  In the
+worst-case metric that construction pays in full on the branch where it
+runs, so no such factor appears and the analogue of \cref{GS4} is
+$\CMCs = \tilde\Omega(N)$; the limit of any such statement is the guessing
+floor at $\epsilon = \Theta(N^{-2})$, where naming three unqueried points
+already succeeds.
+\end{remark}
+
+\begin{remark}[Why the base rungs sit at an interior peak space]\label{r:interior}
+\Cref{GS1,GS2} must be stated at an interior $S$.  At $S = O(\log N)$ bits
+cumulative memory degenerates into the query charge and the statement there
+is \cref{BS3} rather than anything new.  At $S = N^{1/6}$ the target is
+tight, since Joux--Lucks there has $T = N^{5/6}$ and
+$\cmcs \approx TS = \tilde\Theta(N)$; any $1 \ll S \ll N^{1/3}$ would serve
+equally.
+\end{remark}
+
+\begin{remark}[Between peak and cumulative]\label{r:sustained}
+Peak space and cumulative memory are not the only two measures.  Sustained
+space~\cite{ABP18}
+counts the steps at which the space in use is at least $s$, and a statement
+of the form \emph{every successful adversary spends $\tilde\Omega(N/s)$
+steps with space at least $s$} implies \cref{GS3} already for one interior
+$s$, since those steps alone contribute $\cmcs = \tilde\Omega(N)$.  It is
+therefore strictly stronger than \cref{GS3}, and it is the natural statement
+to attempt once \cref{GS3} is in hand: the transfer of \cref{r:transfer} is
+stated for cumulative memory, but the block decomposition it rests on is
+what a sustained bound needs too.
+\end{remark}
+
+
+\paragraph{The attackable case: many collisions.}
+
+\begin{conj}{GS3-C}[the same in cumulative memory]\label{GS3-C}
+For every $C \geq 1$, every sequential adversary that outputs $C$ pairwise
+disjoint $3$-collisions with probability at least $\tfrac12$ satisfies
+$\eCMCs = \tilde\Omega(CN)$.
+\end{conj}
+
+At $C=1$ this is \cref{GS3}, and by \cref{r:transfer} a proof of
+\cref{BS4-C} along the expected lines carries it at no extra cost.  It is
+tight by the same algorithm as \cref{BS4-C}.
+
+\paragraph{General $k$.}
+
+\begin{conj}{GS3-k}[cumulative memory, general $k$]\label{GS3-k}
+For every constant $k \geq 3$, every sequential adversary succeeding with
+probability at least $\tfrac12$ satisfies $\eCMCs = \tilde\Omega(N)$.
+\end{conj}
+
+\Cref{GS3-k} deserves a word: its target does \emph{not} depend on $k$.  It
+is tight for every $k\geq3$, since the table-free recursion has
+$\cmcs=\tilde\Theta(N)$ while the balanced Joux--Lucks point has
+$\cmcs\approx TS=N^{(2k-3)/k}\geq N$, with equality exactly at $k=3$.  So
+cumulative memory sees no difference between the collision orders above two,
+and at $k=3$ alone the whole tradeoff curve sits at one value of it.
+
+\subsection{Parallel: class \cls{GP}}\label{sec:GP}
+
+A round issues $q$ queries, the length becomes the number of rounds $r$, and
+$T=rq$.  This is the one class in which the achievable cumulative memory
+genuinely depends on the width.
+
+\paragraph{The three-collision conjectures, $k=3$.}
+The proved base is the oblivious bound; the conjectures then run from one
+width to the whole range.
+
+\begin{cthm}{GP0}[oblivious parallel adversaries]\label{GP0}
+Every repetition-free oblivious $q$-parallel adversary of peak space $S$
+cells succeeding with probability at least $\tfrac12$ satisfies
+$T \cdot (S + q) = \tilde\Omega(N)$, and hence
+$\eCMCs = \tilde\Omega\bigl(N/(S+q)\bigr)$.  At $S = \tilde O(q)$ and
+$q \leq N^{1/3}$ this is \cref{GP3}.
+\end{cthm}
+
+\begin{proof}
+The first clause is \cref{BP0}, whose proof uses only the state carried
+between rounds and the buffer held within one, and which applies at any
+constant success probability.  For the second, $\cmcs\geq
+T\lceil\log_2N\rceil$ pointwise, so an adversary with
+$\eCMCs=o\bigl(N/(S+q)\bigr)$ has $\mathbb{E}[T]=o\bigl(N/(S+q)\bigr)$;
+truncating it at $4\,\mathbb{E}[T]$ queries leaves success probability at
+least $\tfrac14$ by Markov's inequality, contradicting the first clause.
+\end{proof}
+
+The conjectures, weakest first.
+
+\begin{conj}{GP1}[one interior width, worst case]\label{GP1}
+Every $q$-parallel adversary of width $q = N^{1/6}$ succeeding with
+probability at least $\tfrac12$ satisfies $\CMCs = \tilde\Omega(N^{5/6})$.
+\end{conj}
+\begin{conj}{GP2}[the same in the expected metric]\label{GP2}
+Every $q$-parallel adversary of width $q = N^{1/6}$ succeeding with
+probability at least $\tfrac12$ satisfies $\eCMCs = \tilde\Omega(N^{5/6})$.
+\end{conj}
+\begin{conj}{GP3}[every width]\label{GP3}
+For every $q \geq 1$, every $q$-parallel adversary succeeding with
+probability at least $\tfrac12$ satisfies
+$\eCMCs = \tilde\Omega\bigl(\max\{N^{2/3},\, N/q\}\bigr)$; equivalently
+$q \cdot \eCMCs = \tilde\Omega(N)$ for $q \leq N^{1/3}$.
+\end{conj}
+
+\Cref{GP3} at $q=1$ is \cref{GS3}, so it is stronger; it is met by
+Joux--Lucks at width $q$, where $\cmcs\approx rS=N/q$, and at $q=N^{1/3}$ it
+flattens onto the query charge.  \Cref{GP1} is stated at $q=N^{1/6}$ as a
+clean interior point; any $1\ll q\ll N^{1/3}$ would do.
+
+\paragraph{General $k$.}
+
+\begin{conj}{GP3-k}[cumulative memory, parallel, general $k$]\label{GP3-k}
+For every constant $k \geq 3$ and every $q \geq 1$, every $q$-parallel
+adversary succeeding with probability at least $\tfrac12$ satisfies
+$\eCMCs = \tilde\Omega\bigl(\max\{N^{(k-1)/k},\, N/q\}\bigr)$; equivalently
+$q \cdot \eCMCs = \tilde\Omega(N)$ for $q \leq N^{1/k}$.
+\end{conj}
+
+The target of \cref{GP3-k} is again $k$-free away from the floor.
+% ---------------------------------------------------------------------
+\section{Relations across the classes}\label{sec:relations}
+% ---------------------------------------------------------------------
+
+The model sections presented each class in its own order of difficulty.
+This section records the logical relations that cut across them: the ladders
+within each class, the chain between classes, how both change with $k$, the
+structural reason register machines are the easiest place to work and
+branching programs the hardest, and what a single algorithm would have to do
+to refute each statement.
+
+\begin{proposition}[the ladders]\label{p:ladders}
+Within each class the codes are ordered by implication:
+\begin{center}
+\begin{tabular}{@{}l@{}}
+\ref{RS5} $\Rightarrow$ \ref{RS4} $\Rightarrow$ \ref{RS3} $\Rightarrow$
+  \ref{RS2} $\Rightarrow$ \ref{RS1},\\
+\ref{BS4-C} $\Rightarrow$ \ref{BS4} $\Rightarrow$ \ref{BS3} $\Rightarrow$
+  \ref{BS2} $\Rightarrow$ \ref{BS1},\\
+\ref{GS4} $\Rightarrow$ \ref{GS3} $\Rightarrow$ \ref{GS2} $\Rightarrow$
+  \ref{GS1}, \quad and \quad \ref{GS3-C} $\Rightarrow$ \ref{GS3},\\
+\ref{GP3} $\Rightarrow$ \ref{GP2} $\Rightarrow$ \ref{GP1},\\
+\ref{BP3} $\Rightarrow$ \ref{BP2} $\Rightarrow$ \ref{BP1}.
+\end{tabular}
+\end{center}
+The proved statements \cref{RS0,RS5',BS0,BP0,GP0} are not rungs of these
+ladders.
+\end{proposition}
+
+\begin{proof}
+Four moves generate every implication.  \emph{Weakening the hypothesis on
+the algorithm}: demanding success probability $1-o(1)$ rather than $\tfrac12$
+restricts the algorithms quantified over, giving \ref{RS2} $\Rightarrow$
+\ref{RS1} and \ref{BS2} $\Rightarrow$ \ref{BS1}.  \emph{Weakening the
+conclusion}: $N^{1-o(1)}=\omega(N^{2/3})$, giving \ref{RS3} $\Rightarrow$
+\ref{RS2} and \ref{BS3} $\Rightarrow$ \ref{BS2}.  \emph{Specialising a curve
+to one value of its parameter}: $S=O(1)$ in \cref{RS4} gives \cref{RS3};
+$S=O(\log N)$ in \cref{BS4} gives \cref{BS3}; $S=N^{1/6}$ in \cref{GS3} gives
+\cref{GS2}; $q=N^{1/6}$ in \cref{GP3} gives \cref{GP2}; $q\leq\sqrt N$ in
+\cref{BP3} gives \cref{BP2} and $q=\sqrt N$ then \cref{BP1};
+$\epsilon=\tfrac12$ in \cref{GS4} gives \cref{GS3}; $C=1$ in \cref{BS4-C}
+gives \cref{BS4} and in \cref{GS3-C} gives \cref{GS3}; and success
+probability $\tfrac12$ in \cref{RS5} gives the clause $T=\tilde\Omega(N/S)$
+of \cref{RS4}, whose other clause is~\ref{F1}.  \emph{Passing from the
+expected to the worst-case metric}: $\eCMCs\leq\CMCs$, giving \ref{GS2}
+$\Rightarrow$ \ref{GS1} and \ref{GP2} $\Rightarrow$ \ref{GP1}.  The five
+proved statements restrict the algorithms rather than the conclusion and so
+sit beside the ladders rather than on them; \cref{sec:route} places them.
+\end{proof}
+
+\begin{proposition}[the chain across classes]\label{p:chain}
+\ref{GS3} $\Rightarrow$ \ref{BS4} $\Rightarrow$ \ref{RS4}, and hence with
+\cref{p:ladders} the sequential statements have \ref{GS4} at the top and
+\ref{RS1} at the bottom.
+\end{proposition}
+
+\begin{proof}
+For the first, $\cmcs\leq T(S+\lceil\log_2 N\rceil)$ pointwise for an
+adversary of peak space $S$, so $\eCMCs=\tilde\Omega(N)$ forces
+$T\cdot\max\{S,\log_2 N\}=\tilde\Omega(N)$.  For the second, a register
+machine with $S$ cells and $\beta=O(S\log N)$ control bits is a branching
+program of the same length and space $O(S\log N)$, its node at level $i$
+being the pair $(Z,b)$; conversely a branching program need not be a
+register machine, since its node may be labelled with any point.
+\end{proof}
+
+\begin{remark}[Peak does not bound cumulative]\label{r:peak}
+\Cref{BS4} does not imply \cref{GS3}.  A bound on $T \cdot S$ constrains
+the \emph{peak} state, and $\sum_i |\sigma_i|$ can be far below $TS$ when
+the state is small in most rounds.  Any route from a branching-program
+bound to a cumulative one therefore needs a further argument about the
+profile $i \mapsto |\sigma_i|$, not just its maximum.  This is why
+\cref{GS3} is listed as strictly stronger and not as a corollary.
+\end{remark}
+\begin{remark}[The technique transfers even though the statement does not]\label{r:transfer}
+\Cref{r:peak} is about implication, not about difficulty.  Beame and
+Kornerup~\cite{BK23} convert Borodin--Cook-style time--space proofs into
+cumulative-memory bounds of the same strength, by choosing the block
+boundaries at time steps of locally small space instead of at fixed ones,
+and losing only a constant or logarithmic factor.  So a proof of
+\cref{BS4-C} by that route delivers \cref{GS3-C}, and a proof of
+\cref{BS4} by that route would deliver \cref{GS3}.  Class \cls{GS} is
+strictly stronger than class \cls{BS} and no harder to work in, which is
+why \cref{sec:route} treats their rungs as one stage and not two.  The step
+is not speculative: applied to the estimate of Hamoudi and Magniez for $k$
+disjoint collision pairs it yields the cumulative-memory bound
+$\Omega(k^{3}N/T^{2})$ for quantum circuits~\cite{HM21,BK23}, which is the
+collision-pair instance of exactly the move \cref{BS4-C} would need.
+\end{remark}
+
+\begin{remark}[The short-output barrier]\label{r:barrier}
+Every statement of classes \cls{BS}, \cls{GS}, \cls{BP} and \cls{GP} asks
+for one $3$-collision, an output of $O(\log N)$ bits, and that is the
+regime in which no technique for general models is known to give anything:
+the available tradeoffs need an output at least as large as the space, and
+for short outputs the best bounds are logarithmic in the input
+size~\cite{HHL26}.  Hao, Huang and Liu take the $3$-collision problem as
+their starting point and cannot treat it.  The reduction one wants, from
+finding one triple to finding many pairs, fails on machines that never hold
+many pairs, their example being one that hunts preimages of a single value
+in polylogarithmic space; they prove a tradeoff instead for a modified
+problem in which a second oracle records the tuples an algorithm has
+assembled.  Two consequences here.  That example is a constraint alongside
+\ref{F3} which any proof must accommodate, and \cref{RS5'} accommodates it
+by covering exactly the machines it describes.  And the statements of
+\cref{sec:cfold} are the way past the barrier that leaves the problem
+alone.  By contrast streaming models carry no such barrier, which is why
+\ref{BS0}, \ref{BP0} and \ref{GP0} are proved; the preprocessing model
+carries none either, but it answers a different question, as
+\cref{r:proxies} records.  The quantum counterpart of the same wall is
+where~\cite{HHL26} began, the time--space complexity of quantum collision
+finding being on Aaronson's list of ten open challenges.
+\end{remark}
+\begin{remark}[Three neighbouring models that do not see the phenomenon]\label{r:proxies}
+Each of the following questions has been settled, and none of them settles
+anything here; it is worth being explicit about why, since all three are
+sometimes offered as proxies.
+
+\emph{Preprocessed advice.}  In the auxiliary-input random oracle model the
+adversary receives $S$ bits about $f$ and then queries with unbounded
+working memory.  Memory-sensitive bounds are proved there, and for
+multi-collisions in Merkle--Damg\aa{}rd hashing the $m$-way advantage
+differs from the $2$-way one by a factor $m$~\cite{ACDW20,Aks24}.  The
+phenomenon of this note is invisible in that model, because advice is not
+working memory: an adversary with polylogarithmic advice still has the
+$\Theta(N^{2/3})$-query algorithm of~\ref{F1} available.
+
+\emph{Deciding instead of searching.}  For a random $f \colon \NN \to \NN$ a
+$3$-collision exists with overwhelming probability, so the decision problem
+is vacuous.  In the non-trivial regime $M = \tilde\Theta(N^{3/2})$ for
+$f \colon [N] \to [M]$ it is solvable in $\tilde O(N^{3/2}/\sqrt S)$, which
+is the curve for $2$-collisions as well~\cite{GNY25}, so deciding does not
+see the collision order either.
+
+\emph{Comparison-based programs.}  For element distinctness, a single-output
+problem, memory-sensitive bounds are proved: $TS = \Omega(n^{3/2}\sqrt{\log
+n})$~\cite{BFMUW87}, improved to $TS = \Omega(n^{2-o(1)})$~\cite{Yao94}.
+Both are for comparison-based programs on worst-case inputs.  The problem
+here differs on three axes at once, being a search problem, on a random
+input, against programs that may compute anything of what they have seen,
+and each difference is one of the reasons \cref{r:barrier} bites.
+\end{remark}
+\begin{proposition}\label{p:fork}
+For $k = 3$ the general-$k$ statements form the single chain of
+\cref{p:chain}.  For $k \geq 4$ they do not:
+\ref{BS4-k} $\Rightarrow$ \ref{RS3-k} $\Rightarrow$ \ref{RS2-k}, and
+\ref{GS3-k} $\Rightarrow$ \ref{BS4-k} \emph{fails}.
+\end{proposition}
+
+\begin{proof}
+The surviving implications are as in \cref{p:chain}, a register machine with
+$S$ cells being a branching program of space $\tilde O(S)$.  For the failure,
+$\cmcs\leq T(S+\lceil\log_2 N\rceil)$ yields only $T\cdot S=\tilde\Omega(N)$,
+and since $S^{1/(k-2)}\leq S$ that is strictly weaker than the conclusion of
+\cref{BS4-k} whenever $k\geq4$.
+\end{proof}
+
+So at $k=3$, where $1/(k-2)=1$, the cumulative and branching-program
+statements coincide in strength and the sequential statements are linearly
+ordered; from $k=4$ on they are incomparable.
+
+
+\subsection{What would refute each}
+
+
+Each statement is refuted by a single algorithm, and it is worth being
+explicit about what would count.  Throughout $k=3$.
+
+\begin{center}
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+statement & refuted by \\
+\midrule
+\ref{RS2} & a register machine with $S = O(1)$ and cost $O(N^{2/3})$ \\
+\ref{RS3} & the same with cost $N^{1-\delta}$ for a fixed $\delta > 0$ \\
+\ref{RS4} & a register machine beating $T = \tilde O(N/S)$ for some $S$ \\
+\ref{RS5} & any of the above, or an advantage $\omega(TS/N)$ at some $T$ \\
+\ref{BS4} & any algorithm with $T \cdot S = o(N/\mathrm{polylog})$ \\
+\ref{GS3} & any algorithm with $\eCMCs = o(N/\mathrm{polylog})$ \\
+\ref{GP3} & a $q$-parallel adversary with $\eCMCs = o(\max\{N^{2/3},N/q\})$ \\
+\ref{BP3} & a $q$-parallel program of width $N^{O(1)}$ with
+            $T = o(\min\{N,N^{2}/q^{2}\})$ \\
+\ref{BS4-C} & any algorithm with $T \cdot S = o(CN/\mathrm{polylog})$ for some $C$ \\
+\ref{GS3-C} & any algorithm with $\eCMCs = o(CN/\mathrm{polylog})$ for some $C$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+\section{Index of labelled statements}\label{sec:index}
+% ---------------------------------------------------------------------
+
+\begin{center}
+\footnotesize
+\begin{tabular}{@{}llp{0.44\textwidth}l@{}}
+\toprule
+code & kind & statement & status \\
+\midrule
+\multicolumn{4}{@{}l}{\emph{class \cls{RS}, register machine, sequential
+  (\cref{sec:reg})}}\\
+\ref{RS0} & Thm  & non-adaptive: success $O(S^{3}/N^{2})$ at every $T$ & proved \\
+\ref{RS1} & Conj & $S=O(1)$, success $1-o(1)$: $T=\omega(N^{2/3})$ & open, base rung \\
+\ref{RS2} & Conj & $S=O(1)$, success $\tfrac12$: $T=\omega(N^{2/3})$ & open \\
+\ref{RS3} & Conj & $S=O(1)$, success $\tfrac12$: $T=N^{1-o(1)}$ & open \\
+\ref{RS4} & Conj & every $S$: $T=\tilde\Omega(\max\{N^{2/3},N/S\})$ & open \\
+\ref{RS5} & Conj & every $T$: advantage $\tilde O(TS/N)$ & open, top rung \\
+\ref{RS5'} & Thm  & lifting machines: advantage $O(TS/N)$ & proved \\
+\addlinespace[3pt]
+\multicolumn{4}{@{}l}{\emph{class \cls{BS}, branching program, sequential
+  (\cref{sec:bp})}}\\
+\ref{BS0} & Thm  & repetition-free oblivious: $T\cdot(S+\log_2 N)=\tilde\Omega(N)$ & proved \\
+\ref{BS1} & Conj & width $N^{O(1)}$, success $1-o(1)$: $T=\omega(N^{2/3})$ & open, weakest rung \\
+\ref{BS2} & Conj & width $N^{O(1)}$, success $\tfrac12$: $T=\omega(N^{2/3})$ & open \\
+\ref{BS3} & Conj & width $N^{O(1)}$: $T=N^{1-o(1)}$ & open \\
+\ref{BS4} & Conj & every width: $T\cdot S=\tilde\Omega(N)$ & open, top rung \\
+\ref{BS4-C} & Conj & $C$ disjoint triples: $T=\tilde\Omega(\max\{C^{1/3}N^{2/3},CN/S\})$ & open, reachable at $C=\tilde\Omega(S)$ \\
+\addlinespace[3pt]
+\multicolumn{4}{@{}l}{\emph{class \cls{GS}, general adversary, sequential
+  (\cref{sec:cmc})}}\\
+\ref{GS1} & Conj & peak $S=N^{1/6}$: $\CMCs=\tilde\Omega(N)$ & open, base rung \\
+\ref{GS2} & Conj & peak $S=N^{1/6}$: $\eCMCs=\tilde\Omega(N)$ & open \\
+\ref{GS3} & Conj & every peak space: $\eCMCs=\tilde\Omega(N)$ & open \\
+\ref{GS4} & Conj & success $\epsilon$: $\eCMCs=\tilde\Omega(\epsilon N)$ & open, top rung \\
+\ref{GS3-C} & Conj & $C$ disjoint triples: $\eCMCs=\tilde\Omega(CN)$ & open, follows \ref{BS4-C} \\
+\addlinespace[3pt]
+\multicolumn{4}{@{}l}{\emph{class \cls{GP}, general adversary, parallel
+  (\cref{sec:GP})}}\\
+\ref{GP0} & Thm  & repetition-free oblivious: $T\cdot(S+q)=\tilde\Omega(N)$ & proved \\
+\ref{GP1} & Conj & $q=N^{1/6}$: $\CMCs=\tilde\Omega(N^{5/6})$ & open, weakest rung \\
+\ref{GP2} & Conj & $q=N^{1/6}$: $\eCMCs=\tilde\Omega(N^{5/6})$ & open \\
+\ref{GP3} & Conj & every $q$: $\eCMCs=\tilde\Omega(\max\{N^{2/3},N/q\})$ & open, top rung \\
+\addlinespace[3pt]
+\multicolumn{4}{@{}l}{\emph{class \cls{BP}, branching program, parallel
+  (\cref{sec:BP})}}\\
+\ref{BP0} & Thm  & repetition-free oblivious: $T\cdot(S+q\log_2 N)=\tilde\Omega(N)$ & proved \\
+\ref{BP1} & Conj & $q=\sqrt N$, width $N^{O(1)}$: $T=\tilde\Omega(N)$ & open, weakest rung \\
+\ref{BP2} & Conj & every $q\leq\sqrt N$: $T=\tilde\Omega(N)$ & open \\
+\ref{BP3} & Conj & every $q$: $T=\tilde\Omega(\min\{N,N^{2}/q^{2}\})$ & open, top rung \\
+\addlinespace[3pt]
+\multicolumn{4}{@{}l}{\emph{general $k$ (in each model section)}}\\
+\ref{RS2-k} & Conj & $S=O(1)$: $T=\omega(N^{(k-1)/k})$ & open \\
+\ref{RS3-k} & Conj & $S=O(1)$: $T=N^{1-o(1)}$ & open \\
+\ref{RS4-k} & Conj & every $S$: $T=\tilde\Omega(\max\{N^{(k-1)/k},NS^{-1/(k-2)}\})$ & open; upper bound attained \\
+\ref{BS4-k} & Conj & every width: $T\cdot S^{1/(k-2)}=\tilde\Omega(N)$ & open \\
+\ref{GS3-k} & Conj & every peak space: $\eCMCs=\tilde\Omega(N)$ & open \\
+\ref{GP3-k} & Conj & every $q$: $\eCMCs=\tilde\Omega(\max\{N^{(k-1)/k},N/q\})$ & open \\
+\ref{BP3-k} & Conj & every $q$: $T=\tilde\Omega(\min\{N,N^{k-1}/q^{k-1}\})$ & open \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\medskip\noindent
+Classes \cls{US}, \cls{UP} and \cls{RP} carry no code: the first two are
+settled by~\ref{F1} and \cref{p:onerou}, and the third reduces to
+\cls{RS} by \cref{p:qcap,p:costfree}, with \cref{cor:depth} as its only
+consequence.
+
+% ---------------------------------------------------------------------
+\section{A route through the problems}\label{sec:route}
+% ---------------------------------------------------------------------
+
+The ladders of \cref{p:ladders} order statements by logical strength, and
+strength is not difficulty: \cref{BS1} is the weakest statement of its class
+and stands behind the same obstruction as its strongest.  What governs
+difficulty is whether any technique can see the class at all, and on that
+axis the codes fall into seven stages.  Three principles generate the
+order.  \emph{Restricting the algorithm buys more than weakening the
+target}: all five proved statements restrict the algorithm and none weakens
+a target.  \emph{Streaming models escape the barrier of \cref{r:barrier}
+and the generic model does not}, which puts every oblivious statement ahead
+of every adaptive one.  And \emph{a method that needs many outputs should be
+given many outputs}, which puts \cref{sec:cfold} ahead of its own $C=1$
+cases.
+
+\begin{center}
+\small
+\begin{tabular}{@{}lp{0.34\textwidth}p{0.40\textwidth}@{}}
+\toprule
+stage & statements & what it takes \\
+\midrule
+0 & \ref{RS0}, \ref{RS5'}
+  & counting inside the model; proved here \\
+\addlinespace[2pt]
+1 & \ref{BS0}, \ref{BP0}, \ref{GP0}, and the upper bound of \ref{RS4-k}
+  & the streaming switching lemma \cite{Din20b} and the algorithm
+    of~\cite{GNY25}; proved here, two caveats outstanding \\
+\addlinespace[2pt]
+2 & the oblivious curve at $k=3$; \ref{GP3} for oblivious adversaries at
+    every peak space; \ref{BP3} for oblivious programs at fixed $q$
+  & a cumulative-memory form of \cite{Din20b}; no new model and no new
+    barrier \\
+\addlinespace[2pt]
+3 & \ref{BS4-C}, \ref{GS3-C}
+  & one new estimate, then segmentation as in~\cite{Din20} and the
+    transfer of \cref{r:transfer} \\
+\addlinespace[2pt]
+4 & \ref{RS1}--\ref{RS5}, \ref{RS2-k}, \ref{RS3-k}, \ref{RS4-k}
+  & an argument in the functional graph of $f$ covering the non-lifting
+    runs \\
+\addlinespace[2pt]
+5 & \ref{BS1}--\ref{BS4}, \ref{GS1}--\ref{GS4}, \ref{BS4-k}, \ref{GS3-k}
+  & a way past the short-output barrier \\
+\addlinespace[2pt]
+6 & \ref{GP1}--\ref{GP3}, \ref{BP1}--\ref{BP3}, \ref{GP3-k}, \ref{BP3-k}
+  & the same, and a parallel segmentation \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Stage by stage}
+
+\paragraph{Stage 0: what counting gives.}
+\Cref{RS0,RS5'} are both union bounds over the operations of a run.
+\Cref{RS5'} is the more useful of the two, because it subtracts from
+\cref{RS4,RS5} everything a counting argument can reach and leaves a
+sharply posed residue: the runs in which no $2$-collision is in hand when
+the third preimage arrives.  Every algorithm in the literature, including
+the one Hao, Huang and Liu isolate as an obstruction, lies on the side
+already settled.
+
+\paragraph{Stage 1: harvest.}
+\Cref{BS0,BP0,GP0} are one lemma applied three times, and the upper bound
+of \cref{RS4-k} is a reading of an existing algorithm.  What remains here
+is bookkeeping rather than mathematics, in two places.  The three theorems
+assume repetition-free schedules, and the multi-pass lemma covers a
+schedule that repeats a fixed sequence but not one that repeats
+arbitrarily; that gap should either be closed or recorded as a hypothesis.
+And the algorithm behind \cref{RS4-k} uses auxiliary hash functions that
+class \cls{RS} does not provide, so the substitution described after
+\cref{RS4-k} has to be carried out.
+
+\paragraph{Stage 2: finish the oblivious classes.}
+Three targets, in increasing order of effort.  First, close the factor
+$\sqrt S$ between \cref{BS0} and the $\tilde O(N/\sqrt S)$ algorithm inside
+its own class; this is the smallest open quantity in the note and the only
+one whose resolution needs no new technique in either direction.  Second,
+remove the peak-space restriction from \cref{GP0}, which asks for a
+cumulative-memory version of the streaming switching lemma: the conversion
+of~\cite{BK23} is stated for proofs following Borodin and Cook, whereas
+\cite{Din20b} argues through communication complexity, so this is an
+adaptation and not a citation.  Third, close the factor $q$ between
+\cref{BP0} and \cref{BP3}, whose hardest single point is $q = \sqrt N$ for
+the reason given in \cref{r:parbase}.  None of the three changes the model,
+and each is self-contained.
+
+\paragraph{Stage 3: the $C$-fold statements.}
+\Cref{BS4-C} at $C = \tilde\Omega(S)$ is the first assertion about
+adaptive memory-bounded algorithms that current technique can plausibly
+reach.  What has to be proved is the input property that segmentation
+consumes: that a decision tree of height $h$ produces $k$ pairwise disjoint
+$3$-collisions with probability exponentially small in $k$ as soon as
+$h \ll (kN^{2})^{1/3}$, which is for triples what the corresponding
+estimate for pairs is in~\cite{Din20} classically and in~\cite{HM21}
+quantumly.  Given it, segmentation yields
+\cref{BS4-C} and \cref{r:transfer} yields \cref{GS3-C} at no extra cost.
+This is the stage at which a first theorem about class \cls{BS} should be
+expected, and also the stage that would test whether the framing of this
+note survives contact with a proof.
+
+\paragraph{Stage 4: the register ladder.}
+Begin at \cref{RS1}.  A success probability of $1-o(1)$ permits arguing
+about typical executions rather than tail events; the qualitative form asks
+for no exponent; and \cref{RS5'} has already reduced the task to the
+non-lifting runs, where the quantity to be controlled is the factor $\ell$
+of \cref{r:leverage}.  Any argument here must be sensitive to adaptivity,
+since at $k=2$ the non-adaptive statement is \cref{RS0} and the adaptive one
+is false by~\ref{F3}; the same sensitivity is what forced Dinur, Keller and
+Marmor to leave the presampling technique behind in the preprocessing
+model~\cite{DKM25}.  Then \cref{RS2,RS3,RS4,RS5} in that order, and then
+the general-$k$ forms, whose slack $N^{1/k}$ shrinks as $k$ grows, so that
+$k=3$ remains the easiest instance rather than merely the first.
+
+\paragraph{Stage 5: the generic sequential wall.}
+Classes \cls{BS} and \cls{GS} are blocked in their entirety by
+\cref{r:barrier}, and no amount of weakening within a class moves them,
+which is why their nominally weakest rungs are no easier than their
+strongest.  Two ways to spend effort here rather than against it.  Prove the
+$C$-fold statements first and then ask precisely what $C=1$ needs that
+$C = \tilde\Omega(S)$ does not; the answer is a progress measure that
+survives down to a single output, which is the open problem of~\cite{HHL26}
+stated in this note's terms.  Or follow their route and modify the problem
+until a measure exists, then argue the modification inessential; a version
+of their construction whose recording oracle records collision pairs of $f$
+itself, rather than tuples of an independent oracle, would speak directly
+to \cref{BS4}.
+
+\paragraph{Stage 6: the generic parallel classes.}
+Last, and not only by inheritance.  Class \cls{BP} is the one class in which
+the naive bound is false rather than unproved, by \cref{p:parbp}, so a
+statement here has to be correctly shaped before it can be attacked, which
+is why \cref{r:notconj} declines to conjecture beyond polynomial width.
+The oblivious shadow of this class is stage 2 and is open; until that is
+settled there is little reason to attempt \cref{BP1}.
+
+\subsection{Two disagreements with the ladders}
+
+The order above departs from \cref{p:ladders} in exactly two places, and
+both are worth stating plainly.  \Cref{BS1,GS1} are called the weakest rungs
+of their classes and should nonetheless not be attacked first: their
+weakness is logical, not technical, and \cref{sec:cfold} offers a genuinely
+easier target in the same class.  And \cref{GS3} should not be attempted
+after \cref{BS4} but at the same time, since by \cref{r:transfer} a proof of
+the second along the expected lines carries the first.  Of the codes in
+\cref{sec:index}, five are theorems; of the rest, the three items of stage 2
+are reachable with the tools now in hand, stage 3 needs one new estimate,
+and everything from stage 5 on needs an idea that does not yet exist in the
+literature.  A third disagreement is with the literature rather than with
+the ladders: by \cref{r:proxies}, three settled questions resemble this one
+closely enough to be mistaken for it, so a result in the advice model, or
+about the decision version, or about comparison-based programs, advances no
+stage above.
+
+% ---------------------------------------------------------------------
+\appendix
+\section{Models of computation}\label{app:models}
+% ---------------------------------------------------------------------
+
+The model boxes of \cref{sec:R,sec:B,sec:G} are prose, and prose leaves
+choices implicit that a proof then has to make.  This appendix gives all of
+them as code-based games in the style of~\cite{BR06}.  Three things come out
+of it.  The eight classes of \cref{sec:labels} become restrictions on the
+type of a single function, so that what distinguishes them can be read
+rather than recited.  The principle of deferred decisions, on which every
+estimate of what a short computation can find depends, becomes the
+lazy-sampling line of the execution game.  And the output normalisation that
+segmentation arguments need becomes a wrapper whose cost is read off its
+code, which is what \cref{sec:route} asks for at stage 3.
+
+\subsection{Syntax}\label{app:syntax}
+
+\begin{definition}[branching adversary]\label{d:adv}
+Let $N,T,S \in \mathbb{N}$ and $\Sigma = \{0,1\}^{S}$.  A \emph{branching
+adversary} over $\NN$ of length $T$ and space $S$ is a tuple
+$\advers = (\sigma_{0}, \advers.\qry, \advers.\nxt, \advers.\outp)$ with
+\[
+  \begin{array}{ll}
+  \sigma_{0} \in \Sigma
+    & \text{the initial state},\\
+  \advers.\qry \colon [T] \times \Sigma \to \NN
+    & \text{the point queried},\\
+  \advers.\nxt \colon [T] \times \Sigma \times \NN \to \Sigma
+    & \text{the state update},\\
+  \advers.\outp \colon [T] \times \Sigma \times \NN \to (\NN^{3})^{*}
+    & \text{the statements emitted}.
+  \end{array}
+\]
+All four are fixed before $f$ is drawn.
+\end{definition}
+
+Three features of the definition carry weight.  The functions are total and
+deterministic, so an adversary is a finite object.  They receive the step
+index, which is what makes the model levelled.  And $\advers.\outp$ emits
+statements as a side effect of a transition rather than at the end, which is
+what lets a proof speak of the statements emitted during an interval of
+time, as \cref{sec:cfold} needs.
+
+\begin{convention}[the step counter is free]\label{c:counter}
+Passing $i$ to $\advers.\qry$ and $\advers.\nxt$ gives the adversary a
+program counter that is not charged to $S$, which matches the levelled DAG,
+where a node names its own level.  An adversary charged for its counter is
+one whose state space must encode $i$, so the two conventions differ by an
+additive $\lceil\log_{2}T\rceil$ in $S$.  Bounds stated with $S$ replaced by
+$S + \log_{2}T$ hold under either, which is why that substitution appears
+wherever a proof unions over $\Sigma$ at several time steps.
+\end{convention}
+
+\begin{convention}[coins]\label{c:coins}
+A randomised branching adversary is a distribution over the objects of
+\cref{d:adv}.  Since $f$ is drawn from a fixed distribution, for every
+randomised adversary there is a deterministic one with the same resources
+and at least the same success probability, obtained by fixing the coins to a
+best value.  This is the remark that lets \cref{BS4} be stated for
+deterministic programs without loss.
+\end{convention}
+
+\subsection{Execution}\label{app:exec}
+
+\begin{figure}[t]
+\begin{minipage}[t]{0.48\textwidth}
+\begin{gbox}
+\gname{$\mathsf{Game}~\Exec^{\advers}_{N,T}$}
+\begin{pc}
+\item $H \gets \emptyset$; \ $\sigma \gets \sigma_{0}$; \ $L \gets \varepsilon$
+\item $\mathsf{cost} \gets 0$; \ $\mathsf{fresh} \gets 0$
+\item \textbf{for} $i = 1$ \textbf{to} $T$ \textbf{do}
+\item \quad $x \gets \advers.\qry(i,\sigma)$
+\item \quad $y \gets \RO(x)$; \ $\mathsf{cost} \gets \mathsf{cost}+1$
+\item \quad $L \gets L \,\|\, \advers.\outp(i,\sigma,y)$
+\item \quad $\sigma \gets \advers.\nxt(i,\sigma,y)$
+\item \textbf{return} $(L,H)$
+\end{pc}
+\end{gbox}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.48\textwidth}
+\begin{gbox}
+\gname{$\mathsf{procedure}~\RO(x)$}
+\begin{pc}
+\item[\scriptsize 9:] \textbf{if} $H[x] = \bot$ \textbf{then}
+\item[\scriptsize 10:] \quad $H[x] \getsr \NN$
+\item[\scriptsize 11:] \quad $\mathsf{fresh} \gets \mathsf{fresh}+1$
+\item[\scriptsize 12:] \textbf{return} $H[x]$
+\end{pc}
+\end{gbox}
+\begin{gbox}
+\gname{$\mathsf{procedure}~\Fin_{C}(L,H)$}
+\begin{pc}
+\item[\scriptsize 13:] \textbf{for} $x$ in $L$ with $H[x]=\bot$ \textbf{do}
+\item[\scriptsize 14:] \quad $H[x] \getsr \NN$
+\item[\scriptsize 15:] \textbf{return} $\mathsf{disj3}_{C}(L,H)$
+\end{pc}
+\end{gbox}
+\end{minipage}
+\caption{Execution of a branching adversary against a lazily sampled random
+oracle, and the finalisation that decides the task of \cref{sec:cfold}.  At
+$C=1$ the task is the one this note is about.}
+\label{fig:exec}
+\end{figure}
+
+\Cref{fig:exec} is the whole model.  The table $H$ is the oracle, sampled
+lazily; $L$ is the list of emitted statements; $\mathsf{cost}$ counts
+charged steps and $\mathsf{fresh}$ counts points whose image has been
+revealed.  The predicate $\mathsf{disj3}_{C}(L,H)$ returns $1$ iff $L$
+contains $C$ entries $(x^{t}_{1},x^{t}_{2},x^{t}_{3})$, $t \in [C]$, whose
+$3C$ points are pairwise distinct and which satisfy
+$H[x^{t}_{1}] = H[x^{t}_{2}] = H[x^{t}_{3}]$ for every $t$.  The advantage
+of $\advers$ is
+\[
+  \Adv^{\Col}_{N,C,T}(\advers) \;=\;
+  \Pr\bigl[\,\Fin_{C}\bigl(\Exec^{\advers}_{N,T}\bigr) = 1\,\bigr],
+\]
+and the statements of this note read, for instance,
+$\Adv^{\Col}_{N,1,T}(\advers) = O\bigl((T^{3}+1)N^{-2}\bigr)$ for
+unbounded $\Sigma$, which is~\ref{F1}; and
+$\Adv^{\Col}_{N,1,T}(\advers) \geq \tfrac12 \Rightarrow T\cdot S =
+\tilde\Omega(N)$, which is \cref{BS4}.
+
+\begin{remark}[what line 14 is for]\label{r:guess}
+An adversary may emit points it never queried.  Sampling their images in
+$\Fin$ rather than forbidding them keeps the model faithful and makes the
+resulting term visible: a triple none of whose points was queried is a
+$3$-collision with probability $N^{-2}$, which is the additive
+$O(CN^{-2})$ that appears in~\ref{F1} and in the proof of \cref{BS0}.  An
+argument that assumes emitted points are queried has to earn the
+assumption, and \cref{l:ver} is how.
+\end{remark}
+
+\begin{proposition}[equivalence with the levelled DAG]\label{p:dag}
+Branching adversaries of length $T$ and space $S$ are in bijection, up to
+unreachable states, with the branching programs of \cref{sec:bp} of length
+$T$ and width $2^{S}$ whose edges carry output statements.
+\end{proposition}
+
+\begin{proof}
+Given $\advers$, take the node set $[T+1] \times \Sigma$, label $(i,\sigma)$
+with $\advers.\qry(i,\sigma)$, and for each $y$ draw the edge
+$(i,\sigma) \to (i+1,\advers.\nxt(i,\sigma,y))$ carrying
+$\advers.\outp(i,\sigma,y)$; each level then has $2^{S}$ nodes.  Conversely,
+index the nodes of each level of a program of width $W$ by
+$\{0,1\}^{\lceil\log_{2}W\rceil}$ and read off the three functions.  The
+computation paths correspond step by step, hence so do the emitted
+statements and the success events.
+\end{proof}
+
+\begin{center}
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+DAG & code \\
+\midrule
+level $i$ & the loop index, free by \cref{c:counter} \\
+node at level $i$ & the pair $(i,\sigma)$ \\
+node label & $\advers.\qry(i,\sigma)$ \\
+out-edge labelled $y$ & $\advers.\nxt(i,\sigma,y)$ \\
+output statement on an edge & $\advers.\outp(i,\sigma,y)$ \\
+width $W$ & $|\Sigma| = 2^{S}$ \\
+computation path on $f$ & the trace of $\mathsf{Game}~\Exec$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{The classes as restrictions of one type}\label{app:classes}
+
+Everything below changes \cref{d:adv} in one place only, which is the point
+of writing it this way.
+
+\paragraph{Oblivious, repetition-free, non-adaptive.}
+$\advers$ is \emph{oblivious} if $\advers.\qry(i,\sigma)$ is independent of
+$\sigma$, so that $\advers.\qry$ factors through $[T]$, and
+\emph{repetition-free} if that induced map is injective, equivalently if
+$\mathsf{fresh} = T$ on every execution.  These are the hypotheses of
+\cref{BS0,BP0,GP0}.  Obliviousness is also what \emph{non-adaptive} means
+here: the schedule is fixed before $f$ is drawn and only the emitted
+statements may depend on answers, which is the hypothesis of \cref{RS0}
+transposed to class \cls{BS}.
+
+\paragraph{Unbounded space.}
+Taking $\Sigma = \{0,1\}^{*}$ and charging only $\mathsf{cost}$ gives class
+\cls{US}, where~\ref{F1} is the whole story.
+
+\paragraph{Parallel width $q$.}
+Replace the two middle types by
+\[
+  \advers.\qry \colon [r] \times \Sigma \to \NN^{q},
+  \qquad
+  \advers.\nxt \colon [r] \times \Sigma \times \NN^{q} \to \Sigma ,
+\]
+run the loop for $r$ rounds calling $\RO$ on each coordinate, and set
+$T = rq$.  The second type is the substantive one: a round branches on its
+whole answer tuple, so an execution carries
+$S + q\lceil\log_{2}N\rceil$ bits across the interior of a round though only
+$S$ cross its boundary.  That is exactly the term charged in the proofs of
+\cref{BP0,GP0}, and \cref{r:notconj} is the observation that it is charged
+there and nowhere else that is proved.
+
+\paragraph{Cumulative memory.}
+Take $\Sigma = \{0,1\}^{*}$, insert into \cref{fig:exec} the accumulator
+\[
+  \textrm{5a:}\quad \cmcs \gets \cmcs + |\sigma| + \lceil\log_{2}N\rceil
+\]
+once per iteration, and charge $\cmcs$ in place of $(T,S)$; $\eCMCs$ is its
+expectation over the coins of $\RO$ and $\CMCs$ its supremum.  The second
+summand is the query charge discussed in \cref{sec:cmc}, and the accumulator
+is what \cref{r:sustained} would replace by a count of the iterations at
+which $|\sigma| \geq s$.
+
+\paragraph{Register machines.}
+Here the state is structured and the transition is restricted to five
+operations, which makes the class an abstract model of computation in
+Maurer's sense~\cite{Mau05}, the generic group model of Shoup~\cite{Sho97}
+being the familiar instance.  Fix $w_{1},w_{2},\dots \in \NN$ before $f$ is
+drawn.  The state is $\sigma = (Z,b,hd)$ with
+$Z \in (\NN\cup\{\bot\})^{S}$, $b \in \{0,1\}^{\beta}$ and
+$hd \in \mathbb{N}$, and the adversary is the single function
+\[
+  \advers.\stp \colon \{0,1\}^{\beta} \times (\NN \cup \{\bot\})
+  \;\longrightarrow\; \mathsf{Op} \times \{0,1\}^{\beta},
+\]
+\[
+  \mathsf{Op} \;=\;
+  \{\Advance,\Next,\Copy,\Update,\Halt\} \times [S]^{3},
+\]
+which receives the value written by the previous operation and returns the
+next operation with a new control state.  \Cref{fig:reg} is the execution.
+
+\begin{figure}[t]
+\begin{minipage}[t]{0.53\textwidth}
+\begin{gbox}
+\gname{$\mathsf{Game}~\Exec\text{-}\mathrm{REG}^{\advers}_{N,T}$}
+\begin{pc}
+\item $H \gets \emptyset$; \ $Z \gets (\bot,\dots,\bot)$; \ $b \gets b_{0}$
+\item $hd \gets 1$; \ $v \gets \bot$; \ $\mathsf{cost} \gets 0$
+\item \textbf{repeat}
+\item \quad $(\mathsf{op},b) \gets \advers.\stp(b,v)$; \ $v \gets \bot$
+\item \quad \textbf{if} $\mathsf{op} = \Advance(i,j)$ \textbf{then}
+\item \quad\quad \textbf{if} $Z[i] = \bot$ \textbf{then abort}
+\item \quad\quad $v \gets \RO(Z[i])$; \ $Z[j] \gets v$
+\item \quad\quad $\mathsf{cost} \gets \mathsf{cost}+1$
+\item \quad \textbf{if} $\mathsf{op} = \Next(j)$ \textbf{then}
+\item \quad\quad $v \gets w_{hd}$; \ $Z[j] \gets v$; \ $hd \gets hd+1$
+\item \quad\quad $\mathsf{cost} \gets \mathsf{cost}+1$
+\item \quad \textbf{if} $\mathsf{op} = \Copy(i,j)$ \textbf{then} $Z[j] \gets Z[i]$
+\item \quad \textbf{if} $\mathsf{op} = \Halt(i,j,k)$ \textbf{then}
+\item \quad\quad \textbf{return} $\bigl((Z[i],Z[j],Z[k]),H\bigr)$
+\item \textbf{until} $\mathsf{cost} = T$
+\end{pc}
+\end{gbox}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.43\textwidth}
+\small
+The three features that give class \cls{RS} its content, none of which is
+present in \cref{fig:exec}:
+
+\smallskip
+\emph{Contents.}  A register is written only at lines 7, 10 and 12, so it
+holds a point of the closure of $\{w_{m}\}$ under $f$.  The oracle is never
+called on a point of the adversary's own devising.  This is what
+\cref{r:leverage} exploits.
+
+\smallskip
+\emph{Charging.}  $\mathsf{cost}$ counts $\Advance$ \emph{and} $\Next$, so
+reaching the $m$-th sequence point costs $m$, while the oracle is called
+only at line 7.  Cost and query count are different quantities.
+
+\smallskip
+\emph{Feedback.}  The adversary learns $v$ and remembers only what it puts
+in $b$; the space is $S$ cells and $\beta$ control bits.
+\end{minipage}
+\caption{Class \cls{RS} as a restriction of \cref{fig:exec}: structured
+state, five operations, cost charged for two of them.}
+\label{fig:reg}
+\end{figure}
+
+\begin{remark}[the feedback channel is not optional]\label{r:feedback}
+The prose model of \cref{sec:reg} once said only that the algorithm is a
+function of what it was last told.  What it is told has to be part of the
+definition, and the choice decides the class.  If $\advers.\stp$ receives
+the value $v$, as in \cref{fig:reg}, then distinguished-point techniques are
+available, since testing whether $v$ has a prescribed prefix is a
+computation on $v$; parallel collision search~\cite{OW99} and the tradeoff
+algorithms built on it are then legal, which is what makes $\tilde O(N/S)$
+an upper bound for the class and hence what makes \cref{RS4} tight.  Were
+the report instead the equality pattern of the register file, as in a
+generic group model, distinguished points would be excluded and that upper
+bound would fail.  The generous choice is also the right one for a lower
+bound, and it is the one adopted throughout this note.
+\end{remark}
+
+\begin{center}
+\small
+\begin{tabular}{@{}llll@{}}
+\toprule
+class & state space & query type & charged \\
+\midrule
+\cls{US} & $\{0,1\}^{*}$ & one point & $\mathsf{cost}$ \\
+\cls{BS} & $\{0,1\}^{S}$ & one point & $\mathsf{cost}$, $S$ \\
+\cls{RS} & $(\NN\cup\{\bot\})^{S}\times\{0,1\}^{\beta}\times\mathbb{N}$
+  & $Z[i]$, via $\Advance$ & $\mathsf{cost}$, $S$ \\
+\cls{GS} & $\{0,1\}^{*}$ & one point & $\cmcs$ \\
+\cls{UP} & $\{0,1\}^{*}$ & $q$-tuple & $\mathsf{cost}=rq$ \\
+\cls{BP} & $\{0,1\}^{S}$ & $q$-tuple & $\mathsf{cost}=rq$, $S$ \\
+\cls{RP} & as \cls{RS} & $q$ operations per round & $\mathsf{cost}$, $S$ \\
+\cls{GP} & $\{0,1\}^{*}$ & $q$-tuple & $\cmcs$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Two transforms}\label{app:transforms}
+
+\begin{lemma}[deferred decisions]\label{l:lazy}
+Let $\Exec^{\advers}_{N,T}[\mathrm{eager}]$ be \cref{fig:exec} with line 1
+replaced by $f \getsr \mathrm{Fun}(\NN,\NN)$ and $\RO(x)$ by
+\textbf{return} $f(x)$.  The two games induce the same distribution on
+$(L,H)$, reading $H$ as the restriction of $f$ to the queried points.
+Consequently, if $x_{i} \notin \{x_{1},\dots,x_{i-1}\}$ then $y_{i}$ is
+uniform on $\NN$ and independent of $y_{1},\dots,y_{i-1}$, and the
+subsequence of answers to fresh queries is i.i.d.\ uniform whatever the
+adversary's strategy.
+\end{lemma}
+
+\begin{proof}
+In either game the value returned for a point is drawn uniformly and once,
+and $\advers$ is a function of the values returned so far, so the two
+experiments couple step by step.  The consequence is line 10: at the moment
+$y_{i}$ is returned for a fresh $x_{i}$ it has just been drawn uniformly,
+and no earlier line inspected it.
+\end{proof}
+
+\Cref{l:lazy} is the whole probabilistic content of the estimates that
+\cref{sec:route} calls for at stage 3, and it is worth saying what it does
+not give.  Adaptivity is harmless for the distribution of answers and for
+nothing else: the adversary chooses which points to query, so which
+collisions exist among queried points is under its influence, and only the
+count of fresh queries is protected.  This is also the reason
+$\mathsf{fresh}$ and $\mathsf{cost}$ are separate counters in
+\cref{fig:exec}: a tail estimate must be indexed by the former, and an
+adversary that re-queries pays the latter for no new randomness, which is
+the mechanism behind the multi-pass bound used to prove \cref{BS0}.
+
+\begin{figure}[t]
+\begin{minipage}[t]{0.53\textwidth}
+\begin{gbox}
+\gname{$\mathsf{adversary}~\Ver[\advers]$, at step $4(i-1)+1+m$}
+\begin{pc}
+\item \textbf{state} $\sigma' = (\sigma,\tau)$,
+  $\tau \in \NN^{3}\cup\{\bot\}$
+\item \textbf{if} $m = 0$ \quad \emph{// the original step}
+\item \quad query $\advers.\qry(i,\sigma)$
+\item \quad on answer $y$: \ $\tau \gets \advers.\outp(i,\sigma,y)$;
+  \ $\sigma \gets \advers.\nxt(i,\sigma,y)$; emit nothing
+\item \textbf{if} $m \in \{1,2,3\}$ \quad \emph{// verification}
+\item \quad query $\tau[m]$, or a fixed point if $\tau = \bot$
+\item \quad on answer $y$: emit $\tau$ if $m=3$ and $\tau \neq \bot$
+\end{pc}
+\end{gbox}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.43\textwidth}
+\small
+The wrapper delays each statement by three steps and queries its three
+points first.  It holds one pending triple, so the state grows by
+$3\lceil\log_{2}N\rceil$ bits; when the wrapped adversary is a register
+machine the triple is already in registers and the growth is nil.
+\end{minipage}
+\caption{The verification wrapper of \cref{l:ver}.  Its purpose is the
+invariant, not efficiency.}
+\label{fig:ver}
+\end{figure}
+
+\begin{lemma}[verification wrapper]\label{l:ver}
+Let $\advers$ have resources $(T,S)$.  Then $\Ver[\advers]$ of
+\cref{fig:ver} has length $4T$ and space $S + 3\lceil\log_{2}N\rceil$,
+satisfies $\Adv^{\Col}_{N,C,4T}(\Ver[\advers]) =
+\Adv^{\Col}_{N,C,T}(\advers)$, and emits every statement within three steps
+of querying its three points.
+\end{lemma}
+
+\begin{proof}
+Step $4(i-1)+1$ of the wrapper reproduces step $i$ of $\advers$ and its
+answers are distributed identically, so the trace of $\sigma$ and the
+multiset of statements agree; the interleaved queries are answered by $\RO$
+and their answers discarded, so they influence neither $\sigma$ nor the
+statements.  The invariant is immediate from lines 6 and 7, and $\tau$ holds
+one triple.
+\end{proof}
+
+Two consequences.  With \cref{l:ver} in hand, line 14 of $\Fin$ never fires,
+so the guessing term of \cref{r:guess} disappears at the cost of a factor
+$4$ in length; this is the normalisation a segmentation argument needs, and
+it is where the $C$-fold statements of \cref{sec:cfold} would begin.  And
+the space cost is additive, so a bound of the form
+$\mathsf{cost} \cdot S = \tilde\Omega(\cdot)$ is unaffected, whereas a bound
+carrying $S$ in an exponent has to be restated for $S + O(\log N)$.
+
+\subsection{Four conventions the prose leaves implicit}\label{app:pitfalls}
+
+\begin{enumerate}[leftmargin=*,label=(\roman*)]\itemsep3pt
+\item \emph{The step counter} is free, by \cref{c:counter}, so ``$S$ bits of
+  memory'' means $S$ besides the counter.  A proof that unions over
+  $\Sigma$ at each of several time steps pays $\log_{2}T$ anyway and should
+  say $S + \log_{2}T$, as \cref{RS5} and \cref{sec:route} do.
+\item \emph{Repeats} carry no randomness, by \cref{l:lazy}, so an estimate
+  must be indexed by $\mathsf{fresh}$ and not by $\mathsf{cost}$.  The gap
+  between the two is what separates adaptive cycle finding from the
+  multi-pass streaming bound, and hence~\ref{F3} from \cref{BS0}.
+\item \emph{Unqueried outputs} are permitted, and line 14 of $\Fin$ prices
+  them rather than assuming them away.
+\item \emph{Cost is not the query count} in class \cls{RS}, where $\Next$ is
+  charged and calls no oracle.  A bound obtained from a query count becomes
+  a bound on cost only after that gap is closed, which is why the proof of
+  \cref{RS5'} counts charged operations rather than oracle calls.
+\end{enumerate}
+
+% ---------------------------------------------------------------------
+\begin{thebibliography}{9}
+\small
+
+\bibitem{ABP18}
+J.~Alwen, J.~Blocki, and K.~Pietrzak.
+\newblock Sustained space complexity.
+\newblock In \emph{EUROCRYPT 2018, Part II}, LNCS vol.~10821,
+  pp.~99--130, Springer, 2018.
+
+\bibitem{ACDW20}
+Akshima, D.~Cash, A.~Drucker, and H.~Wee.
+\newblock Time-space tradeoffs and short collisions in
+  Merkle--Damg\aa{}rd hash functions.
+\newblock In \emph{CRYPTO 2020, Part I}, LNCS vol.~12170, pp.~157--186,
+  Springer, 2020.
+
+\bibitem{Aks24}
+Akshima.
+\newblock Time-space tradeoffs for finding multi-collisions in
+  Merkle--Damg\aa{}rd hash functions.
+\newblock In \emph{ITC 2024}, LIPIcs vol.~304, pp.~9:1--9:22, Schloss
+  Dagstuhl, 2024.
+
+\bibitem{AS15}
+J.~Alwen and V.~Serbinenko.
+\newblock High parallel complexity graphs and memory-hard functions.
+\newblock In \emph{STOC 2015}, pp.~595--603, ACM, 2015.
+
+\bibitem{BC82}
+A.~Borodin and S.~A. Cook.
+\newblock A time-space tradeoff for sorting on a general sequential model
+  of computation.
+\newblock \emph{SIAM Journal on Computing} 11(2):287--297, 1982.
+
+\bibitem{BFMUW87}
+A.~Borodin, F.~Fich, F.~Meyer auf der Heide, E.~Upfal, and A.~Wigderson.
+\newblock A time-space tradeoff for element distinctness.
+\newblock \emph{SIAM Journal on Computing} 16(1):97--99, 1987.
+
+\bibitem{BK16}
+A.~Biryukov and D.~Khovratovich.
+\newblock Equihash: asymmetric proof-of-work based on the generalized
+  birthday problem.
+\newblock In \emph{NDSS 2016}, Internet Society, 2016.  Journal version:
+  \emph{Ledger} 2:1--30, 2017.
+
+\bibitem{BK23}
+P.~Beame and N.~Kornerup.
+\newblock Cumulative memory lower bounds for randomized and quantum
+  computation.
+\newblock In \emph{ICALP 2023}, LIPIcs vol.~261, pp.~17:1--17:20; journal
+  version \emph{ACM Transactions on Computation Theory} 17(3):20, 2025.
+
+\bibitem{BR06}
+M.~Bellare and P.~Rogaway.
+\newblock The security of triple encryption and a framework for code-based
+  game-playing proofs.
+\newblock In \emph{EUROCRYPT 2006}, LNCS vol.~4004, pp.~409--426,
+  Springer, 2006.
+
+\bibitem{Brent80}
+R.~P. Brent.
+\newblock An improved Monte Carlo factorization algorithm.
+\newblock \emph{BIT} 20:176--184, 1980.
+
+\bibitem{BT24}
+J.~Buzek and S.~Tessaro.
+\newblock Collision resistance from multi-collision resistance for all
+  constant parameters.
+\newblock In \emph{CRYPTO 2024, Part V}, LNCS vol.~14924, pp.~429--458,
+  Springer, 2024.
+
+\bibitem{Din20}
+I.~Dinur.
+\newblock Tight time-space lower bounds for finding multiple collision
+  pairs and their applications.
+\newblock In \emph{EUROCRYPT 2020, Part I}, LNCS vol.~12105,
+  pp.~405--434, Springer, 2020.
+
+\bibitem{Din20b}
+I.~Dinur.
+\newblock On the streaming indistinguishability of a random permutation and
+  a random function.
+\newblock In \emph{EUROCRYPT 2020, Part II}, LNCS vol.~12106,
+  pp.~433--460, Springer, 2020.
+
+\bibitem{DKM25}
+I.~Dinur, N.~Keller, and A.~Marmor.
+\newblock Non-adaptive cryptanalytic time-space lower bounds via a
+  Shearer-like inequality for permutations.
+\newblock arXiv:2505.00894, 2025.
+
+\bibitem{FO90}
+P.~Flajolet and A.~M. Odlyzko.
+\newblock Random mapping statistics.
+\newblock In \emph{EUROCRYPT '89}, LNCS vol.~434, pp.~329--354, Springer,
+  1990.
+
+\bibitem{GNY25}
+J.~Guo, W.~Nan, and Y.~Yao.
+\newblock Revisiting time-space tradeoffs in collision search and decision
+  problems.
+\newblock In \emph{ASIACRYPT 2025}, LNCS vol.~16245, pp.~514--545,
+  Springer, 2026.
+
+\bibitem{HHL26}
+Z.~Hao, Z.~Huang, and Q.~Liu.
+\newblock On the need for (quantum) memory with short outputs.
+\newblock arXiv:2602.23763, 2026.
+
+\bibitem{HM21}
+Y.~Hamoudi and F.~Magniez.
+\newblock Quantum time-space tradeoff for finding multiple collision
+  pairs.
+\newblock In \emph{TQC 2021}, LIPIcs vol.~197, pp.~1:1--1:21, Schloss
+  Dagstuhl, 2021.
+
+\bibitem{JL09}
+A.~Joux and S.~Lucks.
+\newblock Improved generic algorithms for 3-collisions.
+\newblock In \emph{ASIACRYPT 2009}, LNCS vol.~5912, pp.~347--363,
+  Springer, 2009.
+
+\bibitem{JT19}
+J.~Jaeger and S.~Tessaro.
+\newblock Tight time-memory trade-offs for symmetric encryption.
+\newblock In \emph{EUROCRYPT 2019, Part I}, LNCS vol.~11476,
+  pp.~467--497, Springer, 2019.
+
+\bibitem{Mau05}
+U.~Maurer.
+\newblock Abstract models of computation in cryptography.
+\newblock In \emph{Cryptography and Coding 2005}, LNCS vol.~3796,
+  pp.~1--12, Springer, 2005.
+
+\bibitem{OW99}
+P.~C. van Oorschot and M.~J. Wiener.
+\newblock Parallel collision search with cryptanalytic applications.
+\newblock \emph{Journal of Cryptology} 12(1):1--28, 1999.
+
+\bibitem{Pollard75}
+J.~M. Pollard.
+\newblock A Monte Carlo method for factorization.
+\newblock \emph{BIT} 15(3):331--334, 1975.
+
+\bibitem{RV22}
+R.~D. Rothblum and P.~N. Vasudevan.
+\newblock Collision-resistance from multi-collision-resistance.
+\newblock In \emph{CRYPTO 2022, Part III}, LNCS vol.~13509,
+  pp.~503--529, Springer, 2022.
+
+\bibitem{Sho97}
+V.~Shoup.
+\newblock Lower bounds for discrete logarithms and related problems.
+\newblock In \emph{EUROCRYPT '97}, LNCS vol.~1233, pp.~256--266,
+  Springer, 1997.
+
+\bibitem{STKT06}
+K.~Suzuki, D.~Tonien, K.~Kurosawa, and K.~Toyota.
+\newblock Birthday paradox for multi-collisions.
+\newblock In \emph{ICISC 2006}, LNCS vol.~4296, pp.~29--40, Springer,
+  2006.
+
+\bibitem{Wag02}
+D.~Wagner.
+\newblock A generalized birthday problem.
+\newblock In \emph{CRYPTO 2002}, LNCS vol.~2442, pp.~288--303, Springer,
+  2002.
+
+\bibitem{Yao94}
+A.~C.-C. Yao.
+\newblock Near-optimal time-space tradeoff for element distinctness.
+\newblock \emph{SIAM Journal on Computing} 23(5):966--975, 1994.
+
+\bibitem{Note2}
+The author.
+\newblock Many three-way collisions with bounded memory: the attackable
+  case.
+\newblock Companion note, this volume.
+
+\end{thebibliography}
+
+\end{document}

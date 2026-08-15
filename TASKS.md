@@ -13,10 +13,6 @@
 
   Every one of the 100 functionality pages (`uc/layer-N-.../<id>/index.qmd`) is still a stub. Fill in real content incrementally, one functionality at a time: precise UC-style definition, known realizations, security properties, and any formal/Lean artifacts.
 
-- [ ] **Sync corrected citations into LaTeX/PDF sources**
-
-  The three real conjecture pages under `open-problems/symmetric-key/` (`generalized-mirror-theory`, `feistel-6-round-indifferentiability`, `k-collisions-auxiliary-input`) had several citations in their `index.qmd` that were fabricated or misattributed (e.g. "Ito et al., 2021" didn't correspond to any real paper; "Dai et al. (2018)" was actually Mandal–Patarin–Seurin 2012). These were corrected and linked to free versions in the `.qmd` pages, but the mirrored `latex/main.tex` sources (and their compiled `pdf/main.pdf`) still have the old, incorrect citation text — recompile once `hyperref` links are wanted there too.
-
 - [ ] **Verify status badge contrast in dark theme**
 
   The concentric-ring status badge (`scripts/status_badge.py`, `theme-light.scss`/`theme-dark.scss`) had a real bug where the lowest-grade (σ=0/π=0) ring and disc colours were nearly invisible against the light-theme page background — fixed and confirmed via an actual headless-Chrome screenshot. The dark-theme colours were only checked by comparing hex values (RGB distance from `$body-bg`), never with a real screenshot, because the site's dark mode is toggled via a `data-bs-theme="dark"` attribute (not `prefers-color-scheme`), which the available headless-Chrome flags couldn't force. Confirm it actually looks right — ideally by clicking the theme toggle in a real browser, or scripting the attribute switch some other way.

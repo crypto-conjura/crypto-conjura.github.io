@@ -1,6 +1,13 @@
 # Tasks
 
-Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates assume the work is done with Claude (Premium) doing the bulk of it, not a human working unassisted — keep new estimates calibrated the same way. Total estimated time: **~75h** (rough; the two research/production-scale items — UC Encyclopedia content and the LHL secret-seed resolution — are especially uncertain and could run well over their estimate, or in the LHL case, not resolve at all regardless of tooling).
+Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates assume the work is done with Claude (Premium) doing the bulk of it, not a human working unassisted — keep new estimates calibrated the same way. Total estimated time: **~79h** (rough; the two research/production-scale items — UC Encyclopedia content and the LHL secret-seed resolution — are especially uncertain and could run well over their estimate, or in the LHL case, not resolve at all regardless of tooling).
+
+- [ ] **Usability on iPhone, Android, and other handheld devices (~4h)**
+
+  A real-device (or accurate emulation, not just a resized desktop browser) pass across the site. One concrete problem already found: the wide statement-listing tables — `open-problems/all/index.qmd` and every `open-problems/areas/<area>/index.qmd`, all built from `_listing-templates/statement-table.ejs.md` (Status/Statement/Model/Form/Category/Open, 6 columns) — don't adapt for narrow screens, they just squeeze, so on an iPhone-width viewport "Model"/"Form"/"Category" become single-word columns wrapping awkwardly across several lines instead of scrolling horizontally or collapsing columns. By contrast the 2-column UC Encyclopedia tables (`uc/layer-N-.../index.qmd`, Functionality/Status) read fine at the same width — worth using that as the bar to clear.
+
+  - Also worth specifically testing: the UC-for-gamers "Contents" links (`pdf/main.pdf#page=N`) that jump into a PDF page — desktop browsers honor the `#page=` fragment in their built-in viewer, but mobile PDF handling (iOS Safari's viewer vs. Android Chrome/Samsung Internet, some of which just download the file) is inconsistent and needs checking on actual devices, not assumed from desktop behavior.
+  - Note this is distinct from the earlier "Site-wide uniformity audit" task above — that one is about consistency across pages regardless of screen size; this one is specifically about narrow/touch viewports.
 
 - [ ] **Site-wide uniformity audit: how a page relates to its position in the site (~6h)**
 

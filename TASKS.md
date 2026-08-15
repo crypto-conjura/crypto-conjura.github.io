@@ -41,6 +41,10 @@ Ordered by difficulty: web-related tweaks, new web content, new conjectures, new
 
   `papers/programme-committee/index.qmd` currently only describes the mechanics of review (AI use, the `Reviewers` field). Add why it matters: reviewing is hard, often-thankless work that's rarely acknowledged or rewarded the way authorship is. This system makes the reviewer an integral part of the result, not an afterthought — a reviewer vouching for correctness, with or without AI's help, is a key step toward a result's validity and relevance, arguably now more than ever given how easy AI makes it to produce plausible-looking but unchecked claims.
 
+- [ ] **Add a mission statement to the Surveys page about generated interactive learning**
+
+  `surveys/index.qmd` describes what a survey is but says nothing about where it's headed. Add a mission-style statement: interactive learning material and quizzes (see the UC tutorial task below, currently scoped to the UC-for-gamers book) are meant to eventually be generated from the books and surveys themselves, not just that one — i.e. every survey is a future source for its own interactive tutorial, not only static reading material.
+
 - [ ] **Interactive UC tutorial for the website**
 
   Based on the UC-for-gamers paper; depends on the HTML-conversion task above.

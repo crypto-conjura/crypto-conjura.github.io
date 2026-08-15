@@ -1,99 +1,131 @@
-\documentclass[10pt,a4paper]{article}
-
-\usepackage[T1]{fontenc}
-\usepackage[utf8]{inputenc}
-\usepackage{amsmath,amssymb,amsthm}
-\usepackage[margin=2.2cm]{geometry}
-\usepackage{hyperref}
-
-\theoremstyle{plain}
-\newtheorem{conjecture}{Conjecture}
-\theoremstyle{definition}
-\newtheorem{definition}{Definition}
+% =====================================================================
+%  STATEMENT DOCUMENT.  Informal conjecture upfront, then two sections
+%  -- The setting, The conjecture -- following exactly the structure
+%  and environment conventions of the sibling k-cr and groth16
+%  statements (Section -> prose setting -> formal
+%  \definition/\conjecture/\remark in the conjecture section).  No
+%  Bibliography section: the original document cited no external
+%  source, and none is added here.
+%
+%  This document originally stated TWO conjectures side by side,
+%  "Secret seed" and "Public seed".  The public-seed one is no longer
+%  open: resolution.tex in this folder proves it (Theorem + Corollary,
+%  constant c=2), and it is published, proved, on the live site as
+%  c/0004 (category: research-solved).  The secret-seed conjecture
+%  remains open and unattempted, published as c/0005.  Per the
+%  author's instruction, this statement keeps only the still-open
+%  secret-seed conjecture; the public-seed bound is mentioned in
+%  Remark~\ref{rem:pub} purely as resolved context, not restated as a
+%  conjecture of its own.
+%
+%  Built on the shared conjura-conjecture.cls house style -- see
+%  latex/conjectures/_template/.
+% =====================================================================
+\documentclass{conjura-conjecture}
 
 \newcommand{\Fun}{\mathsf{Fun}}
 \newcommand{\Adv}{\mathbf{Adv}}
 \newcommand{\Gm}{\mathsf{Game}}
 \newcommand{\Pred}{\mathrm{Pred}}
 \newcommand{\Ext}{\mathrm{Ext}}
-\newcommand{\ExtP}{\mathrm{Ext}\text{-}\mathrm{pub}}
 \newcommand{\pred}{\mathrm{pred}}
 \newcommand{\ext}{\mathrm{ext}}
 \newcommand{\extpub}{\textup{ext-pub}}
 \newcommand{\sd}{\mathit{sd}}
-\newcommand{\sample}{\stackrel{{\scriptscriptstyle\$}}{\leftarrow}}
+% overrides the class's plain-arrow \sample with the "sampled from" dollar-arrow this note needs
+\renewcommand{\sample}{\stackrel{{\scriptscriptstyle\$}}{\leftarrow}}
 \newcommand{\SD}{\mathrm{SD}}
 \newcommand{\calK}{\mathcal{K}}
 \newcommand{\calD}{\mathcal{D}}
 \newcommand{\calR}{\mathcal{R}}
 \newcommand{\ret}{\textbf{return}\ }
 
-\pagestyle{empty}
+\runninghead{LHL FOR RANDOM-ORACLE SOURCES}
 
 \begin{document}
 
-\begin{center}
-{\large\bfseries Randomness Extraction from Unpredictable Random-Oracle Sources:\\
-Two Leftover-Hash-Lemma Conjectures}
-\end{center}
-\vspace{0.5em}
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{Randomness Extraction from Unpredictable Random-Oracle Sources}
+\cjsubtitle{A Leftover-Hash-Lemma Conjecture for the Secret-Seed Game}
+\cjstatus{Statement: human-written, not yet formalized. Proof: open -- no attempt yet.}
+\cjcategory{Information-Theoretic Cryptography.}
+\cjkeywords{leftover hash lemma; randomness extraction; unpredictable sources; random-oracle
+  model; universal hashing; seed-dependent extractors.}
 
-\noindent\textbf{Setting.}
+\vspace{0.4em}
+
+\begin{informalconjecture}
+For an extractor built from a random function with a $K$-element seed space, and any source
+whose output no unbounded predictor can guess with probability better than $\epsilon$ -- even
+given the extractor's entire function table -- the extracted value should look uniform to an
+unbounded distinguisher that does not see the seed, up to statistical distance about
+$\sqrt{(\epsilon R + \log D)/K}$. This is the shape of the classical leftover hash lemma, but
+with unpredictability against an omniscient adversary in place of min-entropy as the source
+restriction, and a single universal constant working for every choice of parameters.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+An extractor built from a random function $H$ maps a seed and an unpredictable source's output
+to a value that should look uniform to an unbounded distinguisher holding the source's auxiliary
+output and the oracle's entire table.  Unpredictability is measured against an equally unbounded
+predictor with the same information.  Whether the distinguisher also learns the seed splits the
+question into two games; this note concerns the harder one, where the seed stays hidden from it.
+Definition~\ref{def:games} formalizes both notions.
+
+\smallskip
+\noindent\textbf{Notation.}
 Fix nonempty finite sets $\calK$ (seeds), $\calD$ (inputs), $\calR$ (outputs), and write
-$K := |\calK|$, $D := |\calD|$, $R := |\calR|$. Let $\Fun(\calK \times \calD, \calR)$ be the set of
-all functions $\calK \times \calD \to \calR$, let $\SD(\cdot,\cdot)$ denote statistical distance and
-$U_{\calR}$ the uniform distribution on $\calR$. The source $S$, the predictor $P$ and the
-distinguisher $\mathsf{D}$ of Figure~\ref{fig:games} are computationally unbounded and receive the
-\emph{entire} function table of $H$ as an explicit input. The two extraction games differ only in
-whether the seed $\sd$ is kept secret from $\mathsf{D}$ or given to it.
+$K := |\calK|$, $D := |\calD|$, $R := |\calR|$.  Let $\Fun(\calK \times \calD, \calR)$ be the set
+of all functions $\calK \times \calD \to \calR$, let $\SD(\cdot,\cdot)$ denote statistical
+distance and $U_{\calR}$ the uniform distribution on $\calR$.  The source $S$, the predictor $P$
+and the distinguisher $\mathsf{D}$ of Figure~\ref{fig:games} are computationally unbounded and
+receive the \emph{entire} function table of $H$ as an explicit input.
+
+\section{The conjecture}\label{sec:conjecture}
+
+Notation as in Section~\ref{sec:setting}.  Definition~\ref{def:games} restates the games
+formally, for self-containment; the conjecture quantifies over all $\epsilon$-unpredictable
+sources.
 
 \begin{figure}[ht]
 \centering
-\fbox{\begin{minipage}[t]{0.29\textwidth}
+\fbox{\begin{minipage}[t]{0.9\linewidth}
 \underline{$\Gm\ \Pred^{S}_{P}$}\\[2pt]
-$H \sample \Fun(\calK \times \calD, \calR)$\\
-$(x,z) \sample S(H)$\\
-$x' \sample P(H,z)$\\
+$H \sample \Fun(\calK \times \calD, \calR)$;\quad
+$(x,z) \sample S(H)$;\quad
+$x' \sample P(H,z)$;\quad
 $\ret (x = x')$
-\end{minipage}}\hfill
-\fbox{\begin{minipage}[t]{0.31\textwidth}
+\end{minipage}}
+\par\smallskip
+\fbox{\begin{minipage}[t]{0.9\linewidth}
 \underline{$\Gm\ \Ext^{S}_{\mathsf{D}}$ (secret seed)}\\[2pt]
-$H \sample \Fun(\calK \times \calD, \calR)$\\
-$(x,z) \sample S(H)$;\quad $\sd \sample \calK$\\
-$y_0 \leftarrow H(\sd,x)$;\quad $y_1 \sample \calR$\\
-$b \sample \{0,1\}$\\
-$b' \sample \mathsf{D}(H, y_b, z)$\\
-$\ret (b = b')$
-\end{minipage}}\hfill
-\fbox{\begin{minipage}[t]{0.31\textwidth}
-\underline{$\Gm\ \ExtP^{S}_{\mathsf{D}}$ (public seed)}\\[2pt]
-$H \sample \Fun(\calK \times \calD, \calR)$\\
-$(x,z) \sample S(H)$;\quad $\sd \sample \calK$\\
-$y_0 \leftarrow H(\sd,x)$;\quad $y_1 \sample \calR$\\
-$b \sample \{0,1\}$\\
-$b' \sample \mathsf{D}(H, \sd, y_b, z)$\\
+$H \sample \Fun(\calK \times \calD, \calR)$;\quad
+$(x,z) \sample S(H)$;\quad
+$\sd \sample \calK$\\
+$y_0 \leftarrow H(\sd,x)$;\quad
+$y_1 \sample \calR$;\quad
+$b \sample \{0,1\}$;\quad
+$b' \sample \mathsf{D}(H, y_b, z)$;\quad
 $\ret (b = b')$
 \end{minipage}}
-\caption{Prediction game (left) and the two extraction games: secret seed (middle) and public seed
-(right). The first argument of $S$, $P$ and $\mathsf{D}$ is the \emph{full function table} of $H$;
-the games $\Ext$ and $\ExtP$ differ only in whether $\mathsf{D}$ receives $\sd$.}
+\caption{Prediction game (top) and the secret-seed extraction game (bottom); unlike the
+public-seed variant (Remark~\ref{rem:pub}), $\mathsf{D}$ does not receive $\sd$.}
 \label{fig:games}
 \end{figure}
 
-\begin{definition}\label{def:games}
+\begin{definition}[the extraction games]\label{def:games}
 Set $\Adv^{\pred}_{\calK,\calD,\calR,S}(P) := \Pr[\Pred^{S}_{P} \Rightarrow 1]$ and
 \[
-  \Adv^{\ext}_{\calK,\calD,\calR}(S,\mathsf{D}) := 2\Pr[\Ext^{S}_{\mathsf{D}} \Rightarrow 1] - 1 ,
-  \qquad
-  \Adv^{\extpub}_{\calK,\calD,\calR}(S,\mathsf{D}) := 2\Pr[\ExtP^{S}_{\mathsf{D}} \Rightarrow 1] - 1 .
+  \Adv^{\ext}_{\calK,\calD,\calR}(S,\mathsf{D}) := 2\Pr[\Ext^{S}_{\mathsf{D}} \Rightarrow 1] - 1 .
 \]
 A source $S$ is \emph{$\epsilon$-unpredictable} if
 $\Adv^{\pred}_{\calK,\calD,\calR,S}(P) \le \epsilon$ for every unbounded predictor $P$.
 \end{definition}
 
-\begin{conjecture}[Secret seed]\label{conj:main}
-There is a universal constant $c > 0$, independent of $\calK$, $\calD$, $\calR$ and $\epsilon$, such
-that for all nonempty finite $\calK, \calD, \calR$, all $\epsilon \in (0,1]$, every
+\begin{conjecture}[secret seed]\label{conj:main}
+There is a universal constant $c > 0$, independent of $\calK$, $\calD$, $\calR$ and $\epsilon$,
+such that for all nonempty finite $\calK, \calD, \calR$, all $\epsilon \in (0,1]$, every
 $\epsilon$-unpredictable source $S$ and every unbounded distinguisher $\mathsf{D}$,
 \[
   \Adv^{\ext}_{\calK,\calD,\calR}(S,\mathsf{D})
@@ -102,15 +134,18 @@ $\epsilon$-unpredictable source $S$ and every unbounded distinguisher $\mathsf{D
 \]
 \end{conjecture}
 
-\begin{conjecture}[Public seed]\label{conj:pub}
-There is a universal constant $c > 0$, independent of $\calK$, $\calD$, $\calR$ and $\epsilon$, such
-that for all nonempty finite $\calK, \calD, \calR$, all $\epsilon \in (0,1]$, every
-$\epsilon$-unpredictable source $S$ and every unbounded distinguisher $\mathsf{D}$,
+\begin{remark}[the public-seed variant is already resolved]\label{rem:pub}
+Giving the seed to $\mathsf{D}$ as well defines a second game, $\Ext\text{-}\mathrm{pub}$, with
+advantage $\Adv^{\extpub}$.  Unlike the conjecture above, its natural bound is proved: for the
+same universal constant $c = 2$,
 \[
   \Adv^{\extpub}_{\calK,\calD,\calR}(S,\mathsf{D})
-  \;\le\; \delta_{\mathrm{pub}}(\epsilon, K, D, R)
-  \;:=\; c \cdot \Bigl( \sqrt{\epsilon R} + \sqrt{\frac{\log_2 D}{K}} \,\Bigr) .
+  \;\le\; c \cdot \Bigl( \sqrt{\epsilon R} + \sqrt{\frac{\log_2 D}{K}} \,\Bigr)
 \]
-\end{conjecture}
+holds unconditionally (see \url{https://crypto-conjura.github.io/c/0004/}).  This is weaker than
+Conjecture~\ref{conj:main} whenever the two are compared directly, since
+$\sqrt{(\epsilon R + \log_2 D)/K} \le \sqrt{\epsilon R} + \sqrt{\log_2 D/K}$ -- consistent with
+hiding the seed only helping the extractor, never hurting it.
+\end{remark}
 
 \end{document}

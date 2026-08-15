@@ -1,6 +1,6 @@
 # Tasks
 
-Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates assume the work is done with Claude (Premium) doing the bulk of it, not a human working unassisted — keep new estimates calibrated the same way. Total estimated time: **~61.5h** (rough; the UC Encyclopedia content item is especially uncertain and could run well over its estimate).
+Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates assume the work is done with Claude (Premium) doing the bulk of it, not a human working unassisted — keep new estimates calibrated the same way. Total estimated time: **~66.5h** (rough; the UC Encyclopedia content item is especially uncertain and could run well over its estimate).
 
 - [ ] **Usability on iPhone, Android, and other handheld devices (~3h)**
 
@@ -27,6 +27,13 @@ Ordered by difficulty: web-related tweaks, new web content, new conjectures, new
 - [ ] **Document the pre-human review pipeline on the Programme Committee page (~1.5h)**
 
   `papers/programme-committee/index.qmd`'s "## How reviewing works" section currently only describes the human-committee step (a member reviews, their name joins the `Reviewers` field). Add what happens *before* that: every paper first goes through agentic "stress tests" — meticulous, adversarial scrutiny for mistakes, run via topic-specific prompts that check for the fatal errors and gaps known to recur in that area's literature. Only after that does an editorial pass improve the writing itself against best practice for mathematical exposition (style manuals, standard conventions), and only after *that* is a paper in a position for a human reviewer to look at it — the agentic stages are a filter, not a replacement for the human step described above. Also worth stating as a standing constraint: a paper's focus is kept to its specific conjecture (not broadened into a survey or multi-result piece) precisely to keep this whole pipeline, human review included, tractable.
+
+- [ ] **A Philosophy page, with an audio read-out and a podcast (~5h)**
+
+  A new page on the site's philosophy — distinct from `vision/index.qmd` ("why Conjura exists, where it's headed"), this is about the underlying worldview/reasoning rather than the roadmap; decide on the relationship between the two (separate page vs. a section of Vision) and where it sits in the nav (top-level like Vision, or nested under Resources) when picked up. Two things accompany the written page:
+
+  - **An audio read-out** — a straight narrated version of the page's own text.
+  - **A podcast** — a produced discussion-format episode, distinct from the read-out. Note the removed Blog section's old description ("informal write-ups — and eventually podcasts and videos — for resolved conjectures," `README.md:17`) was about individual resolved conjectures; this is scoped to the site's philosophy specifically, not that.
 
 - [ ] **Convert the UC-for-gamers paper to HTML (~5h)**
 

@@ -117,6 +117,8 @@
   #1}\par}
 \newcommand{\cjcategory}[1]{\smallskip\noindent{\small\textbf{Category.}
   #1}\par}
+\newcommand{\cjkeywords}[1]{\smallskip\noindent{\small\textbf{Keywords.}
+  #1}\par}
 
 % ---- small conveniences used across Conjura conjecture write-ups
 \newcommand{\poly}{\mathrm{poly}}

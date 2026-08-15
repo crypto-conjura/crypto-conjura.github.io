@@ -17,6 +17,47 @@ State per served party: a verification key $\mathsf{vk} \in \mathsf{Keys} \cup \
 - **Verify(vk, msg, σ)**: if this exact triple already has a recorded verdict, return it unchanged (consistency across repeated queries). Otherwise ask the adversary for a bit; force it to $0$ if it isn't a bit, and force it to $0$ outright if $\mathsf{vk}$ belongs to some *honest* party and $(\mathsf{vk}, \mathsf{msg}, \sigma)$ was never signed — this one line is what makes the functionality unforgeable rather than merely "whatever the simulator says."
 - **Leak()**: returns the party's own key together with every message/signature pair recorded valid under it — nothing else of the state.
 
+::: {.callout-note title="Pseudocode"}
+$\mathsf{Adv}(\cdot)$ denotes a query to whichever adversary/simulator occupies the slot; "sanitize" means resample/reject until the stated predicate holds. State: tables $\mathsf{VK} : \mathsf{Parties} \to \mathsf{Keys} \cup \{\bot\}$ and $\mathsf{Ver} : \mathsf{Keys} \times \mathsf{Msgs} \times \mathsf{Sigs} \to \{0,1,\bot\}$.
+
+**Initialize()**
+
+1. $\mathsf{VK}[*] \gets \bot$
+2. $\mathsf{Ver}[*,*,*] \gets \bot$
+
+**Gen()**, from party $P$
+
+1. if $\mathsf{VK}[P] \neq \bot$: **return** $\mathsf{VK}[P]$
+2. $\mathsf{vk} \gets \mathsf{Adv}(\mathsf{Gen})$
+3. if $\mathsf{VK}[P] \neq \bot$: **return** $\mathsf{VK}[P]$ (recorded while suspended)
+4. sanitize $\mathsf{vk}$: require $\mathsf{vk} \in \mathsf{Keys}$, not already issued to another party, and not already recorded valid on any message
+5. $\mathsf{VK}[P] \gets \mathsf{vk}$
+6. **return** $\mathsf{vk}$
+
+**Sign(msg)**, from party $P$
+
+1. $\mathsf{vk} \gets \mathsf{VK}[P]$; if $\mathsf{vk} = \bot$: **return** $\bot$
+2. $\sigma \gets \mathsf{Adv}(\mathsf{Sign}, \mathsf{msg})$
+3. sanitize $\sigma$: require $\sigma \in \mathsf{Sigs}$ and not already recorded invalid on $(\mathsf{vk}, \mathsf{msg}, \sigma)$
+4. $\mathsf{Ver}[\mathsf{vk}, \mathsf{msg}, \sigma] \gets 1$
+5. **return** $\sigma$
+
+**Verify(vk, msg, σ)**
+
+1. if $\mathsf{Ver}[\mathsf{vk}, \mathsf{msg}, \sigma] \neq \bot$: **return** $\mathsf{Ver}[\mathsf{vk}, \mathsf{msg}, \sigma]$
+2. $b \gets \mathsf{Adv}(\mathsf{Verify}, \mathsf{vk}, \mathsf{msg}, \sigma)$
+3. if $\mathsf{Ver}[\mathsf{vk}, \mathsf{msg}, \sigma] \neq \bot$: **return** $\mathsf{Ver}[\mathsf{vk}, \mathsf{msg}, \sigma]$ (recorded while suspended)
+4. if $b \notin \{0,1\}$: $b \gets 0$
+5. if $\mathsf{vk} = \mathsf{VK}[P']$ for some honest $P'$, and $(\mathsf{vk}, \mathsf{msg}, \sigma)$ was never signed: $b \gets 0$ (no forgery under an honest key)
+6. $\mathsf{Ver}[\mathsf{vk}, \mathsf{msg}, \sigma] \gets b$
+7. **return** $b$
+
+**Leak()**, from party $P$
+
+1. if $\mathsf{VK}[P] = \bot$: **return** $(\bot, \emptyset)$
+2. **return** $\bigl(\mathsf{VK}[P],\ \{(\mathsf{msg},\sigma) : \mathsf{Ver}[\mathsf{VK}[P],\mathsf{msg},\sigma] = 1\}\bigr)$
+:::
+
 ## Known realizations
 
 Realized, up to the ordinary reduction loss of the underlying primitive, by any EUF-CMA-secure signature scheme run over local randomness and storage (see [*F-Rand*](/uc/layer-0-idealized-setup/f-rand/index.qmd) and [*F-Store*](/uc/layer-0-idealized-setup/f-store/index.qmd)): the scheme's own key-generation, signing, and verification algorithms, with coins drawn and erased through *F-Rand* and the key pair held in *F-Store*. Correctness of the scheme gives correctness of the simulation; strong unforgeability under chosen-message attack gives the functionality's unforgeability, up to the scheme's own advantage bound.

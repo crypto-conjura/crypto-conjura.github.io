@@ -18,6 +18,29 @@ Parameterized by a bit-width $n$. State: a counter $\mathsf{ctr}$ and a table $\
 
 The counter is shared across every party the instance serves — two parties drawing from the same instance draw distinct entries — which is what makes it a shared *source* rather than a per-party generator, and what a protocol relies on to keep two draws from colliding.
 
+::: {.callout-note title="Pseudocode"}
+**Initialize()**
+
+1. $\mathsf{ctr} \gets 0$
+2. $\mathsf{L}[*] \gets \bot$
+
+**Rnd()**, from any admitted caller
+
+1. $\mathsf{ctr} \gets \mathsf{ctr} + 1$
+2. $r \gets_\$ \{0,1\}^n$
+3. $\mathsf{L}[\mathsf{ctr}] \gets r$
+4. **return** $(\mathsf{ctr}, r)$
+
+**Erase(i)**
+
+1. $\mathsf{L}[i] \gets \bot$
+2. **return** $\mathsf{ok}$
+
+**Leak()**
+
+1. **return** $\mathsf{L}$
+:::
+
 ## Known realizations
 
 A perfectly uniform, unbounded randomness source is an idealization; nothing computational realizes it exactly. In practice it stands in for a party's own local coin tosses, discarded once used — the erasure interface exists so that a protocol drawing coins it must not retain (e.g. signing randomness) can model "these bits are gone" rather than assuming a real machine's memory is inspectable only up to what it chooses to keep.

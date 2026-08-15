@@ -18,6 +18,34 @@ Parameterized by a delay bound $\Delta$; uses the global clock and the adversary
 
 Both slot calls are responsive, for the same reason as *F-Net*'s: a fetch's clock read and its aging test have to be one atomic moment, or the adversary could stall between them and unlawfully withhold a message past its deadline.
 
+::: {.callout-note title="Pseudocode"}
+**Initialize()**
+
+1. $\mathsf{ctr} \gets 0$; $\mathsf{list}[*] \gets \bot$ (entries $(P, Q, \tau, \mathsf{msg})$)
+
+**Send(Q, msg)**, from party $P$
+
+1. $\tau \gets$ read the current time off the clock
+2. $\mathsf{ctr} \gets \mathsf{ctr} + 1$
+3. $\mathsf{list}[\mathsf{ctr}] \gets (P, Q, \tau, \mathsf{msg})$
+4. notify the adversary of $(\mathsf{ctr}, Q, \tau, \mathsf{msg})$
+5. **return** $\mathsf{ok}$
+
+**Leak()**
+
+1. **return** $\mathsf{list}$
+
+**Fetch()**, from party $Q$
+
+1. $\tau \gets$ read the current time off the clock
+2. $R \gets \{m : \mathsf{list}[m] = (\cdot, Q, \tau_m, \cdot) \wedge \tau_m + \Delta \le \tau\}$ (come of age)
+3. $S \gets$ ask the adversary which not-yet-aged entries addressed to $Q$ to release early
+4. sanitize $S$ against $\mathsf{list}$ and $Q$ (released early)
+5. $M \gets \{\mathsf{list}[m] : m \in R \cup S\}$
+6. $\mathsf{list}[m] \gets \bot$ for each $m \in R \cup S$
+7. **return** $M$
+:::
+
 ## Known realizations
 
 Realized *exactly*, within advantage $0$, by a protocol over three purely local, ideal subroutines: a public-key directory, *F-Net*, and a (responsive) signature functionality. To send, a party registers a signing key on first use, then signs the tuple (sender, recipient, timestamp, sequence number, message) and diffuses it with its signature over *F-Net*; to fetch, it keeps only diffused items addressed to itself whose signature verifies under the claimed sender's directory key and whose (sender, sequence number) pair hasn't been seen before. The reduction is information-theoretic — every subroutine is already ideal, so there is no computational gap to account for.

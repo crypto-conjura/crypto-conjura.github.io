@@ -18,6 +18,28 @@ State: a table $\mathsf{VK} : \mathsf{Parties} \to \mathsf{Keys} \cup \{\bot\}$,
 
 There is deliberately no *Deregister*: a key once bound stays bound. Revocation would be a genuine addition to this functionality, not a gap left open by oversight.
 
+::: {.callout-note title="Pseudocode"}
+**Initialize()**
+
+1. $\mathsf{VK}[*] \gets \bot$
+
+**Register(vk)**, from party $P$
+
+1. if the caller is the adversary or environment acting for an *honest* $P$: **return** $\mathsf{VK}[P]$ (a peek, not a write)
+2. if $\mathsf{VK}[P] \neq \bot$: **return** $\mathsf{VK}[P]$
+3. sanitize $\mathsf{vk}$: require $\mathsf{vk} \in \mathsf{Keys}$ and not already claimed by another party
+4. $\mathsf{VK}[P] \gets \mathsf{vk}$
+5. **return** $\mathsf{vk}$
+
+**Retrieve(P)**
+
+1. **return** $\mathsf{VK}[P]$
+
+**Leak()**
+
+1. **return** $\mathsf{VK}$
+:::
+
 ## Known realizations
 
 An idealization of a certificate authority or append-only public directory; realized in practice by any PKI whose issuance policy amounts to "first claim wins, no two parties share a key."

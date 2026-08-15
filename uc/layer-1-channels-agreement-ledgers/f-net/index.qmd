@@ -18,6 +18,34 @@ Parameterized by a delay bound $\Delta$; uses the global clock and the adversary
 
 Both slot calls (send-notification and the fetch query) are *responsive*: the adversary's answer comes back before anything else can run, so a fetch reads one consistent snapshot of the clock rather than racing it.
 
+::: {.callout-note title="Pseudocode"}
+**Initialize()**
+
+1. $\mathsf{ctr} \gets 0$; $\mathsf{buf} \gets \emptyset$ (entries $(m, P, \mathsf{msg}, \tau)$)
+2. $\mathsf{rel}[*,*] \gets 0$ (what is released to whom)
+
+**Send(msg)**, from party $P$
+
+1. $\tau \gets$ read the current time off the clock
+2. $m \gets \mathsf{ctr}$; $\mathsf{ctr} \gets \mathsf{ctr} + 1$
+3. $\mathsf{buf} \gets \mathsf{buf} \cup \{(m, P, \mathsf{msg}, \tau)\}$
+4. notify the adversary of $(m, \mathsf{msg})$ (responsive; the network is public)
+5. **return** $m$
+
+**Fetch()**, from party $P$
+
+1. $\tau \gets$ read the current time off the clock
+2. $(S, I) \gets$ ask the adversary which stored ids to release to $P$ early and which fresh (unattributed) messages to inject (responsive; a non-pair answer reads as $(\emptyset,\emptyset)$)
+3. sanitize inline: $S \gets S \cap \{m : (m,\cdot,\cdot,\cdot) \in \mathsf{buf}\}$; $I \gets I \cap \mathsf{Msgs}$
+4. $\mathsf{rel}[m, P] \gets 1$ for each $m \in S$
+5. for each injected $\mathsf{msg} \in I$: $\mathsf{buf} \gets \mathsf{buf} \cup \{(\mathsf{ctr}, \bot, \mathsf{msg}, \infty)\}$; $\mathsf{rel}[\mathsf{ctr}, P] \gets 1$; $\mathsf{ctr} \gets \mathsf{ctr} + 1$
+6. **return** every $(m, \mathsf{msg})$ with $(m, P', \mathsf{msg}, \tau_s) \in \mathsf{buf}$ such that $\mathsf{rel}[m, P] = 1$ or $\tau_s + \Delta \le \tau$ (never the sender $P'$)
+
+**Leak()**
+
+1. **return** $(\mathsf{buf}, \mathsf{rel})$
+:::
+
 ## Known realizations
 
 Not itself realized by a lower-level protocol in this framework; it stands in directly for whatever best-effort broadcast/gossip network a deployment actually has. What *is* built on top of it: the [authenticated channel](/uc/layer-1-channels-agreement-ledgers/f-ac/index.qmd) is realized by signing every message with a [signature functionality](/uc/layer-3-public-key-primitives/f-sig/index.qmd) key registered in a directory, then diffusing signature and message together over *F-Net* — see *F-AC*'s own entry.

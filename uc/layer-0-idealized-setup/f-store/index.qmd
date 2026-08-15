@@ -19,6 +19,32 @@ State: a table $\mathsf{L} : \mathbb{N} \to \{0,1\}^* \cup \{\bot, \mathsf{gone}
 
 State is shared across every party the instance serves, exactly as for *F-Rand*: one party may retrieve what another put, which is what makes it a shared store rather than a per-party tape.
 
+::: {.callout-note title="Pseudocode"}
+**Initialize()**
+
+1. $\mathsf{L}[*] \gets \bot$
+
+**Put(i, x)**
+
+1. require $\mathsf{L}[i] \in \{\bot, \mathsf{gone}\}$ (else refuse — an occupied index refuses)
+2. $\mathsf{L}[i] \gets x$
+3. **return** $\mathsf{ok}$
+
+**Erase(i)**
+
+1. $\mathsf{L}[i] \gets \mathsf{gone}$
+2. **return** $\mathsf{ok}$
+
+**Get(i)**
+
+1. require $\mathsf{L}[i] \neq \bot$ (else refuse — never written refuses)
+2. **return** $\mathsf{L}[i]$ ($\mathsf{gone}$ if erased)
+
+**Leak()**
+
+1. **return** $\mathsf{L}$
+:::
+
 ## Known realizations
 
 An idealization of ordinary local storage together with a secure-erasure primitive; nothing computational realizes the erasure guarantee exactly, since a real machine's memory is not erasure-transparent the way this functionality's $\mathsf{gone}$ marker is. It stands in, in a protocol write-up, for "this value is kept on the party's own tape until explicitly deleted."

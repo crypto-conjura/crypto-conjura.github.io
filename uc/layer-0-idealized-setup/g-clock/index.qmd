@@ -19,6 +19,44 @@ State: a counter $\mathsf{now}$ (starts at $0$, only ever increases), plus per-p
 
 Corrupt parties neither hold a round open nor help close one: their ticks are the adversary's to give or withhold, and the advance test only ever reads honest parties' flags. Until the first honest party registers, the round-closing test is vacuous, so time is effectively the adversary's to spend.
 
+::: {.callout-note title="Pseudocode"}
+The adversary notification in *Update* is responsive: it goes out before the call returns, but the answer is discarded.
+
+**Initialize()**
+
+1. $\mathsf{now} \gets 0$
+2. $\mathsf{reg}[*] \gets 0$; $\mathsf{tick}[*] \gets 0$
+
+**Register()**, from party $P$
+
+1. if the caller is the adversary/environment acting for an *honest* $P$: **return** $\mathsf{now}$
+2. $\mathsf{reg}[P] \gets 1$; $\mathsf{tick}[P] \gets 0$ (a fresh member owes a tick)
+3. **return** $\mathsf{now}$
+
+**Deregister()**, from party $P$
+
+1. if the caller is the adversary/environment acting for an *honest* $P$: **return** $\mathsf{now}$
+2. $\mathsf{reg}[P] \gets 0$
+3. **return** $\mathsf{now}$
+
+**Update()**, from party $P$
+
+1. if the caller is the adversary/environment acting for an *honest* $P$: **return** $\mathsf{now}$ (reading, not ticking)
+2. if $\mathsf{reg}[P] = 0$: **return** $\mathsf{now}$ (not in the round structure)
+3. $\mathsf{tick}[P] \gets 1$
+4. if every registered honest party's tick is now in: $\mathsf{now} \gets \mathsf{now} + 1$ and $\mathsf{tick}[*] \gets 0$ (the round is over)
+5. notify the adversary of the tick and the new $\mathsf{now}$
+6. **return** $\mathsf{now}$
+
+**Read()**
+
+1. **return** $\mathsf{now}$
+
+**Leak()**
+
+1. **return** $(\mathsf{now}, \mathsf{reg}, \mathsf{tick})$
+:::
+
 ## Known realizations
 
 A global setup assumption, not itself realized by a lower-level protocol in this framework — it stands in directly for whatever round-synchronization mechanism (network-level timeouts, a blockchain's own block schedule, etc.) a deployment actually has.

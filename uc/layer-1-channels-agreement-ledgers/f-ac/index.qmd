@@ -1,0 +1,42 @@
+---
+title: "F-AC — Δ-delayed authenticated channel"
+status: "Canonical"
+layer: 1
+---
+
+*F-AC* (Δ-delayed authenticated channel) is part of *Channels, Agreement, Ledgers* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+
+Canetti's authenticated channel, given the same clock-relative $\Delta$ delivery bound as [*F-Net*](/uc/layer-1-channels-agreement-ledgers/f-net/index.qmd). Where *F-Net* diffuses anonymously and lets the adversary inject unattributed traffic, *F-AC* names a sender and recipient on every message and admits no injections at all — every delivered message really was sent, by the party it names, because the only way onto the channel is through its own *Send* interface. The two are worth reading side by side: they differ in a good deal more than the sender field, and the difference is where authentication actually lives (on the wire for *F-Net*, nowhere but the interface for *F-AC*).
+
+## Functionality
+
+Parameterized by a delay bound $\Delta$; uses the global clock and the adversary. State: a list of entries $(P, Q, \tau, \mathsf{msg})$ indexed by message id.
+
+- **Send(Q, msg)**, from party $P$: read the current time $\tau$ off the clock, file $(P, Q, \tau, \mathsf{msg})$ under a fresh id, notify the adversary, and return $\mathsf{ok}$. A corrupt sender's call still goes through this interface under its own identity — that is the whole mechanism: there is no other way onto the channel, so nothing is ever attributed to a sender that didn't call *Send*.
+- **Fetch()**, from party $Q$: gather every entry addressed to $Q$ that has come of age (aged past $\tau_{\text{sent}} + \Delta$), ask the adversary which not-yet-aged entries addressed to $Q$ to release early, return the union as full records $(P, Q, \tau, \mathsf{msg})$, and *remove* every entry it just answered — each message is delivered exactly once, not repeatedly re-offered the way *F-Net*'s diffused messages are.
+- **Leak()**: returns the whole list — authentication is not secrecy, and this channel hides nothing.
+
+Both slot calls are responsive, for the same reason as *F-Net*'s: a fetch's clock read and its aging test have to be one atomic moment, or the adversary could stall between them and unlawfully withhold a message past its deadline.
+
+## Known realizations
+
+Realized *exactly*, within advantage $0$, by a protocol over three purely local, ideal subroutines: a public-key directory, *F-Net*, and a (responsive) signature functionality. To send, a party registers a signing key on first use, then signs the tuple (sender, recipient, timestamp, sequence number, message) and diffuses it with its signature over *F-Net*; to fetch, it keeps only diffused items addressed to itself whose signature verifies under the claimed sender's directory key and whose (sender, sequence number) pair hasn't been seen before. The reduction is information-theoretic — every subroutine is already ideal, so there is no computational gap to account for.
+
+One genuine subtlety: this construction realizes a very slightly weaker object, $F\text{-}AC^\flat$, that admits a corrupt sender's traffic at fetch time unstored and with a freely-chosen timestamp — exactly Canetti's own authenticated-channel guarantee level, no less, no more. The gap is forced: a diffusion network lets the adversary inject traffic mid-fetch with no prior send, so no simulator can make *F-AC* itself (which delivers only what its own *Send* stored) produce a corrupt sender's message on demand. Against an adversary that corrupts nobody, the two objects coincide exactly, so the construction realizes *F-AC* itself whenever no party is corrupted.
+
+## Properties
+
+Both proven with probability exactly $0$ against every occupant of the adversary slot:
+
+- **Liveness.** A message sent by an honest party at time $\tau_s$, to an honest or corrupt recipient, is present in every fetch the recipient makes from time $\tau_s + \Delta$ on.
+- **Authentication.** Every message an honest party fetches really was sent, by exactly the party it names — there is no environment/adversary pair that can make an honest recipient accept a message with no matching prior send, unlike *F-Net*, where the symmetric claim is false by an explicit counterexample.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
+
+*References:*
+
+- Canetti. [*Universally composable security*](https://eprint.iacr.org/2000/067). Journal of the ACM, 67(5):28:1–28:94, 2020.
+- Badertscher, Maurer, Tschudi, and Zikas. [*Bitcoin as a transaction ledger: A composable treatment*](https://eprint.iacr.org/2017/149). In Advances in Cryptology – CRYPTO 2017, Part I, volume 10401 of LNCS, pages 324–356, 2017.
+- [*UC for Gamers*](/surveys/uc-for-gamers/index.qmd), this site's own book draft on composable security. Chapters "Δ-Delayed Authenticated Channel" and "Realizing the Authenticated Channel" give the functionality, its properties, and the full realization proof.

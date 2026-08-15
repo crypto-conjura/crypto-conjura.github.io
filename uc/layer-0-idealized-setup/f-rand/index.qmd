@@ -1,0 +1,37 @@
+---
+title: "F-Rand — Randomness source with erasure"
+status: "Idealized Setup"
+layer: 0
+---
+
+*F-Rand* (Randomness source with erasure) is part of *Idealized Setup and Resources* in the UC functionality encyclopedia. Status: an idealized setup assumption or shared resource.
+
+A source of uniform bits shared across the parties it serves, paired with an erasure interface: it hands out $n$-bit strings, remembers what it has handed out so a corrupt party's whole draw history can be read off, and lets a party erase a specific draw so that it can no longer leak. Entries are indexed by an ever-growing counter and never reused, so an erased index stays erased. It places no calls of its own — nothing is delegated to the clock or to the adversary — which makes it the one functionality in its source whose real-world/ideal-world gap can be argued without any absorption machinery at all.
+
+## Functionality
+
+Parameterized by a bit-width $n$. State: a counter $\mathsf{ctr}$ and a table $\mathsf{L} : \mathbb{N} \to \{0,1\}^n \cup \{\bot\}$, initially $\mathsf{ctr} = 0$ and $\mathsf{L}[*] = \bot$.
+
+- **Rnd()**, from any admitted caller: increment $\mathsf{ctr}$, sample $r \gets_\$ \{0,1\}^n$, set $\mathsf{L}[\mathsf{ctr}] \gets r$, and return $(\mathsf{ctr}, r)$ — the index is returned alongside the value precisely so the caller can name the draw later.
+- **Erase(i)**: set $\mathsf{L}[i] \gets \bot$ and return $\mathsf{ok}$.
+- **Leak()**: return $\mathsf{L}$ in full (the adversary at a corrupt party sees every draw not yet erased).
+
+The counter is shared across every party the instance serves — two parties drawing from the same instance draw distinct entries — which is what makes it a shared *source* rather than a per-party generator, and what a protocol relies on to keep two draws from colliding.
+
+## Known realizations
+
+A perfectly uniform, unbounded randomness source is an idealization; nothing computational realizes it exactly. In practice it stands in for a party's own local coin tosses, discarded once used — the erasure interface exists so that a protocol drawing coins it must not retain (e.g. signing randomness) can model "these bits are gone" rather than assuming a real machine's memory is inspectable only up to what it chooses to keep.
+
+## Properties
+
+**Unpredictability.** No environment can name, in advance, a value a later draw will return. Concretely: if an environment places at most $q_g$ calls that go on record as guesses and at most $q_r$ calls to *Rnd*, then for every occupant of the adversary slot, the probability the environment wins the unpredictability game is at most $q_g \cdot q_r \cdot 2^{-n}$.
+
+This is the one functionality of its kind whose guaranteed bound is not exactly $0$: unlike (say) a signature functionality's correctness, unpredictability is a genuinely probabilistic guarantee, bounded by a union bound over guesses against draws, each individually off by a factor $2^{-n}$. The bound holds against *every* adversary directly, with no reduction to a canonical ("dummy") adversary needed, precisely because the functionality places no calls of its own for an adversary to interfere with.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
+
+*References:*
+
+- [*UC for Gamers*](/surveys/uc-for-gamers/index.qmd), this site's own book draft on composable security. Chapter "Randomness" gives the functionality above and its unpredictability bound in full.

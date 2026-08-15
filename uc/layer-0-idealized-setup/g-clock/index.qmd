@@ -6,6 +6,38 @@ layer: 0
 
 *G-clock* (Clock) is part of *Idealized Setup and Resources* in the UC functionality encyclopedia. Status: an idealized setup assumption or shared resource.
 
+A shared monotone counter modeling round synchrony, introduced by Katz–Maurer–Tackmann–Zikas and recast as a shared global setup by Badertscher–Maurer–Tschudi–Zikas. It has become the canonical timekeeping functionality behind composable analyses of Bitcoin and its successors: global (one instance, reachable from every session), readable by anyone it serves, and advanced only once every honest party currently in the round structure has asked it to.
+
+## Functionality
+
+State: a counter $\mathsf{now}$ (starts at $0$, only ever increases), plus per-party $\mathsf{reg}$ and $\mathsf{tick}$ flags.
+
+- **Register()** / **Deregister()**, from party $P$: an outsider acting for an *honest* $P$ just reads the time, unchanged; otherwise $P$ enters or leaves the round structure (a freshly registered party owes a fresh tick).
+- **Update()**, from party $P$: an outsider acting for an *honest* $P$ just reads the time. Otherwise, if $P$ is registered, its tick is recorded; if every currently-honest registered party's tick is now in, the counter advances by one and every tick clears — a round closing. The adversary is notified of every tick (responsively, its answer discarded) before the call returns. Every call, including reads, returns the counter as it stands on return.
+- **Read()**: returns $\mathsf{now}$.
+- **Leak()**: returns the counter and both flag tables in full — a clock keeps no secrets.
+
+Corrupt parties neither hold a round open nor help close one: their ticks are the adversary's to give or withhold, and the advance test only ever reads honest parties' flags. Until the first honest party registers, the round-closing test is vacuous, so time is effectively the adversary's to spend.
+
+## Known realizations
+
+A global setup assumption, not itself realized by a lower-level protocol in this framework — it stands in directly for whatever round-synchronization mechanism (network-level timeouts, a blockchain's own block schedule, etc.) a deployment actually has.
+
+## Properties
+
+Both proven with probability exactly $0$ against every occupant of the adversary slot:
+
+- **Steadiness.** The counter only ever moves forward by exactly one, and only at a genuine tick — no read, registration, or departure ever sees it jump, stall backward, or advance on its own.
+- **Unanimity.** The counter cannot pass a time $t$ while some honest, still-registered party that joined by $t$ has not ticked for round $t$ — a round cannot close early by leaving an honest party behind.
+
+The per-tick adversary notification costs something real: transferring these two properties from the ideal clock to a system built over it needs an argument made directly (the usual "any adversary reduces to a canonical one" shortcut doesn't apply to a functionality that notifies the slot on every call), which is the price of the clock telling the adversary anything at all.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
+
 *References:*
 
 - Katz et al. [*Universally composable synchronous computation*](https://eprint.iacr.org/2011/310). In 10th Theory of Cryptography Conference (TCC), pages 477–498, 2013.
+- Badertscher, Maurer, Tschudi, and Zikas. [*Bitcoin as a transaction ledger: A composable treatment*](https://eprint.iacr.org/2017/149). In Advances in Cryptology – CRYPTO 2017, Part I, volume 10401 of LNCS, pages 324–356, 2017.
+- [*UC for Gamers*](/surveys/uc-for-gamers/index.qmd), this site's own book draft on composable security. Chapter "Global Clock" gives the functionality above and both properties in full.

@@ -1,0 +1,41 @@
+---
+title: "F-Store — Shared storage with erasure"
+status: "Idealized Setup"
+layer: 0
+---
+
+*F-Store* (Shared storage with erasure) is part of *Idealized Setup and Resources* in the UC functionality encyclopedia. Status: an idealized setup assumption or shared resource.
+
+*F-Rand*'s companion: where a randomness source produces values and lets them be forgotten, a store takes values and holds them until they are. A party puts a value at an index, gets it back, and can erase it; an erased index is reusable. Together the two are what lets a protocol keep no persistent state on its own machine tape — draw coins through *F-Rand*, keep everything else through *F-Store* — so that whatever the adversary can read off a corrupt party's leakage is exactly what these two functionalities choose to expose, and nothing hidden in an implementation's memory besides.
+
+## Functionality
+
+State: a table $\mathsf{L} : \mathbb{N} \to \{0,1\}^* \cup \{\bot, \mathsf{gone}\}$, initially $\mathsf{L}[*] = \bot$. An index is in one of three conditions, kept deliberately distinct: $\bot$ if nothing was ever put there, a value if put and not erased, and $\mathsf{gone}$ if put and then erased — so a caller can tell "nothing was ever here" from "something was here and is gone," rather than a store that answers the same either way and cannot be asked whether an erasure actually happened.
+
+- **Put(i, x)**: requires $\mathsf{L}[i] \in \{\bot, \mathsf{gone}\}$ (an occupied index refuses); sets $\mathsf{L}[i] \gets x$ and returns $\mathsf{ok}$.
+- **Erase(i)**: sets $\mathsf{L}[i] \gets \mathsf{gone}$ and returns $\mathsf{ok}$ — erasing an index that holds nothing is a harmless no-op.
+- **Get(i)**: requires $\mathsf{L}[i] \neq \bot$ (never written refuses); returns $\mathsf{L}[i]$, which is $\mathsf{gone}$ if the entry was erased.
+- **Leak()**: returns $\mathsf{L}$ in full.
+
+State is shared across every party the instance serves, exactly as for *F-Rand*: one party may retrieve what another put, which is what makes it a shared store rather than a per-party tape.
+
+## Known realizations
+
+An idealization of ordinary local storage together with a secure-erasure primitive; nothing computational realizes the erasure guarantee exactly, since a real machine's memory is not erasure-transparent the way this functionality's $\mathsf{gone}$ marker is. It stands in, in a protocol write-up, for "this value is kept on the party's own tape until explicitly deleted."
+
+## Properties
+
+Two properties, proven with probability exactly $0$ (information-theoretic, no adversary strategy succeeds at all):
+
+- **Persistence.** A value put and not erased is the value later got back — no get ever returns anything other than the last successful put at that index, so long as no erasure intervened.
+- **Erasure.** A value that has been erased is never got back — no get ever returns the value an erasure removed, so long as no later put restored it first.
+
+Both hold against every occupant of the adversary slot, not just a canonical one, since (as with *F-Rand*) the functionality places no calls of its own for an adversary to interfere with.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
+
+*References:*
+
+- [*UC for Gamers*](/surveys/uc-for-gamers/index.qmd), this site's own book draft on composable security. Chapter "Storage" gives the functionality above and both properties in full.

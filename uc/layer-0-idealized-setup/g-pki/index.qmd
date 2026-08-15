@@ -6,6 +6,36 @@ layer: 0
 
 *G-PKI* (Global, non-encapsulated PKI) is part of *Idealized Setup and Resources* in the UC functionality encyclopedia. Status: an idealized setup assumption or shared resource.
 
+A single, shared directory binding a verification key to the party that registered it, closing the gap [*F-Sig*](/uc/layer-3-public-key-primitives/f-sig/index.qmd) deliberately leaves open (its *Verify* takes a key unconnected to any caller, since keys are not assumed authenticated on their own). Global in Canetti's sense: at most one copy exists in any system, and every session reaches that one instance, since a second directory would mean a second notion of who owns which key.
+
+## Functionality
+
+State: a table $\mathsf{VK} : \mathsf{Parties} \to \mathsf{Keys} \cup \{\bot\}$, initially everywhere $\bot$.
+
+- **Register(vk)**, from party $P$: an outsider (the adversary or the environment) acting for an *honest* $P$ only gets a peek at what's on file, never a write. Otherwise, if $P$ already has a key on file, that key is returned unchanged — the first successful call wins, permanently. Otherwise the offered key is sanitized to be fresh (not already claimed by another party) and recorded against $P$, then returned.
+- **Retrieve(P)**: returns whatever is on file for $P$, or $\bot$ if nobody has registered — answered to any caller, since a directory is public by nature.
+- **Leak()**: returns the whole table, which is no more than *Retrieve* already gives out one entry at a time.
+
+There is deliberately no *Deregister*: a key once bound stays bound. Revocation would be a genuine addition to this functionality, not a gap left open by oversight.
+
+## Known realizations
+
+An idealization of a certificate authority or append-only public directory; realized in practice by any PKI whose issuance policy amounts to "first claim wins, no two parties share a key."
+
+## Properties
+
+Both proven with probability exactly $0$ against every occupant of the adversary slot:
+
+- **Fixity.** A party's registered key never changes once set — every later registration by that party returns the same key, whatever is offered.
+- **Binding.** No two distinct parties ever hold the same key on file.
+
+Registering on behalf of a *corrupt* party proceeds freely (the adversary supplies whatever key it likes for a party it controls), so binding and fixity are guarantees about what the directory itself enforces, not about what an honest-looking key means.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
+
 *References:*
 
 - Canetti, Shahaf, and Vald. [*Universally composable authentication and key-exchange with global PKI*](https://eprint.iacr.org/2014/432). In Public-Key Cryptography (PKC), Part II, volume 9615 of LNCS, pages 265–296, 2016.
+- [*UC for Gamers*](/surveys/uc-for-gamers/index.qmd), this site's own book draft on composable security. Chapter "Public-Key Infrastructure" gives the functionality above and both properties in full.

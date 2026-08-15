@@ -6,8 +6,39 @@ layer: 3
 
 *F-SIG* (Digital signature) is part of *Public-Key Primitives, Key Exchange, Messaging* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
 
+Canetti's ideal signature functionality: a local, per-party functionality that generates a key on first use, signs on request, and verifies — with the simulator given just enough freedom to choose the key and each signature, and no more, so that the guarantees below fall out of the code rather than needing to be argued separately.
+
+## Functionality
+
+State per served party: a verification key $\mathsf{vk} \in \mathsf{Keys} \cup \{\bot\}$ and a table $\mathsf{Ver} : \mathsf{Keys} \times \mathsf{Msgs} \times \mathsf{Sigs} \to \{0,1,\bot\}$ recording every verification verdict decided so far.
+
+- **Gen()**, from party $P$: if $P$ already has a key, return it unchanged. Otherwise ask the adversary for one, sanitize it to be fresh (not already issued, and not already recorded valid on some message) and record it against $P$.
+- **Sign(msg)**, from party $P$: if $P$ has no key yet, return $\bot$. Otherwise ask the adversary for a signature, sanitize it to be an actual signature not already recorded invalid on this triple, record it valid, and return it.
+- **Verify(vk, msg, σ)**: if this exact triple already has a recorded verdict, return it unchanged (consistency across repeated queries). Otherwise ask the adversary for a bit; force it to $0$ if it isn't a bit, and force it to $0$ outright if $\mathsf{vk}$ belongs to some *honest* party and $(\mathsf{vk}, \mathsf{msg}, \sigma)$ was never signed — this one line is what makes the functionality unforgeable rather than merely "whatever the simulator says."
+- **Leak()**: returns the party's own key together with every message/signature pair recorded valid under it — nothing else of the state.
+
+## Known realizations
+
+Realized, up to the ordinary reduction loss of the underlying primitive, by any EUF-CMA-secure signature scheme run over local randomness and storage (see [*F-Rand*](/uc/layer-0-idealized-setup/f-rand/index.qmd) and [*F-Store*](/uc/layer-0-idealized-setup/f-store/index.qmd)): the scheme's own key-generation, signing, and verification algorithms, with coins drawn and erased through *F-Rand* and the key pair held in *F-Store*. Correctness of the scheme gives correctness of the simulation; strong unforgeability under chosen-message attack gives the functionality's unforgeability, up to the scheme's own advantage bound.
+
+Verification keys are deliberately *not* assumed authenticated on their own (*Verify* takes a $\mathsf{vk}$ of its own, unconnected to any caller) — binding a key to the party that owns it is [*G-PKI*](/uc/layer-0-idealized-setup/g-pki/index.qmd)'s job, not this functionality's.
+
+## Properties
+
+Both proven with probability exactly $0$ against every occupant of the adversary slot:
+
+- **Correctness.** A signature honestly produced by *Sign* always verifies (there is no environment/adversary pair that can make an honestly-signed message/signature pair fail *Verify*).
+- **Unforgeability**, and *strong* unforgeability at that: no environment/adversary pair can make *Verify* accept a fresh triple — not just a fresh message, but a triple that wasn't itself the direct output of a *Sign* call — under an honest party's key.
+
+A further, more surprising pair of results (from the same source's deeper treatment): these two properties do not by themselves *characterize* the functionality — a variant that memoizes nothing about repeated verification queries satisfies both yet is distinguishable from this one — but four properties together (correctness, unforgeability, plus verification-consistency across repeated queries and one-key-per-party) do characterize it exactly. And realizations can be *strictly stronger* than the ideal object they realize: a concrete scheme-backed realization can be collision-resistant (no honest key ever verifies one signature under two distinct messages) even though *F-Sig* itself, as specified above, provably is not.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
+
 *References:*
 
 - Canetti. [*Universally composable signature, certification, and authentication*](https://eprint.iacr.org/2003/239). In 17th IEEE Computer Security Foundations Workshop (CSFW), pages 219–233, 2004.
 - Backes and Hofheinz. [*How to break and repair a universally composable signature functionality*](https://eprint.iacr.org/2003/240). In Information Security Conference (ISC), 2004.
 - Küsters and Tuengerthal. [*Joint state theorems for public-key encryption and digital signature functionalities with local computation*](https://eprint.iacr.org/2008/006). In 21st IEEE Computer Security Foundations Symposium (CSF), pages 270–284, 2008.
+- [*UC for Gamers*](/surveys/uc-for-gamers/index.qmd), this site's own book draft on composable security. Chapter "Digital Signatures" gives the functionality above and both properties in full; the deep-dive chapter "F-Sig: A Deeper Dive" gives the characterization and collision-resistance results.

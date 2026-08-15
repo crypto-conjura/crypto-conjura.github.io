@@ -1,0 +1,40 @@
+---
+title: "F-Net — Δ-delayed diffusion network"
+status: "Canonical"
+layer: 1
+---
+
+*F-Net* (Δ-delayed diffusion network) is part of *Channels, Agreement, Ledgers* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+
+A clock-parameterized specialization of unauthenticated diffusion (see *F-diffuse*): messages are timestamped against the [global clock](/uc/layer-0-idealized-setup/g-clock/index.qmd) and guaranteed to reach every party within a fixed delay $\Delta$, following Katz–Maurer–Tackmann–Zikas's bounded-delay model and Badertscher–Maurer–Tschudi–Zikas's diffusion form — the network the composable analyses of Bitcoin and its successors run over. It is unauthenticated: a fetched message carries no sender, and the adversary may inject fresh traffic with no name attached at all. The companion functionality with sender identity attached is *F-AC*.
+
+## Functionality
+
+Parameterized by a delay bound $\Delta$; uses the global clock and the adversary. State: a buffer of entries $(m, P, \mathsf{msg}, \tau)$ indexed by message id $m$, and a "released to" table.
+
+- **Send(msg)**, from party $P$: read the current time $\tau$ off the clock, store $(m, P, \mathsf{msg}, \tau)$ under a fresh id $m$, notify the adversary of the send, and return $m$.
+- **Fetch()**, from party $P$: read the current time $\tau$; ask the adversary which stored ids to release to $P$ early and what fresh (unattributed) messages to inject; return, for every entry addressed — implicitly, since delivery is diffusion to everyone — either already released to $P$ or aged past $\tau_{\text{sent}} + \Delta$, the pair $(m, \mathsf{msg})$ (never the sender). Injected messages are delivered with no id-history, carry no sender, and never ripen — they are the adversary's own traffic, on the wire only because it wrote there.
+- **Leak()**: returns the whole buffer and release table — the network is public and keeps no secrets.
+
+Both slot calls (send-notification and the fetch query) are *responsive*: the adversary's answer comes back before anything else can run, so a fetch reads one consistent snapshot of the clock rather than racing it.
+
+## Known realizations
+
+Not itself realized by a lower-level protocol in this framework; it stands in directly for whatever best-effort broadcast/gossip network a deployment actually has. What *is* built on top of it: the [authenticated channel](/uc/layer-1-channels-agreement-ledgers/f-ac/index.qmd) is realized by signing every message with a [signature functionality](/uc/layer-3-public-key-primitives/f-sig/index.qmd) key registered in a directory, then diffusing signature and message together over *F-Net* — see *F-AC*'s own entry.
+
+## Properties
+
+Both proven with probability exactly $0$ against every occupant of the adversary slot:
+
+- **Liveness.** A message sent by an honest party at time $\tau_s$ is present in every fetch an honest party makes from time $\tau_s + \Delta$ on, regardless of what the adversary answered along the way.
+- **Authentication does *not* hold**, and provably so: there is a concrete environment and adversary strategy — inject a message with no prior send at all — that wins the "every fetched message was actually sent" game with probability exactly $1$. This is not a bug but the definition of unauthenticated diffusion: the wire has no names on it, so nothing stops the adversary writing on it directly. This is the fact that motivates *F-AC*, the addressed, authenticated variant that closes exactly this gap.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
+
+*References:*
+
+- Katz, Maurer, Tackmann, and Zikas. [*Universally composable synchronous computation*](https://eprint.iacr.org/2011/310). In 10th Theory of Cryptography Conference (TCC), pages 477–498, 2013.
+- Badertscher, Maurer, Tschudi, and Zikas. [*Bitcoin as a transaction ledger: A composable treatment*](https://eprint.iacr.org/2017/149). In Advances in Cryptology – CRYPTO 2017, Part I, volume 10401 of LNCS, pages 324–356, 2017.
+- [*UC for Gamers*](/surveys/uc-for-gamers/index.qmd), this site's own book draft on composable security. Chapter "Δ-Delayed Network" gives the functionality above, its liveness proof, and the explicit non-authentication counterexample in full.

@@ -1,6 +1,10 @@
 # Tasks
 
-Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates assume the work is done with Claude (Premium) doing the bulk of it, not a human working unassisted — keep new estimates calibrated the same way. Total estimated time: **~73h** (rough; the two research/production-scale items — UC Encyclopedia content and the LHL secret-seed resolution — are especially uncertain and could run well over their estimate, or in the LHL case, not resolve at all regardless of tooling).
+Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates assume the work is done with Claude (Premium) doing the bulk of it, not a human working unassisted — keep new estimates calibrated the same way. Total estimated time: **~76h** (rough; the two research/production-scale items — UC Encyclopedia content and the LHL secret-seed resolution — are especially uncertain and could run well over their estimate, or in the LHL case, not resolve at all regardless of tooling).
+
+- [ ] **Simplify the conjecture-listing tables (~2h)**
+
+  `_listing-templates/statement-table.ejs.md` — shared by 28 pages (`open-problems/all/index.qmd` plus every `areas/`, `model/`, `form/`, `assumption/` listing page) — currently renders 6 columns: Status badge, Statement (+ one-line summary), Model, Form, Category, Open (obligations count). Simplify it: the Model/Form/Category trio in particular reads as three separate wide columns for what's really just tag data — consider collapsing them into a single compact tags cell (small pills/labels) next to the statement, and reconsider whether the Open-obligations count earns its own column or belongs folded into the status summary line instead. Since one shared template drives all 28 pages, this is high-leverage — and overlaps with the "Usability on handheld devices" task above, which flagged this same table as cramped on narrow screens; a simpler table may resolve both at once.
 
 - [ ] **Usability on iPhone, Android, and other handheld devices (~4h)**
 
@@ -16,6 +20,10 @@ Ordered by difficulty: web-related tweaks, new web content, new conjectures, new
   - **Names matching the links that lead to them.** A sidebar/navbar label and the destination page's own title should read as the same thing once you click through — this has already been fixed once for the Papers section (Archive/Committee vs. Example Paper/Programme Committee); check the rest of `_quarto.yml` and every section index for the same drift recurring.
   - **Sub-links listed on each page.** A section's own index page should list links to its children the same way everywhere — `index.qmd`'s "Explore" grid and `papers/index.qmd`'s "Browse" links (Archive/Committee) are the current model; check whether `surveys/index.qmd`, `resources/index.qmd`, `open-problems/index.qmd`, and `uc/index.qmd` all surface their sub-pages the same way, or whether some just rely on the sidebar and say nothing in the body.
   - **Look and feel across pages.** `page-layout`, `title-block-banner`/`title-block-style`, and related metadata should be applied consistently rather than page-by-page as an afterthought (a version of this was fixed once already for the Papers page specifically) — worth a real side-by-side visual comparison, both themes, rather than just diffing frontmatter.
+
+- [ ] **Add a "Proposals" section under Papers (~1h)**
+
+  `papers/index.qmd`'s "## Browse" section currently links to two things: [Archive](/papers/example-paper/index.qmd) and [Committee](/papers/programme-committee/index.qmd) (`_quarto.yml:69-73` mirrors the same two under the Papers sidebar section). Add a third: "Proposals" — a place for paper ideas/topics worth writing up but not yet claimed by anyone, the papers analogue of an open conjecture. Needs a new `papers/proposals/index.qmd` (mirroring the `example-paper`/`programme-committee` pattern), a third `_quarto.yml` sidebar entry, and a third Browse link. Exact scope (a simple list vs. something with its own per-proposal pages) is an open call — decide when picked up.
 
 - [ ] **Convert the UC-for-gamers paper to HTML (~5h)**
 

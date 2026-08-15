@@ -26,6 +26,12 @@
 \newcommand{\ch}{\mathrm{ch}}
 % definition/remark/proposition/theorem/corollary/lemma all come from the class
 
+% procedure listing: framed like the class's definition boxes
+\newtcolorbox{procedurebox}{enhanced jigsaw,breakable,sharp corners,
+  boxrule=2pt,colframe=cjBorder,colback=white,
+  left=6pt,right=6pt,top=5pt,bottom=5pt,
+  before skip=9pt,after skip=9pt}
+
 \runninghead{UBER ASSUMPTION AND RANDOM SELF-REDUCIBILITY}
 
 \begin{document}
@@ -45,24 +51,32 @@ affine-reparametrization theorem then yields random self-reducibility whenever t
 data are stable under the reparametrization and the challenge polynomial transforms
 covariantly. The four settings differ only through the product structure the pairing (and,
 in Type 2, the homomorphism $\psi$) makes available, and this difference is exactly what
-enlarges or shrinks the self-reducible subclass. We give a worked self-reducible assumption
-in each setting and exhibit a target that is self-reducible in Type 2 but not, by any
-affine reparametrization, in Type 3. A final section places the theorem against classical
-random self-reducibility: the affine condition is the one-query case of the non-adaptive
-condition of Feigenbaum and Fortnow, and the classical multi-query interpolation of Lipton,
-which the group encoding admits unchanged, does reach the separating target --- but only its
-computational form, and only against a high-advantage solver. The two techniques are
-incomparable, and the decisional, negligible-advantage regime that cryptography works in is
-the one where only the affine route survives.
+enlarges or shrinks the self-reducible subclass. We give a worked self-reducible assumption in
+each setting, show that no monomial target can ever separate two settings, and exhibit a
+non-monomial target that is self-reducible in Type 2 but for which, in Type 3, the affine
+reduction fails at every worst-case point --- the largest the failure locus can be, since the
+admissible reparametrizations form a group and the failure fraction is therefore either
+$O(1/p)$ or exactly one. Because the admissibility conditions are polynomial conditions on the
+reparametrization, the search for one is mechanical, and we give a decision procedure that
+returns the maximal admissible group and either certifies the reduction or exhibits the locus
+of worst-case points at which it fails. A further section places the theorem against classical
+random
+self-reducibility. The affine condition is the one-query, linear case of the non-adaptive
+condition of Feigenbaum and Fortnow; Lipton's multi-query line interpolation, which the group
+encoding admits unchanged, solves the computational problem for every target here, including
+the separating one, but only against a high-advantage solver and never the decisional problem.
+The classical decoding machinery that would soften its threshold is not linear in the received
+word and so does not survive the encoding, which is why the separation stands in the
+decisional, negligible-advantage regime that cryptography works in.
 \end{abstract}
 
 \section{Introduction}
 
 The discrete-logarithm problem is random self-reducible by the shift $g^{x}\mapsto
 g^{x}g^{r}$~\cite{TW87}; the answer for a worst-case instance is recovered from an
-average-case solver by subtracting $r$. This note carries the underlying idea, inject a
-uniform reparametrization of the secret and undo it on the answer, across the standard
-group settings and states it uniformly. Throughout, $p$ is a prime and all groups have
+average-case solver by subtracting $r$. This note carries the underlying idea --- injecting a
+uniform reparametrization of the secret and undoing it on the answer --- across the standard
+group settings, and states it uniformly. Throughout, $p$ is a prime and all groups have
 order $p$. We use implicit (bracket) notation in the style of~\cite{EHKRV13}.
 Section~\ref{sec:classical} relates the resulting condition to the classical form of the
 same idea, in which the undoing is done by polynomial interpolation across several
@@ -112,7 +126,7 @@ Fix a setting and an instance consisting of encodings of finite polynomial tuple
 $R\subseteq\Zp[\vX]$ in $\Gone$, $S\subseteq\Zp[\vX]$ in $\Gtwo$, and $T\subseteq\Zp[\vX]$
 in $\GT$ (in a single-group setting only $R$ and, if applicable, $T$ occur). Each tuple is
 assumed to contain the constant $1$, since the generators are public. For $\vX=(X_1,\dots,X_n)$
-and a secret $\vx\in\Zp^{n}$, the instance is the collection of $[r_i(\vx)]_1$,
+and a secret $\vx=(x_1,\dots,x_n)\in\Zp^{n}$, the instance is the collection of $[r_i(\vx)]_1$,
 $[s_j(\vx)]_2$, $[t_k(\vx)]_T$.
 
 For a group $\gamma\in\{\Gone,\Gtwo,\GT\}$ (or $\G$) let $\LL_\gamma\subseteq\Zp[\vX]$
@@ -309,6 +323,7 @@ oracle call, recovering full worst-case coverage.
 \end{remark}
 
 \section{Random self-reducibility: non-bilinear groups}
+\label{sec:nonbilinear}
 
 Here $\LL_\star=\LL_{\G}=\Span{R}$ and no pairing exists, so (C2) demands the covariance
 defect to be a $\Zp$-combination of the source exponents themselves. The motivating
@@ -389,6 +404,7 @@ exponents, which the pairing can form only after $\psi$ has moved one of them in
 In Type 1 this term is free; in Type 3 it is unavailable, as the next section shows.
 
 \section{Random self-reducibility: Type 3}
+\label{sec:type3}
 
 Here $\LL_1=\Span{R}$, $\LL_2=\Span{S}$, and $\LL_T=\Span{R\cdot S\cup T}$: the target space
 contains only cross products. This is the most restrictive setting, and reparametrizations
@@ -416,189 +432,440 @@ because an additive shift $x_1\mapsto x_1+b_1$ would put $b_1X_2$ into $h_\tau$,
 $X_2\notin\LL_1$ in Type 3.
 \end{proof}
 
-The next result shows the Type-3 restriction genuinely bites: the target of
-Proposition~\ref{prop:type2}, self-reducible in Type 2, is not affine-randomizable in
-Type 3.
+\subsection{Monomial targets never separate}
+
+It is tempting to look for a separation at the target $f=X_1X_2^{2}$ of
+Proposition~\ref{prop:type2}, whose defect under translation contains the $X_2^{2}$ that
+Type 3 cannot form. That attempt fails, and it fails for a reason that rules out an entire
+class of candidates at once.
+
+\begin{proposition}[monomial targets are always self-reducible]
+\label{prop:nomono}
+Let $R,S,T$ consist of monomials, each containing $1$, and let $f=X_1^{i}X_2^{j}$ with
+$i,j\ge 1$ be a monomial with $f\notin\LL_\star$. Then in every one of the four settings the
+diagonal torus $\mathcal T=\{\tau_{a,d}\colon\vx\mapsto(ax_1,dx_2):a,d\in\Zpx\}$, with $a$ and
+$d$ drawn uniformly from $\Zpx$, satisfies
+\textup{(C1)} and \textup{(C2)}, and Theorem~\ref{thm:master} applies in the relaxed form of
+Remark~\ref{rem:c3}. No such $f$ separates two settings.
+\end{proposition}
+\begin{proof}
+A monomial composed with a coordinate scaling is a scalar multiple of itself, so
+$m\circ\tau_{a,d}=a^{k}d^{l}m$ for $m=X_1^{k}X_2^{l}$. Hence every source monomial stays in
+the span of itself, giving (C1) in any setting, and $f\circ\tau_{a,d}=a^{i}d^{j}f$, giving
+(C2) with $\lambda_\tau=a^{i}d^{j}\in\Zpx$ and $h_\tau=0$ --- the defect vanishes identically,
+so no uncomputable monomial can appear in it. The image $\tau_{a,d}(\vx)$ is uniform on
+$\Zpx\times\Zpx$ whenever $x_1,x_2\neq 0$, and on the complement
+$\{x_1=0\}\cup\{x_2=0\}$ one has $f(\vx)=0$ because $i,j\ge 1$, so the answer is the identity
+and the reduction detects the case by testing $[x_1]_1$ and $[x_2]_2$ against the identity.
+Remark~\ref{rem:c3} then gives full worst-case coverage.
+\end{proof}
+
+In particular $f=X_1X_2^{2}$ is random self-reducible in Type 3 as well as in Type 2, by
+$\tau\colon\vx\mapsto(\alpha x_1,\,x_2+b)$: here $f\circ\tau=\alpha f+2\alpha b\,X_1X_2+
+\alpha b^{2}X_1$, whose defect monomials $X_1X_2$ and $X_1$ are both cross products $R\cdot S$
+and hence in $\LL_T$ even in Type 3. This is the same shape of reparametrization that
+Proposition~\ref{prop:cocdh} forces for co-CDH. A separating target must therefore be
+non-monomial, and must defeat the torus.
+
+\subsection{A separating target}
 
 \begin{proposition}[a Type-2 versus Type-3 separation]
 \label{prop:sep}
-In a Type-3 group let $R=(1,X_1)$ in $\Gone$, $S=(1,X_2)$ in $\Gtwo$, $T=(1)$, and
-$f=X_1X_2^{2}$ with challenge in $\GT$. The assumption is generically hard, and no
-$\tau\in\AGL_2(\Zp)$ satisfies \textup{(C1)--(C3)}; hence the affine reduction of
-Theorem~\ref{thm:master} does not apply, in contrast to Type 2
-(Proposition~\ref{prop:type2}).
+Let $p\ge 5$, $R=(1,X_1)$ in $\Gone$, $S=(1,X_2)$ in $\Gtwo$, $T=(1)$, and
+\[
+  f=X_1^{2}+X_1X_2^{2}+X_2^{3}
+\]
+with challenge in $\GT$. Then $f\notin\LL_T$ in Type 2 and in Type 3, so the assumption is
+generically hard in both. In Type 2 the admissible reparametrizations act transitively and
+uniformly on $\Zp^{2}$, so Theorem~\ref{thm:master} applies with exact advantage transfer. In
+Type 3 the admissible group is
+\[
+  \mathcal T_3=\{\tau_c\colon\vx\mapsto(x_1-3c,\ x_2+c)\ :\ c\in\Zp\}\cong(\Zp,+),
+\]
+of order $p$; its orbits are the $p$ lines $x_1+3x_2=k$, each of size $p$; and on no such line
+is $f$ computable from the instance. Hence \textup{(C3)} fails at \emph{every}
+$\vx_0\in\Zp^{2}$, even in the relaxed form of Remark~\ref{rem:c3}.
 \end{proposition}
 \begin{proof}
-Hardness holds as $\LL_\star=\LL_T=\Span{R\cdot S}=\Span{1,X_1,X_2,X_1X_2}$ and
-$X_1X_2^{2}\notin\Span{1,X_1,X_2,X_1X_2}$. Suppose $\tau\in\AGL_2(\Zp)$ satisfies (C1).
-Condition (C1) for $r=X_1$ forces the first coordinate map $\tau_1=X_1\circ\tau$ to lie in
-$\LL_1=\Span{1,X_1}$, that is $\tau_1=e_1X_1+e_0$ with no $X_2$; likewise (C1) for $s=X_2$
-forces $\tau_2=aX_2+a_0$ with no $X_1$. Invertibility requires $e_1,a\in\Zpx$. Then
+\emph{Hardness.} In Type 3, $\LL_T=\Span{R\cdot S}=\Span{1,X_1,X_2,X_1X_2}$; in Type 2,
+$\LL_T=\Span{(R\cup S)\cdot S}=\Span{1,X_1,X_2,X_1X_2,X_2^{2}}$. Neither contains $X_1^{2}$,
+so $f\notin\LL_T$ in either.
+
+\emph{Type 3.} By (C1), $\tau_1=aX_1+c_1$ and $\tau_2=dX_2+c_2$ with $a,d\in\Zpx$. The
+monomials of $f\circ\tau$ lying outside $\LL_T$ are $X_1^{2}$, $X_1X_2^{2}$, $X_2^{3}$ and
+$X_2^{2}$; the first three occur in $f$ and the fourth does not. Reading off coefficients,
 \[
-  f\circ\tau=(e_1X_1+e_0)(aX_2+a_0)^{2}
-  =(e_1X_1+e_0)\bigl(a^{2}X_2^{2}+2aa_0X_2+a_0^{2}\bigr).
+  [X_1^{2}]:\ a^{2}=\lambda_\tau,\qquad
+  [X_1X_2^{2}]:\ ad^{2}=\lambda_\tau,\qquad
+  [X_2^{3}]:\ d^{3}=\lambda_\tau .
 \]
-The coefficient of the monomial $X_2^{2}$ (which carries no $X_1$) is $e_0a^{2}$. Since
-$X_2^{2}\notin\LL_\star$ and $\lambda_\tau f=\lambda_\tau X_1X_2^{2}$ contributes no pure
-$X_2^{2}$ term, condition (C2) forces $e_0a^{2}=0$, hence $e_0=0$. But then
-$\tau_1=e_1X_1$, so $\tau(\vx)_1=e_1x_1$, which cannot be uniform on $\Zp$ for a fixed
-$x_1$ (it never realizes uniformity across the value $0$), so (C3) fails. Therefore no
-$\tau$ meets (C1)--(C3) simultaneously.
+From the first two, $a=d^{2}$; from the last two, $a=d$; hence $d^{2}=d$ and, as
+$d\in\Zpx$, $d=1$, so $a=1$ and $\lambda_\tau=1$. The pure $X_2^{2}$ coefficient is
+$c_1+3c_2$ and must vanish, giving $c_1=-3c_2$. Writing $c\coloneqq c_2$ yields exactly
+$\mathcal T_3$, and one checks $h_{\tau_c}=2c\,X_1X_2+(c^{2}-6c)X_1-3c^{2}X_2+(9c^{2}-2c^{3})
+\in\LL_T$, so (C2) does hold on $\mathcal T_3$. Since $x_1+3x_2$ is invariant under $\tau_c$,
+the orbit of $\vx_0$ is the line $\ell_k=\{x_1+3x_2=k\}$ through it, of size $p$ out of
+$p^{2}$.
+
+\emph{No escape on an orbit.} Parametrize $\ell_k$ by $s\coloneqq x_2$, so $x_1=k-3s$. There
+\[
+  f|_{\ell_k}=(k-3s)^{2}+(k-3s)s^{2}+s^{3}=-2s^{3}+(k+9)s^{2}-6ks+k^{2},
+\]
+while $\LL_T$ restricts to $\Span{1,\,k-3s,\,s,\,(k-3s)s}=\Span{1,s,s^{2}}$. As $p\ge 5$ the
+coefficient $-2$ is nonzero and $s^{3}$ is not a $\Zp$-combination of $1,s,s^{2}$ as a
+function on $\Zp$, so $f|_{\ell_k}\notin\LL_T|_{\ell_k}$ for every $k$. The escape clause of
+Remark~\ref{rem:c3} is therefore unavailable on any orbit.
+
+\emph{Type 2.} Now $\LL_1=\Span{1,X_1,X_2}$, so (C1) permits $\tau_1=a_{11}X_1+a_{12}X_2+c_1$,
+and $X_2^{2}\in\LL_T$ removes the $X_2^{2}$ constraint. The surviving conditions are
+$a_{11}^{2}=\lambda_\tau$, $a_{11}d^{2}=\lambda_\tau$ and $a_{12}d^{2}+d^{3}=\lambda_\tau$,
+giving $a_{11}=d^{2}$ and $a_{12}=d^{2}-d$, with $c_1,c_2$ free. Then
+$\tau(\vx)=(d^{2}x_1+(d^{2}-d)x_2+c_1,\ dx_2+c_2)$, and as $c_1,c_2$ range over $\Zp$ the two
+coordinates range independently over all of $\Zp$: $\tau(\vx)$ is exactly uniform on $\Zp^{2}$
+for every fixed $\vx$, which is (C3) unrelaxed.
 \end{proof}
 
-The obstruction is exactly the one flagged after Proposition~\ref{prop:type2}: the
-covariance defect necessarily contains $X_2^{2}$, a product of two $\Gtwo$ exponents. In
-Type 2 the homomorphism $\psi$ places $X_2^{2}$ in $\LL_T$ and translation works; in Type 3
-it is generically uncomputable, and forcing it out of the defect collapses the
-reparametrization on the $\Gone$ coordinate. Proposition~\ref{prop:sep} rules out the
-single-reparametrization affine technique, which is the tool behind every positive result
-above, but it does not rule out every reduction. Section~\ref{sec:classical} shows that a
-multi-query interpolation reduction, of the kind classical random self-reducibility has used
-since Lipton~\cite{Lipton91}, does solve the \emph{computational} problem here; the Type-2
-versus Type-3 gap for this target is therefore a gap for the decisional problem and for
-tight reductions, not a structural one. Ruling out every reduction for the decisional
-problem would additionally require a lower-bound argument such as a meta-reduction.
+Two features of Type 2 drive the separation, and the proof uses both: $\psi$ places $X_2^{2}$
+in $\LL_T$, which removes the constraint that ties $c_1$ to $c_2$ in Type 3, and it places
+$X_2$ in $\LL_1$, which lets $\tau_1$ carry the shear term $a_{12}X_2$. Neither is available
+in Type 3, and either alone would leave a smaller admissible group.
+
+On the other side, all three terms of $f$ are needed, and the coefficient conditions
+$a^{2}=ad^{2}=d^{3}=\lambda_\tau$ are what make them work together: any two of the three force
+only a single relation between $a$ and $d$, leaving a one-parameter torus, whereas all three
+force $d=1$ and kill the torus that Proposition~\ref{prop:nomono} would otherwise use to
+rescue the Type-3 reduction. Dropping a term accordingly costs the separation, but in
+different ways. Without $X_1^{2}$ one has $a=d$; the torus survives, and the failure locus
+shrinks to the single line $x_1+3x_2=0$, an $O(1/p)$ fraction. Without $X_1X_2^{2}$ one has
+$a^{2}=d^{3}$, and without $X_2^{3}$ one has $a=d^{2}$; in both cases the surviving
+one-parameter torus leaves Type-3 orbits of size $\Theta(p^{2})$, so the loss is a constant
+factor rather than a break --- Type 2 retains full coverage in each case, so what fails is the
+Type-3 half of the separation, not the Type-2 half.
+
+The hypothesis $p\ge 5$ is not cosmetic. The proof needs $s^{3}$ to be independent of
+$1,s,s^{2}$ \emph{as a function} on $\Zp$, which holds exactly when $p>3$. At $p=3$ Fermat
+gives $s^{3}=s$, so $f|_{\ell_k}=ks^{2}+s+k^{2}$ lies in $\LL_T|_{\ell_k}$ and the escape
+clause of Remark~\ref{rem:c3} becomes available on every orbit; at $p=2$ the assumption is
+vacuous, since $X_1^{2},X_2^{2}$ and $X_2^{3}$ collapse to $X_1,X_2,X_2$ and $f$ agrees
+pointwise with $X_1+X_1X_2+X_2\in\LL_T$. Both failures are of hardness or of the escape
+clause, not of the group computation, which is characteristic-free.
+
+\begin{remark}[the failure is as large as it can be]
+\label{rem:dichotomy}
+The set of $\tau$ satisfying (C1) and (C2) is closed under composition and inversion, so it is
+a group and the orbits of $\Zp^{n}$ under it partition the space. Orbit size is constant on
+orbits, so the set of $\vx_0$ at which (C3) fails is a union of orbits. If it is not all of
+$\Zp^{n}$, it omits some orbit of size at least $p^{n}-O(p)$ and therefore has size $O(p)$.
+The failure fraction is thus either $O(1/p)$ or exactly $1$, with nothing in between, and
+Proposition~\ref{prop:sep} realizes the second alternative.
+\end{remark}
+
+Proposition~\ref{prop:sep} rules out the single-reparametrization technique of
+Theorem~\ref{thm:master}, which is the tool behind every positive result above. It does not
+rule out every reduction: Section~\ref{sec:classical} shows that a multi-query interpolation
+reduction still solves the \emph{computational} problem, at high solver advantage, for this
+target as for any other with these source tuples. The Type-2 versus Type-3 gap established
+here is accordingly a gap for decisional reductions and for reductions that must work at
+negligible advantage. Ruling out every decisional reduction would additionally require a
+lower-bound argument such as a meta-reduction.
 
 \section{Relation to classical random self-reducibility}
 \label{sec:classical}
 
 Random self-reducibility long predates its use on group-based assumptions, and the classical
 technique differs from Theorem~\ref{thm:master} in one respect that decides exactly what
-Proposition~\ref{prop:sep} does and does not rule out. This section isolates the difference,
-shows that the two techniques are incomparable, and uses the classical one to reach a target
-the affine one cannot.
+Proposition~\ref{prop:sep} does and does not rule out. This section isolates the difference
+and delimits the reach of each technique.
 
 \subsection{The multi-query condition}
 
 Condition (C2) asks a single reparametrized challenge to be a scalar multiple of the original
-up to a computable defect. The general \emph{non-adaptive} condition, in the sense of
-Feigenbaum and Fortnow~\cite{FF93}, asks instead that the original challenge be a
-$\Zp$-combination of \emph{several} reparametrized ones:
+up to a computable defect. Feigenbaum and Fortnow~\cite{FF93} call a problem non-adaptively
+random self-reducible when $f(\vx_0)$ is recoverable by an arbitrary polynomial-time function
+of the answers on several identically distributed queries; see~\cite{BT06} for the place of
+that notion in average-case complexity. The specialization in which the recovery is
+$\Zp$-linear is the one this setting supports:
 \begin{enumerate}[label=\textup{(C2$'$)},leftmargin=3.9em]
-  \item there are $\tau_1,\dots,\tau_m\in\mathcal T$, coefficients $c_1,\dots,c_m\in\Zp$, and a
-        polynomial $h\in\LL_\star$, all computable from the sampled data, with
+  \item there are $\tau_1,\dots,\tau_m$, jointly sampled so that each $\tau_i$ is marginally
+        distributed as in (C3), together with coefficients $c_1,\dots,c_m\in\Zp$ and a
+        polynomial $h\in\LL_\star$, all computable from the sampled data, such that
         \[
           f=\sum_{i=1}^{m}c_i\,(f\circ\tau_i)+h.
         \]
 \end{enumerate}
-Condition (C2) is the case $m=1$: from $f\circ\tau=\lambda_\tau f+h_\tau$ one gets
-$f=\lambda_\tau^{-1}(f\circ\tau)-\lambda_\tau^{-1}h_\tau$, which is (C2$'$) with
+Condition (C2) is the case $m=1$ with $c_1\neq 0$: from $f\circ\tau=\lambda_\tau f+h_\tau$ one
+gets $f=\lambda_\tau^{-1}(f\circ\tau)-\lambda_\tau^{-1}h_\tau$, which is (C2$'$) with
 $c_1=\lambda_\tau^{-1}$ and $h=-\lambda_\tau^{-1}h_\tau$.
 
-Suppose (C1) and (C3) hold for each $\tau_i$ separately. Then (C2$'$) suffices for the
-\emph{computational} problem: the reduction rebuilds $\Inst(\tau_i(\vx_0))$ for each $i$ as in
-the proof of Theorem~\ref{thm:master}, queries the solver on all $m$ of them to get
-$W_1,\dots,W_m$, and returns
+Given (C1) for each $\tau_i$, condition (C2$'$) suffices for the \emph{computational} problem:
+the reduction rebuilds $\Inst(\tau_i(\vx_0))$ for each $i$ as in the proof of
+Theorem~\ref{thm:master}, queries the solver on all $m$ of them to get $W_1,\dots,W_m$, and
+returns
 \[
   \prod_{i=1}^{m}W_i^{\,c_i}\cdot[h(\vx_0)]_\star
   =\Bigl[\sum_{i=1}^{m}c_i\,f(\tau_i(\vx_0))+h(\vx_0)\Bigr]_\star=[f(\vx_0)]_\star .
 \]
 The step that makes this go through is that a $\Zp$-linear combination of \emph{exponents} is
-realized by group operations on their encodings, so arbitrary linear post-processing of the
-solver's answers is available to the reduction for free. Encodings are transparent to it: the
-map $\vx\mapsto[f(\vx)]_\star$ is a Reed--Muller codeword read through the encoding, and a
-linear local-decoding procedure for that code never notices the encoding is there. The whole
-Lipton~\cite{Lipton91} toolkit therefore applies to computational Uber problems verbatim.
+realized by group operations on their encodings, so linear post-processing of the solver's
+answers is available to the reduction for free. Encodings are transparent to it: the map
+$\vx\mapsto[f(\vx)]_\star$ is a Reed--Muller codeword read through the encoding, and a linear
+local-decoding procedure for that code never notices the encoding is there. This is why the
+linear part of the classical toolkit --- Lipton's line restriction~\cite{Lipton91}, and the
+degree-$k$ curves with which Beaver and Feigenbaum~\cite{BF90} make the queries $k$-wise
+independent --- carries over to computational Uber problems unchanged.
 
-Two costs come with $m>1$. The reparametrizations $\tau_i$ must be correlated for the
-interpolation identity to hold --- in Lipton's instantiation they are the translations along a
-single random line, uniform marginally but not jointly --- so the reduction's success
-probability is controlled by a union bound rather than transferred exactly. And, as
-Section~\ref{sec:mqdec} records, the technique does not reach decisional problems at all.
+\subsection{Interpolation, and what it costs}
 
-\subsection{Interpolation reaches a Type-3 target the affine technique cannot}
+The classical instantiation restricts $f$ to a random line through $\vx_0$ and interpolates.
+It needs nothing of $f$ beyond its degree, and nothing of the setting beyond (C1) for
+translations.
 
-\begin{proposition}[interpolation in Type 3]
+\begin{proposition}[line interpolation]
 \label{prop:interp}
-Let $p>4$ and take the Type-3 instance of Proposition~\ref{prop:sep}: $R=(1,X_1)$ in $\Gone$,
-$S=(1,X_2)$ in $\Gtwo$, $T=(1)$, and $f=X_1X_2^{2}$ with challenge in $\GT$. The
-\emph{computational} $(R,S,T,f;\GT)$-Uber problem is random self-reducible by a non-adaptive
-four-query reduction $\mathcal B^{\mathcal A}$ satisfying, for every $\vx_0\in\Zp^{2}$,
+Suppose $R$, $S$ and $T$ are stable under translation, in the sense that $r\circ\tau_{\vb}\in
+\LL_1$, $s\circ\tau_{\vb}\in\LL_2$ and $t\circ\tau_{\vb}\in\LL_T$ for every $\vb\in\Zp^{n}$ and
+every $r\in R$, $s\in S$, $t\in T$, where $\tau_{\vb}\colon\vx\mapsto\vx+\vb$. Let
+$d\coloneqq\deg f$ and suppose $d\le p-2$. Then the \emph{computational}
+$(R,S,T,f;\ch)$-Uber problem is random self-reducible by a non-adaptive $(d+1)$-query
+reduction $\mathcal B^{\mathcal A}$ with
 \[
-  \Succ(\mathcal B;\vx_0)\ \ge\ 1-4\bigl(1-\Succ_{\mathrm{avg}}(\mathcal A)\bigr).
+  \Succ(\mathcal B;\vx_0)\ \ge\ 1-(d+1)\bigl(1-\Succ_{\mathrm{avg}}(\mathcal A)\bigr)
+  \qquad\text{for every }\vx_0\in\Zp^{n}.
 \]
 \end{proposition}
 \begin{proof}
-Draw $\vb=(b_1,b_2)\rsample\Zp^{2}$ and fix four distinct nonzero $t_1,\dots,t_4\in\Zp$, which
-exist as $p>4$. Let $\tau_i\colon\vx\mapsto\vx+t_i\vb$.
+Draw $\vb\rsample\Zp^{n}$ and fix $d+1$ distinct nonzero $t_1,\dots,t_{d+1}\in\Zp$, which exist
+as $d+1\le p-1$. Put $\tau_i\coloneqq\tau_{t_i\vb}$. Each $\tau_i$ is a translation, so (C1)
+holds by hypothesis and $\Inst(\vx_0+t_i\vb)$ is computable from $\Inst(\vx_0)$; and since
+$t_i\neq 0$ and $\vb$ is uniform, $\vx_0+t_i\vb$ is uniform on $\Zp^{n}$, so each query is
+marginally a fresh average-case instance. The $d+1$ queries are not jointly independent: they
+lie on one line.
 
-\emph{Rebuild.} Each $\tau_i$ is a translation, so $X_1\circ\tau_i=X_1+t_ib_1\in\LL_1=
-\Span{1,X_1}$ and $X_2\circ\tau_i=X_2+t_ib_2\in\LL_2=\Span{1,X_2}$, which is (C1); the
-$\GT$ tuple is the constant $1$ and needs nothing. Explicitly
-$\Inst(\vx_0+t_i\vb)=\bigl([1]_1,\ [x_1]_1[1]_1^{t_ib_1},\ [1]_2,\ [x_2]_2[1]_2^{t_ib_2},\
-[1]_T\bigr)$, computable from $\Inst(\vx_0)$ with no pairing and no $\psi$.
-
-\emph{Uniformity.} For each fixed $i$, $t_i\neq 0$ and $\vb$ uniform make $\vx_0+t_i\vb$
-uniform on $\Zp^{2}$, which is (C3) for each $\tau_i$ separately. The four are not jointly
-independent: they lie on one line.
-
-\emph{Interpolate.} Put $g(t)\coloneqq f(\vx_0+t\vb)=(x_1+tb_1)(x_2+tb_2)^{2}$, a polynomial in
-$t$ of degree at most $3$, and let $c_i\coloneqq\prod_{j\neq i}(-t_j)(t_i-t_j)^{-1}$ be the
-Lagrange coefficients at $0$, so that $q(0)=\sum_i c_i q(t_i)$ for every $q$ of degree at most
-$3$. This is (C2$'$) with $m=4$ and $h=0$. Query $W_i\leftarrow\mathcal A(\Inst(\vx_0+t_i\vb))$
-and output $Y\coloneqq\prod_{i=1}^{4}W_i^{\,c_i}$. If every $W_i=[g(t_i)]_T$ then
-\[
-  Y=\Bigl[\sum_{i=1}^{4}c_i\,g(t_i)\Bigr]_T=[g(0)]_T=[f(\vx_0)]_T .
-\]
-Each query is marginally a fresh average-case instance, so $\mathcal A$ errs on any fixed one
-with probability $1-\Succ_{\mathrm{avg}}(\mathcal A)$, and a union bound over the four gives
-the stated bound.
+Put $g(t)\coloneqq f(\vx_0+t\vb)$, a polynomial in $t$ of degree at most $d$, and let
+$c_i\coloneqq\prod_{j\neq i}(-t_j)(t_i-t_j)^{-1}$ be the Lagrange coefficients at $0$, so that
+$q(0)=\sum_i c_i q(t_i)$ for every $q$ of degree at most $d$. This is (C2$'$) with $m=d+1$ and
+$h=0$. Query $W_i\leftarrow\mathcal A(\Inst(\vx_0+t_i\vb))$ and output
+$Y\coloneqq\prod_i W_i^{\,c_i}$; if every $W_i=[g(t_i)]_\star$ then
+$Y=[\sum_i c_i g(t_i)]_\star=[g(0)]_\star=[f(\vx_0)]_\star$. A union bound over the $d+1$
+queries gives the stated bound.
 \end{proof}
 
-The reduction never computes $[x_2^{2}]_T$, the element Proposition~\ref{prop:sep} shows to be
-out of reach. It does not have to: it never rebuilds the covariance defect, because the solver
-returns that defect implicitly inside its own answers, and recovering $f(\vx_0)$ from those
-answers is a $\Zp$-linear operation the encoding permits.
+The source tuples of Propositions~\ref{prop:cocdh}, \ref{prop:nomono} and~\ref{prop:sep} are
+all translation-stable, so Proposition~\ref{prop:interp} applies to each: the computational
+problems there are self-reducible in Type 3 whatever the covariance obstruction, including
+the separating target of Proposition~\ref{prop:sep}, whose degree $3$ needs four queries. The
+reduction never rebuilds the covariance defect --- the solver returns it implicitly inside its
+own answers --- so no uncomputable monomial ever has to be formed.
 
-\subsection{The decisional problem stays blocked}
-\label{sec:mqdec}
+What it costs is the regime. The queries must be correlated for the interpolation identity to
+hold, so the transfer runs through a union bound and the bound is vacuous unless
+$\Succ_{\mathrm{avg}}(\mathcal A)>d/(d+1)$. In the classical setting that threshold is soft:
+Berlekamp--Welch decoding brings the tolerable disagreement to any constant below
+$1/2$~\cite{GS92}, and list decoding brings it past $1/2$~\cite{Sudan97,STV01}. Neither is
+available here. Berlekamp--Welch solves $N(t_i)=y_i\,E(t_i)$ for the coefficients of $N$ and
+$E$, a linear system whose \emph{coefficient matrix contains the received values} $y_i$; the
+reduction holds only $[y_i]_\star$, and forming that system would require multiplying and
+inverting encoded values. The same objection applies to the list-decoding refinements. So the
+very criterion that lets interpolation survive the encoding --- linearity in the received word
+--- excludes the machinery that would soften its threshold, and $d/(d+1)$ is a genuine wall
+rather than an artifact.
 
-\begin{remark}
+\begin{remark}[challenge transport]
 \label{rem:decblock}
-Interpolation does not transfer to the decisional problem of Proposition~\ref{prop:sep}. There
-the reduction must map its own challenge $Z$ to a challenge $Z_i$ for each rebuilt instance,
-so it needs the encodings of the coefficients of
+Interpolation does not reach the decisional problem. Recovering $f(\vx_0)$ from the answers is
+linear and hence free in the exponent, but a decisional reduction must also run in the other
+direction, transporting its own challenge $Z$ forward to a challenge for each rebuilt
+instance, and decision bits do not interpolate. Concretely, for the target
+$f=X_1^{2}+X_1X_2^{2}+X_2^{3}$ of Proposition~\ref{prop:sep} the reduction would need the
+coefficients of $g(t)=f(\vx_0+t\vb)$; the coefficient of $t$ is the directional derivative
 \[
-  g(t)=\underbrace{x_1x_2^{2}}_{t^{0}}
-  +\underbrace{\bigl(b_1x_2^{2}+2b_2x_1x_2\bigr)}_{t^{1}}t
-  +\underbrace{\bigl(b_2^{2}x_1+2b_1b_2x_2\bigr)}_{t^{2}}t^{2}
-  +\underbrace{b_1b_2^{2}}_{t^{3}}t^{3}.
+  b_1\bigl(2X_1+X_2^{2}\bigr)+b_2\bigl(2X_1X_2+3X_2^{2}\bigr)
+  =2b_1X_1+2b_2X_1X_2+(b_1+3b_2)X_2^{2},
 \]
-The $t^{2}$ and $t^{3}$ coefficients lie in $\LL_T=\Span{1,X_1,X_2,X_1X_2}$, but the $t^{1}$
-coefficient carries $b_1X_2^{2}$, and $X_2^{2}\notin\LL_T$ in Type 3. Setting $b_1=0$ removes
-it at the cost of freezing the first coordinate, destroying (C3) exactly as in the proof of
-Proposition~\ref{prop:sep}. The asymmetry is structural rather than incidental: interpolation
-runs from the solver's answers to the target, which is linear and hence free in the exponent,
-whereas a decisional reduction must also run from the target to the solver's challenges, and
-that direction needs the intermediate coefficients themselves.
+whose $X_2^{2}$ term lies outside $\LL_T$ in Type 3 unless $b_1+3b_2=0$ --- that is, unless
+$\vb$ points along the one direction whose orbits are the degenerate lines of
+Proposition~\ref{prop:sep}.
 \end{remark}
 
 \subsection{What each technique buys}
 
-The two reductions are incomparable, and the axes trade against each other.
-Theorem~\ref{thm:master} admits every $\tau\in\AGL_n(\Zp)$, including the multiplicative
-scaling that Proposition~\ref{prop:cocdh} shows to be forced for co-CDH and that no reduction
-restricted to translations along a line could supply; interpolation admits any $f$ of degree
-less than $p$ whose line restriction rebuilds, with no covariance requirement at all. In
-exchange, Theorem~\ref{thm:master} transfers advantage exactly, in both the search and the
-decisional problem, whereas Proposition~\ref{prop:interp} needs
-$\Succ_{\mathrm{avg}}(\mathcal A)>3/4$ before its bound says anything and says nothing about
-decisional problems. The threshold is an artifact of naive interpolation rather than of the
-approach --- Berlekamp--Welch decoding and its list-decoding successors push it down to a
-constant and then to $\mathrm{poly}(1/\epsilon)$~\cite{GS92,BT06} --- but no version of it
-reaches negligible advantage, and none reaches a decisional problem. Cryptographic assumptions
-are stated overwhelmingly in the decisional form and at negligible advantage, which is
-precisely the regime where the covariance route is the only one available; that is why
-Theorem~\ref{thm:master}, and not interpolation, is the tool used throughout this note.
+The two techniques are not ordered by reach. On \emph{computational} problems interpolation is
+the more permissive of the two: it asks nothing of $f$ but its degree, so wherever the sources
+are translation-stable it succeeds regardless of the covariance obstruction, and
+Proposition~\ref{prop:interp} applies to every target in this note. What separates them is the
+regime. Theorem~\ref{thm:master} transfers advantage exactly, and reaches the decisional
+problem; Proposition~\ref{prop:interp} says nothing below solver advantage $d/(d+1)$ and
+nothing about decisional problems at all (Remark~\ref{rem:decblock}). The gap is not one of
+tightness --- a reduction
+requiring $\Succ_{\mathrm{avg}}>3/4$ is not a loose reduction, it does not exist below that
+threshold --- and, by the preceding subsection, it cannot be closed by the classical decoding
+machinery, because that machinery is not linear in the received word. Since Uber assumptions
+are stated at negligible advantage, and very often in decisional form, the covariance route is
+in practice the only one available; that is why Theorem~\ref{thm:master}, and not
+interpolation, is the tool used throughout this note, and why the separation of
+Proposition~\ref{prop:sep} is meaningful despite Proposition~\ref{prop:interp}.
 
-Two further points of contact are worth recording. The translation reduction for CDH and DDH
-is the group-theoretic form of Blum--Luby--Rubinfeld self-correction~\cite{BLR93}: the shift
-$\vx\mapsto\vx+\vb$ is their shift, with the group law supplying the linearity their argument
-needs. And the worst-case-to-average-case reductions of lattice cryptography, from
-Ajtai~\cite{Ajtai96} to Regev~\cite{Regev09}, share the motivation of this note --- basing an
-average-case assumption on a worst-case one --- but are reductions \emph{between distinct
-problems} rather than self-reductions, and their mechanism, Gaussian sampling over a lattice,
-has nothing to do with the polynomial structure exploited here.
+Two further points of contact are worth recording, with their differences. Shift-based
+self-correction in the style of Blum, Luby and Rubinfeld~\cite{BLR93} uses the same
+$\vx\mapsto\vx+\vb$ as the CDH and DDH reduction of Section~\ref{sec:nonbilinear}, but their
+corrector queries the oracle twice per trial and takes a majority over repetitions, tolerating
+a constant error rate, where the reduction here makes one query and computes the correction
+itself from the instance, transferring advantage exactly. And the worst-case-to-average-case
+reductions of lattice cryptography, from Ajtai~\cite{Ajtai96} to Regev~\cite{Regev09}, share
+the motivation of this note --- basing an average-case assumption on a worst-case one --- but
+are reductions \emph{between distinct problems} rather than self-reductions, and rest on
+lattice geometry rather than on polynomial structure; Regev's is moreover a quantum reduction.
+
+\section{Deciding whether the affine technique applies}
+\label{sec:decide}
+
+Conditions \textup{(C1)} and \textup{(C2)} are polynomial conditions on the entries of $\tau$,
+and \textup{(C3)} is a statement about the size of an orbit. Finding an admissible $\mathcal T$
+is therefore a computation rather than a matter of ingenuity, and the hand arguments of
+Sections~\ref{sec:nonbilinear}--\ref{sec:type3} are all instances of one procedure. This
+section writes it out. What the procedure decides is the applicability of
+Theorem~\ref{thm:master}, not random self-reducibility as such;
+Section~\ref{sec:limits} is precise about the gap.
+
+\subsection{Set-up}
+
+Fix a setting and an instance $(R,S,T,f;\ch)$ in $n$ variables over $\Zp$, and put
+$D\coloneqq\max\{\deg f,\ \deg q: q\in R\cup S\cup T\}$. Affine substitution does not raise
+degree, so every polynomial the procedure meets lies in $P_D\coloneqq\Zp[\vX]_{\le D}$, a
+$\Zp$-space of dimension $N=\binom{n+D}{n}$; represent its elements by coefficient vectors.
+Treat the $n^{2}+n$ entries of $(A,\vb)$ in $\tau_{A,\vb}\colon\vx\mapsto A\vx+\vb$ as
+indeterminates; for $q\in P_D$ the coefficients of $q\circ\tau_{A,\vb}$ are then polynomials in
+those indeterminates, obtained by expansion.
+
+Two structural facts fix the shape of the procedure. First, \textup{(C1)} and \textup{(C2)} cut
+out an algebraic subset $\mathcal T\subseteq\AGL_n(\Zp)$ which is a subgroup
+(Remark~\ref{rem:dichotomy}). Second, with $\mathcal D$ uniform on $\mathcal T$ the image
+$\tau(\vx_0)$ is uniform on the orbit $\mathcal T\vx_0$, because $\tau\mapsto\tau(\vx_0)$ is
+$|\mathrm{Stab}_{\mathcal T}(\vx_0)|$-to-one onto that orbit. Deciding \textup{(C3)} is
+therefore deciding how large the orbits are, and by the Lang--Weil estimate an orbit of
+dimension $e$ carries $\Theta(p^{e})$ points, with implied constants depending only on $n$ and
+$D$. For $p$ large relative to those, comparing $\dim\mathcal T\vx_0$ with $n$ decides
+\textup{(C3)} up to exactly the $O(1/p)$ slack that Remark~\ref{rem:c3} already tolerates.
+
+\subsection{The procedure}
+
+\begin{procedurebox}
+\textbf{\textsc{Admissible}}$(\Gamma,R,S,T,f,\ch,p)$ --- decides applicability of
+Theorem~\ref{thm:master}.\\[2pt]
+\emph{Returns} one of \textsc{Not-Hard}, \textsc{Exact}, \textsc{Relaxed},
+\textsc{Affine-Fails}, together with $\mathcal T$ and, in the last case, a witness locus.
+\begin{enumerate}[label=\textup{\arabic*.},leftmargin=2.2em,itemsep=3pt]
+  \item \emph{Computable spaces.} From Lemma~\ref{lem:comp} form the generating sets for the
+        setting $\Gamma$ and compute bases of $\LL_1,\LL_2,\LL_T\subseteq P_D$ by Gaussian
+        elimination. Put $\LL_\star\coloneqq\LL_{\ch}$.
+  \item \emph{Hardness.} Test $f\in\LL_\star$ by linear algebra. If so, return
+        \textsc{Not-Hard}: the challenge is already computable from the instance and there is
+        no assumption to reduce.
+  \item \emph{Admissible group.} Let $\pi\colon P_D\to P_D/\LL_\star$ and $\bar f\coloneqq
+        \pi(f)$, nonzero by step 2. Impose on $(A,\vb)$:
+        \begin{enumerate}[label=\textup{(\alph*)},leftmargin=2.2em,topsep=2pt,itemsep=1pt]
+          \item \textup{(C1)} for each $r\in R$, $s\in S$, $t\in T$, the vanishing of the
+                image of $\mathrm{coef}(r\circ\tau)$ in $P_D/\LL_1$, of
+                $\mathrm{coef}(s\circ\tau)$ in $P_D/\LL_2$, and of $\mathrm{coef}(t\circ\tau)$
+                in $P_D/\LL_T$;
+          \item \textup{(C2)} the vanishing of every $2\times 2$ minor of the two-column
+                matrix $[\,\pi(f\circ\tau)\mid\bar f\,]$.
+        \end{enumerate}
+        Let $I$ be the ideal they generate. Compute a Gr\"obner basis of $I$ saturated at
+        $\det A$ and at $\pi(f\circ\tau)$; the resulting variety is $\mathcal T$, and the
+        scalar $\lambda_\tau$ is read off from $\pi(f\circ\tau)=\lambda_\tau\bar f$. If
+        $\mathcal T$ is trivial, return \textsc{Affine-Fails} with witness $\Zp^{n}$.
+  \item \emph{Generic orbit.} Compute $e\coloneqq\dim\mathcal T\vx_0$ for generic $\vx_0$, by
+        eliminating $(A,\vb)$ from $\vy=A\vx_0+\vb$ over $I$. If $e<n$, return
+        \textsc{Affine-Fails} with witness $\Zp^{n}$: by Remark~\ref{rem:dichotomy} every
+        orbit is then deficient, so \textup{(C3)} fails everywhere.
+  \item \emph{Exactness.} If $\mathcal T$ acts transitively --- equivalently
+        $|\mathcal T\vx_0|=p^{n}$ for one, hence by the dichotomy for every, $\vx_0$ --- return
+        \textsc{Exact}: Theorem~\ref{thm:master} applies with unrelaxed \textup{(C3)} and exact
+        advantage transfer.
+  \item \emph{Failure locus.} Otherwise let $Z\coloneqq\{\vx_0:\dim\mathcal T\vx_0<n\}$, the
+        locus where the evaluation map drops rank; obtain its irreducible components
+        $Z_1,\dots,Z_m$ by primary decomposition. By Remark~\ref{rem:dichotomy}, $Z$ is a
+        proper closed subset, so $|Z|=O(p^{\,n-1})$.
+  \item \emph{Escape clause.} For each component $Z_j$ test both:
+        \begin{enumerate}[label=\textup{(\alph*)},leftmargin=2.2em,topsep=2pt,itemsep=1pt]
+          \item \emph{detectability} --- is $Z_j$ cut out by equations $q(\vx)=0$ with
+                $q\in\LL_\gamma$ for some group $\gamma$? If so the reduction decides
+                membership by testing $[q(\vx_0)]_\gamma$ against the identity;
+          \item \emph{computability} --- writing $\rho_j$ for restriction to $Z_j$, is
+                $\rho_j(f)\in\rho_j(\LL_\star)$? This is linear algebra in the coordinate ring
+                of $Z_j$, and must be done on \emph{functions} on $Z_j(\Zp)$, not on
+                polynomials.
+        \end{enumerate}
+        If both hold for every $j$, return \textsc{Relaxed}: Theorem~\ref{thm:master} applies
+        via Remark~\ref{rem:c3}, with advantage transfer up to $O(1/p)$. Otherwise return
+        \textsc{Affine-Fails} with the first offending $Z_j$ as witness.
+\end{enumerate}
+\end{procedurebox}
+
+\begin{proposition}[correctness]
+\label{prop:decide}
+\textsc{Admissible} terminates, and its output is correct: it returns \textsc{Not-Hard} exactly
+when $f\in\LL_\star$; it returns \textsc{Exact} only when some efficiently sampleable
+$\mathcal D$ satisfies \textup{(C1)--(C3)} as stated in Theorem~\ref{thm:master}; it returns
+\textsc{Relaxed} only when Theorem~\ref{thm:master} applies in the form of
+Remark~\ref{rem:c3}; and when it returns \textsc{Affine-Fails} with witness $Z_j$, no
+distribution on any subgroup of $\AGL_n(\Zp)$ satisfies \textup{(C1)--(C3)} at the points of
+$Z_j$, even relaxed.
+\end{proposition}
+\begin{proof}
+Termination is that every step is a finite linear-algebra or Gr\"obner computation over $\Zp$.
+Step 2 is the generic-model hardness criterion of~\cite{BBG05,Boyen08}. For steps 3--5, the
+conditions imposed are literal transcriptions of \textup{(C1)} and \textup{(C2)}: the former
+because membership of $q\circ\tau$ in a subspace is the vanishing of its image in the quotient,
+the latter because $f\circ\tau=\lambda_\tau f+h_\tau$ with $h_\tau\in\LL_\star$ says exactly
+that $\pi(f\circ\tau)$ is proportional to $\bar f$, the factor being $\lambda_\tau$ and the
+saturation enforcing $\lambda_\tau\neq 0$. Since $\mathcal T$ is a group and $\mathcal D$ is
+uniform on it, $\tau(\vx_0)$ is uniform on $\mathcal T\vx_0$; so \textup{(C3)} holds exactly
+when the orbit is all of $\Zp^{n}$ and holds to within $O(1/p)$ when the orbit has full
+dimension. Maximality is what gives the negative half: $\mathcal T$ contains \emph{every}
+$\tau$ meeting \textup{(C1)} and \textup{(C2)}, so any admissible subgroup is contained in
+$\mathcal T$ and its orbits are contained in $\mathcal T$-orbits; if the $\mathcal T$-orbit of a
+point of $Z_j$ is already deficient and $f$ is not computable on it, no smaller group can do
+better.
+\end{proof}
+
+\begin{remark}[cost]
+The expensive step is 3, whose Gr\"obner computation is doubly exponential in $n^{2}+n$ in the
+worst case. The systems arising here are far from worst case: they are the coefficient-matching
+equations of Section~\ref{sec:type3}, near-triangular in the entries of $A$, and for $n=2$ they
+are six variables and are solved by hand. Steps 1, 2 and 7 are $O(N^{3})$ linear algebra with
+$N=\binom{n+D}{n}$.
+\end{remark}
+
+\subsection{What the procedure does not decide}
+\label{sec:limits}
+
+\textsc{Affine-Fails} is not a proof that the assumption fails to be random self-reducible. It
+is a proof about one technique, and three gaps remain open beneath it.
+
+First, multi-query reductions. Proposition~\ref{prop:interp} solves the computational problem
+whenever the sources are translation-stable and $\deg f\le p-2$, whatever the verdict of
+\textsc{Admissible} --- as it does for the separating target of Proposition~\ref{prop:sep}. A
+run returning \textsc{Affine-Fails} should therefore be followed by that test, which is a
+one-line check. The general linear multi-query condition \textup{(C2$'$)} is decidable too, but
+by a different route: it asks whether $f$ lies in
+$\Span{f\circ\tau:\tau\ \text{satisfies (C1)}}+\LL_\star$, a subspace of $P_D$ that can be
+accumulated by sampling $\tau$ until the dimension stabilises, which happens after at most $N$
+successful samples. That test is necessary but not sufficient, since \textup{(C2$'$)} also
+requires the sampled $\tau_i$ to be marginally distributed as in \textup{(C3)}.
+
+Second, non-linear recombination. Feigenbaum and Fortnow~\cite{FF93} allow the answers to be
+combined by an arbitrary polynomial-time function, and nothing here decides that condition; the
+procedure sees only the $\Zp$-linear fragment that the group encoding makes free.
+
+Third, reparametrizations outside $\AGL_n(\Zp)$, and reductions that are not reparametrization
+based at all. A genuine impossibility result for the decisional problem would need a lower-bound
+argument such as a meta-reduction, as noted after Proposition~\ref{prop:sep}.
+
+\textsc{Admissible} is accordingly a decision procedure for a sufficient condition, and a
+semi-decision procedure for random self-reducibility: it can certify it, and it cannot refute
+it.
 
 \section{Discussion}
 \label{sec:discussion}
@@ -612,18 +879,21 @@ space $\LL_\star$ grows with the available products:
 \]
 A larger $\LL_\star$ makes the covariance condition (C2) easier to meet, so the
 affine-self-reducible subclass is largest in Type 1 and smallest in Type 3, with the
-non-bilinear case the degenerate product-free floor. Proposition~\ref{prop:sep} witnesses
-the strict gap between Type 2 and Type 3 for the affine technique; by
-Proposition~\ref{prop:interp} the gap closes for that target once several correlated queries
-are allowed and only the computational problem is asked, so what the taxonomy of
-Lemma~\ref{lem:comp} constrains is the reach of tight and decisional reductions.
+non-bilinear case the degenerate product-free floor. Proposition~\ref{prop:sep} witnesses the
+strict gap between Type 2 and Type 3, at a target where the Type-3 reduction fails at every
+worst-case point --- the most the failure locus can ever be, by
+Remark~\ref{rem:dichotomy}. The gap is one for decisional reductions and for reductions that
+must work at negligible advantage: Proposition~\ref{prop:interp} still solves the
+computational problem in Type 3 at high solver advantage, as it does for every target here.
+Proposition~\ref{prop:nomono} marks the other boundary, that no monomial target can separate
+any two settings at all.
 
 Self-reducibility is orthogonal to hardness. The master theorem
 of~\cite{BBG05,Boyen08} makes an assumption hard exactly when $f\notin\LL_\star$, whereas
 Theorem~\ref{thm:master} needs the defect $f\circ\tau-\lambda_\tau f$ to lie \emph{in}
 $\LL_\star$. These constrain different objects, so hard yet self-reducible assumptions
-abound: CDH and DDH (non-bilinear), BDDH (Type 1), $X_1X_2^{2}$ (Type 2), and co-CDH
-(Type 3) are all of this kind. Quantitatively, Bauer, Fuchsbauer, and
+abound: CDH and DDH (non-bilinear), BDDH (Type 1), and co-CDH and every monomial target
+(Type 3, Proposition~\ref{prop:nomono}) are all of this kind. Quantitatively, Bauer, Fuchsbauer, and
 Loss~\cite{BFL20} show that in the algebraic group model every member of the Uber family is
 implied by the $q$-discrete-logarithm assumption, with $q$ governed by the degrees of the
 defining polynomials, and Rotem~\cite{Rotem22} refines $q$ to the maximal degree in which a
@@ -640,11 +910,22 @@ information.
 In \emph{28th Annual Symposium on Foundations of Computer Science (FOCS 1987)},
 pages 472--482. IEEE, 1987.
 
+\bibitem[BF90]{BF90}
+D.~Beaver and J.~Feigenbaum.
+Hiding instances in multioracle queries.
+In \emph{7th Annual Symposium on Theoretical Aspects of Computer Science (STACS 1990)},
+volume 415 of \emph{Lecture Notes in Computer Science}, pages 37--48. Springer, 1990.
+
 \bibitem[Lipton91]{Lipton91}
 R.~J.~Lipton.
 New directions in testing.
 In \emph{Distributed Computing and Cryptography}, volume 2 of \emph{DIMACS Series in
 Discrete Mathematics and Theoretical Computer Science}, pages 191--202. AMS, 1991.
+
+\bibitem[GS92]{GS92}
+P.~Gemmell and M.~Sudan.
+Highly resilient correctors for polynomials.
+\emph{Information Processing Letters}, 43(4):169--174, 1992.
 
 \bibitem[BLR93]{BLR93}
 M.~Blum, M.~Luby, and R.~Rubinfeld.
@@ -657,20 +938,21 @@ J.~Feigenbaum and L.~Fortnow.
 Random-self-reducibility of complete sets.
 \emph{SIAM Journal on Computing}, 22(5):994--1005, 1993.
 
-\bibitem[GS92]{GS92}
-P.~Gemmell and M.~Sudan.
-Highly resilient correctors for polynomials.
-\emph{Information Processing Letters}, 43(4):169--174, 1992.
+\bibitem[Ajtai96]{Ajtai96}
+M.~Ajtai.
+Generating hard instances of lattice problems.
+In \emph{28th Annual ACM Symposium on Theory of Computing (STOC 1996)}, pages 99--108.
+ACM, 1996.
 
-\bibitem[BT06]{BT06}
-A.~Bogdanov and L.~Trevisan.
-Average-case complexity.
-\emph{Foundations and Trends in Theoretical Computer Science}, 2(1):1--106, 2006.
+\bibitem[Sudan97]{Sudan97}
+M.~Sudan.
+Decoding of Reed--Solomon codes beyond the error-correction bound.
+\emph{Journal of Complexity}, 13(1):180--193, 1997.
 
-\bibitem[GPS08]{GPS08}
-S.~D.~Galbraith, K.~G.~Paterson, and N.~P.~Smart.
-Pairings for cryptographers.
-\emph{Discrete Applied Mathematics}, 156(16):3113--3121, 2008.
+\bibitem[STV01]{STV01}
+M.~Sudan, L.~Trevisan, and S.~Vadhan.
+Pseudorandom generators without the XOR lemma.
+\emph{Journal of Computer and System Sciences}, 62(2):236--266, 2001.
 
 \bibitem[BBG05]{BBG05}
 D.~Boneh, X.~Boyen, and E.-J.~Goh.
@@ -678,11 +960,27 @@ Hierarchical identity based encryption with constant size ciphertext.
 In \emph{Advances in Cryptology -- EUROCRYPT 2005},
 volume 3494 of \emph{Lecture Notes in Computer Science}, pages 440--456. Springer, 2005.
 
+\bibitem[BT06]{BT06}
+A.~Bogdanov and L.~Trevisan.
+Average-case complexity.
+\emph{Foundations and Trends in Theoretical Computer Science}, 2(1):1--106, 2006.
+
 \bibitem[Boyen08]{Boyen08}
 X.~Boyen.
 The uber-assumption family: a unified complexity framework for bilinear groups.
 In \emph{Pairing-Based Cryptography -- Pairing 2008},
 volume 5209 of \emph{Lecture Notes in Computer Science}, pages 39--56. Springer, 2008.
+
+\bibitem[GPS08]{GPS08}
+S.~D.~Galbraith, K.~G.~Paterson, and N.~P.~Smart.
+Pairings for cryptographers.
+\emph{Discrete Applied Mathematics}, 156(16):3113--3121, 2008.
+
+\bibitem[Regev09]{Regev09}
+O.~Regev.
+On lattices, learning with errors, random linear codes, and cryptography.
+\emph{Journal of the ACM}, 56(6):article 34, 2009.
+Preliminary version in \emph{STOC 2005}, pages 84--93.
 
 \bibitem[EHKRV13]{EHKRV13}
 A.~Escala, G.~Herold, E.~Kiltz, C.~R\`afols, and J.~Villar.
@@ -703,18 +1001,6 @@ Revisiting the uber assumption in the algebraic group model: fine-grained bounds
 hidden-order groups and improved reductions in bilinear groups.
 In \emph{3rd Conference on Information-Theoretic Cryptography (ITC 2022)},
 volume 230 of \emph{LIPIcs}, article 13. Schloss Dagstuhl, 2022.
-
-\bibitem[Ajtai96]{Ajtai96}
-M.~Ajtai.
-Generating hard instances of lattice problems.
-In \emph{28th Annual ACM Symposium on Theory of Computing (STOC 1996)}, pages 99--108.
-ACM, 1996.
-
-\bibitem[Regev09]{Regev09}
-O.~Regev.
-On lattices, learning with errors, random linear codes, and cryptography.
-\emph{Journal of the ACM}, 56(6):article 34, 2009.
-Preliminary version in \emph{STOC 2005}, pages 84--93.
 
 \end{conjurabibliography}
 

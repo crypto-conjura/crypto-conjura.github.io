@@ -29,6 +29,10 @@ Ordered by difficulty: web-related tweaks, new web content, new conjectures, new
 
   Every one of the 100 functionality pages (`uc/layer-N-.../<id>/index.qmd`) is still a stub. Fill in real content incrementally, one functionality at a time: precise UC-style definition, known realizations, security properties, and any formal/Lean artifacts.
 
+- [ ] **Explain why reviewing matters, on the Programme Committee page**
+
+  `papers/programme-committee/index.qmd` currently only describes the mechanics of review (AI use, the `Reviewers` field). Add why it matters: reviewing is hard, often-thankless work that's rarely acknowledged or rewarded the way authorship is. This system makes the reviewer an integral part of the result, not an afterthought — a reviewer vouching for correctness, with or without AI's help, is a key step toward a result's validity and relevance, arguably now more than ever given how easy AI makes it to produce plausible-looking but unchecked claims.
+
 - [ ] **Interactive UC tutorial for the website**
 
   Based on the UC-for-gamers paper; depends on the HTML-conversion task above.

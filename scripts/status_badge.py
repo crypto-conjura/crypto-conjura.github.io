@@ -37,8 +37,18 @@ criterion), so proof_formal authorship is metadata/caption text, not a
 colour.
 
 Seal (de Bruijn-complete): pi == 4 and sigma >= 4.
+
+Beyond the badge, every leaf under c/ also carries a required `status_summary`
+frontmatter field and a `## Status` body section (checked, never generated,
+here). `statement_sha` is a hash of the leaf's `## Statement` block: if it no
+longer matches what's on disk, the informal statement changed since the
+formalization was last checked against it, so `statement_match` is forced
+back to `open`, `statement_sha` is rewritten, and `revision` is bumped -- a
+match can never be silently invalidated. Run with `--check` (no writes) to
+use this as a CI gate.
 """
 
+import hashlib
 import re
 import sys
 from pathlib import Path
@@ -58,6 +68,11 @@ FREE_TEXT_FIELDS = ("statement_by", "proof_by")
 
 START_MARKER = "<!-- status:start -->"
 END_MARKER = "<!-- status:end -->"
+
+STATUS_HEADING_RE = re.compile(r"^##\s+Status\s*$", re.MULTILINE)
+STATEMENT_BLOCK_RE = re.compile(
+    r"^##\s+Statement\s*\n(.*?)(?=^##\s+\S|\Z)", re.MULTILINE | re.DOTALL
+)
 
 
 def compute_sigma(s1, s2, s3):
@@ -280,16 +295,83 @@ def parse_status_block(frontmatter, filename):
     return status
 
 
-def process_file(path):
+def get_scalar_field(frontmatter, field):
+    m = re.search(rf"^{field}:\s*(.*)$", frontmatter, re.MULTILINE)
+    if not m:
+        return None
+    val = m.group(1).strip()
+    if val.startswith('"') and val.endswith('"') and len(val) >= 2:
+        val = val[1:-1]
+    return val
+
+
+def set_scalar_field(frontmatter, field, value, quote):
+    stripped = re.sub(rf"^{field}:.*\n?", "", frontmatter, flags=re.MULTILINE)
+    rendered = f'"{value}"' if quote else str(value)
+    return stripped.rstrip("\n") + "\n" + f"{field}: {rendered}" + "\n"
+
+
+def normalize_statement_text(text):
+    lines = [line.rstrip() for line in text.split("\n")]
+    normalized_lines = []
+    blank_run = 0
+    for line in lines:
+        if line == "":
+            blank_run += 1
+            if blank_run > 1:
+                continue
+        else:
+            blank_run = 0
+        normalized_lines.append(line)
+    return "\n".join(normalized_lines).strip("\n")
+
+
+def compute_statement_sha(body):
+    m = STATEMENT_BLOCK_RE.search(body)
+    if not m:
+        return None
+    normalized = normalize_statement_text(m.group(1))
+    return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+
+
+def process_file(path, check=False):
     text = path.read_text(encoding="utf-8")
     fm_match = re.match(r"^---\n(.*?\n)---\n", text, re.DOTALL)
     if not fm_match:
-        return False
+        return False, []
     frontmatter = fm_match.group(1)
+    body = text[fm_match.end() :]
 
     status = parse_status_block(frontmatter, path)
     if status is None:
-        return False
+        return False, []
+
+    errors = []
+    if not (get_scalar_field(frontmatter, "status_summary") or "").strip():
+        errors.append(f"{path}: missing or empty status_summary")
+    if not STATUS_HEADING_RE.search(body):
+        errors.append(f"{path}: missing a '## Status' section in the body")
+
+    computed_sha = compute_statement_sha(body)
+    if computed_sha is None:
+        errors.append(f"{path}: no '## Statement' section found to hash")
+    else:
+        existing_sha = get_scalar_field(frontmatter, "statement_sha")
+        if existing_sha != computed_sha:
+            if existing_sha:
+                print(
+                    f"WARNING: {path}: statement text changed since the last "
+                    "recorded hash -- forcing statement_match to 'open', "
+                    "rewriting statement_sha, bumping revision",
+                    file=sys.stderr,
+                )
+                status["statement_match"] = "open"
+                try:
+                    revision = int(get_scalar_field(frontmatter, "revision") or "0") + 1
+                except ValueError:
+                    revision = 1
+                frontmatter = set_scalar_field(frontmatter, "revision", revision, quote=False)
+            frontmatter = set_scalar_field(frontmatter, "statement_sha", computed_sha, quote=True)
 
     validate(status, str(path))
     badge = render_badge_svg(status)
@@ -311,11 +393,13 @@ def process_file(path):
         )
     new_text = marker_re.sub(body_block, new_text)
 
-    if new_text != text:
+    changed = new_text != text
+    if changed and not check:
         path.write_text(new_text, encoding="utf-8")
         print(f"updated {path}")
-        return True
-    return False
+    elif changed and check:
+        print(f"STALE: {path} would be updated by scripts/status_badge.py")
+    return changed, errors
 
 
 def main(argv):
@@ -323,7 +407,8 @@ def main(argv):
         self_test()
         return 0
 
-    targets = [a for a in argv if not a.startswith("--")] or ["open-problems"]
+    check = "--check" in argv
+    targets = [a for a in argv if not a.startswith("--")] or ["c"]
     files = []
     for t in targets:
         p = Path(t)
@@ -333,10 +418,31 @@ def main(argv):
             files.append(p)
 
     changed = 0
+    all_errors = []
     for f in files:
-        if process_file(f):
+        try:
+            did_change, errors = process_file(f, check=check)
+        except ValueError as e:
+            print(f"ERROR: {e}", file=sys.stderr)
+            all_errors.append(str(e))
+            continue
+        all_errors.extend(errors)
+        if did_change:
             changed += 1
-    print(f"{changed} file(s) updated out of {len(files)} scanned")
+
+    if check and changed:
+        all_errors.append(
+            f"{changed} file(s) are stale -- run scripts/status_badge.py to "
+            "regenerate and commit the result"
+        )
+
+    verb = "would be " if check else ""
+    print(f"{changed} file(s) {verb}updated out of {len(files)} scanned")
+
+    if all_errors:
+        for e in all_errors:
+            print(f"ERROR: {e}", file=sys.stderr)
+        return 1
     return 0
 
 

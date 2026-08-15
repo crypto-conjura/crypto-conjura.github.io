@@ -1,0 +1,95 @@
+---
+title: "Schema"
+subtitle: "The frontmatter contract for statements and problems, for humans and agents"
+---
+
+Conjura has three content layers. Only the first two carry a schema; the
+third (facets) is generated, never authored.
+
+- **Problem** (hub) -- one informal question, with provenance, history,
+  motivation. No Lean artifact. No status badge -- only an aggregate view
+  over its children. Lives at `p/<slug>/index.qmd`, URL `/p/<slug>/`.
+- **Statement** (leaf) -- one precise proposition, one Lean declaration. The
+  atomic addressable unit. Lives at `c/<id>/index.qmd`, URL `/c/<id>/`. `id`
+  is a sequential four-digit string, allocated once and never reused; a
+  withdrawn statement keeps its page as a tombstone rather than 404ing.
+- **Facet** -- a tag (area, model, form, or assumption class), materialized
+  as a generated listing page under `open-problems/`. Never a home directory
+  for anything; purely a view driven by `scripts/build_index.py`'s output
+  under `_generated/`.
+
+## Statement frontmatter
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | string | Four-digit zero-padded, matches the `c/<id>/` directory name. |
+| `problem` | string | Exactly one hub slug under `p/`. |
+| `title` | string | Precise, fully-quantified. |
+| `short_title` | string | For listing-table columns; falls back to `title`. |
+| `areas` | list of string | Subset of the 19 fixed area slugs below. First entry is primary, display only -- never a home directory. |
+| `model` | enum | `rom` \| `prom` \| `icm` \| `ggm` \| `qrom` \| `standard` \| `other` |
+| `form` | enum | `separation` \| `lower-bound` \| `tight-bound` \| `equivalence` \| `impossibility` \| `assumption` \| `characterization` |
+| `assumption_class` | enum | `unconditional` \| `falsifiable` \| `non-falsifiable` |
+| `category` | enum | `research-open` \| `research-solved` \| `test` \| `api` \| `withdrawn`. Solved special cases and sanity lemmas (`research-solved`, `test`) belong on the site -- a disproof of an easy case is often the signal that a definition was formalized wrongly. |
+| `statement_sha` | string | 64-char hex sha256 of the `## Statement` tab content. Script-maintained by `scripts/status_badge.py`; never hand-edit. |
+| `revision` | integer | Bumped automatically when `statement_sha` changes. |
+| `status` | map | The six existing graded fields, unchanged: `statement_informal`, `statement_formal`, `statement_match`, `proof_informal`, `proof_review`, `proof_formal`. See [the status legend](/open-problems/status-legend/index.qmd). |
+| `status_badge` | string | Generated. Never hand-edit. |
+| `status_summary` | string | One required sentence, rendered next to the badge in listing tables. |
+| `status_updated` | date | |
+| `relations` | list of map | `{kind, target, note?}`. `kind` is one of `generalizes`, `specializes`, `implies`, `implied-by`, `equivalent-to`, `strengthens` (same claim, better quantitative bound), `variant-of`, `refutes`, `refuted-by`, `superseded-by`. `target` is a four-digit id. `note` is required on an `equivalent-to` edge whose proof grades disagree. |
+| `lean` | map | `mode` (`in-repo` \| `external-lean4` \| `other-system` \| `none`), plus `repo`/`commit`/`path`/`decl`/`toolchain` as applicable. `commit` is required once `status.statement_formal != open` when `mode: external-lean4`. |
+| `sources` | list of map | `{cite, url}`. Real citations only -- never a specific author/venue/year citation that hasn't been verified to exist; leave the list empty rather than invent one. |
+| `withdrawn_reason` | string | Required when `category: withdrawn`. A withdrawn statement is never deleted and never 404s -- its page stays up as a tombstone, together with a `{kind: superseded-by, target: ...}` relation pointing at whatever replaced it. |
+
+### The 19 fixed area slugs
+
+`foundations`, `idealized-models`, `impossibility-results`, `symmetric-key`,
+`information-theoretic`, `side-channel`, `public-key`, `lattices`,
+`isogenies`, `quantum`, `zk`, `proof-systems`, `homomorphic-encryption`,
+`obfuscation`, `mpc`, `secret-sharing`, `universal-composability`,
+`privacy`, `consensus`.
+
+These are kept in sync between `_quarto.yml`'s sidebar and
+`scripts/build_index.py`'s `AREA_SLUGS`. Do not rename or merge them
+silently -- see `CONTRIBUTING.md`.
+
+### Body sections, in order
+
+1. Badge markers (`<!-- status:start -->...<!-- status:end -->`), generated.
+2. `## Status` -- `status_summary` restated in prose, free text on what's
+   been tried and where the argument is stuck, and a `### Open obligations`
+   markdown task list (unverified steps, unaudited files, unmatched
+   formalizations, missing sanity lemmas). The open count feeds a listing
+   column.
+3. `## Sessions` -- pointer to the `sessions/` folder (not itself rendered).
+4. `## Changelog` -- one entry per `revision`, newest first: date, what
+   changed, and (only when the revision fixed a defective formalization) a
+   `misformalization:` classification per the Formal Conjectures taxonomy
+   (arXiv:2605.13171) -- see `CONTRIBUTING.md`.
+5. A `::: {.panel-tabset}` with `## Statement` (the block `statement_sha`
+   hashes), `## Proof`, `## Formal Artifact`.
+
+See `_templates/statement.qmd` for a fully commented skeleton.
+
+## Problem frontmatter
+
+Just `title` and an optional `subtitle`. The body carries motivation,
+provenance/history, a parameter lattice (a table whose axes are the
+independent dimensions the family varies along, each cell linking to the
+occupying leaf, empty cells marked `unstated` as research prompts rather
+than left blank), and a listing of the hub's own children. See
+`_templates/problem.qmd`.
+
+## Machine-readable index
+
+`scripts/build_index.py` emits `conjura.json` at the site root: every
+statement, keyed by id, with its full frontmatter, parsed obligations, and
+resolved relations. This is generated (gitignored, rebuilt by CI before every
+render) -- read it, never hand-edit it. It's the interface external tooling
+(for example a proof-campaign harness) consumes as a work queue.
+
+## Identifier and revision rules
+
+See `CONTRIBUTING.md` for the full editorial rule on when a change needs a
+new id versus a `revision` bump on the same one.

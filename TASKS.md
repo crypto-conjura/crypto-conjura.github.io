@@ -2,6 +2,10 @@
 
 Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions.
 
+- [ ] **Give every conjecture its own tex file and folder under `latex/conjectures/`**
+
+  There are 9 published conjectures (`c/0001`–`c/0009`), each with its own tracked `c/000N/latex/main.tex`, but the working-draft folder `latex/conjectures/` currently has only 4 entries (`_template`, `groth16`, `k-cr`, `lhl`) and they don't map 1:1 onto the 9: `groth16` = `c/0009` (fine, 1:1), but `lhl`'s `statement.tex` covers only the secret-seed variant (`c/0005`), leaving the public-seed variants (`c/0004`, `c/0006`) with no draft folder at all, and `k-cr` mixes a general `main.tex` on k-way collisions with a `statement.tex` specific to `c/0007`, leaving `c/0003` (also a k-collisions conjecture) without its own. `c/0001`, `c/0002`, and `c/0008` have no `latex/conjectures/` folder whatsoever. Split the shared folders and add the missing ones so each of the 9 conjectures has exactly one dedicated `.tex` source and folder.
+
 - [ ] **Tag papers by topic**
 
   Give papers the same tag treatment conjectures already have:

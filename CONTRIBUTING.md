@@ -190,6 +190,26 @@ PyYAML is missing the hook still runs the `status_badge.py` and
 `gen_interface.py` gates (both stdlib-only) and reports that it skipped the
 other two. Bypass a single commit with `git commit --no-verify`.
 
+## Does a UC entry have a definition?
+
+Every UC encyclopedia entry carries `definition:` in its frontmatter, and every
+layer index shows it as a column beside `status:`. The two say different things
+and both are needed: `status:` is how established the concept is, `definition:`
+is whether this page actually contains one.
+
+Three values, and like `status_badge:` the field is generated, so do not
+hand-edit the first two:
+
+- `"Defined"` and `"Not yet written"` are derived from whether the page carries
+  a `.cj-interface` box. `scripts/uc_status.py` writes them and
+  `--check` gates them in CI.
+- `"No canonical definition"` is the exception, and the only value a human sets
+  by hand. It records that the literature has none to transcribe, which is a
+  result rather than a chore, and the script preserves it. Writing it on a page
+  that does have a box is a contradiction and fails the check.
+
+Run `python3 scripts/uc_status.py` after adding or filling an entry.
+
 ## UC functionality boxes
 
 The interface box on a functionality's encyclopedia page is *generated*, not

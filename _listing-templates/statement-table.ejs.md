@@ -30,7 +30,7 @@
 <span class="cj-status-summary"><%= item.status_summary %><% if (item.open_obligations > 0) { %> <span class="cj-open-count"><%= item.open_obligations %> open</span><% } %></span>
 </td>
 <td class="cj-tags">
-<span class="cj-tag"><%= item.model %></span><span class="cj-tag"><%= item.form %></span><span class="cj-tag listing-category"><%= item.category %></span>
+<span class="cj-tag"><%= item.model %></span><span class="cj-tag"><%= item.form %></span><span class="cj-tag listing-category"><%= item.category %></span><% if (item.difficulty) { %><span class="cj-tag cj-tag-difficulty" title="<%= item.difficulty_note %>"><%= item.difficulty %><% if (item.difficulty_by === "ai") { %> (ai)<% } %></span><% } %>
 </td>
 </tr>
 <% } %>

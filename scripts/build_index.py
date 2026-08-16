@@ -77,7 +77,13 @@ STATUS_FIELDS = {
 REQUIRED_FIELDS = [
     "id", "problem", "title", "areas", "model", "form", "assumption_class",
     "category", "statement_sha", "revision", "status", "status_summary",
+    "difficulty",
 ]
+
+# What a resolution would have to invent, ordered. Deliberately not expected
+# effort, which depends on who is working, and deliberately not a probability
+# of resolution, which nine statements cannot calibrate. See the status legend.
+DIFFICULTY_REACH = ("routine", "adaptation", "new-idea", "barrier")
 
 
 def load_frontmatter(path):
@@ -116,6 +122,18 @@ def validate_leaf(fm, path, errors):
         err(f"id {leaf_id!r} is not a 4-digit zero-padded string")
     elif path.parent.name != leaf_id:
         err(f"id {leaf_id!r} does not match directory name {path.parent.name!r}")
+
+    d = fm.get("difficulty")
+    if d is not None:
+        if not isinstance(d, dict):
+            err("difficulty must be a mapping with reach, by and note")
+        else:
+            if d.get("reach") not in DIFFICULTY_REACH:
+                err(f"difficulty.reach = {d.get('reach')!r} not in {DIFFICULTY_REACH}")
+            if d.get("by") not in ("ai", "human"):
+                err(f"difficulty.by = {d.get('by')!r} not in ('ai', 'human')")
+            if not str(d.get("note") or "").strip():
+                err("difficulty.note is required: a grade with no reason is not checkable")
 
     areas = fm.get("areas")
     if not isinstance(areas, list) or not areas:
@@ -202,6 +220,9 @@ def listing_item(leaf_id, fm):
         "form": fm["form"],
         "assumption_class": fm["assumption_class"],
         "category": fm["category"],
+        "difficulty": (fm.get("difficulty") or {}).get("reach", ""),
+        "difficulty_by": (fm.get("difficulty") or {}).get("by", ""),
+        "difficulty_note": (fm.get("difficulty") or {}).get("note", ""),
         "open_obligations": sum(1 for o in fm["_obligations"] if not o["done"]),
     }
 

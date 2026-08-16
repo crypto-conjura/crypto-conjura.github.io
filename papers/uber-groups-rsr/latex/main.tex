@@ -1,0 +1,1289 @@
+\documentclass{conjura-solution}
+
+% amssymb is not loaded: it clashes with newtxmath (already loaded by the class) over \Bbbk;
+% newtxmath already supplies \mathbb and the other symbols this document needs.
+\usepackage{mathtools}
+
+% ---------- notation ----------
+\newcommand{\G}{\mathbb{G}}
+\newcommand{\Gone}{\mathbb{G}_1}
+\newcommand{\Gtwo}{\mathbb{G}_2}
+\newcommand{\GT}{\mathbb{G}_T}
+\newcommand{\Zp}{\mathbb{Z}_p}
+\newcommand{\Zpx}{\mathbb{Z}_p^{\times}}
+\newcommand{\vx}{\vec{x}}
+\newcommand{\vy}{\vec{y}}
+\newcommand{\vX}{\vec{X}}
+\newcommand{\vb}{\vec{b}}
+\newcommand{\Inst}{\mathsf{Inst}}
+\newcommand{\Succ}{\mathsf{Succ}}
+\newcommand{\Ex}{\mathbb{E}}
+\newcommand{\LL}{\mathcal{L}}
+\newcommand{\Span}[1]{\langle #1 \rangle}
+\newcommand{\rsample}{\leftarrow_{\$}}
+\newcommand{\GL}{\mathrm{GL}}
+\newcommand{\AGL}{\mathrm{AGL}}
+\newcommand{\bg}{\mathcal{BG}}
+\newcommand{\ch}{\mathrm{ch}}
+\newcommand{\Lie}{\operatorname{Lie}}
+\newcommand{\Stab}{\mathrm{Stab}}
+\newcommand{\agl}{\mathfrak{agl}}
+\newcommand{\gl}{\mathfrak{gl}}
+\newcommand{\tge}{\mathfrak{t}}
+\newcommand{\vvec}{\vec{v}}   % \vv itself is already taken by newtxmath
+\newcommand{\PP}{\mathbb{P}}
+\newcommand{\rk}{\operatorname{rank}}
+% definition/remark/proposition/theorem/corollary/lemma all come from the class
+
+% procedure listing: framed like the class's definition boxes
+\newtcolorbox{procedurebox}{enhanced jigsaw,breakable,sharp corners,
+  boxrule=2pt,colframe=cjBorder,colback=white,
+  left=6pt,right=6pt,top=5pt,bottom=5pt,
+  before skip=9pt,after skip=9pt}
+
+\runninghead{UBER ASSUMPTION AND RANDOM SELF-REDUCIBILITY}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} NOTE}
+\cjtitle{The Uber Assumption and its Random Self-Reducibility}
+\cjsubtitle{in Non-Bilinear and Type 1, 2, 3 Bilinear Groups}
+
+\vspace{0.6em}
+
+\begin{abstract}
+We fix notation for prime-order groups without a pairing and for bilinear groups in each
+of the three Galbraith--Paterson--Smart types, formally define the Uber assumption in all
+four settings, and treat random self-reducibility in each. A single generic-computability
+lemma isolates, per setting, the space of exponents a reduction can realize; a single
+affine-reparametrization theorem then yields random self-reducibility whenever the source
+data are stable under the reparametrization and the challenge polynomial transforms
+covariantly. The four settings differ only through the product structure the pairing (and,
+in Type 2, the homomorphism $\psi$) makes available, and this difference is exactly what
+enlarges or shrinks the self-reducible subclass. We give a worked self-reducible assumption in
+each setting, show that no monomial target can ever separate two settings, and exhibit a
+non-monomial target that is self-reducible in Type 2 but for which, in Type 3, the affine
+reduction fails at every worst-case point --- the largest the failure locus can be, since the
+admissible reparametrizations form a group and the failure fraction is therefore either
+$O(1/p)$ or exactly one. Because the admissibility conditions are polynomial conditions on the
+reparametrization, the search for one is mechanical, and we give a decision procedure that
+returns the maximal admissible group and either certifies the reduction or exhibits the locus
+of worst-case points at which it fails. The procedure needs nothing bespoke: the admissible
+group is the stabilizer of a subspace arrangement and of a point of a projective space, and the
+failure locus is the determinantal variety of the infinitesimal action, so the whole of it is
+standard computational algebra --- a Gr\"obner basis, a Jacobian kernel, an ideal of maximal
+minors, a primary decomposition. A further section places the theorem against classical
+random
+self-reducibility. The affine condition is the one-query, linear case of the non-adaptive
+condition of Feigenbaum and Fortnow; Lipton's multi-query line interpolation, which the group
+encoding admits unchanged, solves the computational problem for every target here, including
+the separating one, but only against a high-advantage solver and never the decisional problem.
+The classical decoding machinery that would soften its threshold is not linear in the received
+word and so does not survive the encoding, which is why the separation stands in the
+decisional, negligible-advantage regime that cryptography works in.
+\end{abstract}
+
+\section{Introduction}
+
+The discrete-logarithm problem is random self-reducible by the shift $g^{x}\mapsto
+g^{x}g^{r}$~\cite{TW87}; the answer for a worst-case instance is recovered from an
+average-case solver by subtracting $r$. This note carries the underlying idea --- injecting a
+uniform reparametrization of the secret and undoing it on the answer --- across the standard
+group settings, and states it uniformly. Throughout, $p$ is a prime and all groups have
+order $p$. We use implicit (bracket) notation in the style of~\cite{EHKRV13}.
+Section~\ref{sec:classical} relates the resulting condition to the classical form of the
+same idea, in which the undoing is done by polynomial interpolation across several
+correlated queries rather than in closed form on one~\cite{Lipton91,FF93}.
+
+\section{Group settings}
+
+\subsection{Non-bilinear groups}
+
+\begin{definition}[prime-order group]
+A \emph{(non-bilinear) group generator} outputs $\mathcal G=(p,\G,g)$ where $\G$ is a
+cyclic group of prime order $p$, $g$ a generator, and the group law and equality are
+computable in probabilistic polynomial time. For $a\in\Zp$ write $[a]\coloneqq g^{a}$, so
+$[a]\cdot[b]=[a+b]$ and $[a]^{c}=[ca]$. There is no pairing.
+\end{definition}
+
+\subsection{Bilinear groups and the GPS taxonomy}
+
+\begin{definition}[bilinear group]
+A \emph{bilinear group generator} outputs
+$\bg=(p,\Gone,\Gtwo,\GT,e,g_1,g_2)$ where $\Gone,\Gtwo,\GT$ are cyclic of prime order $p$,
+$g_1,g_2$ generate $\Gone,\Gtwo$, all group laws and equalities are efficient, and
+$e\colon\Gone\times\Gtwo\to\GT$ is an efficiently computable, non-degenerate bilinear map.
+For $a\in\Zp$ write $[a]_1\coloneqq g_1^{a}$, $[a]_2\coloneqq g_2^{a}$, and
+$[a]_T\coloneqq e(g_1,g_2)^{a}$, so that
+\[
+  e\bigl([a]_1,[b]_2\bigr)=[ab]_T,\qquad [a]_i\cdot[b]_i=[a+b]_i,\qquad [a]_i^{c}=[ca]_i.
+\]
+\end{definition}
+
+Following Galbraith, Paterson, and Smart~\cite{GPS08}, bilinear groups come in three types,
+distinguished by the efficiently computable isomorphisms between $\Gone$ and $\Gtwo$:
+\begin{enumerate}[label=\textup{Type~\arabic*.},leftmargin=4.4em,itemsep=3pt]
+  \item $\Gone=\Gtwo=\G$ and $e$ is symmetric, $e(u,v)=e(v,u)$. One source group.
+  \item $\Gone\neq\Gtwo$, with an efficiently computable isomorphism
+        $\psi\colon\Gtwo\to\Gone$ (so $\psi([a]_2)=[a]_1$), but none known in the reverse
+        direction.
+  \item $\Gone\neq\Gtwo$, with no efficiently computable isomorphism in either direction.
+\end{enumerate}
+Type 3 is the most efficient and most used in practice; Type 1 is the most permissive
+algebraically. The only structural difference for what follows is which group elements can
+be moved between $\Gone$ and $\Gtwo$, and hence which products the pairing can form.
+
+\section{The generic-computability calculus}
+
+Fix a setting and an instance consisting of encodings of finite polynomial tuples
+$R\subseteq\Zp[\vX]$ in $\Gone$, $S\subseteq\Zp[\vX]$ in $\Gtwo$, and $T\subseteq\Zp[\vX]$
+in $\GT$ (in a single-group setting only $R$ and, if applicable, $T$ occur). Each tuple is
+assumed to contain the constant $1$, since the generators are public. For $\vX=(X_1,\dots,X_n)$
+and a secret $\vx=(x_1,\dots,x_n)\in\Zp^{n}$, the instance is the collection of $[r_i(\vx)]_1$,
+$[s_j(\vx)]_2$, $[t_k(\vx)]_T$.
+
+For a group $\gamma\in\{\Gone,\Gtwo,\GT\}$ (or $\G$) let $\LL_\gamma\subseteq\Zp[\vX]$
+denote the polynomials $q$ for which $[q(\vx)]_\gamma$ is computable in probabilistic
+polynomial time from the instance and public parameters, uniformly in $\vx$. Write
+$A\cdot B=\{ab:a\in A,\,b\in B\}$ and let $\Span{\cdot}$ be $\Zp$-linear span.
+
+\begin{lemma}[computable exponents]
+\label{lem:comp}
+With the conventions above,
+\[
+\begin{aligned}
+  \text{non-bilinear:}\quad & \LL_{\G}=\Span{R};\\[2pt]
+  \text{Type 1 } (\Gone=\Gtwo=\G,\ \text{source tuple }R):\quad
+      & \LL_{\G}=\Span{R},\quad \LL_{\GT}=\Span{R\cdot R\ \cup\ T};\\[2pt]
+  \text{Type 2 } (\psi\colon\Gtwo\to\Gone):\quad
+      & \LL_{1}=\Span{R\cup S},\quad \LL_{2}=\Span{S},\\
+      &\quad \LL_{T}=\Span{(R\cup S)\cdot S\ \cup\ T};\\[2pt]
+  \text{Type 3:}\quad
+      & \LL_{1}=\Span{R},\quad \LL_{2}=\Span{S},\quad
+        \LL_{T}=\Span{R\cdot S\ \cup\ T}.
+\end{aligned}
+\]
+The inclusions ``$\supseteq$'' hold unconditionally: every listed polynomial's encoding is
+computable by group operations and pairings. The reverse inclusions hold in the generic
+bilinear group model, where these are exactly the computable encodings~\cite{BBG05,Boyen08}.
+\end{lemma}
+
+\begin{proof}[Justification]
+The group law realizes all $\Zp$-linear combinations, giving $\Span{\cdot}$ in each group.
+The pairing sends a computable $\Gone$-exponent $a\in\LL_1$ and a computable
+$\Gtwo$-exponent $b\in\LL_2$ to $ab\in\LL_T$; pairing against the generator ($b=1$ or
+$a=1$) shows $\LL_1,\LL_2\subseteq\LL_T$. In Type 1 both pairing arguments range over
+$\Span{R}$, producing all products $R\cdot R$. In Type 2, $\psi$ moves each $\Gtwo$
+encoding into $\Gone$, so $\LL_1$ gains $S$, and the pairable products become
+$\LL_1\cdot\LL_2=(R\cup S)\cdot S$; the missing products $R\cdot R$ would require an
+element of $\Gtwo$ with an $R$-exponent, which $\psi$ cannot supply. In Type 3 neither
+group maps to the other, so $\LL_1=\Span{R}$, $\LL_2=\Span{S}$, and only cross products
+$R\cdot S$ arise. The generic-model converse is the master lemma
+of~\cite{BBG05,Boyen08}.
+\end{proof}
+
+The single distinction across the four rows is the set of $\GT$-products: none (no pairing),
+$R\cdot R$ (Type 1), $R\cdot S\cup S\cdot S$ (Type 2), $R\cdot S$ (Type 3). Everything below
+is a consequence of this.
+
+\section{The Uber assumption}
+
+\begin{definition}[bilinear Uber problem]
+\label{def:uber}
+Fix a bilinear setting, source tuples $R$ (in $\Gone$), $S$ (in $\Gtwo$), $T$ (in $\GT$),
+each containing $1$, a challenge polynomial $f\in\Zp[\vX]$, and a challenge group
+$\ch\in\{\Gone,\Gtwo,\GT\}$; write $\LL_\star\coloneqq\LL_{\ch}$ (Lemma~\ref{lem:comp}).
+For a secret $\vx\in\Zp^{n}$ the instance is
+\[
+  \Inst(\vx)=\bigl(\{[r_i(\vx)]_1\}_i,\ \{[s_j(\vx)]_2\}_j,\ \{[t_k(\vx)]_T\}_k\bigr).
+\]
+\begin{itemize}[leftmargin=1.4em,itemsep=2pt]
+  \item \emph{Computational} $(R,S,T,f;\ch)$-Uber: given $\Inst(\vx)$, output
+        $[f(\vx)]_\star$.
+  \item \emph{Decisional} $(R,S,T,f;\ch)$-Uber: given $\Inst(\vx)$ and $Z$, decide whether
+        $Z=[f(\vx)]_\star$ (real) or $Z\rsample\ch$ (random).
+\end{itemize}
+The \emph{average case} draws $\vx\rsample\Zp^{n}$; the \emph{worst case} quantifies over
+all $\vx$. For a decision algorithm $\mathcal A$ put
+\[
+  \delta(\mathcal A;\vx)=\Pr\bigl[\mathcal A(\Inst(\vx),[f(\vx)]_\star)=1\bigr]
+  -\Pr\bigl[\mathcal A(\Inst(\vx),U)=1\bigr],\quad U\rsample\ch,
+\]
+and $\delta_{\mathrm{avg}}(\mathcal A)=\Ex_{\vx\rsample\Zp^{n}}[\delta(\mathcal A;\vx)]$;
+for a search algorithm put $\Succ(\mathcal A;\vx)=\Pr[\mathcal A(\Inst(\vx))=[f(\vx)]_\star]$
+and $\Succ_{\mathrm{avg}}(\mathcal A)=\Ex_{\vx}[\Succ(\mathcal A;\vx)]$. The assumption
+asserts that $\delta_{\mathrm{avg}}$ (resp.\ $\Succ_{\mathrm{avg}}$) is negligible for all
+probabilistic polynomial-time $\mathcal A$.
+\end{definition}
+
+The four settings are Definition~\ref{def:uber} with the computable spaces of
+Lemma~\ref{lem:comp}. We record each explicitly.
+
+\begin{definition}[non-bilinear Uber]
+Setting $\mathcal G=(p,\G,g)$; source tuple $R$ (in $\G$, containing $1$); challenge
+$f\in\Zp[\vX]$ in $\G$. Instance $\Inst(\vx)=\{[r_i(\vx)]\}_i$; goal, compute or distinguish
+$[f(\vx)]$. Computable space $\LL_\star=\LL_{\G}=\Span{R}$; no pairing, hence no products.
+\end{definition}
+
+\begin{definition}[Type-1 Uber]
+Setting $\bg$ of Type 1, $\Gone=\Gtwo=\G$; source tuple $R$ (in $\G$), target tuple $T$
+(in $\GT$), each containing $1$; challenge $f$ in $\ch\in\{\G,\GT\}$. Computable spaces
+$\LL_{\G}=\Span{R}$ and $\LL_{\GT}=\Span{R\cdot R\cup T}$.
+\end{definition}
+
+\begin{definition}[Type-2 Uber]
+Setting $\bg$ of Type 2 with $\psi\colon\Gtwo\to\Gone$; source tuples $R$ (in $\Gone$),
+$S$ (in $\Gtwo$), $T$ (in $\GT$); challenge $f$ in $\ch\in\{\Gone,\Gtwo,\GT\}$. Computable
+spaces $\LL_1=\Span{R\cup S}$, $\LL_2=\Span{S}$,
+$\LL_T=\Span{(R\cup S)\cdot S\cup T}$.
+\end{definition}
+
+\begin{definition}[Type-3 Uber]
+Setting $\bg$ of Type 3; source tuples $R$ (in $\Gone$), $S$ (in $\Gtwo$), $T$ (in $\GT$);
+challenge $f$ in $\ch\in\{\Gone,\Gtwo,\GT\}$. Computable spaces $\LL_1=\Span{R}$,
+$\LL_2=\Span{S}$, $\LL_T=\Span{R\cdot S\cup T}$.
+\end{definition}
+
+\begin{remark}[hardness]
+The master theorem of~\cite{BBG05,Boyen08} states, informally, that the decisional
+$(R,S,T,f;\ch)$-Uber problem is hard in the generic bilinear group model if and only if
+$f\notin\LL_\star$, that is, the challenge exponent is linearly independent of the
+computable ones. Random self-reducibility is a separate property and does not require
+hardness; the two interact through Lemma~\ref{lem:comp}, as discussed in
+Section~\ref{sec:discussion}.
+\end{remark}
+
+\section{An affine random-self-reducibility theorem}
+
+Let $\AGL_n(\Zp)$ be the affine group of maps $\tau_{A,\vb}\colon\vx\mapsto A\vx+\vb$ with
+$A\in\GL_n(\Zp)$, acting on polynomials by $(q\circ\tau)(\vX)=q(A\vX+\vb)$. The following
+theorem is setting-agnostic: it refers only to the computable spaces of
+Lemma~\ref{lem:comp}.
+
+\begin{theorem}[master reduction]
+\label{thm:master}
+Consider any of the four settings, an instance with source tuples $R,S,T$ and challenge
+$(f;\ch)$, and computable spaces $\{\LL_\gamma\}$ with $\LL_\star=\LL_{\ch}$. Suppose there
+is an efficiently sampleable distribution $\mathcal D$ on a subgroup
+$\mathcal T\le\AGL_n(\Zp)$ such that, for every $\tau\in\mathcal T$,
+\begin{enumerate}[label=\textup{(C\arabic*)},leftmargin=3.4em,itemsep=3pt]
+  \item $r_i\circ\tau\in\LL_1$, $s_j\circ\tau\in\LL_2$, and $t_k\circ\tau\in\LL_T$ for all
+        $i,j,k$ (with $\LL_1=\LL_{\G}$ in the single-group settings);
+  \item $f\circ\tau=\lambda_\tau f+h_\tau$ for a scalar $\lambda_\tau\in\Zpx$ and a
+        polynomial $h_\tau\in\LL_\star$, both computable from $\tau$ and the parameters;
+\end{enumerate}
+and, moreover,
+\begin{enumerate}[label=\textup{(C\arabic*)},leftmargin=3.4em,start=3]
+  \item $\tau(\vx)$ is uniform on $\Zp^{n}$ for every fixed $\vx$ when $\tau\leftarrow\mathcal D$.
+\end{enumerate}
+Then the computational and decisional $(R,S,T,f;\ch)$-Uber problems are random
+self-reducible: there is a probabilistic polynomial-time reduction $\mathcal B^{\mathcal A}$,
+using one draw from $\mathcal D$ and one oracle call, with
+$\Succ(\mathcal B;\vx_0)=\Succ_{\mathrm{avg}}(\mathcal A)$ and
+$\delta(\mathcal B;\vx_0)=\delta_{\mathrm{avg}}(\mathcal A)$ for every $\vx_0\in\Zp^{n}$.
+\end{theorem}
+
+\begin{proof}
+On input $\Inst(\vx_0)$ (and a challenge $Z$ in the decisional case) the reduction proceeds
+as follows.
+
+\emph{Reparametrize.} Draw $\tau\leftarrow\mathcal D$ and set $\vx'\coloneqq\tau(\vx_0)$,
+which is unknown to $\mathcal B$ but uniform on $\Zp^{n}$ by (C3).
+
+\emph{Rebuild the instance.} By (C1), each rebuilt exponent lies in the computable space of
+its group, so by the ``$\supseteq$'' part of Lemma~\ref{lem:comp} its encoding is
+computable from $\Inst(\vx_0)$. Concretely, writing $r_i\circ\tau=\sum_a c_a\,g_a$ as a
+$\Zp$-combination of the generators of $\LL_1$, one has
+$[r_i(\vx')]_1=[(r_i\circ\tau)(\vx_0)]_1=\prod_a[g_a(\vx_0)]_1^{c_a}$, and similarly for
+$S$ (using $\psi$ in Type 2 to realize any $S$-exponent in $\Gone$) and for $T$ (using
+pairings $e([\cdot]_1,[\cdot]_2)$ to realize products). This yields $\Inst(\vx')$,
+distributed exactly as a fresh average-case instance.
+
+\emph{Transport the challenge.} By (C2) compute $\lambda_\tau,h_\tau$ and the element
+$[h_\tau(\vx_0)]_\star$ (computable since $h_\tau\in\LL_\star$).
+
+\emph{Decisional case.} Set $Z'\coloneqq Z^{\lambda_\tau}\cdot[h_\tau(\vx_0)]_\star$ and
+output $\mathcal A(\Inst(\vx'),Z')$. If $Z=[f(\vx_0)]_\star$ then
+\[
+  Z'=[\lambda_\tau f(\vx_0)+h_\tau(\vx_0)]_\star=[(f\circ\tau)(\vx_0)]_\star=[f(\vx')]_\star,
+\]
+the real challenge for $\vx'$. If $Z$ is uniform on $\ch$, then $Z^{\lambda_\tau}$ is
+uniform because $z\mapsto z^{\lambda_\tau}$ is a bijection of the order-$p$ cyclic group
+$\ch$ (as $\gcd(\lambda_\tau,p)=1$), so $Z'$ is uniform and independent of $\Inst(\vx')$.
+Writing $p_1,p_0$ for $\mathcal A$'s acceptance probabilities on real and random challenges,
+\[
+  \delta(\mathcal B;\vx_0)
+  =\Ex_{\tau}[p_1(\tau(\vx_0))]-\Ex_{\tau}[p_0(\tau(\vx_0))]
+  \overset{\text{(C3)}}{=}\Ex_{\vx'}[p_1]-\Ex_{\vx'}[p_0]
+  =\delta_{\mathrm{avg}}(\mathcal A).
+\]
+
+\emph{Search case.} Run $W\leftarrow\mathcal A(\Inst(\vx'))$. On success
+$W=[f(\vx')]_\star=[\lambda_\tau f(\vx_0)+h_\tau(\vx_0)]_\star$, so output
+$Y\coloneqq(W\cdot[h_\tau(\vx_0)]_\star^{-1})^{\lambda_\tau^{-1}\bmod p}=[f(\vx_0)]_\star$.
+Since $\vx'$ is uniform, the success probability equals $\Succ_{\mathrm{avg}}(\mathcal A)$.
+\end{proof}
+
+\begin{remark}[relaxing (C3)]
+\label{rem:c3}
+When $\mathcal D$ makes $\tau(\vx)$ uniform only on a subset $\Omega\subseteq\Zp^{n}$ (for
+instance $\Zpx\times\Zp$ under a multiplicative reparametrization of one coordinate), the
+transfer holds with the average taken over $\Omega$. If the complement $\Zp^{n}\setminus
+\Omega$ is a proper affine subvariety on which $f(\vx)$ takes a value the reduction can
+compute directly from $\Inst(\vx_0)$ (a common case is $f(\vx)=0$ there), the reduction
+detects that case by an equality test on the given encodings and answers it without an
+oracle call, recovering full worst-case coverage.
+\end{remark}
+
+\section{Random self-reducibility: non-bilinear groups}
+\label{sec:nonbilinear}
+
+Here $\LL_\star=\LL_{\G}=\Span{R}$ and no pairing exists, so (C2) demands the covariance
+defect to be a $\Zp$-combination of the source exponents themselves. The motivating
+scalar case is discrete log: to solve $g^{x}$ query the solver on $g^{x+r}$ and subtract
+$r$~\cite{TW87}; its group-valued cousins fit Definition~\ref{def:uber}.
+
+\begin{proposition}[CDH and DDH]
+\label{prop:cdh}
+Let $R=(1,X_1,X_2)$, so $\LL_{\G}=\Span{1,X_1,X_2}$, and $f=X_1X_2$ with challenge in $\G$.
+The translation group $\mathcal T=\{\vx\mapsto\vx+\vb\}$ with $\vb\rsample\Zp^{2}$ satisfies
+\textup{(C1)--(C3)}, so computational CDH and decisional DDH are random self-reducible.
+\end{proposition}
+\begin{proof}
+$X_i\circ\tau=X_i+b_i\in\LL_{\G}$ gives (C1). For (C2),
+$f\circ\tau=(X_1+b_1)(X_2+b_2)=f+(b_2X_1+b_1X_2+b_1b_2)$, so $\lambda_\tau=1$ and
+$h_\tau=b_2X_1+b_1X_2+b_1b_2\in\Span{1,X_1,X_2}=\LL_\star$. Translation gives exact
+uniformity, (C3). Explicitly the reduction returns
+$[f(\vx_0)]=W\cdot[x_1]^{-b_2}[x_2]^{-b_1}[1]^{-b_1b_2}$ in the search case.
+\end{proof}
+
+With $R=(1,X_1,\dots,X_n)$ we have $\LL_\star=V_{\le 1}$ (affine polynomials), and
+translating a degree-$d$ monomial leaves monomials of degree at most $d-1$; hence (C2)
+holds under translation exactly when $\deg f\le 2$. Without a pairing, degree $2$ is the
+ceiling: a product target is the most that is randomizable, and it is.
+
+\section{Random self-reducibility: Type 1}
+
+Here $\LL_\star=\LL_{\GT}=\Span{R\cdot R\cup T}$: the pairing supplies all products of source
+exponents, so the covariance defect may use any degree-$2$ combination of them.
+
+\begin{proposition}[BDDH]
+\label{prop:bddh}
+Let $R=(1,X_1,X_2,X_3)$, $T=(1)$, so $\LL_{\GT}=V_{\le 2}$, and $f=X_1X_2X_3$ with challenge
+in $\GT$. Translation satisfies \textup{(C1)--(C3)}, so decisional and computational BDDH are
+random self-reducible.
+\end{proposition}
+\begin{proof}
+$X_i\circ\tau=X_i+b_i\in\LL_{\G}=\Span{R}$ gives (C1). Expanding,
+\[
+  f\circ\tau=X_1X_2X_3+\bigl[b_3X_1X_2+b_2X_1X_3+b_1X_2X_3+(\deg\le 1)\bigr],
+\]
+so $\lambda_\tau=1$ and $h_\tau$ has total degree at most $2$, hence lies in
+$V_{\le 2}=\LL_\star$; each of its monomials is realized by a single pairing, for instance
+$[x_1x_2]_T=e([x_1]_1,[x_2]_2)$. Translation gives (C3).
+\end{proof}
+
+With coordinate source $R=(1,X_1,\dots,X_n)$ we get $\LL_\star=V_{\le 2}$, so the same
+degree count gives translation-randomizability for every $f$ with $\deg f\le 3$. The
+pairing has raised the ceiling from $2$ (no pairing) to $3$.
+
+\section{Random self-reducibility: Type 2}
+
+Here $\LL_1=\Span{R\cup S}$ and $\LL_T=\Span{(R\cup S)\cdot S\cup T}$: relative to Type 3
+the homomorphism $\psi$ adds the right-hand products $S\cdot S$ to the target space. This
+extra room is what makes the following target randomizable.
+
+\begin{proposition}
+\label{prop:type2}
+In a Type-2 group let $R=(1,X_1)$ in $\Gone$, $S=(1,X_2)$ in $\Gtwo$, $T=(1)$, and
+$f=X_1X_2^{2}$ with challenge in $\GT$. Then $f\notin\LL_\star$ (so the assumption is
+generically hard), and translation satisfies \textup{(C1)--(C3)}; the problem is random
+self-reducible.
+\end{proposition}
+\begin{proof}
+Here $\LL_T=\Span{(R\cup S)\cdot S}=\Span{1,X_1,X_2,X_1X_2,X_2^{2}}$, and $X_1X_2^{2}$ is
+not in this span, giving generic hardness. Under $\tau\colon\vx\mapsto\vx+\vb$ one has
+$X_1\circ\tau=X_1+b_1\in\LL_1=\Span{1,X_1}$ and $X_2\circ\tau=X_2+b_2\in\LL_2=\Span{1,X_2}$,
+which is (C1). Expanding,
+\[
+  f\circ\tau=(X_1+b_1)(X_2+b_2)^{2}
+  =f+\underbrace{2b_2X_1X_2+b_2^{2}X_1+b_1X_2^{2}+2b_1b_2X_2+b_1b_2^{2}}_{h_\tau},
+\]
+so $\lambda_\tau=1$ and every monomial of $h_\tau$ lies in $\LL_\star$. The term $X_2^{2}$
+is realized using $\psi$: $[x_2^{2}]_T=e\bigl(\psi([x_2]_2),[x_2]_2\bigr)$. Translation gives
+(C3).
+\end{proof}
+
+The point is precisely the $X_2^{2}$ term of $h_\tau$: it is a product of two $\Gtwo$
+exponents, which the pairing can form only after $\psi$ has moved one of them into $\Gone$.
+In Type 1 this term is free; in Type 3 it is unavailable, as the next section shows.
+
+\section{Random self-reducibility: Type 3}
+\label{sec:type3}
+
+Here $\LL_1=\Span{R}$, $\LL_2=\Span{S}$, and $\LL_T=\Span{R\cdot S\cup T}$: the target space
+contains only cross products. This is the most restrictive setting, and reparametrizations
+must respect which coordinates are reachable in the challenge group.
+
+\begin{proposition}[co-CDH]
+\label{prop:cocdh}
+In a Type-3 group let $R=(1,X_1)$ in $\Gone$, $S=(1,X_2)$ in $\Gtwo$, and $f=X_1X_2$ with
+challenge in $\Gone$. Then $f\notin\LL_\star$ (generically hard), and the reparametrization
+$\tau\colon(x_1,x_2)\mapsto(\alpha x_1,\ x_2+b_2)$ with $\alpha\rsample\Zpx$,
+$b_2\rsample\Zp$ satisfies \textup{(C1),(C2)} and makes $\tau(\vx)$ uniform on
+$\Zpx\times\Zp$; the problem is random self-reducible, with the slice $x_1=0$ handled
+directly.
+\end{proposition}
+\begin{proof}
+Here $\LL_\star=\LL_1=\Span{1,X_1}$, which contains no $\Gtwo$ variable; and $X_1X_2\notin
+\Span{1,X_1}$, giving hardness. For (C1), $X_1\circ\tau=\alpha X_1\in\LL_1$ and
+$X_2\circ\tau=X_2+b_2\in\LL_2=\Span{1,X_2}$. For (C2),
+$f\circ\tau=\alpha X_1(X_2+b_2)=\alpha f+\alpha b_2X_1$, so $\lambda_\tau=\alpha\in\Zpx$ and
+$h_\tau=\alpha b_2X_1\in\LL_\star$. The image $\tau(\vx)=(\alpha x_1,x_2+b_2)$ is uniform on
+$\Zpx\times\Zp$ for every fixed $x_1\neq 0$. If $x_1=0$ then $f(\vx)=0$ and the answer is
+the identity of $\Gone$; the reduction detects this by testing $[x_1]_1=[0]_1$ and outputs
+the identity, per Remark~\ref{rem:c3}. A multiplicative reparametrization of $x_1$ is forced
+because an additive shift $x_1\mapsto x_1+b_1$ would put $b_1X_2$ into $h_\tau$, and
+$X_2\notin\LL_1$ in Type 3.
+\end{proof}
+
+\subsection{Monomial targets never separate}
+
+It is tempting to look for a separation at the target $f=X_1X_2^{2}$ of
+Proposition~\ref{prop:type2}, whose defect under translation contains the $X_2^{2}$ that
+Type 3 cannot form. That attempt fails, and it fails for a reason that rules out an entire
+class of candidates at once.
+
+\begin{proposition}[monomial targets are always self-reducible]
+\label{prop:nomono}
+Let $R,S,T$ consist of monomials, each containing $1$, and let $f=X_1^{i}X_2^{j}$ with
+$i,j\ge 1$ be a monomial with $f\notin\LL_\star$. Then in every one of the four settings the
+diagonal torus $\mathcal T=\{\tau_{a,d}\colon\vx\mapsto(ax_1,dx_2):a,d\in\Zpx\}$, with $a$ and
+$d$ drawn uniformly from $\Zpx$, satisfies
+\textup{(C1)} and \textup{(C2)}, and Theorem~\ref{thm:master} applies in the relaxed form of
+Remark~\ref{rem:c3}. No such $f$ separates two settings.
+\end{proposition}
+\begin{proof}
+A monomial composed with a coordinate scaling is a scalar multiple of itself, so
+$m\circ\tau_{a,d}=a^{k}d^{l}m$ for $m=X_1^{k}X_2^{l}$. Hence every source monomial stays in
+the span of itself, giving (C1) in any setting, and $f\circ\tau_{a,d}=a^{i}d^{j}f$, giving
+(C2) with $\lambda_\tau=a^{i}d^{j}\in\Zpx$ and $h_\tau=0$ --- the defect vanishes identically,
+so no uncomputable monomial can appear in it. The image $\tau_{a,d}(\vx)$ is uniform on
+$\Zpx\times\Zpx$ whenever $x_1,x_2\neq 0$, and on the complement
+$\{x_1=0\}\cup\{x_2=0\}$ one has $f(\vx)=0$ because $i,j\ge 1$, so the answer is the identity
+and the reduction detects the case by testing $[x_1]_1$ and $[x_2]_2$ against the identity.
+Remark~\ref{rem:c3} then gives full worst-case coverage.
+\end{proof}
+
+In particular $f=X_1X_2^{2}$ is random self-reducible in Type 3 as well as in Type 2, by
+$\tau\colon\vx\mapsto(\alpha x_1,\,x_2+b)$: here $f\circ\tau=\alpha f+2\alpha b\,X_1X_2+
+\alpha b^{2}X_1$, whose defect monomials $X_1X_2$ and $X_1$ are both cross products $R\cdot S$
+and hence in $\LL_T$ even in Type 3. This is the same shape of reparametrization that
+Proposition~\ref{prop:cocdh} forces for co-CDH. A separating target must therefore be
+non-monomial, and must defeat the torus.
+
+\subsection{A separating target}
+
+\begin{proposition}[a Type-2 versus Type-3 separation]
+\label{prop:sep}
+Let $p\ge 5$, $R=(1,X_1)$ in $\Gone$, $S=(1,X_2)$ in $\Gtwo$, $T=(1)$, and
+\[
+  f=X_1^{2}+X_1X_2^{2}+X_2^{3}
+\]
+with challenge in $\GT$. Then $f\notin\LL_T$ in Type 2 and in Type 3, so the assumption is
+generically hard in both. In Type 2 the admissible reparametrizations act transitively and
+uniformly on $\Zp^{2}$, so Theorem~\ref{thm:master} applies with exact advantage transfer. In
+Type 3 the admissible group is
+\[
+  \mathcal T_3=\{\tau_c\colon\vx\mapsto(x_1-3c,\ x_2+c)\ :\ c\in\Zp\}\cong(\Zp,+),
+\]
+of order $p$; its orbits are the $p$ lines $x_1+3x_2=k$, each of size $p$; and on no such line
+is $f$ computable from the instance. Hence \textup{(C3)} fails at \emph{every}
+$\vx_0\in\Zp^{2}$, even in the relaxed form of Remark~\ref{rem:c3}.
+\end{proposition}
+\begin{proof}
+\emph{Hardness.} In Type 3, $\LL_T=\Span{R\cdot S}=\Span{1,X_1,X_2,X_1X_2}$; in Type 2,
+$\LL_T=\Span{(R\cup S)\cdot S}=\Span{1,X_1,X_2,X_1X_2,X_2^{2}}$. Neither contains $X_1^{2}$,
+so $f\notin\LL_T$ in either.
+
+\emph{Type 3.} By (C1), $\tau_1=aX_1+c_1$ and $\tau_2=dX_2+c_2$ with $a,d\in\Zpx$. The
+monomials of $f\circ\tau$ lying outside $\LL_T$ are $X_1^{2}$, $X_1X_2^{2}$, $X_2^{3}$ and
+$X_2^{2}$; the first three occur in $f$ and the fourth does not. Reading off coefficients,
+\[
+  [X_1^{2}]:\ a^{2}=\lambda_\tau,\qquad
+  [X_1X_2^{2}]:\ ad^{2}=\lambda_\tau,\qquad
+  [X_2^{3}]:\ d^{3}=\lambda_\tau .
+\]
+From the first two, $a=d^{2}$; from the last two, $a=d$; hence $d^{2}=d$ and, as
+$d\in\Zpx$, $d=1$, so $a=1$ and $\lambda_\tau=1$. The pure $X_2^{2}$ coefficient is
+$c_1+3c_2$ and must vanish, giving $c_1=-3c_2$. Writing $c\coloneqq c_2$ yields exactly
+$\mathcal T_3$, and one checks $h_{\tau_c}=2c\,X_1X_2+(c^{2}-6c)X_1-3c^{2}X_2+(9c^{2}-2c^{3})
+\in\LL_T$, so (C2) does hold on $\mathcal T_3$. Since $x_1+3x_2$ is invariant under $\tau_c$,
+the orbit of $\vx_0$ is the line $\ell_k=\{x_1+3x_2=k\}$ through it, of size $p$ out of
+$p^{2}$.
+
+\emph{No escape on an orbit.} Parametrize $\ell_k$ by $s\coloneqq x_2$, so $x_1=k-3s$. There
+\[
+  f|_{\ell_k}=(k-3s)^{2}+(k-3s)s^{2}+s^{3}=-2s^{3}+(k+9)s^{2}-6ks+k^{2},
+\]
+while $\LL_T$ restricts to $\Span{1,\,k-3s,\,s,\,(k-3s)s}=\Span{1,s,s^{2}}$. As $p\ge 5$ the
+coefficient $-2$ is nonzero and $s^{3}$ is not a $\Zp$-combination of $1,s,s^{2}$ as a
+function on $\Zp$, so $f|_{\ell_k}\notin\LL_T|_{\ell_k}$ for every $k$. The escape clause of
+Remark~\ref{rem:c3} is therefore unavailable on any orbit.
+
+\emph{Type 2.} Now $\LL_1=\Span{1,X_1,X_2}$, so (C1) permits $\tau_1=a_{11}X_1+a_{12}X_2+c_1$,
+and $X_2^{2}\in\LL_T$ removes the $X_2^{2}$ constraint. The surviving conditions are
+$a_{11}^{2}=\lambda_\tau$, $a_{11}d^{2}=\lambda_\tau$ and $a_{12}d^{2}+d^{3}=\lambda_\tau$,
+giving $a_{11}=d^{2}$ and $a_{12}=d^{2}-d$, with $c_1,c_2$ free. Then
+$\tau(\vx)=(d^{2}x_1+(d^{2}-d)x_2+c_1,\ dx_2+c_2)$, and as $c_1,c_2$ range over $\Zp$ the two
+coordinates range independently over all of $\Zp$: $\tau(\vx)$ is exactly uniform on $\Zp^{2}$
+for every fixed $\vx$, which is (C3) unrelaxed.
+\end{proof}
+
+Two features of Type 2 drive the separation, and the proof uses both: $\psi$ places $X_2^{2}$
+in $\LL_T$, which removes the constraint that ties $c_1$ to $c_2$ in Type 3, and it places
+$X_2$ in $\LL_1$, which lets $\tau_1$ carry the shear term $a_{12}X_2$. Neither is available
+in Type 3, and either alone would leave a smaller admissible group.
+
+On the other side, all three terms of $f$ are needed, and the coefficient conditions
+$a^{2}=ad^{2}=d^{3}=\lambda_\tau$ are what make them work together: any two of the three force
+only a single relation between $a$ and $d$, leaving a one-parameter torus, whereas all three
+force $d=1$ and kill the torus that Proposition~\ref{prop:nomono} would otherwise use to
+rescue the Type-3 reduction. Dropping a term accordingly costs the separation, but in
+different ways. Without $X_1^{2}$ one has $a=d$; the torus survives, and the failure locus
+shrinks to the single line $x_1+3x_2=0$, an $O(1/p)$ fraction. Without $X_1X_2^{2}$ one has
+$a^{2}=d^{3}$, and without $X_2^{3}$ one has $a=d^{2}$; in both cases the surviving
+one-parameter torus leaves Type-3 orbits of size $\Theta(p^{2})$, so the loss is a constant
+factor rather than a break --- Type 2 retains full coverage in each case, so what fails is the
+Type-3 half of the separation, not the Type-2 half.
+
+The hypothesis $p\ge 5$ is not cosmetic. The proof needs $s^{3}$ to be independent of
+$1,s,s^{2}$ \emph{as a function} on $\Zp$, which holds exactly when $p>3$. At $p=3$ Fermat
+gives $s^{3}=s$, so $f|_{\ell_k}=ks^{2}+s+k^{2}$ lies in $\LL_T|_{\ell_k}$ and the escape
+clause of Remark~\ref{rem:c3} becomes available on every orbit; at $p=2$ the assumption is
+vacuous, since $X_1^{2},X_2^{2}$ and $X_2^{3}$ collapse to $X_1,X_2,X_2$ and $f$ agrees
+pointwise with $X_1+X_1X_2+X_2\in\LL_T$. Both failures are of hardness or of the escape
+clause, not of the group computation, which is characteristic-free.
+
+\begin{remark}[the failure is as large as it can be]
+\label{rem:dichotomy}
+The set of $\tau$ satisfying (C1) and (C2) is closed under composition and inversion, so it is
+a group and the orbits of $\Zp^{n}$ under it partition the space. Orbit size is constant on
+orbits, so the set of $\vx_0$ at which (C3) fails is a union of orbits. If it is not all of
+$\Zp^{n}$, it omits some orbit of size at least $p^{n}-O(p)$ and therefore has size $O(p)$.
+The failure fraction is thus either $O(1/p)$ or exactly $1$, with nothing in between, and
+Proposition~\ref{prop:sep} realizes the second alternative.
+\end{remark}
+
+Proposition~\ref{prop:sep} rules out the single-reparametrization technique of
+Theorem~\ref{thm:master}, which is the tool behind every positive result above. It does not
+rule out every reduction: Section~\ref{sec:classical} shows that a multi-query interpolation
+reduction still solves the \emph{computational} problem, at high solver advantage, for this
+target as for any other with these source tuples. The Type-2 versus Type-3 gap established
+here is accordingly a gap for decisional reductions and for reductions that must work at
+negligible advantage. Ruling out every decisional reduction would additionally require a
+lower-bound argument such as a meta-reduction.
+
+\section{Relation to classical random self-reducibility}
+\label{sec:classical}
+
+Random self-reducibility long predates its use on group-based assumptions, and the classical
+technique differs from Theorem~\ref{thm:master} in one respect that decides exactly what
+Proposition~\ref{prop:sep} does and does not rule out. This section isolates the difference
+and delimits the reach of each technique.
+
+\subsection{The multi-query condition}
+
+Condition (C2) asks a single reparametrized challenge to be a scalar multiple of the original
+up to a computable defect. Feigenbaum and Fortnow~\cite{FF93} call a problem non-adaptively
+random self-reducible when $f(\vx_0)$ is recoverable by an arbitrary polynomial-time function
+of the answers on several identically distributed queries; see~\cite{BT06} for the place of
+that notion in average-case complexity. The specialization in which the recovery is
+$\Zp$-linear is the one this setting supports:
+\begin{enumerate}[label=\textup{(C2$'$)},leftmargin=3.9em]
+  \item there are $\tau_1,\dots,\tau_m$, jointly sampled so that each $\tau_i$ is marginally
+        distributed as in (C3), together with coefficients $c_1,\dots,c_m\in\Zp$ and a
+        polynomial $h\in\LL_\star$, all computable from the sampled data, such that
+        \[
+          f=\sum_{i=1}^{m}c_i\,(f\circ\tau_i)+h.
+        \]
+\end{enumerate}
+Condition (C2) is the case $m=1$ with $c_1\neq 0$: from $f\circ\tau=\lambda_\tau f+h_\tau$ one
+gets $f=\lambda_\tau^{-1}(f\circ\tau)-\lambda_\tau^{-1}h_\tau$, which is (C2$'$) with
+$c_1=\lambda_\tau^{-1}$ and $h=-\lambda_\tau^{-1}h_\tau$.
+
+Given (C1) for each $\tau_i$, condition (C2$'$) suffices for the \emph{computational} problem:
+the reduction rebuilds $\Inst(\tau_i(\vx_0))$ for each $i$ as in the proof of
+Theorem~\ref{thm:master}, queries the solver on all $m$ of them to get $W_1,\dots,W_m$, and
+returns
+\[
+  \prod_{i=1}^{m}W_i^{\,c_i}\cdot[h(\vx_0)]_\star
+  =\Bigl[\sum_{i=1}^{m}c_i\,f(\tau_i(\vx_0))+h(\vx_0)\Bigr]_\star=[f(\vx_0)]_\star .
+\]
+The step that makes this go through is that a $\Zp$-linear combination of \emph{exponents} is
+realized by group operations on their encodings, so linear post-processing of the solver's
+answers is available to the reduction for free. Encodings are transparent to it: the map
+$\vx\mapsto[f(\vx)]_\star$ is a Reed--Muller codeword read through the encoding, and a linear
+local-decoding procedure for that code never notices the encoding is there. This is why the
+linear part of the classical toolkit --- Lipton's line restriction~\cite{Lipton91}, and the
+degree-$k$ curves with which Beaver and Feigenbaum~\cite{BF90} make the queries $k$-wise
+independent --- carries over to computational Uber problems unchanged.
+
+\subsection{Interpolation, and what it costs}
+
+The classical instantiation restricts $f$ to a random line through $\vx_0$ and interpolates.
+It needs nothing of $f$ beyond its degree, and nothing of the setting beyond (C1) for
+translations.
+
+\begin{proposition}[line interpolation]
+\label{prop:interp}
+Suppose $R$, $S$ and $T$ are stable under translation, in the sense that $r\circ\tau_{\vb}\in
+\LL_1$, $s\circ\tau_{\vb}\in\LL_2$ and $t\circ\tau_{\vb}\in\LL_T$ for every $\vb\in\Zp^{n}$ and
+every $r\in R$, $s\in S$, $t\in T$, where $\tau_{\vb}\colon\vx\mapsto\vx+\vb$. Let
+$d\coloneqq\deg f$ and suppose $d\le p-2$. Then the \emph{computational}
+$(R,S,T,f;\ch)$-Uber problem is random self-reducible by a non-adaptive $(d+1)$-query
+reduction $\mathcal B^{\mathcal A}$ with
+\[
+  \Succ(\mathcal B;\vx_0)\ \ge\ 1-(d+1)\bigl(1-\Succ_{\mathrm{avg}}(\mathcal A)\bigr)
+  \qquad\text{for every }\vx_0\in\Zp^{n}.
+\]
+\end{proposition}
+\begin{proof}
+Draw $\vb\rsample\Zp^{n}$ and fix $d+1$ distinct nonzero $t_1,\dots,t_{d+1}\in\Zp$, which exist
+as $d+1\le p-1$. Put $\tau_i\coloneqq\tau_{t_i\vb}$. Each $\tau_i$ is a translation, so (C1)
+holds by hypothesis and $\Inst(\vx_0+t_i\vb)$ is computable from $\Inst(\vx_0)$; and since
+$t_i\neq 0$ and $\vb$ is uniform, $\vx_0+t_i\vb$ is uniform on $\Zp^{n}$, so each query is
+marginally a fresh average-case instance. The $d+1$ queries are not jointly independent: they
+lie on one line.
+
+Put $g(t)\coloneqq f(\vx_0+t\vb)$, a polynomial in $t$ of degree at most $d$, and let
+$c_i\coloneqq\prod_{j\neq i}(-t_j)(t_i-t_j)^{-1}$ be the Lagrange coefficients at $0$, so that
+$q(0)=\sum_i c_i q(t_i)$ for every $q$ of degree at most $d$. This is (C2$'$) with $m=d+1$ and
+$h=0$. Query $W_i\leftarrow\mathcal A(\Inst(\vx_0+t_i\vb))$ and output
+$Y\coloneqq\prod_i W_i^{\,c_i}$; if every $W_i=[g(t_i)]_\star$ then
+$Y=[\sum_i c_i g(t_i)]_\star=[g(0)]_\star=[f(\vx_0)]_\star$. A union bound over the $d+1$
+queries gives the stated bound.
+\end{proof}
+
+The source tuples of Propositions~\ref{prop:cocdh}, \ref{prop:nomono} and~\ref{prop:sep} are
+all translation-stable, so Proposition~\ref{prop:interp} applies to each: the computational
+problems there are self-reducible in Type 3 whatever the covariance obstruction, including
+the separating target of Proposition~\ref{prop:sep}, whose degree $3$ needs four queries. The
+reduction never rebuilds the covariance defect --- the solver returns it implicitly inside its
+own answers --- so no uncomputable monomial ever has to be formed.
+
+What it costs is the regime. The queries must be correlated for the interpolation identity to
+hold, so the transfer runs through a union bound and the bound is vacuous unless
+$\Succ_{\mathrm{avg}}(\mathcal A)>d/(d+1)$. In the classical setting that threshold is soft:
+Berlekamp--Welch decoding brings the tolerable disagreement to any constant below
+$1/2$~\cite{GS92}, and list decoding brings it past $1/2$~\cite{Sudan97,STV01}. Neither is
+available here. Berlekamp--Welch solves $N(t_i)=y_i\,E(t_i)$ for the coefficients of $N$ and
+$E$, a linear system whose \emph{coefficient matrix contains the received values} $y_i$; the
+reduction holds only $[y_i]_\star$, and forming that system would require multiplying and
+inverting encoded values. The same objection applies to the list-decoding refinements. So the
+very criterion that lets interpolation survive the encoding --- linearity in the received word
+--- excludes the machinery that would soften its threshold, and $d/(d+1)$ is a genuine wall
+rather than an artifact.
+
+\begin{remark}[challenge transport]
+\label{rem:decblock}
+Interpolation does not reach the decisional problem. Recovering $f(\vx_0)$ from the answers is
+linear and hence free in the exponent, but a decisional reduction must also run in the other
+direction, transporting its own challenge $Z$ forward to a challenge for each rebuilt
+instance, and decision bits do not interpolate. Concretely, for the target
+$f=X_1^{2}+X_1X_2^{2}+X_2^{3}$ of Proposition~\ref{prop:sep} the reduction would need the
+coefficients of $g(t)=f(\vx_0+t\vb)$; the coefficient of $t$ is the directional derivative
+\[
+  b_1\bigl(2X_1+X_2^{2}\bigr)+b_2\bigl(2X_1X_2+3X_2^{2}\bigr)
+  =2b_1X_1+2b_2X_1X_2+(b_1+3b_2)X_2^{2},
+\]
+whose $X_2^{2}$ term lies outside $\LL_T$ in Type 3 unless $b_1+3b_2=0$ --- that is, unless
+$\vb$ points along the one direction whose orbits are the degenerate lines of
+Proposition~\ref{prop:sep}.
+\end{remark}
+
+\subsection{What each technique buys}
+
+The two techniques are not ordered by reach. On \emph{computational} problems interpolation is
+the more permissive of the two: it asks nothing of $f$ but its degree, so wherever the sources
+are translation-stable it succeeds regardless of the covariance obstruction, and
+Proposition~\ref{prop:interp} applies to every target in this note. What separates them is the
+regime. Theorem~\ref{thm:master} transfers advantage exactly, and reaches the decisional
+problem; Proposition~\ref{prop:interp} says nothing below solver advantage $d/(d+1)$ and
+nothing about decisional problems at all (Remark~\ref{rem:decblock}). The gap is not one of
+tightness --- a reduction
+requiring $\Succ_{\mathrm{avg}}>3/4$ is not a loose reduction, it does not exist below that
+threshold --- and, by the preceding subsection, it cannot be closed by the classical decoding
+machinery, because that machinery is not linear in the received word. Since Uber assumptions
+are stated at negligible advantage, and very often in decisional form, the covariance route is
+in practice the only one available; that is why Theorem~\ref{thm:master}, and not
+interpolation, is the tool used throughout this note, and why the separation of
+Proposition~\ref{prop:sep} is meaningful despite Proposition~\ref{prop:interp}.
+
+Two further points of contact are worth recording, with their differences. Shift-based
+self-correction in the style of Blum, Luby and Rubinfeld~\cite{BLR93} uses the same
+$\vx\mapsto\vx+\vb$ as the CDH and DDH reduction of Section~\ref{sec:nonbilinear}, but their
+corrector queries the oracle twice per trial and takes a majority over repetitions, tolerating
+a constant error rate, where the reduction here makes one query and computes the correction
+itself from the instance, transferring advantage exactly. And the worst-case-to-average-case
+reductions of lattice cryptography, from Ajtai~\cite{Ajtai96} to Regev~\cite{Regev09}, share
+the motivation of this note --- basing an average-case assumption on a worst-case one --- but
+are reductions \emph{between distinct problems} rather than self-reductions, and rest on
+lattice geometry rather than on polynomial structure; Regev's is moreover a quantum reduction.
+
+\section{Deciding whether the affine technique applies}
+\label{sec:decide}
+
+Conditions \textup{(C1)} and \textup{(C2)} are polynomial conditions on the entries of $\tau$,
+and \textup{(C3)} is a statement about the size of an orbit. Finding an admissible $\mathcal T$
+is therefore a computation rather than a matter of ingenuity, and the hand arguments of
+Sections~\ref{sec:nonbilinear}--\ref{sec:type3} are all instances of one procedure. This
+section writes it out and, at each step, names the standard operation of computational algebra
+that performs it. Nothing bespoke is needed: the whole of it is subspace arithmetic, one
+stabilizer computation, one Jacobian kernel, one ideal of maximal minors, and one primary
+decomposition, in that order. What the procedure decides is the applicability of
+Theorem~\ref{thm:master}, not random self-reducibility as such;
+Section~\ref{sec:limits} is precise about the gap.
+
+\subsection{Set-up}
+
+Fix a setting and an instance $(R,S,T,f;\ch)$ in $n$ variables over $\Zp$, and let $D$ be the
+largest degree occurring among $f$ and the generators listed for $\LL_1,\LL_2,\LL_T$ in
+Lemma~\ref{lem:comp} --- so $D\ge\deg r+\deg s$ for the pairing products, not merely the
+largest degree in $R\cup S\cup T$. Affine substitution does not raise
+degree, so every polynomial the procedure meets lies in $P_D\coloneqq\Zp[\vX]_{\le D}$, a
+$\Zp$-space of dimension $N=\binom{n+D}{n}$; represent its elements by coefficient vectors.
+Treat the $n^{2}+n$ entries of $(A,\vb)$ in $\tau_{A,\vb}\colon\vx\mapsto A\vx+\vb$ as
+indeterminates; for $q\in P_D$ the coefficients of $q\circ\tau_{A,\vb}$ are then polynomials of
+degree at most $\deg q$ in those indeterminates, obtained by expansion. Composition with an
+affine map is $\Zp$-linear on $P_D$ and respects composition, so it is a representation
+\[
+  \rho\colon\AGL_n(\Zp)\longrightarrow\GL(P_D),\qquad \rho(\tau)q=q\circ\tau,
+\]
+whose matrix entries are polynomials of degree at most $D$ in $(A,\vb)$. Everything below is an
+operation on $\rho$ and on the subspaces of $P_D$ that Lemma~\ref{lem:comp} supplies.
+
+Two structural facts fix the shape of the procedure. First, \textup{(C1)} and \textup{(C2)} cut
+out an algebraic subset $\mathcal T\subseteq\AGL_n(\Zp)$ which is a subgroup, and
+Lemma~\ref{lem:stab} below identifies it as a stabilizer, which is where the group structure
+asserted in Remark~\ref{rem:dichotomy} comes from. Second, with $\mathcal D$ uniform on
+$\mathcal T$ the image $\tau(\vx_0)$ is uniform on the orbit $\mathcal T\vx_0$, because
+$\tau\mapsto\tau(\vx_0)$ is $|\Stab_{\mathcal T}(\vx_0)|$-to-one onto that orbit. Deciding
+\textup{(C3)} is therefore deciding how large the orbits are, and by the Lang--Weil estimate an
+orbit of dimension $e$ carries $\Theta(p^{e})$ points, with implied constants depending only on
+$n$ and $D$. For $p$ large relative to those, comparing $\dim\mathcal T\vx_0$ with $n$ decides
+\textup{(C3)} up to exactly the $O(1/p)$ slack that Remark~\ref{rem:c3} already tolerates.
+
+\subsection{The admissible set is a stabilizer}
+
+Conditions \textup{(C1)} and \textup{(C2)} look like conditions of different kinds --- one a
+membership requirement on the rebuilt sources, the other a covariance requirement on the
+challenge. Under $\rho$ they are two instances of one condition: each says that $\tau$ fixes
+something.
+
+\begin{lemma}[stabilizer form]
+\label{lem:stab}
+Write $\bar f\coloneqq f+\LL_\star\in P_D/\LL_\star$. For $\tau\in\AGL_n(\Zp)$:
+\begin{enumerate}[label=\textup{(\roman*)},leftmargin=2.6em,itemsep=2pt]
+  \item \textup{(C1)} holds if and only if $\rho(\tau)$ stabilizes each of $\LL_1$, $\LL_2$ and
+        $\LL_T$;
+  \item assuming \textup{(C1)}, so that $\rho(\tau)$ descends to a map $\bar\rho(\tau)$ of
+        $P_D/\LL_\star$, condition \textup{(C2)} holds if and only if $\bar\rho(\tau)$ fixes the
+        line $\Span{\bar f}$, and $\lambda_\tau$ is then the scalar by which it acts there.
+\end{enumerate}
+Hence the admissible set is a stabilizer,
+\[
+  \mathcal T=\bigl\{\tau:\rho(\tau)\LL_\gamma=\LL_\gamma\ (\gamma=1,2,T)
+  \ \text{ and }\ \bar\rho(\tau)\Span{\bar f}=\Span{\bar f}\bigr\},
+\]
+the $\rho$-preimage of an intersection of three subspace stabilizers --- maximal parabolic
+subgroups of $\GL(P_D)$, or all of $\GL(P_D)$ in the degenerate case $\LL_\gamma=P_D$ ---
+with the stabilizer of a point of $\PP(P_D/\LL_\star)$. In particular $\mathcal T$ is a subgroup
+of $\AGL_n(\Zp)$, and $\lambda\colon\mathcal T\to\Zpx$, $\tau\mapsto\lambda_\tau$, is a
+character of it.
+\end{lemma}
+\begin{proof}
+(i) In each of the four settings the computable spaces of Lemma~\ref{lem:comp} are generated by
+$R,S,T$ under multiplication: $\LL_2=\Span{S}$, $\LL_1=\Span{R}$ or $\Span{R\cup S}$, and
+$\LL_T=\LL_1\cdot\LL_2+\Span{T}$, with $\LL_1=\LL_2=\Span{R}$ in the single-group settings and
+$\LL_T$ absent when there is no pairing. If $\rho(\tau)$ stabilizes the three spaces then
+\textup{(C1)} follows, since $R\subseteq\LL_1$, $S\subseteq\LL_2$ and $T\subseteq\LL_T$.
+Conversely assume \textup{(C1)}. Then $\rho(\tau)\Span{S}\subseteq\LL_2=\Span{S}$; and both
+$\Span{R}$ and $\Span{S}$ land in $\LL_1$ --- in Type 2 because $\LL_2\subseteq\LL_1$, in the
+other settings because $\LL_1=\Span{R}$ and only $R$ is involved --- so
+$\rho(\tau)\LL_1\subseteq\LL_1$. Composition with $\tau$ is a ring endomorphism of $\Zp[\vX]$,
+so $(uv)\circ\tau=(u\circ\tau)(v\circ\tau)$ and therefore
+$\rho(\tau)(\LL_1\cdot\LL_2)\subseteq\LL_1\cdot\LL_2$; with $\rho(\tau)\Span{T}\subseteq\LL_T$
+from \textup{(C1)} this gives $\rho(\tau)\LL_T\subseteq\LL_T$. Each inclusion is between spaces
+of equal finite dimension under an invertible map, hence an equality.
+
+(ii) The identity $f\circ\tau=\lambda_\tau f+h_\tau$ with $h_\tau\in\LL_\star$ says exactly that
+the image of $f\circ\tau$ in $P_D/\LL_\star$ is $\lambda_\tau\bar f$, and the requirement
+$\lambda_\tau\in\Zpx$ says the image is a \emph{nonzero} multiple, that is, that the line is
+fixed rather than merely mapped into itself. The final claims follow because the preimage of an
+intersection of subgroups under a homomorphism is a subgroup, and because the scalar by which a
+group acts on a fixed line is multiplicative in the group.
+\end{proof}
+
+Lemma~\ref{lem:stab} supersedes the direct check in Remark~\ref{rem:dichotomy} that
+$\mathcal T$ is closed under composition and inversion: it is a preimage of a subgroup. It also
+places $\lambda$ correctly as a character rather than an incidental scalar, which is what makes
+$\lambda_\tau\in\Zpx$ compose in the multi-query condition \textup{(C2$'$)}.
+
+\subsection{Orbits: invariants and a rank locus}
+
+By Lemma~\ref{lem:stab}, $\mathcal T$ is an algebraic subgroup of $\AGL_n$ acting on affine
+$n$-space, and \textup{(C3)} asks that its orbits be everything. Two standard descriptions of
+orbits apply, one generic and one pointwise, and between them they replace the orbit
+bookkeeping of Sections~\ref{sec:nonbilinear}--\ref{sec:type3}.
+
+Generically, orbits are the fibres of the invariant map. By Rosenlicht's theorem on generic
+quotients there is a dense open subset of $\overline{\Zp}^{\,n}$ on which the orbits of
+$\mathcal T$ are exactly the fibres of the map assembled from a finite generating set of the
+invariant field, and $\operatorname{trdeg}\overline{\Zp}(\vX)^{\mathcal T}=
+n-\max_{\vx}\dim\mathcal T\vx$. So the generic orbit is $n$-dimensional precisely when
+$\mathcal T$ admits no non-constant rational invariant. This is the exact shape of the Type-3
+obstruction in Proposition~\ref{prop:sep}: there the invariant is $x_1+3x_2$, the orbits are its
+level sets, and the ``no escape on an orbit'' step of that proof is a membership test on the
+generic fibre.
+
+Pointwise, the failure locus is where the infinitesimal action drops rank. Write
+$\agl_n=\gl_n\ltimes\Zp^{n}$ and let $(M,\vvec)$ act on polynomials as the derivation
+\[
+  \delta_{M,\vvec}=\sum_{i=1}^{n}(M\vX+\vvec)_i\,\frac{\partial}{\partial X_i},
+\]
+the derivative at $t=0$ of $q\mapsto q\circ(\mathrm{id}+t\,(M,\vvec))$. Differentiating the
+conditions of Lemma~\ref{lem:stab} at the identity turns them into a \emph{linear} system in
+$(M,\vvec)$:
+\begin{enumerate}[label=\textup{(L\arabic*)},leftmargin=3.4em,itemsep=2pt]
+  \item $\delta r\in\LL_1$, $\delta s\in\LL_2$ and $\delta t\in\LL_T$ for all $r\in R$,
+        $s\in S$, $t\in T$;
+  \item $\delta f\in\Span{f}+\LL_\star$, the coefficient of $f$ being $d\lambda(\delta)$.
+\end{enumerate}
+Its solution space $\widehat\tge$ is the tangent space at the identity to the scheme cut out by
+\textup{(C1)} and \textup{(C2)}, so $\Lie\mathcal T\subseteq\widehat\tge$ and
+$\dim\mathcal T\le\dim\widehat\tge$, with equality when that scheme is smooth at the identity.
+
+\begin{lemma}[rank locus]
+\label{lem:rank}
+Let $\tge\subseteq\Lie\mathcal T$ be spanned by $(M_1,\vvec_1),\dots,(M_d,\vvec_d)$ and let
+$\Theta(\vX)$ be the $n\times d$ matrix of affine-linear forms whose $i$-th column is
+$M_i\vX+\vvec_i$. Then $\rk\Theta(\vx)\le\dim\mathcal T\vx$ for every $\vx$, with equality when
+$\tge=\Lie\mathcal T$ and the orbit map $\tau\mapsto\tau(\vx)$ is separable. Consequently the
+failure locus $Z\coloneqq\{\vx:\dim\mathcal T\vx<n\}$ satisfies
+\[
+  Z\ \subseteq\ V\bigl(I_n(\Theta)\bigr),
+\]
+where $I_n(\Theta)$ is the ideal of $n\times n$ minors of $\Theta$ --- the $0$-th Fitting ideal
+of $\operatorname{coker}\Theta$ --- generated in degree at most $n$, and equal to $(0)$ when
+$d<n$.
+\end{lemma}
+\begin{proof}
+Orbits of an algebraic group are homogeneous, hence smooth, so
+$\dim\mathcal T\vx=\dim T_{\vx}(\mathcal T\vx)$. The orbit map $\mathcal T\to\mathcal T\vx$ has
+differential $\mu\mapsto\mu(\vx)$ at the identity, whose image lies in $T_{\vx}(\mathcal T\vx)$
+and contains the column span of $\Theta(\vx)$, with equality when $\tge=\Lie\mathcal T$; it is
+the whole tangent space exactly when the orbit map is separable. The displayed inclusion is the
+rank bound read contrapositively: $\rk\Theta(\vx)=n$ forces $\dim\mathcal T\vx=n$.
+\end{proof}
+
+Lemma~\ref{lem:rank} is what makes the failure locus computable rather than merely definable.
+The entries of $\Theta$ are affine-linear, so its maximal minors have degree at most $n$ and are
+written down by expansion; the locus they cut out is a determinantal variety, and its components
+come from a primary decomposition. In every example of this note the inclusion is an equality
+and the minors reproduce the loci found by hand: $(1)$ --- empty locus --- for CDH, DDH and
+BDDH, the ideal $(x_1)$ for co-CDH, the ideal $(x_1x_2)$ for the monomial targets of
+Proposition~\ref{prop:nomono}, and $(0)$ --- the whole space --- for the Type-3 half of
+Proposition~\ref{prop:sep}, where $\tge$ is one-dimensional and no $2\times 2$ minor exists.
+
+\subsection{The procedure}
+
+\begin{procedurebox}
+\textbf{\textsc{Admissible}}$(\Gamma,R,S,T,f,\ch,p)$ --- decides applicability of
+Theorem~\ref{thm:master}. The bracketed name on each step is the operation it calls.\\[2pt]
+\emph{Returns} one of \textsc{Not-Hard}, \textsc{Exact}, \textsc{Relaxed},
+\textsc{Affine-Fails}, together with $\mathcal T$ and, in the last case, a witness locus.
+\begin{enumerate}[label=\textup{\arabic*.},leftmargin=2.2em,itemsep=3pt]
+  \item \emph{Computable spaces} \textup{[image of a multiplication map]}. From
+        Lemma~\ref{lem:comp} form the generating sets for the setting $\Gamma$ and compute bases
+        of $\LL_1,\LL_2,\LL_T\subseteq P_D$ by Gaussian elimination; the target space is the
+        image of the multiplication map $\LL_1\otimes\LL_2\to P_D$ plus $\Span{T}$. Put
+        $\LL_\star\coloneqq\LL_{\ch}$.
+  \item \emph{Hardness} \textup{[subspace membership]}. Test $f\in\LL_\star$. If so, return
+        \textsc{Not-Hard}: the challenge is already computable from the instance and there is
+        no assumption to reduce.
+  \item \emph{Admissible group} \textup{[stabilizer; Gr\"obner basis of a saturated ideal]}. Let
+        $\pi\colon P_D\to P_D/\LL_\star$ and $\bar f\coloneqq\pi(f)$, nonzero by step 2. With
+        the $n^{2}+n$ entries of $(A,\vb)$ and one further indeterminate $\lambda$, let $I$ be
+        generated by
+        \begin{enumerate}[label=\textup{(\alph*)},leftmargin=2.2em,topsep=2pt,itemsep=1pt]
+          \item the images of $\mathrm{coef}(r\circ\tau)$ in $P_D/\LL_1$, of
+                $\mathrm{coef}(s\circ\tau)$ in $P_D/\LL_2$, and of $\mathrm{coef}(t\circ\tau)$
+                in $P_D/\LL_T$, for each $r\in R$, $s\in S$, $t\in T$ --- this is
+                \textup{(C1)} in the form of Lemma~\ref{lem:stab}(i);
+          \item the coefficients of $\pi(f\circ\tau)-\lambda\bar f$ --- this is \textup{(C2)}
+                in the form of Lemma~\ref{lem:stab}(ii).
+        \end{enumerate}
+        Compute a Gr\"obner basis of the saturation $I:(\lambda\det A)^{\infty}$, by
+        Rabinowitsch in one extra variable. Its variety is $\mathcal T$, the character
+        $\lambda$ is the $\lambda$-coordinate, and $\dim\mathcal T$ is the Hilbert dimension of
+        the basis. If $\mathcal T$ is trivial, return \textsc{Affine-Fails} with witness
+        $\Zp^{n}$.
+  \item \emph{Infinitesimal action} \textup{[Jacobian kernel: one linear system]}. Solve
+        \textup{(L1)--(L2)} for $\widehat\tge$. If $\dim\widehat\tge<n$ then
+        $\dim\mathcal T\le\dim\widehat\tge<n$, every orbit is deficient, and by
+        Remark~\ref{rem:dichotomy} \textup{(C3)} fails everywhere: return
+        \textsc{Affine-Fails} with witness $\Zp^{n}$. Otherwise retain those basis elements
+        whose one-parameter subgroups can be verified against \textup{(C1)--(C2)} by
+        substitution, obtaining $\tge\subseteq\Lie\mathcal T$; retaining fewer only makes the
+        verdict more conservative.
+  \item \emph{Transitivity} \textup{[the translation subgroup, a $\Zp$-subspace]}. Let
+        $W\coloneqq\{\vb:\tau_{\mathrm{id},\vb}\in\mathcal T\}$, a subgroup of $(\Zp^{n},+)$ and
+        hence a $\Zp$-subspace; compute it as $\{\vvec:(0,\vvec)\in\widehat\tge\}$ and verify each
+        basis vector against \textup{(C1)--(C2)}. If $W=\Zp^{n}$ then $\mathcal T$ is
+        transitive: return \textsc{Exact}, and Theorem~\ref{thm:master} applies with unrelaxed
+        \textup{(C3)} and exact advantage transfer.
+  \item \emph{Failure locus} \textup{[maximal minors: a Fitting ideal, then its minimal
+        primes]}. Otherwise form $\Theta$ from $\tge$ and compute $I_n(\Theta)$. By
+        Lemma~\ref{lem:rank} the failure locus satisfies $Z\subseteq V(I_n(\Theta))$; take the
+        minimal primes $Z_1,\dots,Z_m$ of $V(I_n(\Theta))$ by primary decomposition. If
+        $I_n(\Theta)=(1)$ the orbits all have dimension $n$ and, by Remark~\ref{rem:dichotomy},
+        return \textsc{Relaxed}. If $I_n(\Theta)=(0)$, return \textsc{Affine-Fails} with witness
+        $\Zp^{n}$.
+  \item \emph{Escape clause} \textup{[ideal membership; normal form with the field equations
+        adjoined]}. For each component $Z_j$ test both:
+        \begin{enumerate}[label=\textup{(\alph*)},leftmargin=2.2em,topsep=2pt,itemsep=1pt]
+          \item \emph{detectability} --- is the ideal $I(Z_j)$ generated by polynomials lying in
+                $\LL_\gamma$ for some group $\gamma$? If so the reduction decides membership by
+                testing each $[q(\vx_0)]_\gamma$ against the identity;
+          \item \emph{computability} --- is $f\in\LL_\star$ \emph{as a function} on $Z_j(\Zp)$?
+                Adjoin the field equations and reduce: compute normal forms modulo a Gr\"obner
+                basis of $I(Z_j)+(X_1^{p}-X_1,\dots,X_n^{p}-X_n)$, an ideal that is radical and
+                whose variety is exactly $Z_j(\Zp)$, and test membership of the normal form of
+                $f$ in the span of those of $\LL_\star$.
+        \end{enumerate}
+        If both hold for every $j$, return \textsc{Relaxed}: Theorem~\ref{thm:master} applies
+        via Remark~\ref{rem:c3}, with advantage transfer up to $O(1/p)$. Otherwise return
+        \textsc{Affine-Fails} with the first offending $Z_j$ as witness.
+\end{enumerate}
+\end{procedurebox}
+
+Three of these steps are worth a word. Step 3 introduces $\lambda$ as an indeterminate rather
+than imposing the proportionality $\pi(f\circ\tau)\parallel\bar f$ through the vanishing of the
+$2\times 2$ minors of $[\,\pi(f\circ\tau)\mid\bar f\,]$: the two cut out the same set, but the
+minors number $\binom{\dim P_D/\LL_\star}{2}$ and have degree $2D$, whereas the linear-in-%
+$\lambda$ form has $\dim P_D/\LL_\star$ generators of degree $D$, and the saturation at
+$\lambda$ is exactly the requirement $\lambda_\tau\in\Zpx$. Step 5 tests a sufficient condition
+for transitivity rather than transitivity itself, because that is all the \textsc{Exact} verdict
+needs and because the translation subgroup, being a subgroup of $(\Zp^{n},+)$, is a subspace and
+so costs one linear solve; a transitive $\mathcal T$ with $W\neq\Zp^{n}$ is merely reported as
+\textsc{Relaxed}, at a cost of $O(1/p)$ in the advantage. Step 7(b) is where the distinction
+between polynomials and functions bites --- $f$ may lie outside $\LL_\star$ as a polynomial and
+inside it as a function on $Z_j(\Zp)$ --- and the standard device for it is to adjoin the field
+equations $X_i^{p}-X_i$, which is what forces the hypothesis $p\ge 5$ in
+Proposition~\ref{prop:sep}: at $p=3$ the relation $s^{3}=s$ is among them.
+
+\begin{proposition}[correctness]
+\label{prop:decide}
+\textsc{Admissible} terminates, and its output is correct: it returns \textsc{Not-Hard} exactly
+when $f\in\LL_\star$; it returns \textsc{Exact} only when some efficiently sampleable
+$\mathcal D$ satisfies \textup{(C1)--(C3)} as stated in Theorem~\ref{thm:master}; it returns
+\textsc{Relaxed} only when Theorem~\ref{thm:master} applies in the form of
+Remark~\ref{rem:c3}; when it returns \textsc{Affine-Fails} with witness $\Zp^{n}$, no
+distribution on any subgroup of $\AGL_n(\Zp)$ satisfies \textup{(C1)--(C3)} at any point, even
+relaxed; and when it returns \textsc{Affine-Fails} with witness a component $Z_j$ on which
+$\dim\mathcal T\vx<n$, the same holds at the points of $Z_j$.
+\end{proposition}
+\begin{proof}
+Termination is that every step is a finite linear-algebra or Gr\"obner computation over $\Zp$.
+Step 2 is the generic-model hardness criterion of~\cite{BBG05,Boyen08}. Steps 3 and 4 are exact
+transcriptions of Lemma~\ref{lem:stab} and of its derivative at the identity: membership of
+$q\circ\tau$ in a subspace is the vanishing of its image in the quotient, and
+$f\circ\tau=\lambda_\tau f+h_\tau$ with $h_\tau\in\LL_\star$ says that $\pi(f\circ\tau)$ equals
+$\lambda\bar f$, the saturation enforcing $\lambda_\tau\neq 0$ and $\det A\neq 0$. Since
+$\mathcal T$ is a group and $\mathcal D$ is uniform on it, $\tau(\vx_0)$ is uniform on
+$\mathcal T\vx_0$; so \textup{(C3)} holds exactly when the orbit is all of $\Zp^{n}$, which
+step 5 certifies through a transitive subgroup of translations, and holds to within $O(1/p)$
+when the orbit has full dimension, which step 6 certifies through Lemma~\ref{lem:rank}.
+Maximality is what gives the negative half: by Lemma~\ref{lem:stab}, $\mathcal T$ contains
+\emph{every} $\tau$ meeting \textup{(C1)} and \textup{(C2)}, so any admissible subgroup is
+contained in $\mathcal T$ and its orbits in $\mathcal T$-orbits; if the $\mathcal T$-orbit of a
+point of $Z_j$ is already deficient and $f$ is not computable on it, no smaller group can do
+better. For the witness $\Zp^{n}$ at step 4 this is unconditional, since
+$\dim\mathcal T\le\dim\widehat\tge$ bounds the orbit dimension at every point at once.
+\end{proof}
+
+\begin{remark}[the negative verdict at step 7 is conservative]
+\label{rem:conservative}
+Lemma~\ref{lem:rank} gives $Z\subseteq V(I_n(\Theta))$ and not equality, so a component $Z_j$
+returned by step 6 is a \emph{candidate} failure locus: it is a genuine one when
+$\tge=\Lie\mathcal T$ and the orbit maps along $Z_j$ are separable, and otherwise the orbits
+along $Z_j$ may be larger than $\Theta$ can see, in which case the procedure has failed to
+certify rather than certified a failure. The positive verdicts are unaffected, since they rest
+on the inclusion in the direction Lemma~\ref{lem:rank} does supply. When the distinction
+matters it is settled by the more expensive test the rank locus replaces: compute the orbit of a
+generic point of $Z_j$ as the image of the morphism $\tau\mapsto\tau(\vx_0)$, by eliminating
+$(A,\vb)$ from $\vy=A\vx_0+\vb$ over $I$ and applying the closure theorem, and compare its
+dimension with $n$. In every example of this note the two agree.
+\end{remark}
+
+\begin{remark}[cost]
+Only step 3 is expensive: its Gr\"obner computation is doubly exponential in $n^{2}+n+1$ in the
+worst case, though the systems arising here are far from worst case --- they are the
+coefficient-matching equations of Section~\ref{sec:type3}, near-triangular in the entries of
+$A$, and for $n=2$ they are seven variables and are solved by hand. It is also, for the verdict,
+optional: every one of the four outputs is reached from steps 1, 2 and 4--7, which need only
+$\widehat\tge$ and $\tge$. What step 3 adds is $\mathcal T$ in closed form and the character
+$\lambda$, and with them the maximality on which the negative half of
+Proposition~\ref{prop:decide} rests. Steps 1, 2, 5 and 7 are $O(N^{3})$ linear algebra with
+$N=\binom{n+D}{n}$; step 4 is a linear system in $n^{2}+n$ unknowns; step 6 is
+$\binom{d}{n}$ determinants of size $n$ followed by a primary decomposition in $n$ variables of
+an ideal generated in degree at most $n$. Every primitive named above is a standard call in a
+general-purpose system such as Singular, Macaulay2 or Magma.
+\end{remark}
+
+\subsection{The primitives, and the procedure on the examples of this note}
+
+Collecting the bracketed names gives the whole of \textsc{Admissible} as a pipeline:
+
+\begin{center}
+\small
+\begin{tabular}{@{}rll@{}}
+\toprule
+step & task & operation \\
+\midrule
+1 & the computable spaces $\LL_\gamma$ & image of a multiplication map \\
+2 & hardness, $f\in\LL_\star$ & subspace membership \\
+3 & the admissible group $\mathcal T$ & stabilizer of subspaces and of a \\
+  & & point of $\PP(P_D/\LL_\star)$; Gr\"obner \\
+  & & basis of a saturated ideal \\
+3 & the scalars $\lambda_\tau$ & the character of $\mathcal T$ on $\Span{\bar f}$ \\
+4 & $\Lie\mathcal T$ & kernel of the Jacobian at the identity \\
+5 & transitivity & the translation subspace $W\le\Zp^{n}$ \\
+6 & the failure locus & $0$-th Fitting ideal $I_n(\Theta)$, then \\
+  & & its minimal primes \\
+7 & detectability of $Z_j$ & ideal membership \\
+7 & computability on $Z_j$ & normal form modulo
+                             $I(Z_j)+(X_i^{p}-X_i)$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+Run on the assumptions treated above, it reproduces every one of the hand arguments, with the
+whole of the orbit analysis coming from a single determinant:
+
+\begin{center}
+\footnotesize
+\setlength{\tabcolsep}{4.5pt}
+\begin{tabular}{@{}llll@{}}
+\toprule
+target & $\tge$, as vector fields & $I_n(\Theta)$ & verdict \\
+\midrule
+CDH, DDH (Prop.~\ref{prop:cdh})
+  & $\Span{\partial_1,\partial_2,X_1\partial_1,X_2\partial_2}$
+  & $(1)$ & \textsc{Exact} \\
+BDDH (Prop.~\ref{prop:bddh})
+  & $\Span{\partial_i,\ X_i\partial_i:i\le 3}$
+  & $(1)$ & \textsc{Exact} \\
+co-CDH (Prop.~\ref{prop:cocdh})
+  & $\Span{X_1\partial_1,X_2\partial_2,\partial_2}$
+  & $(x_1)$ & \textsc{Relaxed} \\
+$X_1^{i}X_2^{j}$ (Prop.~\ref{prop:nomono})
+  & $\supseteq\Span{X_1\partial_1,X_2\partial_2}$
+  & $\ni x_1x_2$ & \textsc{Relaxed} \\
+Prop.~\ref{prop:sep}, Type 2
+  & $\Span{\partial_1,\partial_2,(2X_1{+}X_2)\partial_1+X_2\partial_2}$
+  & $(1)$ & \textsc{Exact} \\
+Prop.~\ref{prop:sep}, Type 3
+  & $\Span{-3\partial_1+\partial_2}$
+  & $(0)$ & \textsc{Affine-Fails} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+The last two rows are the separation, and in this form it is a statement about one number: the
+Type-2 conditions leave a three-dimensional $\tge$ containing both translations, so
+$\Theta$ has an invertible $2\times 2$ submatrix and the failure locus is empty, while the
+Type-3 conditions cut $\tge$ down to a single vector field, $\Theta$ becomes a $2\times 1$
+matrix, and no $2\times 2$ minor exists to be nonzero. The intermediate rows show the two ways a
+non-empty failure locus can still be harmless, both settled by step 7: the locus $x_1=0$ for
+co-CDH and $x_1x_2=0$ for the monomial targets are detectable by an equality test on the
+encodings, and $f$ vanishes on each, so the reduction answers there without an oracle call.
+Row three also shows what maximality buys: the group the procedure returns for co-CDH is
+three-dimensional, strictly larger than the $\{(\alpha x_1,\,x_2+b_2)\}$ used in the proof of
+Proposition~\ref{prop:cocdh}, which chose a sufficient subgroup rather than the largest one.
+
+\subsection{What the procedure does not decide}
+\label{sec:limits}
+
+\textsc{Affine-Fails} is not a proof that the assumption fails to be random self-reducible. It
+is a proof about one technique, and three gaps remain open beneath it.
+
+First, multi-query reductions. Proposition~\ref{prop:interp} solves the computational problem
+whenever the sources are translation-stable and $\deg f\le p-2$, whatever the verdict of
+\textsc{Admissible} --- as it does for the separating target of Proposition~\ref{prop:sep}. A
+run returning \textsc{Affine-Fails} should therefore be followed by that test, which is a
+one-line check. The general linear multi-query condition \textup{(C2$'$)} is decidable too, but
+by a different route: it asks whether $f$ lies in
+$\Span{f\circ\tau:\tau\ \text{satisfies (C1)}}+\LL_\star$. By Lemma~\ref{lem:stab}(i) the
+$\tau$ satisfying \textup{(C1)} form a group $\mathcal G_1$ --- the same stabilizer as
+$\mathcal T$, without the condition on $\bar f$ --- so that span is the $\rho(\mathcal
+G_1)$-submodule of $P_D$ generated by $f$, and step 3 run without its part (b) returns
+$\mathcal G_1$. The test is then the standard closure computation: apply generators of
+$\mathcal G_1$ to a spanning set repeatedly until the dimension stabilises, which happens after
+at most $N$ rounds, and test membership of $f$ in the result plus $\LL_\star$. It is necessary
+but not sufficient, since \textup{(C2$'$)} also requires the $\tau_i$ realizing the combination
+to be marginally distributed as in \textup{(C3)}.
+
+Second, non-linear recombination. Feigenbaum and Fortnow~\cite{FF93} allow the answers to be
+combined by an arbitrary polynomial-time function, and nothing here decides that condition; the
+procedure sees only the $\Zp$-linear fragment that the group encoding makes free.
+
+Third, reparametrizations outside $\AGL_n(\Zp)$, and reductions that are not reparametrization
+based at all. A genuine impossibility result for the decisional problem would need a lower-bound
+argument such as a meta-reduction, as noted after Proposition~\ref{prop:sep}.
+
+\textsc{Admissible} is accordingly a decision procedure for a sufficient condition, and a
+semi-decision procedure for random self-reducibility: it can certify it, and it cannot refute
+it.
+
+\section{Discussion}
+\label{sec:discussion}
+
+Across the four settings the reduction of Theorem~\ref{thm:master} is one and the same;
+only the admissibility conditions move, and they move only because the computable target
+space $\LL_\star$ grows with the available products:
+\[
+  \text{none}\ \subsetneq\ R\cdot S\ (\text{Type 3})\ \subsetneq\ R\cdot S\cup S\cdot S\
+  (\text{Type 2})\ \subseteq\ R\cdot R\ (\text{Type 1, single group}).
+\]
+A larger $\LL_\star$ makes the covariance condition (C2) easier to meet, so the
+affine-self-reducible subclass is largest in Type 1 and smallest in Type 3, with the
+non-bilinear case the degenerate product-free floor. Proposition~\ref{prop:sep} witnesses the
+strict gap between Type 2 and Type 3, at a target where the Type-3 reduction fails at every
+worst-case point --- the most the failure locus can ever be, by
+Remark~\ref{rem:dichotomy}. The gap is one for decisional reductions and for reductions that
+must work at negligible advantage: Proposition~\ref{prop:interp} still solves the
+computational problem in Type 3 at high solver advantage, as it does for every target here.
+Proposition~\ref{prop:nomono} marks the other boundary, that no monomial target can separate
+any two settings at all.
+
+Self-reducibility is orthogonal to hardness. The master theorem
+of~\cite{BBG05,Boyen08} makes an assumption hard exactly when $f\notin\LL_\star$, whereas
+Theorem~\ref{thm:master} needs the defect $f\circ\tau-\lambda_\tau f$ to lie \emph{in}
+$\LL_\star$. These constrain different objects, so hard yet self-reducible assumptions
+abound: CDH and DDH (non-bilinear), BDDH (Type 1), and co-CDH and every monomial target
+(Type 3, Proposition~\ref{prop:nomono}) are all of this kind. Quantitatively, Bauer, Fuchsbauer, and
+Loss~\cite{BFL20} show that in the algebraic group model every member of the Uber family is
+implied by the $q$-discrete-logarithm assumption, with $q$ governed by the degrees of the
+defining polynomials, and Rotem~\cite{Rotem22} refines $q$ to the maximal degree in which a
+single variable occurs and gives improved bilinear reductions.
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{EHKRV13}
+
+\bibitem[TW87]{TW87}
+M.~Tompa and H.~Woll.
+Random self-reducibility and zero knowledge interactive proofs of possession of
+information.
+In \emph{28th Annual Symposium on Foundations of Computer Science (FOCS 1987)},
+pages 472--482. IEEE, 1987.
+
+\bibitem[BF90]{BF90}
+D.~Beaver and J.~Feigenbaum.
+Hiding instances in multioracle queries.
+In \emph{7th Annual Symposium on Theoretical Aspects of Computer Science (STACS 1990)},
+volume 415 of \emph{Lecture Notes in Computer Science}, pages 37--48. Springer, 1990.
+
+\bibitem[Lipton91]{Lipton91}
+R.~J.~Lipton.
+New directions in testing.
+In \emph{Distributed Computing and Cryptography}, volume 2 of \emph{DIMACS Series in
+Discrete Mathematics and Theoretical Computer Science}, pages 191--202. AMS, 1991.
+
+\bibitem[GS92]{GS92}
+P.~Gemmell and M.~Sudan.
+Highly resilient correctors for polynomials.
+\emph{Information Processing Letters}, 43(4):169--174, 1992.
+
+\bibitem[BLR93]{BLR93}
+M.~Blum, M.~Luby, and R.~Rubinfeld.
+Self-testing/correcting with applications to numerical problems.
+\emph{Journal of Computer and System Sciences}, 47(3):549--595, 1993.
+Preliminary version in \emph{STOC 1990}, pages 73--83.
+
+\bibitem[FF93]{FF93}
+J.~Feigenbaum and L.~Fortnow.
+Random-self-reducibility of complete sets.
+\emph{SIAM Journal on Computing}, 22(5):994--1005, 1993.
+
+\bibitem[Ajtai96]{Ajtai96}
+M.~Ajtai.
+Generating hard instances of lattice problems.
+In \emph{28th Annual ACM Symposium on Theory of Computing (STOC 1996)}, pages 99--108.
+ACM, 1996.
+
+\bibitem[Sudan97]{Sudan97}
+M.~Sudan.
+Decoding of Reed--Solomon codes beyond the error-correction bound.
+\emph{Journal of Complexity}, 13(1):180--193, 1997.
+
+\bibitem[STV01]{STV01}
+M.~Sudan, L.~Trevisan, and S.~Vadhan.
+Pseudorandom generators without the XOR lemma.
+\emph{Journal of Computer and System Sciences}, 62(2):236--266, 2001.
+
+\bibitem[BBG05]{BBG05}
+D.~Boneh, X.~Boyen, and E.-J.~Goh.
+Hierarchical identity based encryption with constant size ciphertext.
+In \emph{Advances in Cryptology -- EUROCRYPT 2005},
+volume 3494 of \emph{Lecture Notes in Computer Science}, pages 440--456. Springer, 2005.
+
+\bibitem[BT06]{BT06}
+A.~Bogdanov and L.~Trevisan.
+Average-case complexity.
+\emph{Foundations and Trends in Theoretical Computer Science}, 2(1):1--106, 2006.
+
+\bibitem[Boyen08]{Boyen08}
+X.~Boyen.
+The uber-assumption family: a unified complexity framework for bilinear groups.
+In \emph{Pairing-Based Cryptography -- Pairing 2008},
+volume 5209 of \emph{Lecture Notes in Computer Science}, pages 39--56. Springer, 2008.
+
+\bibitem[GPS08]{GPS08}
+S.~D.~Galbraith, K.~G.~Paterson, and N.~P.~Smart.
+Pairings for cryptographers.
+\emph{Discrete Applied Mathematics}, 156(16):3113--3121, 2008.
+
+\bibitem[Regev09]{Regev09}
+O.~Regev.
+On lattices, learning with errors, random linear codes, and cryptography.
+\emph{Journal of the ACM}, 56(6):article 34, 2009.
+Preliminary version in \emph{STOC 2005}, pages 84--93.
+
+\bibitem[EHKRV13]{EHKRV13}
+A.~Escala, G.~Herold, E.~Kiltz, C.~R\`afols, and J.~Villar.
+An algebraic framework for Diffie-Hellman assumptions.
+In \emph{Advances in Cryptology -- CRYPTO 2013},
+volume 8043 of \emph{Lecture Notes in Computer Science}, pages 129--147. Springer, 2013.
+Journal version: \emph{Journal of Cryptology} 30(1):242--288, 2017.
+
+\bibitem[BFL20]{BFL20}
+B.~Bauer, G.~Fuchsbauer, and J.~Loss.
+A classification of computational assumptions in the algebraic group model.
+In \emph{Advances in Cryptology -- CRYPTO 2020},
+volume 12171 of \emph{Lecture Notes in Computer Science}, pages 121--151. Springer, 2020.
+
+\bibitem[Rotem22]{Rotem22}
+L.~Rotem.
+Revisiting the uber assumption in the algebraic group model: fine-grained bounds in
+hidden-order groups and improved reductions in bilinear groups.
+In \emph{3rd Conference on Information-Theoretic Cryptography (ITC 2022)},
+volume 230 of \emph{LIPIcs}, article 13. Schloss Dagstuhl, 2022.
+
+\end{conjurabibliography}
+
+\end{document}

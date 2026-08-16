@@ -1,10 +1,25 @@
 # Tasks
 
-Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~12.9h** (rough; the UC Encyclopedia content dominates the uncertainty and could run well over its estimate).
+Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~13.8h** (rough; the UC Encyclopedia content dominates the uncertainty and could run well over its estimate).
 
 Last reconciled against `main` at `3aba67d` on 16 August 2026.
 
 Completed tasks are deleted from this file rather than checked off and kept: this is a list of live work, and `git log` is the record of what closed and when.
+
+- [ ] **Shorten the About page, then proofread it with `prompts/prose.md`, then update it (~50 min)**
+
+  `about/index.qmd` is 163 lines and roughly 3,080 words under 21 headings: two `Part` headings, then 19 sections and subsections beneath them. It got there by accretion, three tasks in one day writing into the same page, and it now reads as a list of positions rather than one.
+
+  Three steps, in order. The shortening comes first, because proofreading a structure that is about to change wastes the pass.
+
+  - **Cut and merge subsections.** The clearest candidates are the four `(an idea we're exploring)` subsections in Part I, which close on near-identical disclaimer sentences and would read better as one subsection with four short entries. Part II's seven `##` sections are each defensible alone but are cumulatively long for a reasoning half. Target something closer to 10 or 12 headings without losing an argument.
+  - **One cross-reference breaks if the merge happens.** `## Say plainly what isn't built yet` states that "four of its subsections carry the same flat disclaimer" and names the bounties, the idle tokens, the distributed compute and the journal. Collapsing those four into one makes that sentence false, so it has to move with them.
+  - **Then the proofread, then apply it.** Run the page through `prompts/prose.md` and update the page from the result rather than treating the output as final copy.
+
+  Two frictions worth knowing before starting, neither a reason not to do it:
+
+  - **`prompts/prose.md` is built for LaTeX, not Quarto.** Its opening line says it revises "a mathematical manuscript... written in LaTeX and compiled with `pdflatex`", and its rules assume `.tex` source, `\label`s, and math environments. `about/index.qmd` is Quarto markdown with callout blocks, a table and site-relative links. The prose rules carry over; the mechanical and typesetting ones do not, and the edit-tagging convention needs adapting or dropping.
+  - **The site recommends the other prompt for new work.** `prompts/index.qmd` describes `prose.md` as "the original, shorter version... Kept for comparison; use the manuscript version above for new work", meaning `revise.md`, which adds length targets, a mechanical sweep and a conflict register. `prose.md` is what was asked for and is what should be run; worth a second pass with `revise.md` if the first leaves the length target unmet.
 
 - [ ] **Move the UC Encyclopedia under Surveys (~30 min — decide the URL question before touching anything)**
 

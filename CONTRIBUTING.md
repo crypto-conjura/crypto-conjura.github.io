@@ -102,12 +102,19 @@ python3 scripts/gen_interface.py              # regenerate the UC functionality 
 quarto preview                                # facet listings need build_index.py to have run first
 ```
 
-CI runs the same checks (`status_badge.py --check`, `build_index.py`,
+CI runs the same checks (`status_badge.py --check c papers`, `build_index.py`,
 `check_relations.py`, `gen_interface.py --check`) before `quarto render`; a
 non-zero exit from any of them fails the build.
 
+The badge gate covers `c/` **and** `papers/`: a paper page carries the same
+`status:`, `statement_sha`, and `status_badge` contract as a statement, so an
+unregenerated paper badge is the same failure. Hubs under `p/` are exempt by
+design (a hub has no badge of its own, only an aggregate over its children --
+see `/schema/`). `c` and `papers` are also what bare `status_badge.py`
+regenerates, so the gate and the fix cover the same set.
+
 `.githooks/pre-commit` runs those same checks locally, on commits that touch
-`c/`, `p/`, any `.qmd`, `scripts/`, `_templates/`, or
+`c/`, `p/`, `papers/`, any `.qmd`, `scripts/`, `_templates/`, or
 `surveys/uc-for-gamers/latex/`. Enable it with the `core.hooksPath` line above
 -- it is worth the one command, because the checks gate the job *before*
 `quarto render`: a single unregenerated `statement_sha` fails every push after

@@ -1,0 +1,63 @@
+%% The interface box of g-pki, the one source for both the book
+%% and uc/.../g-pki/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Gpki$ \\
+\params{$\PID := (\op{G}\op{PKI},0,0)$, \quad $\Ps$, \quad
+$\admits := \Stdpid \cup \Apid \cup \Zpid$, \quad $\uses := \emptyset$, \quad $\pars := \none$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{VK} : \Gpki.\Ps \to \Keys \cup \{\unset\}$
+\State $\V{VK}[*] \gets \unset$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Register}(\vk)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$\id'.F \in \{A,Z\} \ \wedge\ \id.P \notin \Cs$}
+  \State \textbf{return} $\V{VK}[\id.P]$ \label{ln:pkipeek}
+    \Comment{a peek, not a write}
+\EndIf
+\If{$\V{VK}[\id.P] \neq \unset$}
+  \State \textbf{return} $\V{VK}[\id.P]$ \label{ln:pkifixed}
+\EndIf
+\State $\vk \gets \San[\Clean_{\op{reg}}](\vk; \V{VK})$
+\State $\V{VK}[\id.P] \gets \vk$ \label{ln:pkiwrite}
+\State \textbf{return} $\vk$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Retrieve}(P)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $\V{VK}[P]$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $\V{VK}$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\Clean_{\op{reg}}(\vk; \V{VK})$}:
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $\vk \in \Keys \ \wedge\ \neg\exists\, P : \V{VK}[P] = \vk$
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

@@ -22,9 +22,11 @@ root="$(git rev-parse --show-toplevel)" || exit 0
 cd "$root" || exit 0
 
 # Only bother when the commit touches content these gates actually read.
-# Nothing relevant staged (a .tex/.scss/.md-only commit) -> stay silent.
+# Nothing relevant staged (a .scss/.md-only commit) -> stay silent. The
+# functionality fragments are in here because an edit to one of them is
+# precisely what puts a page's interface box out of date.
 if ! git diff --cached --name-only --diff-filter=ACMR \
-     | grep -qE '^(c|p)/|\.qmd$|^scripts/|^_templates/'; then
+     | grep -qE '^(c|p)/|\.qmd$|^scripts/|^_templates/|^surveys/uc-for-gamers/latex/'; then
   exit 0
 fi
 
@@ -47,7 +49,18 @@ if ! python3 scripts/status_badge.py --check c; then
        "python3 scripts/status_badge.py"
 fi
 
-# --- gates 2 and 3: facet index and relation graph ---------------------------
+# --- gate 2: UC interface boxes against their LaTeX --------------------------
+# Also stdlib-only. Catches the same class of failure as gate 1 -- generated
+# content that no longer matches the source it was generated from -- for the
+# functionality boxes, where the usual cause is a line added to the .tex
+# leaving every later <ol start="N"> on the page off by one.
+if ! python3 scripts/gen_interface.py --check >/dev/null; then
+  python3 scripts/gen_interface.py --check >&2
+  fail "a UC interface box is not what its .tex fragment produces." \
+       "python3 scripts/gen_interface.py"
+fi
+
+# --- gates 3 and 4: facet index and relation graph ---------------------------
 # These need PyYAML. If it is missing, say so once rather than blocking the
 # commit -- a missing local dependency should not make the repo uncommittable.
 if python3 -c "import yaml" 2>/dev/null; then

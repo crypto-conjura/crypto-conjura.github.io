@@ -1,0 +1,60 @@
+%% The interface box of f-store, the one source for both the book
+%% and uc/.../f-store/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fstore$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad $\uses := \emptyset$, \quad $\pars := \none$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{L} : \mathbb{N} \to \bits \cup \{\none,\unset\}$
+\State $\V{L}[*] \gets \unset$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Put}(i,x)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{L}[i] \in \{\none,\unset\}$} \label{ln:putfree}
+  \Comment{an occupied index refuses}
+\State $\V{L}[i] \gets x$ \label{ln:putwrite}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Erase}(i)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $\V{L}[i] \gets \none$ \label{ln:storeerase}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Get}(i)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{L}[i] \neq \unset$} \label{ln:getset}
+  \Comment{never written refuses}
+\State \textbf{return} $\V{L}[i]$ \label{ln:getread}
+  \Comment{$\none$ if erased}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $\V{L}$
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

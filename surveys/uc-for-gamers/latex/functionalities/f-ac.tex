@@ -1,0 +1,60 @@
+%% The interface box of f-ac, the one source for both the book
+%% and uc/.../f-ac/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fac$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Gclock,\serves),\,(\Adv,\serves)\}$, \quad $\pars := \Delta$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{ctr} \gets 0$
+\State $\V{list} : \mathbb{N} \to (\Fac.\Ps^{2} \times \mathbb{N} \times \Msgs) \cup \{\none\}$
+\State $\V{list}[*] \gets \none$
+  \Comment{entries $(P, Q, \tau, \msg)$}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Send}(Q, \msg)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $\tau \gets \id_{\Gclock}.\fopl{Read}() \text{ as } \id$ \label{ln:acsendread}
+\State $\V{ctr} \gets \V{ctr} + 1$
+\State $\V{list}[\V{ctr}] \gets (\id.P,\, Q,\, \tau,\, \msg)$
+\State $\Adv^{!}\bigl(\id.\op{Send},\ \V{ctr},\ Q,\ \tau,\ \msg\bigr)$ \label{ln:acsend}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $\V{list}$
+\algsave
+\end{algorithmic}
+
+\columnbreak
+
+\opsig{$\id.\op{Fetch}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $\tau \gets \id_{\Gclock}.\fopl{Read}() \text{ as } \id$ \label{ln:acfetchread}
+\State $R \gets \{m : \V{list}[m] = (\cdot,\, \id.P,\, \tau_m,\, \cdot)$
+\State \quad ${}\wedge\ \tau_m + \Delta \leq \tau\}$ \label{ln:acripe}
+  \Comment{come of age}
+\State $S \gets \Adv^{!}\bigl(\id.\op{Fetch},\ \tau\bigr)$ \label{ln:acquery}
+  \Comment{released early}
+\State $S \gets \San[\Clean_{\op{addr}}]\bigl(S;\ \V{list},\, \id.P\bigr)$ \label{ln:acsan}
+\State $M \gets \{\V{list}[m] : m \in R \cup S\}$
+\State $\V{list}[m] \gets \none$ \ for each $m \in R \cup S$ \label{ln:acdrain}
+\State \textbf{return} $M$
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

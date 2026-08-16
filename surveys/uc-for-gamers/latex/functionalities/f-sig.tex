@@ -1,0 +1,110 @@
+%% The interface box of f-sig, the one source for both the book
+%% and uc/.../f-sig/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fsig$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := \none$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{VK} : \Fsig.\Ps \to \Keys \cup \{\unset\}$
+\State $\V{VK}[*] \gets \unset$
+\State $\V{Ver} : \Keys \times \Msgs \times \Sigs \to \{0,1\} \cup \{\unset\}$
+\State $\V{Ver}[*,*,*] \gets \unset$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Gen}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$\V{VK}[\id.P] \neq \unset$}
+  \State \textbf{return} $\V{VK}[\id.P]$
+\EndIf
+\State $\vk \gets \Adv\bigl(\id.\op{Gen}\bigr)$
+\If{$\V{VK}[\id.P] \neq \unset$}
+  \State \textbf{return} $\V{VK}[\id.P]$
+    \Comment{recorded while suspended}
+\EndIf
+\State $\vk \gets \San[\Clean_{\vk}](\vk; \V{VK}, \V{Ver})$
+\State $\V{VK}[\id.P] \gets \vk$
+\State \textbf{return} $\vk$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Sign}(\msg)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $\vk \gets \V{VK}[\id.P]$
+\If{$\vk = \unset$}
+  \State \textbf{return} $\none$
+\EndIf
+\State $\sigma \gets \Adv\bigl(\id.\op{Sign}, \msg\bigr)$
+\State $\sigma \gets \San[\Clean_{\sigma}](\sigma; \msg, \vk, \V{Ver})$
+\State $\V{Ver}[\vk, \msg, \sigma] \gets 1$
+\State \textbf{return} $\sigma$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Verify}(\vk, \msg, \sigma)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$\V{Ver}[\vk, \msg, \sigma] \neq \unset$}
+  \State \textbf{return} $\V{Ver}[\vk, \msg, \sigma]$
+\EndIf
+\State $b \gets \Adv\bigl(\id.\op{Verify}, \vk, \msg, \sigma\bigr)$
+\If{$\V{Ver}[\vk, \msg, \sigma] \neq \unset$}
+  \State \textbf{return} $\V{Ver}[\vk, \msg, \sigma]$
+    \Comment{recorded while suspended}
+\EndIf
+\If{$b \not\in \{0,1\}$}
+  \State $b \gets 0$
+\EndIf
+\If{$\exists\, P' \not\in \Cs \, : \, \vk = \V{VK}[P']$}
+  \State $b \gets 0$
+    \Comment{no forgery under an honest key}
+\EndIf
+\State $\V{Ver}[\vk, \msg, \sigma] \gets b$
+\State \textbf{return} $b$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$\V{VK}[\id.P] = \unset$}
+  \State \textbf{return} $(\none, \emptyset)$
+\EndIf
+\State \textbf{return} $\bigl(\V{VK}[\id.P],$
+\Statex \quad\ $\{\, (\msg,\sigma) : \V{Ver}[\V{VK}[\id.P],\msg,\sigma] = 1 \,\}\bigr)$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\Clean_{\vk}(\vk; \V{VK}, \V{Ver})$}:
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $\vk \in \Keys \ \wedge\ \neg\exists\, P : \V{VK}[P] = \vk$
+\State \algand\ $\neg\exists\, \msg,\sigma : \V{Ver}[\vk,\msg,\sigma] = 1$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\Clean_{\sigma}(\sigma; \msg, \vk, \V{Ver})$}:
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $\sigma \in \Sigs \wedge \V{Ver}[\vk,\msg,\sigma] \neq 0$
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

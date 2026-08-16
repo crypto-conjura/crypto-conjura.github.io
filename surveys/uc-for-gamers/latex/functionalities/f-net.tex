@@ -1,0 +1,66 @@
+%% The interface box of f-net, the one source for both the book
+%% and uc/.../f-net/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fnet$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Gclock,\serves),\,(\Adv,\serves)\}$, \quad $\pars := \Delta$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{ctr} \gets 0$
+\State $\V{buf} \gets \emptyset$
+  \Comment{entries $(m, P, \msg, \tau)$}
+\State $\V{rel} : \mathbb{N} \times \Fnet.\Ps \to \{0,1\}$
+\State $\V{rel}[*,*] \gets 0$
+  \Comment{what is released to whom}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Send}(\msg)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $\tau \gets \id_{\Gclock}.\fopl{Read}() \text{ as } \id$
+\State $m \gets \V{ctr}$; \ $\V{ctr} \gets \V{ctr} + 1$
+\State $\V{buf} \gets \V{buf} \cup \{(m, \id.P, \msg, \tau)\}$
+\State $\Adv^{!}\bigl(\id.\op{Send},\ m,\ \msg\bigr)$ \label{ln:netsend}
+  \Comment{the network is public}
+\State \textbf{return} $m$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $(\V{buf},\ \V{rel})$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Fetch}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $\tau \gets \id_{\Gclock}.\fopl{Read}() \text{ as } \id$
+\State $(S, I) \gets \Adv^{!}\bigl(\id.\op{Fetch},\ \tau\bigr)$ \label{ln:netquery}
+  \Comment{a non-pair reads as $(\emptyset,\emptyset)$}
+\State $S \gets S \cap \{m : (m,\cdot,\cdot,\cdot) \in \V{buf}\}$;
+\State $I \gets I \cap \Msgs$
+  \Comment{sanitized inline}
+\State $\V{rel}[m, \id.P] \gets 1$ \ for each $m \in S$
+\State for each $\msg \in I$: \label{ln:netinject}
+\State \quad $\V{buf} \gets \V{buf} \cup \{(\V{ctr}, \none, \msg, \infty)\}$;
+\State \quad $\V{rel}[\V{ctr}, \id.P] \gets 1$; \ $\V{ctr} \gets \V{ctr} + 1$
+\State \textbf{return} $\bigl\{(m, \msg) : (m, P', \msg, \tau_s) \in \V{buf}$
+\State \quad ${}\wedge\ \bigl(\V{rel}[m, \id.P] = 1 \ \vee\ \tau_s + \Delta \leq \tau\bigr)\bigr\}$ \label{ln:netavail}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

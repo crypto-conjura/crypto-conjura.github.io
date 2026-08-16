@@ -1,0 +1,195 @@
+%% ucgamers.sty -- the notation, code-listing and box machinery of
+%% *UC for Gamers*, factored out of main.tex so that a single interface
+%% definition can live in one file and be read by two consumers: the book
+%% itself (via \input from main.tex) and scripts/gen_interface.py, which
+%% renders the same file to the HTML on its encyclopedia page.
+%%
+%% Load it where the notation block used to sit -- after xcolor, tcolorbox,
+%% algpseudocode, multicol and the palette, all of which it needs and none
+%% of which it reorders. The \RequirePackage lines below are for the
+%% standalone case (functionalities/preview.tex); inside main.tex they are
+%% no-ops, since every one of them is already loaded by then.
+%%
+%% What is here is exactly what an \begin{interface} block depends on. Two
+%% rules keep it that way, and they are not cosmetic -- the generator reads
+%% this file to learn what the notation macros mean:
+%%   1. A notation macro belongs here, not in main.tex, if a code box can
+%%      mention it. The generator expands \newcommand definitions found in
+%%      this file and knows nothing of any defined elsewhere.
+%%   2. If a macro's expansion is not valid MathJax (\op is \textsc, which
+%%      MathJax has no font for), the generator needs an override for it in
+%%      MACRO_OVERRIDES. Adding such a macro here without the override is
+%%      how a box silently stops rendering on the web.
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{ucgamers}[2026/08/16 UC for Gamers notation and code boxes]
+
+\RequirePackage{amsmath}
+\RequirePackage{amssymb}
+\RequirePackage{xcolor}
+\RequirePackage{algpseudocode}
+\RequirePackage{multicol}
+\RequirePackage[most]{tcolorbox}
+
+%% The palette, for the standalone case only. main.tex defines these before
+%% loading us, and \providecolor leaves an existing definition alone -- so
+%% the book's colours stay the book's, and a fragment compiled on its own
+%% still gets the right ones.
+\providecolor{accent}{HTML}{C8791A}
+\providecolor{accentsoft}{HTML}{A8630F}
+\providecolor{boxrule}{HTML}{E0A85C}
+\providecolor{boxtint}{HTML}{F6E2C4}
+\providecolor{boxback}{HTML}{FDF6EC}
+\providecolor{boxtitle}{HTML}{7A4A0C}
+\providecolor{proctint}{HTML}{EFEAE2}
+\providecolor{procback}{HTML}{F8F6F3}
+\providecolor{procrule}{HTML}{B9A98F}
+\providecolor{commenttint}{HTML}{8A8378}
+
+%% ------------------------------------------------------------- notation
+\newcommand{\Ps}{\mathbf{P}}
+\newcommand{\PID}{\mathit{pid}}
+\renewcommand{\emptyset}{\varnothing}
+\newcommand{\admits}{\mathbf{N}}
+\newcommand{\Apid}{\mathbf{A}}
+\newcommand{\Zpid}{\mathbf{Z}}
+\newcommand{\Stdpid}{\mathbf{Std}}
+\newcommand{\pars}{\mathit{par}}
+\newcommand{\uses}{\mathbf{U}}
+\newcommand{\serves}{\op{serves}}
+\newcommand{\WF}{\op{wf}}
+\newcommand{\Cs}{\mathbf{C}}
+\newcommand{\Corr}{\mathcal{C}}
+\newcommand{\Blk}{\mathcal{B}}
+\newcommand{\F}{\mathcal{F}}
+\newcommand{\G}{\mathcal{G}}
+\newcommand{\Zenv}{\mathcal{Z}}
+\newcommand{\Adv}{\mathcal{A}}
+\newcommand{\Dum}{\mathcal{D}}
+\newcommand{\Sim}{\mathcal{S}}
+\newcommand{\bd}[1]{\mathbf{#1}}
+\newcommand{\advtg}{\op{Adv}}
+%% property advantage, indexed by finalization:
+%%   \padv{Fin}{\Gm,\sigma,\Zenv,\mathcal{X}}  --- drop the last for the dummy
+\newcommand{\padv}[2]{\advtg^{#1}_{#2}}
+\newcommand{\Aset}{\mathbb{A}}
+\newcommand{\SimSet}{\mathbb{S}}
+\newcommand{\ZenvSet}{\mathbb{Z}}
+%% \textnormal keeps interface names upright inside italic theorem statements:
+%% Palatino has no small-caps italic, and LaTeX would substitute upright anyway.
+\newcommand{\op}[1]{\textnormal{\textsc{#1}}}
+%% clickable operation names: \opdef marks a definition, \opl links to it
+\newcommand{\opdef}[1]{\hypertarget{op:#1}{\op{#1}}}
+\newcommand{\opl}[1]{\hyperlink{op:#1}{\textcolor{accentsoft}{\op{#1}}}}
+\newcommand{\fopdef}[1]{\hypertarget{op:#1}{\op{Full}\op{#1}}}
+\newcommand{\fopl}[1]{\hyperlink{op:#1}{\textcolor{accentsoft}{\op{Full}\op{#1}}}}
+\newcommand{\IDs}{\op{IDs}}
+\newcommand{\Ids}{\mathcal{I}}
+\newcommand{\id}{id}
+%% value atoms -- ok, rej, done, true, false -- share \op's small caps but
+%% not its color, so a bare name and a bare value no longer look alike:
+%% \atomtint reuses the comment color, one quiet tone for everything that
+%% is not the operative code.
+\newcommand{\atom}[1]{\textcolor{commenttint}{\op{#1}}}
+\newcommand{\rej}{\atom{rej}}
+\newcommand{\ok}{\atom{ok}}
+\newcommand{\true}{\atom{true}}
+\newcommand{\false}{\atom{false}}
+\newcommand{\parent}{\mathord{\uparrow}}
+\newcommand{\Gm}{\mathcal{G}m}
+\newcommand{\Xset}{\mathbb{X}}
+\newcommand{\Win}{\op{Win}}
+\newcommand{\Bad}{\op{Bad}}
+\newcommand{\done}{\atom{done}}
+\newcommand{\Frand}{\mathcal{F}_{\mathsf{Rand}}}
+\newcommand{\Fstore}{\mathcal{F}_{\mathsf{Store}}}
+\newcommand{\Fio}{\mathcal{F}_{\mathsf{IO}}}
+\newcommand{\Fdiffuse}{\mathcal{F}_{\mathsf{Diffuse}}}
+\newcommand{\Fsig}{\mathcal{F}_{\mathsf{Sig}}}
+\newcommand{\Gclock}{\mathcal{G}_{\mathsf{Clock}}}
+\newcommand{\Gpki}{\mathcal{G}_{\mathsf{PKI}}}
+\newcommand{\Fnet}{\mathcal{F}_{\mathsf{Net}}}
+\newcommand{\Fac}{\mathcal{F}_{\mathsf{AC}}}
+\newcommand{\Facz}{\mathcal{F}^{\circ}_{\mathsf{AC}}}
+\newcommand{\Fpki}{\mathcal{F}_{\mathsf{PKI}}}
+\newcommand{\DS}{\mathsf{DS}}
+\newcommand{\psig}{\pi_{\mathsf{Sig}}}
+\newcommand{\vk}{\mathit{vk}}
+\newcommand{\msg}{\mathit{msg}}
+\newcommand{\unset}{\square}
+\newcommand{\Keys}{\mathcal{K}}
+\newcommand{\Msgs}{\mathcal{M}}
+\newcommand{\Sigs}{\Sigma}
+\newcommand{\none}{\bot}
+\newcommand{\San}{\opl{San}}
+\newcommand{\Clean}{\op{Clean}}
+\newcommand{\V}[1]{\mathtt{#1}}
+\newcommand{\bits}{\{0,1\}^*}
+\newcommand{\Op}{\op{Op}}
+\newcommand{\ncl}[1]{\langle #1 \rangle}
+
+%% ------------------------------------------------- algorithmic settings
+\algrenewcommand\algorithmicrequire{\textbf{require}}
+\algnewcommand\Req[1]{\State \textbf{require}\ #1}
+\algrenewcommand{\algorithmiccomment}[1]{\hfill{\color{commenttint}\slshape /\!\!/ #1}}
+\algrenewcommand\algorithmicindent{1.1em}
+%% invisible block that just indents its body
+\algdef{SE}[INDENTBLOCK]{Indent}{EndIndent}{}{}
+\algtext*{Indent}
+\algtext*{EndIndent}
+%% ``on <event>'' block
+\algdef{SE}[ONBLOCK]{On}{EndOn}[1]{\textbf{on}\ #1}{}
+%% block ends are carried by indentation alone
+\algtext*{EndOn}
+\algtext*{EndIf}
+%% carry algorithmic line numbers from one block to the next
+\newcounter{contline}
+\newcommand{\algcont}{\setcounter{ALG@line}{\value{contline}}}
+\newcommand{\algsave}{\setcounter{contline}{\value{ALG@line}}}
+%% column widths for aligned code
+\newlength{\algretwd}\settowidth{\algretwd}{\textbf{return}}
+\newcommand{\algand}{\makebox[\algretwd][r]{$\wedge$\,}}
+\newlength{\clausewd}
+\newlength{\reswd}
+
+%% ----------------------------------------------------------- box panels
+%% Four displays, one hue, told apart by shape. Geometry is shared so they
+%% sit on the page as one family; weight is what separates them.
+\tcbset{panel/.style={%
+  enhanced,
+  boxrule=0pt, leftrule=0pt,
+  sharp corners, arc=0pt, outer arc=0pt,
+  left=4pt, right=4pt, top=5pt, bottom=5pt,
+  before skip=1.8ex, after skip=1.8ex}}
+%% Kept for anything that genuinely cannot be brought back to the measure.
+%% Nothing uses it at present: statements align with the prose because they
+%% hold prose, and the code boxes buy their width back in font size instead.
+\tcbset{widepanel/.style={panel,
+  grow to left by=9mm, grow to right by=9mm}}
+
+%% the optional argument takes extra tcolorbox keys for one box -- e.g.
+%% \begin{interface}[nofloat]{...} pins a box in place instead of floating it
+%% functionality: the heaviest of the four -- filled body, filled title
+%% band, and now a bounding box all round, at the same 0.9pt as defbox
+%% below, so the listing reads as one enclosed unit rather than a title
+%% band floating over open text.
+\newtcolorbox{interface}[2][]{%
+  panel, unbreakable, float=htbp, every float=\centering,
+  fontupper=\footnotesize,
+  colback=boxback, colframe=boxrule, colbacktitle=boxtint, coltitle=boxtitle,
+  boxrule=0.9pt, leftrule=0.9pt, titlerule=0pt, fonttitle=\small\bfseries,
+  title={#2}, #1}
+
+%% procedure: same geometry, one step lighter -- no body fill, a neutral
+%% title band, the same bounding box as interface. Predicates, wrappers
+%% and everything that is not a functionality.
+\newtcolorbox{procedure}[1]{%
+  panel, unbreakable, float=htbp, every float=\centering,
+  fontupper=\footnotesize,
+  colback=procback, colframe=procrule, colbacktitle=proctint, coltitle=black!62,
+  boxrule=0.9pt, leftrule=0.9pt, titlerule=0pt, fonttitle=\small\bfseries,
+  title={#1}}
+
+\newcommand{\params}[1]{{\footnotesize\normalfont\color{black!72} #1}}
+\newcommand{\opsig}[1]{\textcolor{accent}{\underline{\smash{#1}}}}
+
+\endinput

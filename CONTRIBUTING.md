@@ -98,18 +98,55 @@ python3 scripts/status_badge.py --self-test   # grading logic sanity check
 python3 scripts/status_badge.py               # regenerate badges + statement_sha
 python3 scripts/build_index.py                # validate schema, emit _generated/ + conjura.json
 python3 scripts/check_relations.py            # validate the relation graph
+python3 scripts/gen_interface.py              # regenerate the UC functionality boxes
 quarto preview                                # facet listings need build_index.py to have run first
 ```
 
-CI runs the same four checks (`status_badge.py --check`, `build_index.py`,
-`check_relations.py`) before `quarto render`; a non-zero exit from any of
-them fails the build.
+CI runs the same checks (`status_badge.py --check`, `build_index.py`,
+`check_relations.py`, `gen_interface.py --check`) before `quarto render`; a
+non-zero exit from any of them fails the build.
 
 `.githooks/pre-commit` runs those same checks locally, on commits that touch
-`c/`, `p/`, any `.qmd`, `scripts/`, or `_templates/`. Enable it with the
-`core.hooksPath` line above -- it is worth the one command, because the checks
-gate the job *before* `quarto render`: a single unregenerated `statement_sha`
-fails every push after it, not just its own, and the site stops deploying until
-someone notices. If PyYAML is missing the hook still runs the `status_badge.py`
-gate (stdlib-only) and reports that it skipped the other two. Bypass a single
-commit with `git commit --no-verify`.
+`c/`, `p/`, any `.qmd`, `scripts/`, `_templates/`, or
+`surveys/uc-for-gamers/latex/`. Enable it with the `core.hooksPath` line above
+-- it is worth the one command, because the checks gate the job *before*
+`quarto render`: a single unregenerated `statement_sha` fails every push after
+it, not just its own, and the site stops deploying until someone notices. If
+PyYAML is missing the hook still runs the `status_badge.py` and
+`gen_interface.py` gates (both stdlib-only) and reports that it skipped the
+other two. Bypass a single commit with `git commit --no-verify`.
+
+## UC functionality boxes
+
+The interface box on a functionality's encyclopedia page is *generated*, not
+written. Each functionality owns one file,
+
+```
+surveys/uc-for-gamers/latex/functionalities/<id>.tex
+```
+
+holding its `\begin{interface}` environment. `main.tex` `\input`s that file, and
+`scripts/gen_interface.py` renders the same file to the `.cj-interface` block on
+`uc/layer-N-.../<id>/index.qmd`. Edit the `.tex` and regenerate; never edit the
+HTML block on the page, since the next run overwrites it. Everything *around*
+the block -- the notation paragraph above it, the commentary below -- is
+hand-written and left alone.
+
+Line numbers are computed, not copied: the script runs the book's own
+`\algcont`/`\algsave` counter, so inserting a line in the `.tex` renumbers the
+rest of the box in the HTML exactly as it does in the PDF. That is what the
+`--check` gate protects. Before this existed the numbers were hardcoded in
+`<ol start="N">` and nothing noticed when they went stale.
+
+Notation macros are read from `surveys/uc-for-gamers/latex/ucgamers.sty`, so a
+new `\newcommand` there is understood without touching the script -- unless its
+expansion is not valid MathJax (`\op` is `\textsc`, which MathJax cannot set),
+in which case it also needs an entry in the script's `MACRO_OVERRIDES`. Adding
+one without the other is how a box silently stops rendering on the web.
+`functionalities/preview.tex` compiles a single fragment on its own, which is
+the check that a fragment depends on nothing outside the shared style file:
+
+```
+cd surveys/uc-for-gamers/latex
+pdflatex -output-directory=/tmp "\def\FRAG{f-sig}\input{functionalities/preview}"
+```

@@ -16,7 +16,7 @@ Reading the box: $\mathcal{A}^{!}(\cdot)$ is a *responsive* call on the adversar
 <div class="cj-interface">
 <div class="cj-interface-head">
 <div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{Net}}\)</div>
-<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{G}_{\mathsf{Clock}}, \mathsf{serves}),\, (\mathcal{A}, \mathsf{serves})\}\), &nbsp; \(\mathit{par} := \Delta\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{G}_{\mathsf{Clock}},\mathsf{serves}),\,(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := \Delta\)</div>
 </div>
 <div class="cj-interface-body">
 
@@ -24,17 +24,17 @@ Reading the box: $\mathcal{A}^{!}(\cdot)$ is a *responsive* call on the adversar
 <div class="cj-op-sig">Initialize():</div>
 <ol class="cj-code" start="1">
 <li>\(\mathtt{ctr} \gets 0\)</li>
-<li>\(\mathtt{buf} \gets \emptyset\)<span class="cj-comment">// entries \((m, P, \mathit{msg}, \tau)\)</span></li>
+<li>\(\mathtt{buf} \gets \varnothing\)<span class="cj-comment">// entries \((m, P, \mathit{msg}, \tau)\)</span></li>
 <li>\(\mathtt{rel} : \mathbb{N} \times \mathcal{F}_{\mathsf{Net}}.\mathbf{P} \to \{0,1\}\)</li>
 <li>\(\mathtt{rel}[*,*] \gets 0\)<span class="cj-comment">// what is released to whom</span></li>
 </ol>
 </div>
 
 <div class="cj-op">
-<div class="cj-op-sig"><span class="cj-id">id</span>.Send(<span class="cj-id">msg</span>)<span class="cj-op-from">from <span class="cj-id">id</span>′</span></div>
+<div class="cj-op-sig"><span class="cj-id">id</span>.Send(<span class="cj-id">msg</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
 <ol class="cj-code" start="5">
 <li>\(\tau \gets \mathit{id}_{\mathcal{G}_{\mathsf{Clock}}}.\mathsf{FullRead}() \text{ as } \mathit{id}\)</li>
-<li>\(m \gets \mathtt{ctr}\);&nbsp;\(\mathtt{ctr} \gets \mathtt{ctr} + 1\)</li>
+<li>\(m \gets \mathtt{ctr}\); &nbsp;\(\mathtt{ctr} \gets \mathtt{ctr} + 1\)</li>
 <li>\(\mathtt{buf} \gets \mathtt{buf} \cup \{(m, \mathit{id}.P, \mathit{msg}, \tau)\}\)</li>
 <li>\(\mathcal{A}^{!}\bigl(\mathit{id}.\mathsf{Send},\ m,\ \mathit{msg}\bigr)\)<span class="cj-comment">// the network is public</span></li>
 <li>\(\textbf{return}\ m\)</li>
@@ -42,23 +42,23 @@ Reading the box: $\mathcal{A}^{!}(\cdot)$ is a *responsive* call on the adversar
 </div>
 
 <div class="cj-op">
-<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>′</span></div>
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
 <ol class="cj-code" start="10">
 <li>\(\textbf{return}\ (\mathtt{buf},\ \mathtt{rel})\)</li>
 </ol>
 </div>
 
 <div class="cj-op">
-<div class="cj-op-sig"><span class="cj-id">id</span>.Fetch()<span class="cj-op-from">from <span class="cj-id">id</span>′</span></div>
+<div class="cj-op-sig"><span class="cj-id">id</span>.Fetch()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
 <ol class="cj-code" start="11">
 <li>\(\tau \gets \mathit{id}_{\mathcal{G}_{\mathsf{Clock}}}.\mathsf{FullRead}() \text{ as } \mathit{id}\)</li>
-<li>\((S, I) \gets \mathcal{A}^{!}\bigl(\mathit{id}.\mathsf{Fetch},\ \tau\bigr)\)<span class="cj-comment">// a non-pair reads as \((\emptyset,\emptyset)\)</span></li>
+<li>\((S, I) \gets \mathcal{A}^{!}\bigl(\mathit{id}.\mathsf{Fetch},\ \tau\bigr)\)<span class="cj-comment">// a non-pair reads as \((\varnothing,\varnothing)\)</span></li>
 <li>\(S \gets S \cap \{m : (m,\cdot,\cdot,\cdot) \in \mathtt{buf}\}\);</li>
 <li>\(I \gets I \cap \mathcal{M}\)<span class="cj-comment">// sanitized inline</span></li>
 <li>\(\mathtt{rel}[m, \mathit{id}.P] \gets 1\) &nbsp;for each \(m \in S\)</li>
-<li>\(\textbf{for each}\ \mathit{msg} \in I:\)</li>
+<li>for each \(\mathit{msg} \in I\):</li>
 <li><span class="cj-ind">\(\mathtt{buf} \gets \mathtt{buf} \cup \{(\mathtt{ctr}, \bot, \mathit{msg}, \infty)\}\);</span></li>
-<li><span class="cj-ind">\(\mathtt{rel}[\mathtt{ctr}, \mathit{id}.P] \gets 1\);&nbsp;\(\mathtt{ctr} \gets \mathtt{ctr} + 1\)</span></li>
+<li><span class="cj-ind">\(\mathtt{rel}[\mathtt{ctr}, \mathit{id}.P] \gets 1\); &nbsp;\(\mathtt{ctr} \gets \mathtt{ctr} + 1\)</span></li>
 <li>\(\textbf{return}\ \bigl\{(m, \mathit{msg}) : (m, P', \mathit{msg}, \tau_s) \in \mathtt{buf}\)</li>
 <li><span class="cj-ind">\({}\wedge\ \bigl(\mathtt{rel}[m, \mathit{id}.P] = 1 \ \vee\ \tau_s + \Delta \leq \tau\bigr)\bigr\}\)</span></li>
 </ol>

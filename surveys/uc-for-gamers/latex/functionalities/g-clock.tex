@@ -1,0 +1,88 @@
+%% The interface box of g-clock, the one source for both the book
+%% and uc/.../g-clock/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Gclock$ \\
+\params{$\PID := (\op{G}\op{Clock},0,0)$, \quad $\Ps$, \quad
+$\admits := \Stdpid \cup \Apid \cup \Zpid$, \quad $\uses := \{(\Adv,\serves)\}$, \quad $\pars := \none$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{now} \gets 0$
+\State $\V{reg},\, \V{tick} : \Gclock.\Ps \to \{0,1\}$
+\State $\V{reg}[*] \gets 0$; \ $\V{tick}[*] \gets 0$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Register}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$\id'.F \in \{A,Z\} \ \wedge\ \id.P \notin \Cs$}
+  \State \textbf{return} $\V{now}$
+\EndIf
+\State $\V{reg}[\id.P] \gets 1$; \ $\V{tick}[\id.P] \gets 0$
+  \Comment{a fresh member owes a tick}
+\State \textbf{return} $\V{now}$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Deregister}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$\id'.F \in \{A,Z\} \ \wedge\ \id.P \notin \Cs$}
+  \State \textbf{return} $\V{now}$
+\EndIf
+\State $\V{reg}[\id.P] \gets 0$
+\State \textbf{return} $\V{now}$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\opdef{Update}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$\id'.F \in \{A,Z\} \ \wedge\ \id.P \notin \Cs$}
+  \State \textbf{return} $\V{now}$ \label{ln:clockaz}
+    \Comment{reading, not ticking}
+\EndIf
+\If{$\V{reg}[\id.P] = 0$}
+  \State \textbf{return} $\V{now}$
+    \Comment{not in the round structure}
+\EndIf
+\State $\V{tick}[\id.P] \gets 1$
+\If{$\forall\, P \in \Gclock.\Ps \setminus \Cs \, : \, \V{reg}[P] = 1 \Rightarrow \V{tick}[P] = 1$} \label{ln:advance}
+  \State $\V{now} \gets \V{now} + 1$
+  \State $\V{tick}[*] \gets 0$
+    \Comment{the round is over}
+\EndIf
+\State $\Adv^{!}\bigl(\id.\op{Update},\ \V{now}\bigr)$ \label{ln:clocknotify}
+  \Comment{notify; the answer is discarded}
+\State \textbf{return} $\V{now}$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Read}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $\V{now}$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $(\V{now},\ \V{reg},\ \V{tick})$
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

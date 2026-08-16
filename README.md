@@ -27,7 +27,7 @@ _generated/, conjura.json    build_index.py output; gitignored, rebuilt by CI be
 .githooks/, .github/         the pre-commit hook, and the publish and checks workflows
 ```
 
-There is no `blog/` yet. It was dropped from the navbar and the sidebar on 2026-08-16 because no posts existed, and it returns to both once there is real content to put in it.
+`blog/` holds one post and is hidden from the navbar and the sidebar as of 2026-08-16. The pages are still built and still resolve, so any link already pointing at one keeps working; they are only unadvertised. Both lists get a `Blog` entry back when it is wanted again.
 
 Topic (`areas`) is a tag a statement carries, never a home directory -- see `/schema/` for the full frontmatter contract and `CONTRIBUTING.md` for how to add a statement or a problem.
 

@@ -1,44 +1,10 @@
 # Tasks
 
-Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~26.1h** (rough; two items dominate the uncertainty and could each run well over their estimate — the UC Encyclopedia content, and finishing the c/0004 Lean proof, whose remaining work includes a concentration inequality Mathlib does not carry).
+Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~20.5h** (rough; two items dominate the uncertainty and could each run well over their estimate: the UC Encyclopedia content, and finishing the c/0004 Lean proof, whose remaining work includes a concentration inequality Mathlib does not carry).
 
-- [ ] **Merge the CI-gate branch (~10 min — manual: needs an interactive OAuth flow only you can complete)**
+Last reconciled against `main` at `4fae707` on 16 August 2026.
 
-  Everything else from the overnight run of 2026-08-16 is merged. One branch is left, and it cannot be pushed by an agent: `overnight/01-ci-gate` adds `.github/workflows/checks.yml`, and the `gh` token carries `repo` but not `workflow`, so GitHub rejects the push outright. Run
-
-  ```
-  gh auth refresh -h github.com -s workflow
-  git push -u origin overnight/01-ci-gate
-  ```
-
-  then merge it. Two commits: the badge gate widens from `c/` to `c/` **and** `papers/` (with `status_badge.py`'s default roots moved to match, so the fix the hook prints covers what the gate checks, and `p/` hubs exempted on purpose and documented in `schema/`), and a new `checks.yml` that runs the four Python gates plus `quarto render` on `pull_request` with `contents: read` only, so branches get CI without touching Pages. Verified locally: staling the hashed block of `papers/example-paper/index.qmd` passes the old gate and fails the new one, and actionlint 1.7.7 is clean on both workflows.
-
-  Until this lands there is still no CI on pull requests, which is the whole point of the branch.
-
-- [ ] **Supply the c/0004 session transcript (~10 min — manual: only you have the original session)**
-
-  `c/0004/sessions/` is empty. The overnight run deliberately did not create anything there: a fabricated transcript is worse than an absent one, so the directory stays empty until the real prompt/agent session that produced `latex/proof.tex` is dropped in. Same for `c/0005/sessions/`, which is empty for the same reason.
-
-- [ ] **Usability on iPhone, Android, and other handheld devices (~15 min — manual: PDF fragment behavior needs a real physical device, not just emulation)**
-
-  Playwright's actual device emulation (WebKit as iPhone 14, Chromium as Pixel 7 — real per-device viewport, touch, and pixel-ratio profiles, not a resized desktop window) found and fixed three real horizontal-overflow bugs on narrow viewports, all in `theme-{light,dark}.scss`: MathJax display equations wider than their column (c/0001, c/0002, c/0004, and likely other statement pages), plain markdown/pandoc tables that didn't scroll (c/0001–c/0003), and the page-layout:article content grid not shrinking below its content's intrinsic width the same way page-layout:full was already fixed to. Verified clean afterward on both device profiles across the landing, listing, statement, and UC pages. Also verified: the mobile sidebar/navbar off-canvas toggle (`.quarto-btn-toggle`, in `quarto-secondary-nav`) works correctly — an initial concern that it was unreachable turned out to be testing the wrong button, not a real bug. Touch targets are dominated by standard framework chrome (search button, hamburger, dark-mode toggle, anchorjs heading anchors) at their normal sizes; the one custom element under the 44px guideline is the small `cj-status-link` badge icon (~24-28px on these profiles), a minor cosmetic gap, not fixed here.
-
-  What's left, and can't be shortcut by emulation (Playwright drives the real WebKit/Chromium rendering engines but not iOS/Android's native PDF viewer integration): check the UC-for-gamers "Contents" links (`pdf/main.pdf#page=N`) on an actual iPhone and Android phone — desktop browsers honor the `#page=` fragment in their built-in viewer, but real mobile PDF handling (iOS Safari's viewer vs. Android Chrome/Samsung Internet, some of which just download the file) is inconsistent and can't be verified through emulation.
-
-- [ ] **Consolidate Vision, Philosophy and the mission statement into one page (~35 min, plus audio if it is regenerated rather than just flagged — do this *before* the three statement tasks below, or they write new sections into a structure that is about to be replaced)**
-
-  `vision/index.qmd` and `philosophy/index.qmd` are 48 lines each, and the landing page's hero paragraph in `index.qmd` is a third, shorter statement of the same position. One page instead of three.
-
-  The split is currently principled, so consolidating means overruling a real distinction rather than tidying an accident: `philosophy/index.qmd`'s opening paragraph draws the line explicitly — Vision is where Conjura is headed, Philosophy is "something narrower and slower-moving", the reasoning under specific choices. That line is worth keeping *inside* the merged page as its two halves (what we are building toward / why the site behaves the way it does), because interleaving a roadmap with a set of convictions produces something that reads as neither. What goes away is the navigation cost and the fact that the position is currently split across three places that each state part of it.
-
-  What the merge actually touches:
-
-  - **Pick the canonical URL first**, because everything else follows from it. Neither page is in the navbar or the sidebar today — `_quarto.yml` lists Open Problems, Papers, Surveys, Resources, Blog and UC Encyclopedia, and there is no page footer — so the *only* routes in are the two hero buttons in `index.qmd:13` and the reciprocal cross-links at `philosophy/index.qmd:6` and `:48`. A single page is easier to justify a nav entry for than two were; decide that at the same time.
-  - **Both old URLs are live and may be linked from outside.** Use Quarto's frontmatter `aliases:` on the consolidated page so `/vision/` and `/philosophy/` redirect rather than 404.
-  - **Inbound references to fix**: the two hero buttons collapse to one, the two cross-links disappear, and `README.md` describes both directories in its tree (lines 21–22) and again in its prose (line 56).
-  - **The audio is attached to the wrong half.** `philosophy/audio/read-out.mp3` and `podcast.mp3` narrate the Philosophy text only, and `_quarto.yml:9` lists that path in `resources:`. After the merge the read-out covers a fraction of the page it sits on, and the path may move. Either regenerate both against the consolidated text — which is real manual production time on top of the estimate — or say on the page that the audio covers one section, and keep the path stable.
-
-  Sequencing matters here: the venues-posture, access-asymmetry and responsible-disclosure tasks below all add prose to `vision/` and `philosophy/`. Doing this first means writing all three into one page in a single pass; doing it after means merging three fresh sections whose placement was chosen for a layout that no longer exists.
+- [ ] **DEFERRED: supply the c/0004 session transcript** -- the original session that produced `latex/proof.tex` could not be found (confirmed 16 August 2026). `c/0004/sessions/` stays empty rather than reconstructed, and the About page now states that no result on the site carries a session log.
 
 - [ ] **Move the UC Encyclopedia under Surveys (~30 min — decide the URL question before touching anything)**
 
@@ -53,18 +19,6 @@ Ordered by difficulty: web-related tweaks, new web content, new conjectures, new
   - `uc/index.qmd` says in its own words that the section "may eventually move to a dedicated site of its own, separate from Conjura." Filing it under Surveys pushes the opposite way. Either that note goes, or the move is explicitly the interim arrangement and says so — leaving both claims on the site is the kind of quiet contradiction the rest of this list keeps trying to avoid.
   - Surveys and the Encyclopedia are already entangled in the right direction: seven of the filled functionality pages were ported out of `surveys/uc-for-gamers/latex/main.tex`, and the Surveys page already promises interactive content generated from a survey's own text. That is the actual argument for the move, and it is worth stating on the page rather than leaving the new hierarchy to imply it.
 
-- [ ] **Remove the audio files (~10 min)**
-
-  Delete `philosophy/audio/read-out.mp3` and `podcast.mp3` (~3.4 MB together) and everything that points at them. Five places, and the last two are the ones easy to miss:
-
-  - The whole `## Listen` section of `about/index.qmd` (roughly lines 111–129) — both `<audio>` blocks, the synthesized-voice note above them, and the callout admitting the recordings cover only the second half and predate its opening section. That callout is the clearest sign the audio has become a liability rather than an asset, so it goes with them rather than being updated again.
-  - `_quarto.yml`'s `resources:` entry `"philosophy/audio/*.mp3"`, leaving `conjura.json` as the only entry.
-  - `README.md:22`, which describes `philosophy/audio/` in the directory tree.
-  - The now-empty `philosophy/` directory itself. Its URL keeps working regardless: `/philosophy/` is served by the `aliases:` list in `about/index.qmd`'s frontmatter, not by the directory.
-  - The two large binaries stay in git history unless it is rewritten. Not worth rewriting for 3.4 MB — just don't expect `git clone` to get smaller.
-
-  This also cancels two open caveats elsewhere in this list: the consolidation task's note about the audio being attached to the wrong half, and the venues task's note about a new section silently desynchronizing the recordings. With the files gone, neither is a constraint on anything.
-
 - [ ] **Say on the site that the site itself is AI-generated and not yet reviewed (~25 min — manual: whether this becomes an open call for reviewers is a commitment only you can make)**
 
   The badges cover the research artifacts: a statement, a proof, a Lean file each carry a graded provenance and a "reviewed by" line. Nothing covers the *container* — the prose on every page, `CONTRIBUTING.md`, `schema/`, the scripts under `scripts/`, the encyclopedia stubs, the templates. All of it was generated by an AI under extensive human prompting and refinement, and none of it has been independently reviewed by anybody. That is exactly the kind of thing this site says elsewhere should be disclosed per artifact, so omitting it about itself would be the single most quotable inconsistency available to a critic — and a fair one.
@@ -77,60 +31,6 @@ Ordered by difficulty: web-related tweaks, new web content, new conjectures, new
   - **The full statement lives on `about/index.qmd`**, and it belongs next to "Plausible isn't the same as true" and "Say plainly what isn't built yet" — it is those two commitments turned on the site itself, and saying so is what keeps it from reading as boilerplate.
   - **Say what would take it down.** A notice with no exit condition becomes furniture that nobody updates and every reader learns to skip. State what changes it: which parts have been reviewed, by whom, and when — the same shape as the badge semantics, so the notice narrows as review actually happens rather than staying a permanent blanket.
   - **Decide whether it asks for something.** "Wants multiple reviewers" can be a statement of fact or an open call with a route in (an issue label, a contact). The second is more useful and is a commitment; that choice is yours.
-
-- [ ] **State the case against the venues' AI posture, and for a journal of AI-assisted research (~30 min — manual: every venue policy quoted has to be a real, dated policy, and the framing is the site's own position, not a neutral summary)**
-
-  The site currently argues the *checking* half of its position well — "Plausible isn't the same as true" and "Attribution doesn't erase the work" in `philosophy/index.qmd` — but nowhere says what it is a reaction *against*, and nowhere names the ambition. Both belong on the site. The argument to place:
-
-  - Traditional venues, one way or another, discourage extensive use of AI.
-  - That produces an arms race — undisclosed use on one side, detection and suspicion on the other — and rules that cannot actually be enforced, so they stay loose guidelines rather than standards anyone can hold a submission to.
-  - And it slows the pace of progress substantially, at exactly the moment one of the largest technological revolutions is available to the field.
-  - Conjura's approach is deliberately dual: **embrace AI, and keep it in check**, so that the literature is not polluted. Neither half works alone — embracing without checking is what the venues are afraid of, and checking without embracing is what they are doing.
-  - Put plainly: this is advocacy for a **journal of AI-assisted research in cryptology**, and the site is a beginning of one.
-
-  Placement, and what each page already carries:
-
-  - `vision/index.qmd` — "The problem" is currently only about uncoordinated effort and rediscovery. The venue posture is a *second* problem of equal weight and should be written as one, ahead of "What we're building toward". The journal ambition then belongs there as its own subsection, in the same register as the existing "(an idea we're exploring)" items — the site's own "say plainly what isn't built yet" discipline applies to a journal more than to anything else on that page.
-  - `philosophy/index.qmd` — the dual formulation is the natural spine of a new section: the existing badge/tombstone/attribution sections are all *instances* of "keep it in check", so the section should say so rather than repeat them. Note the audio artifacts under `philosophy/audio/` (`read-out.mp3`, `podcast.mp3`) narrate the current text; adding a section silently desynchronizes both, so either regenerate them or note the gap.
-  - `index.qmd` — the hero mission sentence is the one-line statement of the whole position and currently omits the reaction-against entirely. A clause, not a paragraph.
-
-  One hard constraint: do not characterize any specific venue's policy without checking the actual text. IACR, ACM, Springer, IEEE and the individual conferences differ substantially and have all revised their wording more than once. An invented or misdated policy quote in a document arguing for honesty about AI would be the worst possible failure mode. The task below does the naming and quoting properly, so this one should either wait for it or be written alongside it rather than reaching for a generic "the venues" that the evidence might not support.
-
-- [ ] **Read the IACR, ACM and IEEE AI policies and place them against what Conjura does (~45 min — manual: each policy has to be read at its source and quoted with its date, and the honest reading may not match the argument it is being cited for)**
-
-  The task above argues against "the venues" in the abstract. This one supplies the evidence and makes the differentiation concrete, and it is the harder half. Three policies to actually read at source — IACR, ACM, IEEE — plus Springer if the LNCS pipeline makes it relevant, since that is what an IACR conference proceedings volume goes through.
-
-  - **Quote, don't paraphrase from memory.** Each one gets its venue, its title, its URL, and the date the text was read, because all three have revised their wording more than once and a reader in a year needs to know which vintage the page is arguing with. A "policies as read on `<date>`" line on the page itself, not just in a commit message.
-  - **Report what they actually say, including the parts that help them.** The likely honest reading is that these policies converge on something reasonable — an LLM cannot be an author, the human authors remain accountable for everything in the paper, and use must be disclosed — rather than on a ban. If that is what they say, the page must say so.
-  - **Then the differentiation, which is where the real argument lives.** If the policies already require disclosure, Conjura's claim cannot be "they forbid AI and we allow it" — that would be a strawman, and a checkable one, on a site whose whole premise is that claims should be checkable. The defensible difference is in what disclosure *is*: at a venue it is a sentence in an acknowledgements section, unverifiable and unenforceable, attached to a paper that is otherwise accepted or rejected as a whole. Here it is per artifact and machine-checked — a badge that grades what has actually been verified, session logs and prompts published with the result, an attribution field that says who or what produced each part. Same principle, taken seriously enough to build gates around. That is the sentence the page should be able to defend.
-  - **Let the evidence move the framing, not the reverse.** If reading the three policies contradicts the arms-race framing in the task above, the framing gets adjusted — an argument that survives its own sources honestly quoted is worth having, and one that needs them shaded is not.
-
-  Where it goes: `about/index.qmd`, alongside the venues section rather than as its own page, since a policy survey with no argument attached is not what the site is for. A short comparison table (what each policy requires / what Conjura does instead) is probably the clearest form, but only if it fits three rows without distorting any of them.
-
-- [ ] **Say that research shouldn't belong to whoever can afford the most compute (~25 min — best done in the same pass as the venues task above, since it edits the same two pages in the same register)**
-
-  If AI becomes a real driver of research output, then access to it decides who gets to produce results — and access is not evenly held. A well-funded lab has more inference capacity, higher limits, and earlier access to better models than an independent researcher or a department in a country where none of this is affordable. That is a fairness problem the field had in a much milder form when the scarce input was mostly thinking time. A distributed, decentralized and open system is the argument against it: pooled capacity, orchestration across many accounts and models, and public tooling and results, so that the frontier is reachable from outside the handful of places that can buy it outright.
-
-  Where it goes, and why the page is already halfway there:
-
-  - `vision/index.qmd` already carries the *mechanisms* — "Idle tokens" (pointing unused capacity at the backlog) and "Distributed, multi-model compute" (orchestrating one demanding task across several accounts and models) — but both are written as capability and efficiency ideas. The fairness argument is the principle that makes them cohere, and stating it first would give both subsections a reason to exist beyond being clever. `resources/index.qmd` publishing the prompts and templates for anyone to run is already an access-leveling act that the site never describes as one.
-  - `philosophy/index.qmd` is the right home for the principle itself if it is stated as a conviction rather than a roadmap item — it sits naturally beside "Verification is a job, and it's been an undervalued one", which is the page's other argument about who gets rewarded for what.
-  - Optional, and only if it can be put without sounding like an accusation: this connects to the venues task above, because a rule that cannot be enforced binds whoever chooses to comply with it, which is not the same population as whoever has the most access.
-
-  The one thing not to do is overclaim. Conjura redistributes nothing today: idle tokens and distributed compute are both explicitly marked as not built, and saying or implying that the site already levels the field would be false in exactly the way `philosophy/index.qmd`'s "Say plainly what isn't built yet" section exists to prevent. This is a statement of what the design is *for*, written as such.
-
-- [ ] **Write the responsible-disclosure statement, and the guardrails behind it (~40 min — manual: the private channel and any embargo window are commitments only you can make, and one of them needs a repo setting flipped)**
-
-  A paper here could break something deployed. Nothing on the site currently anticipates that: there is no `SECURITY.md`, `.github/` holds only `publish.yml`, and `CONTRIBUTING.md` routes every submission through a public pull request or issue. So today the only way to tell Conjura about a vulnerability is to publish it. That is the gap — the statement is the visible half, but a statement without a private channel behind it is decoration.
-
-  The statement should say what triggers it, what a reporter should do, and what Conjura will do in return. The guardrails that have to exist for it to mean anything:
-
-  - **A private intake channel, chosen explicitly.** Either GitHub's private vulnerability reporting (a repo setting, giving a private advisory thread on the same repo) or a named contact address. Whichever it is, `SECURITY.md` at the root is what makes GitHub surface it in the "Report a vulnerability" flow, and the site page should link to the same place.
-  - **Embargo has to hold in the pipeline, not just in the prose.** `.github/workflows/publish.yml` deploys `main` to Pages, and the repo is public, so an embargoed write-up cannot sit on a branch "not merged yet" — the branch is already readable. Under embargo the material stays out of this repo entirely until release. Say that plainly in the statement rather than implying a merge gate does the work.
-  - **A scope boundary, or the policy reads as theatre.** Most of the site is conjectures, lower bounds and impossibility results, where nothing is deployed and disclosure never arises. The statement has to distinguish what actually triggers it — a break of a deployed scheme, a parameter or standard whose concrete security is worse than claimed, an attack on a named implementation — from model-level and asymptotic results, which are the normal case here.
-  - **Reconcile it with the transparency commitment, because they genuinely conflict.** `vision/index.qmd` promises exploration in public "rather than in private notebooks", with prompts and session logs published as they happen. An agent that stumbles onto a practical break would, under that default, publish the break *and its reproduction* in a transcript before any human read it. Disclosure is therefore a real, named exception to the publish-everything rule, and both pages have to say so — an unreconciled contradiction between the two is worse than either policy alone. This is the part specific to how this site works, and probably the reason the statement is worth writing at all.
-
-  Same citation constraint as the venues task: if the statement adopts a disclosure window or appeals to an existing norm, point at a real, dated policy rather than asserting a folk standard.
 
 - [ ] **Finish the Uber-assumption paper and run the checks on it (~1.5h — uncertain: the remaining mathematics is real work, not write-up)**
 
@@ -196,3 +96,15 @@ Ordered by difficulty: web-related tweaks, new web content, new conjectures, new
   - **Deep-dive quizzes as combinatorial retrieval, not just recall.** The puzzle tier should force recombining a later chapter's functionality with an earlier chapter's property or shell.
   - **Light gamification paired with spaced review, not gamification alone.** Streaks/XP/progress bars alone are a weak retention lever; the literature's stronger result is spaced repetition *combined* with light game mechanics. Concretely: resurface a prior chapter's quiz question (in a new combination) a chapter or two later rather than only in that chapter's own quiz, and track a streak across that resurfacing rather than only within one session.
 
+## Completed 16 August 2026
+
+Bodies deleted rather than left as completion narrative. `git log` is the record.
+
+- [x] **Merge the CI-gate branch** -- PR #12, `checks.yml` passed on its own PR in 2m1s, merged as `4fae707`
+- [x] **Usability on iPhone, Android, and other handheld devices** -- `pdf/main.pdf#page=N` fragments confirmed working on real handsets, 16 August 2026
+- [x] **Consolidate Vision, Philosophy and the mission statement into one page** -- `/about/`, both old URLs aliased
+- [x] **State the case against the venues' AI posture, and for a journal of AI-assisted research**
+- [x] **Read the IACR, ACM and IEEE AI policies and place them against what Conjura does** -- read at source, and the evidence moved the framing
+- [x] **Say that research shouldn't belong to whoever can afford the most compute**
+- [x] **Write the responsible-disclosure statement, and the guardrails behind it** -- `SECURITY.md`, private vulnerability reporting enabled
+- [x] **Remove the audio files**

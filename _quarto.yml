@@ -10,6 +10,10 @@ project:
     # PDF by scripts/build_uc_html.sh. Not a .qmd, so Quarto only ships it if
     # it is listed here.
     - "surveys/uc-for-gamers/html/**"
+    # MathJax, vendored rather than fetched from a CDN. See html-math-method
+    # below; scripts/build_uc_html.sh points the UC edition at the same copy,
+    # so the site loads one MathJax, once, from its own origin.
+    - "assets/mathjax/**"
 
 website:
   title: "Conjura"
@@ -119,6 +123,18 @@ format:
     # og:url. This is a format option rather than a `website:` one, but it
     # only does anything once `website: site-url:` is set above.
     canonical-url: true
+    # Self-hosted MathJax. Quarto's default is
+    # cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js, which made every page on
+    # the site depend on a third party to render any mathematics, and ran a
+    # different major version from the UC edition's own copy. This is
+    # mathjax@3.2.2 tex-chtml-full: "full" because the UC edition needs the
+    # TeX extensions, and 3.x because that is what its 78 injected macros and
+    # 5,886 formulas are verified against. The fonts sit beside it at
+    # assets/mathjax/output/chtml/fonts/woff-v2/, which is where the script
+    # looks for them, relative to its own URL.
+    html-math-method:
+      method: mathjax
+      url: "/assets/mathjax/tex-chtml-full.js"
     toc: true
     grid:
       sidebar-width: 260px

@@ -1,6 +1,6 @@
 # Tasks
 
-Split into two sections: **Website and repository** (~7.75h) covers the site, its build tooling and the repository's configuration; **Conjectures and papers** (~3.5h) covers the mathematics — proving conjectures, and writing and checking the papers that report them. Within each section, tasks are ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~11.25h** (rough; the UC Encyclopedia content dominates the uncertainty and could run well over its estimate).
+Split into two sections: **Website and repository** (~5.5h) covers the site, its build tooling and the repository's configuration; **Conjectures and papers** (~3.5h) covers the mathematics — proving conjectures, and writing and checking the papers that report them. Within each section, tasks are ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~9.0h** (rough; the UC Encyclopedia content dominates the uncertainty and could run well over its estimate).
 
 Last reconciled against `main` at `5e5e95b` on 16 August 2026.
 
@@ -8,13 +8,15 @@ Completed tasks are deleted from this file rather than checked off and kept: thi
 
 ## Website and repository
 
-- [ ] **Self-host MathJax, or decide not to (~0.5h)**
+- [ ] **Drop the last third-party script: Quarto's es6 polyfill (~0.5h)**
 
-  This replaces the "four known defects" entry. Three of those four are fixed (16 August 2026, `scripts/build_uc_html.sh` steps 8 and 9, with checks that fail the build if any regresses): all 294 rendered pseudocode line references now land on the line they name rather than the enclosing heading, dead internal links are down from 127 to 0, and emphasis carries as `<em>` (347 of the source's 348 `\emph`; the one unaccounted for was not chased).
+  MathJax is now self-hosted (16 August 2026): `assets/mathjax/` holds mathjax@3.2.2 `tex-chtml-full` plus its 23 CHTML fonts, 1.68MB in total, and both `_quarto.yml` and `scripts/build_uc_html.sh` point at that one copy. CDN references for MathJax across `_site/` went from 121 pages to 0, and a UC edition chapter now loads contacting no external host at all.
 
-  **The fourth was wrong as written, which is why it is restated here rather than closed.** It claimed "every other asset on the site is self-hosted". Measured 16 August 2026: 121 pages under `_site/` load MathJax from `cdn.jsdelivr.net`, and there is no MathJax anywhere in `site_libs/`. The book edition is not an outlier, it matches the site. The only real inconsistency is version and bundle: the edition requests `mathjax@3/tex-chtml-full`, the Quarto pages request `mathjax@4/tex-chtml`.
+  What that exposed is the remaining one. Quarto emits two third-party scripts, not one, and the second survives: `<script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6">` on 62 pages. It is emitted by Quarto's own HTML template rather than by any setting in this repository, so `html-math-method` does not reach it and there is no documented switch for it in Quarto 1.10.18.
 
-  So the open question is site-wide, not about this one page: self-host MathJax for every page, or accept the CDN and at least stop running two major versions. Self-hosting means vendoring the `es5` bundle plus its CHTML fonts (several MB against a 2.4MB site) and pointing both Quarto and `build_uc_html.sh` at the same copy. Changing the edition to v4 on its own is the one option to avoid: it risks 5,886 formulas and 78 injected macros for no benefit, since the CDN dependency would remain either way.
+  It is also almost certainly dead weight: MathJax 3 requires ES6 to run at all, so a browser old enough to need the polyfill cannot render the mathematics either way. Worth confirming that reading before acting on it.
+
+  Three ways to remove it, in the order worth trying: find a supported Quarto option or template partial that suppresses it; failing that, vendor the file next to `assets/mathjax/` and rewrite the tag in a post-render step, accepting that a post-render rewrite has to be maintained against Quarto's template; or leave it and record the decision here rather than leaving the inconsistency unexplained. Do not simply delete the tag from `_site/` by hand, since that is regenerated on every build.
 
 - [ ] **UC Encyclopedia content (~5h — manual: sourcing and verifying real citations per functionality, not just drafting text)**
 
@@ -31,25 +33,6 @@ Completed tasks are deleted from this file rather than checked off and kept: thi
   What the estimate is still carrying is the part the tooling cannot shortcut: choosing between incompatible variants, and verifying every citation is a real paper at a real venue in a real year. Expect the mismatch registers to be the most interesting output, and expect some functionalities to have no canonical printed definition at all — that finding is itself a page worth having.
 
   One ordering trap, which turns CI red for the whole site: `gen_interface.py --check` runs in both workflows over every fragment in `functionalities/` and errors if a fragment's page has no `.cj-interface` block to replace. The page scaffold and the fragment must land in the same commit.
-
-- [ ] **Interactive UC tutorial for the website (~2.25h — minor manual: clicking through the drag/interactive slides by hand to check they actually work)**
-
-  Based on the UC-for-gamers paper. Its prerequisite is met: the HTML edition exists at `/surveys/uc-for-gamers/html/main.html`, so chapter text, the nine diagrams as SVG and the functionality boxes can all be quoted as live web content rather than screenshotted from the PDF. Read the defect task above before quoting anything with a line reference in it.
-
-  Structure:
-
-  - Chapter by chapter: each chapter opens with a few slides explaining its concepts, with Next/Previous navigation.
-  - Slides include images and excerpts of functionalities drawn from the paper.
-  - Each section ends with a quiz, in three tiers: basic-knowledge, deep-dive, and harder/trick-statement.
-
-  Design techniques to build the tutorial around, drawn from how Brilliant.org, Duolingo and the spaced-repetition/gamification literature approach technical learning — worth a fresh look at these sources when this task is actually picked up, since the field moves:
-
-  - **Learn by doing, not watching.** Brilliant's core lesson unit is a guided problem the learner manipulates directly — drag, choose, compute — with the concept explained *through* the interaction rather than in a lecture the learner then gets quizzed on. Apply this to the chapter slides: prefer a slide where the reader drags a process id onto a functionality box or predicts a UC-emulation outcome before being told the answer, over a slide of prose followed by a separate quiz question.
-  - **Build intuition before formalism, minimal cognitive load per slide.** Start each chapter's slide sequence with the simplest instance of the idea (one functionality, one corruption, no hybrids) and layer complexity slide by slide — mirrors both Brilliant's approach and the progressive-disclosure pattern Duolingo's onboarding uses to avoid overwhelming a new user.
-  - **Immediate, specific feedback, not just right/wrong.** Every quiz answer — correct or not — should get a one-line explanation tied to *why*, not a bare checkmark/cross. This is what Brilliant's "instant custom feedback" and Duolingo's per-answer explanations both lean on for retention.
-  - **Misconception-based distractors for the multiple-choice tiers.** Each wrong option should be "wrong for a reason" — a specific, real misunderstanding a UC newcomer plausibly holds (e.g. conflating the security parameter with a corruption bound, assuming the environment can see a functionality's internal coins, forgetting a shell has to be built to the *strictest* verdict it serves) — not an arbitrary false statement. This directly serves the harder-quizzes tier: a true/false statement that inverts logic should invert a *specific* convention from the paper's notation-conventions list, so a wrong answer diagnoses which convention the reader hasn't internalized yet.
-  - **Deep-dive quizzes as combinatorial retrieval, not just recall.** The puzzle tier should force recombining a later chapter's functionality with an earlier chapter's property or shell.
-  - **Light gamification paired with spaced review, not gamification alone.** Streaks/XP/progress bars alone are a weak retention lever; the literature's stronger result is spaced repetition *combined* with light game mechanics. Concretely: resurface a prior chapter's quiz question (in a new combination) a chapter or two later rather than only in that chapter's own quiz, and track a streak across that resurfacing rather than only within one session.
 
 ## Conjectures and papers
 

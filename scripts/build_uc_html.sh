@@ -318,6 +318,7 @@ JS = """<script>
 
 pages = sorted(pathlib.Path(".").glob("main*.html"))
 heads = 0
+rots = 0
 for f in pages:
     items = "\n".join(
         li(k, n, h, t, h.split("#")[0] == f.name) for k, n, h, t in entries)
@@ -346,12 +347,29 @@ for f in pages:
     h2 = h2.replace("</body>", "</div>" + JS + "</body>", 1)
     h2, hn = re.subn(r"</head>", HEAD_JS + "</head>", h2, count=1)
     heads += hn
+    # Step 11: the book's one sideways figure, in 4.3 Parallel Composition.
+    # main.tex rotates it 90 degrees because it is too wide for a portrait
+    # page. tex4ht carries that over as a CSS transform, and a transform does
+    # not affect layout: the box still reserves the unrotated 847x290 while the
+    # image draws 290 wide and 847 tall, so roughly 550pt of diagram lands on
+    # the paragraph underneath. The web has no page to fit it to, so the
+    # rotation goes and the figure scrolls sideways instead, which is what this
+    # stylesheet already does with wide tables and equations.
+    h2, rn = re.subn(r"<span class='rotatebox'[^>]*>(\s*<img[^>]*>\s*)</span>",
+                     lambda m: f"<span class='ucfig-wide'>{m.group(1)}</span>",
+                     h2, flags=re.S)
+    rots += rn
     f.write_text(h2)
 print(f"    sidebar on {len(pages)} pages, {len(entries)} entries")
 # A page that missed the head script shows the wrong theme for a frame before
 # correcting itself, which is exactly the bug the script exists to prevent and
 # is invisible in a spot check. Fail rather than ship a subset.
 assert heads == len(pages), f"head script reached {heads} of {len(pages)} pages"
+# One sideways figure exists in the book. If the source gains another and
+# this silently keeps rewriting one, the new one overlaps its text with no
+# sign here; if a future tex4ht stops emitting rotatebox, this hits 0 and
+# the fix has quietly become a no-op.
+assert rots == 1, f"expected 1 rotated figure, rewrote {rots}"
 print(f"    theme toggle and pre-paint script on {heads} pages")
 
 CSS = """
@@ -494,6 +512,29 @@ body {
 
 /* The book sets its own widths on these; keep them inside the column. */
 .ucnav-body img, .ucnav-body svg, .ucnav-body table { max-width: 100%; }
+/* Step 11: the unrotated sideways figure. It is wider than the column, so
+   it scrolls in place at full size rather than being shrunk to fit, which
+   at 62% would leave the labels inside it unreadable. */
+.ucfig-wide { display: block; overflow-x: auto; max-width: 100%; }
+.ucfig-wide img { max-width: none; }
+
+/* tex4ht ships its own "@media (prefers-color-scheme: dark) { img[src^=main] {
+   filter: invert(1) } }". That follows the machine, not the reader, so a
+   dark-mode machine with light chosen here inverted all nine diagrams on a
+   light page: white ink on black boxes, which is what "the pictures are
+   designed for dark mode" looks like. Restated below to follow the choice, in
+   both directions. The hue rotation is not decoration: a plain invert turns
+   the book's accent orange (#a8630f) into blue, and rotating the hue back puts
+   it where the figures were drawn. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) img[src^="main"] {
+    filter: invert(1) hue-rotate(180deg);
+  }
+  :root[data-theme="light"] img[src^="main"] { filter: none; }
+}
+:root[data-theme="dark"] img[src^="main"] {
+  filter: invert(1) hue-rotate(180deg);
+}
 
 @media (max-width: 60rem) {
   /* A sidebar holding its column at this width is how horizontal overflow
@@ -600,6 +641,12 @@ chk "unresolved cross-references" "$(grep -h -c '\[?\]' main*.html | paste -sd+ 
 chk "formulas left as images" "$(grep -ho "<img[^>]*alt='\[[^P]" main*.html | wc -l | tr -d ' ')" "0"
 chk "pages without a sidebar" "$(grep -L "class='ucnav'" main*.html | wc -l | tr -d ' ')" "0"
 chk "pages without the theme button" "$(grep -L "class='ucnav-theme'" main*.html | wc -l | tr -d ' ')" "0"
+chk "rotated figures left overlapping their text" "$(grep -ho "class='rotatebox'" main*.html | wc -l | tr -d ' ')" "0"
+chk "the sideways figure, unrotated and scrollable" "$(grep -ho "class='ucfig-wide'" main*.html | wc -l | tr -d ' ')" "1"
+# The theme the reader picked has to win over the theme their machine prefers,
+# for the diagrams as well as the page. Without the guarded pair below, light
+# chosen on a dark-mode machine renders inverted figures on a light page.
+chk "diagram inversion following the choice" "$(grep -c ':root\[data-theme="light"\] img' main.css)" "1"
 chk "pages without the pre-paint theme script" "$(grep -L "uc-theme" main*.html | wc -l | tr -d ' ')" "0"
 # Light must be the base, so that a browser with no support for the query, and
 # a reader who has chosen light, both get it. If the light tokens ever move

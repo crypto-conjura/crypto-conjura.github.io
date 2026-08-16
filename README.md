@@ -31,13 +31,6 @@ Copy `_templates/statement.qmd` (or `_templates/problem.qmd`, or `papers/example
 
 ## Licensing
 
-**Draft, not yet in force.** These two files are proposed terms awaiting the
-repository owner's confirmation. Until that confirmation lands, treat the
-repository as all-rights-reserved and ask before reusing anything. The
-specific thing needing confirmation is in the last section of
-`LICENSE-CONTENT`: imported LaTeX from co-authored or published work may
-carry third-party rights that the Conjura contributors cannot relicense.
-
 Two licenses, split by what the file is:
 
 - [`LICENSE-CODE`](LICENSE-CODE) (MIT) covers the tooling: `scripts/`,
@@ -51,6 +44,15 @@ Two licenses, split by what the file is:
   `resources/` pages.
 
 Lean artifacts under `c/<id>/lean/` are code, so MIT.
+
+**Imported material is carved out.** Some `.tex` sources and PDFs under
+`c/<id>/latex/`, `c/<id>/pdf/`, `papers/<slug>/latex/`, `papers/<slug>/pdf/`,
+`surveys/<slug>/latex/`, `surveys/<slug>/pdf/` and `latex/` came from work with
+co-authors or from published papers, and may carry third-party rights the
+Conjura contributors cannot grant. Where that is so, the imported file's own
+terms govern and `LICENSE-CONTENT` does not apply to it. See the final section
+of that file. If you want to reuse something under one of those paths and it
+is not obvious who holds the rights, ask first.
 
 ## Contributing
 

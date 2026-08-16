@@ -38,9 +38,10 @@ colour.
 
 Seal (de Bruijn-complete): pi == 4 and sigma >= 4.
 
-Beyond the badge, every leaf under c/ also carries a required `status_summary`
-frontmatter field and an `## Open obligations` body section (checked, never
-generated, here). `statement_sha` is a hash of the leaf's `## Statement`
+Beyond the badge, every page carrying a `status:` block (leaves under c/ and
+papers under papers/) also carries a required `status_summary` frontmatter
+field and an `## Open obligations` body section (checked, never generated,
+here). `statement_sha` is a hash of the page's `## Statement`
 block: if it no longer matches what's on disk, the informal statement
 changed since the formalization was last checked against it, so
 `statement_match` is forced back to `open`, `statement_sha` is rewritten,
@@ -55,6 +56,17 @@ from pathlib import Path
 
 LEVELS3 = ("open", "ai", "human")
 LEVELS2 = ("ai", "human")
+
+# Roots scanned when no target is given on the command line. Both hold pages
+# carrying the `status:`/`statement_sha`/`status_badge` contract: statements
+# under c/, and papers under papers/ (the same tabs, the same hashed
+# `## Statement` block). Hubs under p/ are deliberately absent: per
+# /schema/, a hub carries no badge of its own, only an aggregate view over
+# its children. Any page without a `status:` block is skipped anyway, so the
+# exemption is about intent rather than mechanics -- adding a `status:` block
+# to a hub should be a deliberate schema change, not something this script
+# starts silently generating badges for.
+DEFAULT_ROOTS = ("c", "papers")
 
 FIELD_SPECS = {
     "statement_informal": LEVELS2,
@@ -408,7 +420,7 @@ def main(argv):
         return 0
 
     check = "--check" in argv
-    targets = [a for a in argv if not a.startswith("--")] or ["c"]
+    targets = [a for a in argv if not a.startswith("--")] or list(DEFAULT_ROOTS)
     files = []
     for t in targets:
         p = Path(t)

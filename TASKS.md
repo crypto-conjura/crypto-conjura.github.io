@@ -1,6 +1,6 @@
 # Tasks
 
-Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~12.58h** (rough; the UC Encyclopedia content item is especially uncertain and could run well over its estimate).
+Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~11.08h** (rough; the UC Encyclopedia content item is especially uncertain and could run well over its estimate).
 
 - [ ] **Usability on iPhone, Android, and other handheld devices (~15 min — manual: PDF fragment behavior needs a real physical device, not just emulation)**
 
@@ -11,13 +11,6 @@ Ordered by difficulty: web-related tweaks, new web content, new conjectures, new
 - [ ] **Mention a multi-account, multi-model distributed compute idea on the Vision page (~15 min)**
 
   `vision/index.qmd` already has two "(an idea we're exploring)" subsections following the same pattern: "Incentives for open problems" (on-chain bounties) and "Idle tokens" (other people's spare API/subscription capacity donated to the backlog). Add a third, distinct from both: a distributed system Conjura itself would run, orchestrating particularly compute-intensive research tasks across multiple AI accounts and multiple different models (not just one account, one model) to get more throughput on the hardest open problems than any single account/rate-limit allows. Same framing as the other two: a direction worth exploring, not a built feature.
-
-- [ ] **A Philosophy page, with an audio read-out and a podcast (~1.5h — manual: actual audio/podcast production, not just text generation)**
-
-  A new page on the site's philosophy — distinct from `vision/index.qmd` ("why Conjura exists, where it's headed"), this is about the underlying worldview/reasoning rather than the roadmap; decide on the relationship between the two (separate page vs. a section of Vision) and where it sits in the nav (top-level like Vision, or nested under Resources) when picked up. Two things accompany the written page:
-
-  - **An audio read-out** — a straight narrated version of the page's own text.
-  - **A podcast** — a produced discussion-format episode, distinct from the read-out. Note the removed Blog section's old description ("informal write-ups — and eventually podcasts and videos — for resolved conjectures," `README.md:17`) was about individual resolved conjectures; this is scoped to the site's philosophy specifically, not that.
 
 - [ ] **Attempt the Groth conjecture (~2h — highly uncertain: genuine open research, may not resolve regardless of time spent)**
 

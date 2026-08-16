@@ -42,6 +42,31 @@ Each statement or paper folder follows the same convention:
 
 Copy `_templates/statement.qmd` (or `_templates/problem.qmd`, or `papers/example-paper/`) as a starting template.
 
+## Licensing
+
+Two licenses, split by what the file is:
+
+- [`LICENSE-CODE`](LICENSE-CODE) (MIT) covers the tooling: `scripts/`,
+  `.githooks/`, `.github/workflows/`, `_listing-templates/`, `_templates/`,
+  the `.scss` themes, and the LaTeX document classes under
+  `latex/conjectures/_template/`.
+- [`LICENSE-CONTENT`](LICENSE-CONTENT) (CC BY 4.0) covers the writing:
+  statement and problem pages under `c/` and `p/`, papers under `papers/`,
+  surveys under `surveys/`, the UC encyclopedia under `uc/`, the prompts
+  under `prompts/`, and the `schema/`, `vision/`, `philosophy/` and
+  `resources/` pages.
+
+Lean artifacts under `c/<id>/lean/` are code, so MIT.
+
+**Imported material is carved out.** Some `.tex` sources and PDFs under
+`c/<id>/latex/`, `c/<id>/pdf/`, `papers/<slug>/latex/`, `papers/<slug>/pdf/`,
+`surveys/<slug>/latex/`, `surveys/<slug>/pdf/` and `latex/` came from work with
+co-authors or from published papers, and may carry third-party rights the
+Conjura contributors cannot grant. Where that is so, the imported file's own
+terms govern and `LICENSE-CONTENT` does not apply to it. See the final section
+of that file. If you want to reuse something under one of those paths and it
+is not obvious who holds the rights, ask first.
+
 ## Contributing
 
 See `CONTRIBUTING.md` for the full workflow (identifier allocation, the same-id-vs-new-id revision rule, adding a statement or a problem). In short:

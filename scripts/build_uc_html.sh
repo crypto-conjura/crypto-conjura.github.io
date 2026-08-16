@@ -105,6 +105,9 @@ for name, (nargs, body) in G.load_macros().items():
 # definition for. Without these they render as red literal text.
 out.setdefault("P", r"\unicode{x00B6}")   # pilcrow, from $\P$ in the source
 out.setdefault("allowbreak", "")           # a line-break hint, no visual effect
+out.setdefault("relax", "")                # a TeX no-op; step 6 strips the
+                                           # ones step 5 causes, this catches
+                                           # any the book emits elsewhere
 cfg = "window.MathJax = { tex: { tags: 'ams', macros: " + json.dumps(out) + " } };"
 for f in pathlib.Path(".").glob("main*.html"):
     h = f.read_text(errors="ignore")
@@ -201,6 +204,11 @@ for f in pages:
            f"<div class='ucnav-head'><a href='main.html'>UC for Gamers</a></div>"
            f"<ul>{items}</ul></nav>")
     h = f.read_text(errors="ignore")
+    # Step 5's \ensuremath reaches the page as "\(\relax \Delta \)". \relax is
+    # a TeX no-op with nothing to typeset, and MathJax has no definition for
+    # it, so it renders as literal red text next to the four affected
+    # headings. Drop it: removing a no-op cannot change what the math means.
+    h = h.replace(r"\(\relax ", r"\(")
     # Insert after <body...>, and close the wrapper before </body>. tex4ht
     # writes "<body>" plainly, but match attributes in case that changes.
     # lambda again: chapter titles carry backslashes, and as a string
@@ -339,6 +347,7 @@ for target in $(grep -oE '\(html/main[^)]+\)' "$idx" | tr -d '()' | sed 's|^html
   fi
 done
 chk "index.qmd links that do not resolve" "$bad_links" "0"
+chk "TeX no-ops left in the math" "$(grep -oh '\\relax' main*.html | wc -l | tr -d ' ')" "0"
 
 tex_h=$(grep -cE '^\\(chapter|section)\{' main.tex)
 html_h=$(grep -hoE '<h[23][^>]*>' main*.html | wc -l | tr -d ' ')

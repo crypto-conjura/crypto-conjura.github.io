@@ -19,7 +19,6 @@ prompts/                     reusable prompts (research, proof-checking, writing
 resources/                   reusable supporting material; books/ and papers/ hold local reference PDFs
 schema/                      the frontmatter contract, for humans and agents
 about/                       the site's position: where it's headed, and the reasoning underneath
-philosophy/audio/            spoken readings of the About page's second half
 latex/                       working drafts, staged here before they become a site page
 scripts/                     the four CI gates: badges, facet index, relation graph, UC boxes
 _templates/                  copy-paste skeletons for a new statement or problem

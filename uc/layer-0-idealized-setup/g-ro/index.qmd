@@ -6,7 +6,111 @@ layer: 0
 
 *G-RO* (Global RO: observable, programmable, restricted) is part of *Idealized Setup and Resources* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
 
+One hash oracle, shared by every session at once. That sharing is the whole difficulty. A local random oracle can be reprogrammed and watched by the simulator because the simulator owns it, and none of that survives being made global: an oracle every session queries is an oracle no single session's simulator may freely rewrite. The functionality below buys back exactly two of the lost powers, and buys each back only within the session asking, which is what "restricted" names.
+
+## Functionality
+
+Reading the box: $\mathtt{H}$ is the oracle's table, drawn lazily, so $\square$ marks a point not yet fixed rather than a point fixed to nothing; $\mathtt{Q}[s]$ collects the queries made *about* session $s$ from outside it, which is the only thing this functionality ever tells an adversary; $\mathtt{prog}$ is the set of points the adversary wrote rather than drew. A message is always a pair $(s,m')$ of a session and a payload, and comparing that $s$ against the caller's own session $\mathit{id}'.s$ is what separates a legitimate query from a recorded one. $\mathbf{U} := \varnothing$: the oracle calls nothing, not even the adversary slot.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{G}_{\mathsf{RO}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid} := (\mathsf{GRO},0,0)\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N} := \mathbf{Std} \cup \mathbf{A} \cup \mathbf{Z}\), &nbsp; \(\mathbf{U} := \varnothing\), &nbsp; \(\mathit{par} := \ell\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{H}[*] \gets \square\)<span class="cj-comment">// the table, drawn lazily</span></li>
+<li>\(\mathtt{Q}[*] \gets \varnothing\)<span class="cj-comment">// illegitimate queries, per session</span></li>
+<li>\(\mathtt{prog} \gets \varnothing\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Query(<span class="cj-id">m</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="4">
+<li>\(\textbf{if}\ \mathtt{H}[m] = \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{H}[m] \gets_{\$} \{0,1\}^{\ell}\)</span></li>
+<li>parse \(m\) as \((s,m')\)</li>
+<li>\(\textbf{if}\ \mathit{id}'.F = \mathbf{A} \ \vee\ s \neq \mathit{id}'.s\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{Q}[s] \gets \mathtt{Q}[s] \cup \{(s,m',\mathtt{H}[m])\}\)</span><span class="cj-comment">// out of session, so recorded</span></li>
+<li>\(\textbf{return}\ \mathtt{H}[m]\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Observe()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="10">
+<li>\(\textbf{if}\ \mathit{id}'.F \neq \mathbf{A}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\) <span class="cj-atom">rej</span></span><span class="cj-comment">// \(\mathcal{G}_{\mathsf{RO}}^{\mathsf{ro}}\), \(\mathcal{G}_{\mathsf{RO}}^{\mathsf{rpo}}\) only</span></li>
+<li>\(\textbf{return}\ \mathtt{Q}[\mathit{id}'.s]\)<span class="cj-comment">// this session's, and no other's</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Program(<span class="cj-id">m</span>, <span class="cj-id">h</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="13">
+<li>\(\textbf{if}\ \mathit{id}'.F \neq \mathbf{A}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\) <span class="cj-atom">rej</span></span><span class="cj-comment">// \(\mathcal{G}_{\mathsf{RO}}^{\mathsf{rp}}\), \(\mathcal{G}_{\mathsf{RO}}^{\mathsf{rpo}}\) only</span></li>
+<li>\(\textbf{if}\ \mathtt{H}[m] \neq \square \ \wedge\ \mathtt{H}[m] \neq h\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\) <span class="cj-atom">rej</span></span><span class="cj-comment">// a drawn point is never moved</span></li>
+<li>\(\mathtt{H}[m] \gets h\); &nbsp;\(\mathtt{prog} \gets \mathtt{prog} \cup \{m\}\)</li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.IsProgrammed(<span class="cj-id">m</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="19">
+<li>parse \(m\) as \((s,m')\)</li>
+<li>\(\textbf{if}\ \mathit{id}'.F \neq \mathbf{A} \ \wedge\ s \neq \mathit{id}'.s\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\) <span class="cj-atom">rej</span></span><span class="cj-comment">// only about one's own session</span></li>
+<li>\(\textbf{return}\ m \in \mathtt{prog}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="23">
+<li>\(\textbf{return}\ \bot\)<span class="cj-comment">// observation is \(\mathsf{Observe}\)'s, and restricted</span></li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+The box is transcribed from Camenisch, Drijvers, Gagliardoni, Lehmann and Neven, *The Wonderful World of Global Random Oracles*, ePrint 2018/165, revision `20180211:144419`, Figure 10, p. 23, which defines three functionalities in one figure and says which interfaces each has: $\mathcal{G}^{\mathsf{ro}}_{\mathsf{RO}}$ "contains only the Query and Observe interfaces", $\mathcal{G}^{\mathsf{rp}}_{\mathsf{RO}}$ "contains only the Query, Program, and IsProgrammed interfaces", and $\mathcal{G}^{\mathsf{rpo}}_{\mathsf{RO}}$ "contains all interfaces". The box keeps that arrangement, one figure carrying the family, with each restricted operation marked in its own comment. The observable variant is due to Canetti, Jain and Scafuro, *Practical UC Security with a Global Random Oracle*, ePrint 2014/908, revision `20141116:182219`, which this paper recalls and then extends with programming.
+
+Three lines carry the design.
+
+- **Line 7 decides what counts as illegitimate, and line 8 records it.** A query is kept when the adversary makes it, or when the session named inside the message is not the caller's own. Honest in-session use leaves no trace at all, so the list a simulator later reads is precisely the traffic that came from outside, which is what makes it safe to hand over.
+- **Line 12 hands over one session's list and no other's.** This is the restriction. An unrestricted observable oracle would let any session's simulator watch every session, and the global oracle would stop being a shared resource and become a wiretap.
+- **Line 15 refuses to move a point already drawn.** Programming may fill a gap, never overwrite, and line 17 writes only once that guard has passed. Without it the oracle would not be a function.
+
+Four conventions the source does not fix, decided here.
+
+- **Leakage.** The book requires a $\mathsf{Leak}$ and the source has no such interface, so line 23 is added and deliberately returns $\bot$. Handing back the table, or even the query lists, would undo the restriction that the previous two operations exist to impose. What an adversary may observe, it observes through $\mathsf{Observe}$, in its own session, or not at all.
+- **Which session $\mathsf{Observe}$ reads.** The source takes the session as an argument, "on input $(\textsf{Observe}, \mathit{sid})$ from the adversary". Here it is read off the caller instead. The two agree whenever the adversary is the one bound to that session, which is the only case the source intends, and taking it as an argument would let a caller name a session it does not belong to and read a list that is not its own. Recorded because the source is literally an argument and this is not.
+- **Refusal.** The source says "ignore this input" for a call out of scope. The book has no ignoring: every operation returns. Those become an explicit $\mathsf{rej}$, on lines 11, 14, 16 and 21. This is a real change of shape, not a transcription: a caller that is ignored cannot tell it was ignored, and a caller that is rejected can.
+- **No security parameter.** The source draws from $\{0,1\}^{\ell(n)}$, with $\ell$ a function of a security parameter. This book is concrete throughout, with no security parameter and no asymptotics, so $\ell$ is the output length itself. Nothing about the functionality changes; where the quantification lives does.
+
+## Known realizations
+
+None, in the sense the other entries use. This is a setup assumption, and a strong one: the point of the paper it comes from is what can be realized *given* it, not how to build it. Its interest is that the restricted forms are enough. The programmable restricted oracle suffices for UC commitments, which the plain model cannot realize at all, and the observable one already suffices for the commitments of Canetti, Jain and Scafuro.
+
+## Properties
+
+The family is ordered by what it grants, and the ordering is the reason there are three of them rather than one. Observability alone gives a simulator extraction, by reading the out-of-session queries that a committer must have made. Programming alone gives it equivocation, by fixing a point after the fact. Combining them is strictly more than either, and the paper's own results are organised by which of the two a construction needs. Both are restricted to the asking session, so neither weakens any other session's security, which is the property that makes a shared oracle usable at all.
+
+## Formal artifacts
+
+None yet.
+
 *References:*
 
 - Canetti, Jain, and Scafuro. [*Practical UC security with a global random oracle*](https://eprint.iacr.org/2014/908). In ACM Conference on Computer and Communications Security (CCS), pages 597–608, 2014.
-- Camenisch et al. [*The wonderful world of global random oracles*](https://eprint.iacr.org/2018/165). In Advances in Cryptology – EUROCRYPT 2018, 2018.
+- Camenisch, Drijvers, Gagliardoni, Lehmann, and Neven. [*The Wonderful World of Global Random Oracles*](https://eprint.iacr.org/2018/165). In Advances in Cryptology – EUROCRYPT 2018, 2018.

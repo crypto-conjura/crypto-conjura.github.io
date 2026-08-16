@@ -1,0 +1,93 @@
+%% The interface box of g-ro, the one source for both the book
+%% and uc/.../g-ro/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Gro$ \\
+\params{$\PID := (\op{G}\op{RO},0,0)$, \quad $\Ps$, \quad
+$\admits := \Stdpid \cup \Apid \cup \Zpid$, \quad $\uses := \emptyset$, \quad $\pars := \ell$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{H}[*] \gets \unset$
+  \Comment{the table, drawn lazily}
+\State $\V{Q}[*] \gets \emptyset$
+  \Comment{illegitimate queries, per session}
+\State $\V{prog} \gets \emptyset$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Query}(m)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$\V{H}[m] = \unset$}
+  \State $\V{H}[m] \gets_{\$} \{0,1\}^{\ell}$ \label{ln:roqdraw}
+\EndIf
+\State parse $m$ as $(s,m')$
+\If{$\id'.F = \Apid \ \vee\ s \neq \id'.s$} \label{ln:roillegit}
+  \State $\V{Q}[s] \gets \V{Q}[s] \cup \{(s,m',\V{H}[m])\}$
+    \Comment{out of session, so recorded}
+\EndIf
+\State \textbf{return} $\V{H}[m]$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Observe}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$\id'.F \neq \Apid$}
+  \State \textbf{return} $\rej$ \label{ln:roobsadv}
+    \Comment{$\Gro^{\mathsf{ro}}$, $\Gro^{\mathsf{rpo}}$ only}
+\EndIf
+\State \textbf{return} $\V{Q}[\id'.s]$ \label{ln:roobserve}
+  \Comment{this session's, and no other's}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Program}(m,h)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$\id'.F \neq \Apid$}
+  \State \textbf{return} $\rej$
+    \Comment{$\Gro^{\mathsf{rp}}$, $\Gro^{\mathsf{rpo}}$ only}
+\EndIf
+\If{$\V{H}[m] \neq \unset \ \wedge\ \V{H}[m] \neq h$}
+  \State \textbf{return} $\rej$ \label{ln:ronoclobber}
+    \Comment{a drawn point is never moved}
+\EndIf
+\State $\V{H}[m] \gets h$; \ $\V{prog} \gets \V{prog} \cup \{m\}$
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{IsProgrammed}(m)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State parse $m$ as $(s,m')$
+\If{$\id'.F \neq \Apid \ \wedge\ s \neq \id'.s$}
+  \State \textbf{return} $\rej$ \label{ln:roisprogscope}
+    \Comment{only about one's own session}
+\EndIf
+\State \textbf{return} $m \in \V{prog}$ \label{ln:roisprog}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $\none$ \label{ln:roleak}
+  \Comment{observation is $\op{Observe}$'s, and restricted}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

@@ -1,8 +1,15 @@
-# Working LaTeX drafts (local only)
+# Working LaTeX drafts
 
-This folder holds in-progress LaTeX documents — papers and conjectures — that
-aren't ready for the site yet. It's excluded from git (`/latex/` in
-`.gitignore`), so nothing here ever reaches GitHub or the published site.
+This folder holds in-progress LaTeX documents, papers and conjectures, that
+aren't ready for the site yet.
+
+It **is** tracked in git, and so is public: commit 4ace801 un-ignored it
+deliberately, so that drafts are versioned like everything else. Only the
+regenerable build byproducts are ignored (`.aux`, `.log`, `.out`, `.toc`,
+`.fls`, `.fdb_latexmk`, `.synctex.gz`). What this folder is excluded from is
+the *published site*: nothing here is rendered by Quarto or copied into
+`_site/`. Treat anything you drop in here as visible on GitHub the moment you
+push it.
 
 ```
 latex/papers/         working paper drafts

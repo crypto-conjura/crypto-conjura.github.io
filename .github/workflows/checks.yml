@@ -1,0 +1,53 @@
+name: Checks
+
+# The same gates as `publish.yml`, minus the deploy. This exists so that work
+# on a branch gets the build checked before it reaches `main`: `publish.yml`
+# only runs on push to `main`, which means a broken generated field is caught
+# after it has already stopped the site deploying, not before.
+#
+# Nothing here touches Pages: no `pages:`/`id-token:` permission, no artifact
+# upload, no deploy job.
+
+on:
+  pull_request:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: "checks-${{ github.ref }}"
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Validate statement schema and badges
+        run: python3 scripts/status_badge.py --check c papers
+
+      - name: Build facet index (conjura.json, _generated/)
+        run: python3 scripts/build_index.py
+
+      - name: Check relation graph consistency
+        run: python3 scripts/check_relations.py
+
+      - name: Check UC interface boxes against their LaTeX
+        run: python3 scripts/gen_interface.py --check
+
+      - name: Set up Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+        with:
+          version: "1.10.18"
+
+      - name: Render site
+        run: quarto render

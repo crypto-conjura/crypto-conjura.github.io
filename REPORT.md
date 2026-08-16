@@ -666,6 +666,65 @@ nothing new. `_site` is 19 MB and the 7.4 GB `.lake` tree did not leak into it.
 
 ---
 
+## Pull requests
+
+`gh` was authenticated, so per R1 a draft PR was opened per branch, labeled
+`overnight`. All eleven are **drafts**, so none can be merged by accident.
+
+| PR | Branch | Base |
+|---|---|---|
+| [#1](https://github.com/crypto-conjura/crypto-conjura.github.io/pull/1) | `overnight/02-listing-filter` | `main` |
+| [#2](https://github.com/crypto-conjura/crypto-conjura.github.io/pull/2) | `overnight/03-site-url` | `main` |
+| [#3](https://github.com/crypto-conjura/crypto-conjura.github.io/pull/3) | `overnight/04-readme` | `main` |
+| [#4](https://github.com/crypto-conjura/crypto-conjura.github.io/pull/4) | `overnight/05-citations` | `main` |
+| [#5](https://github.com/crypto-conjura/crypto-conjura.github.io/pull/5) | `overnight/06-uc-boxes` | `main` |
+| [#6](https://github.com/crypto-conjura/crypto-conjura.github.io/pull/6) | `overnight/07-lean-statement` | `main` |
+| [#7](https://github.com/crypto-conjura/crypto-conjura.github.io/pull/7) | `overnight/08-lean-proof` | `overnight/07-lean-statement` |
+| [#8](https://github.com/crypto-conjura/crypto-conjura.github.io/pull/8) | `overnight/09a-license-draft` | `main` |
+| [#9](https://github.com/crypto-conjura/crypto-conjura.github.io/pull/9) | `overnight/09b-c0005-secret-seed` | `main` |
+| [#10](https://github.com/crypto-conjura/crypto-conjura.github.io/pull/10) | `overnight/09c-c0006-ksource` | `main` |
+| [#11](https://github.com/crypto-conjura/crypto-conjura.github.io/pull/11) | `overnight/09d-blog-restore` | `overnight/03-site-url` |
+
+An `overnight` label was created for this (the repository had no such label).
+
+### BLOCKED: two branches could not be pushed, so have no PR
+
+`overnight/01-ci-gate` and `overnight/10-integration` were **rejected by
+GitHub**:
+
+```
+! [remote rejected] overnight/01-ci-gate -> overnight/01-ci-gate
+  (refusing to allow an OAuth App to create or update workflow
+   `.github/workflows/checks.yml` without `workflow` scope)
+```
+
+The authenticated token carries `admin:public_key, gist, read:org, repo` and
+**not `workflow`**, so any branch touching `.github/workflows/` is refused.
+`overnight/10-integration` contains T1, so it is refused for the same reason.
+
+I did not widen the token, re-authenticate, or change any repository setting:
+R7 puts credentialed and settings actions out of scope, and a scope change is
+not something to do to someone's account while they are asleep.
+
+**Both branches exist locally and are complete**, with all gates green. To get
+them up:
+
+```
+gh auth refresh -h github.com -s workflow      # then re-run:
+git push -u origin overnight/01-ci-gate
+git push -u origin overnight/10-integration
+```
+
+Or apply T1 by hand: it is two files of workflow change plus
+`scripts/status_badge.py`, `CONTRIBUTING.md` and `schema/index.qmd`.
+
+A consequence worth noting: `checks.yml` is what would have given these PRs
+CI. Since it could not be pushed, **the eleven open PRs have no CI running
+against them**. Everything in this report was verified locally instead, and
+the commands are quoted so you can re-run them.
+
+---
+
 ## Decisions taken under Section 2
 
 | # | Decision | Rule |
@@ -699,6 +758,7 @@ nothing new. `_site` is 19 MB and the 7.4 GB `.lake` tree did not leak into it.
 12. **T9c:** the `√k` bound shape is a guess; generic Hellinger tensorization gives only `√(kδ)`.
 13. **T9c:** `c/0006` carries `form: lower-bound` while stating an upper bound.
 14. **Pre-existing:** two broken internal links on the paper template.
+15. **Credentials:** the `gh` token lacks the `workflow` scope, so the two branches touching `.github/workflows/` could not be pushed and have no PR. Not worked around; see the Pull requests section.
 
 ---
 
@@ -711,8 +771,9 @@ Independent, merge in any order, lowest risk first:
 1. `overnight/03-site-url` -- config only, biggest visible win.
 2. `overnight/02-listing-filter` -- template plus two SCSS blocks.
 3. `overnight/04-readme` -- docs only.
-4. `overnight/01-ci-gate` -- gate widening plus the new `checks.yml`. Merge
-   this before the content branches if you want them checked by CI.
+4. `overnight/01-ci-gate` -- gate widening plus the new `checks.yml`.
+   **Local only: push blocked for lack of the `workflow` token scope.** Merge
+   it before the content branches if you want them checked by CI.
 5. `overnight/06-uc-boxes` -- adds `--vs-pdf`, changes no output.
 6. `overnight/05-citations` -- one prose citation, one `sources:` block.
 
@@ -727,7 +788,8 @@ Hold until you have decided:
 10. `overnight/09a-license-draft` -- **needs your confirmation**, see below.
 
 Or merge `overnight/10-integration` and get all of it at once; it is already
-conflict-resolved, gates green, renders clean. It is marked "merge last".
+conflict-resolved, gates green, renders clean. It is "merge last", and it is
+**local only** for the same token-scope reason.
 
 ### What needs a human, by design
 
@@ -766,6 +828,15 @@ can do them, and this one did not try.
 - [ ] **`c/0006` `form:`** is `lower-bound` but the page states an upper bound.
 - [ ] **`prompts/solve.md`** cites Section 5.2 for the 6.5% figure; it is 4.2.
       Yours to edit.
+
+### Housekeeping
+
+- [ ] **Push the two blocked branches.** `gh auth refresh -h github.com -s workflow`,
+      then push `overnight/01-ci-gate` and `overnight/10-integration`. Until
+      then the eleven open PRs have no CI, because `checks.yml` lives on the
+      branch that could not be pushed.
+- [ ] Close the draft PRs you do not want; they are all drafts, so nothing can
+      merge itself.
 
 ### Red baseline findings
 

@@ -180,7 +180,13 @@ table.table {
   color: $body-color;
   text-decoration: none;
 }
-.cj-explore-card h3 a::after {
+// Direct child, and never the anchor-link Quarto injects. quarto.js runs
+// anchorJS.add('.anchored') at load, which appends a second <a>, pointing at
+// "#open-problems", inside this very heading. A bare "h3 a::after" gives that
+// one a card-covering overlay too, and being appended last it paints on top,
+// so every click on the card jumped to the section anchor on the landing page
+// instead of opening the section's own page.
+.cj-explore-card h3 > a:not(.anchorjs-link)::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -197,6 +203,12 @@ table.table {
   margin-bottom: 0;
   font-size: 0.95rem;
   opacity: 0.85;
+  // The whole card is one link, via the title's ::after overlay above. This
+  // paragraph's opacity makes it a stacking context, and measurement in a
+  // browser says it still takes the clicks wherever its text actually sits,
+  // overlay z-index notwithstanding. Nothing here is selectable prose worth
+  // protecting, so let the pointer through to the link that covers the card.
+  pointer-events: none;
 }
 
 // The one-line status_summary under each title in a listing table. Smaller

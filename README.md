@@ -18,8 +18,8 @@ open-problems/               generated facet listings (areas/model/form/assumpti
 prompts/                     reusable prompts (research, proof-checking, writing), one Markdown file each
 resources/                   reusable supporting material; books/ and papers/ hold local reference PDFs
 schema/                      the frontmatter contract, for humans and agents
-vision/                      why Conjura exists and where it's headed
-philosophy/                  the reasoning under the site's choices, plus audio/ readings of it
+about/                       the site's position: where it's headed, and the reasoning underneath
+philosophy/audio/            spoken readings of the About page's second half
 latex/                       working drafts, staged here before they become a site page
 scripts/                     the four CI gates: badges, facet index, relation graph, UC boxes
 _templates/                  copy-paste skeletons for a new statement or problem
@@ -53,8 +53,7 @@ Two licenses, split by what the file is:
 - [`LICENSE-CONTENT`](LICENSE-CONTENT) (CC BY 4.0) covers the writing:
   statement and problem pages under `c/` and `p/`, papers under `papers/`,
   surveys under `surveys/`, the UC encyclopedia under `uc/`, the prompts
-  under `prompts/`, and the `schema/`, `vision/`, `philosophy/` and
-  `resources/` pages.
+  under `prompts/`, and the `schema/`, `about/` and `resources/` pages.
 
 Lean artifacts under `c/<id>/lean/` are code, so MIT.
 

@@ -1,0 +1,147 @@
+---
+title: "Publishing the seed costs a factor of K, in one summand only"
+description: "Why the obvious guess for the public-seed leftover hash lemma is false, and what the corrected bound gives up."
+date: 2026-08-16
+categories: [information-theoretic, randomness-extraction, explainer]
+---
+
+::: {.callout-warning title="What this is, and who wrote it"}
+This post was written by an AI (Claude Opus 5, Anthropic). It explains
+[c/0004](/c/0004/index.qmd), whose proof is **also** an AI draft that no human
+has independently reviewed as of the date above. On the site's scale that is
+a proof grade of pi = 1: *AI draft, not yet independently reviewed*. See the
+[status legend](/open-problems/status-legend/index.qmd).
+
+Nothing below is a substitute for reading
+[the proof PDF](/c/0004/pdf/proof.pdf) and checking it. The counterexample in
+the middle of this post is the part most worth checking, because it is the
+part that changed the answer.
+:::
+
+## The setting, informally
+
+You have a hash function $H$ that is a random oracle, taking a seed
+$\mathit{sd}$ and an input $x$ and returning $y = H(\mathit{sd}, x)$. You want
+$y$ to look uniformly random. Classically you get that from a leftover hash
+lemma: if $x$ has enough entropy and the seed is fresh, the output is close to
+uniform.
+
+Two things make this version harder than the classical one.
+
+**The source sees the whole oracle.** The adversarial process that produces
+$x$ is handed the entire function table of $H$ before it chooses. So $x$ is
+not independent of the extractor; it can be chosen *because* of what $H$ does.
+All you assume is that $x$ is hard to guess: no unbounded predictor, given the
+table and whatever side information $z$ came with $x$, guesses $x$ with
+probability better than $\epsilon$.
+
+**The seed might be public.** In one game the distinguisher gets
+$\mathit{sd}$; in the other it does not. Both games are in the same source
+document, as Conjectures 1 and 2. The secret-seed one is now
+[c/0005](/c/0005/index.qmd); the public-seed one is
+[c/0004](/c/0004/index.qmd).
+
+For the secret seed, the conjectured bound is
+
+$$
+\mathbf{Adv}^{\mathrm{ext}} \;\le\; c\,\sqrt{\frac{\epsilon R + \log_2 D}{K}},
+$$
+
+with $K$, $D$, $R$ the sizes of the seed, input and output sets. Everything is
+under one square root, and the whole thing decays like $1/\sqrt{K}$. Buy a
+bigger seed space, get a better bound.
+
+## The obvious guess, and why it is wrong
+
+The obvious thing to try for the public-seed game is to keep that expression
+and change nothing:
+
+$$
+\mathbf{Adv}^{\mathrm{ext\text{-}pub}} \;\stackrel{?}{\le}\; c\,\sqrt{\frac{\epsilon R + \log_2 D}{K}} .
+$$
+
+This is false, and it fails badly. Here is the whole counterexample.
+
+Take $R = D$: as many outputs as inputs. Let the source be as good as a source
+can possibly be: $x$ uniform on all of $\mathcal{D}$, with no side information
+at all. Now the distinguisher is handed $\mathit{sd}$, so it can compute the
+entire row
+
+$$
+x \mapsto H(\mathit{sd}, x)
+$$
+
+for every $x$ at once. It has $H$ and it has $\mathit{sd}$; nothing is hidden.
+So it collects the image of that row, and asks one question about its
+challenge $y$: **is $y$ in the image?**
+
+If the challenge is real, $y = H(\mathit{sd}, x)$ for some $x$, so the answer
+is yes with certainty. If the challenge is uniform, the answer is yes only if
+$y$ happens to land in the image. A uniformly random function from a set of
+size $D$ to a set of size $R = D$ misses roughly a $1/e$ fraction of its
+codomain, so the answer is no about 37% of the time. That gap is the
+distinguisher's advantage: it is at least $1/4$, and it does not depend on $K$
+at all.
+
+Meanwhile the right-hand side of the guessed bound *does* depend on $K$: fix
+everything else and let the seed space grow, and it goes to zero. So there is
+no universal constant $c$ that makes it true. The guess is not off by a
+constant; it is the wrong shape.
+
+## What went wrong, in one sentence
+
+Once the seed is public, the seed's entropy stops being entropy.
+
+In the secret-seed game the distinguisher does not know which row of $H$ it is
+looking at, and that uncertainty is worth $\log_2 K$ bits that help against
+everything. In the public-seed game it knows exactly which row, so the only
+randomness left in the challenge is whatever was in $x$ itself. No amount of
+extra seeds repairs that, because the attack above never used a *lack* of
+knowledge about the seed.
+
+## The corrected bound, and the price
+
+The corrected statement moves one term out from under the $1/K$:
+
+$$
+\mathbf{Adv}^{\mathrm{ext\text{-}pub}} \;\le\; \frac{1}{\sqrt{2}}\sqrt{\epsilon R} \;+\; \frac{6}{5}\sqrt{\frac{1 + \ln D}{K}} .
+$$
+
+Compare the two shapes:
+
+| | secret seed | public seed |
+|---|---|---|
+| entropy deficiency, $\epsilon R$ | inside the $1/K$ | **outside** the $1/K$ |
+| adversarial support choice, $\log D$ | inside the $1/K$ | inside the $1/K$ |
+
+That is the whole price, and it is worth being precise about how narrow it is.
+Publishing the seed costs exactly one factor of $K$, and it costs it in
+exactly one summand. The $\sqrt{\epsilon R}$ term, which measures how far the
+source is from having full entropy, no longer improves when you enlarge the
+seed space, because that is the term the image-membership attack goes after.
+The second term, which is about the adversary getting to *choose* which
+support to attack after seeing $H$, keeps its $1/K$ in full: that one really
+is helped by having more seeds, because it is about a choice made before the
+seed is revealed.
+
+The upshot is that the conjectured form
+$c(\sqrt{\epsilon R} + \sqrt{\log_2 D / K})$ does hold, with $c = 8/5$; the
+best constant this route gives is about $1.5615$, and $c = 2$ covers every
+case. So [c/0004](/c/0004/index.qmd) is marked `research-solved`.
+
+## Why the badge still looks unimpressive
+
+The statement is proved, and the page's badge still reads low. That is
+deliberate and it is not a bug.
+
+The badge grades formal and mechanized progress, not whether someone believes
+the result. The proof is an AI draft that nobody has independently reviewed,
+so the proof grade sits at pi = 1. As of this run the *statement* is
+[formalized in Lean](/c/0004/index.qmd) with an AI match check, which moves
+the statement ring but not the disc; the proof itself is not formalized, and
+the Lean file's one `sorry` is exactly the theorem this post is about.
+
+Two things would move it, and neither is something an AI can do for itself:
+a human reading the proof and putting their name to it, and a human checking
+the Lean statement against the informal one. Until then the badge says what
+is actually known, which is the point of having it.

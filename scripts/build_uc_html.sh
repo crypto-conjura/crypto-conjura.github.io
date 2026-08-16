@@ -90,6 +90,41 @@ decl = ("\\usepackage[utf8]{inputenc}\n"
 # set -e the build then runs happily on undeclared Unicode.
 s, n = re.subn(r"\\usepackage\[utf8\]\{inputenc\}", lambda _: decl, s, count=1)
 assert n == 1, "inputenc line not found -- step 5 needs updating"
+
+# Step 8: give every pseudocode line label an anchor. tex4ht emits nothing
+# for a \label inside algpseudocode, so all 298 line references resolve to
+# the enclosing heading or to an anchor that was never written. A
+# \hypertarget beside each \label is what tex4ht does turn into an id.
+# The line labels are not all in main.tex: 25 of them live in the
+# functionalities/ includes, and anchoring only main.tex leaves exactly
+# those references pointing at a heading.
+ANCHOR = (r"\\label\{(ln:[^}]*)\}",
+          lambda m: "\\label{%s}\\hypertarget{%s}{}" % (m.group(1), m.group(1)))
+# main.tex is edited in memory: re-reading it here would discard the Unicode
+# declarations added above, and the only symptom of that is a table of
+# contents quietly losing its Delta and pi again.
+s, total = re.subn(ANCHOR[0], ANCHOR[1], s)
+for f in sorted(pathlib.Path("functionalities").glob("*.tex")):
+    t, k = re.subn(ANCHOR[0], ANCHOR[1], f.read_text())
+    if k:
+        f.write_text(t)
+    total += k
+assert total > 0, "no ln: labels found -- step 8 needs updating"
+print(f"    anchored {total} pseudocode line labels")
+
+# Step 9: \emph carries no semantics in tex4ht's output, only an italic font
+# class shared with every other italic on the page. \HCode exists only under
+# tex4ht, so the PDF build is untouched by this and the guard keeps a plain
+# latex run working.
+emph = ("\\makeatletter\n"
+        "\\AtBeginDocument{\\ifdefined\\HCode\n"
+        "  \\let\\uc@emph\\emph\n"
+        "  \\renewcommand{\\emph}[1]{\\HCode{<em>}\\uc@emph{#1}\\HCode{</em>}}\\fi}\n"
+        "\\makeatother\n"
+        "\\begin{document}")
+s, n = re.subn(r"\\begin\{document\}", lambda _: emph, s, count=1)
+assert n == 1, "begin{document} not found -- step 9 needs updating"
+
 p.write_text(s)
 PY
 
@@ -382,6 +417,61 @@ css = pathlib.Path("main.css")
 css.write_text(css.read_text(errors="ignore") + CSS)
 PY
 
+# Step 8b: repoint the line references at the anchors step 8 created, and
+# drop the bogus fragment tex4ht puts on its own "up" links.
+python3 - <<'STEP8' || { echo "FAIL: step 8 (line references)"; exit 1; }
+import pathlib, re
+
+pages = sorted(pathlib.Path(".").glob("main*.html"))
+text = {q.name: q.read_text(errors="ignore") for q in pages}
+
+# Where did each \hypertarget{ln:...} end up?
+where = {}
+for name, h in text.items():
+    # tex4ht sanitises the colon out of a \hypertarget key, so
+    # \hypertarget{ln:session} lands as id='ln_session'.
+    for lab in re.findall(r"id='(ln_[^']+)'", h):
+        where.setdefault(lab, name)
+
+# tex4ht records the label it could not resolve in a comment inside the link
+# text: <a href='...'>3<!-- tex4ht:ref: ln:session --></a>. That comment is
+# the only thing tying the reference back to the line it meant.
+# Match a whole <a>...</a> and look for the comment inside it. A single
+# regex reaching from href to comment spans intervening links instead --
+# .*? crosses </a> under re.S -- so the comment gets attributed to an
+# earlier anchor and 183 of the 481 rendered references are skipped while
+# the count still reports success.
+ANCH = re.compile(r"<a href='([^']*)'([^>]*)>(.*?)</a>", re.S)
+MARK = re.compile(r"<!--\s*tex4ht:ref:\s*(ln:[A-Za-z0-9_@.\-]+)\s*-->")
+# Section pages point "up" at their chapter page, not only at main.html.
+UP = re.compile(r"href='(main[a-z0-9]*\.html)#main[a-z0-9]*\.html'")
+
+stats = {"fixed": 0, "missing": 0, "ups": 0}
+
+def repoint(m):
+    mark = MARK.search(m.group(3))
+    if not mark:
+        return m.group(0)
+    key = mark.group(1).replace(":", "_")
+    page = where.get(key)
+    if not page:
+        stats["missing"] += 1
+        return m.group(0)
+    stats["fixed"] += 1
+    return "<a href='%s#%s'%s>%s</a>" % (page, key, m.group(2), m.group(3))
+
+for name, h in text.items():
+    h2 = ANCH.sub(repoint, h)
+    h2, n = UP.subn(lambda m: "href='" + m.group(1) + "'", h2)
+    stats["ups"] += n
+    if h2 != h:
+        pathlib.Path(name).write_text(h2)
+
+print("    repointed {fixed} line references ({missing} unresolved), "
+      "{ups} up-links".format(**stats))
+assert stats["missing"] == 0, "%d line references have no anchor" % stats["missing"]
+STEP8
+
 echo "==> checking"
 rc=0
 chk() { if [ "$2" = "$3" ]; then echo "    ok   $1: $2"; else echo "    FAIL $1: got $2, want $3"; rc=1; fi; }
@@ -418,6 +508,38 @@ done
 chk "index.qmd links that do not resolve" "$bad_links" "0"
 chk "TeX no-ops left in the math" "$(grep -oh '\\relax' main*.html | wc -l | tr -d ' ')" "0"
 
+# Defect 2: the old cross-reference check greped for "[?]", which is what
+# LaTeX emits for an *unresolved* \ref. Every line reference resolved; they
+# resolved to the wrong place, so that check reported success on 298 broken
+# links. This one parses every href and tests the fragment against the ids
+# actually present. NB tex4ht writes single-quoted attributes, so a check
+# written against href=" matches nothing and silently passes.
+dead=$(python3 - <<'AUDIT'
+import pathlib, re
+text = {q.name: q.read_text(errors="ignore") for q in pathlib.Path(".").glob("main*.html")}
+ids = {n: set(re.findall(r"\bid='([^']+)'", h)) for n, h in text.items()}
+dead = 0
+for name, h in text.items():
+    for href in re.findall(r"\bhref='([^']+)'", h):
+        if href.startswith(("http://", "https://", "mailto:")):
+            continue
+        tgt, _, frag = href.partition("#")
+        tgt = tgt or name
+        if not tgt.endswith(".html"):
+            continue
+        if tgt not in text or (frag and frag not in ids[tgt]):
+            dead += 1
+print(dead)
+AUDIT
+)
+chk "dead internal links" "$dead" "0"
+chk "emphasis carried as <em>" "$([ "$(grep -ho '<em[ >]' main*.html | wc -l | tr -d ' ')" -gt 300 ] && echo yes || echo no)" "yes"
+# Count the references still NOT landing on a line rather than the ones that
+# do: the book renders 481 line references from 298 \ref commands, because
+# the functionality boxes are typeset in more than one place, so any fixed
+# expected total is wrong the moment that changes.
+stray=$(grep -oh "<a href='[^']*'[^>]*>[^<]*<!-- tex4ht:ref: ln:" main*.html | grep -vc "#ln_")
+chk "line references not landing on a line" "$stray" "0"
 tex_h=$(grep -cE '^\\(chapter|section)\{' main.tex)
 html_h=$(grep -hoE '<h[23][^>]*>' main*.html | wc -l | tr -d ' ')
 echo "    info headings: $tex_h in source, $html_h in html"

@@ -154,9 +154,11 @@ def validate_leaf(fm, path, errors):
     if fm.get("category") == "withdrawn":
         if not str(fm.get("withdrawn_reason", "")).strip():
             err("category is withdrawn but withdrawn_reason is missing or empty")
-        relations = fm.get("relations", []) or []
-        if not any(r.get("kind") == "superseded-by" for r in relations):
-            err("category is withdrawn but no {kind: superseded-by, target: ...} relation is present")
+        # superseded-by is required only when a new id replaced this one. A
+        # statement withdrawn for any other reason has no successor to name,
+        # and demanding one would force a false relation or block withdrawal
+        # entirely -- which, since 17 August 2026, is the only way a page can
+        # leave the listings at all.
 
     problem_slug = fm.get("problem")
     if not isinstance(problem_slug, str) or not problem_slug:

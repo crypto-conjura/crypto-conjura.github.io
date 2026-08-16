@@ -1,3 +1,18 @@
+<% /* A facet with nothing in it yet would otherwise render as a bare header
+      row. Quarto does emit its own `.listing-no-matching` div on every table
+      listing, but only un-hides it from List.js's `updated` event, and that
+      never fires on these pages: they carry `sort-ui: false` and get no
+      filter box, so nothing ever updates the list. The message is therefore
+      always present and always hidden. Say it here instead.
+
+      Two notes for editors. The engine is lodash templates, not full EJS, so
+      a hash-style template comment is a syntax error (it parses as a
+      JavaScript `#`); write a JavaScript block comment inside a code tag,
+      like this one. And a comment may not itself contain a closing tag
+      delimiter: the scanner stops at the first one it sees. */ %>
+<% if (items.length === 0) { %>
+<p class="cj-listing-empty">Nobody has stated one yet. An empty facet is a research prompt, not an error: see <a href="/open-problems/all/index.qmd">all statements</a> for what is on the site so far.</p>
+<% } else { %>
 <table class="table cj-statement-table list">
 <thead>
 <tr>
@@ -21,3 +36,4 @@
 <% } %>
 </tbody>
 </table>
+<% } %>

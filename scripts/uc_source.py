@@ -298,9 +298,18 @@ def harvest(fid, page, dpi, max_shots):
 
         text = pages_text(local)
         rec["pdf_pages"] = len(text)
-        hit, near = candidates(fid, boxes(text))
+        found = boxes(text)
+        hit, near = candidates(fid, found)
         rec["boxes_matching"] = hit
         rec["boxes_nearby"] = near[:12]
+        # A miss is the common case and usually means the paper names the box
+        # something else -- Canetti et al.'s global-setup paper defines what
+        # this site calls f-acrs, but prints it under another name. So when
+        # nothing matches, hand over every box the paper does print: deciding
+        # that one of them is the target is a judgment about the literature,
+        # and the reader of this manifest is the one equipped to make it.
+        if not hit:
+            rec["boxes_in_paper"] = list({b["title"]: b for b in found}.values())[:24]
         rec["status"] = "ok"
         if rec.get("version"):
             print("       version %s (%d revision(s) on ePrint)"
@@ -324,9 +333,10 @@ def harvest(fid, page, dpi, max_shots):
             print("       p%-4d %-28s -> %s"
                   % (b["page"], b["title"], png.relative_to(REPO)))
         if not hit:
-            print("       no box named %s found%s" % (
-                fid, "; nearby: " + ", ".join(sorted({b["title"] for b in near}))
-                if near else ""))
+            other = sorted({b["title"] for b in near} or
+                           {b["title"] for b in found})
+            print("       no box named %s; this paper prints: %s"
+                  % (fid, ", ".join(other[:8]) or "no boxes at all"))
         manifest["citations"].append(rec)
 
     src.mkdir(parents=True, exist_ok=True)

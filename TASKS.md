@@ -1,10 +1,25 @@
 # Tasks
 
-Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~11.5h** (rough; the UC Encyclopedia content dominates the uncertainty and could run well over its estimate).
+Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~12.0h** (rough; the UC Encyclopedia content dominates the uncertainty and could run well over its estimate).
 
-Last reconciled against `main` at `404452b` on 16 August 2026.
+Last reconciled against `main` at `5e5e95b` on 16 August 2026.
 
 Completed tasks are deleted from this file rather than checked off and kept: this is a list of live work, and `git log` is the record of what closed and when.
+
+- [ ] **Restrict who can modify anything outside `latex/` (~0.5h, blocked on a decision)**
+
+  Requested 16 August 2026: allow others to modify only the `latex/` folder. Investigated the same day. The literal form of this is not available on this repository, so what follows is what is available instead.
+
+  - **GitHub has no path-scoped write permission.** The repository roles (Read, Triage, Write, Maintain, Admin) each apply to the whole repository. The only path-aware enforcement GitHub offers is the "Restrict file paths" rule, and that rule exists only inside a *push* ruleset. The documentation scopes push rulesets to "a private or internal repository and that repository's entire fork network", and this repository is public, so push rulesets cannot be created here at all; the separate Team-plan requirement reported for them is moot on top of that. The rule is in any case a deny list of `fnmatch` patterns with no negation syntax, so "everything except `latex/`" would have to enumerate the other 27 top-level entries and would silently stop covering whatever is added later.
+  - **There is nothing to restrict today.** `farshim` is the only account with any access: one organization member, no teams, no outside collaborators, no bots. Everyone else already reaches the repository through a fork and a pull request and can modify nothing without a merge. That flow, not a permission setting, is what currently enforces the intent, and it is stricter than what was asked for.
+  - **`main` is unprotected, which is the actual gap.** No rulesets, no branch protection, no `CODEOWNERS`. The moment any collaborator is granted write access they can push anything anywhere, `latex/` or otherwise, with nothing to stop them.
+
+  Two ways forward, to be chosen before anything is built:
+
+  - Grant write access to nobody and leave the configuration alone. Strongest guarantee available on this plan, already in force, nothing to maintain.
+  - Or, before write access is ever granted: a branch ruleset on `main` requiring pull requests, which unlike a push ruleset *is* available for public repositories on the Free plan, plus a `pull_request` Actions job that reads the changed paths and fails when an author outside an allow list touches anything beyond `latex/`, registered as a required status check. This is the closest free equivalent to the rule that was asked for, and it enforces rather than documents. A repository admin can still bypass it, so it constrains collaborators, not the owner.
+
+  The second is only worth building if collaborators are actually going to be added.
 
 - [ ] **Finish the Uber-assumption paper and run the checks on it (~1.5h — uncertain: the remaining mathematics is real work, not write-up)**
 

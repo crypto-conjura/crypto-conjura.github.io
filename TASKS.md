@@ -1,6 +1,6 @@
 # Tasks
 
-Split into two sections: **Website and repository** (~5.5h) covers the site, its build tooling and the repository's configuration; **Conjectures and papers** (~3.5h) covers the mathematics — proving conjectures, and writing and checking the papers that report them. Within each section, tasks are ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~9.0h** (rough; the UC Encyclopedia content dominates the uncertainty and could run well over its estimate).
+Split into two sections: **Website and repository** (~5.5h) covers the site, its build tooling and the repository's configuration; **Conjectures and papers** (~6.0h) covers the mathematics — proving conjectures, and writing and checking the papers that report them. Within each section, tasks are ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~11.5h** (rough; the UC Encyclopedia content dominates the uncertainty and could run well over its estimate).
 
 Last reconciled against `main` at `5e5e95b` on 16 August 2026.
 
@@ -35,6 +35,30 @@ Completed tasks are deleted from this file rather than checked off and kept: thi
   One ordering trap, which turns CI red for the whole site: `gen_interface.py --check` runs in both workflows over every fragment in `functionalities/` and errors if a fragment's page has no `.cj-interface` block to replace. The page scaffold and the fragment must land in the same commit.
 
 ## Conjectures and papers
+
+- [ ] **Mine IOG's 2026 research papers for open problems (~2.5h — manual: reading each paper for what it actually leaves open, and verifying every citation)**
+
+  Requested 16 August 2026. Harvest the 2026 research papers from IOG's listing, read each for the problems it leaves open, and file what comes out in two places: open-ended directions as **proposals**, precise falsifiable claims as **conjectures**.
+
+  The harvest is smaller than it looks, checked at source on 16 August 2026:
+
+  - The listing is `https://www.iog.io/news?type=research-paper&page=N`, `N` from 1 to 15, 348 paper links in total. Pagination is `page=`, not `p=` — `p=2` silently returns page 1 again, which is how a scrape ends up harvesting the same twenty papers fifteen times.
+  - **Only 19 are dated 2026, and all of them are on page 1**, since the listing is reverse-chronological. Pages 2 to 15 are 2025 and earlier. So the job is 19 papers, not 292.
+  - Despite being a Next.js app, the listing HTML carries both the `/papers/<slug>` links and the "Month YYYY" dates, so plain `curl` is enough and Playwright is not needed. There is no public JSON behind it (`/api/papers` 404s).
+  - Each detail page links its PDF directly, and for those checked it is IACR ePrint (e.g. `eprint.iacr.org/2026/1116.pdf`). Prefer the ePrint URL over any mirror: it is versioned, citable, and the revision is recoverable.
+
+  Where the output goes, both of which already exist and neither of which needs inventing:
+
+  - **Proposals** go in the "## Open proposals" section of `papers/proposals/index.qmd`, which is still the placeholder "No proposals have been posted yet" and carries a `callout-note` saying so — remove that callout when the first one lands. That page already defines a proposal as exactly what is wanted here: a focused research topic, narrower than a survey but not yet precise enough to be a conjecture.
+  - **Conjectures** go in as statement leaves: `c/<next id>/` from `_templates/paper.qmd`'s sibling `_templates/statement.qmd`, under a problem hub in `p/`, which is what makes them appear under `/open-problems/`. Ids are sequential, allocated once and never reused; the highest today is `c/0009`. See CONTRIBUTING.md for the allocation and revision rules.
+
+  Three things to get right:
+
+  - **The split is a judgement, and most will be proposals.** A paper's closing "we leave X to future work" is usually a direction, not a statement. It is a conjecture only if it can be written so a referee could refute it. Do not inflate a hint into a formal claim to make the conjecture list longer; an honestly-filed proposal is worth more than a conjecture nobody can attack.
+  - **Do not commit the PDFs.** They are the authors'. Follow the encyclopedia's precedent: `scripts/uc_source.py` already resolves references to ePrint PDFs, records URL, revision and page in a committed `sources.json`, and renders evidence images into a gitignored `_src/`. Copy that shape rather than a new one, and it may be worth extending that script rather than writing a second harvester.
+  - **Every citation must be real.** Author, venue and year verified against the source, never reconstructed from memory. This is the standing rule on this site and the reason the estimate carries a manual flag.
+
+  The CI gates apply to anything landing under `c/`: `status_badge.py`, `build_index.py` and `check_relations.py` all run before `quarto render`, so a leaf with an unregenerated badge or a dangling relation fails the deploy for everyone.
 
 - [ ] **Finish the Uber-assumption paper and run the checks on it (~1.5h — uncertain: the remaining mathematics is real work, not write-up)**
 

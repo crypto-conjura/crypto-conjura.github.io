@@ -50,30 +50,36 @@ an empty cell is a research prompt).
   `withdrawn_reason` and a `{kind: superseded-by, target: "<new id>"}`
   relation. Never delete it and never let its id 404.
 
-## Retiring a `test` page
+## Nothing under `c/` is ever deleted
 
-The never-delete rule above is about **statements**: propositions someone
-actually posed, which stay addressable forever because other work may cite
-them and because a retracted claim is part of the record.
+The never-delete rule is absolute, and it covers every page under `c/`,
+including `category: test` scaffolding. A page that has served its purpose is
+**withdrawn**, never removed: set `category: withdrawn`, give it a
+`withdrawn_reason`, and leave it in place. Its URL keeps resolving forever.
 
-A `category: test` page is not one of those. It is scaffolding, added to
-exercise the machinery (a parameter-lattice cell, a listing column, a badge
-combination) rather than to assert anything. Scaffolding may be deleted
-outright when it has served its purpose: no tombstone, no `withdrawn_reason`,
-no `superseded-by`.
+This is stricter than the rule that stood until 17 August 2026, which let a
+`test` page be deleted outright on the grounds that scaffolding asserts
+nothing. That carve-out is gone. The reason is that deletion is
+indistinguishable, from outside, from a result being quietly disappeared, and
+an archive whose case rests on keeping the record cannot afford a mechanism
+for making pages vanish -- not even one reserved for pages that never claimed
+anything. `c/0006` was deleted under the old rule on 2026-08-16, which is why
+the ids skip it; that is the last such deletion.
 
-Two things still hold when you do.
+Withdrawal delists rather than erases. `build_index.py` drops withdrawn
+statements from every generated facet view, so a withdrawn page stops
+appearing in area, form and model listings while its own page, and every link
+and citation aiming at it, keeps working.
 
-- **The id is retired, not recycled.** Deleting `c/0006` leaves a gap between
-  `0005` and `0007`, and that gap stays. Allocating a new statement into a
-  freed number would make an old link point at unrelated content, which is
-  the failure the allocate-once rule exists to prevent.
-- **Fix what pointed at it.** `build_index.py` fails on relations whose
-  target no longer exists, so every `relations:` entry aiming at the deleted
-  id has to be retargeted or removed in the same commit, along with any hub
-  lattice cell or prose that named it.
+Two things hold whenever a page is withdrawn.
 
-`c/0006` was removed this way on 2026-08-16, which is why the ids skip it.
+- **The id is retired, not recycled.** Allocating a new statement into a freed
+  number would make an old link point at unrelated content, which is the
+  failure the allocate-once rule exists to prevent.
+- **A successor is recorded when there is one.** If the page is withdrawn
+  because a new id replaced it, add `{kind: superseded-by, target: "<new
+  id>"}`. A page withdrawn for any other reason needs no successor, and
+  `withdrawn_reason` carries the explanation instead.
 
 `revision` and `statement_sha` are otherwise script-maintained: run
 `scripts/status_badge.py` after any edit to the `## Statement` tab, and let

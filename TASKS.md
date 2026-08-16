@@ -1,10 +1,19 @@
 # Tasks
 
-Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~13.8h** (rough; the UC Encyclopedia content dominates the uncertainty and could run well over its estimate).
+Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~13.9h** (rough; the UC Encyclopedia content dominates the uncertainty and could run well over its estimate).
 
 Last reconciled against `main` at `3aba67d` on 16 August 2026.
 
 Completed tasks are deleted from this file rather than checked off and kept: this is a list of live work, and `git log` is the record of what closed and when.
+
+- [ ] **Stop the sidebar opening more than two levels (~10 min)**
+
+  The knob is `sidebar.collapse-level` in `_quarto.yml`, currently `1`. Two levels expanded is the target; anything deeper should arrive collapsed and open on click.
+
+  - **The problem gets worse before it gets better.** Sidebar section depth on `main` today is 2. PR #15 makes it 3, because the UC Encyclopedia becomes a subsection of Surveys with its nine layer pages under it. So this is worth doing with or just after that merge, and testing it before #15 lands will not reproduce the case that motivates it.
+  - **The worst offender is `By area`.** Under Open Problems it holds 19 children, all leaf pages. Whatever `collapse-level` ends up as, that one subsection is most of the visual weight, and it is worth looking at the rendered result specifically rather than assuming a config change fixed it.
+  - **Verify in the rendered output, not from the config.** Quarto's `collapse-level` semantics are easy to get backwards, and the value that produces "two levels open" is not reliably the number 2. Render, open a deep page such as a UC layer or an area listing, and count what is expanded on arrival. A config diff is not evidence here.
+  - Worth checking at the same time whether `style: floating` interacts with this; the alternative is `docked`, and the two behave differently when a section is long.
 
 - [ ] **Shorten the About page, then proofread it with `prompts/prose.md`, then update it (~50 min)**
 

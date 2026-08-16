@@ -1,6 +1,6 @@
 # Tasks
 
-Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~25.6h** (rough; two items dominate the uncertainty and could each run well over their estimate — the UC Encyclopedia content, and finishing the c/0004 Lean proof, whose remaining work includes a concentration inequality Mathlib does not carry).
+Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~26.1h** (rough; two items dominate the uncertainty and could each run well over their estimate — the UC Encyclopedia content, and finishing the c/0004 Lean proof, whose remaining work includes a concentration inequality Mathlib does not carry).
 
 - [ ] **Merge the CI-gate branch (~10 min — manual: needs an interactive OAuth flow only you can complete)**
 
@@ -39,6 +39,19 @@ Ordered by difficulty: web-related tweaks, new web content, new conjectures, new
   - **The audio is attached to the wrong half.** `philosophy/audio/read-out.mp3` and `podcast.mp3` narrate the Philosophy text only, and `_quarto.yml:9` lists that path in `resources:`. After the merge the read-out covers a fraction of the page it sits on, and the path may move. Either regenerate both against the consolidated text — which is real manual production time on top of the estimate — or say on the page that the audio covers one section, and keep the path stable.
 
   Sequencing matters here: the venues-posture, access-asymmetry and responsible-disclosure tasks below all add prose to `vision/` and `philosophy/`. Doing this first means writing all three into one page in a single pass; doing it after means merging three fresh sections whose placement was chosen for a layout that no longer exists.
+
+- [ ] **Move the UC Encyclopedia under Surveys (~30 min — decide the URL question before touching anything)**
+
+  The Encyclopedia is a top-level section today: `uc/` in the repo, its own navbar entry on the right of `_quarto.yml`, and its own top-level sidebar section with the nine layers under it. Putting it under Surveys is really two different jobs, and which one this is has to be settled first:
+
+  - **Navigation only.** The navbar and sidebar entries move under Surveys, `surveys/index.qmd` gains it in the "Browse" list, and every URL stays at `/uc/...`. Cheap, reversible, and nothing outside `_quarto.yml` and one listing page changes. Note `_quarto.yml` carries a comment demanding the navbar's left-hand entries and the sidebar's top-level sections stay mirrored — the UC entry currently lives in `navbar.right`, so moving it means the mirroring rule now applies to it.
+  - **URLs too.** `/uc/...` becomes `/surveys/uc/...`, which moves 114 `.qmd` files and rewrites references in `scripts/gen_interface.py`, `prompts/source.md`, `CONTRIBUTING.md`, `README.md`, `index.qmd`, `latex/README.md`, `latex/uc/README.md`, and the cross-links inside the already-filled functionality pages (`f-sig`, `f-net`, `f-ac`, `g-pki`). Every old URL then needs an alias or it 404s. Doable, but it is the whole afternoon's difference from the option above.
+
+  My read: navigation only, unless there is a reason to want the URLs to match the hierarchy. The recommendation is not free of friction though —
+
+  - `surveys/index.qmd` defines a survey as "book-length expository work… a sustained treatment of one area, built to teach it", and its Browse list currently holds exactly one entry, UC for Gamers. An encyclopedia of 100 functionality pages is a reference work, not a book read front to back; the section's own definition needs a sentence widening it, or the Encyclopedia will sit there contradicting the paragraph above it.
+  - `uc/index.qmd` says in its own words that the section "may eventually move to a dedicated site of its own, separate from Conjura." Filing it under Surveys pushes the opposite way. Either that note goes, or the move is explicitly the interim arrangement and says so — leaving both claims on the site is the kind of quiet contradiction the rest of this list keeps trying to avoid.
+  - Surveys and the Encyclopedia are already entangled in the right direction: seven of the filled functionality pages were ported out of `surveys/uc-for-gamers/latex/main.tex`, and the Surveys page already promises interactive content generated from a survey's own text. That is the actual argument for the move, and it is worth stating on the page rather than leaving the new hierarchy to imply it.
 
 - [ ] **Remove the audio files (~10 min)**
 

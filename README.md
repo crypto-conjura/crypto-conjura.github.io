@@ -39,7 +39,7 @@ Each statement or paper folder follows the same convention:
 - `lean/` -- the Lean artifact, when the statement has one
 - `sessions/` -- dumps of prompt/agent research sessions, kept for provenance, excluded from the site
 
-Copy `_templates/statement.qmd` (or `_templates/problem.qmd`, or `papers/example-paper/`) as a starting template.
+Copy `_templates/statement.qmd` (or `_templates/problem.qmd`, or `_templates/paper.qmd`) as a starting template.
 
 ## Licensing
 

@@ -12,6 +12,7 @@
 \newcommand{\Zp}{\mathbb{Z}_p}
 \newcommand{\Zpx}{\mathbb{Z}_p^{\times}}
 \newcommand{\vx}{\vec{x}}
+\newcommand{\vy}{\vec{y}}
 \newcommand{\vX}{\vec{X}}
 \newcommand{\vb}{\vec{b}}
 \newcommand{\Inst}{\mathsf{Inst}}
@@ -24,6 +25,14 @@
 \newcommand{\AGL}{\mathrm{AGL}}
 \newcommand{\bg}{\mathcal{BG}}
 \newcommand{\ch}{\mathrm{ch}}
+\newcommand{\Lie}{\operatorname{Lie}}
+\newcommand{\Stab}{\mathrm{Stab}}
+\newcommand{\agl}{\mathfrak{agl}}
+\newcommand{\gl}{\mathfrak{gl}}
+\newcommand{\tge}{\mathfrak{t}}
+\newcommand{\vvec}{\vec{v}}   % \vv itself is already taken by newtxmath
+\newcommand{\PP}{\mathbb{P}}
+\newcommand{\rk}{\operatorname{rank}}
 % definition/remark/proposition/theorem/corollary/lemma all come from the class
 
 % procedure listing: framed like the class's definition boxes
@@ -59,7 +68,11 @@ admissible reparametrizations form a group and the failure fraction is therefore
 $O(1/p)$ or exactly one. Because the admissibility conditions are polynomial conditions on the
 reparametrization, the search for one is mechanical, and we give a decision procedure that
 returns the maximal admissible group and either certifies the reduction or exhibits the locus
-of worst-case points at which it fails. A further section places the theorem against classical
+of worst-case points at which it fails. The procedure needs nothing bespoke: the admissible
+group is the stabilizer of a subspace arrangement and of a point of a projective space, and the
+failure locus is the determinantal variety of the infinitesimal action, so the whole of it is
+standard computational algebra --- a Gr\"obner basis, a Jacobian kernel, an ideal of maximal
+minors, a primary decomposition. A further section places the theorem against classical
 random
 self-reducibility. The affine condition is the one-query, linear case of the non-adaptive
 condition of Feigenbaum and Fortnow; Lipton's multi-query line interpolation, which the group
@@ -331,6 +344,7 @@ scalar case is discrete log: to solve $g^{x}$ query the solver on $g^{x+r}$ and 
 $r$~\cite{TW87}; its group-valued cousins fit Definition~\ref{def:uber}.
 
 \begin{proposition}[CDH and DDH]
+\label{prop:cdh}
 Let $R=(1,X_1,X_2)$, so $\LL_{\G}=\Span{1,X_1,X_2}$, and $f=X_1X_2$ with challenge in $\G$.
 The translation group $\mathcal T=\{\vx\mapsto\vx+\vb\}$ with $\vb\rsample\Zp^{2}$ satisfies
 \textup{(C1)--(C3)}, so computational CDH and decisional DDH are random self-reducible.
@@ -354,6 +368,7 @@ Here $\LL_\star=\LL_{\GT}=\Span{R\cdot R\cup T}$: the pairing supplies all produ
 exponents, so the covariance defect may use any degree-$2$ combination of them.
 
 \begin{proposition}[BDDH]
+\label{prop:bddh}
 Let $R=(1,X_1,X_2,X_3)$, $T=(1)$, so $\LL_{\GT}=V_{\le 2}$, and $f=X_1X_2X_3$ with challenge
 in $\GT$. Translation satisfies \textup{(C1)--(C3)}, so decisional and computational BDDH are
 random self-reducible.
@@ -723,79 +738,229 @@ Conditions \textup{(C1)} and \textup{(C2)} are polynomial conditions on the entr
 and \textup{(C3)} is a statement about the size of an orbit. Finding an admissible $\mathcal T$
 is therefore a computation rather than a matter of ingenuity, and the hand arguments of
 Sections~\ref{sec:nonbilinear}--\ref{sec:type3} are all instances of one procedure. This
-section writes it out. What the procedure decides is the applicability of
+section writes it out and, at each step, names the standard operation of computational algebra
+that performs it. Nothing bespoke is needed: the whole of it is subspace arithmetic, one
+stabilizer computation, one Jacobian kernel, one ideal of maximal minors, and one primary
+decomposition, in that order. What the procedure decides is the applicability of
 Theorem~\ref{thm:master}, not random self-reducibility as such;
 Section~\ref{sec:limits} is precise about the gap.
 
 \subsection{Set-up}
 
-Fix a setting and an instance $(R,S,T,f;\ch)$ in $n$ variables over $\Zp$, and put
-$D\coloneqq\max\{\deg f,\ \deg q: q\in R\cup S\cup T\}$. Affine substitution does not raise
+Fix a setting and an instance $(R,S,T,f;\ch)$ in $n$ variables over $\Zp$, and let $D$ be the
+largest degree occurring among $f$ and the generators listed for $\LL_1,\LL_2,\LL_T$ in
+Lemma~\ref{lem:comp} --- so $D\ge\deg r+\deg s$ for the pairing products, not merely the
+largest degree in $R\cup S\cup T$. Affine substitution does not raise
 degree, so every polynomial the procedure meets lies in $P_D\coloneqq\Zp[\vX]_{\le D}$, a
 $\Zp$-space of dimension $N=\binom{n+D}{n}$; represent its elements by coefficient vectors.
 Treat the $n^{2}+n$ entries of $(A,\vb)$ in $\tau_{A,\vb}\colon\vx\mapsto A\vx+\vb$ as
-indeterminates; for $q\in P_D$ the coefficients of $q\circ\tau_{A,\vb}$ are then polynomials in
-those indeterminates, obtained by expansion.
+indeterminates; for $q\in P_D$ the coefficients of $q\circ\tau_{A,\vb}$ are then polynomials of
+degree at most $\deg q$ in those indeterminates, obtained by expansion. Composition with an
+affine map is $\Zp$-linear on $P_D$ and respects composition, so it is a representation
+\[
+  \rho\colon\AGL_n(\Zp)\longrightarrow\GL(P_D),\qquad \rho(\tau)q=q\circ\tau,
+\]
+whose matrix entries are polynomials of degree at most $D$ in $(A,\vb)$. Everything below is an
+operation on $\rho$ and on the subspaces of $P_D$ that Lemma~\ref{lem:comp} supplies.
 
 Two structural facts fix the shape of the procedure. First, \textup{(C1)} and \textup{(C2)} cut
-out an algebraic subset $\mathcal T\subseteq\AGL_n(\Zp)$ which is a subgroup
-(Remark~\ref{rem:dichotomy}). Second, with $\mathcal D$ uniform on $\mathcal T$ the image
-$\tau(\vx_0)$ is uniform on the orbit $\mathcal T\vx_0$, because $\tau\mapsto\tau(\vx_0)$ is
-$|\mathrm{Stab}_{\mathcal T}(\vx_0)|$-to-one onto that orbit. Deciding \textup{(C3)} is
-therefore deciding how large the orbits are, and by the Lang--Weil estimate an orbit of
-dimension $e$ carries $\Theta(p^{e})$ points, with implied constants depending only on $n$ and
-$D$. For $p$ large relative to those, comparing $\dim\mathcal T\vx_0$ with $n$ decides
+out an algebraic subset $\mathcal T\subseteq\AGL_n(\Zp)$ which is a subgroup, and
+Lemma~\ref{lem:stab} below identifies it as a stabilizer, which is where the group structure
+asserted in Remark~\ref{rem:dichotomy} comes from. Second, with $\mathcal D$ uniform on
+$\mathcal T$ the image $\tau(\vx_0)$ is uniform on the orbit $\mathcal T\vx_0$, because
+$\tau\mapsto\tau(\vx_0)$ is $|\Stab_{\mathcal T}(\vx_0)|$-to-one onto that orbit. Deciding
+\textup{(C3)} is therefore deciding how large the orbits are, and by the Lang--Weil estimate an
+orbit of dimension $e$ carries $\Theta(p^{e})$ points, with implied constants depending only on
+$n$ and $D$. For $p$ large relative to those, comparing $\dim\mathcal T\vx_0$ with $n$ decides
 \textup{(C3)} up to exactly the $O(1/p)$ slack that Remark~\ref{rem:c3} already tolerates.
+
+\subsection{The admissible set is a stabilizer}
+
+Conditions \textup{(C1)} and \textup{(C2)} look like conditions of different kinds --- one a
+membership requirement on the rebuilt sources, the other a covariance requirement on the
+challenge. Under $\rho$ they are two instances of one condition: each says that $\tau$ fixes
+something.
+
+\begin{lemma}[stabilizer form]
+\label{lem:stab}
+Write $\bar f\coloneqq f+\LL_\star\in P_D/\LL_\star$. For $\tau\in\AGL_n(\Zp)$:
+\begin{enumerate}[label=\textup{(\roman*)},leftmargin=2.6em,itemsep=2pt]
+  \item \textup{(C1)} holds if and only if $\rho(\tau)$ stabilizes each of $\LL_1$, $\LL_2$ and
+        $\LL_T$;
+  \item assuming \textup{(C1)}, so that $\rho(\tau)$ descends to a map $\bar\rho(\tau)$ of
+        $P_D/\LL_\star$, condition \textup{(C2)} holds if and only if $\bar\rho(\tau)$ fixes the
+        line $\Span{\bar f}$, and $\lambda_\tau$ is then the scalar by which it acts there.
+\end{enumerate}
+Hence the admissible set is a stabilizer,
+\[
+  \mathcal T=\bigl\{\tau:\rho(\tau)\LL_\gamma=\LL_\gamma\ (\gamma=1,2,T)
+  \ \text{ and }\ \bar\rho(\tau)\Span{\bar f}=\Span{\bar f}\bigr\},
+\]
+the $\rho$-preimage of an intersection of three subspace stabilizers --- maximal parabolic
+subgroups of $\GL(P_D)$, or all of $\GL(P_D)$ in the degenerate case $\LL_\gamma=P_D$ ---
+with the stabilizer of a point of $\PP(P_D/\LL_\star)$. In particular $\mathcal T$ is a subgroup
+of $\AGL_n(\Zp)$, and $\lambda\colon\mathcal T\to\Zpx$, $\tau\mapsto\lambda_\tau$, is a
+character of it.
+\end{lemma}
+\begin{proof}
+(i) In each of the four settings the computable spaces of Lemma~\ref{lem:comp} are generated by
+$R,S,T$ under multiplication: $\LL_2=\Span{S}$, $\LL_1=\Span{R}$ or $\Span{R\cup S}$, and
+$\LL_T=\LL_1\cdot\LL_2+\Span{T}$, with $\LL_1=\LL_2=\Span{R}$ in the single-group settings and
+$\LL_T$ absent when there is no pairing. If $\rho(\tau)$ stabilizes the three spaces then
+\textup{(C1)} follows, since $R\subseteq\LL_1$, $S\subseteq\LL_2$ and $T\subseteq\LL_T$.
+Conversely assume \textup{(C1)}. Then $\rho(\tau)\Span{S}\subseteq\LL_2=\Span{S}$; and both
+$\Span{R}$ and $\Span{S}$ land in $\LL_1$ --- in Type 2 because $\LL_2\subseteq\LL_1$, in the
+other settings because $\LL_1=\Span{R}$ and only $R$ is involved --- so
+$\rho(\tau)\LL_1\subseteq\LL_1$. Composition with $\tau$ is a ring endomorphism of $\Zp[\vX]$,
+so $(uv)\circ\tau=(u\circ\tau)(v\circ\tau)$ and therefore
+$\rho(\tau)(\LL_1\cdot\LL_2)\subseteq\LL_1\cdot\LL_2$; with $\rho(\tau)\Span{T}\subseteq\LL_T$
+from \textup{(C1)} this gives $\rho(\tau)\LL_T\subseteq\LL_T$. Each inclusion is between spaces
+of equal finite dimension under an invertible map, hence an equality.
+
+(ii) The identity $f\circ\tau=\lambda_\tau f+h_\tau$ with $h_\tau\in\LL_\star$ says exactly that
+the image of $f\circ\tau$ in $P_D/\LL_\star$ is $\lambda_\tau\bar f$, and the requirement
+$\lambda_\tau\in\Zpx$ says the image is a \emph{nonzero} multiple, that is, that the line is
+fixed rather than merely mapped into itself. The final claims follow because the preimage of an
+intersection of subgroups under a homomorphism is a subgroup, and because the scalar by which a
+group acts on a fixed line is multiplicative in the group.
+\end{proof}
+
+Lemma~\ref{lem:stab} supersedes the direct check in Remark~\ref{rem:dichotomy} that
+$\mathcal T$ is closed under composition and inversion: it is a preimage of a subgroup. It also
+places $\lambda$ correctly as a character rather than an incidental scalar, which is what makes
+$\lambda_\tau\in\Zpx$ compose in the multi-query condition \textup{(C2$'$)}.
+
+\subsection{Orbits: invariants and a rank locus}
+
+By Lemma~\ref{lem:stab}, $\mathcal T$ is an algebraic subgroup of $\AGL_n$ acting on affine
+$n$-space, and \textup{(C3)} asks that its orbits be everything. Two standard descriptions of
+orbits apply, one generic and one pointwise, and between them they replace the orbit
+bookkeeping of Sections~\ref{sec:nonbilinear}--\ref{sec:type3}.
+
+Generically, orbits are the fibres of the invariant map. By Rosenlicht's theorem on generic
+quotients there is a dense open subset of $\overline{\Zp}^{\,n}$ on which the orbits of
+$\mathcal T$ are exactly the fibres of the map assembled from a finite generating set of the
+invariant field, and $\operatorname{trdeg}\overline{\Zp}(\vX)^{\mathcal T}=
+n-\max_{\vx}\dim\mathcal T\vx$. So the generic orbit is $n$-dimensional precisely when
+$\mathcal T$ admits no non-constant rational invariant. This is the exact shape of the Type-3
+obstruction in Proposition~\ref{prop:sep}: there the invariant is $x_1+3x_2$, the orbits are its
+level sets, and the ``no escape on an orbit'' step of that proof is a membership test on the
+generic fibre.
+
+Pointwise, the failure locus is where the infinitesimal action drops rank. Write
+$\agl_n=\gl_n\ltimes\Zp^{n}$ and let $(M,\vvec)$ act on polynomials as the derivation
+\[
+  \delta_{M,\vvec}=\sum_{i=1}^{n}(M\vX+\vvec)_i\,\frac{\partial}{\partial X_i},
+\]
+the derivative at $t=0$ of $q\mapsto q\circ(\mathrm{id}+t\,(M,\vvec))$. Differentiating the
+conditions of Lemma~\ref{lem:stab} at the identity turns them into a \emph{linear} system in
+$(M,\vvec)$:
+\begin{enumerate}[label=\textup{(L\arabic*)},leftmargin=3.4em,itemsep=2pt]
+  \item $\delta r\in\LL_1$, $\delta s\in\LL_2$ and $\delta t\in\LL_T$ for all $r\in R$,
+        $s\in S$, $t\in T$;
+  \item $\delta f\in\Span{f}+\LL_\star$, the coefficient of $f$ being $d\lambda(\delta)$.
+\end{enumerate}
+Its solution space $\widehat\tge$ is the tangent space at the identity to the scheme cut out by
+\textup{(C1)} and \textup{(C2)}, so $\Lie\mathcal T\subseteq\widehat\tge$ and
+$\dim\mathcal T\le\dim\widehat\tge$, with equality when that scheme is smooth at the identity.
+
+\begin{lemma}[rank locus]
+\label{lem:rank}
+Let $\tge\subseteq\Lie\mathcal T$ be spanned by $(M_1,\vvec_1),\dots,(M_d,\vvec_d)$ and let
+$\Theta(\vX)$ be the $n\times d$ matrix of affine-linear forms whose $i$-th column is
+$M_i\vX+\vvec_i$. Then $\rk\Theta(\vx)\le\dim\mathcal T\vx$ for every $\vx$, with equality when
+$\tge=\Lie\mathcal T$ and the orbit map $\tau\mapsto\tau(\vx)$ is separable. Consequently the
+failure locus $Z\coloneqq\{\vx:\dim\mathcal T\vx<n\}$ satisfies
+\[
+  Z\ \subseteq\ V\bigl(I_n(\Theta)\bigr),
+\]
+where $I_n(\Theta)$ is the ideal of $n\times n$ minors of $\Theta$ --- the $0$-th Fitting ideal
+of $\operatorname{coker}\Theta$ --- generated in degree at most $n$, and equal to $(0)$ when
+$d<n$.
+\end{lemma}
+\begin{proof}
+Orbits of an algebraic group are homogeneous, hence smooth, so
+$\dim\mathcal T\vx=\dim T_{\vx}(\mathcal T\vx)$. The orbit map $\mathcal T\to\mathcal T\vx$ has
+differential $\mu\mapsto\mu(\vx)$ at the identity, whose image lies in $T_{\vx}(\mathcal T\vx)$
+and contains the column span of $\Theta(\vx)$, with equality when $\tge=\Lie\mathcal T$; it is
+the whole tangent space exactly when the orbit map is separable. The displayed inclusion is the
+rank bound read contrapositively: $\rk\Theta(\vx)=n$ forces $\dim\mathcal T\vx=n$.
+\end{proof}
+
+Lemma~\ref{lem:rank} is what makes the failure locus computable rather than merely definable.
+The entries of $\Theta$ are affine-linear, so its maximal minors have degree at most $n$ and are
+written down by expansion; the locus they cut out is a determinantal variety, and its components
+come from a primary decomposition. In every example of this note the inclusion is an equality
+and the minors reproduce the loci found by hand: $(1)$ --- empty locus --- for CDH, DDH and
+BDDH, the ideal $(x_1)$ for co-CDH, the ideal $(x_1x_2)$ for the monomial targets of
+Proposition~\ref{prop:nomono}, and $(0)$ --- the whole space --- for the Type-3 half of
+Proposition~\ref{prop:sep}, where $\tge$ is one-dimensional and no $2\times 2$ minor exists.
 
 \subsection{The procedure}
 
 \begin{procedurebox}
 \textbf{\textsc{Admissible}}$(\Gamma,R,S,T,f,\ch,p)$ --- decides applicability of
-Theorem~\ref{thm:master}.\\[2pt]
+Theorem~\ref{thm:master}. The bracketed name on each step is the operation it calls.\\[2pt]
 \emph{Returns} one of \textsc{Not-Hard}, \textsc{Exact}, \textsc{Relaxed},
 \textsc{Affine-Fails}, together with $\mathcal T$ and, in the last case, a witness locus.
 \begin{enumerate}[label=\textup{\arabic*.},leftmargin=2.2em,itemsep=3pt]
-  \item \emph{Computable spaces.} From Lemma~\ref{lem:comp} form the generating sets for the
-        setting $\Gamma$ and compute bases of $\LL_1,\LL_2,\LL_T\subseteq P_D$ by Gaussian
-        elimination. Put $\LL_\star\coloneqq\LL_{\ch}$.
-  \item \emph{Hardness.} Test $f\in\LL_\star$ by linear algebra. If so, return
+  \item \emph{Computable spaces} \textup{[image of a multiplication map]}. From
+        Lemma~\ref{lem:comp} form the generating sets for the setting $\Gamma$ and compute bases
+        of $\LL_1,\LL_2,\LL_T\subseteq P_D$ by Gaussian elimination; the target space is the
+        image of the multiplication map $\LL_1\otimes\LL_2\to P_D$ plus $\Span{T}$. Put
+        $\LL_\star\coloneqq\LL_{\ch}$.
+  \item \emph{Hardness} \textup{[subspace membership]}. Test $f\in\LL_\star$. If so, return
         \textsc{Not-Hard}: the challenge is already computable from the instance and there is
         no assumption to reduce.
-  \item \emph{Admissible group.} Let $\pi\colon P_D\to P_D/\LL_\star$ and $\bar f\coloneqq
-        \pi(f)$, nonzero by step 2. Impose on $(A,\vb)$:
+  \item \emph{Admissible group} \textup{[stabilizer; Gr\"obner basis of a saturated ideal]}. Let
+        $\pi\colon P_D\to P_D/\LL_\star$ and $\bar f\coloneqq\pi(f)$, nonzero by step 2. With
+        the $n^{2}+n$ entries of $(A,\vb)$ and one further indeterminate $\lambda$, let $I$ be
+        generated by
         \begin{enumerate}[label=\textup{(\alph*)},leftmargin=2.2em,topsep=2pt,itemsep=1pt]
-          \item \textup{(C1)} for each $r\in R$, $s\in S$, $t\in T$, the vanishing of the
-                image of $\mathrm{coef}(r\circ\tau)$ in $P_D/\LL_1$, of
+          \item the images of $\mathrm{coef}(r\circ\tau)$ in $P_D/\LL_1$, of
                 $\mathrm{coef}(s\circ\tau)$ in $P_D/\LL_2$, and of $\mathrm{coef}(t\circ\tau)$
-                in $P_D/\LL_T$;
-          \item \textup{(C2)} the vanishing of every $2\times 2$ minor of the two-column
-                matrix $[\,\pi(f\circ\tau)\mid\bar f\,]$.
+                in $P_D/\LL_T$, for each $r\in R$, $s\in S$, $t\in T$ --- this is
+                \textup{(C1)} in the form of Lemma~\ref{lem:stab}(i);
+          \item the coefficients of $\pi(f\circ\tau)-\lambda\bar f$ --- this is \textup{(C2)}
+                in the form of Lemma~\ref{lem:stab}(ii).
         \end{enumerate}
-        Let $I$ be the ideal they generate. Compute a Gr\"obner basis of $I$ saturated at
-        $\det A$ and at $\pi(f\circ\tau)$; the resulting variety is $\mathcal T$, and the
-        scalar $\lambda_\tau$ is read off from $\pi(f\circ\tau)=\lambda_\tau\bar f$. If
-        $\mathcal T$ is trivial, return \textsc{Affine-Fails} with witness $\Zp^{n}$.
-  \item \emph{Generic orbit.} Compute $e\coloneqq\dim\mathcal T\vx_0$ for generic $\vx_0$, by
-        eliminating $(A,\vb)$ from $\vy=A\vx_0+\vb$ over $I$. If $e<n$, return
-        \textsc{Affine-Fails} with witness $\Zp^{n}$: by Remark~\ref{rem:dichotomy} every
-        orbit is then deficient, so \textup{(C3)} fails everywhere.
-  \item \emph{Exactness.} If $\mathcal T$ acts transitively --- equivalently
-        $|\mathcal T\vx_0|=p^{n}$ for one, hence by the dichotomy for every, $\vx_0$ --- return
-        \textsc{Exact}: Theorem~\ref{thm:master} applies with unrelaxed \textup{(C3)} and exact
-        advantage transfer.
-  \item \emph{Failure locus.} Otherwise let $Z\coloneqq\{\vx_0:\dim\mathcal T\vx_0<n\}$, the
-        locus where the evaluation map drops rank; obtain its irreducible components
-        $Z_1,\dots,Z_m$ by primary decomposition. By Remark~\ref{rem:dichotomy}, $Z$ is a
-        proper closed subset, so $|Z|=O(p^{\,n-1})$.
-  \item \emph{Escape clause.} For each component $Z_j$ test both:
+        Compute a Gr\"obner basis of the saturation $I:(\lambda\det A)^{\infty}$, by
+        Rabinowitsch in one extra variable. Its variety is $\mathcal T$, the character
+        $\lambda$ is the $\lambda$-coordinate, and $\dim\mathcal T$ is the Hilbert dimension of
+        the basis. If $\mathcal T$ is trivial, return \textsc{Affine-Fails} with witness
+        $\Zp^{n}$.
+  \item \emph{Infinitesimal action} \textup{[Jacobian kernel: one linear system]}. Solve
+        \textup{(L1)--(L2)} for $\widehat\tge$. If $\dim\widehat\tge<n$ then
+        $\dim\mathcal T\le\dim\widehat\tge<n$, every orbit is deficient, and by
+        Remark~\ref{rem:dichotomy} \textup{(C3)} fails everywhere: return
+        \textsc{Affine-Fails} with witness $\Zp^{n}$. Otherwise retain those basis elements
+        whose one-parameter subgroups can be verified against \textup{(C1)--(C2)} by
+        substitution, obtaining $\tge\subseteq\Lie\mathcal T$; retaining fewer only makes the
+        verdict more conservative.
+  \item \emph{Transitivity} \textup{[the translation subgroup, a $\Zp$-subspace]}. Let
+        $W\coloneqq\{\vb:\tau_{\mathrm{id},\vb}\in\mathcal T\}$, a subgroup of $(\Zp^{n},+)$ and
+        hence a $\Zp$-subspace; compute it as $\{\vvec:(0,\vvec)\in\widehat\tge\}$ and verify each
+        basis vector against \textup{(C1)--(C2)}. If $W=\Zp^{n}$ then $\mathcal T$ is
+        transitive: return \textsc{Exact}, and Theorem~\ref{thm:master} applies with unrelaxed
+        \textup{(C3)} and exact advantage transfer.
+  \item \emph{Failure locus} \textup{[maximal minors: a Fitting ideal, then its minimal
+        primes]}. Otherwise form $\Theta$ from $\tge$ and compute $I_n(\Theta)$. By
+        Lemma~\ref{lem:rank} the failure locus satisfies $Z\subseteq V(I_n(\Theta))$; take the
+        minimal primes $Z_1,\dots,Z_m$ of $V(I_n(\Theta))$ by primary decomposition. If
+        $I_n(\Theta)=(1)$ the orbits all have dimension $n$ and, by Remark~\ref{rem:dichotomy},
+        return \textsc{Relaxed}. If $I_n(\Theta)=(0)$, return \textsc{Affine-Fails} with witness
+        $\Zp^{n}$.
+  \item \emph{Escape clause} \textup{[ideal membership; normal form with the field equations
+        adjoined]}. For each component $Z_j$ test both:
         \begin{enumerate}[label=\textup{(\alph*)},leftmargin=2.2em,topsep=2pt,itemsep=1pt]
-          \item \emph{detectability} --- is $Z_j$ cut out by equations $q(\vx)=0$ with
-                $q\in\LL_\gamma$ for some group $\gamma$? If so the reduction decides
-                membership by testing $[q(\vx_0)]_\gamma$ against the identity;
-          \item \emph{computability} --- writing $\rho_j$ for restriction to $Z_j$, is
-                $\rho_j(f)\in\rho_j(\LL_\star)$? This is linear algebra in the coordinate ring
-                of $Z_j$, and must be done on \emph{functions} on $Z_j(\Zp)$, not on
-                polynomials.
+          \item \emph{detectability} --- is the ideal $I(Z_j)$ generated by polynomials lying in
+                $\LL_\gamma$ for some group $\gamma$? If so the reduction decides membership by
+                testing each $[q(\vx_0)]_\gamma$ against the identity;
+          \item \emph{computability} --- is $f\in\LL_\star$ \emph{as a function} on $Z_j(\Zp)$?
+                Adjoin the field equations and reduce: compute normal forms modulo a Gr\"obner
+                basis of $I(Z_j)+(X_1^{p}-X_1,\dots,X_n^{p}-X_n)$, an ideal that is radical and
+                whose variety is exactly $Z_j(\Zp)$, and test membership of the normal form of
+                $f$ in the span of those of $\LL_\star$.
         \end{enumerate}
         If both hold for every $j$, return \textsc{Relaxed}: Theorem~\ref{thm:master} applies
         via Remark~\ref{rem:c3}, with advantage transfer up to $O(1/p)$. Otherwise return
@@ -803,40 +968,152 @@ Theorem~\ref{thm:master}.\\[2pt]
 \end{enumerate}
 \end{procedurebox}
 
+Three of these steps are worth a word. Step 3 introduces $\lambda$ as an indeterminate rather
+than imposing the proportionality $\pi(f\circ\tau)\parallel\bar f$ through the vanishing of the
+$2\times 2$ minors of $[\,\pi(f\circ\tau)\mid\bar f\,]$: the two cut out the same set, but the
+minors number $\binom{\dim P_D/\LL_\star}{2}$ and have degree $2D$, whereas the linear-in-%
+$\lambda$ form has $\dim P_D/\LL_\star$ generators of degree $D$, and the saturation at
+$\lambda$ is exactly the requirement $\lambda_\tau\in\Zpx$. Step 5 tests a sufficient condition
+for transitivity rather than transitivity itself, because that is all the \textsc{Exact} verdict
+needs and because the translation subgroup, being a subgroup of $(\Zp^{n},+)$, is a subspace and
+so costs one linear solve; a transitive $\mathcal T$ with $W\neq\Zp^{n}$ is merely reported as
+\textsc{Relaxed}, at a cost of $O(1/p)$ in the advantage. Step 7(b) is where the distinction
+between polynomials and functions bites --- $f$ may lie outside $\LL_\star$ as a polynomial and
+inside it as a function on $Z_j(\Zp)$ --- and the standard device for it is to adjoin the field
+equations $X_i^{p}-X_i$, which is what forces the hypothesis $p\ge 5$ in
+Proposition~\ref{prop:sep}: at $p=3$ the relation $s^{3}=s$ is among them.
+
 \begin{proposition}[correctness]
 \label{prop:decide}
 \textsc{Admissible} terminates, and its output is correct: it returns \textsc{Not-Hard} exactly
 when $f\in\LL_\star$; it returns \textsc{Exact} only when some efficiently sampleable
 $\mathcal D$ satisfies \textup{(C1)--(C3)} as stated in Theorem~\ref{thm:master}; it returns
 \textsc{Relaxed} only when Theorem~\ref{thm:master} applies in the form of
-Remark~\ref{rem:c3}; and when it returns \textsc{Affine-Fails} with witness $Z_j$, no
-distribution on any subgroup of $\AGL_n(\Zp)$ satisfies \textup{(C1)--(C3)} at the points of
-$Z_j$, even relaxed.
+Remark~\ref{rem:c3}; when it returns \textsc{Affine-Fails} with witness $\Zp^{n}$, no
+distribution on any subgroup of $\AGL_n(\Zp)$ satisfies \textup{(C1)--(C3)} at any point, even
+relaxed; and when it returns \textsc{Affine-Fails} with witness a component $Z_j$ on which
+$\dim\mathcal T\vx<n$, the same holds at the points of $Z_j$.
 \end{proposition}
 \begin{proof}
 Termination is that every step is a finite linear-algebra or Gr\"obner computation over $\Zp$.
-Step 2 is the generic-model hardness criterion of~\cite{BBG05,Boyen08}. For steps 3--5, the
-conditions imposed are literal transcriptions of \textup{(C1)} and \textup{(C2)}: the former
-because membership of $q\circ\tau$ in a subspace is the vanishing of its image in the quotient,
-the latter because $f\circ\tau=\lambda_\tau f+h_\tau$ with $h_\tau\in\LL_\star$ says exactly
-that $\pi(f\circ\tau)$ is proportional to $\bar f$, the factor being $\lambda_\tau$ and the
-saturation enforcing $\lambda_\tau\neq 0$. Since $\mathcal T$ is a group and $\mathcal D$ is
-uniform on it, $\tau(\vx_0)$ is uniform on $\mathcal T\vx_0$; so \textup{(C3)} holds exactly
-when the orbit is all of $\Zp^{n}$ and holds to within $O(1/p)$ when the orbit has full
-dimension. Maximality is what gives the negative half: $\mathcal T$ contains \emph{every}
-$\tau$ meeting \textup{(C1)} and \textup{(C2)}, so any admissible subgroup is contained in
-$\mathcal T$ and its orbits are contained in $\mathcal T$-orbits; if the $\mathcal T$-orbit of a
+Step 2 is the generic-model hardness criterion of~\cite{BBG05,Boyen08}. Steps 3 and 4 are exact
+transcriptions of Lemma~\ref{lem:stab} and of its derivative at the identity: membership of
+$q\circ\tau$ in a subspace is the vanishing of its image in the quotient, and
+$f\circ\tau=\lambda_\tau f+h_\tau$ with $h_\tau\in\LL_\star$ says that $\pi(f\circ\tau)$ equals
+$\lambda\bar f$, the saturation enforcing $\lambda_\tau\neq 0$ and $\det A\neq 0$. Since
+$\mathcal T$ is a group and $\mathcal D$ is uniform on it, $\tau(\vx_0)$ is uniform on
+$\mathcal T\vx_0$; so \textup{(C3)} holds exactly when the orbit is all of $\Zp^{n}$, which
+step 5 certifies through a transitive subgroup of translations, and holds to within $O(1/p)$
+when the orbit has full dimension, which step 6 certifies through Lemma~\ref{lem:rank}.
+Maximality is what gives the negative half: by Lemma~\ref{lem:stab}, $\mathcal T$ contains
+\emph{every} $\tau$ meeting \textup{(C1)} and \textup{(C2)}, so any admissible subgroup is
+contained in $\mathcal T$ and its orbits in $\mathcal T$-orbits; if the $\mathcal T$-orbit of a
 point of $Z_j$ is already deficient and $f$ is not computable on it, no smaller group can do
-better.
+better. For the witness $\Zp^{n}$ at step 4 this is unconditional, since
+$\dim\mathcal T\le\dim\widehat\tge$ bounds the orbit dimension at every point at once.
 \end{proof}
 
-\begin{remark}[cost]
-The expensive step is 3, whose Gr\"obner computation is doubly exponential in $n^{2}+n$ in the
-worst case. The systems arising here are far from worst case: they are the coefficient-matching
-equations of Section~\ref{sec:type3}, near-triangular in the entries of $A$, and for $n=2$ they
-are six variables and are solved by hand. Steps 1, 2 and 7 are $O(N^{3})$ linear algebra with
-$N=\binom{n+D}{n}$.
+\begin{remark}[the negative verdict at step 7 is conservative]
+\label{rem:conservative}
+Lemma~\ref{lem:rank} gives $Z\subseteq V(I_n(\Theta))$ and not equality, so a component $Z_j$
+returned by step 6 is a \emph{candidate} failure locus: it is a genuine one when
+$\tge=\Lie\mathcal T$ and the orbit maps along $Z_j$ are separable, and otherwise the orbits
+along $Z_j$ may be larger than $\Theta$ can see, in which case the procedure has failed to
+certify rather than certified a failure. The positive verdicts are unaffected, since they rest
+on the inclusion in the direction Lemma~\ref{lem:rank} does supply. When the distinction
+matters it is settled by the more expensive test the rank locus replaces: compute the orbit of a
+generic point of $Z_j$ as the image of the morphism $\tau\mapsto\tau(\vx_0)$, by eliminating
+$(A,\vb)$ from $\vy=A\vx_0+\vb$ over $I$ and applying the closure theorem, and compare its
+dimension with $n$. In every example of this note the two agree.
 \end{remark}
+
+\begin{remark}[cost]
+Only step 3 is expensive: its Gr\"obner computation is doubly exponential in $n^{2}+n+1$ in the
+worst case, though the systems arising here are far from worst case --- they are the
+coefficient-matching equations of Section~\ref{sec:type3}, near-triangular in the entries of
+$A$, and for $n=2$ they are seven variables and are solved by hand. It is also, for the verdict,
+optional: every one of the four outputs is reached from steps 1, 2 and 4--7, which need only
+$\widehat\tge$ and $\tge$. What step 3 adds is $\mathcal T$ in closed form and the character
+$\lambda$, and with them the maximality on which the negative half of
+Proposition~\ref{prop:decide} rests. Steps 1, 2, 5 and 7 are $O(N^{3})$ linear algebra with
+$N=\binom{n+D}{n}$; step 4 is a linear system in $n^{2}+n$ unknowns; step 6 is
+$\binom{d}{n}$ determinants of size $n$ followed by a primary decomposition in $n$ variables of
+an ideal generated in degree at most $n$. Every primitive named above is a standard call in a
+general-purpose system such as Singular, Macaulay2 or Magma.
+\end{remark}
+
+\subsection{The primitives, and the procedure on the examples of this note}
+
+Collecting the bracketed names gives the whole of \textsc{Admissible} as a pipeline:
+
+\begin{center}
+\small
+\begin{tabular}{@{}rll@{}}
+\toprule
+step & task & operation \\
+\midrule
+1 & the computable spaces $\LL_\gamma$ & image of a multiplication map \\
+2 & hardness, $f\in\LL_\star$ & subspace membership \\
+3 & the admissible group $\mathcal T$ & stabilizer of subspaces and of a \\
+  & & point of $\PP(P_D/\LL_\star)$; Gr\"obner \\
+  & & basis of a saturated ideal \\
+3 & the scalars $\lambda_\tau$ & the character of $\mathcal T$ on $\Span{\bar f}$ \\
+4 & $\Lie\mathcal T$ & kernel of the Jacobian at the identity \\
+5 & transitivity & the translation subspace $W\le\Zp^{n}$ \\
+6 & the failure locus & $0$-th Fitting ideal $I_n(\Theta)$, then \\
+  & & its minimal primes \\
+7 & detectability of $Z_j$ & ideal membership \\
+7 & computability on $Z_j$ & normal form modulo
+                             $I(Z_j)+(X_i^{p}-X_i)$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+Run on the assumptions treated above, it reproduces every one of the hand arguments, with the
+whole of the orbit analysis coming from a single determinant:
+
+\begin{center}
+\footnotesize
+\setlength{\tabcolsep}{4.5pt}
+\begin{tabular}{@{}llll@{}}
+\toprule
+target & $\tge$, as vector fields & $I_n(\Theta)$ & verdict \\
+\midrule
+CDH, DDH (Prop.~\ref{prop:cdh})
+  & $\Span{\partial_1,\partial_2,X_1\partial_1,X_2\partial_2}$
+  & $(1)$ & \textsc{Exact} \\
+BDDH (Prop.~\ref{prop:bddh})
+  & $\Span{\partial_i,\ X_i\partial_i:i\le 3}$
+  & $(1)$ & \textsc{Exact} \\
+co-CDH (Prop.~\ref{prop:cocdh})
+  & $\Span{X_1\partial_1,X_2\partial_2,\partial_2}$
+  & $(x_1)$ & \textsc{Relaxed} \\
+$X_1^{i}X_2^{j}$ (Prop.~\ref{prop:nomono})
+  & $\supseteq\Span{X_1\partial_1,X_2\partial_2}$
+  & $\ni x_1x_2$ & \textsc{Relaxed} \\
+Prop.~\ref{prop:sep}, Type 2
+  & $\Span{\partial_1,\partial_2,(2X_1{+}X_2)\partial_1+X_2\partial_2}$
+  & $(1)$ & \textsc{Exact} \\
+Prop.~\ref{prop:sep}, Type 3
+  & $\Span{-3\partial_1+\partial_2}$
+  & $(0)$ & \textsc{Affine-Fails} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+The last two rows are the separation, and in this form it is a statement about one number: the
+Type-2 conditions leave a three-dimensional $\tge$ containing both translations, so
+$\Theta$ has an invertible $2\times 2$ submatrix and the failure locus is empty, while the
+Type-3 conditions cut $\tge$ down to a single vector field, $\Theta$ becomes a $2\times 1$
+matrix, and no $2\times 2$ minor exists to be nonzero. The intermediate rows show the two ways a
+non-empty failure locus can still be harmless, both settled by step 7: the locus $x_1=0$ for
+co-CDH and $x_1x_2=0$ for the monomial targets are detectable by an equality test on the
+encodings, and $f$ vanishes on each, so the reduction answers there without an oracle call.
+Row three also shows what maximality buys: the group the procedure returns for co-CDH is
+three-dimensional, strictly larger than the $\{(\alpha x_1,\,x_2+b_2)\}$ used in the proof of
+Proposition~\ref{prop:cocdh}, which chose a sufficient subgroup rather than the largest one.
 
 \subsection{What the procedure does not decide}
 \label{sec:limits}

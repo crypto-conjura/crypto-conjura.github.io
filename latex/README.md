@@ -56,7 +56,7 @@ this folder's contents. That means:
   subfolders (which *are* tracked on GitHub), and the statement gets
   transcribed into `index.qmd`.
 - For a paper: same, but under `papers/<paper-slug>/`, following
-  `papers/example-paper/`.
+  `_templates/paper.qmd`.
 - For a UC functionality: regenerate `uc/layer-N-.../<slug>/index.qmd`
   from the matching `latex/uc/layer-N-.../<slug>/main.tex`.
 

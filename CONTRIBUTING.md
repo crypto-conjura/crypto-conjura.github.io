@@ -22,6 +22,15 @@ contract; this file covers the editorial rules and the day-to-day workflow.
    `python3 scripts/check_relations.py` to validate the schema and the
    relation graph. All three must exit 0 before you open a PR.
 
+## Adding a new paper
+
+Copy `_templates/paper.qmd` to `papers/<slug>/index.qmd`, create the
+`latex/`, `pdf/` and `sessions/` folders beside it, and add the paper by
+hand to the "## Papers" list in `papers/archive/index.qmd` -- that list is
+written, not generated. Run `python3 scripts/status_badge.py` afterwards to
+populate `statement_sha` and the badge. A paper carries no id, hub, areas
+or relations, so `build_index.py` and `check_relations.py` do not apply.
+
 ## Adding a new problem
 
 Copy `_templates/problem.qmd` to `p/<slug>/index.qmd` and write the

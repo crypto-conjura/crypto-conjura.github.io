@@ -1,29 +1,10 @@
 # Tasks
 
-Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~12.25h** (rough; the UC Encyclopedia content dominates the uncertainty and could run well over its estimate).
+Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~12.0h** (rough; the UC Encyclopedia content dominates the uncertainty and could run well over its estimate).
 
 Last reconciled against `main` at `8937c1f` on 16 August 2026.
 
 Completed tasks are deleted from this file rather than checked off and kept: this is a list of live work, and `git log` is the record of what closed and when.
-
-- [ ] **Remove the Example Paper page (~0.25h)**
-
-  Delete `/papers/example-paper/`: `index.qmd` plus three subfolders (`latex/`, `pdf/`, `sessions/`) that contain nothing but a `README.md` each.
-
-  **Decide what happens to the template first, because that page is not dead weight.** It is the live contract a new paper is copied from: the full `status:` block, `reviewers: []`, `status_summary`, `status_updated`, `revision`, `statement_sha` and the generated `status_badge`, with a callout telling the copier which fields to fill and which note to delete. `_templates/` holds only `problem.qmd` and `statement.qmd`, so deleting this folder leaves the repo with no paper template at all. Three options: delete outright and let `papers/uber-groups-rsr/` serve as the exemplar; move it to `_templates/paper.qmd`, which puts it beside its two siblings and out of the rendered site; or delete it and fold the frontmatter contract into `CONTRIBUTING.md`. Moving it to `_templates/` is the recommendation, since the page's own callout already calls it a template page and `_templates/` is where the other two contracts live.
-
-  Five inbound references break on deletion and none of them is a Quarto listing, so all five are hand edits:
-
-  - `papers/index.qmd:17` — a "Browse" bullet.
-  - `papers/archive/index.qmd:28` — an entire "## Not papers" section that exists only to explain why this page is not in the archive list. Delete the section, not just the link.
-  - `papers/programme-committee/index.qmd:22` — "see the [paper template]", load-bearing for the sentence about how `reviewers` accumulates. Needs a replacement target, not just link removal.
-  - `README.md:42` — names it as a starting template alongside `_templates/statement.qmd` and `_templates/problem.qmd`.
-  - `latex/README.md:59`.
-
-  Two things not to get wrong:
-
-  - Re-run `python3 scripts/status_badge.py`, `build_index.py` and `check_relations.py` after the deletion and commit their output. All three gate the deploy ahead of `quarto render`, and a stale index entry pointing at a removed folder fails every subsequent push by anyone, with the failure blaming an innocent commit.
-  - `papers/example-paper/sessions/README.md` is the only non-empty `sessions/` directory in the repo. It is documentation, not a transcript, so the About page's claim that session logs are the one promise still unkept stays true after this removal. Do not "fix" the About page as a side effect.
 
 - [ ] **Finish the Uber-assumption paper and run the checks on it (~1.5h — uncertain: the remaining mathematics is real work, not write-up)**
 

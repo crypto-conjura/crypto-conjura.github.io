@@ -14,11 +14,41 @@ Two things sit on this page, and they move at different speeds.
 
 # Part I: where Conjura is headed
 
-## The problem
+## Two problems
+
+### Research that collides instead of compounding
 
 Progress in cryptographic research is often slowed by more than mathematical difficulty: uncoordinated effort and opaque tooling slow it down too. Results get produced in isolation, so partial progress is rediscovered more than once, and the same dead ends get walked into by people who never find out about each other's attempts.
 
 Conjura's answer is a public, durable record: what's been tried, what's resolved, what's still stuck, and by whom, so that compute and attention can be pointed at open problems collaboratively instead of redundantly.
+
+### How the field publishes AI-assisted work
+
+The second problem carries the same weight as the first, and it is one the field has made for itself.
+
+Start with what the policies actually say, because the honest reading is not the convenient one. Read at source on 16 August 2026, they converge on something reasonable rather than on a ban:
+
+| | What it requires |
+|---|---|
+| **IACR** ([Crypto 2026](https://crypto.iacr.org/2026/aipolicy.php), [Asiacrypt 2025](https://asiacrypt.iacr.org/2025/aipolicy.php), [TCC 2026](https://tcc.iacr.org/2026/aipolicy.php)) | Each says it will "generally follow the ACM Policy on the use of AI tools". Graduated disclosure: none for grammar, a footnote for a sentence, an appendix naming tools, versions and prompts for whole generated sections. No AI author. |
+| **ACM** ([policy FAQ](https://www.acm.org/publications/policies/frequently-asked-questions)) | Generative AI "cannot be listed as authors on ACM Works under any conditions". AI used in *conducting the research* must be described in the methods section. AI used in *writing the manuscript* no longer requires disclosure. |
+| **IEEE** ([author guidelines](https://journals.ieeeauthorcenter.ieee.org/become-an-ieee-journal-author/publishing-ethics/guidelines-and-policies/submission-and-peer-review-policies/)) | AI-generated content "shall be disclosed in the acknowledgments section", the system named and the affected sections identified with "a brief explanation regarding the level at which the AI system was used". Editing and grammar are outside the intent. |
+
+No AI authorship, humans accountable for everything in the paper, substantive generation disclosed. None of that is unreasonable, and Conjura does not argue with any of it.
+
+Two things are worth noticing all the same.
+
+The first is a limit on **degree**. The clause ACM states, and the IACR venues reproduce, is that a work must be "not primarily the result of the tool's generative capabilities". That is the line this site crosses deliberately: several results here are primarily a model's output, directed and then checked by a person. "Primarily" has no operational definition, no reviewer can recover it from a finished manuscript, and none of the three policies describes a way to detect a breach or a consequence for one.
+
+The second is **drift**. The IACR pages present ACM's graduated disclosure ladder for generated text, while ACM's own current FAQ says writing assistance no longer requires disclosure at all. Whichever reading is right, a rule that three sibling venues state differently from the body they defer to is a guideline, not a standard.
+
+Conjura's disagreement is therefore narrower than "they forbid AI and we allow it", which would be false and easy to check. It is about what disclosure *is*. At a venue, disclosure is a sentence in an acknowledgements section: unverifiable, unenforced, and attached to a paper that is accepted or rejected whole. Here it is per artifact and machine-checked. A [status badge](/open-problems/status-legend/index.qmd) grades what has actually been verified and cannot claim more. Prompts and session logs are published with the result. An attribution field records who or what produced each part, and a CI gate fails the build when a page and its formal artifact drift apart.
+
+Same principle. Taken seriously enough to build gates around it.
+
+::: {.callout-note appearance="simple"}
+Policies as read on 16 August 2026, at the URLs above. All three have revised their wording more than once, so the vintage matters. The IACR and IEEE pages were fetched directly; acm.org returned HTTP 403 to an automated request, so its FAQ was read through a text-extraction proxy of the same URL.
+:::
 
 ## What we're building toward
 
@@ -38,6 +68,16 @@ Every result on the site is published with the prompts, tools, and session logs 
 
 A formal statement and a machine-checked proof don't by themselves make a result understood. Alongside the formal artifacts, we want to keep the informal explanation of why a result is true and why it was hard, since that's usually most of what makes a result worth reading.
 
+### Who gets to do the work
+
+The three subsections that follow are mechanisms. This is the principle behind them, and it belongs first, because otherwise they read as unrelated engineering ideas.
+
+Access to capable models is now a real input to research output, and it is not evenly held. A well-funded group can run an expensive search across several models for weeks; someone on a personal subscription cannot. To the extent that results start to track available compute, the field's output starts to track budgets rather than ideas, and it does so invisibly, because nobody publishes the attempts they could not afford to run.
+
+That is a poor direction for a field whose central claim on anyone's attention is that its results are checkable by anyone.
+
+Conjura redistributes no compute today, and should not be read as claiming otherwise. What it does do, and has not named as such until now, is give its tooling away: the [prompts](/prompts/index.qmd) behind the results here are published in full, for anyone to take and point at their own problems. That is a small levelling act and currently the only one in effect. The two mechanisms below would be larger. Neither is built.
+
 ### Incentives for open problems (an idea we're exploring)
 
 Paul Erdős placed cash bounties on conjectures he found particularly interesting. We're interested in a modern, decentralized version of that: letting anyone attach an on-chain bounty to an open problem, claimable without a central intermediary once a resolution is verified. This isn't built yet. It's a direction worth exploring, not a current feature, and we'd rather say so plainly than oversell it.
@@ -50,6 +90,14 @@ Plenty of people and organizations sit on API credits or subscription capacity t
 
 Some open problems on this site are compute-intensive enough that no single AI account, and no single model, is really the right unit of work for them. We're interested in a distributed system Conjura itself would run: orchestrating a particularly demanding research task across multiple AI accounts and multiple different models at once, rather than serializing it behind one account's rate limit or one model's blind spots. This isn't built yet either. It's a direction worth exploring, not a current feature, and we'd rather say so plainly than oversell it.
 
+### A journal of AI-assisted research (an idea we're exploring)
+
+Stated plainly, because it is what the rest of this page implies: cryptology should have a venue for research that is openly and substantially AI-assisted, judged on whether its results survive checking rather than on how large the model's share of the drafting was. Conjura is a beginning of one, not the thing itself.
+
+The IACR already publishes [Communications in Cryptology](https://cic.iacr.org/), a real and well-run venue, and this is not a complaint about it. It is a difference of editorial posture. CiC carries the same ACM-derived policy as the conferences, so a paper that is primarily model-generated has no natural home there however thoroughly it has been verified. The gap is not quality control. It is that the existing rules sort by authorship share before reaching the question of whether the mathematics holds.
+
+What such a venue needs is mostly what this site is already trying to build: a status vocabulary precise enough to say what has actually been checked, formal artifacts wherever feasible, reviewers named on what they reviewed, and prompts and sessions published as a condition of acceptance rather than as an appendix nobody opens. Whether that becomes a journal, a track, or simply a body of work that makes the case by existing, we don't know. This isn't built yet, and calling it a journal today would be exactly the overclaiming the last section of this page argues against.
+
 ## Along the way
 
 ...and to have some fun doing it.
@@ -61,7 +109,7 @@ Some open problems on this site are compute-intensive enough that no single AI a
 *In keeping with the transparency this page itself argues for: both are synthesized with the operating system's built-in text-to-speech voices, not a human voice-over.*
 
 ::: {.callout-note appearance="simple"}
-Both recordings narrate this second half only, not the roadmap above. They are kept because what they do cover is unchanged; they are not a substitute for reading the page.
+Both recordings narrate this second half only, not the roadmap above, and they predate the section that opens it. They are kept because what they do cover is unchanged; they are not a substitute for reading the page.
 :::
 
 **Read-out** is a straight narration of the text below.
@@ -76,6 +124,16 @@ Both recordings narrate this second half only, not the roadmap above. They are k
 <audio controls src="/philosophy/audio/podcast.mp3" style="width: 100%; max-width: 500px;"></audio>
 ```
 
+## Embrace it, and keep it in check
+
+Everything else in this half is an instance of one commitment, and the rest reads more easily if the commitment is stated first.
+
+Conjura's posture toward AI is dual. Use these tools as far as they will go, and hold what comes out to a standard that does not care where it came from. Neither half stands alone. Enthusiasm without checking produces work that reads as rigorous and has been verified by nobody, which is the failure the field is right to fear. Checking without enthusiasm keeps the standard and forgoes the capability, at the moment the capability is arriving.
+
+The two are not in tension, and that is the point. Adoption is what makes rigorous checking necessary; rigorous checking is what makes adoption defensible.
+
+The sections that follow are that commitment applied to particular decisions, and are best read as its instances rather than as separate principles: a badge that can understate but never overstate, a wrong conjecture that keeps its page, an attribution rule that changes the record but never the standard, and verification treated as work worth crediting. The last of them turns the same commitment on the roadmap in the first half of this page.
+
 ## Plausible isn't the same as true
 
 AI has made it cheap to produce mathematical writing that reads as rigorous without anyone, human or machine, having actually checked it. That's a genuine problem for a field that runs on trust in proofs, and it's not solved by writing more carefully or citing more sources; a fabricated citation can be written just as carefully as a real one. Conjura's answer is to track what's actually been checked, machine-verified or independently human-reviewed, separately from what merely reads well, and to let a badge say "not yet checked" plainly rather than borrow the authority of work that hasn't been done. A status badge here is deliberately narrow: it can say less than a result deserves, but it can't say more than what's been verified.
@@ -88,6 +146,8 @@ A withdrawn statement keeps its page as a tombstone instead of disappearing; a d
 
 Whether a human or an AI produced a statement, a proof, or a review, the record says so, and either way the thing produced is checked to the same standard. This isn't a hedge against AI-generated work being wrong. It's the same rigor applied regardless of source, which is the only way a badge can mean the same thing twice. Passing that check is what should earn confidence, not who or what attempted it.
 
+This is the exact point of difference with the venue policies in the first half. They ask how much of the work the model did, a question with no measurable answer and no enforcement. Conjura asks what has been checked, which has both.
+
 ## Verification is a job, and it's been an undervalued one
 
 Reviewing someone else's proof, or checking that a formalization actually matches the statement it claims to formalize, has never carried the reward that producing a new result does: a byline is visible, a careful review that catches nothing wrong usually isn't. Conjura treats that asymmetry as a problem to design against, not a fact of life to accept. Agentic stress-testing before a human ever sees a submission, a reviewer's name permanently attached to what they checked, formal artifacts wherever they're feasible instead of only where they're convenient.
@@ -97,6 +157,8 @@ That stress-testing shouldn't come from one model either. A single model's blind
 ## Say plainly what isn't built yet
 
 An idea worth exploring and a feature that exists are different things, and Conjura would rather mark the gap between them explicitly than let a roadmap read as more finished than it is. That discipline is part of the same worldview as the rest of this page: the badge, the tombstone, the attribution rule, and an honest "this isn't built yet" are all the same underlying commitment, applied to a different part of the site.
+
+It applies to the first half of this page too, which is why four of its subsections carry the same flat disclaimer. The bounties, the idle tokens, the distributed compute and the journal are all unbuilt, and the compute-fairness argument above is a principle the site holds, not a programme it runs. Naming an ambition is not delivering it, and a page arguing for honesty about AI would be a poor place to blur that.
 
 ---
 

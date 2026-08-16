@@ -93,6 +93,7 @@ output. Keep changes reviewable: one logical change per commit.
 
 ```
 pip install -r requirements.txt
+git config core.hooksPath .githooks           # once per clone: run the checks pre-commit
 python3 scripts/status_badge.py --self-test   # grading logic sanity check
 python3 scripts/status_badge.py               # regenerate badges + statement_sha
 python3 scripts/build_index.py                # validate schema, emit _generated/ + conjura.json
@@ -103,3 +104,12 @@ quarto preview                                # facet listings need build_index.
 CI runs the same four checks (`status_badge.py --check`, `build_index.py`,
 `check_relations.py`) before `quarto render`; a non-zero exit from any of
 them fails the build.
+
+`.githooks/pre-commit` runs those same checks locally, on commits that touch
+`c/`, `p/`, any `.qmd`, `scripts/`, or `_templates/`. Enable it with the
+`core.hooksPath` line above -- it is worth the one command, because the checks
+gate the job *before* `quarto render`: a single unregenerated `statement_sha`
+fails every push after it, not just its own, and the site stops deploying until
+someone notices. If PyYAML is missing the hook still runs the `status_badge.py`
+gate (stdlib-only) and reports that it skipped the other two. Bypass a single
+commit with `git commit --no-verify`.

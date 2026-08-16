@@ -40,10 +40,18 @@ See `CONTRIBUTING.md` for the full workflow (identifier allocation, the same-id-
 
 ```
 pip install -r requirements.txt
+git config core.hooksPath .githooks  # once per clone: run the checks below pre-commit
 python3 scripts/status_badge.py     # regenerate badges + statement_sha
 python3 scripts/build_index.py      # validate schema, emit _generated/ + conjura.json
 python3 scripts/check_relations.py  # validate the relation graph
 quarto preview                      # facet listings need build_index.py to have run first
 ```
+
+The `core.hooksPath` line enables `.githooks/pre-commit`, which runs the same
+three checks the publish workflow gates on. It matters because those checks run
+*before* `quarto render` in CI: a stale `statement_sha` fails the whole job, so
+one unregenerated edit blocks the site deploy on every push after it, not just
+its own. Editing prose inside a `## Statement` block is enough to cause this —
+the block is hashed. Bypass a single commit with `git commit --no-verify`.
 
 requires the [Quarto CLI](https://quarto.org/docs/get-started/) installed locally.

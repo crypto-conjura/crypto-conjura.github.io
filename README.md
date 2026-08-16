@@ -72,6 +72,9 @@ See `CONTRIBUTING.md` for the full workflow (identifier allocation, the same-id-
 
 - **New statement, problem, paper, or prompt**: open a pull request adding the relevant files, after running the local checks below.
 - **Gap in a proof, or discussion of a conjecture** -- open an issue.
+- **A result that breaks something deployed** -- do not open either. See
+  [`SECURITY.md`](SECURITY.md) and use private vulnerability reporting. Nearly
+  nothing here is in that category, and the file says where the line is.
 
 ## Local development
 

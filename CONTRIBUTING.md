@@ -103,6 +103,21 @@ list several; don't rename or merge a slug without updating both
 `_quarto.yml`'s sidebar and `AREA_SLUGS` in `scripts/build_index.py` together,
 in the same commit.
 
+## Before you open a public pull request or issue
+
+Every route in this file is public, and that is almost always right. The one
+exception is a result that breaks something deployed, weakens a parameter set
+or standard real systems rely on, or attacks a named implementation. Those go
+through [private vulnerability reporting](https://github.com/crypto-conjura/crypto-conjura.github.io/security/advisories/new)
+first, not through a pull request or an issue, both of which are world-readable
+the moment they exist.
+
+Nearly nothing on this site is in that category: conjectures, lower bounds,
+impossibility results and asymptotic statements in idealized models have
+nothing deployed to attack. `SECURITY.md` at the repository root sets out the
+scope, the timeline, and why an embargoed write-up cannot live on a branch here
+at all.
+
 ## Citations
 
 Never write a specific author/venue/year citation into `sources:` (or into

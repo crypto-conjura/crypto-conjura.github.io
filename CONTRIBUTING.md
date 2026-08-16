@@ -41,6 +41,31 @@ an empty cell is a research prompt).
   `withdrawn_reason` and a `{kind: superseded-by, target: "<new id>"}`
   relation. Never delete it and never let its id 404.
 
+## Retiring a `test` page
+
+The never-delete rule above is about **statements**: propositions someone
+actually posed, which stay addressable forever because other work may cite
+them and because a retracted claim is part of the record.
+
+A `category: test` page is not one of those. It is scaffolding, added to
+exercise the machinery (a parameter-lattice cell, a listing column, a badge
+combination) rather than to assert anything. Scaffolding may be deleted
+outright when it has served its purpose: no tombstone, no `withdrawn_reason`,
+no `superseded-by`.
+
+Two things still hold when you do.
+
+- **The id is retired, not recycled.** Deleting `c/0006` leaves a gap between
+  `0005` and `0007`, and that gap stays. Allocating a new statement into a
+  freed number would make an old link point at unrelated content, which is
+  the failure the allocate-once rule exists to prevent.
+- **Fix what pointed at it.** `build_index.py` fails on relations whose
+  target no longer exists, so every `relations:` entry aiming at the deleted
+  id has to be retargeted or removed in the same commit, along with any hub
+  lattice cell or prose that named it.
+
+`c/0006` was removed this way on 2026-08-16, which is why the ids skip it.
+
 `revision` and `statement_sha` are otherwise script-maintained: run
 `scripts/status_badge.py` after any edit to the `## Statement` tab, and let
 it force `statement_match` back to `open` and bump `revision` for you if the

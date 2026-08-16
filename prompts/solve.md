@@ -4,7 +4,7 @@ Roles are separated so errors decorrelate; verification is adversarial and blind
 
 ## 0. Calibration before you start
 
-In the largest published sweep, a strong agent was run against 700 problems listed as open; of 200 that experts could grade, 68.5% were fundamentally flawed, 31.5% technically correct, and only **6.5% meaningfully correct**, i.e. correct and answering the intended question (arXiv:2602.10177 §5.2). Three consequences drive the design:
+In the largest published sweep, a strong agent was run against 700 problems listed as open; of 200 that experts could grade, 68.5% were fundamentally flawed, 31.5% technically correct, and only **6.5% meaningfully correct**, i.e. correct and answering the intended question (arXiv:2602.10177 §4.2). Three consequences drive the design:
 
 1. **The modal failure is a valid proof of a weaker or different statement**, because the model silently takes the easiest reading. Spend more effort pinning the statement than checking the algebra.
 2. **Refusal is the most valuable output after success.** An agent that cannot say "no progress" hands you plausible garbage.

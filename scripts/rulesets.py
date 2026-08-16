@@ -69,8 +69,16 @@ def strip(obj):
     return obj
 
 
+# Roles whose actor_id carries no information. The API takes an id for these on
+# write and returns null for them on read, so comparing the id reports a
+# difference that no number of --apply runs can ever settle.
+IMPLICIT_ID_ACTORS = {"OrganizationAdmin", "EnterpriseOwner"}
+
+
 def actor_key(a):
-    return (a.get("actor_type"), a.get("actor_id"), a.get("bypass_mode"))
+    kind = a.get("actor_type")
+    ident = None if kind in IMPLICIT_ID_ACTORS else a.get("actor_id")
+    return (kind, ident, a.get("bypass_mode"))
 
 
 def drift(want, live):

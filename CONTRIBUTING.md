@@ -127,6 +127,24 @@ nothing deployed to attack. `SECURITY.md` at the repository root sets out the
 scope, the timeline, and why an embargoed write-up cannot live on a branch here
 at all.
 
+## Write access and `main`
+
+Nobody needs write access to contribute. Fork the repository, push a branch to
+your fork, and open a pull request. The write role is granted only to
+maintainers, and granting it is not what lets a change land.
+
+`main` is protected by a branch ruleset: no direct pushes, no force-pushes, no
+deletion, and every change arrives through a pull request whose `checks` job is
+green. The ruleset is kept as JSON in `.github/rulesets/`, with the reasoning
+for each rule beside it, rather than only in the settings UI. Check the live
+repository against those files with `python3 scripts/rulesets.py --check`, which
+needs read access only.
+
+GitHub has no way to grant write access to one folder. Repository roles cover
+the whole repository, and the one path-scoped rule GitHub offers is unavailable
+on public repositories. So "you may edit `latex/` only" is a review convention
+here, not something the platform enforces.
+
 ## Citations
 
 Never write a specific author/venue/year citation into `sources:` (or into

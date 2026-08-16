@@ -2,10 +2,27 @@
 title: "Prompts"
 ---
 
-Reusable prompts and skills for automating research in theoretical cryptography, organized by purpose:
+Reusable prompts and skills for automating research in theoretical cryptography. Each one is a single Markdown file: download the raw source and paste it as a system or instruction prompt, alongside whatever `.tex` or proof you want it run against.
 
-- [Research](research/index.qmd) — literature search, conjecture exploration, proof-strategy brainstorming.
-- [Proof Checking](proof-checking/index.qmd) — verifying proof steps, finding gaps, formalization assistance.
-- [Writing](writing/index.qmd) — turning results into precise write-ups.
+## Research
 
-Contribute a new prompt by opening a pull request that adds a Markdown file to the relevant subfolder.
+- [Multi-agent harness for attacking an open conjecture](HARNESS.md) — an architecture of role-separated agents (Scout, Strategist, isolated Provers, Refuter, blind Verifiers, Triage, Reviser, Formalizer, Weakener, Lifter, plus a persistent Ledger) built so errors decorrelate and no agent can see the reasoning trace behind the result it's checking. Motivated by the finding that in the largest published sweep of agent-claimed proofs of open problems, only 6.5% were meaningfully correct — most failures were a valid proof of a weaker or different statement. Includes the problem-contract template, the retreat/weakening protocol for descending to a provable special case, and file-based persistence so state survives across sessions rather than living only in a conversation.
+
+## Proof checking
+
+Prompts for auditing a finished proof adversarially: the model's job is to find where an argument breaks, or to certify that it tried and could not, never to summarize or praise.
+
+- [Idealized-model proof audit](proof-audit-prompt.md) — a system prompt for auditing proofs in the random-oracle, ideal-cipher, and generic-group models, tuned for probability-heavy arguments: presampling and auxiliary input, concentration inequalities, martingales, communication-complexity reductions, and randomness extraction. Runs a staged protocol (pin down the exact model variant, build the lemma dependency graph, check independence/conditioning, attempt an explicit attack, classify every issue as FATAL/GAP/FIXABLE/COSMETIC) against a long subtlety checklist, and outputs a findings table plus inline `\aicomment`/`\aifix`/`\aiwcfix` LaTeX annotations. Ships with a list of verified reference anchors for the techniques it checks against.
+- [UC security-proof audit](uc-audit-prompt.md) — a composite protocol for auditing universally composable security proofs (UC/GUC/UCGS/JUC/iUC/GNUC/IITM/SUC), merging a read-only, non-inventive extraction pass with staged, adversarial auditing and an independent-baseline verifier. Fixes a five-way verdict vocabulary (ERROR/GAP/CONVENTION/UNVERIFIABLE/QUESTION), forbids silently repairing a step to make it work, and includes the full staging, scoring rubric, adjudication procedure, and a LaTeX sidecar variant for running it directly against a manuscript.
+
+## Writing
+
+Prompts for turning a working LaTeX draft into a submittable one, split by concern: typesetting hygiene versus prose quality, so a single pass never has to judge both mathematics and grammar at once.
+
+- [LaTeX stylistic and typesetting audit](latex-style-audit-prompt.md) — a copy-editor/compositor prompt that produces a defect report, not a rewrite: orthography, punctuation, spacing, cross-reference and bibliography consistency, and TeX source hygiene for IACR/AMS/ACM/LNCS-style manuscripts. It explicitly does not judge correctness, novelty, or persuasiveness — every finding must carry a file, a line number, and a verbatim excerpt, or it's suppressed. Configure via a filled-in header (project root, document class, target venue, US/UK spelling, house style overrides, scope) before pasting.
+- [Revise a LaTeX manuscript for quality of writing](revise-latex-manuscript-prompt.md) — the current, fuller version of the prose-revision prompt: every edit is tagged with a rule ID traceable to a published style authority (not the reviser's taste), under hard invariants that forbid changing mathematical content, repairing a suspected error instead of logging it, renaming a `\label`, or introducing an em dash. Adds a mandatory proof overview, numeric length targets, a mechanical-sweep section for the checks a linter would normally catch, and a conflict register for where two cited authorities disagree.
+- [Revise LaTeX prose (earlier version)](revise-latex-prose.md) — the original, shorter version of the same prose-revision prompt, before the length targets, mechanical sweep, and conflict register were added. Kept for comparison; use the manuscript version above for new work.
+
+## Contributing
+
+Open a pull request that adds a Markdown file to `prompts/` and a bullet to the matching section above.

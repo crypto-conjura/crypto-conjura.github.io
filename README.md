@@ -13,7 +13,7 @@ open-problems/               generated facet listings (areas/model/form/assumpti
 schema/                      the frontmatter contract, for humans and agents
 _templates/                  copy-paste skeletons for a new statement or problem
 papers/<paper-slug>/         write-ups that don't resolve a conjecture
-prompts/                     reusable prompts for research, proof-checking, writing
+prompts/                     reusable prompts (research, proof-checking, writing), one Markdown file each
 blog/posts/                  informal write-ups (and eventually podcasts/videos) for resolved conjectures
 resources/                   pdfs/books used as reference material, not rendered on the site
 ```

@@ -52,6 +52,20 @@
 #      background, so recolouring the fill for dark mode without the text
 #      would destroy the contrast the pair was chosen for.
 #
+#      Light is the base and dark is the override, reachable two ways: the
+#      reader's system preference, and a button in the sidebar that overrides
+#      it and persists. The media query is guarded with :not([data-theme=
+#      "light"]) so a reader who picks light on a dark-mode machine keeps it.
+#      The stored choice is read by a script in <head>, not with the rest of
+#      the JavaScript at the end of <body>: read after first paint, the wrong
+#      theme is on screen for a frame before being swapped. Every page carries
+#      that script and the build fails if any does not, because one page
+#      missing it flashes and no spot check would show which.
+#
+#  10. MathJax is loaded from this site, not from tex4ht's hardcoded CDN.
+#      assets/mathjax/ holds mathjax@3.2.2 tex-chtml-full and its CHTML
+#      fonts, and _quarto.yml points every other page at the same copy.
+#
 # Usage:  scripts/build_uc_html.sh [--check]
 #         --check verifies the result and writes nothing to the repository.
 
@@ -166,6 +180,14 @@ for f in pathlib.Path(".").glob("main*.html"):
         h2 = h.replace("</head>", f"<script>{cfg}</script>\n</head>", 1)
     # tex4ht leaves <title> empty for a book with a \titlepage.
     h2 = h2.replace("<title></title>", "<title>UC for Gamers</title>", 1)
+    # Step 10: load MathJax from this site, not from a CDN. tex4ht hardcodes
+    # cdn.jsdelivr.net, which made every formula in the book depend on a
+    # third party and ran a different major version from the rest of the
+    # site. The vendored copy is the one _quarto.yml points at too. The path
+    # is absolute because these pages sit four levels down and the site is
+    # served from the domain root.
+    h2 = re.sub(r"https://cdn\.jsdelivr\.net/npm/mathjax@[^'\"]*",
+                lambda _: "/assets/mathjax/tex-chtml-full.js", h2)
     f.write_text(h2)
 print(f"    injected {len(out)} macros")
 PY
@@ -226,22 +248,76 @@ def li(kind, num, href, title, current):
 TOGGLE = ("<button class='ucnav-toggle' type='button' aria-controls='ucnav' "
           "aria-expanded='false'>Contents</button>")
 
+# Runs in <head>, before the body is painted. Reading the stored choice after
+# first paint would show the wrong theme for a frame and then swap it, which is
+# the flash this avoids. Kept to one statement and wrapped, because localStorage
+# throws rather than returning null when a browser blocks storage.
+HEAD_JS = ("<script>try{var t=localStorage.getItem('uc-theme');"
+           "if(t)document.documentElement.setAttribute('data-theme',t);}"
+           "catch(e){}</script>")
+
+THEME_BTN = (
+    "<button class='ucnav-theme' type='button'>"
+    "<svg class='uc-moon' viewBox='0 0 24 24' aria-hidden='true'>"
+    "<path d='M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z'/></svg>"
+    "<svg class='uc-sun' viewBox='0 0 24 24' aria-hidden='true'>"
+    "<circle cx='12' cy='12' r='4'/>"
+    "<path d='M12 2v2M12 20v2M2 12h2M20 12h2"
+    "M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4'/>"
+    "</svg></button>")
+
 JS = """<script>
 (function () {
   var nav = document.getElementById('ucnav'),
       btn = document.querySelector('.ucnav-toggle');
-  if (!nav || !btn) return;
-  btn.addEventListener('click', function () {
-    var open = document.body.classList.toggle('ucnav-open');
-    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  if (nav && btn) {
+    btn.addEventListener('click', function () {
+      var open = document.body.classList.toggle('ucnav-open');
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    // Keep the current chapter in view without scrolling the page itself.
+    var cur = nav.querySelector('.ucnav-current');
+    if (cur) nav.scrollTop = cur.offsetTop - nav.clientHeight / 2;
+  }
+
+  var root = document.documentElement,
+      tbtn = document.querySelector('.ucnav-theme');
+  if (!tbtn) return;
+  // What the reader is actually looking at. No attribute means no choice has
+  // been made, so the system preference is what the CSS is following.
+  function inForce() {
+    return root.getAttribute('data-theme') ||
+      (window.matchMedia &&
+       window.matchMedia('(prefers-color-scheme: dark)').matches
+         ? 'dark' : 'light');
+  }
+  function paint() {
+    var t = inForce();
+    tbtn.setAttribute('data-theme-state', t);
+    tbtn.setAttribute('aria-label',
+      t === 'dark' ? 'Switch to the light theme' : 'Switch to the dark theme');
+    tbtn.setAttribute('title', tbtn.getAttribute('aria-label'));
+  }
+  tbtn.style.display = 'block';
+  paint();
+  tbtn.addEventListener('click', function () {
+    var next = inForce() === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    try { localStorage.setItem('uc-theme', next); } catch (e) {}
+    paint();
   });
-  // Keep the current chapter in view without scrolling the page itself.
-  var cur = nav.querySelector('.ucnav-current');
-  if (cur) nav.scrollTop = cur.offsetTop - nav.clientHeight / 2;
+  // Follow the system while the reader has expressed no preference of their
+  // own. Once they have, the stored choice wins and this stops mattering.
+  if (window.matchMedia) {
+    var mq = window.matchMedia('(prefers-color-scheme: dark)');
+    (mq.addEventListener ? mq.addEventListener.bind(mq, 'change')
+                         : mq.addListener.bind(mq))(paint);
+  }
 })();
 </script>"""
 
 pages = sorted(pathlib.Path(".").glob("main*.html"))
+heads = 0
 for f in pages:
     items = "\n".join(
         li(k, n, h, t, h.split("#")[0] == f.name) for k, n, h, t in entries)
@@ -251,6 +327,7 @@ for f in pages:
            f"<div class='ucnav-head'>"
            f"<a class='ucnav-up' href='../'>&#8592; Conjura</a>"
            f"<a class='ucnav-book' href='main.html'>UC for Gamers</a>"
+           f"{THEME_BTN}"
            f"</div><ul>{items}</ul></nav>")
     h = f.read_text(errors="ignore")
     # Step 5's \ensuremath reaches the page as "\(\relax \Delta \)". \relax is
@@ -267,8 +344,15 @@ for f in pages:
     if n == 0:
         continue
     h2 = h2.replace("</body>", "</div>" + JS + "</body>", 1)
+    h2, hn = re.subn(r"</head>", HEAD_JS + "</head>", h2, count=1)
+    heads += hn
     f.write_text(h2)
 print(f"    sidebar on {len(pages)} pages, {len(entries)} entries")
+# A page that missed the head script shows the wrong theme for a frame before
+# correcting itself, which is exactly the bug the script exists to prevent and
+# is invisible in a spot check. Fail rather than ship a subset.
+assert heads == len(pages), f"head script reached {heads} of {len(pages)} pages"
+print(f"    theme toggle and pre-paint script on {heads} pages")
 
 CSS = """
 
@@ -278,6 +362,7 @@ CSS = """
    CSS. Keep these in sync with theme-light.scss and theme-dark.scss: they
    are copies, not imports, and nothing detects drift between them. */
 :root {
+  color-scheme: light;
   --cj-bg: #faf9f5;
   --cj-fg: #1f1e1d;
   --cj-link: #a34f2a;
@@ -294,18 +379,16 @@ CSS = """
              "Liberation Mono", monospace;
   --ucnav-w: 19rem;
 }
+/* Dark arrives two ways: from the reader's system preference, unless they have
+   explicitly asked for light here, and from an explicit choice of dark. Light
+   is the base, so choosing it needs no rules of its own, only the guard on the
+   media query that stops the system overriding a deliberate choice. The token
+   values are written once in this script and emitted into both selectors, so
+   the two cannot drift apart. */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --cj-bg: #1f1e1d;
-    --cj-fg: #f0e8c0;
-    --cj-link: #e89b7f;
-    --cj-link-hover: #f2b79f;
-    --cj-rule: #383634;
-    --cj-code-bg: #262524;
-    --cj-muted: #9a9384;
-    --cj-select: #3a3430;
-  }
+  :root:not([data-theme="light"]) {@@DARK@@  }
 }
+:root[data-theme="dark"] {@@DARK@@}
 
 /* Step 7: the book itself, in the site's typography and palette. tex4ht
    ships its own colours and a browser-default serif; without this the page
@@ -360,13 +443,31 @@ body {
 .ucnav-head {
   position: sticky; top: 0; z-index: 1; font-weight: 700;
   background: var(--cj-bg); border-bottom: 1px solid var(--cj-rule);
-  padding: 0.9rem 1rem 0.6rem;
+  /* Room on the right for the theme button, which is positioned against this
+     box (sticky is a positioned element, so it is already the containing
+     block) and would otherwise sit on top of a longer book title. */
+  padding: 0.9rem 3rem 0.6rem 1rem;
 }
 .ucnav-head a, .ucnav a { color: inherit; text-decoration: none; }
 .ucnav-up { display: block; font-weight: 400; font-size: 0.82em;
             color: var(--cj-muted) !important; margin-bottom: 0.3rem; }
 .ucnav-up:hover { color: var(--cj-link) !important; }
 .ucnav-book { font-family: var(--cj-display); font-size: 1.05em; }
+/* Hidden until the script below reveals it. A theme button that cannot switch
+   the theme is worse than no button, and without JavaScript this one cannot. */
+.ucnav-theme {
+  display: none; position: absolute; top: 0.8rem; right: 0.85rem;
+  background: none; border: 1px solid var(--cj-rule); border-radius: 0.25rem;
+  color: var(--cj-muted); cursor: pointer; padding: 0.3rem; line-height: 0;
+}
+.ucnav-theme:hover { color: var(--cj-link); border-color: var(--cj-link); }
+.ucnav-theme svg { width: 0.95rem; height: 0.95rem; display: block;
+                   fill: none; stroke: currentColor; stroke-width: 1.6;
+                   stroke-linecap: round; stroke-linejoin: round; }
+/* Show the theme being offered, not the one in force: in light, a moon. */
+.ucnav-theme .uc-sun { display: none; }
+.ucnav-theme[data-theme-state="dark"] .uc-sun { display: block; }
+.ucnav-theme[data-theme-state="dark"] .uc-moon { display: none; }
 .ucnav ul { list-style: none; margin: 0; padding: 0; }
 .ucnav li a {
   display: block; padding: 0.28rem 1rem 0.28rem 1.6rem;
@@ -413,6 +514,20 @@ body {
   }
 }
 """
+DARK = """
+    color-scheme: dark;
+    --cj-bg: #1f1e1d;
+    --cj-fg: #f0e8c0;
+    --cj-link: #e89b7f;
+    --cj-link-hover: #f2b79f;
+    --cj-rule: #383634;
+    --cj-code-bg: #262524;
+    --cj-muted: #9a9384;
+    --cj-select: #3a3430;
+"""
+assert CSS.count("@@DARK@@") == 2, "both dark selectors must take the tokens"
+CSS = CSS.replace("@@DARK@@", DARK)
+
 css = pathlib.Path("main.css")
 css.write_text(css.read_text(errors="ignore") + CSS)
 PY
@@ -484,6 +599,13 @@ chk "diagrams referenced vs produced" "$svg_refs" "$svg_files"
 chk "unresolved cross-references" "$(grep -h -c '\[?\]' main*.html | paste -sd+ - | bc)" "0"
 chk "formulas left as images" "$(grep -ho "<img[^>]*alt='\[[^P]" main*.html | wc -l | tr -d ' ')" "0"
 chk "pages without a sidebar" "$(grep -L "class='ucnav'" main*.html | wc -l | tr -d ' ')" "0"
+chk "pages without the theme button" "$(grep -L "class='ucnav-theme'" main*.html | wc -l | tr -d ' ')" "0"
+chk "pages without the pre-paint theme script" "$(grep -L "uc-theme" main*.html | wc -l | tr -d ' ')" "0"
+# Light must be the base, so that a browser with no support for the query, and
+# a reader who has chosen light, both get it. If the light tokens ever move
+# inside a media query this is 0 and the page has no light theme at all.
+chk "light palette outside any media query" "$(awk '/^:root \{/{f=1} f&&/--cj-bg: #faf9f5/{print;exit}' main.css | wc -l | tr -d ' ')" "1"
+chk "dark selectors carrying the tokens" "$(grep -c -- '--cj-bg: #1f1e1d' main.css)" "2"
 # Step 5 regression guard. Test the sidebar text, which step 6 resolves to
 # literal Δ and π: if the declarations go missing, detex has nothing to map
 # and both drop to zero pages. Testing the body instead does not work, since
@@ -506,6 +628,7 @@ for target in $(grep -oE '\(html/main[^)]+\)' "$idx" | tr -d '()' | sed 's|^html
   fi
 done
 chk "index.qmd links that do not resolve" "$bad_links" "0"
+chk "MathJax fetched from a CDN" "$(grep -oh 'cdn\.jsdelivr\.net\|cdnjs\.cloudflare\.com\|unpkg\.com' main*.html | wc -l | tr -d ' ')" "0"
 chk "TeX no-ops left in the math" "$(grep -oh '\\relax' main*.html | wc -l | tr -d ' ')" "0"
 
 # Defect 2: the old cross-reference check greped for "[?]", which is what

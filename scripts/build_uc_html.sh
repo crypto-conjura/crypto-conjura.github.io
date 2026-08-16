@@ -319,6 +319,7 @@ JS = """<script>
 pages = sorted(pathlib.Path(".").glob("main*.html"))
 heads = 0
 rots = 0
+urlfix = 0
 for f in pages:
     items = "\n".join(
         li(k, n, h, t, h.split("#")[0] == f.name) for k, n, h, t in entries)
@@ -359,6 +360,21 @@ for f in pages:
                      lambda m: f"<span class='ucfig-wide'>{m.group(1)}</span>",
                      h2, flags=re.S)
     rots += rn
+    # Step 12: LaTeX's own escape, left in the URL. The bibliography writes
+    # \url{...Selected\%20Scientific...}, which is correct LaTeX, and the PDF
+    # gets a clean %20: verified by reading the URI annotations out of
+    # surveys/uc-for-gamers/pdf/main.pdf, which carry no backslash. tex4ht
+    # copies the escape through into the href instead, and the published link
+    # 404s while the same link in the PDF works. Fixed here rather than in the
+    # source, because the source is not what is wrong.
+    def _unescape(m):
+        global urlfix
+        u = m.group(1)
+        if "\\%" in u:
+            urlfix += 1
+            u = u.replace("\\%", "%")
+        return "href='" + u + "'"
+    h2 = re.sub(r"href='([^']*)'", _unescape, h2)
     f.write_text(h2)
 print(f"    sidebar on {len(pages)} pages, {len(entries)} entries")
 # A page that missed the head script shows the wrong theme for a frame before
@@ -370,6 +386,7 @@ assert heads == len(pages), f"head script reached {heads} of {len(pages)} pages"
 # sign here; if a future tex4ht stops emitting rotatebox, this hits 0 and
 # the fix has quietly become a no-op.
 assert rots == 1, f"expected 1 rotated figure, rewrote {rots}"
+print(f"    unescaped {urlfix} URL(s) carrying a LaTeX percent escape")
 print(f"    theme toggle and pre-paint script on {heads} pages")
 
 CSS = """
@@ -643,6 +660,7 @@ chk "pages without a sidebar" "$(grep -L "class='ucnav'" main*.html | wc -l | tr
 chk "pages without the theme button" "$(grep -L "class='ucnav-theme'" main*.html | wc -l | tr -d ' ')" "0"
 chk "rotated figures left overlapping their text" "$(grep -ho "class='rotatebox'" main*.html | wc -l | tr -d ' ')" "0"
 chk "the sideways figure, unrotated and scrollable" "$(grep -ho "class='ucfig-wide'" main*.html | wc -l | tr -d ' ')" "1"
+chk "LaTeX escapes left inside a URL" "$(grep -oh "href='[^']*\\\\%" main*.html | wc -l | tr -d ' ')" "0"
 # The theme the reader picked has to win over the theme their machine prefers,
 # for the diagrams as well as the page. Without the guarded pair below, light
 # chosen on a dark-mode machine renders inverted figures on a light page.

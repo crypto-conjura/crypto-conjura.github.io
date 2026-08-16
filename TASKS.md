@@ -1,10 +1,35 @@
 # Tasks
 
-Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~12.0h** (rough; the UC Encyclopedia content dominates the uncertainty and could run well over its estimate).
+Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~12.75h** (rough; the UC Encyclopedia content dominates the uncertainty and could run well over its estimate).
 
 Last reconciled against `main` at `8937c1f` on 16 August 2026.
 
 Completed tasks are deleted from this file rather than checked off and kept: this is a list of live work, and `git log` is the record of what closed and when.
+
+- [ ] **Rewrite the About page as an article on why Conjura was created (~0.75h)**
+
+  `about/index.qmd` should stop being a two-part statement of position and become a single argued article: why this project exists, closing with where it is heading and why it is a community effort rather than one person's site.
+
+  **Decide first which base to build on, because there are two and they disagree.** `main` has the 157-line prose version (Part I "where Conjura is headed", Part II "the reasoning underneath"). Unmerged branch `feature/about-three-sections` at `ef1a7ba` already rewrites the same file down to 24 lines: opening statement, three sections, bullets only. That branch's whole premise — bullets, not prose — is the opposite of what an article wants, so either it gets superseded and abandoned, or its condensation work gets mined for phrasing and the branch closed. Do not leave both alive; two competing rewrites of one page is how the next person picks the wrong one.
+
+  Themes the article should cover, in an order that argues rather than enumerates:
+
+  - Collaborative open problem-solving with AI as a way to accelerate science.
+  - Decentralized use of AI — no single account, model or budget as the unit of work.
+  - An Erdős-style problem set for cryptography, with the incentives (bounties) that made Erdős's list work.
+  - Verification by human reviewers *and* autoformalization as the thing that makes any of it trustworthy.
+  - More open discussion of open problems, and the avoidance of duplicated effort and scooping that follows from a public record.
+  - An alternative to traditional venues, which are cautious about AI-assisted work.
+  - Conjura as an AI benchmark: a public record of how current models actually perform against unresolved problems.
+
+  Roughly half of these already have text on the page worth carrying over rather than rewriting: research-that-collides, the venue-policy argument and its sourced table, Erdős bounties (currently filed under "ideas we're exploring"), compute fairness, idle tokens, distributed multi-model compute, and verification-as-undervalued-work. Genuinely new material is needed for **autoformalization** (the page argues for machine-checked proofs but never names autoformalization as a mechanism), **Conjura as a benchmark** (absent entirely), **incentives** as a theme in its own right rather than only as the bounty bullet, and the **community-effort close** (the page currently ends on "say plainly what isn't built yet" and a back-link).
+
+  Constraints that a restructure can silently break:
+
+  - `_quarto.yml:53` links to `/about/index.qmd#this-site-has-not-been-reviewed-either` from site-wide furniture. That anchor must survive, explicitly (`[...]{#this-site-has-not-been-reviewed-either}` if the heading text changes), or the link 404s on every page.
+  - The front matter carries `aliases: /vision/, /philosophy/`. Keep both.
+  - The dated, verified claims are load-bearing and must not be loosened into vibes on the way into article prose: the three AI-policy readings at source on 16 August 2026, the ACM-vs-IACR drift, and the statement that every `sessions/` directory is empty. Re-check the `sessions/` claim is still true at the time of the rewrite; if it has closed, the sentence changes rather than quietly disappears.
+  - Run the result through `prompts/prose.md`, as the previous two passes on this page were.
 
 - [ ] **Finish the Uber-assumption paper and run the checks on it (~1.5h — uncertain: the remaining mathematics is real work, not write-up)**
 

@@ -1,8 +1,8 @@
 # Tasks
 
-Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~12.0h** (rough; the UC Encyclopedia content dominates the uncertainty and could run well over its estimate).
+Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~11.5h** (rough; the UC Encyclopedia content dominates the uncertainty and could run well over its estimate).
 
-Last reconciled against `main` at `8937c1f` on 16 August 2026.
+Last reconciled against `main` at `404452b` on 16 August 2026.
 
 Completed tasks are deleted from this file rather than checked off and kept: this is a list of live work, and `git log` is the record of what closed and when.
 
@@ -24,14 +24,14 @@ Completed tasks are deleted from this file rather than checked off and kept: thi
 
   `c/0008` ("No Two-Element Split Non-Interactive Linear Proofs for Hard Relations") and `c/0009` ("Groth16 Proof-Size Optimality in the Pure Generic Group Model") are both open — whether a 2-element split NILP can be statistically sound against affine provers for any hard relation generator, equivalently whether Groth16's 3-group-element proof size is optimal in the pure GGM (no random oracle, non-interactive, publicly verifiable, generic prover). `p/groth16-proof-size-optimality/index.qmd` has the full parameter lattice and provenance: Groth (EUROCRYPT 2016) posed the 2-element question as his paper's own closing open problem; every subsequent result has attacked some restriction of the pure-GGM model rather than this exact cell. `c/0008` implies `c/0009`, so proving the stronger statement (`c/0008`) resolves both.
 
-- [ ] **Convert the UC-for-gamers paper to HTML (~1.25h — manual: trial-and-error against third-party LaTeX toolchains)**
+- [ ] **Fix the four known defects in the HTML edition of UC for Gamers (~0.75h)**
 
-  Needed as a prerequisite (or at least a shared source) for the interactive UC tutorial task below: that tutorial quotes functionality excerpts from the paper, and an HTML version is what makes those excerpts reusable as live web content instead of screenshotted PDF pages.
+  The conversion itself is done and live at `/surveys/uc-for-gamers/html/main.html`, built by `scripts/build_uc_html.sh`. These are what it shipped with, known and unfixed. Numbers below were measured against the installed files on 16 August 2026, and they correct the looser description in pull request #23, which undercounted the first defect and misdiagnosed it as two.
 
-  - The main conversion risk is the paper's heavy custom LaTeX: `tcolorbox` (the property/game boxes, saturated header + coloured body), `algpseudocode` (the operation listings), and extensive `\hypertarget`/`\hyperlink` cross-referencing (line numbering across shell/finalization boxes, `\opdef`/`\op` targets) — none of these survive a naive converter untouched. Check LaTeXML and `make4ht`/tex4ht against a representative box (e.g. one of `F-Net`, `F-AC`, `G-Clock`) early, before committing to a toolchain, to see which one preserves the box styling and internal hyperlinks rather than flattening them to plain text.
-  - Whatever the box markup degrades to in HTML, math and cross-reference links must not: the per-box line numbering and cross-box hyperlinks are load-bearing for how the paper is read, so a conversion that silently drops or renumbers them is a regression, not an acceptable simplification.
-  - Decide up front whether the target is (a) one faithful HTML mirror of the whole paper, or (b) just the excerpted figures/boxes the tutorial task needs pulled out individually — the two have very different toolchains (whole-document converter vs. per-box snippet export) and it's worth picking before starting rather than defaulting into whichever is easier to try first. Note that (b) is already solved for the functionality boxes: `scripts/gen_interface.py` renders a `\begin{interface}` fragment to styled HTML directly, no third-party converter involved, and it handles the `algpseudocode` subset and the continuous line numbering that a general converter is most likely to mangle. It covers only `interface` environments, not the paper's prose, theorems or diagrams — but if a trial shows LaTeXML/`make4ht` flattening the boxes, splicing this generator's output back over the converter's is a live option, and extending it to the `procedure` environment is a small job.
-
+  - **No line reference in the edition works.** Of 1,104 cross-references, the 806 pointing at definitions, sections, theorems and the rest all resolve correctly. All 298 pointing at pseudocode lines fail, in two ways: 279 resolve but land on the enclosing chapter heading instead of the line, and 19 are dead, pointing at two synthetic anchors (`#x1-11001r3.6`, `#x1-18001r5`) that tex4ht never emitted. Eight distinct labels collapse onto those two targets, which is the tell: tex4ht is not emitting per-line anchors for `algpseudocode` labels at all, and the surviving links only appear to work. This is the load-bearing defect, because line-referenced pseudocode is how the paper explains itself.
+  - **`scripts/build_uc_html.sh` cannot catch the above.** Its cross-reference check greps for `[?]`, which is what LaTeX emits for an *unresolved* `\ref`. These all resolved; they resolved to the wrong place. A fix should add a real link audit to the script: parse every `href`, check the fragment against the ids actually present, and fail on a dead one. Note the trap that produced the bad numbers in #23 and twice more during the build: tex4ht writes single-quoted attributes, so a check written against `href="` matches nothing and reports success.
+  - **`\emph` degrades to a font-class span.** 348 `\emph` in the source, 0 `<em>` in the output, 1,162 `class='pplri8t-'` spans instead. Emphasis is visual only, carrying nothing for screen readers or for search.
+  - **MathJax loads from a CDN.** Every other asset on the site is self-hosted; this page fetches `cdn.jsdelivr.net` on load, and none of the 5,886 formulas render if that fetch fails.
 
 - [ ] **UC Encyclopedia content (~5h — manual: sourcing and verifying real citations per functionality, not just drafting text)**
 
@@ -41,7 +41,7 @@ Completed tasks are deleted from this file rather than checked off and kept: thi
 
 - [ ] **Interactive UC tutorial for the website (~2.25h — minor manual: clicking through the drag/interactive slides by hand to check they actually work)**
 
-  Based on the UC-for-gamers paper; depends on the HTML-conversion task above.
+  Based on the UC-for-gamers paper. Its prerequisite is met: the HTML edition exists at `/surveys/uc-for-gamers/html/main.html`, so chapter text, the nine diagrams as SVG and the functionality boxes can all be quoted as live web content rather than screenshotted from the PDF. Read the defect task above before quoting anything with a line reference in it.
 
   Structure:
 

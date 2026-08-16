@@ -285,11 +285,11 @@ JS = """<script>
   if (!tbtn) return;
   // What the reader is actually looking at. No attribute means no choice has
   // been made, so the system preference is what the CSS is following.
+  // Dark unless a choice is stored. Not matchMedia: the CSS ignores the
+  // system preference, so consulting it here would label the button wrong for
+  // anyone on a light-mode machine who has not chosen anything yet.
   function inForce() {
-    return root.getAttribute('data-theme') ||
-      (window.matchMedia &&
-       window.matchMedia('(prefers-color-scheme: dark)').matches
-         ? 'dark' : 'light');
+    return root.getAttribute('data-theme') || 'dark';
   }
   function paint() {
     var t = inForce();
@@ -306,13 +306,6 @@ JS = """<script>
     try { localStorage.setItem('uc-theme', next); } catch (e) {}
     paint();
   });
-  // Follow the system while the reader has expressed no preference of their
-  // own. Once they have, the stored choice wins and this stops mattering.
-  if (window.matchMedia) {
-    var mq = window.matchMedia('(prefers-color-scheme: dark)');
-    (mq.addEventListener ? mq.addEventListener.bind(mq, 'change')
-                         : mq.addListener.bind(mq))(paint);
-  }
 })();
 </script>"""
 
@@ -396,16 +389,14 @@ CSS = """
    site's Quarto theme, so the theme's tokens are restated here as plain
    CSS. Keep these in sync with theme-light.scss and theme-dark.scss: they
    are copies, not imports, and nothing detects drift between them. */
+/* Dark is the default, and unconditionally so: this edition opens black
+   whatever the reader's machine prefers. Light is reachable only by choosing
+   it with the button in the sidebar, which stores the choice. There is
+   deliberately no prefers-color-scheme rule here. One would mean the default
+   is whatever the visitor's system says, which is the opposite of having a
+   default. The two palettes are written once each in this script and emitted
+   into one selector apiece, so they cannot drift apart. */
 :root {
-  color-scheme: light;
-  --cj-bg: #faf9f5;
-  --cj-fg: #1f1e1d;
-  --cj-link: #a34f2a;
-  --cj-link-hover: #8a4223;
-  --cj-rule: #e5e3dc;
-  --cj-code-bg: #f0eee6;
-  --cj-muted: #6d6a63;
-  --cj-select: #f7ede8;
   --cj-serif: "Hoefler Text", Baskerville, "Big Caslon", "Palatino Linotype",
               Palatino, "Book Antiqua", Georgia, "Times New Roman", serif;
   --cj-display: "Big Caslon", "Baskerville Old Face", "Hoefler Text",
@@ -413,17 +404,8 @@ CSS = """
   --cj-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
              "Liberation Mono", monospace;
   --ucnav-w: 19rem;
-}
-/* Dark arrives two ways: from the reader's system preference, unless they have
-   explicitly asked for light here, and from an explicit choice of dark. Light
-   is the base, so choosing it needs no rules of its own, only the guard on the
-   media query that stops the system overriding a deliberate choice. The token
-   values are written once in this script and emitted into both selectors, so
-   the two cannot drift apart. */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {@@DARK@@  }
-}
-:root[data-theme="dark"] {@@DARK@@}
+@@DARK@@}
+:root[data-theme="light"] {@@LIGHT@@}
 
 /* Step 7: the book itself, in the site's typography and palette. tex4ht
    ships its own colours and a browser-default serif; without this the page
@@ -535,23 +517,16 @@ body {
 .ucfig-wide { display: block; overflow-x: auto; max-width: 100%; }
 .ucfig-wide img { max-width: none; }
 
-/* tex4ht ships its own "@media (prefers-color-scheme: dark) { img[src^=main] {
-   filter: invert(1) } }". That follows the machine, not the reader, so a
-   dark-mode machine with light chosen here inverted all nine diagrams on a
-   light page: white ink on black boxes, which is what "the pictures are
-   designed for dark mode" looks like. Restated below to follow the choice, in
-   both directions. The hue rotation is not decoration: a plain invert turns
-   the book's accent orange (#a8630f) into blue, and rotating the hue back puts
-   it where the figures were drawn. */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) img[src^="main"] {
-    filter: invert(1) hue-rotate(180deg);
-  }
-  :root[data-theme="light"] img[src^="main"] { filter: none; }
-}
-:root[data-theme="dark"] img[src^="main"] {
-  filter: invert(1) hue-rotate(180deg);
-}
+/* The diagrams are drawn as black ink on white, so on the dark default they
+   have to be inverted, and tex4ht's own rule cannot do it: it ships
+   "@media (prefers-color-scheme: dark) { img[src^=main] { filter: invert(1) } }",
+   which follows the machine rather than this page's default and would leave a
+   light-mode visitor reading black figures on a black page. Inverted here
+   unconditionally instead, and undone only when light is chosen. The hue
+   rotation is not decoration: a plain invert turns the book's accent orange
+   (#a8630f) into blue, and rotating the hue back puts it where it was drawn. */
+img[src^="main"] { filter: invert(1) hue-rotate(180deg); }
+:root[data-theme="light"] img[src^="main"] { filter: none; }
 
 @media (max-width: 60rem) {
   /* A sidebar holding its column at this width is how horizontal overflow
@@ -573,18 +548,30 @@ body {
 }
 """
 DARK = """
-    color-scheme: dark;
-    --cj-bg: #1f1e1d;
-    --cj-fg: #f0e8c0;
-    --cj-link: #e89b7f;
-    --cj-link-hover: #f2b79f;
-    --cj-rule: #383634;
-    --cj-code-bg: #262524;
-    --cj-muted: #9a9384;
-    --cj-select: #3a3430;
+  color-scheme: dark;
+  --cj-bg: #1f1e1d;
+  --cj-fg: #f0e8c0;
+  --cj-link: #e89b7f;
+  --cj-link-hover: #f2b79f;
+  --cj-rule: #383634;
+  --cj-code-bg: #262524;
+  --cj-muted: #9a9384;
+  --cj-select: #3a3430;
 """
-assert CSS.count("@@DARK@@") == 2, "both dark selectors must take the tokens"
-CSS = CSS.replace("@@DARK@@", DARK)
+LIGHT = """
+  color-scheme: light;
+  --cj-bg: #faf9f5;
+  --cj-fg: #1f1e1d;
+  --cj-link: #a34f2a;
+  --cj-link-hover: #8a4223;
+  --cj-rule: #e5e3dc;
+  --cj-code-bg: #f0eee6;
+  --cj-muted: #6d6a63;
+  --cj-select: #f7ede8;
+"""
+assert CSS.count("@@DARK@@") == 1, "the dark tokens go in :root, once"
+assert CSS.count("@@LIGHT@@") == 1, "the light tokens go in the opt-in, once"
+CSS = CSS.replace("@@DARK@@", DARK).replace("@@LIGHT@@", LIGHT)
 
 css = pathlib.Path("main.css")
 css.write_text(css.read_text(errors="ignore") + CSS)
@@ -669,8 +656,13 @@ chk "pages without the pre-paint theme script" "$(grep -L "uc-theme" main*.html 
 # Light must be the base, so that a browser with no support for the query, and
 # a reader who has chosen light, both get it. If the light tokens ever move
 # inside a media query this is 0 and the page has no light theme at all.
-chk "light palette outside any media query" "$(awk '/^:root \{/{f=1} f&&/--cj-bg: #faf9f5/{print;exit}' main.css | wc -l | tr -d ' ')" "1"
-chk "dark selectors carrying the tokens" "$(grep -c -- '--cj-bg: #1f1e1d' main.css)" "2"
+chk "dark is the default palette" "$(awk '/^:root \{/{f=1} f&&/--cj-bg: #1f1e1d/{print;exit}' main.css | wc -l | tr -d ' ')" "1"
+chk "light is reachable by choice" "$(grep -c '^:root\[data-theme="light"\] {' main.css)" "1"
+# A prefers-color-scheme rule of ours would defeat the point of a default. The
+# one tex4ht ships is still in the file and is overridden, so match only the
+# selectors this script writes.
+chk "our own system-preference rules" "$(grep -c ':root:not(\[data-theme' main.css)" "0"
+chk "each palette written exactly once" "$(grep -c -- '--cj-bg: #1f1e1d' main.css)$(grep -c -- '--cj-bg: #faf9f5' main.css)" "11"
 # Step 5 regression guard. Test the sidebar text, which step 6 resolves to
 # literal Δ and π: if the declarations go missing, detex has nothing to map
 # and both drop to zero pages. Testing the body instead does not work, since

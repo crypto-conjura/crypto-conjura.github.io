@@ -1,25 +1,10 @@
 # Tasks
 
-Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~20.75h** (rough; two items dominate the uncertainty and could each run well over their estimate: the UC Encyclopedia content, and finishing the c/0004 Lean proof, whose remaining work includes a concentration inequality Mathlib does not carry).
+Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~20.5h** (rough; two items dominate the uncertainty and could each run well over their estimate: the UC Encyclopedia content, and finishing the c/0004 Lean proof, whose remaining work includes a concentration inequality Mathlib does not carry).
 
-Last reconciled against `main` at `4fae707` on 16 August 2026.
+Last reconciled against `main` at `3aba67d` on 16 August 2026.
 
 Completed tasks are deleted from this file rather than checked off and kept: this is a list of live work, and `git log` is the record of what closed and when.
-
-- [ ] **DEFERRED: supply the c/0004 session transcript** -- the original session that produced `latex/proof.tex` could not be found (confirmed 16 August 2026). `c/0004/sessions/` stays empty rather than reconstructed, and the About page now states that no result on the site carries a session log.
-
-- [ ] **Give the real papers an "Archive" section in the sidebar, and drop Example Paper from it (~15 min)**
-
-  The sidebar's Papers section (`_quarto.yml:82-88`) lists four pages flat: `uber-groups-rsr`, `example-paper`, `programme-committee`, `proposals`. Only the first is a paper — the other three are a template, a policy page and a topic list. Group the real ones under an **Archive** subsection and take Example Paper out of the sidebar entirely; Archive holds `papers/uber-groups-rsr/index.qmd` for now, and every paper added later goes there instead of directly under Papers.
-
-  Reading the instruction: "(It should NOT appear on the side bar)" is taken to mean Example Paper, not the Archive section — Archive lives in the sidebar as a subsection of Papers and is where the papers are listed. If the intent was the other one (Archive as a heading on `papers/index.qmd` only, with the sidebar's Papers section holding no papers at all), that is a different edit and is worth confirming before starting; everything below applies either way.
-
-  What has to move with it:
-
-  - **Example Paper stays a page.** Only its sidebar entry goes. Four things link to it and must keep resolving: `README.md:42` and `latex/README.md:59` both name `papers/example-paper/` as the template to copy, and `papers/programme-committee/index.qmd` points at it twice (once at line 7, once at line 22 as "the paper template"). Deleting the page is not what is being asked for.
-  - **`papers/index.qmd`'s Browse list is already wrong and this is the moment to fix it.** It opens with "[Example Paper] — the papers themselves", which was true when Example Paper was the only thing there and is not now, and it does not list the Uber-assumption paper at all. Give it an Archive entry pointing at the real papers, and demote Example Paper to what it actually is: the frontmatter contract other papers are copied from.
-  - **One stale sentence rides along.** `papers/programme-committee/index.qmd:7` says "There is currently one example paper on the site and no committee yet." The first half stopped being true when `papers/uber-groups-rsr/` was published.
-  - **The mirroring rule is not affected**, as long as Archive is a subsection under Papers: `_quarto.yml`'s comment binds the navbar's entries to the sidebar's *top-level* sections only. Promoting Archive to top level would drag the navbar into it.
 
 - [ ] **Move the UC Encyclopedia under Surveys (~30 min — decide the URL question before touching anything)**
 

@@ -1,22 +1,12 @@
 # Tasks
 
-Split into two sections: **Website and repository** (~5.5h) covers the site, its build tooling and the repository's configuration; **Conjectures and papers** (~6.0h) covers the mathematics — proving conjectures, and writing and checking the papers that report them. Within each section, tasks are ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~11.5h** (rough; the UC Encyclopedia content dominates the uncertainty and could run well over its estimate).
+Split into two sections: **Website and repository** (~5.5h) covers the site, its build tooling and the repository's configuration; **Conjectures and papers** (~6.0h) covers the mathematics — proving conjectures, and writing and checking the papers that report them. Within each section, tasks are ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~11.0h** (rough; the UC Encyclopedia content dominates the uncertainty and could run well over its estimate).
 
-Last reconciled against `main` at `5e5e95b` on 16 August 2026.
+Last reconciled against `main` at `ac8942c` on 16 August 2026.
 
 Completed tasks are deleted from this file rather than checked off and kept: this is a list of live work, and `git log` is the record of what closed and when.
 
 ## Website and repository
-
-- [ ] **Drop the last third-party script: Quarto's es6 polyfill (~0.5h)**
-
-  MathJax is now self-hosted (16 August 2026): `assets/mathjax/` holds mathjax@3.2.2 `tex-chtml-full` plus its 23 CHTML fonts, 1.68MB in total, and both `_quarto.yml` and `scripts/build_uc_html.sh` point at that one copy. CDN references for MathJax across `_site/` went from 121 pages to 0, and a UC edition chapter now loads contacting no external host at all.
-
-  What that exposed is the remaining one. Quarto emits two third-party scripts, not one, and the second survives: `<script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6">` on 62 pages. It is emitted by Quarto's own HTML template rather than by any setting in this repository, so `html-math-method` does not reach it and there is no documented switch for it in Quarto 1.10.18.
-
-  It is also almost certainly dead weight: MathJax 3 requires ES6 to run at all, so a browser old enough to need the polyfill cannot render the mathematics either way. Worth confirming that reading before acting on it.
-
-  Three ways to remove it, in the order worth trying: find a supported Quarto option or template partial that suppresses it; failing that, vendor the file next to `assets/mathjax/` and rewrite the tag in a post-render step, accepting that a post-render rewrite has to be maintained against Quarto's template; or leave it and record the decision here rather than leaving the inconsistency unexplained. Do not simply delete the tag from `_site/` by hand, since that is regenerated on every build.
 
 - [ ] **UC Encyclopedia content (~5h — manual: sourcing and verifying real citations per functionality, not just drafting text)**
 

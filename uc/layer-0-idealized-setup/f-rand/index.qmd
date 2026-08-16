@@ -10,15 +10,7 @@ A source of uniform bits shared across the parties it serves, paired with an era
 
 ## Functionality
 
-Parameterized by a bit-width $n$. State: a counter $\mathtt{ctr}$ and a table $\mathtt{L} : \mathbb{N} \to \{0,1\}^n \cup \{\square\}$, initially $\mathtt{ctr} = 0$ and $\mathtt{L}[*] = \square$.
-
-- **Rnd()**, from any admitted caller: increment $\mathtt{ctr}$, sample $r \gets_\$ \{0,1\}^n$, set $\mathtt{L}[\mathtt{ctr}] \gets r$, and return $(\mathtt{ctr}, r)$ — the index is returned alongside the value precisely so the caller can name the draw later.
-- **Erase(i)**: set $\mathtt{L}[i] \gets \square$ and return $\mathsf{ok}$.
-- **Leak()**: return $\mathtt{L}$ in full (the adversary at a corrupt party sees every draw not yet erased).
-
-The counter is shared across every party the instance serves — two parties drawing from the same instance draw distinct entries — which is what makes it a shared *source* rather than a per-party generator, and what a protocol relies on to keep two draws from colliding.
-
-Below is the functionality itself, transcribed from [*UC for Gamers*](/surveys/uc-for-gamers/pdf/main.pdf#page=137) (§13.1, p. 136), line numbering and all. The header line fixes the process id, the served parties $\mathbf{P}$, the admitted callers $\mathbf{N}$, the used slots $\mathbf{U}$ (none: the source draws on nothing outside itself) and the parameter $\mathit{par} := n$, the width of a draw. Inside, $\square$ marks an entry the table has no value at — either never reached by the counter, or erased.
+Reading the box: the header line fixes the process id, the served parties $\mathbf{P}$, the admitted callers $\mathbf{N}$, the used slots $\mathbf{U}$ (none: the source draws on nothing outside itself) and the parameter $\mathit{par} := n$, the width of a draw. Inside, $\square$ marks an entry the table has no value at — either never reached by the counter, or erased.
 
 ```{=html}
 <div class="cj-interface">
@@ -65,6 +57,12 @@ Below is the functionality itself, transcribed from [*UC for Gamers*](/surveys/u
 </div>
 </div>
 ```
+
+The box is transcribed from [*UC for Gamers*](/surveys/uc-for-gamers/pdf/main.pdf#page=137) (§13.1, p. 136), line numbering and all.
+
+Three things the code does without saying why. *Rnd* returns the index alongside the value (line 7) because otherwise a caller could never name a draw again, and *Erase* would have nothing to take. The counter is shared across every party the instance serves, so two parties drawing from the same instance draw distinct entries — that is what makes this a shared *source* rather than a per-party generator, and what a protocol relies on to keep two draws from colliding. And since $\mathtt{ctr}$ only ever climbs, an index is never reused: erasure is permanent rather than a freed slot, which is the whole point of having it.
+
+*Leak* hands back the table entire, so what the adversary sees at a corrupt party is exactly every draw not yet erased — erasure is the only difference between the two.
 
 ## Known realizations
 

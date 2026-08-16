@@ -10,15 +10,7 @@ Canetti's authenticated channel, given the same clock-relative $\Delta$ delivery
 
 ## Functionality
 
-Parameterized by a delay bound $\Delta$; uses the global clock and the adversary. State: a list of entries $(P, Q, \tau, \mathsf{msg})$ indexed by message id.
-
-- **Send(Q, msg)**, from party $P$: read the current time $\tau$ off the clock, file $(P, Q, \tau, \mathsf{msg})$ under a fresh id, notify the adversary, and return $\mathsf{ok}$. A corrupt sender's call still goes through this interface under its own identity — that is the whole mechanism: there is no other way onto the channel, so nothing is ever attributed to a sender that didn't call *Send*.
-- **Fetch()**, from party $Q$: gather every entry addressed to $Q$ that has come of age (aged past $\tau_{\text{sent}} + \Delta$), ask the adversary which not-yet-aged entries addressed to $Q$ to release early, return the union as full records $(P, Q, \tau, \mathsf{msg})$, and *remove* every entry it just answered — each message is delivered exactly once, not repeatedly re-offered the way *F-Net*'s diffused messages are.
-- **Leak()**: returns the whole list — authentication is not secrecy, and this channel hides nothing.
-
-Both slot calls are responsive, for the same reason as *F-Net*'s: a fetch's clock read and its aging test have to be one atomic moment, or the adversary could stall between them and unlawfully withhold a message past its deadline.
-
-Below is the functionality itself, transcribed from [*UC for Gamers*](/surveys/uc-for-gamers/pdf/main.pdf#page=179) (§19.1, p. 178), line numbering and all. Reading it: $\mathcal{A}^{!}(\cdot)$ is a *responsive* call on the adversary slot; $\mathit{id}_{\mathcal{G}_{\mathsf{Clock}}}.\mathsf{FullRead}()$ is a call on the global clock's full interface, guard included; $\mathcal{M}$ is the message space. The predicate sanitizing the early release at line 14 is defined in the source's prose rather than in the box: $\mathsf{Clean}_{\mathsf{addr}}(S; \mathtt{list}, P)$ holds exactly when $S \subseteq \{i : \mathtt{list}[i] = (\cdot, P, \cdot, \cdot)\}$ — the slot may release early only undrained entries addressed to the fetching party, and a bad answer is repaired to $\emptyset$. Line 16 drains what it returns, so each entry is delivered exactly once.
+Reading the box: $\mathcal{A}^{!}(\cdot)$ is a *responsive* call on the adversary slot; $\mathit{id}_{\mathcal{G}_{\mathsf{Clock}}}.\mathsf{FullRead}()$ is a call on the global clock's full interface, guard included; $\mathcal{M}$ is the message space; $\Delta$, the parameter on the header line, is the delivery deadline. One predicate is named but not written out — $\mathsf{Clean}_{\mathsf{addr}}(S; \mathtt{list}, P)$, defined in the source's prose, holds exactly when $S \subseteq \{i : \mathtt{list}[i] = (\cdot, P, \cdot, \cdot)\}$.
 
 ```{=html}
 <div class="cj-interface">
@@ -72,6 +64,18 @@ Below is the functionality itself, transcribed from [*UC for Gamers*](/surveys/u
 </div>
 </div>
 ```
+
+The box is transcribed from [*UC for Gamers*](/surveys/uc-for-gamers/pdf/main.pdf#page=179) (§19.1, p. 178), line numbering and all. Every entry carries both a sender and a recipient, which is the structural difference from *F-Net* and the source of everything else.
+
+*Send* files the entry under the caller's own identity, $\mathit{id}.P$ (line 6), and that is the whole authentication mechanism: a corrupt sender's call goes through this same interface under its own name, and there is no other way onto the channel, so nothing is ever attributed to a party that did not call *Send*. Note what *Send* returns — $\mathsf{ok}$, not the message id — so a sender cannot refer to its own message afterwards; the channel gives it no handle to withdraw or re-address.
+
+*Fetch* answers in two halves and then destroys what it answered:
+
+- **Lines 11–12** gather what has come of age on the clock alone: entries addressed to the fetching party, sent at least $\Delta$ ago. This half needs no adversary at all, which is why liveness holds no matter what the slot says.
+- **Lines 13–14** let the adversary release entries early, and $\mathsf{Clean}_{\mathsf{addr}}$ bounds what that permission is worth: only undrained entries already addressed to the fetching party, with a bad answer repaired to $\emptyset$. The adversary can hurry a message along; it cannot redirect one or conjure one.
+- **Line 16** drains every entry the call is about to return, so each message is delivered exactly once rather than re-offered on every fetch the way *F-Net*'s diffused entries are.
+
+Both slot calls are responsive, for the same reason as *F-Net*'s: a fetch's clock read and its aging test have to be one atomic moment, or the adversary could stall between them and withhold a message past its deadline. *Leak* returns the whole list, since authentication is not secrecy and this channel hides nothing.
 
 ## Known realizations
 

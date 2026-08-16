@@ -10,16 +10,7 @@ layer: 0
 
 ## Functionality
 
-State: a table $\mathtt{L} : \mathbb{N} \to \{0,1\}^* \cup \{\bot, \square\}$, initially $\mathtt{L}[*] = \square$. An index is in one of three conditions, kept deliberately distinct: $\square$ if nothing was ever put there, a value if put and not erased, and $\bot$ if put and then erased — so a caller can tell "nothing was ever here" from "something was here and is gone," rather than a store that answers the same either way and cannot be asked whether an erasure actually happened.
-
-- **Put(i, x)**: requires $\mathtt{L}[i] \in \{\bot, \square\}$ (an occupied index refuses); sets $\mathtt{L}[i] \gets x$ and returns $\mathsf{ok}$.
-- **Erase(i)**: sets $\mathtt{L}[i] \gets \bot$ and returns $\mathsf{ok}$ — erasing an index that holds nothing is a harmless no-op.
-- **Get(i)**: requires $\mathtt{L}[i] \neq \square$ (never written refuses); returns $\mathtt{L}[i]$, which is $\bot$ if the entry was erased.
-- **Leak()**: returns $\mathtt{L}$ in full.
-
-State is shared across every party the instance serves, exactly as for *F-Rand*: one party may retrieve what another put, which is what makes it a shared store rather than a per-party tape.
-
-Below is the functionality itself, transcribed from [*UC for Gamers*](/surveys/uc-for-gamers/pdf/main.pdf#page=141) (§14.1, p. 140), line numbering and all. Two markers do the work of three conditions: $\square$ is never written, $\bot$ is written and since erased, and anything else is a value put and still there. The refusals are written as **require**s rather than as returns of $\mathsf{rej}$ — the framework answers a refused **require** with $\mathsf{rej}$, so lines 3 and 8 are exactly the two refusals a store owes.
+Reading the box: two markers do the work of three conditions — $\square$ is an index never written, $\bot$ is one written and since erased, and anything else is a value put and still there. The refusals are written as **require**s rather than as returns of $\mathsf{rej}$; the framework answers a refused **require** with $\mathsf{rej}$ of its own accord.
 
 ```{=html}
 <div class="cj-interface">
@@ -72,6 +63,14 @@ Below is the functionality itself, transcribed from [*UC for Gamers*](/surveys/u
 </div>
 </div>
 ```
+
+The box is transcribed from [*UC for Gamers*](/surveys/uc-for-gamers/pdf/main.pdf#page=141) (§14.1, p. 140), line numbering and all.
+
+The three conditions are kept apart on purpose. A caller can tell "nothing was ever here" from "something was here and is gone", where a store that answered the same either way could not be asked whether an erasure actually happened — which is precisely the question a protocol relying on erasure needs answered. That is why *Get* refuses $\square$ (line 8) but happily returns $\bot$ (line 9): the refusal means "wrong index", the $\bot$ means "gone", and collapsing them would lose the distinction the state was built to carry.
+
+Lines 3 and 8 are the only two refusals a store owes. *Put* refuses an occupied index, so a value cannot be silently overwritten — an erasure has to be asked for explicitly. *Erase* refuses nothing at all: erasing an index that holds nothing is a harmless no-op, and making it fail would only give a caller a way to probe the table.
+
+State is shared across every party the instance serves, exactly as for *F-Rand*: one party may retrieve what another put, which is what makes this a shared store rather than a per-party tape.
 
 ## Known realizations
 

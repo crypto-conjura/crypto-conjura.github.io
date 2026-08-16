@@ -10,15 +10,7 @@ A clock-parameterized specialization of unauthenticated diffusion (see *F-diffus
 
 ## Functionality
 
-Parameterized by a delay bound $\Delta$; uses the global clock and the adversary. State: a buffer $\mathtt{buf}$ of entries $(m, P, \mathit{msg}, \tau)$ indexed by message id $m$, and a "released to" table.
-
-- **Send(msg)**, from party $P$: read the current time $\tau$ off the clock, store $(m, P, \mathsf{msg}, \tau)$ under a fresh id $m$, notify the adversary of the send, and return $m$.
-- **Fetch()**, from party $P$: read the current time $\tau$; ask the adversary which stored ids to release to $P$ early and what fresh (unattributed) messages to inject; return, for every entry addressed — implicitly, since delivery is diffusion to everyone — either already released to $P$ or aged past $\tau_{\text{sent}} + \Delta$, the pair $(m, \mathsf{msg})$ (never the sender). Injected messages are delivered with no id-history, carry no sender, and never ripen — they are the adversary's own traffic, on the wire only because it wrote there.
-- **Leak()**: returns the whole buffer and release table — the network is public and keeps no secrets.
-
-Both slot calls (send-notification and the fetch query) are *responsive*: the adversary's answer comes back before anything else can run, so a fetch reads one consistent snapshot of the clock rather than racing it.
-
-Below is the functionality itself, transcribed from [*UC for Gamers*](/surveys/uc-for-gamers/pdf/main.pdf#page=170) (§18.1, p. 169), line numbering and all. Reading it: $\mathcal{A}^{!}(\cdot)$ is a *responsive* call on the adversary slot, so a fetch reads one consistent snapshot rather than racing the clock; $\mathit{id}_{\mathcal{G}_{\mathsf{Clock}}}.\mathsf{FullRead}()$ is a call on the global clock's full interface, guard included; $\mathcal{M}$ is the message space. Lines 13–14 are the inline sanitization of the slot's answer, and line 20 reads $\mathtt{rel}$ *or* the deadline, so the adversary's silence past $\Delta$ is ignored rather than punished.
+Reading the box: $\mathcal{A}^{!}(\cdot)$ is a *responsive* call on the adversary slot, so a fetch reads one consistent snapshot rather than racing the clock; $\mathit{id}_{\mathcal{G}_{\mathsf{Clock}}}.\mathsf{FullRead}()$ is a call on the global clock's full interface, guard included; $\mathcal{M}$ is the message space; $\Delta$, the parameter on the header line, is the delivery deadline every entry is measured against.
 
 ```{=html}
 <div class="cj-interface">
@@ -75,6 +67,17 @@ Below is the functionality itself, transcribed from [*UC for Gamers*](/surveys/u
 </div>
 </div>
 ```
+
+The box is transcribed from [*UC for Gamers*](/surveys/uc-for-gamers/pdf/main.pdf#page=170) (§18.1, p. 169), line numbering and all. There is no addressee anywhere in the state: an entry is $(m, P, \mathit{msg}, \tau)$, and delivery is diffusion to everyone the instance serves. What $\mathtt{rel}$ tracks is not *whether* a message reaches a party but *when* — it is early release, not routing.
+
+*Send* stamps the entry with the clock's current time (line 5) and tells the adversary about it (line 8) before returning, because the network is public: there is nothing to hide about a message in flight, only about when it lands.
+
+The two lines to read closely are in *Fetch*:
+
+- **Line 20** reads $\mathtt{rel}$ *or* the deadline. The adversary may release an entry to a party early, but $\tau_s + \Delta \leq \tau$ delivers it regardless once the deadline passes — so silence past $\Delta$ is ignored rather than punished, and this disjunction is the whole of liveness.
+- **Lines 13–14** sanitize the slot's answer inline rather than through $\mathsf{San}[\mathsf{Clean}]$: $S$ is intersected down to ids actually in the buffer and $I$ down to genuine messages, so a malformed or greedy answer is trimmed rather than refused. A non-pair reads as $(\emptyset, \emptyset)$, which is why no answer at all is a safe answer.
+
+Injected messages (lines 16–18) are filed with $\bot$ where a sender would go and $\infty$ where a send time would, then marked released to the fetching party alone. They therefore carry no sender, never ripen for anyone else, and reach exactly the party the adversary handed them to — the adversary's own traffic, on the wire only because it wrote there. That the send notification and the fetch query are both responsive is what keeps a fetch's clock read and its aging test one atomic moment.
 
 ## Known realizations
 

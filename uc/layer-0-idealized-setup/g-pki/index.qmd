@@ -10,15 +10,7 @@ A single, shared directory binding a verification key to the party that register
 
 ## Functionality
 
-State: a table $\mathtt{VK} : \mathcal{G}_{\mathsf{PKI}}.\mathbf{P} \to \mathcal{K} \cup \{\square\}$, initially everywhere $\square$.
-
-- **Register(vk)**, from party $P$: an outsider (the adversary or the environment) acting for an *honest* $P$ only gets a peek at what's on file, never a write. Otherwise, if $P$ already has a key on file, that key is returned unchanged — the first successful call wins, permanently. Otherwise the offered key is sanitized to be fresh (not already claimed by another party) and recorded against $P$, then returned.
-- **Retrieve(P)**: returns whatever is on file for $P$, or $\square$ if nobody has registered — answered to any caller, since a directory is public by nature.
-- **Leak()**: returns the whole table, which is no more than *Retrieve* already gives out one entry at a time.
-
-There is deliberately no *Deregister*: a key once bound stays bound. Revocation would be a genuine addition to this functionality, not a gap left open by oversight.
-
-Below is the functionality itself, transcribed from [*UC for Gamers*](/surveys/uc-for-gamers/pdf/main.pdf#page=153) (§16.1, p. 152), line numbering and all. Reading it: $\mathsf{San}[\mathsf{Clean}](\cdot)$ resamples until the named predicate holds, with $\mathsf{Clean}_{\mathsf{reg}}$ written out at the end of the box; $\mathbf{C}$ is the set of corrupted parties; $A$ and $Z$ are the adversary's and environment's name components, so line 3 is the test that an outsider calling for an honest party gets a peek and not a write. The process id is pinned to a constant and $\mathbf{N}$ admits every standard, adversarial and environment id — that is what makes the directory *global*.
+Reading the box: $\mathsf{San}[\mathsf{Clean}](\cdot)$ resamples until the named predicate holds, with $\mathsf{Clean}_{\mathsf{reg}}$ written out at the end of the box; $\mathbf{C}$ is the set of corrupted parties; $A$ and $Z$ are the adversary's and environment's name components, so a test on $\mathit{id}'.F$ asks who is really placing the call. The process id is pinned to a constant and $\mathbf{N}$ admits every standard, adversarial and environment id — that is what makes the directory *global*.
 
 ```{=html}
 <div class="cj-interface">
@@ -73,6 +65,18 @@ Below is the functionality itself, transcribed from [*UC for Gamers*](/surveys/u
 </div>
 </div>
 ```
+
+The box is transcribed from [*UC for Gamers*](/surveys/uc-for-gamers/pdf/main.pdf#page=153) (§16.1, p. 152), line numbering and all. The state is a single table, and *Register* is the only operation that writes to it; the other three read.
+
+Three lines carry the whole design:
+
+- **Line 3** turns *Register* into a read whenever an outsider — the adversary or the environment — calls on behalf of an *honest* party: it gets a peek at what is on file and never a write. Registering on behalf of a *corrupt* party falls through and proceeds freely, which is why the guarantees below are about what the directory enforces, not about what an honest-looking key means.
+- **Line 5** makes the first successful registration permanent: a party with a key on file gets that key back, whatever it offers. There is no test of *who* offered it and no way to overwrite, so a corrupt party's later attempt to swap its own key is indistinguishable from a repeat call.
+- **Line 7** sanitizes the offered key to be one no other party has claimed. This is the only condition $\mathsf{Clean}_{\mathsf{reg}}$ imposes beyond membership in $\mathcal{K}$, and it is exactly what makes the binding property hold.
+
+*Retrieve* answers any caller with whatever is on file, or $\square$ if nobody has registered — a directory is public by nature — which is why *Leak* costs nothing: the whole table is no more than *Retrieve* already gives out one entry at a time.
+
+There is deliberately no *Deregister*: a key once bound stays bound. Revocation would be a genuine addition to this functionality, not a gap left open by oversight.
 
 ## Known realizations
 

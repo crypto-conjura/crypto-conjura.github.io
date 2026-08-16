@@ -10,16 +10,7 @@ A shared monotone counter modeling round synchrony, introduced by Katz–Maurer�
 
 ## Functionality
 
-State: a counter $\mathtt{now}$ (starts at $0$, only ever increases), plus per-party $\mathtt{reg}$ and $\mathtt{tick}$ flags.
-
-- **Register()** / **Deregister()**, from party $P$: an outsider acting for an *honest* $P$ just reads the time, unchanged; otherwise $P$ enters or leaves the round structure (a freshly registered party owes a fresh tick).
-- **Update()**, from party $P$: an outsider acting for an *honest* $P$ just reads the time. Otherwise, if $P$ is registered, its tick is recorded; if every currently-honest registered party's tick is now in, the counter advances by one and every tick clears — a round closing. The adversary is notified of every tick (responsively, its answer discarded) before the call returns. Every call, including reads, returns the counter as it stands on return.
-- **Read()**: returns $\mathtt{now}$.
-- **Leak()**: returns the counter and both flag tables in full — a clock keeps no secrets.
-
-Corrupt parties neither hold a round open nor help close one: their ticks are the adversary's to give or withhold, and the advance test only ever reads honest parties' flags. Until the first honest party registers, the round-closing test is vacuous, so time is effectively the adversary's to spend.
-
-Below is the functionality itself, transcribed from [*UC for Gamers*](/surveys/uc-for-gamers/pdf/main.pdf#page=160) (§17.1, p. 159), line numbering and all. Reading it: $\mathcal{A}^{!}(\cdot)$ is a *responsive* call on the adversary slot — the answer comes back before anything else runs, and here it is discarded outright, the call being a notification; $\mathbf{C}$ is the set of corrupted parties; $A$ and $Z$ are the adversary's and environment's name components, so the first test of each mutator is what stops an outsider ticking on an honest party's behalf. The process id is pinned to a constant and $\mathbf{N}$ admits every standard, adversarial and environment id — that is what makes the clock *global*.
+Reading the box: $\mathcal{A}^{!}(\cdot)$ is a *responsive* call on the adversary slot — the answer comes back before anything else runs, and here it is discarded outright, the call being a notification; $\mathbf{C}$ is the set of corrupted parties; $A$ and $Z$ are the adversary's and environment's name components, so the first test of each mutator asks whether an outsider is calling on an honest party's behalf. The process id is pinned to a constant and $\mathbf{N}$ admits every standard, adversarial and environment id — that is what makes the clock *global*.
 
 ```{=html}
 <div class="cj-interface">
@@ -91,6 +82,14 @@ Below is the functionality itself, transcribed from [*UC for Gamers*](/surveys/u
 </div>
 </div>
 ```
+
+The box is transcribed from [*UC for Gamers*](/surveys/uc-for-gamers/pdf/main.pdf#page=160) (§17.1, p. 159), line numbering and all. Every operation returns $\mathtt{now}$, reads and mutators alike, and always as it stands on return — so a caller that closed a round sees the counter it just advanced, not the one it entered on.
+
+*Register* and *Deregister* are the same operation up to which flags they set: a freshly registered party has its tick cleared (line 6) and so owes a fresh tick, while a departing one is simply dropped from the round structure and leaves no obligation behind. Both open with the outsider test (lines 4 and 8), which downgrades the call to a read.
+
+The round closes in *Update*, and lines 17–19 are the whole of it. A tick is recorded (line 16); if every currently-honest registered party's tick is now in, the counter advances by one and every tick clears at once. Two things follow from how line 17 quantifies. Corrupt parties neither hold a round open nor help close one — the test ranges over $\mathbf{P} \setminus \mathbf{C}$, so their ticks are the adversary's to give or withhold and count for nothing either way. And until the first honest party registers the test is vacuously true, so time is effectively the adversary's to spend.
+
+The notification at line 20 fires on every *Update* that gets that far, not only on the ones that advanced the counter, and its answer is discarded — the clock is telling the adversary something and asking nothing. That it is *responsive* means the adversary cannot use the notification to run other machinery mid-tick.
 
 ## Known realizations
 

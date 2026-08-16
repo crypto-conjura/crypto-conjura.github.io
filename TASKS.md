@@ -1,6 +1,20 @@
 # Tasks
 
-Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~12.33h** (rough; the UC Encyclopedia content item is especially uncertain and could run well over its estimate).
+Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~12.67h** (rough; the UC Encyclopedia content item is especially uncertain and could run well over its estimate).
+
+- [ ] **Flatten the `prompts/` folder (~20 min)**
+
+  Drop the three category subfolders (`prompts/research/`, `prompts/proof-checking/`, `prompts/writing/`) and put every prompt directly under `prompts/`, with one index page instead of four.
+
+  Current state — 3 category `index.qmd` pages plus 6 tracked prompt files (`research/HARNESS.md`; `proof-checking/proof-audit-prompt.md`, `proof-checking/uc-audit-prompt.md`; `writing/latex-style-audit-prompt.md`, `writing/revise-latex-manuscript-prompt.md`, `writing/revise-latex-prose.md`), plus `writing/latex-typography-prompt.md`, which is untracked as of 2026-08-16 and isn't listed on any index page yet — decide whether it comes along in the same move.
+
+  What the move touches:
+
+  - `git mv` the 7 `.md` files up one level; filenames are already unique across the three folders, so no renaming is needed. Delete the 3 category `index.qmd` files and the now-empty folders (and the stray `prompts/.DS_Store`, which is untracked).
+  - `prompts/index.qmd` currently links to the three category pages and nothing else. It has to absorb their content: each category page carries a one-paragraph framing plus a per-prompt annotated bullet (the annotations are long and worth keeping verbatim). Either keep the three categories as `##` headings on the single page, or go fully flat — worth deciding explicitly rather than defaulting, since the page is currently a 3-line hub and would become the site's longest Resources page.
+  - `_quarto.yml:83-88`: the sidebar has a nested `- section: "Prompts"` with three `contents:` entries; after the flatten the section has no children and should collapse to a plain `- prompts/index.qmd` under Resources.
+  - Link check: `resources/index.qmd:11` points at `/prompts/index.qmd` (unaffected), and `README.md:16` describes the folder as "reusable prompts for research, proof-checking, writing" (reword). Nothing else on the site links into the subfolders, so the only URLs that die are the three category pages themselves.
+  - Note: `prompts/proof-checking/uc-audit-prompt.md` had uncommitted edits from a concurrent session as of 2026-08-16 — re-check `git status` before moving it so a `git mv` doesn't collide with work in flight.
 
 - [ ] **Usability on iPhone, Android, and other handheld devices (~15 min — manual: PDF fragment behavior needs a real physical device, not just emulation)**
 

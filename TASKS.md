@@ -1,6 +1,6 @@
 # Tasks
 
-Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~25.43h** (rough; two items dominate the uncertainty and could each run well over their estimate — the UC Encyclopedia content, and finishing the c/0004 Lean proof, whose remaining work includes a concentration inequality Mathlib does not carry).
+Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~25.6h** (rough; two items dominate the uncertainty and could each run well over their estimate — the UC Encyclopedia content, and finishing the c/0004 Lean proof, whose remaining work includes a concentration inequality Mathlib does not carry).
 
 - [ ] **Merge the CI-gate branch (~10 min — manual: needs an interactive OAuth flow only you can complete)**
 
@@ -39,6 +39,18 @@ Ordered by difficulty: web-related tweaks, new web content, new conjectures, new
   - **The audio is attached to the wrong half.** `philosophy/audio/read-out.mp3` and `podcast.mp3` narrate the Philosophy text only, and `_quarto.yml:9` lists that path in `resources:`. After the merge the read-out covers a fraction of the page it sits on, and the path may move. Either regenerate both against the consolidated text — which is real manual production time on top of the estimate — or say on the page that the audio covers one section, and keep the path stable.
 
   Sequencing matters here: the venues-posture, access-asymmetry and responsible-disclosure tasks below all add prose to `vision/` and `philosophy/`. Doing this first means writing all three into one page in a single pass; doing it after means merging three fresh sections whose placement was chosen for a layout that no longer exists.
+
+- [ ] **Remove the audio files (~10 min)**
+
+  Delete `philosophy/audio/read-out.mp3` and `podcast.mp3` (~3.4 MB together) and everything that points at them. Five places, and the last two are the ones easy to miss:
+
+  - The whole `## Listen` section of `about/index.qmd` (roughly lines 111–129) — both `<audio>` blocks, the synthesized-voice note above them, and the callout admitting the recordings cover only the second half and predate its opening section. That callout is the clearest sign the audio has become a liability rather than an asset, so it goes with them rather than being updated again.
+  - `_quarto.yml`'s `resources:` entry `"philosophy/audio/*.mp3"`, leaving `conjura.json` as the only entry.
+  - `README.md:22`, which describes `philosophy/audio/` in the directory tree.
+  - The now-empty `philosophy/` directory itself. Its URL keeps working regardless: `/philosophy/` is served by the `aliases:` list in `about/index.qmd`'s frontmatter, not by the directory.
+  - The two large binaries stay in git history unless it is rewritten. Not worth rewriting for 3.4 MB — just don't expect `git clone` to get smaller.
+
+  This also cancels two open caveats elsewhere in this list: the consolidation task's note about the audio being attached to the wrong half, and the venues task's note about a new section silently desynchronizing the recordings. With the files gone, neither is a constraint on anything.
 
 - [ ] **Say on the site that the site itself is AI-generated and not yet reviewed (~25 min — manual: whether this becomes an open call for reviewers is a commitment only you can make)**
 

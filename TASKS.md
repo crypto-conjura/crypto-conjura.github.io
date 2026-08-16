@@ -1,60 +1,10 @@
 # Tasks
 
-Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~13.9h** (rough; the UC Encyclopedia content dominates the uncertainty and could run well over its estimate).
+Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~12.0h** (rough; the UC Encyclopedia content dominates the uncertainty and could run well over its estimate).
 
-Last reconciled against `main` at `3aba67d` on 16 August 2026.
+Last reconciled against `main` at `8937c1f` on 16 August 2026.
 
 Completed tasks are deleted from this file rather than checked off and kept: this is a list of live work, and `git log` is the record of what closed and when.
-
-- [ ] **Stop the sidebar opening more than two levels (~10 min)**
-
-  The knob is `sidebar.collapse-level` in `_quarto.yml`, currently `1`. Two levels expanded is the target; anything deeper should arrive collapsed and open on click.
-
-  - **The problem gets worse before it gets better.** Sidebar section depth on `main` today is 2. PR #15 makes it 3, because the UC Encyclopedia becomes a subsection of Surveys with its nine layer pages under it. So this is worth doing with or just after that merge, and testing it before #15 lands will not reproduce the case that motivates it.
-  - **The worst offender is `By area`.** Under Open Problems it holds 19 children, all leaf pages. Whatever `collapse-level` ends up as, that one subsection is most of the visual weight, and it is worth looking at the rendered result specifically rather than assuming a config change fixed it.
-  - **Verify in the rendered output, not from the config.** Quarto's `collapse-level` semantics are easy to get backwards, and the value that produces "two levels open" is not reliably the number 2. Render, open a deep page such as a UC layer or an area listing, and count what is expanded on arrival. A config diff is not evidence here.
-  - Worth checking at the same time whether `style: floating` interacts with this; the alternative is `docked`, and the two behave differently when a section is long.
-
-- [ ] **Shorten the About page, then proofread it with `prompts/prose.md`, then update it (~50 min)**
-
-  `about/index.qmd` is 163 lines and roughly 3,080 words under 21 headings: two `Part` headings, then 19 sections and subsections beneath them. It got there by accretion, three tasks in one day writing into the same page, and it now reads as a list of positions rather than one.
-
-  Three steps, in order. The shortening comes first, because proofreading a structure that is about to change wastes the pass.
-
-  - **Cut and merge subsections.** The clearest candidates are the four `(an idea we're exploring)` subsections in Part I, which close on near-identical disclaimer sentences and would read better as one subsection with four short entries. Part II's seven `##` sections are each defensible alone but are cumulatively long for a reasoning half. Target something closer to 10 or 12 headings without losing an argument.
-  - **One cross-reference breaks if the merge happens.** `## Say plainly what isn't built yet` states that "four of its subsections carry the same flat disclaimer" and names the bounties, the idle tokens, the distributed compute and the journal. Collapsing those four into one makes that sentence false, so it has to move with them.
-  - **Then the proofread, then apply it.** Run the page through `prompts/prose.md` and update the page from the result rather than treating the output as final copy.
-
-  Two frictions worth knowing before starting, neither a reason not to do it:
-
-  - **`prompts/prose.md` is built for LaTeX, not Quarto.** Its opening line says it revises "a mathematical manuscript... written in LaTeX and compiled with `pdflatex`", and its rules assume `.tex` source, `\label`s, and math environments. `about/index.qmd` is Quarto markdown with callout blocks, a table and site-relative links. The prose rules carry over; the mechanical and typesetting ones do not, and the edit-tagging convention needs adapting or dropping.
-  - **The site recommends the other prompt for new work.** `prompts/index.qmd` describes `prose.md` as "the original, shorter version... Kept for comparison; use the manuscript version above for new work", meaning `revise.md`, which adds length targets, a mechanical sweep and a conflict register. `prose.md` is what was asked for and is what should be run; worth a second pass with `revise.md` if the first leaves the length target unmet.
-
-- [ ] **Move the UC Encyclopedia under Surveys (~30 min — decide the URL question before touching anything)**
-
-  The Encyclopedia is a top-level section today: `uc/` in the repo, its own navbar entry on the right of `_quarto.yml`, and its own top-level sidebar section with the nine layers under it. Putting it under Surveys is really two different jobs, and which one this is has to be settled first:
-
-  - **Navigation only.** The navbar and sidebar entries move under Surveys, `surveys/index.qmd` gains it in the "Browse" list, and every URL stays at `/uc/...`. Cheap, reversible, and nothing outside `_quarto.yml` and one listing page changes. Note `_quarto.yml` carries a comment demanding the navbar's left-hand entries and the sidebar's top-level sections stay mirrored — the UC entry currently lives in `navbar.right`, so moving it means the mirroring rule now applies to it.
-  - **URLs too.** `/uc/...` becomes `/surveys/uc/...`, which moves 114 `.qmd` files and rewrites references in `scripts/gen_interface.py`, `prompts/source.md`, `CONTRIBUTING.md`, `README.md`, `index.qmd`, `latex/README.md`, `latex/uc/README.md`, and the cross-links inside the already-filled functionality pages (`f-sig`, `f-net`, `f-ac`, `g-pki`). Every old URL then needs an alias or it 404s. Doable, but it is the whole afternoon's difference from the option above.
-
-  My read: navigation only, unless there is a reason to want the URLs to match the hierarchy. The recommendation is not free of friction though —
-
-  - `surveys/index.qmd` defines a survey as "book-length expository work… a sustained treatment of one area, built to teach it", and its Browse list currently holds exactly one entry, UC for Gamers. An encyclopedia of 100 functionality pages is a reference work, not a book read front to back; the section's own definition needs a sentence widening it, or the Encyclopedia will sit there contradicting the paragraph above it.
-  - `uc/index.qmd` says in its own words that the section "may eventually move to a dedicated site of its own, separate from Conjura." Filing it under Surveys pushes the opposite way. Either that note goes, or the move is explicitly the interim arrangement and says so — leaving both claims on the site is the kind of quiet contradiction the rest of this list keeps trying to avoid.
-  - Surveys and the Encyclopedia are already entangled in the right direction: seven of the filled functionality pages were ported out of `surveys/uc-for-gamers/latex/main.tex`, and the Surveys page already promises interactive content generated from a survey's own text. That is the actual argument for the move, and it is worth stating on the page rather than leaving the new hierarchy to imply it.
-
-- [ ] **Say on the site that the site itself is AI-generated and not yet reviewed (~25 min — manual: whether this becomes an open call for reviewers is a commitment only you can make)**
-
-  The badges cover the research artifacts: a statement, a proof, a Lean file each carry a graded provenance and a "reviewed by" line. Nothing covers the *container* — the prose on every page, `CONTRIBUTING.md`, `schema/`, the scripts under `scripts/`, the encyclopedia stubs, the templates. All of it was generated by an AI under extensive human prompting and refinement, and none of it has been independently reviewed by anybody. That is exactly the kind of thing this site says elsewhere should be disclosed per artifact, so omitting it about itself would be the single most quotable inconsistency available to a critic — and a fair one.
-
-  What it has to say, in one short paragraph: the site is AI-generated; a human directed, prompted and refined it throughout, so it is not unsupervised output; it has **not** had thorough independent review, and it wants that review from more than one reviewer. Written as a plain statement of status, not an apology and not a disclaimer that tries to shed responsibility — the "extensive prompting and refinement" clause is there because it is true, not to soften the first clause.
-
-  Mechanics, which are the actual work:
-
-  - **A site-wide notice needs a footer, and there isn't one.** `_quarto.yml` has `navbar` and `sidebar` but no `page-footer`, so a persistent one-line notice means adding that key plus matching styling in both `theme-light.scss` and `theme-dark.scss`. One line linking to the full statement on `about/index.qmd` is the right weight; a banner on every page is not.
-  - **The full statement lives on `about/index.qmd`**, and it belongs next to "Plausible isn't the same as true" and "Say plainly what isn't built yet" — it is those two commitments turned on the site itself, and saying so is what keeps it from reading as boilerplate.
-  - **Say what would take it down.** A notice with no exit condition becomes furniture that nobody updates and every reader learns to skip. State what changes it: which parts have been reviewed, by whom, and when — the same shape as the badge semantics, so the notice narrows as review actually happens rather than staying a permanent blanket.
-  - **Decide whether it asks for something.** "Wants multiple reviewers" can be a statement of fact or an open call with a route in (an issue label, a contact). The second is more useful and is a commitment; that choice is yours.
 
 - [ ] **Finish the Uber-assumption paper and run the checks on it (~1.5h — uncertain: the remaining mathematics is real work, not write-up)**
 

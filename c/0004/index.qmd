@@ -171,6 +171,42 @@ onto its Lean name, and records the judgement calls, including the one place
 the informal statement is silent (the alphabet the auxiliary information `z`
 is drawn from, left an arbitrary type here rather than assumed finite).
 
+### Partial progress on the proof
+
+[`lean/Proof.lean`](lean/Proof.lean) · [`lean/LEDGER.md`](lean/LEDGER.md)
+
+`proof_formal` stays `open`, and will until `lhl_public_seed` itself compiles
+with no `sorry`. What exists is the bottom of the argument, proved rather than
+assumed: `Proof.lean` has zero `sorry`s of its own.
+
+An audit of Mathlib `v4.33.0` came first, because it decides the shape of the
+work. Two of the seven "standard facts" the [proof PDF](pdf/proof.pdf) borrows
+from outside itself are not in fact available: there is no McDiarmid and no
+bounded-differences inequality at all (Azuma exists, but only in the
+measure-theoretic martingale setting), and there is no statistical distance on
+a `PMF`. Both have to be built.
+
+Proved so far:
+
+- **Statistical distance** on a finite type, as half the l1 distance, with its
+  basic properties and the one-sided identity the next step turns on.
+- **Fact 2.1 in full**: the best advantage any unbounded, randomized
+  distinguisher achieves between two distributions is exactly their
+  statistical distance. Bound *and* attainment, via the
+  maximum-a-posteriori test, packaged as `IsGreatest` because the informal
+  proof states it with a maximum.
+- **The bridge, Lemma 3.1's first half**: the extraction game *is* a
+  distinguishing game between the two laws the distinguisher's view has under
+  the two challenge bits, so the best extraction advantage equals that view
+  distance. This is what lets every later step work with an analytic quantity
+  instead of a game, and nothing above it could be formalized first.
+- **The predictor bound**, Lemma 3.1's other half: no unbounded predictor
+  beats the expected largest mass.
+
+`LEDGER.md` lists the eight remaining obligations in dependency order and is
+blunt about which is the hard one: the finite bounded-differences inequality,
+which Mathlib does not help with and which is a project in itself.
+
 Built against Mathlib `v4.33.0` (`db584cd6d46c92f209a44c0f1c829460d327499d`)
 on `leanprover/lean4:v4.33.0`.
 
@@ -180,5 +216,5 @@ on `leanprover/lean4:v4.33.0`.
 
 - [ ] Independent human review of the informal proof (currently "reviewed by: nobody yet").
 - [ ] Independent **human** match check of `lean/Statement.lean` against the Statement tab. `MATCH.md` is an AI match check; the quantifier order on `c`, and the bit convention in `extGame` (which the sanity lemmas deliberately do not pin down), are the two places to look first.
-- [ ] Formalize the proof. The four-step argument in `latex/proof.tex` is the route; the concentration step needs a bounded-differences inequality over the uniform function space, and whether Mathlib carries a usable McDiarmid has not been checked.
+- [ ] Finish the formal proof. `lean/Proof.lean` has the statistical-distance foundation, Fact 2.1 in full, and the bridge from the game to the analytic quantity, all `sorry`-free; `lean/LEDGER.md` lists the eight remaining obligations. Mathlib v4.33.0 has been checked and carries no McDiarmid and no bounded-differences inequality, so that step has to be proved from scratch in the finite case.
 - [ ] Decide whether `Z` should stay an arbitrary type or be pinned to a finite alphabet, and say so in the Statement tab either way.

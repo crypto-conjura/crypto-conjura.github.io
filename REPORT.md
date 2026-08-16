@@ -2,8 +2,10 @@
 
 **Agent:** Claude Opus 5, running in Claude Code with edit/command auto-accept.
 **Base commit:** `412ff63` on `main` ("Add prompts/source.md: fill one UC functionality stub end to end").
-**Window:** 2026-08-16 02:01:32Z to 03:25Z, about 1 hour 24 minutes of the 8 hours budgeted.
-**`main` untouched.** No pushes, no force-pushes, no history rewriting. Thirteen branches, all local.
+**Window:** 2026-08-16 02:01:32Z to 03:31Z, about 1 hour 30 minutes of the 8 hours budgeted.
+**`main` untouched.** No pushes to `main`, no force-pushes, no history rewriting. Thirteen
+branches: eleven pushed with a draft PR each, two refused by GitHub for want of the
+`workflow` token scope and left local (see Pull requests).
 
 Every task in the queue is closed. No task was checkpointed for running over
 budget. T8, which was allotted "all remaining time", was stopped early on

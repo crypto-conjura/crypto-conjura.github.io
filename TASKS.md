@@ -1,6 +1,20 @@
 # Tasks
 
-Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~12.08h** (rough; the UC Encyclopedia content item is especially uncertain and could run well over its estimate).
+Ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~12.42h** (rough; the UC Encyclopedia content item is especially uncertain and could run well over its estimate).
+
+- [ ] **Put the functionality box first on each UC page, explanations after it (~20 min)**
+
+  On a functionality page, the box *is* the functionality; everything else is commentary on it. So the `.cj-interface` box should sit directly under the `## Functionality` heading, and all the prose should follow it rather than lead up to it. A reader who came for the definition should not have to scroll past three paragraphs of gloss to reach it.
+
+  Current order on all seven filled-in pages (`f-rand`, `f-store`, `f-sig`, `g-pki`, `g-clock`, `f-net`, `f-ac`), as of 2026-08-16: `## Functionality` heading, then a state paragraph, then a bulleted operation-by-operation gloss, then a lead-in paragraph explaining the notation, then the box, then (on `f-sig` only) a closing remark on the re-entrance guards. Target order: heading, box, then all of that prose.
+
+  What has to change beyond moving the block:
+
+  - **The lead-in paragraph is written as a lead-in.** Every one of the seven opens "Below is the functionality itself, transcribed from *UC for Gamers* … line numbering and all. Reading it: …" — that sentence has to be recast as a follow-on ("The box above is transcribed from …"), and the reading-guide half of it, which explains $\mathcal{A}(\cdot)$, $\mathsf{San}[\mathsf{Clean}]$, $\square$/$\bot$ and the header line, is arguably the one piece that should *stay* above the box, since it is what makes the box legible on first read. Decide that explicitly rather than moving everything blindly.
+  - **Forward references become backward ones.** `f-sig`'s closing paragraph says "Two lines in the box exist only to guard against re-entrance … *Gen* (line 8) and *Verify* (line 23)"; `f-store`'s lead-in cites "lines 3 and 8"; `f-net`'s cites "Lines 13–14" and "line 20"; `f-ac`'s cites "line 14" and "Line 16". The line numbers stay valid, but any "below"/"above" wording around them has to flip.
+  - **The state paragraph and the operation bullets are then redundant with the box in a way they were not before.** Read after the code rather than before it, a bullet that restates *Gen* line by line adds nothing; what earns its place is the commentary the source's own prose carries (why the sanitization is where it is, what the re-entrance re-test buys, why `Verify` needs no "was it ever signed?" test). Worth trimming the bullets toward that as part of the same pass, not a separate one.
+
+  Do this after the generator task below, or as part of it: if the box becomes generated output spliced under the heading, the page's hand-written content is exactly the prose that follows it, and the two tasks collapse into one edit per page instead of two.
 
 - [ ] **One `.tex` file per functionality, with the HTML page generated from it (~1.25h)**
 

@@ -19,6 +19,9 @@ having: without it the fragment is just a file the page happens to resemble.
     python3 scripts/gen_interface.py f-sig       # one functionality
     python3 scripts/gen_interface.py --stdout f-sig
     python3 scripts/gen_interface.py --vs-pdf    # numbers vs the printed book
+    python3 scripts/gen_interface.py --vs-preview f-com   # ... vs a standalone
+                                                          # compile of the
+                                                          # fragment itself
 
 Line numbers are *computed*, never read out of the source. `algpseudocode`
 numbers each block from 1 and the book carries a running count across blocks
@@ -32,7 +35,10 @@ Because that counter is *reimplemented* here rather than shared with LaTeX,
 `--check` can only prove the page agrees with the fragment, not that either
 agrees with the book. `--vs-pdf` closes that loop: it reads the numbers out
 of the compiled PDF's text layer and compares. It is a local verification
-aid, not a CI gate, for the reasons in check_vs_pdf's docstring.
+aid, not a CI gate, for the reasons in check_vs_pdf's docstring. `--vs-preview`
+does the same for a fragment the book does not typeset -- which is every
+encyclopedia box beyond the seven the book carries -- by compiling it on its
+own through functionalities/preview.tex.
 
 Macro meanings are read from ucgamers.sty rather than duplicated here, so a
 new `\\newcommand` in the book is understood without touching this file.
@@ -498,7 +504,7 @@ def pdf_line_numbers(fid, pages, want):
     kind, name = fid.split("-", 1)
     rx = re.compile(r"Functionality\s+" + ("F" if kind == "f" else "G")
                     + r"\s*" + name + r"\b", re.I)
-    labels = lambda t: [int(n) for n in re.findall(r"(?:^|\s)(\d{1,3}):\s", t)]
+    labels = printed_labels
     for i, page in enumerate(pages):
         if not rx.search(page):
             continue
@@ -513,6 +519,11 @@ def pdf_line_numbers(fid, pages, want):
         box_page = i if set(want) & set(here) else i + 1
         return combined, box_page + 1
     return None, None
+
+
+def printed_labels(text):
+    """The `N:` line labels algpseudocode printed, in order of appearance."""
+    return [int(n) for n in re.findall(r"(?:^|\s)(\d{1,3}):\s", text)]
 
 
 def html_line_numbers(html):
@@ -588,6 +599,60 @@ def check_vs_pdf(ids):
     return 1 if bad else 0
 
 
+def check_vs_preview(ids, keep=None):
+    """Same check as --vs-pdf, but against the fragment compiled on its own.
+
+    `--vs-pdf` can only check the seven boxes the book actually typesets. The
+    encyclopedia's other ninety-seven have no printed counterpart, so the loop
+    it closes -- are the numbers this script computes the numbers LaTeX
+    prints? -- would be open for exactly the boxes nobody has proofread. The
+    fragments already compile standalone through functionalities/preview.tex,
+    which exists to keep them free of main.tex's preamble, so compile there
+    and read the numbers off that.
+
+    Slower than --vs-pdf (a pdflatex run per fragment) and needs a TeX
+    installation, so it is a local gate for new work, not a CI one.
+    """
+    import tempfile
+
+    macros = load_macros()
+    bad = 0
+    with tempfile.TemporaryDirectory() as tmp:
+        out = Path(keep) if keep else Path(tmp)
+        out.mkdir(parents=True, exist_ok=True)
+        for fid in ids:
+            want = html_line_numbers(to_html(
+                parse_fragment(FRAGMENTS / (fid + ".tex"), macros), macros))
+            job = out / fid
+            try:
+                r = subprocess.run(
+                    ["pdflatex", "-interaction=nonstopmode", "-halt-on-error",
+                     "-jobname", fid, "-output-directory", str(out),
+                     r"\def\FRAG{%s}\input{functionalities/preview}" % fid],
+                    cwd=LATEX, capture_output=True, text=True)
+            except FileNotFoundError:
+                print("cannot run pdflatex; install TeX to use --vs-preview")
+                return 1
+            if r.returncode or not job.with_suffix(".pdf").exists():
+                tail = [ln for ln in r.stdout.splitlines() if ln.startswith("!")]
+                print("%-9s DOES NOT COMPILE  %s" % (fid, tail[0] if tail else ""))
+                bad += 1
+                continue
+            text = subprocess.run(
+                ["pdftotext", "-layout", str(job.with_suffix(".pdf")), "-"],
+                capture_output=True, text=True, check=True).stdout
+            got = sorted(set(printed_labels(text)))
+            if got == sorted(set(want)):
+                print("%-9s lines %d..%d (%d) match the standalone compile"
+                      % (fid, want[0], want[-1], len(want)))
+            else:
+                print("%-9s MISMATCH\n   computed: %s\n   printed : %s"
+                      % (fid, want, got))
+                bad += 1
+    print("\n%d box(es) compiled standalone, %d mismatched" % (len(ids), bad))
+    return 1 if bad else 0
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("ids", nargs="*", help="functionality ids; default all")
@@ -597,10 +662,17 @@ def main():
     ap.add_argument("--vs-pdf", action="store_true",
                     help="compare computed line numbers against the printed PDF "
                          "(needs pdftotext; not a CI gate, see below)")
+    ap.add_argument("--vs-preview", action="store_true",
+                    help="compile each fragment on its own and compare line "
+                         "numbers; works for boxes the book does not typeset")
+    ap.add_argument("--keep", metavar="DIR",
+                    help="with --vs-preview, keep the compiled PDFs here")
     args = ap.parse_args()
 
     if args.vs_pdf:
         return check_vs_pdf(fragments(args.ids))
+    if args.vs_preview:
+        return check_vs_preview(fragments(args.ids), args.keep)
 
     macros = load_macros()
     drift, wrote = [], []

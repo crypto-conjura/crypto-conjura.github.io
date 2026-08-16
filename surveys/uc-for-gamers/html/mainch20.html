@@ -1,0 +1,573 @@
+<!DOCTYPE html> 
+<html lang='en-US' xml:lang='en-US'> 
+<head><title>20 Realizing the Authenticated Channel</title> 
+<meta charset='utf-8' /> 
+<meta content='TeX4ht (https://tug.org/tex4ht/)' name='generator' /> 
+<meta content='width=device-width,initial-scale=1' name='viewport' /> 
+<link href='main.css' rel='stylesheet' type='text/css' /> 
+<meta content='main.tex' name='src' /> 
+<script>window.window.MathJax = { tex: { tags: 'ams', macros: {"Ps": "\\mathbf{P}", "PID": "\\mathit{pid}", "emptyset": "\\varnothing", "admits": "\\mathbf{N}", "Apid": "\\mathbf{A}", "Zpid": "\\mathbf{Z}", "Stdpid": "\\mathbf{Std}", "pars": "\\mathit{par}", "uses": "\\mathbf{U}", "serves": "\\op{serves}", "WF": "\\op{wf}", "Cs": "\\mathbf{C}", "Corr": "\\mathcal{C}", "Blk": "\\mathcal{B}", "F": "\\mathcal{F}", "G": "\\mathcal{G}", "Zenv": "\\mathcal{Z}", "Adv": "\\mathcal{A}", "Dum": "\\mathcal{D}", "Sim": "\\mathcal{S}", "bd": ["\\mathbf{#1}", 1], "advtg": "\\op{Adv}", "padv": ["\\advtg^{#1}_{#2}", 2], "Aset": "\\mathbb{A}", "SimSet": "\\mathbb{S}", "ZenvSet": "\\mathbb{Z}", "op": ["\\mathsf{#1}", 1], "opdef": ["\\mathsf{#1}", 1], "opl": ["\\mathsf{#1}", 1], "fopdef": ["\\mathsf{Full#1}", 1], "fopl": ["\\mathsf{Full#1}", 1], "IDs": "\\op{IDs}", "Ids": "\\mathcal{I}", "id": "\\mathit{id}", "atom": ["\\mathsf{#1}", 1], "rej": "\\atom{rej}", "ok": "\\atom{ok}", "true": "\\atom{true}", "false": "\\atom{false}", "parent": "\\mathord{\\uparrow}", "Gm": "\\mathcal{G}m", "Xset": "\\mathbb{X}", "Win": "\\op{Win}", "Bad": "\\op{Bad}", "done": "\\atom{done}", "Frand": "\\mathcal{F}_{\\mathsf{Rand}}", "Fstore": "\\mathcal{F}_{\\mathsf{Store}}", "Fio": "\\mathcal{F}_{\\mathsf{IO}}", "Fdiffuse": "\\mathcal{F}_{\\mathsf{Diffuse}}", "Fsig": "\\mathcal{F}_{\\mathsf{Sig}}", "Gclock": "\\mathcal{G}_{\\mathsf{Clock}}", "Gpki": "\\mathcal{G}_{\\mathsf{PKI}}", "Fnet": "\\mathcal{F}_{\\mathsf{Net}}", "Fac": "\\mathcal{F}_{\\mathsf{AC}}", "Facz": "\\mathcal{F}^{\\circ}_{\\mathsf{AC}}", "Fpki": "\\mathcal{F}_{\\mathsf{PKI}}", "DS": "\\mathsf{DS}", "psig": "\\pi_{\\mathsf{Sig}}", "vk": "\\mathit{vk}", "msg": "\\mathit{msg}", "unset": "\\square", "Keys": "\\mathcal{K}", "Msgs": "\\mathcal{M}", "Sigs": "\\Sigma", "none": "\\bot", "San": "\\opl{San}", "Clean": "\\op{Clean}", "V": ["\\mathtt{#1}", 1], "bits": "\\{0,1\\}^*", "Op": "\\op{Op}", "ncl": ["\\langle #1 \\rangle", 1], "algcont": "\\setcounter{ALG@line}{\\value{contline}}", "algsave": "\\setcounter{contline}{\\value{ALG@line}}", "algand": "\\makebox[\\algretwd][r]{$\\wedge$\\,}", "params": ["{\\footnotesize\\normalfont\\color{black!72} #1}", 1], "P": "\\unicode{x00B6}", "allowbreak": ""} } }; </script> 
+<script async='async' id='MathJax-script' src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js' type='text/javascript'></script>  
+</head><body><button class='ucnav-toggle' type='button' aria-controls='ucnav' aria-expanded='false'>Contents</button><nav class='ucnav' id='ucnav' aria-label='Contents'><div class='ucnav-head'><a href='main.html'>UC for Gamers</a></div><ul><li class='ucnav-likechapter'><a href='mainli2.html#introduction1'>Introduction</a></li>
+<li class='ucnav-chapter'><a href='mainch1.html#functionalities-and-systems'><span class='ucnav-num'>1</span> Functionalities and Systems</a></li>
+<li class='ucnav-chapter'><a href='mainch2.html#guards-silencers-and-mediators'><span class='ucnav-num'>2</span> Guards, Silencers, and Mediators</a></li>
+<li class='ucnav-chapter'><a href='mainch3.html#the-execution-model'><span class='ucnav-num'>3</span> The Execution Model</a></li>
+<li class='ucnav-section'><a href='mainse1.html#corruption'><span class='ucnav-num'>3.1</span> Corruption</a></li>
+<li class='ucnav-section'><a href='mainse2.html#leakage'><span class='ucnav-num'>3.2</span> Leakage</a></li>
+<li class='ucnav-section'><a href='mainse3.html#the-environment'><span class='ucnav-num'>3.3</span> The Environment</a></li>
+<li class='ucnav-section'><a href='mainse4.html#the-adversary'><span class='ucnav-num'>3.4</span> The Adversary</a></li>
+<li class='ucnav-section'><a href='mainse5.html#the-full-interface'><span class='ucnav-num'>3.5</span> The Full Interface</a></li>
+<li class='ucnav-section'><a href='mainse6.html#executions'><span class='ucnav-num'>3.6</span> Executions</a></li>
+<li class='ucnav-chapter'><a href='mainch4.html#uc-emulation-and-composition'><span class='ucnav-num'>4</span> UC Emulation and Composition</a></li>
+<li class='ucnav-section'><a href='mainse7.html#subsystem-replacement'><span class='ucnav-num'>4.1</span> Subsystem Replacement</a></li>
+<li class='ucnav-section'><a href='mainse8.html#emulation-and-absorption'><span class='ucnav-num'>4.2</span> Emulation and Absorption</a></li>
+<li class='ucnav-section'><a href='mainse9.html#parallel-composition'><span class='ucnav-num'>4.3</span> Parallel Composition</a></li>
+<li class='ucnav-section'><a href='mainse10.html#completeness-of-the-dummy-adversary'><span class='ucnav-num'>4.4</span> Completeness of the Dummy Adversary</a></li>
+<li class='ucnav-section'><a href='mainse11.html#concrete-security'><span class='ucnav-num'>4.5</span> Concrete Security</a></li>
+<li class='ucnav-chapter'><a href='mainch5.html#properties'><span class='ucnav-num'>5</span> Properties</a></li>
+<li class='ucnav-chapter'><a href='mainch6.html#blockers'><span class='ucnav-num'>6</span> Blockers</a></li>
+<li class='ucnav-chapter'><a href='mainch7.html#relocation-and-renaming'><span class='ucnav-num'>7</span> Relocation and Renaming</a></li>
+<li class='ucnav-chapter'><a href='mainch8.html#concrete-costs'><span class='ucnav-num'>8</span> Concrete Costs</a></li>
+<li class='ucnav-chapter'><a href='mainch9.html#responsive-calls'><span class='ucnav-num'>9</span> Responsive Calls</a></li>
+<li class='ucnav-chapter'><a href='mainch10.html#core-language'><span class='ucnav-num'>10</span> Core Language</a></li>
+<li class='ucnav-chapter'><a href='mainch11.html#identical-until-bad'><span class='ucnav-num'>11</span> Identical Until Bad</a></li>
+<li class='ucnav-chapter'><a href='mainch12.html#sanitization'><span class='ucnav-num'>12</span> Sanitization</a></li>
+<li class='ucnav-chapter'><a href='mainch13.html#randomness'><span class='ucnav-num'>13</span> Randomness</a></li>
+<li class='ucnav-section'><a href='mainse12.html#functionality'><span class='ucnav-num'>13.1</span> Functionality</a></li>
+<li class='ucnav-section'><a href='mainse13.html#properties1'><span class='ucnav-num'>13.2</span> Properties</a></li>
+<li class='ucnav-chapter'><a href='mainch14.html#storage'><span class='ucnav-num'>14</span> Storage</a></li>
+<li class='ucnav-section'><a href='mainse14.html#functionality1'><span class='ucnav-num'>14.1</span> Functionality</a></li>
+<li class='ucnav-section'><a href='mainse15.html#properties2'><span class='ucnav-num'>14.2</span> Properties</a></li>
+<li class='ucnav-chapter'><a href='mainch15.html#digital-signatures'><span class='ucnav-num'>15</span> Digital Signatures</a></li>
+<li class='ucnav-section'><a href='mainse16.html#functionality2'><span class='ucnav-num'>15.1</span> Functionality</a></li>
+<li class='ucnav-section'><a href='mainse17.html#properties3'><span class='ucnav-num'>15.2</span> Properties</a></li>
+<li class='ucnav-chapter'><a href='mainch16.html#publickey-infrastructure'><span class='ucnav-num'>16</span> Public-Key Infrastructure</a></li>
+<li class='ucnav-section'><a href='mainse18.html#functionality3'><span class='ucnav-num'>16.1</span> Functionality</a></li>
+<li class='ucnav-section'><a href='mainse19.html#properties4'><span class='ucnav-num'>16.2</span> Properties</a></li>
+<li class='ucnav-chapter'><a href='mainch17.html#global-clock'><span class='ucnav-num'>17</span> Global Clock</a></li>
+<li class='ucnav-section'><a href='mainse20.html#functionality4'><span class='ucnav-num'>17.1</span> Functionality</a></li>
+<li class='ucnav-section'><a href='mainse21.html#properties5'><span class='ucnav-num'>17.2</span> Properties</a></li>
+<li class='ucnav-chapter'><a href='mainch18.html#δdelayed-network'><span class='ucnav-num'>18</span> Δ-Delayed Network</a></li>
+<li class='ucnav-section'><a href='mainse22.html#functionality5'><span class='ucnav-num'>18.1</span> Functionality</a></li>
+<li class='ucnav-section'><a href='mainse23.html#properties6'><span class='ucnav-num'>18.2</span> Properties</a></li>
+<li class='ucnav-chapter'><a href='mainch19.html#δdelayed-authenticated-channel'><span class='ucnav-num'>19</span> Δ-Delayed Authenticated Channel</a></li>
+<li class='ucnav-section'><a href='mainse24.html#functionality6'><span class='ucnav-num'>19.1</span> Functionality</a></li>
+<li class='ucnav-section'><a href='mainse25.html#properties7'><span class='ucnav-num'>19.2</span> Properties</a></li>
+<li class='ucnav-chapter ucnav-current'><a href='mainch20.html#realizing-the-authenticated-channel' aria-current='page'><span class='ucnav-num'>20</span> Realizing the Authenticated Channel</a></li>
+<li class='ucnav-chapter'><a href='mainch21.html#fsig-a-deeper-dive'><span class='ucnav-num'>21</span> F_Sig: A Deeper Dive</a></li>
+<li class='ucnav-section'><a href='mainse26.html#signature-schemes-and-their-games'><span class='ucnav-num'>21.1</span> Signature schemes and their games</a></li>
+<li class='ucnav-section'><a href='mainse27.html#the-protocol-πsig'><span class='ucnav-num'>21.2</span> The protocol π_Sig</a></li>
+<li class='ucnav-section'><a href='mainse28.html#the-converse-and-what-properties-cannot-reach'><span class='ucnav-num'>21.3</span> The converse, and what properties cannot reach</a></li>
+<li class='ucnav-section'><a href='mainse29.html#a-property-of-πsig-that-fsig-lacks'><span class='ucnav-num'>21.4</span> A property of π_Sig that F_Sig lacks</a></li>
+<li class='ucnav-likechapter'><a href='mainli3.html#pending-issues1'>Pending Issues</a></li>
+<li class='ucnav-likechapter'><a href='mainli4.html#bibliography1'>Bibliography</a></li></ul></nav><div class='ucnav-body'>
+   <!-- l. 7749 --><div class='crosslinks'><p class='noindent'>[<a href='mainch21.html'>next</a>] [<a href='mainch19.html'>prev</a>] [<a href='mainch19.html#tailmainch19.html'>prev-tail</a>] [<a href='#tailmainch20.html'>tail</a>] [<a href='main.html#mainch20.html'>up</a>] </p></div>
+   <h2 class='chapterHead' id='realizing-the-authenticated-channel'><span class='titlemark'>Chapter 20</span><br />  <a href='main.html#QQ2-52-48' id='x52-4700020'>Realizing the Authenticated Channel</a></h2>
+<!-- l. 7751 --><p class='noindent'>The channel of Chapter <a href='mainch19.html#δdelayed-authenticated-channel'>19<!-- tex4ht:ref: sec:fac  --></a> was postulated. This chapter earns it: a protocol
+<span class='mathjax-inline'>\(\rho \)</span> over three ideal subroutines — a public-key directory, the unauthenticated
+network of Chapter <a href='mainch18.html#δdelayed-network'>18<!-- tex4ht:ref: sec:fnet  --></a>, and the signatures of Chapter <a href='mainch15.html#digital-signatures'>15<!-- tex4ht:ref: sec:fsig  --></a> — that
+UC-realizes an authenticated channel, and does so <span class='pplri8t-'>exactly</span>, within <span class='mathjax-inline'>\(0\)</span>, every
+subroutine being ideal and the whole reduction information-theoretic. It is
+the largest construction in the paper, and the one that exercises the most of
+it at once: composition, the responsive discipline, sanitization, tightness,
+and the fundamental lemma of Chapter <a href='mainch11.html#identical-until-bad'>11<!-- tex4ht:ref: app:iub  --></a> all appear, each doing a job no
+other could.
+</p><!-- l. 7760 --><p class='noindent'><span style='color:#C8791A;'><span class='pplb8t-'>What </span><span class='mathjax-inline'>\(\rho \) </span><span class='pplb8t-'>does.</span></span>  A party sending for the first time draws a signing key from <span class='mathjax-inline'>\(\Fsig \)</span>
+and registers it in the directory <span class='mathjax-inline'>\(\Fpki \)</span>. To send <span class='mathjax-inline'>\(\msg \)</span> to <span class='mathjax-inline'>\(Q\)</span> it reads the clock for a
+timestamp <span class='mathjax-inline'>\(\tau \)</span>, increments a per-party sequence number <span class='mathjax-inline'>\(s\)</span>, signs the tuple <span class='mathjax-inline'>\((\P ,Q,\tau ,s,\msg )\)</span>, and
+diffuses the tuple with its signature over <span class='mathjax-inline'>\(\Fnet \)</span>. To fetch, it collects what <span class='mathjax-inline'>\(\Fnet \)</span> delivers,
+and keeps a diffused item only if it is addressed to the fetcher, carries a
+signature that verifies under the <span class='pplri8t-'>claimed </span>sender’s directory key, and has a <span class='mathjax-inline'>\((\text {sender},s)\)</span>
+pair not seen before. What survives it hands up as <span class='mathjax-inline'>\((\P ,Q,\tau ,\msg )\)</span>. Diffusion carries no
+addresses and no authenticity; the signature supplies the second and the
+address inside the signed tuple the first, so that a receiver trusts a
+sender’s name exactly because that name is under the sender’s own
+signature.
+</p><!-- l. 7771 --><p class='noindent'><span style='color:#C8791A;'><span class='pplb8t-'>Why the target is </span><span class='mathjax-inline'>\(\Facz \)</span><span class='pplb8t-'>, not </span><span class='mathjax-inline'>\(\Fac \)</span><span class='pplb8t-'>.</span></span>  A corrupt sender is the obstruction, and it is
+instructive rather than incidental. Over a diffusion network the adversary
+writes on the wire whenever it likes, in particular <span class='pplri8t-'>during </span>a fetch —
+<span class='mathjax-inline'>\(\Fnet \)</span>’s injections (line <a href='mainse22.html#functionality5'>16<!-- tex4ht:ref: ln:netinject  --></a>) are chosen inside the responsive window of
+the fetch that carries them. A message so injected, signed under
+a key the adversary registered for a corrupt party, is accepted by
+the receiver and delivered; but no prior <span class='mathjax-inline'>\(\op {Send}\)</span> ever placed it, so <span class='mathjax-inline'>\(\Fac \)</span>, which
+delivers only what its own <span class='mathjax-inline'>\(\op {Send}\)</span> stored, cannot produce it, and no simulator
+can call <span class='mathjax-inline'>\(\Fac .\op {Send}\)</span> inside the fetch’s responsive window to repair the gap.
+Worse, the corrupt sender’s timestamp is its own to choose — the
+signature validates whatever <span class='mathjax-inline'>\(\tau \)</span> the payload carries — where <span class='mathjax-inline'>\(\Fac \)</span> stamps
+the true time of a call it witnessed. Neither gap is a defect in <span class='mathjax-inline'>\(\rho \)</span>; both
+are what an authenticated <span class='pplri8t-'>diffusion </span>unavoidably gives a corrupt
+party, and Chapter <a href='#realizing-the-authenticated-channel'>20<!-- tex4ht:ref: sec:realac  --></a> closes with the argument that no protocol
+over these subroutines does better. So the realized object is <span class='mathjax-inline'>\(\Facz \)</span>: <span class='mathjax-inline'>\(\Fac \)</span> with a
+                                                           
+                                                           
+corrupt sender’s traffic admitted at the fetch, unstored and freely
+timestamped, which is exactly the guarantee level of <span class='cite'>[<a href='mainli4.html#XCanetti20'>7</a>]</span>’s authenticated
+channel and no less. The honest-sender guarantees — delivery by <span class='mathjax-inline'>\(\Delta \)</span>, and
+authenticity, that an honest party’s fetched record was genuinely
+sent by the honest party it names — survive whole. And against an
+adversary that corrupts no one the two objects coincide: the fundamental
+lemma prices the difference at <span class='mathjax-inline'>\(\Pr [\Bad ]\)</span> for a <span class='mathjax-inline'>\(\V {bad}\)</span> that only a corrupt sender
+can raise, so <span class='mathjax-inline'>\(\rho \)</span> realizes <span class='mathjax-inline'>\(\Fac \)</span> itself, exactly, whenever nobody is corrupt
+(Corollary <a href='#x52-47002r2'>20.2<!-- tex4ht:ref: cor:realac  --></a>).
+</p><!-- l. 7792 --><p class='noindent'><span style='color:#C8791A;'><span class='pplb8t-'>Two subroutines are not quite off the shelf.</span></span>  The signatures are the
+responsive variant <span class='mathjax-inline'>\(\Fsig ^{!}\)</span> of Chapter <a href='mainch9.html#responsive-calls'>9<!-- tex4ht:ref: app:responsive  --></a> — <span class='mathjax-inline'>\(\Adv ^{!}\)</span> in <span class='mathjax-inline'>\(\opl {Gen}\)</span>, <span class='mathjax-inline'>\(\opl {Sign}\)</span> and <span class='mathjax-inline'>\(\opl {Verify}\)</span> — and the reason is the
+token. <span class='mathjax-inline'>\(\Fac \)</span>’s fetch is atomic: its one slot call is responsive, so no occupant drives
+the execution between the call and its answer. Were <span class='mathjax-inline'>\(\rho \)</span>’s fetch to reach <span class='mathjax-inline'>\(\Fsig \)</span>
+through the ordinary <span class='mathjax-inline'>\(\Adv (\cdot )\)</span>, a verification would hand the adversary the token
+mid-fetch and let it act elsewhere before returning, an interleaving <span class='mathjax-inline'>\(\Facz \)</span>’s atomic
+fetch cannot show and no simulator could reproduce. The responsive
+variant <span class='mathjax-inline'>\(\Fsig ^{!}\)</span> removes the escape; <span class='mathjax-inline'>\(\Fnet \)</span>’s and <span class='mathjax-inline'>\(\Facz \)</span>’s calls are already responsive, so every
+send and every fetch is atomic on both sides. And the directory is <span class='pplri8t-'>local</span>,
+not the global <span class='mathjax-inline'>\(\Gpki \)</span> of Chapter <a href='mainch16.html#publickey-infrastructure'>16<!-- tex4ht:ref: sec:pki  --></a>: a shared directory is written by an
+honest <span class='mathjax-inline'>\(\rho .\op {Send}\)</span> in the real world and read straight back by the environment
+through <span class='mathjax-inline'>\(\opl {Retrieve}\)</span>, where in the ideal world nothing writes it and the simulator
+holds only the peek <span class='mathjax-inline'>\(\Gpki \)</span> grants at honest parties — an unsimulatable
+difference, the commitment problem of a global setup in this paper’s
+coordinates. A local <span class='mathjax-inline'>\(\Fpki \)</span>, its identities private to the session like any hybrid,
+closes it; <span class='mathjax-inline'>\(Z\)</span> is kept out of its <span class='mathjax-inline'>\(\admits \)</span> for the same reason, a direct retrieval by
+the environment being a call the ideal world has no machine to
+serve.
+</p><!-- l. 7809 --><p class='noindent'><span style='color:#C8791A;'><span class='pplb8t-'>The directory forgets bindings on purpose.</span></span>  <span class='mathjax-inline'>\(\Fpki \)</span> sanitizes a registered key to
+be a key and nothing more — <span class='pplri8t-'>per slot</span>, dropping <span class='mathjax-inline'>\(\Gpki \)</span>’s cross-party freshness
+(Chapter <a href='mainch16.html#publickey-infrastructure'>16<!-- tex4ht:ref: sec:pki  --></a>, <span class='mathjax-inline'>\(\Clean _{\op {reg}}\)</span>). The freshness would be a weapon: the adversary chooses an
+honest party’s signing key, it being the value <span class='mathjax-inline'>\(\Fsig .\op {Gen}\)</span> returns, so it could
+pre-register that key at a corrupt slot and have the honest party’s own
+registration <span class='pplri8t-'>repaired </span>to a different one, leaving directory and signing key
+disagreeing and the party’s every message rejected for ever — a denial of
+the liveness <span class='mathjax-inline'>\(\Facz \)</span> promises unconditionally. Per-slot fixity is enough because
+attribution never rested on binding: the sender’s name travels inside the
+signed tuple, the receiver looks that name up, and a signature valid under
+an honest party’s key on a tuple naming a <span class='pplri8t-'>different </span>sender is a forgery
+                                                           
+                                                           
+<span class='mathjax-inline'>\(\Fsig \)</span> suppresses. Binding buys nothing here and costs liveness, so it
+goes.
+</p>
+   <div class='tcolorbox interface' id='tcolobox-135'>     
+<div class='tcolorbox-title'>
+<!-- l. 7878 --><p class='indent'>   Local directory <span class='mathjax-inline'>\(\Fpki \)</span> <br class='newline' /><span class='mathjax-inline'>\(\PID \)</span><span class='pplr8t-x-x-80'>,     </span><span class='mathjax-inline'>\(\Ps \)</span><span class='pplr8t-x-x-80'>,     </span><span class='mathjax-inline'>\(\admits \)</span><span class='pplr8t-x-x-80'>,     </span><span class='mathjax-inline'>\(\uses := \emptyset \)</span><span class='pplr8t-x-x-80'>,     </span><span class='mathjax-inline'>\(\pars := \none \)</span></p></div> 
+<div class='tcolorbox-content'><div class='columns-2'>
+<!-- l. 7827 --><p class='noindent'><span style='color:#C8791A;'><span class='underline'><span class='mathjax-inline'>\(\op {Initialize}()\)</span></span></span><span class='pplr8t-x-x-70'>:</span> </p><div class='algorithmic'>
+               <span class='line'><span class='label label-8.39998pt'>
+ <span class='pplr8t-x-x-80'>1:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='mathjax-inline'>\(\V {VK} : \Fpki .\Ps \to \Keys \cup \{\unset \}\)</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'>  <span class='pplr8t-x-x-80'>2:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='mathjax-inline'>\(\V {VK}[*] \gets \unset \)</span></span></span>
+</div>
+<!-- l. 7836 --><p class='noindent'><span style='color:#C8791A;'><span class='underline'><span class='mathjax-inline'>\(\id .\op {Register}(\vk )\)</span></span></span>     <span class='pplr8t-x-x-70'>from </span><span class='mathjax-inline'>\(\id '\)</span> </p><div class='algorithmic'>
+               <span class='line'><span class='label label-8.39998pt'>
+ <span class='pplr8t-x-x-80'>3:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='pplb8t-x-x-70'>if</span><span class='pplr8t-x-x-70'> </span><span class='mathjax-inline'>\(\id '.F \in \{A,Z\} \ \wedge \ \id .P \notin \Cs \)</span><span class='pplr8t-x-x-70'> </span><span class='pplb8t-x-x-70'>then</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'>  <span class='pplr8t-x-x-80'>4:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'>     </span><span class='pplb8t-x-x-70'>return </span><span class='mathjax-inline'>\(\V {VK}[\id .P]\)                                                                                                                  </span><span class='pplro8t-x-x-70'>// a peek, not a        write</span>                </span></span><br class='algorithmic' /><span class='empty'><span class='label label-8.39998pt'>        </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'>  <span class='pplr8t-x-x-80'>5:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='pplb8t-x-x-70'>if</span><span class='pplr8t-x-x-70'> </span><span class='mathjax-inline'>\(\V {VK}[\id .P] \neq \unset \)</span><span class='pplr8t-x-x-70'> </span><span class='pplb8t-x-x-70'>then</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'>  <span class='pplr8t-x-x-80'>6:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'>     </span><span class='pplb8t-x-x-70'>return </span><span class='mathjax-inline'>\(\V {VK}[\id .P]\)</span>                </span></span><br class='algorithmic' /><span class='empty'><span class='label label-8.39998pt'>        </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'>  <span class='pplr8t-x-x-80'>7:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='mathjax-inline'>\(\vk \gets \San [\Clean _{\op {key}}](\vk )\)</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'>  <span class='pplr8t-x-x-80'>8:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='mathjax-inline'>\(\V {VK}[\id .P] \gets \vk \)</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'>  <span class='pplr8t-x-x-80'>9:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='pplb8t-x-x-70'>return </span><span class='mathjax-inline'>\(\vk \)</span></span></span>
+</div>
+<!-- l. 7853 --><p class='noindent'><span class='pplr8t-x-x-70'>auto</span>
+</p><!-- l. 7855 --><p class='noindent'><span style='color:#C8791A;'><span class='underline'><span class='mathjax-inline'>\(\id .\op {Retrieve}(P)\)</span></span></span>     <span class='pplr8t-x-x-70'>from </span><span class='mathjax-inline'>\(\id '\)</span> </p><div class='algorithmic'>
+               <span class='line'><span class='label label-8.39998pt'>
+<span class='pplr8t-x-x-80'>10:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='pplb8t-x-x-70'>return </span><span class='mathjax-inline'>\(\V {VK}[P]\)</span></span></span>
+</div>
+<!-- l. 7863 --><p class='noindent'><span style='color:#C8791A;'><span class='underline'><span class='mathjax-inline'>\(\id .\op {Leak}()\)</span></span></span>     <span class='pplr8t-x-x-70'>from </span><span class='mathjax-inline'>\(\id '\)</span> </p><div class='algorithmic'>
+               <span class='line'><span class='label label-8.39998pt'>
+<span class='pplr8t-x-x-80'>11:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='pplb8t-x-x-70'>return </span><span class='mathjax-inline'>\(\V {VK}\)</span></span></span>
+</div>
+<!-- l. 7871 --><p class='noindent'><span style='color:#C8791A;'><span class='underline'><span class='mathjax-inline'>\(\Clean _{\op {key}}(\vk )\)</span></span></span><span class='pplr8t-x-x-70'>:</span> </p><div class='algorithmic'>
+               <span class='line'><span class='label label-8.39998pt'>
+<span class='pplr8t-x-x-80'>12:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='pplb8t-x-x-70'>return </span><span class='mathjax-inline'>\(\vk \in \Keys \)</span></span></span>
+</div>
+</div>  
+</div> 
+</div>
+<!-- l. 7880 --><p class='indent'>   <span class='mathjax-inline'>\(\Facz \)</span> is <span class='mathjax-inline'>\(\Fac \)</span> with one operation changed: <span class='mathjax-inline'>\(\op {Fetch}\)</span> takes back a pair <span class='mathjax-inline'>\((S,I)\)</span> from the slot, <span class='mathjax-inline'>\(S\)</span> the
+early releases among stored ids as before, <span class='mathjax-inline'>\(I\)</span> a set of <span class='pplri8t-'>injected </span>records the
+slot delivers unstored. Sanitizing pins each injection to a corrupt
+sender and to the fetching party, so an injection can only ever put a
+                                                           
+                                                           
+corrupt party’s word into the fetch that asked for it; <span class='mathjax-inline'>\(\Fac \)</span>’s own <span class='mathjax-inline'>\(\op {Send}\)</span>, <span class='mathjax-inline'>\(\op {Leak}\)</span> and <span class='mathjax-inline'>\(\op {Initialize}\)</span> are
+unchanged.
+</p>
+   <div class='tcolorbox interface' id='tcolobox-136'>     
+<div class='tcolorbox-title'>
+<!-- l. 7908 --><p class='indent'>   Functionality <span class='mathjax-inline'>\(\Facz \)</span>: the fetch of <span class='mathjax-inline'>\(\Fac \)</span>, replaced <br class='newline' /><span class='pplr8t-x-x-80'>fields as </span><span class='mathjax-inline'>\(\Fac \) </span><span class='pplr8t-x-x-80'>(Section </span><a href='mainse24.html#functionality6'><span class='pplr8t-x-x-80'>19.1</span><!-- tex4ht:ref: sec:facfunc  --></a><span class='pplr8t-x-x-80'>)</span></p></div> 
+<div class='tcolorbox-content'><!-- l. 7890 --><p class='noindent'><span style='color:#C8791A;'><span class='underline'><span class='mathjax-inline'>\(\id .\op {Fetch}()\)</span></span></span>    <span class='pplr8t-x-x-70'>from </span><span class='mathjax-inline'>\(\id '\)</span> </p><div class='algorithmic'>
+               <span class='line'><span class='label label-8.39998pt'>
+ <span class='pplr8t-x-x-80'>1:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='mathjax-inline'>\(\tau \gets \id _{\Gclock }.\fopl {Read}() \text { as } \id \)</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'>  <span class='pplr8t-x-x-80'>2:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='mathjax-inline'>\(\Cs \gets (C,\id .P).\fopl {Status}() \text { as } \id \)</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'>  <span class='pplr8t-x-x-80'>3:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='mathjax-inline'>\(R \gets \{m : \V {list}[m] = (\cdot ,\, \id .P,\, \tau _m,\, \cdot ) \ \wedge \ \tau _m + \Delta \leq \tau \}\)</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'>  <span class='pplr8t-x-x-80'>4:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='mathjax-inline'>\((S, I) \gets \Adv ^{!}\bigl (\id .\op {Fetch},\ \tau \bigr )\)                                                                                                                                    </span><span class='pplro8t-x-x-70'>// releases and        injections</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'>  <span class='pplr8t-x-x-80'>5:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='mathjax-inline'>\(S \gets \San [\Clean _{\op {addr}}]\bigl (S;\ \V {list},\, \id .P\bigr )\)</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'>  <span class='pplr8t-x-x-80'>6:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='mathjax-inline'>\(I \gets \San [\Clean _{\op {inj}}]\bigl (I;\ \Cs ,\, \id .P\bigr )\)</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'>  <span class='pplr8t-x-x-80'>7:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='mathjax-inline'>\(M \gets \{\V {list}[m] : m \in R \cup S\} \ \cup \ I\)</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'>  <span class='pplr8t-x-x-80'>8:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='mathjax-inline'>\(\V {list}[m] \gets \none \) </span><span class='pplr8t-x-x-70'> for each </span><span class='mathjax-inline'>\(m \in R \cup S\)</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'>  <span class='pplr8t-x-x-80'>9:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='pplb8t-x-x-70'>return </span><span class='mathjax-inline'>\(M\)</span></span></span>
+</div>
+<!-- l. 7904 --><p class='noindent'><span style='color:#C8791A;'><span class='underline'><span class='mathjax-inline'>\(\Clean _{\op {inj}}(I;\ \Cs , P_f)\)</span></span></span><span class='pplr8t-x-x-70'>:</span> </p><div class='algorithmic'>
+               <span class='line'><span class='label label-8.39998pt'>
+ <span class='pplr8t-x-x-80'>1:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='pplb8t-x-x-70'>return</span><span class='pplr8t-x-x-70'> </span><span class='mathjax-inline'>\(I \subseteq \{(P,Q,\tau ,\msg ) : P \in \Cs \ \wedge \ Q = P_f\}\)</span></span></span>
+</div>
+ 
+</div> 
+</div>
+<!-- l. 7910 --><p class='indent'>   The protocol reads its four subroutines through the interfaces at the
+party being served, the notation <span class='mathjax-inline'>\(\id _{\F } := (\F .\PID ,\id .P)\)</span> of Chapter <a href='mainch18.html#δdelayed-network'>18<!-- tex4ht:ref: sec:fnet  --></a>. Its <span class='mathjax-inline'>\(\uses \)</span> names all four, the
+clock among them, since <span class='mathjax-inline'>\(\rho \)</span> stamps its own payloads and does not recover <span class='mathjax-inline'>\(\Fnet \)</span>’s
+stamp, which <span class='mathjax-inline'>\(\Fnet \)</span> never returns.
+</p>
+   <div class='tcolorbox interface' id='tcolobox-137'>     
+<div class='tcolorbox-title'>
+<!-- l. 7977 --><p class='indent'>   Protocol <span class='mathjax-inline'>\(\rho \)</span> over <span class='mathjax-inline'>\(\{\Fpki ,\Fnet ,\Fsig ^{!}\}\)</span> <br class='newline' /><span class='mathjax-inline'>\(\PID \)</span><span class='pplr8t-x-x-80'>,     </span><span class='mathjax-inline'>\(\Ps \)</span><span class='pplr8t-x-x-80'>,     </span><span class='mathjax-inline'>\(\admits \)</span><span class='pplr8t-x-x-80'>,     </span><span class='mathjax-inline'>\(\uses := \{(\Fpki ,\serves ),\allowbreak (\Fnet ,\serves ),\allowbreak (\Fsig ^{!},\serves ),\allowbreak (\Gclock ,\serves )\}\)</span><span class='pplr8t-x-x-80'>,     </span><span class='mathjax-inline'>\(\pars := \none \)</span></p></div> 
+<div class='tcolorbox-content'><div class='columns-2'>
+<!-- l. 7924 --><p class='noindent'><span style='color:#C8791A;'><span class='underline'><span class='mathjax-inline'>\(\op {Initialize}()\)</span></span></span><span class='pplr8t-x-x-70'>:</span> </p><div class='algorithmic'>
+               <span class='line'><span class='label label-8.39998pt'>
+ <span class='pplr8t-x-x-80'>1:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='mathjax-inline'>\(\V {gen} : \Ps \to \{0,1\}\)</span><span class='pplr8t-x-x-70'>;  </span><span class='mathjax-inline'>\(\V {gen}[*] \gets 0\)</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'>  <span class='pplr8t-x-x-80'>2:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='mathjax-inline'>\(\V {seq} : \Ps \to \mathbb {N}\)</span><span class='pplr8t-x-x-70'>;  </span><span class='mathjax-inline'>\(\V {seq}[*] \gets 0\)</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'>  <span class='pplr8t-x-x-80'>3:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='mathjax-inline'>\(\V {seen} : \Ps \to \mathcal {P}(\Ps \times \mathbb {N})\)</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'>  <span class='pplr8t-x-x-80'>4:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='mathjax-inline'>\(\V {seen}[*] \gets \emptyset \)</span></span></span>
+</div>
+<!-- l. 7935 --><p class='noindent'><span style='color:#C8791A;'><span class='underline'><span class='mathjax-inline'>\(\id .\op {Send}(Q,\msg )\)</span></span></span>     <span class='pplr8t-x-x-70'>from </span><span class='mathjax-inline'>\(\id '\)</span> </p><div class='algorithmic'>
+               <span class='line'><span class='label label-8.39998pt'>
+ <span class='pplr8t-x-x-80'>5:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='pplb8t-x-x-70'>if</span><span class='pplr8t-x-x-70'> </span><span class='mathjax-inline'>\(\V {gen}[\id .P] = 0\)</span><span class='pplr8t-x-x-70'> </span><span class='pplb8t-x-x-70'>then</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'>  <span class='pplr8t-x-x-80'>6:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'>     </span><span class='mathjax-inline'>\(\vk \gets \id _{\Fsig }.\fopl {Gen}() \text { as } \id \)</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'>  <span class='pplr8t-x-x-80'>7:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'>     </span><span class='mathjax-inline'>\(\id _{\Fpki }.\fopl {Register}(\vk ) \text { as } \id \)</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'>  <span class='pplr8t-x-x-80'>8:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'>     </span><span class='mathjax-inline'>\(\V {gen}[\id .P] \gets 1\)</span>                </span></span><br class='algorithmic' /><span class='empty'><span class='label label-8.39998pt'>        </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'>  <span class='pplr8t-x-x-80'>9:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='mathjax-inline'>\(\tau \gets \id _{\Gclock }.\fopl {Read}() \text { as } \id \)</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'> <span class='pplr8t-x-x-80'>10:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='mathjax-inline'>\(\V {seq}[\id .P] \gets \V {seq}[\id .P] + 1\)</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'> <span class='pplr8t-x-x-80'>11:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='mathjax-inline'>\(x \gets (\id .P,\, Q,\, \tau ,\, \V {seq}[\id .P],\, \msg )\)</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'> <span class='pplr8t-x-x-80'>12:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='mathjax-inline'>\(\sigma \gets \id _{\Fsig }.\fopl {Sign}(x) \text { as } \id \)</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'> <span class='pplr8t-x-x-80'>13:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='mathjax-inline'>\(\id _{\Fnet }.\fopl {Send}\bigl ((x,\sigma )\bigr ) \text { as } \id \)</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'> <span class='pplr8t-x-x-80'>14:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='pplb8t-x-x-70'>return </span><span class='mathjax-inline'>\(\ok \)</span></span></span>
+</div>
+<!-- l. 7953 --><p class='noindent'><span class='pplr8t-x-x-70'>auto</span>
+</p><!-- l. 7955 --><p class='noindent'><span style='color:#C8791A;'><span class='underline'><span class='mathjax-inline'>\(\id .\op {Fetch}()\)</span></span></span>     <span class='pplr8t-x-x-70'>from </span><span class='mathjax-inline'>\(\id '\)</span> </p><div class='algorithmic'>
+               <span class='line'><span class='label label-8.39998pt'>
+<span class='pplr8t-x-x-80'>15:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='mathjax-inline'>\(N \gets \id _{\Fnet }.\fopl {Fetch}() \text { as } \id \)</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'> <span class='pplr8t-x-x-80'>16:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='mathjax-inline'>\(M \gets \emptyset \)</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'> <span class='pplr8t-x-x-80'>17:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='pplb8t-x-x-70'>for</span><span class='pplr8t-x-x-70'> </span><span class='mathjax-inline'>\((m, y) \in N\)</span><span class='pplr8t-x-x-70'> </span><span class='pplb8t-x-x-70'>do</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'> <span class='pplr8t-x-x-80'>18:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'>     parse </span><span class='mathjax-inline'>\(y\) </span><span class='pplr8t-x-x-70'>as </span><span class='mathjax-inline'>\((x,\sigma )\)</span><span class='pplr8t-x-x-70'>,  </span><span class='mathjax-inline'>\(x = (P,Q,\tau ,s,\msg )\)                                                                                                                         </span><span class='pplro8t-x-x-70'>// else        skip</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'> <span class='pplr8t-x-x-80'>19:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'>     </span><span class='pplb8t-x-x-70'>if </span><span class='mathjax-inline'>\(Q \neq \id .P\) </span><span class='pplb8t-x-x-70'>then </span><span class='pplr8t-x-x-70'>skip</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'> <span class='pplr8t-x-x-80'>20:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'>     </span><span class='mathjax-inline'>\(\vk \gets \id _{\Fpki }.\fopl {Retrieve}(P) \text { as } \id \)</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'> <span class='pplr8t-x-x-80'>21:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'>     </span><span class='pplb8t-x-x-70'>if </span><span class='mathjax-inline'>\(\vk = \unset \) </span><span class='pplb8t-x-x-70'>then </span><span class='pplr8t-x-x-70'>skip</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'> <span class='pplr8t-x-x-80'>22:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'>     </span><span class='mathjax-inline'>\(b \gets \id _{\Fsig }.\fopl {Verify}(\vk , x, \sigma )\)</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'>        </span> <span class='algorithmic'><span class='pplr8t-x-x-70'>     </span><span class='mathjax-inline'>\(\text {as } \id \)</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'> <span class='pplr8t-x-x-80'>23:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'>     </span><span class='pplb8t-x-x-70'>if </span><span class='mathjax-inline'>\(b \neq 1\) </span><span class='pplb8t-x-x-70'>then </span><span class='pplr8t-x-x-70'>skip</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'> <span class='pplr8t-x-x-80'>24:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'>     </span><span class='pplb8t-x-x-70'>if </span><span class='mathjax-inline'>\((P,s) \in \V {seen}[\id .P]\) </span><span class='pplb8t-x-x-70'>then </span><span class='pplr8t-x-x-70'>skip</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'> <span class='pplr8t-x-x-80'>25:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'>     </span><span class='mathjax-inline'>\(\V {seen}[\id .P] \gets \V {seen}[\id .P] \cup \{(P,s)\}\)</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'> <span class='pplr8t-x-x-80'>26:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'>     </span><span class='mathjax-inline'>\(M \gets M \cup \{(P,Q,\tau ,\msg )\}\)</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'> <span class='pplr8t-x-x-80'>27:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='pplb8t-x-x-70'>end</span><span class='pplr8t-x-x-70'> </span><span class='pplb8t-x-x-70'>for</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'> <span class='pplr8t-x-x-80'>28:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='pplb8t-x-x-70'>return </span><span class='mathjax-inline'>\(M\)</span></span></span>
+</div>
+</div>  
+</div> 
+</div>                                                 
+                                                           
+<!-- l. 7979 --><p class='noindent'><span style='color:#C8791A;'><span class='pplb8t-'>The simulator.</span></span>  Fix an occupant <span class='mathjax-inline'>\(\Adv \)</span> of the adversary slot. In the real
+world <span class='mathjax-inline'>\(\Adv \)</span> faces the three hybrids; in the ideal world they are gone,
+and <span class='mathjax-inline'>\(\Sim _{\Adv }\)</span> must present their faces from inside itself. It is an absorption
+(Definition <a href='mainse10.html#x20-16001r26'>4.26<!-- tex4ht:ref: def:zadv  --></a>, read on the adversary side): <span class='mathjax-inline'>\(\Sim _{\Adv }\)</span> bundles <span class='mathjax-inline'>\(\Adv \)</span> with one internal
+copy each of <span class='mathjax-inline'>\(\Fpki \)</span>, <span class='mathjax-inline'>\(\Fnet \)</span> and <span class='mathjax-inline'>\(\Fsig ^{!}\)</span>, runs <span class='mathjax-inline'>\(\Adv \)</span> against them exactly as the real execution
+would, and drives them from what <span class='mathjax-inline'>\(\Facz \)</span> tells it. On an honest <span class='mathjax-inline'>\(\op {Send}\)</span> notification <span class='mathjax-inline'>\(\Facz \)</span>
+hands it <span class='mathjax-inline'>\((\P ,Q,\tau ,\msg )\)</span>; it advances the internal <span class='mathjax-inline'>\(\V {seq}\)</span> for <span class='mathjax-inline'>\(\P \)</span>, forms <span class='mathjax-inline'>\(x = (\P ,Q,\tau ,s,\msg )\)</span>, and replays <span class='mathjax-inline'>\(\rho \)</span>’s own
+steps into the internal hybrids — an internal <span class='mathjax-inline'>\(\Fsig ^{!}.\op {Sign}\)</span>, whose <span class='mathjax-inline'>\(\Adv ^{!}\)</span> query the
+hosted <span class='mathjax-inline'>\(\Adv \)</span> answers, and an internal <span class='mathjax-inline'>\(\Fnet .\op {Send}\)</span>, whose notification it delivers
+— so the hosted <span class='mathjax-inline'>\(\Adv \)</span> sees precisely the queries the real world would
+place. When <span class='mathjax-inline'>\(\Facz \)</span> makes its responsive fetch query, <span class='mathjax-inline'>\(\Sim _{\Adv }\)</span> runs <span class='mathjax-inline'>\(\rho .\op {Fetch}\)</span>’s filter over the
+internal <span class='mathjax-inline'>\(\Fnet \)</span>’s delivery against the hosted <span class='mathjax-inline'>\(\Adv \)</span>, learns exactly which records <span class='mathjax-inline'>\(\rho \)</span>
+would hand up, and answers <span class='mathjax-inline'>\((S,I)\)</span>: the ripe or early-released honest
+entries by their <span class='mathjax-inline'>\(\Facz \)</span> ids in <span class='mathjax-inline'>\(S\)</span>, and the corrupt-sender records — those
+verifying under a key registered at a corrupt slot — in <span class='mathjax-inline'>\(I\)</span>. Corruption
+it passes straight through, <span class='mathjax-inline'>\(\op {Corrupt}\)</span> surviving the bundle as Remark <a href='mainse5.html#x13-10001r2'>3.2<!-- tex4ht:ref: rem:midcall  --></a>’s
+does.
+</p><!-- l. 7996 --><p class='indent'>   Made explicit: two pieces of state the paragraph above passes over
+silently, both forced by the code just above it rather than chosen. <span class='mathjax-inline'>\(\Facz \)</span>’s own <span class='mathjax-inline'>\(\op {Send}\)</span>
+(inherited from <span class='mathjax-inline'>\(\Fac \)</span>, Section <a href='mainse24.html#functionality6'>19.1<!-- tex4ht:ref: sec:facfunc  --></a>) notifies the slot with <span class='mathjax-inline'>\((\op {Send},m,Q,\tau ,\msg )\)</span>, <span class='mathjax-inline'>\(m\)</span> its own list index
+— not <span class='mathjax-inline'>\((\P ,Q,\tau ,\msg )\)</span> alone, the sender <span class='mathjax-inline'>\(\P \)</span> read off the identity the query arrives at
+(Definition <a href='mainch9.html#x26-22002r2'>9.2<!-- tex4ht:ref: def:respcall  --></a>). The simulator <span class='mathjax-inline'>\(\Sim _{\Adv }\)</span> must keep that index, <span class='mathjax-inline'>\(\V {fid}\)</span> below, to name the
+entry later; it cannot recover it at fetch time, having no access to <span class='mathjax-inline'>\(\Facz .\V {list}\)</span> itself. And
+<span class='mathjax-inline'>\(\rho \)</span>’s own tables — <span class='mathjax-inline'>\(\V {gen}\)</span> at line <a href='#realizing-the-authenticated-channel'>5<!-- tex4ht:ref: ln:rgen  --></a>, <span class='mathjax-inline'>\(\V {seq}\)</span>, and the <span class='mathjax-inline'>\(\V {seen}\)</span> its freshness test reads at line <a href='#realizing-the-authenticated-channel'>24<!-- tex4ht:ref: ln:rdedup  --></a> — are
+tables <span class='mathjax-inline'>\(\Sim _{\Adv }\)</span> does not host, <span class='mathjax-inline'>\(\rho \)</span> being no part of the ideal world and only its
+subroutines internal here, so reproducing its filter needs shadows
+of its own, kept equal to <span class='mathjax-inline'>\(\rho \)</span>’s by construction rather than by reading
+them.
+</p><!-- l. 8008 --><p class='indent'>   Two routing questions the prose leaves open, and both decide whether
+the simulator works at all. The first is what becomes of a call the hosted <span class='mathjax-inline'>\(\Adv \)</span>
+places on <span class='mathjax-inline'>\(\rho \)</span>’s <span class='pplri8t-'>own </span>identity. Line <a href='mainse5.html#the-full-interface'>3<!-- tex4ht:ref: ln:corrgate  --></a> admits <span class='mathjax-inline'>\(\Adv \)</span> at a corrupt party and neither
+mediation hook fires on its calls, so in the real world such a call reaches <span class='mathjax-inline'>\(\rho \)</span>’s
+core — and every subroutine call that core then places is mediated
+straight back to <span class='mathjax-inline'>\(\Adv \)</span> (line <a href='mainse5.html#the-full-interface'>4<!-- tex4ht:ref: ln:medin  --></a>, the caller being <span class='mathjax-inline'>\(\rho \)</span> and the party corrupt), so
+nothing of it ever reaches <span class='mathjax-inline'>\(\Fnet \)</span>’s buffer. Relayed outward it would instead
+reach <span class='mathjax-inline'>\(\Facz \)</span>, whose <span class='mathjax-inline'>\(\op {Send}\)</span> files a record that <span class='pplri8t-'>ripens </span>and is delivered by <span class='mathjax-inline'>\(\Delta \)</span> whatever
+the slot answers (Section <a href='mainse24.html#functionality6'>19.1<!-- tex4ht:ref: sec:facfunc  --></a>) — a delivery with no real-world
+counterpart. So these calls are not relayed: Definition <a href='mainse8.html#x17-14011r13'>4.13<!-- tex4ht:ref: def:bundle  --></a>’s explicit
+routing keeps them inside, where the last handler below runs <span class='mathjax-inline'>\(\rho \)</span>’s core
+                                                           
+                                                           
+against the hosted <span class='mathjax-inline'>\(\Adv \)</span> exactly as <span class='mathjax-inline'>\(\opl {Mediate}\)</span> does really. The outward set is declared
+accordingly.
+</p><!-- l. 8020 --><p class='indent'>   The second is how far a responsive answer reaches. Both handlers
+answer a responsive call, and <span class='mathjax-inline'>\(\opl {Respond}\)</span> (Definition <a href='mainch9.html#x26-22001r1'>9.1<!-- tex4ht:ref: def:respond  --></a>) refuses every call the
+responder <span class='pplri8t-'>places</span>; calls between two hosted machines are not placed at all
+(Definition <a href='mainse8.html#x17-14011r13'>4.13<!-- tex4ht:ref: def:bundle  --></a>), so the internal copies are reachable, but nothing outside
+the bundle is. Two things outside it would otherwise be reached, and <span class='mathjax-inline'>\(\Sim _{\Adv }\)</span>’s
+code avoids each.
+</p><!-- l. 8026 --><p class='indent'>   A hosted copy’s <span class='pplri8t-'>full </span>interface opens by reading the corruption register,
+which Definition <a href='mainch9.html#x26-22002r2'>9.2<!-- tex4ht:ref: def:respcall  --></a> refuses outright — a responsive answer is computed
+from what the responder already knows. So the handlers drive the copies
+through their <span class='pplri8t-'>cores</span>, written <span class='mathjax-inline'>\(\opl {Gen}\)</span> rather than <span class='mathjax-inline'>\(\fopl {Gen}\)</span> above, and nothing is lost by it: a
+party corrupt at the send or the fetch is mediated before <span class='mathjax-inline'>\(\Facz \)</span>’s own core runs,
+so no slot query is ever issued on its behalf and no handler ever
+serves one, and at an honest party the full interface adds only its
+silencer — the gate passes, and neither hook fires. And <span class='mathjax-inline'>\(\Fnet \)</span> opens both <span class='mathjax-inline'>\(\op {Send}\)</span>
+and <span class='mathjax-inline'>\(\op {Fetch}\)</span> by reading <span class='mathjax-inline'>\(\Gclock \)</span>, which is shared rather than hosted. That read is
+answered with the <span class='mathjax-inline'>\(\tau \)</span> the notification or query already carries, which is
+the right value and not merely a convenient one: on the send it is
+the stamp the proof shows <span class='mathjax-inline'>\(\rho \)</span>’s and <span class='mathjax-inline'>\(\Fnet \)</span>’s own reads share, and on the
+fetch it is <span class='mathjax-inline'>\(\Facz \)</span>’s read, which no responsive call can have advanced past
+(Proposition <a href='mainch9.html#x26-22003r3'>9.3<!-- tex4ht:ref: prop:respcorr  --></a>).
+</p>
+   <div class='tcolorbox interface' id='tcolobox-138'>     
+<div class='tcolorbox-title'>
+<!-- l. 8128 --><p class='indent'>   Simulator <span class='mathjax-inline'>\(\Sim _{\Adv }\)</span> <br class='newline' /><span class='pplr8t-x-x-80'>occupies </span><span class='mathjax-inline'>\(\IDs (\Adv )\)</span><span class='pplr8t-x-x-80'>; hosts </span><span class='mathjax-inline'>\(\Adv \) </span><span class='pplr8t-x-x-80'>and one internal copy each of </span><span class='mathjax-inline'>\(\Fpki \)</span><span class='pplr8t-x-x-80'>, </span><span class='mathjax-inline'>\(\Fnet \)</span><span class='pplr8t-x-x-80'>, </span><span class='mathjax-inline'>\(\Fsig ^{!}\) </span><span class='pplr8t-x-x-80'>(Definition </span><a href='mainse10.html#x20-16001r26'><span class='pplr8t-x-x-80'>4.26</span><!-- tex4ht:ref: def:zadv  --></a><span class='pplr8t-x-x-80'>, read on the adversary side); outward
+set the identities the ideal execution still serves, less </span><span class='mathjax-inline'>\(\rho \)</span><span class='pplr8t-x-x-80'>’s own, which the last handler routes by hand
+                                                           
+                                                           
+(Definition </span><a href='mainse8.html#x17-14011r13'><span class='pplr8t-x-x-80'>4.13</span><!-- tex4ht:ref: def:bundle  --></a><span class='pplr8t-x-x-80'>)</span></p></div> 
+<div class='tcolorbox-content'><div class='columns-2'>
+<!-- l. 8048 --><p class='noindent'><span style='color:#C8791A;'><span class='underline'><span class='mathjax-inline'>\(\op {Initialize}()\)</span></span></span><span class='pplr8t-x-x-70'>:</span> </p><div class='algorithmic'>
+               <span class='line'><span class='label label-8.39998pt'>
+ <span class='pplr8t-x-x-80'>1:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='mathjax-inline'>\(\V {gen} : \Ps \to \{0,1\}\)</span><span class='pplr8t-x-x-70'>;  </span><span class='mathjax-inline'>\(\V {gen}[*] \gets 0\)</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'>  <span class='pplr8t-x-x-80'>2:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='mathjax-inline'>\(\V {seq} : \Ps \to \mathbb {N}\)</span><span class='pplr8t-x-x-70'>;  </span><span class='mathjax-inline'>\(\V {seq}[*] \gets 0\)</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'>  <span class='pplr8t-x-x-80'>3:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='mathjax-inline'>\(\V {seen} : \Ps \to \mathcal {P}(\Ps \times \mathbb {N})\)</span><span class='pplr8t-x-x-70'>;  </span><span class='mathjax-inline'>\(\V {seen}[*] \gets \emptyset \)</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'>  <span class='pplr8t-x-x-80'>4:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='mathjax-inline'>\(\V {fid} : \Ps \times \mathbb {N} \to \mathbb {N} \cup \{\unset \}\)</span><span class='pplr8t-x-x-70'>;  </span><span class='mathjax-inline'>\(\V {fid}[*] \gets \unset \)                                                                                                                            </span><span class='pplro8t-x-x-70'>// own record </span><span class='mathjax-inline'>\(\mapsto \) \(\Facz \)</span><span class='pplro8t-x-x-70'>’s        index</span></span></span>
+</div>
+<!-- l. 8060 --><p class='noindent'><span style='color:#C8791A;'><span class='underline'><span class='pplr8t-x-x-70'>on </span><span class='mathjax-inline'>\(\Facz \)</span><span class='pplr8t-x-x-70'>’s </span><span class='mathjax-inline'>\(\op {Send}\) </span><span class='pplr8t-x-x-70'>note </span><span class='mathjax-inline'>\((m,Q,\tau ,\msg )\) </span><span class='pplr8t-x-x-70'>at </span><span class='mathjax-inline'>\(\P \)</span></span></span> </p><div class='algorithmic'>
+               <span class='line'><span class='label label-8.39998pt'>
+ <span class='pplr8t-x-x-80'>5:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='pplb8t-x-x-70'>if</span><span class='pplr8t-x-x-70'> </span><span class='mathjax-inline'>\(\V {gen}[\P ] = 0\)</span><span class='pplr8t-x-x-70'> </span><span class='pplb8t-x-x-70'>then</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'>  <span class='pplr8t-x-x-80'>6:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'>     </span><span class='mathjax-inline'>\(\vk \gets \) </span><span class='pplr8t-x-x-70'>internal </span><span class='mathjax-inline'>\(\id _{\Fsig }.\opl {Gen}()\)</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'>  <span class='pplr8t-x-x-80'>7:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'>     internal </span><span class='mathjax-inline'>\(\id _{\Fpki }.\opl {Register}(\vk )\)</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'>  <span class='pplr8t-x-x-80'>8:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'>     </span><span class='mathjax-inline'>\(\V {gen}[\P ] \gets 1\)</span>                </span></span><br class='algorithmic' /><span class='empty'><span class='label label-8.39998pt'>        </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'>  <span class='pplr8t-x-x-80'>9:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='mathjax-inline'>\(\V {seq}[\P ] \gets \V {seq}[\P ] + 1\)</span><span class='pplr8t-x-x-70'>;     </span><span class='mathjax-inline'>\(s \gets \V {seq}[\P ]\)</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'> <span class='pplr8t-x-x-80'>10:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='mathjax-inline'>\(x \gets (\P ,\, Q,\, \tau ,\, s,\, \msg )\)</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'> <span class='pplr8t-x-x-80'>11:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='mathjax-inline'>\(\sigma \gets \) </span><span class='pplr8t-x-x-70'>internal </span><span class='mathjax-inline'>\(\id _{\Fsig }.\opl {Sign}(x)\)                                                                                                      </span><span class='pplro8t-x-x-70'>// hosted </span><span class='mathjax-inline'>\(\Adv \) </span><span class='pplro8t-x-x-70'>answers the        query</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'> <span class='pplr8t-x-x-80'>12:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> internal </span><span class='mathjax-inline'>\(\id _{\Fnet }.\opl {Send}\bigl ((x,\sigma )\bigr )\)                                                                                                </span><span class='pplro8t-x-x-70'>// its clock read answered        </span><span class='mathjax-inline'>\(\tau \)</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'> <span class='pplr8t-x-x-80'>13:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='mathjax-inline'>\(\V {fid}[\P ,s] \gets m\)</span></span></span>
+</div>
+<!-- l. 8079 --><p class='noindent'><span class='pplr8t-x-x-70'>auto</span>
+</p><!-- l. 8081 --><p class='noindent'><span style='color:#C8791A;'><span class='underline'><span class='pplr8t-x-x-70'>on </span><span class='mathjax-inline'>\(\Facz \)</span><span class='pplr8t-x-x-70'>’s responsive </span><span class='mathjax-inline'>\(\op {Fetch}\) </span><span class='pplr8t-x-x-70'>query </span><span class='mathjax-inline'>\((\tau )\) </span><span class='pplr8t-x-x-70'>at </span><span class='mathjax-inline'>\(Q\)</span></span></span> </p><div class='algorithmic'>
+               <span class='line'><span class='label label-8.39998pt'>
+<span class='pplr8t-x-x-80'>14:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='mathjax-inline'>\(N \gets \) </span><span class='pplr8t-x-x-70'>internal </span><span class='mathjax-inline'>\(\id _{\Fnet }.\opl {Fetch}()\)                                                                       </span><span class='pplro8t-x-x-70'>// clock answered </span><span class='mathjax-inline'>\(\tau \)</span><span class='pplro8t-x-x-70'>; </span><span class='mathjax-inline'>\(\Adv \) </span><span class='pplro8t-x-x-70'>answers the release        query</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'> <span class='pplr8t-x-x-80'>15:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='mathjax-inline'>\(S, I \gets \emptyset , \emptyset \)</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'> <span class='pplr8t-x-x-80'>16:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='pplb8t-x-x-70'>for</span><span class='pplr8t-x-x-70'> </span><span class='mathjax-inline'>\((m,y) \in N\)</span><span class='pplr8t-x-x-70'> </span><span class='pplb8t-x-x-70'>do</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'> <span class='pplr8t-x-x-80'>17:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'>     parse </span><span class='mathjax-inline'>\(y\) </span><span class='pplr8t-x-x-70'>as </span><span class='mathjax-inline'>\((x,\sigma )\)</span><span class='pplr8t-x-x-70'>,  </span><span class='mathjax-inline'>\(x = (\P ,Q',\tau _x,s,\msg )\)                                                                                                                         </span><span class='pplro8t-x-x-70'>// else        skip</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'> <span class='pplr8t-x-x-80'>18:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'>     </span><span class='pplb8t-x-x-70'>if </span><span class='mathjax-inline'>\(Q' \neq Q\) </span><span class='pplb8t-x-x-70'>then </span><span class='pplr8t-x-x-70'>skip</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'> <span class='pplr8t-x-x-80'>19:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'>     </span><span class='mathjax-inline'>\(\vk \gets \) </span><span class='pplr8t-x-x-70'>internal </span><span class='mathjax-inline'>\(\id _{\Fpki }.\opl {Retrieve}(\P )\)</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'> <span class='pplr8t-x-x-80'>20:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'>     </span><span class='pplb8t-x-x-70'>if </span><span class='mathjax-inline'>\(\vk = \unset \) </span><span class='pplb8t-x-x-70'>then </span><span class='pplr8t-x-x-70'>skip</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'> <span class='pplr8t-x-x-80'>21:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'>     </span><span class='mathjax-inline'>\(b \gets \) </span><span class='pplr8t-x-x-70'>internal </span><span class='mathjax-inline'>\(\id _{\Fsig }.\opl {Verify}(\vk ,x,\sigma )\)</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'> <span class='pplr8t-x-x-80'>22:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'>     </span><span class='pplb8t-x-x-70'>if </span><span class='mathjax-inline'>\(b \neq 1\) </span><span class='pplb8t-x-x-70'>then </span><span class='pplr8t-x-x-70'>skip</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'> <span class='pplr8t-x-x-80'>23:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'>     </span><span class='pplb8t-x-x-70'>if </span><span class='mathjax-inline'>\((\P ,s) \in \V {seen}[Q]\) </span><span class='pplb8t-x-x-70'>then </span><span class='pplr8t-x-x-70'>skip</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'> <span class='pplr8t-x-x-80'>24:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'>     </span><span class='mathjax-inline'>\(\V {seen}[Q] \gets \V {seen}[Q] \cup \{(\P ,s)\}\)</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'> <span class='pplr8t-x-x-80'>25:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'>     </span><span class='pplb8t-x-x-70'>if </span><span class='mathjax-inline'>\(\V {fid}[\P ,s] \neq \unset \)</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'> <span class='pplr8t-x-x-80'>26:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'>         </span><span class='pplb8t-x-x-70'>then </span><span class='mathjax-inline'>\(S \gets S \cup \{\V {fid}[\P ,s]\}\)</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'> <span class='pplr8t-x-x-80'>27:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'>         </span><span class='pplb8t-x-x-70'>else </span><span class='mathjax-inline'>\(I \gets I \cup \{(\P ,Q,\tau _x,\msg )\}\)</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'> <span class='pplr8t-x-x-80'>28:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='pplb8t-x-x-70'>end</span><span class='pplr8t-x-x-70'> </span><span class='pplb8t-x-x-70'>for</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'> <span class='pplr8t-x-x-80'>29:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> </span><span class='pplb8t-x-x-70'>return </span><span class='mathjax-inline'>\((S,I)\)</span></span></span>
+</div>
+<!-- l. 8106 --><p class='noindent'><span style='color:#C8791A;'><span class='underline'><span class='pplr8t-x-x-70'>on </span><span class='mathjax-inline'>\(\Adv \)</span><span class='pplr8t-x-x-70'>’s </span><span class='mathjax-inline'>\(\op {Send}\) </span><span class='pplr8t-x-x-70'>or </span><span class='mathjax-inline'>\(\op {Fetch}\) </span><span class='pplr8t-x-x-70'>at a corrupt </span><span class='mathjax-inline'>\(\P \)</span></span></span> </p><div class='algorithmic'>
+               <span class='line'><span class='label label-8.39998pt'>
+<span class='pplr8t-x-x-80'>30:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> run </span><span class='mathjax-inline'>\(\rho \)</span><span class='pplr8t-x-x-70'>’s own core for that operation (the protocol box above) on </span><span class='mathjax-inline'>\(\V {gen}\)</span><span class='pplr8t-x-x-70'>, </span><span class='mathjax-inline'>\(\V {seq}\)</span><span class='pplr8t-x-x-70'>, </span><span class='mathjax-inline'>\(\V {seen}\)</span><span class='pplr8t-x-x-70'>, with every subroutine        call it places — to </span><span class='mathjax-inline'>\(\Fsig ^{!}\)</span><span class='pplr8t-x-x-70'>, </span><span class='mathjax-inline'>\(\Fpki \)</span><span class='pplr8t-x-x-70'>, </span><span class='mathjax-inline'>\(\Fnet \) </span><span class='pplr8t-x-x-70'>or </span><span class='mathjax-inline'>\(\Gclock \) </span><span class='pplr8t-x-x-70'>— handed to the hosted </span><span class='mathjax-inline'>\(\Adv \) </span><span class='pplr8t-x-x-70'>rather than placed, as the full interface’s        line </span><a href='mainse5.html#the-full-interface'><span class='pplr8t-x-x-70'>4</span><!-- tex4ht:ref: ln:medin  --></a> <span class='pplr8t-x-x-70'>hands it really; return the core’s own value</span>                </span></span><br class='algorithmic' /><span class='line'><span class='label label-8.39998pt'> <span class='pplr8t-x-x-80'>31:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> never relayed outward: no </span><span class='mathjax-inline'>\(\Facz .\V {list}\) </span><span class='pplr8t-x-x-70'>entry, and none drained</span></span></span>
+</div>
+<!-- l. 8118 --><p class='noindent'><span style='color:#C8791A;'><span class='underline'><span class='pplr8t-x-x-70'>Routing, and </span><span class='mathjax-inline'>\(\op {Corrupt}\)</span></span></span> </p><div class='algorithmic'>
+               <span class='line'><span class='label label-8.39998pt'>
+<span class='pplr8t-x-x-80'>32:</span>  </span> <span class='algorithmic'><span class='pplr8t-x-x-70'> any other call between the hosted </span><span class='mathjax-inline'>\(\Adv \) </span><span class='pplr8t-x-x-70'>and an internal hybrid: served inside, the bundle’s        ordinary routing (Definition </span><a href='mainse8.html#x17-14011r13'><span class='pplr8t-x-x-70'>4.13</span><!-- tex4ht:ref: def:bundle  --></a><span class='pplr8t-x-x-70'>). A </span><span class='mathjax-inline'>\(\op {Corrupt}\) </span><span class='pplr8t-x-x-70'>leaves under the hosted </span><span class='mathjax-inline'>\(\Adv \)</span><span class='pplr8t-x-x-70'>’s own claim, the bundle        occupying </span><span class='mathjax-inline'>\(\IDs (\Adv )\)</span><span class='pplr8t-x-x-70'>, so </span><span class='mathjax-inline'>\(\op {Corrupt}\)</span><span class='pplr8t-x-x-70'>’s own gate </span><span class='mathjax-inline'>\(\id '.F = A\) </span><span class='pplr8t-x-x-70'>(its line </span><a href='mainse1.html#corruption'><span class='pplr8t-x-x-70'>3</span><!-- tex4ht:ref: ln:corronlya  --></a><span class='pplr8t-x-x-70'>) is met without rewriting</span></span></span>
+</div>
+</div>  
+</div> 
+</div>                                               
+                                                           
+<!-- l. 8130 --><p class='indent'>   Three things about <span class='mathjax-inline'>\(\Sim _{\Adv }\)</span>’s code, all used by the proof but easy to read past.
+First, <span class='mathjax-inline'>\(\V {fid}[\P ,s] \neq \unset \)</span> at line <a href='#realizing-the-authenticated-channel'>26<!-- tex4ht:ref: ln:simhonest  --></a> is exactly “an undrained <span class='mathjax-inline'>\(\V {list}\)</span> entry matches the record” in the
+proof’s own words: <span class='mathjax-inline'>\(\Sim _{\Adv }\)</span> recognizes a record precisely when it once relayed the
+honest <span class='mathjax-inline'>\(\op {Send}\)</span> that produced it, which is the only way an entry gets into <span class='mathjax-inline'>\(\V {fid}\)</span> at
+all.
+</p><!-- l. 8136 --><p class='indent'>   Second, <span class='mathjax-inline'>\(\V {gen}\)</span> is a shadow of <span class='mathjax-inline'>\(\rho \)</span>’s own flag and not a reading of the internal <span class='mathjax-inline'>\(\Fpki \)</span>’s <span class='mathjax-inline'>\(\V {VK}\)</span>,
+though at an honest party the two agree — <span class='mathjax-inline'>\(\Fpki \)</span>’s <span class='mathjax-inline'>\(\op {Register}\)</span> turns an <span class='mathjax-inline'>\(A\)</span>- or <span class='mathjax-inline'>\(Z\)</span>-caller’s call
+there into a peek at its line <a href='#realizing-the-authenticated-channel'>4<!-- tex4ht:ref: ln:rpkipeek  --></a>, so only <span class='mathjax-inline'>\(\rho \)</span> ever writes that entry. They part
+company at a corrupt one, which is why the shortcut is not taken: there <span class='mathjax-inline'>\(\rho \)</span>’s <span class='mathjax-inline'>\(\op {Register}\)</span>
+is mediated away before <span class='mathjax-inline'>\(\Fpki \)</span>’s core runs, leaving <span class='mathjax-inline'>\(\V {VK}[\P ]\)</span> unset while <span class='mathjax-inline'>\(\rho \)</span> sets <span class='mathjax-inline'>\(\V {gen}[\P ] \gets 1\)</span> regardless,
+<span class='mathjax-inline'>\(\rho .\op {Send}\)</span>’s line <a href='#realizing-the-authenticated-channel'>5<!-- tex4ht:ref: ln:rgen  --></a> not reading the answer. A simulator testing <span class='mathjax-inline'>\(\V {VK}\)</span> would re-run <span class='mathjax-inline'>\(\op {Gen}\)</span> and <span class='mathjax-inline'>\(\op {Register}\)</span> on
+the party’s every later send and show the hosted <span class='mathjax-inline'>\(\Adv \)</span> a pair of queries the real <span class='mathjax-inline'>\(\Adv \)</span>
+never sees.
+</p><!-- l. 8146 --><p class='indent'>   Third, line <a href='#realizing-the-authenticated-channel'>26<!-- tex4ht:ref: ln:simhonest  --></a> puts <span class='pplri8t-'>every </span>matching honest record into <span class='mathjax-inline'>\(S\)</span>, ripe ones
+included, where <span class='mathjax-inline'>\(\Facz \)</span> would have taken the ripe ones through <span class='mathjax-inline'>\(R\)</span> on its own. This
+is deliberate and costs nothing: <span class='mathjax-inline'>\(\Clean _{\op {addr}}\)</span> admits any undrained entry addressed to <span class='mathjax-inline'>\(Q\)</span>,
+and <span class='mathjax-inline'>\(\Facz .\op {Fetch}\)</span> unions <span class='mathjax-inline'>\(R\)</span> with <span class='mathjax-inline'>\(S\)</span> at its line <a href='#realizing-the-authenticated-channel'>7<!-- tex4ht:ref: ln:aczdeliver  --></a> and drains their union, so naming a ripe
+entry twice delivers and drains it once. Naming it is also all <span class='mathjax-inline'>\(\Sim _{\Adv }\)</span> can do, having
+no clock read of its own inside the query with which to tell ripe from
+early.
+</p>
+   <div class='tcolorbox tcolorbox' id='tcolobox-139'>     
+<div class='tcolorbox-content'><div class='newtheorem'>
+<!-- l. 8153 --><p class='noindent'><span class='head'>
+<a id='x52-47001r1'></a>
+<span class='pplb8t-'>Theorem 20.1 </span>(<span class='mathjax-inline'>\(\rho \)</span> realizes the authenticated channel)<span class='pplb8t-'>.</span>    </span>    <span class='pplri8t-'>Let    </span><span class='mathjax-inline'>\(\pi := \{\rho ,\Fpki ,\Fnet ,\Fsig ^{!}\}\)    </span><span class='pplri8t-'>with
+parameters matched so that </span><span class='mathjax-inline'>\(\pi \cup \{\Gclock \}\) </span><span class='pplri8t-'>is well-formed, </span><span class='mathjax-inline'>\(\rho .\admits = \Facz .\admits \)</span><span class='pplri8t-'>, and </span><span class='mathjax-inline'>\(\Fnet .\pars = \Facz .\pars = \Delta \)</span><span class='pplri8t-'>. Then </span><span class='mathjax-inline'>\(\pi \) </span><span class='pplri8t-'>UC-emulates
+</span><span class='mathjax-inline'>\(\{\Facz \}\) </span><span class='pplri8t-'>within </span><span class='mathjax-inline'>\(0\)</span><span class='pplri8t-'>: for every occupant </span><span class='mathjax-inline'>\(\Adv \) </span><span class='pplri8t-'>of the adversary slot the simulator </span><span class='mathjax-inline'>\(\Sim _{\Adv }\) </span><span class='pplri8t-'>above
+gives, for every </span><span class='mathjax-inline'>\(\Zenv \in \ZenvSet _{\pi ,\{\Facz \}}\)</span><span class='pplri8t-'>,</span> </p><div class='mathjax-block'>\[ \opl {Exec}\bigl (\pi ,\Zenv ,\Adv ,\Corr \bigr ) \;\equiv \; \opl {Exec}\bigl (\{\Facz \},\Zenv ,\Sim _{\Adv },\Corr \bigr ) , \]</div>
+<!-- l. 8163 --><p class='noindent'><span class='pplri8t-'>equal  as  distributions.  The  quantifier  is  over  </span>every  <span class='pplri8t-'>adversary,  not
+the  dummy  alone:  every  slot  call  in  either  world  is  responsive,  so
+Theorem </span><a href='mainse10.html#x20-16004r29'><span class='pplri8t-'>4.29</span><!-- tex4ht:ref: thm:dummy  --></a> <span class='pplri8t-'>does not reach this and the simulator is exhibited against
+each </span><span class='mathjax-inline'>\(\Adv \) </span><span class='pplri8t-'>directly.</span>
+</p>
+</div>
+<!-- l. 8166 --><p class='noindent'></p> 
+</div> 
+</div>
+   <div class='proof'>
+<!-- l. 8170 --><p class='indent'>   <span class='head'>
+                                                           
+                                                           
+<span class='pplri8t-'>Proof.</span> </span>One  induction  on  activations,  carrying  an  invariant  in  three
+parts. The coupling pairs machine to machine as in Lemma <a href='mainse8.html#x17-14020r18'>4.18<!-- tex4ht:ref: lem:absorb  --></a>, so
+the routing, claims and refusal arguments are that lemma’s; what is
+new  is  the  state  carried  across  the  <span class='mathjax-inline'>\(\rho \)</span>/<span class='mathjax-inline'>\(\Facz \)</span>  cut,  and  the  invariant  on  it  is
+the  whole  of  the  argument.  <span class='pplri8t-'>The  invariant  </span>states  the  three  parts:  the
+internal hybrids hold what the real ones hold, <span class='mathjax-inline'>\(\Sim _{\Adv }\)</span>’s shadows hold what
+<span class='mathjax-inline'>\(\rho \)</span> holds,  and  <span class='mathjax-inline'>\(\Facz .\V {list}\)</span>  holds  exactly  the  undrained  honest  sends.  Three  cases
+preserve it. <span class='pplri8t-'>Send </span>shows the two worlds stamp a send at the same time,
+and that replaying <span class='mathjax-inline'>\(\rho \)</span>’s own steps into the internal copies keeps them
+equal.  <span class='pplri8t-'>Fetch  </span>carries  the  weight:  it  splits  not  on  the  sender’s  current
+status but on whether an undrained <span class='mathjax-inline'>\(\V {list}\)</span> entry matches the record, and
+shows that the unmatched case forces a corrupt sender — which is
+what  unforgeability  buys  here,  and  why  <span class='mathjax-inline'>\(\Clean _{\op {inj}}\)</span>  never  trips.  <span class='pplri8t-'>Corrupt-party
+traffic </span>covers the one activation the declared outward set withholds,
+and  shows  that  withholding  it  is  what  the  invariant  needs.  Couple
+the two executions on equal tapes, paired machine to paired machine
+as in Lemma <a href='mainse8.html#x17-14020r18'>4.18<!-- tex4ht:ref: lem:absorb  --></a>: <span class='mathjax-inline'>\(\Zenv \)</span>, <span class='mathjax-inline'>\(\Corr \)</span> and <span class='mathjax-inline'>\(\Gclock \)</span> each to itself, the hosted <span class='mathjax-inline'>\(\Adv \)</span> and the internal
+hybrids of <span class='mathjax-inline'>\(\Sim _{\Adv }\)</span> to the real <span class='mathjax-inline'>\(\Adv \)</span> and the real hybrids, and <span class='mathjax-inline'>\(\rho \)</span> together with what
+the hybrids hold to <span class='mathjax-inline'>\(\Facz \)</span>. Everything below is one induction on activations,
+in the shape of Definition <a href='mainse8.html#x17-14015r17'>4.17<!-- tex4ht:ref: def:regcorr  --></a>; the claims and refusal paragraphs are
+Lemma <a href='mainse8.html#x17-14020r18'>4.18<!-- tex4ht:ref: lem:absorb  --></a>’s verbatim, and its routing paragraph holds of every call
+but one — <span class='mathjax-inline'>\(\Sim _{\Adv }\)</span> is a bundle, and the calls that cross its boundary are the
+ordinary outward and inward relays, save those the hosted <span class='mathjax-inline'>\(\Adv \)</span> places on
+<span class='mathjax-inline'>\(\rho \)</span>’s own identities, which the declared outward set withholds and the
+last handler serves inside — so only the state carried across the <span class='mathjax-inline'>\(\rho \)</span>/<span class='mathjax-inline'>\(\Facz \)</span> cut
+is new, and the invariant on it is the whole of the argument.
+</p><!-- l. 8194 --><p class='indent'>   <span class='pplri8t-'>The invariant. </span>At every corresponding pair of configurations: (i) the
+internal <span class='mathjax-inline'>\(\Fpki \)</span>, <span class='mathjax-inline'>\(\Fnet \)</span> and <span class='mathjax-inline'>\(\Fsig ^{!}\)</span> of <span class='mathjax-inline'>\(\Sim _{\Adv }\)</span> hold the same tables as the real hybrids, having
+been initialised alike and driven by the same calls in the same order;
+(ii) <span class='mathjax-inline'>\(\Sim _{\Adv }\)</span>’s shadow <span class='mathjax-inline'>\(\V {gen}\)</span>, <span class='mathjax-inline'>\(\V {seq}\)</span> and <span class='mathjax-inline'>\(\V {seen}\)</span> equal <span class='mathjax-inline'>\(\rho \)</span>’s; and (iii) <span class='mathjax-inline'>\(\Facz .\V {list}\)</span> holds exactly the records <span class='mathjax-inline'>\((P,Q,\tau ,\msg )\)</span> of
+the sends <span class='mathjax-inline'>\(\rho \)</span> made through a party’s own <span class='mathjax-inline'>\(\op {Send}\)</span> while that party was honest
+— one entry per such <span class='mathjax-inline'>\(\rho .\op {Send}\)</span>, at the timestamp it read — that no fetch has
+since drained, and no others. Later corruption of the sender does not
+disturb the entry, corruption being monotone and the record already
+placed. (i) and (ii) hold because paired copies run the same code on
+equal tapes under the same driving: at an honest party <span class='mathjax-inline'>\(\rho \)</span>’s core drives
+the real hybrids and <span class='mathjax-inline'>\(\Sim _{\Adv }\)</span>’s handlers drive their copies through the same
+steps, and at a corrupt one both sides mediate the same subroutine
+                                                           
+                                                           
+calls away before any callee’s core runs, as the third case below checks.
+(iii) is what the three cases preserve.
+</p><!-- l. 8207 --><p class='indent'>   <span class='pplri8t-'>Send. </span><span class='mathjax-inline'>\(\Zenv \)</span> calls <span class='mathjax-inline'>\(\op {Send}(Q,\msg )\)</span> at an honest <span class='mathjax-inline'>\(\P \)</span>. On the ideal side <span class='mathjax-inline'>\(\Facz .\op {Send}\)</span> reads the clock, appends
+<span class='mathjax-inline'>\((\P ,Q,\tau ,\msg )\)</span> to <span class='mathjax-inline'>\(\V {list}\)</span>, and notifies <span class='mathjax-inline'>\(\Sim _{\Adv }\)</span> responsively. On the real side <span class='mathjax-inline'>\(\rho .\op {Send}\)</span> reads the clock, and its
+internal <span class='mathjax-inline'>\(\Fnet .\op {Send}\)</span> reads it again; the two clock reads coincide, by the argument
+of  Section <a href='mainse23.html#properties6'>18.2<!-- tex4ht:ref: sec:netprops  --></a>  —  no  core  of  either  execution  runs  between  them,  <span class='mathjax-inline'>\(\Gclock .\op {Read}\)</span>
+placing  no  call  —  so  the  send  is  stamped  <span class='mathjax-inline'>\(\tau \)</span>  on  both  sides.  <span class='mathjax-inline'>\(\Sim _{\Adv }\)</span>,  notified,
+replays exactly the <span class='mathjax-inline'>\(\op {Gen}\)</span>/<span class='mathjax-inline'>\(\op {Register}\)</span>/<span class='mathjax-inline'>\(\op {Sign}\)</span>/<span class='mathjax-inline'>\(\op {Send}\)</span> steps <span class='mathjax-inline'>\(\rho \)</span> runs, into copies that (i) keeps equal to
+<span class='mathjax-inline'>\(\rho \)</span>’s — the internal <span class='mathjax-inline'>\(\Fnet \)</span>’s own clock read answered with the <span class='mathjax-inline'>\(\tau \)</span> the notification
+carried, which is that same stamp, since the responder may place no
+call of its own to make it — and the hosted <span class='mathjax-inline'>\(\Adv \)</span> answers each <span class='mathjax-inline'>\(\Adv ^{!}\)</span> query as the
+real <span class='mathjax-inline'>\(\Adv \)</span> does over equal tapes. Both return <span class='mathjax-inline'>\(\ok \)</span>; one new <span class='mathjax-inline'>\(\V {list}\)</span> entry matches the
+one send; (iii) holds.
+</p><!-- l. 8219 --><p class='indent'>   <span class='pplri8t-'>Fetch. </span><span class='mathjax-inline'>\(\Zenv \)</span> calls <span class='mathjax-inline'>\(\op {Fetch}()\)</span> at <span class='mathjax-inline'>\(Q\)</span>. Everything turns on the two worlds delivering the
+same set <span class='mathjax-inline'>\(M\)</span>, and on <span class='mathjax-inline'>\(\Sim _{\Adv }\)</span> being <span class='pplri8t-'>able </span>to name it within <span class='mathjax-inline'>\(\Clean _{\op {inj}}\)</span>. Run <span class='mathjax-inline'>\(\rho .\op {Fetch}\)</span>’s filter, which <span class='mathjax-inline'>\(\Sim _{\Adv }\)</span>
+mirrors internally: a delivered record <span class='mathjax-inline'>\((P,Q,\tau ,\msg )\)</span> is one whose diffused tuple <span class='mathjax-inline'>\((x,\sigma )\)</span>, <span class='mathjax-inline'>\(x = (P,Q,\tau ,s,\msg )\)</span>, is
+addressed to <span class='mathjax-inline'>\(Q\)</span>, carries a signature verifying under <span class='mathjax-inline'>\(\V {VK}_{\Fpki }[P]\)</span>, and is fresh in <span class='mathjax-inline'>\(\V {seen}[Q]\)</span>. Split
+not on <span class='mathjax-inline'>\(P\)</span>’s current status but on whether an undrained <span class='mathjax-inline'>\(\V {list}\)</span> entry matches
+the record — the honest case and the injected case being exactly these
+two.
+</p><!-- l. 8227 --><p class='indent'>   If one matches: by (iii) it is a send <span class='mathjax-inline'>\(\rho \)</span> made for <span class='mathjax-inline'>\(P\)</span> while <span class='mathjax-inline'>\(P\)</span> was honest,
+and  <span class='mathjax-inline'>\(\Facz \)</span>  delivers  it  from  store  —  through  <span class='mathjax-inline'>\(R\)</span>  if  ripe,  and  through  <span class='mathjax-inline'>\(S\)</span>,  its  id
+admitted by <span class='mathjax-inline'>\(\Clean _{\op {addr}}\)</span> as addressed to <span class='mathjax-inline'>\(Q\)</span>, if <span class='mathjax-inline'>\(\Sim _{\Adv }\)</span> releases it early to match <span class='mathjax-inline'>\(\Fnet \)</span>’s early
+release.  Whether  or  not  the  sender  is  corrupt  by  now,  the  record  is
+delivered from <span class='mathjax-inline'>\(\V {list}\)</span> and never injected, so none is delivered twice.
+</p><!-- l. 8233 --><p class='indent'>   If  none  matches:  then  <span class='mathjax-inline'>\(P\)</span>  is  corrupt  at  the  fetch,  and  this  is  where
+unforgeability earns its place. Were <span class='mathjax-inline'>\(P\)</span> honest at the fetch it would be
+honest  throughout,  by  monotonicity,  so  <span class='mathjax-inline'>\(\V {VK}_{\Fpki }[P]\)</span>  would  be  <span class='mathjax-inline'>\(P\)</span>’s  own  <span class='mathjax-inline'>\(\Fsig \)</span>  key  —  <span class='mathjax-inline'>\(\rho \)</span>
+registers exactly what <span class='mathjax-inline'>\(\op {Gen}\)</span> returned — and a signature verifying under an
+honest party’s key is never a forgery: <span class='mathjax-inline'>\(\op {Verify}\)</span>’s honest-key test (Section <a href='mainse16.html#functionality2'>15.1<!-- tex4ht:ref: sec:fsigfunc  --></a>)
+sets <span class='mathjax-inline'>\(b \gets 0\)</span> on any fresh triple under such a key, so <span class='mathjax-inline'>\(b = 1\)</span> forces the triple recorded,
+and only an honest <span class='mathjax-inline'>\(\op {Sign}\)</span> records one, which by (iii) would leave a matching
+<span class='mathjax-inline'>\(\V {list}\)</span> entry — against the case. So <span class='mathjax-inline'>\(P \in \Cs \)</span>; the record is the adversary’s to have
+produced, an <span class='mathjax-inline'>\(\Fnet \)</span> injection or a signature made as a corrupt party, and <span class='mathjax-inline'>\(\Sim _{\Adv }\)</span>
+places <span class='mathjax-inline'>\((P,Q,\tau ,\msg )\)</span> in <span class='mathjax-inline'>\(I\)</span>, which <span class='mathjax-inline'>\(\Clean _{\op {inj}}\)</span> admits, <span class='mathjax-inline'>\(P\)</span> being corrupt and <span class='mathjax-inline'>\(Q\)</span> the fetcher. The channel
+<span class='mathjax-inline'>\(\Facz \)</span> delivers it unstored, as <span class='mathjax-inline'>\(\rho \)</span> hands it up. This is what unforgeability buys:
+no record lacking a genuine send behind it can ever wear an honest
+name, so the injection channel is only ever asked for corrupt senders,
+and <span class='mathjax-inline'>\(\Clean _{\op {inj}}\)</span> never trips.
+                                                           
+                                                           
+</p><!-- l. 8247 --><p class='indent'>   Freshness  matches  on  both  sides  by  (ii),  and  draining  matches:
+a stored record delivered is drained from <span class='mathjax-inline'>\(\V {list}\)</span> ideally and marked seen
+really, so <span class='mathjax-inline'>\(\Fnet \)</span>’s re-delivery of the same tuple is filtered by <span class='mathjax-inline'>\(\V {seen}\)</span> really and finds
+no <span class='mathjax-inline'>\(\V {list}\)</span> entry ideally, falling into neither case a second time. So the two
+<span class='mathjax-inline'>\(\op {Fetch}\)</span>es return the same <span class='mathjax-inline'>\(M\)</span> and step to corresponding configurations; (iii) is
+preserved, its stored entries drained in lockstep.
+</p><!-- l. 8253 --><p class='indent'>   <span class='pplri8t-'>Corrupt-party traffic. </span><span class='mathjax-inline'>\(\Adv \)</span> calls <span class='mathjax-inline'>\(\op {Send}\)</span> or <span class='mathjax-inline'>\(\op {Fetch}\)</span> at a corrupt <span class='mathjax-inline'>\(\P \)</span>, on <span class='mathjax-inline'>\(\rho \)</span>’s own identity — the
+one activation the outward set withholds, and the case the two above
+do not reach. The full interface admits it at line <a href='mainse5.html#the-full-interface'>3<!-- tex4ht:ref: ln:corrgate  --></a>, <span class='mathjax-inline'>\(\P \)</span> being corrupt, and
+neither hook fires on an <span class='mathjax-inline'>\(A\)</span>-caller, so on the real side <span class='mathjax-inline'>\(\rho \)</span>’s core runs. Every
+subroutine call that core then places carries <span class='mathjax-inline'>\(\rho \)</span>’s name at a corrupt party,
+so line <a href='mainse5.html#the-full-interface'>4<!-- tex4ht:ref: ln:medin  --></a> of that same interface hands each to <span class='mathjax-inline'>\(\Adv \)</span> before the callee’s core
+runs: nothing of the activation reaches <span class='mathjax-inline'>\(\Fnet \)</span>’s buffer, <span class='mathjax-inline'>\(\Fpki \)</span>’s directory or <span class='mathjax-inline'>\(\Fsig \)</span>’s tables,
+and its very timestamp is <span class='mathjax-inline'>\(\Adv \)</span>’s to supply. <span class='mathjax-inline'>\(\Sim _{\Adv }\)</span>’s line <a href='#realizing-the-authenticated-channel'>30<!-- tex4ht:ref: ln:simcorr  --></a> runs that same core
+against the hosted <span class='mathjax-inline'>\(\Adv \)</span> on the same shadows, so both sides move <span class='mathjax-inline'>\(\V {gen}\)</span>, <span class='mathjax-inline'>\(\V {seq}\)</span> and
+<span class='mathjax-inline'>\(\V {seen}\)</span> alike  and  leave  the  hybrids  untouched,  preserving  (i)  and  (ii);  and
+neither side touches <span class='mathjax-inline'>\(\V {list}\)</span> — ideally because the call never leaves <span class='mathjax-inline'>\(\Sim _{\Adv }\)</span>, really
+because there is no <span class='mathjax-inline'>\(\Facz \)</span> to touch — so (iii) is preserved with nothing to
+check.
+</p><!-- l. 8266 --><p class='indent'>   Withholding these calls is what (iii) needs, and it is worth saying
+why rather than leaving it to the routing.  Relayed outward the call
+would reach <span class='mathjax-inline'>\(\Facz .\op {Send}\)</span>, which files a record at the true time; the ripeness test
+<span class='mathjax-inline'>\(\Facz \)</span> inherits at <span class='mathjax-inline'>\(\Fac .\op {Fetch}\)</span>’s line <a href='mainse24.html#functionality6'>12<!-- tex4ht:ref: ln:acripe  --></a> would then deliver it to <span class='mathjax-inline'>\(Q\)</span> within <span class='mathjax-inline'>\(\Delta \)</span> whatever the
+slot  answered,  where  the  real  world  delivers  nothing  at  all  unless  <span class='mathjax-inline'>\(\Adv \)</span>
+injects  on  its  own  account.  The  entry  would  break  (iii)  the  moment
+it was filed, and no later answer of <span class='mathjax-inline'>\(\Sim _{\Adv }\)</span>’s could retract it — <span class='mathjax-inline'>\(R\)</span> being <span class='mathjax-inline'>\(\Facz \)</span>’s to
+compute. This is the ripening that Section <a href='mainse24.html#functionality6'>19.1<!-- tex4ht:ref: sec:facfunc  --></a> charges to a corrupt
+sender speaking through <span class='mathjax-inline'>\(\Fac .\op {Send}\)</span>, and a protocol whose corrupt parties speak
+through <span class='mathjax-inline'>\(\Fnet \)</span> instead does not pay it.
+</p><!-- l. 8276 --><p class='indent'>   No  other  activation  touches  the  cut:  a  call  among  <span class='mathjax-inline'>\(\Zenv \)</span>,  <span class='mathjax-inline'>\(\Gclock \)</span>,  <span class='mathjax-inline'>\(\Corr \)</span>  and  <span class='mathjax-inline'>\(\Adv \)</span>
+that  targets  none  of  <span class='mathjax-inline'>\(\rho \)</span>’s  identities  is  routed  and  claimed  identically
+on  both  sides  by  Lemma <a href='mainse8.html#x17-14020r18'>4.18<!-- tex4ht:ref: lem:absorb  --></a>,  and  reads  no  state  the  invariant
+governs. Corresponding halting configurations return <span class='mathjax-inline'>\(\Zenv \)</span>’s one output.
+The executions are equal as distributions, and the advantage is <span class='mathjax-inline'>\(0\)</span> — not
+a bound but an identity, every step deterministic once the tapes are
+fixed and no forgery ever slipping through to force an injection the
+sanitizer would refuse.                                                                                □
+</p>
+                                                           
+                                                           
+   </div>
+<!-- l. 8285 --><p class='indent'>   The bound is <span class='mathjax-inline'>\(0\)</span>, and it is worth being clear on why nothing weaker was
+available and nothing stronger was needed. Every subroutine is ideal, so
+there is no computational gap to charge for; the reduction is an identity of
+distributions, as the composition theorem’s is. Transfer, note, does not run
+here: Corollary <a href='mainch5.html#x22-18012r11'>5.11<!-- tex4ht:ref: cor:proptransfer2  --></a> wants cores placing no responsive call, and <span class='mathjax-inline'>\(\rho \)</span>’s reach <span class='mathjax-inline'>\(\Fsig ^{!}\)</span>, <span class='mathjax-inline'>\(\Fnet \)</span>
+and the clock all responsively, so a property of <span class='mathjax-inline'>\(\Facz \)</span> does not descend to <span class='mathjax-inline'>\(\pi \)</span> for free
+— it must be re-proved over <span class='mathjax-inline'>\(\pi \)</span>, exactly as Section <a href='mainse21.html#properties5'>17.2<!-- tex4ht:ref: sec:clockprops  --></a> warned for anything
+built over the notifying clock. What the theorem gives instead is the
+stronger thing for a realization: not a bound against the dummy but an
+equality against every adversary.
+</p>
+   <div class='tcolorbox tcolorbox' id='tcolobox-140'>     
+<div class='tcolorbox-content'><div class='newtheorem'>
+<!-- l. 8295 --><p class='noindent'><span class='head'>
+<a id='x52-47002r2'></a>
+<span class='pplb8t-'>Corollary 20.2 </span>(Against non-corrupting classes, <span class='mathjax-inline'>\(\rho \)</span> realizes <span class='mathjax-inline'>\(\Fac \)</span> itself)<span class='pplb8t-'>.</span>    </span>
+<span class='pplri8t-'>Instrument </span><span class='mathjax-inline'>\(\Facz \) </span><span class='pplri8t-'>to set </span><span class='mathjax-inline'>\(\V {bad} \gets \true \) </span><span class='pplri8t-'>at line </span><a href='#realizing-the-authenticated-channel'><span class='pplri8t-'>7</span><!-- tex4ht:ref: ln:aczdeliver  --></a> <span class='pplri8t-'>when </span><span class='mathjax-inline'>\(I \neq \emptyset \)</span><span class='pplri8t-'>, and let </span><span class='mathjax-inline'>\(\Fac ^{\flat }\) </span><span class='pplri8t-'>be the pair-shaped </span><span class='mathjax-inline'>\(\Fac \) </span><span class='pplri8t-'>that ignores
+</span><span class='mathjax-inline'>\(I\) </span><span class='pplri8t-'>— its fetch </span><span class='mathjax-inline'>\(\Fac \)</span><span class='pplri8t-'>’s, taking </span><span class='mathjax-inline'>\((S,I)\) </span><span class='pplri8t-'>and using </span><span class='mathjax-inline'>\(S\) </span><span class='pplri8t-'>alone. Now </span><span class='mathjax-inline'>\(\Facz \) </span><span class='pplri8t-'>and </span><span class='mathjax-inline'>\(\Fac ^{\flat }\) </span><span class='pplri8t-'>are identical until
+bad (Definition </span><a href='mainch11.html#x28-24001r1'><span class='pplri8t-'>11.1</span><!-- tex4ht:ref: def:iub  --></a><span class='pplri8t-'>), the injection the one bad-guarded difference. So for
+occupants and environments that corrupt nobody, </span><span class='mathjax-inline'>\(\Clean _{\op {inj}}\) </span><span class='pplri8t-'>forces </span><span class='mathjax-inline'>\(I = \emptyset \) </span><span class='pplri8t-'>and </span><span class='mathjax-inline'>\(\Pr [\Bad ] = 0\)</span><span class='pplri8t-'>, whence
+by Lemma </span><a href='mainch11.html#x28-24002r2'><span class='pplri8t-'>11.2</span><!-- tex4ht:ref: lem:iub  --></a> <span class='pplri8t-'>the two are indistinguishable and </span><span class='mathjax-inline'>\(\pi \) </span><span class='pplri8t-'>UC-emulates </span><span class='mathjax-inline'>\(\{\Fac ^{\flat }\}\)</span><span class='pplri8t-'>, hence
+</span><span class='mathjax-inline'>\(\{\Fac \}\)</span><span class='pplri8t-'>,  within  </span><span class='mathjax-inline'>\(0\)  </span><span class='pplri8t-'>against  the  non-corrupting  classes.  Corrupt  a  party  and  the
+guarantee is </span><span class='mathjax-inline'>\(\Facz \)</span><span class='pplri8t-'>’s, no less: the honest-sender half of </span><span class='mathjax-inline'>\(\op {FinAuth}\) </span><span class='pplri8t-'>(Section </span><a href='mainse25.html#properties7'><span class='pplri8t-'>19.2</span><!-- tex4ht:ref: sec:facprops  --></a><span class='pplri8t-'>) transfers,
+its </span><span class='mathjax-inline'>\(\op {Send}\)</span><span class='pplri8t-'>-tracing argument reading only honest records, while the full </span><span class='mathjax-inline'>\(\op {FinAuth}\) </span><span class='pplri8t-'>fails of </span><span class='mathjax-inline'>\(\Facz \)
+</span><span class='pplri8t-'>exactly as it does of </span><span class='mathjax-inline'>\(\Fnet \)</span><span class='pplri8t-'>, and for the same reason.</span>
+</p>
+</div>
+<!-- l. 8307 --><p class='noindent'></p> 
+</div> 
+</div>
+                                                           
+                                                           
+   <div class='tcolorbox tcolorbox' id='tcolobox-141'>     
+<div class='tcolorbox-content'><div class='newtheorem'>
+<!-- l. 8309 --><p class='noindent'><span class='head'>
+<a id='x52-47003r3'></a>
+<span class='pplb8t-'>Remark 20.3 </span>(The weakening is forced)<span class='pplb8t-'>.</span>
+</span> No protocol over <span class='mathjax-inline'>\(\{\Fpki ,\Fnet ,\Fsig ^{!}\}\)</span> realizes <span class='mathjax-inline'>\(\Fac \)</span> as shipped, so <span class='mathjax-inline'>\(\Facz \)</span> is not a convenience
+but  the  true  target.  Suppose  one  did.  A  corrupt  party  diffuses,
+inside a fetch’s responsive window, a well-formed item its receiver
+accepts — <span class='mathjax-inline'>\(\Fnet \)</span> grants exactly this, the wire being the adversary’s to
+write  (Section <a href='mainse22.html#functionality5'>18.1<!-- tex4ht:ref: sec:fnetfunc  --></a>)  —  carrying  a  timestamp  <span class='mathjax-inline'>\(\tau ^{*}\)</span>  of  the  adversary’s
+choosing.  On  the  ideal  side  the  accepting  fetch  is  atomic,  so  the
+simulator  must  have  called  <span class='mathjax-inline'>\(\Fac .\op {Send}\)</span>  strictly  earlier  to  place  a  matching
+entry;  but  <span class='mathjax-inline'>\(\Fac \)</span>  stamps  that  call  the  true  time  it  was  made,  not  <span class='mathjax-inline'>\(\tau ^{*}\)</span>,
+and the receiver reads <span class='mathjax-inline'>\(\tau ^{*}\)</span> off the delivered record. An environment
+that  sends  at  one  time  and  has  its  corrupt  confederate  claim
+another distinguishes with certainty. The freedom is <span class='mathjax-inline'>\(\Fnet \)</span>’s to give and
+no  receiver-side  check  removes  it,  since  the  signature  validates
+whatever time the payload carries; only weakening the ideal object
+to  admit  it  —  which  is  <span class='mathjax-inline'>\(\Facz \)</span>  —  closes  the  gap.  This  is  the  diffusion
+analogue  of  the  impossibility  that  forces  <span class='mathjax-inline'>\(\Fnet \)</span>’s  own  injections  to  sit
+outside its delivery guarantee.
+</p>
+</div>
+<!-- l. 8322 --><p class='noindent'></p> 
+</div> 
+</div>
+<!-- l. 8324 --><p class='indent'>   This is the paper’s longest single construction, and the point of running
+it in full is that every layer of the framework shows up load-bearing.
+Composition supplies the cut between <span class='mathjax-inline'>\(\rho \)</span> and its hybrids; the responsive
+discipline of Chapter <a href='mainch9.html#responsive-calls'>9<!-- tex4ht:ref: app:responsive  --></a> makes both fetches atomic so the schedules
+can be coupled at all; sanitization confines a corrupt slot to corrupt
+senders; tightness would be what a property of <span class='mathjax-inline'>\(\Facz \)</span> needs to descend,
+and its absence under responsive cores is why the realization is
+proved directly rather than inherited; and the fundamental lemma of
+Chapter <a href='mainch11.html#identical-until-bad'>11<!-- tex4ht:ref: app:iub  --></a> is what turns the exact realization of the weaker object into the
+exact realization of the stronger one wherever no corruption is in
+play. The authenticated channel, postulated in Chapter <a href='mainch19.html#δdelayed-authenticated-channel'>19<!-- tex4ht:ref: sec:fac  --></a>, is now a
+theorem.
+                                                           
+                                                           
+</p>
+   <!-- l. 8336 --><div class='crosslinks'><p class='noindent'>[<a href='mainch21.html'>next</a>] [<a href='mainch19.html'>prev</a>] [<a href='mainch19.html#tailmainch19.html'>prev-tail</a>] [<a href='mainch20.html'>front</a>] [<a href='main.html#mainch20.html'>up</a>] </p></div>
+<!-- l. 8336 --><p class='indent'>   <a id='tailmainch20.html'></a> </p> 
+</div><script>
+(function () {
+  var nav = document.getElementById('ucnav'),
+      btn = document.querySelector('.ucnav-toggle');
+  if (!nav || !btn) return;
+  btn.addEventListener('click', function () {
+    var open = document.body.classList.toggle('ucnav-open');
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+  // Keep the current chapter in view without scrolling the page itself.
+  var cur = nav.querySelector('.ucnav-current');
+  if (cur) nav.scrollTop = cur.offsetTop - nav.clientHeight / 2;
+})();
+</script></body> 
+</html>

@@ -1,39 +1,12 @@
 # Tasks
 
-Split into two sections: **Website and repository** (~5.5h) covers the site, its build tooling and the repository's configuration; **Conjectures and papers** (~6.0h) covers the mathematics — proving conjectures, and writing and checking the papers that report them. Within each section, tasks are ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~13.75h** (rough; the UC Encyclopedia content dominates the uncertainty and could run well over its estimate).
+Split into two sections: **Website and repository** (~5.5h) covers the site, its build tooling and the repository's configuration; **Conjectures and papers** (~6.0h) covers the mathematics — proving conjectures, and writing and checking the papers that report them. Within each section, tasks are ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~11.0h** (rough; the UC Encyclopedia content dominates the uncertainty and could run well over its estimate).
 
-Last reconciled against `main` at `a01e7a0` on 17 August 2026.
+Last reconciled against `main` at `74efe0b` on 17 August 2026.
 
 Completed tasks are deleted from this file rather than checked off and kept: this is a list of live work, and `git log` is the record of what closed and when.
 
 ## Website and repository
-
-- [ ] **Give every conjecture an AI-assessed difficulty (~1.5h)**
-
-  The About page already promises this. It says an open question can be "given a real estimate of its difficulty instead of a reputation for one", and nothing on the site currently estimates anything. That makes it the same kind of overclaim the session-logs sentence was, so either the field appears or the sentence goes.
-
-  Where it lands, all of it already existing machinery:
-
-  - **Frontmatter.** A `difficulty:` block beside `status:` in `c/*/index.qmd`. Nine statements to backfill.
-  - **Validation.** `scripts/build_index.py` already checks `status.*` against an allowed set at lines 149-154; difficulty joins it the same way, so a typo fails CI rather than rendering.
-  - **Display.** `_listing-templates/statement-table.ejs.md` renders the statement table, and `open-problems/` already carries facet pages by area, model and form, so difficulty can become a fourth facet with no new pattern.
-  - **Schema.** `schema/index.qmd` is the published contract and has to describe it.
-
-  The part that needs deciding before any of it is written, and is not a coding question: **what the scale measures.** Expected effort to resolve, distance from known techniques, and probability of resolution within a year are three different quantities, and a single number that blurs them is worse than none. Pick one and say which on the legend page.
-
-  Two constraints the repository already imposes and this must not break. Provenance is per field here, and an AI must never mark its own work as human, so the grade carries its own `ai`/`human` marker and a human assessment supersedes rather than overwrites. And a grade may understate but never overstate, which for difficulty means the uncertain case rounds towards "harder than it looks", not away.
-
-- [ ] **Say on each UC encyclopedia entry whether the functionality actually exists (~1.25h)**
-
-  Every layer index renders a Status column: `fields: [title, status]` in `uc/layer-*/index.qmd`. What it shows is how established the *concept* is, `Canonical` on 71 entries, `Idealized Setup` on 16, `Emerging` on 9, `Open` on 8. What it does not show, anywhere, is whether the entry contains a definition. **13 of 104 do.** A reader scanning the table cannot tell a written entry from an empty slot, and every one of them says "Canonical" with equal confidence.
-
-  What to add is a second, orthogonal signal, and it should be **derived rather than hand-set**. `scripts/gen_interface.py` already knows exactly which pages carry a box: it pairs `surveys/uc-for-gamers/latex/functionalities/*.tex` against the `.cj-interface` blocks in the pages and CI-gates the pair. That makes the filled/empty distinction computable, and this repository's rule is that a computable field is generated and never hand-edited, like `status_badge`.
-
-  Three states, not two, and the third is the interesting one:
-
-  - **Defined here**, a box on the page, transcribed from a named source.
-  - **Not yet written**, a slot with citations and no definition.
-  - **No canonical definition exists.** `prompts/source.md` predicts this case and says the finding is itself worth a page. It must not be collapsed into "not yet written", because one is work outstanding and the other is a result.
 
 - [ ] **UC Encyclopedia content (~5h — manual: sourcing and verifying real citations per functionality, not just drafting text)**
 

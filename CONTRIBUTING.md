@@ -31,6 +31,33 @@ written, not generated. Run `python3 scripts/status_badge.py` afterwards to
 populate `statement_sha` and the badge. A paper carries no id, hub, areas
 or relations, so `build_index.py` and `check_relations.py` do not apply.
 
+## Rebuilding a generated artifact
+
+Every `.tex` here has generated output committed beside it: the statement
+PDFs under `c/<id>/pdf/`, the paper under `papers/uber-groups-rsr/`, and the
+UC book's PDF and its 59-page HTML edition. `scripts/artifact_manifest.py`
+records the hash of each artifact's inputs beside the hash of its outputs, and
+`--check` fails when they diverge, in either direction: a source edited
+without a rebuild, or a generated file edited by hand.
+
+Editing generated output by hand is the failure worth naming. The next
+rebuild destroys it silently, so the check exists to make that visible before
+it happens rather than after it is lost.
+
+When a `.tex` changes, rebuild the artifact and re-baseline:
+
+```
+scripts/build_uc_html.sh                          # for the UC edition, ~4 min
+python3 scripts/artifact_manifest.py --update     # then record the new hashes
+```
+
+The check never builds anything. CI has no TeX, and `build_uc_html.sh` needs
+TeX Live, `make4ht` and TeX Live's own `dvisvgm`, so it only ever reports that
+a rebuild is owed. The inputs it watches are the whole set, not just
+`main.tex`: the `.cls` and `.sty` files count, and so do the 14
+`functionalities/*.tex` fragments, because a change confined to those is
+invisible to anything watching the main file alone.
+
 ## Adding a new problem
 
 Copy `_templates/problem.qmd` to `p/<slug>/index.qmd` and write the

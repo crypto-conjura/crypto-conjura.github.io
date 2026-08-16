@@ -131,7 +131,7 @@ function into `PMF Bool`: randomized, and subject to no complexity bound. -/
 noncomputable def distGame (P₀ P₁ : PMF Ω) (A : Ω → PMF Bool) : PMF Bool :=
   (PMF.uniformOfFintype Bool).bind fun b =>
     (cond b P₁ P₀).bind fun ω =>
-      (A ω).bind fun b' => PMF.pure (decide (b' = b))
+      (A ω).bind fun b' => PMF.pure (decide (b = b'))
 
 /-- `2 Pr[A wins] - 1`, the same normalization `extAdv` uses. -/
 noncomputable def distAdv (P₀ P₁ : PMF Ω) (A : Ω → PMF Bool) : ℝ :=
@@ -145,12 +145,12 @@ lemma distGame_apply_true (P₀ P₁ : PMF Ω) (A : Ω → PMF Bool) :
     distGame P₀ P₁ A true
       = (1 / 2) * (∑ ω, P₀ ω * (A ω) false) + (1 / 2) * (∑ ω, P₁ ω * (A ω) true) := by
   have inner : ∀ (b : Bool) (ω : Ω),
-      ((A ω).bind fun b' => PMF.pure (decide (b' = b))) true = (A ω) b := by
+      ((A ω).bind fun b' => PMF.pure (decide (b = b'))) true = (A ω) b := by
     intro b ω
     rw [PMF.bind_apply, tsum_bool]
     cases b <;> simp [PMF.pure_apply]
   have mid : ∀ b : Bool,
-      ((cond b P₁ P₀).bind fun ω => (A ω).bind fun b' => PMF.pure (decide (b' = b))) true
+      ((cond b P₁ P₀).bind fun ω => (A ω).bind fun b' => PMF.pure (decide (b = b'))) true
         = ∑ ω, (cond b P₁ P₀) ω * (A ω) b := by
     intro b
     rw [PMF.bind_apply, tsum_fintype]
@@ -258,5 +258,154 @@ theorem isGreatest_distAdv (P₀ P₁ : PMF Ω) :
    by rintro r ⟨A, rfl⟩; exact distAdv_le_SD P₀ P₁ A⟩
 
 end DistinguishingBound
+
+/-! ## 3. Bridging the game to the analytic quantity
+
+`Statement.lean` defines `extAdv` operationally. The informal proof works with
+statistical distances instead. The bridge is that the extraction game *is* a
+distinguishing game, between the two distributions the distinguisher's view
+has under `b = 0` and `b = 1`.
+
+The one restriction here that the conjecture does not make is `[Fintype Z]`:
+`SD` above is defined by a `Finset` sum, so the view type has to be finite,
+and the view carries `z`. Lifting it means redoing section 1 with `tsum`,
+which is possible (a `PMF` is countably supported) and is recorded as
+outstanding in `LEDGER.md`. -/
+
+section Bridge
+
+variable {K D R Z : Type}
+  [Fintype K] [Fintype D] [Fintype R] [Fintype Z]
+  [DecidableEq K] [DecidableEq D]
+  [Nonempty K] [Nonempty D] [Nonempty R]
+
+/-- Everything the distinguisher is handed: the table, the seed, the
+challenge, the auxiliary information. -/
+abbrev View (K D R Z : Type) := Table K D R × K × R × Z
+
+/-- The law of the distinguisher's view under challenge bit `b`. -/
+noncomputable def viewDist (S : Source K D R Z) (b : Bool) : PMF (View K D R Z) :=
+  (PMF.uniformOfFintype (Table K D R)).bind fun H =>
+    (S H).bind fun xz =>
+      (PMF.uniformOfFintype K).bind fun sd =>
+        (PMF.uniformOfFintype R).bind fun y₁ =>
+          PMF.pure (H, sd, (if b then y₁ else H (sd, xz.1)), xz.2)
+
+/-- The distinguisher, reading its four arguments off one view. -/
+def onView (Dist : Distinguisher K D R Z) : View K D R Z → PMF Bool :=
+  fun v => Dist v.1 v.2.1 v.2.2.1 v.2.2.2
+
+omit [Fintype Z] [Nonempty D] in
+/-- `distGame` on the two view laws, with the binds flattened out. -/
+lemma distGame_viewDist (S : Source K D R Z) (Dist : Distinguisher K D R Z) :
+    distGame (viewDist S false) (viewDist S true) (onView Dist)
+      = (PMF.uniformOfFintype Bool).bind fun b =>
+          (PMF.uniformOfFintype (Table K D R)).bind fun H =>
+            (S H).bind fun xz =>
+              (PMF.uniformOfFintype K).bind fun sd =>
+                (PMF.uniformOfFintype R).bind fun y₁ =>
+                  (Dist H sd (if b then y₁ else H (sd, xz.1)) xz.2).bind fun b' =>
+                    PMF.pure (decide (b = b')) := by
+  rw [distGame]
+  refine congrArg _ (funext fun b => ?_)
+  have hc : cond b (viewDist S true) (viewDist S false) = viewDist S b := by
+    cases b <;> rfl
+  rw [hc, viewDist]
+  simp only [PMF.bind_bind, PMF.pure_bind, onView]
+
+omit [Fintype Z] [Nonempty D] in
+/-- The extraction game **is** a distinguishing game between the two view laws.
+
+The only work is moving the challenge bit from where the game samples it
+(last, after the table, the source, the seed and the uniform challenge) to
+where a distinguishing game samples it (first): four applications of
+`PMF.bind_comm`. -/
+theorem extGame_eq_distGame (S : Source K D R Z) (Dist : Distinguisher K D R Z) :
+    extGame S Dist = distGame (viewDist S false) (viewDist S true) (onView Dist) := by
+  rw [distGame_viewDist, extGame]
+  have c1 : ∀ (H : Table K D R) (xz : D × Z) (sd : K),
+      ((PMF.uniformOfFintype R).bind fun y₁ =>
+          (PMF.uniformOfFintype Bool).bind fun b =>
+            (Dist H sd (if b then y₁ else H (sd, xz.1)) xz.2).bind fun b' =>
+              PMF.pure (decide (b = b')))
+        = ((PMF.uniformOfFintype Bool).bind fun b =>
+          (PMF.uniformOfFintype R).bind fun y₁ =>
+            (Dist H sd (if b then y₁ else H (sd, xz.1)) xz.2).bind fun b' =>
+              PMF.pure (decide (b = b'))) := fun _ _ _ => PMF.bind_comm _ _ _
+  simp only [c1]
+  have c2 : ∀ (H : Table K D R) (xz : D × Z),
+      ((PMF.uniformOfFintype K).bind fun sd =>
+          (PMF.uniformOfFintype Bool).bind fun b =>
+            (PMF.uniformOfFintype R).bind fun y₁ =>
+              (Dist H sd (if b then y₁ else H (sd, xz.1)) xz.2).bind fun b' =>
+                PMF.pure (decide (b = b')))
+        = ((PMF.uniformOfFintype Bool).bind fun b =>
+          (PMF.uniformOfFintype K).bind fun sd =>
+            (PMF.uniformOfFintype R).bind fun y₁ =>
+              (Dist H sd (if b then y₁ else H (sd, xz.1)) xz.2).bind fun b' =>
+                PMF.pure (decide (b = b'))) := fun _ _ => PMF.bind_comm _ _ _
+  simp only [c2]
+  have c3 : ∀ H : Table K D R,
+      ((S H).bind fun xz =>
+          (PMF.uniformOfFintype Bool).bind fun b =>
+            (PMF.uniformOfFintype K).bind fun sd =>
+              (PMF.uniformOfFintype R).bind fun y₁ =>
+                (Dist H sd (if b then y₁ else H (sd, xz.1)) xz.2).bind fun b' =>
+                  PMF.pure (decide (b = b')))
+        = ((PMF.uniformOfFintype Bool).bind fun b =>
+          (S H).bind fun xz =>
+            (PMF.uniformOfFintype K).bind fun sd =>
+              (PMF.uniformOfFintype R).bind fun y₁ =>
+                (Dist H sd (if b then y₁ else H (sd, xz.1)) xz.2).bind fun b' =>
+                  PMF.pure (decide (b = b'))) := fun _ => PMF.bind_comm _ _ _
+  simp only [c3]
+  exact PMF.bind_comm _ _ _
+
+omit [Nonempty D] in
+/-- **The bridge.**  No unbounded distinguisher does better against the
+extraction game than the statistical distance between the two view laws.
+
+This is what lets every later step of `../latex/proof.tex` work with an
+analytic quantity instead of a game. -/
+theorem extAdv_le_SD_views (S : Source K D R Z) (Dist : Distinguisher K D R Z) :
+    extAdv S Dist ≤ SD (viewDist S false) (viewDist S true) := by
+  have : extAdv S Dist = distAdv (viewDist S false) (viewDist S true) (onView Dist) := by
+    unfold extAdv distAdv
+    rw [extGame_eq_distGame]
+  rw [this]
+  exact distAdv_le_SD _ _ _
+
+open scoped Classical in
+/-- The MAP test on views, curried back into a `Distinguisher`. Unbounded, so
+this is a legal adversary in the game as stated. -/
+noncomputable def mapDist (S : Source K D R Z) : Distinguisher K D R Z :=
+  fun H sd y z => mapTest (viewDist S false) (viewDist S true) (H, sd, y, z)
+
+omit [Nonempty D] in
+open scoped Classical in
+/-- The bridge is tight: `mapDist` attains the view distance. -/
+theorem extAdv_mapDist (S : Source K D R Z) :
+    extAdv S (mapDist S) = SD (viewDist S false) (viewDist S true) := by
+  have honView : onView (mapDist S) = mapTest (viewDist S false) (viewDist S true) := rfl
+  have : extAdv S (mapDist S)
+      = distAdv (viewDist S false) (viewDist S true) (onView (mapDist S)) := by
+    unfold extAdv distAdv
+    rw [extGame_eq_distGame]
+  rw [this, honView, distAdv_mapTest]
+
+omit [Nonempty D] in
+/-- **Lemma 3.1 of `../latex/proof.tex`, first half.**  The best extraction
+advantage any unbounded distinguisher achieves is exactly the statistical
+distance between the two view laws.
+
+The informal proof states this with a maximum and notes in passing that the
+maximum is attained. Here that is `IsGreatest`, with `mapDist` as the witness. -/
+theorem isGreatest_extAdv (S : Source K D R Z) :
+    IsGreatest {r : ℝ | ∃ Dist : Distinguisher K D R Z, extAdv S Dist = r}
+      (SD (viewDist S false) (viewDist S true)) :=
+  ⟨⟨mapDist S, extAdv_mapDist S⟩,
+   by rintro r ⟨Dist, rfl⟩; exact extAdv_le_SD_views S Dist⟩
+
+end Bridge
 
 end Conjura0004

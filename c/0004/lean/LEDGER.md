@@ -61,33 +61,74 @@ each of these.
 a distinguisher can only collect mass where `Q` outweighs `P`, and because the
 two totals agree, that one-sided sum is the whole statistical distance.
 
+### `Proof.lean` section 2: Fact 2.1, in full
+
+| Declaration | Says |
+|---|---|
+| `distGame`, `distAdv` | the distinguishing game and its advantage |
+| `distGame_apply_true`, `distGame_toReal` | the winning probability, written out, in `ℝ≥0∞` and in `ℝ` |
+| `distAdv_eq` | `distAdv = ∑ ω, A(ω)(true) · (P₁ ω - P₀ ω)` |
+| **`distAdv_le_SD`** | **Fact 2.1, bound**: no unbounded randomized `A` beats `SD P₀ P₁` |
+| `mapTest`, **`distAdv_mapTest`** | **Fact 2.1, attainment**: the MAP test achieves it |
+| `isGreatest_distAdv` | so `SD P₀ P₁` is the *greatest* achievable advantage, not just an upper bound |
+
+### `Proof.lean` section 3: the bridge from the game to the analysis
+
+| Declaration | Says |
+|---|---|
+| `View`, `viewDist`, `onView` | the distinguisher's view, and its law under each challenge bit |
+| `distGame_viewDist` | `distGame` on the two view laws, binds flattened |
+| `extGame_eq_distGame` | the extraction game **is** a distinguishing game between the two view laws |
+| **`extAdv_le_SD_views`** | `extAdv S Dist ≤ SD (viewDist S false) (viewDist S true)` |
+| `mapDist`, `extAdv_mapDist` | the MAP test, curried back into a legal `Distinguisher`, attains it |
+| **`isGreatest_extAdv`** | **Lemma 3.1, first half**: the best extraction advantage *is* the view distance |
+
+`extGame_eq_distGame` is the only structurally awkward step, and it is
+entirely bookkeeping: the game samples the challenge bit last, a distinguishing
+game samples it first, so the bit is walked outwards through four
+`PMF.bind_comm`s.
+
+**One restriction, recorded honestly.** Section 3 assumes `[Fintype Z]`, which
+the conjecture does not. `SD` is a `Finset` sum, so the view type has to be
+finite, and the view carries the auxiliary information `z`. `Statement.lean`
+deliberately leaves `Z` arbitrary. Removing the restriction means redoing
+section 1 with `tsum` (legitimate, since a `PMF` is countably supported) and is
+listed below.
+
 ## Outstanding
 
 In dependency order. Nothing below is claimed.
 
-1. **Fact 2.1, the bound** (`distAdv_le_SD`): for every unbounded, possibly
-   randomized `A`, `distAdv P₀ P₁ A ≤ SD P₀ P₁`. The definitions are in place
-   (`distGame`, `distAdv`); the algebra reduces the advantage to
-   `∑ ω, A(ω)(true) · (P₁ ω - P₀ ω)`, which `sum_pos_part_eq_SD` then bounds.
-2. **Fact 2.1, attainment**: the maximum-a-posteriori test attains it, so the
-   `max` over `A` is a maximum and not just a supremum.
-3. **Lemma 3.1 (analytic forms)**: `max_D extAdv = 𝔼[Δ_{H,Z}]` and
-   `max_P predAdv = 𝔼[ε_{H,Z}]`. Needs 1 and 2, plus the factorization of the
-   view distance over the `K` rows.
+1. **Drop `[Fintype Z]` from section 3.** Redo `SD` and section 1 with `tsum`
+   rather than `Finset.sum`. Mechanical but not short: it needs summability
+   side conditions that the finite version gets for free.
+2. **Lemma 3.1, second half**: factor `SD (viewDist S false) (viewDist S true)`
+   as `𝔼_{(H,Z)}[Δ_{H,Z}]`, the average over the `K` rows of
+   `SD(ν^{H,z}_k, U_R)`. This is where the informal proof's one structural
+   observation lives, that publishing the seed moves the average over rows
+   *outside* the statistical distance. Needs conditioning on `(H, Z)`, which
+   in `PMF` terms means exhibiting the view law as a product.
+3. **Lemma 3.1, predictor half**: `max_P predAdv = 𝔼[ε_{H,Z}]`, with the mode
+   predictor as witness. Structurally the easier twin of `isGreatest_extAdv`.
 4. **Lemma 5.1 (flattening)**: reduce to sources supported on a fixed-size set.
-5. **Lemma 5.2 (mean at a fixed support)**: the mean statistical distance for
-   one fixed support.
+5. **Lemma 5.2 (mean at a fixed support)**.
 6. **Fact 2.2 (bounded differences)**, finite special case over the uniform
    function space. The single largest item, and the one Mathlib does not help
-   with.
+   with at all.
 7. **Lemma 5.3 (uniform deviation)**: 6 applied uniformly over all supports of
    all sizes, with the binomial estimate (Fact 2.3).
 8. **Assembling** into `lhl_public_seed`.
 
-Supporting facts the informal proof also uses, not yet formalized: Fact 2.3
-(`C(D,t) ≤ (eD/t)^t`), Fact 2.4 (`𝔼|X - 𝔼X| ≤ √Var X`), Fact 2.5 (Jensen,
-available in Mathlib), Fact 2.6 (two-term Cauchy-Schwarz, trivial), Fact 2.7
-(`(1-1/R)^R ≥ 1/4` for `R ≥ 2`).
+Supporting facts the informal proof also uses, not formalized and not
+attempted: Fact 2.3 (`C(D,t) ≤ (eD/t)^t`), Fact 2.4 (`𝔼|X - 𝔼X| ≤ √Var X`),
+Fact 2.5 (Jensen, available in Mathlib), Fact 2.6 (two-term Cauchy-Schwarz,
+trivial), Fact 2.7 (`(1-1/R)^R ≥ 1/4` for `R ≥ 2`, which needs the
+monotonicity of `(1-1/R)^R` and so is not the one-liner it looks like).
+
+Realistic assessment: items 4 through 8 are the mathematics, and item 6 alone
+is a substantial project. What is done here is items 1 and 2 of the original
+plan plus half of item 3, which is the part that had to come first because
+everything above it is phrased in terms of it.
 
 ## Discipline
 

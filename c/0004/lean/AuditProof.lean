@@ -23,3 +23,5 @@ open Conjura0004
 #print axioms Conjura0004.extAdv_le_SD_views
 #print axioms Conjura0004.extAdv_mapDist
 #print axioms Conjura0004.isGreatest_extAdv
+#print axioms Conjura0004.predGame_toReal
+#print axioms Conjura0004.predAdv_le_maxMass

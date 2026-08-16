@@ -83,6 +83,19 @@ two totals agree, that one-sided sum is the whole statistical distance.
 | `mapDist`, `extAdv_mapDist` | the MAP test, curried back into a legal `Distinguisher`, attains it |
 | **`isGreatest_extAdv`** | **Lemma 3.1, first half**: the best extraction advantage *is* the view distance |
 
+### `Proof.lean` section 3b: the predictor side
+
+| Declaration | Says |
+|---|---|
+| `maxMass` | `∑ z, max_x Pr[(x, z)]`, the analytic form of the best prediction advantage on a fixed table |
+| `predGame_toReal` | the prediction probability, written out in `ℝ` |
+| **`predAdv_le_maxMass`** | **Lemma 3.1, predictor half (bound)**: no unbounded predictor beats `𝔼_H[maxMass]` |
+
+With everything finite, `𝔼_{(H,Z)}[ε_{H,Z}]` needs no conditioning to write
+down: `p(z) · max_x p(x \| z) = max_x p(x, z)`, so the quantity is just
+`∑ z, max_x p(x, z)` averaged over the table. Attainment (the mode predictor)
+is not done; only the bound.
+
 `extGame_eq_distGame` is the only structurally awkward step, and it is
 entirely bookkeeping: the game samples the challenge bit last, a distinguishing
 game samples it first, so the bit is walked outwards through four
@@ -108,8 +121,9 @@ In dependency order. Nothing below is claimed.
    observation lives, that publishing the seed moves the average over rows
    *outside* the statistical distance. Needs conditioning on `(H, Z)`, which
    in `PMF` terms means exhibiting the view law as a product.
-3. **Lemma 3.1, predictor half**: `max_P predAdv = 𝔼[ε_{H,Z}]`, with the mode
-   predictor as witness. Structurally the easier twin of `isGreatest_extAdv`.
+3. **Lemma 3.1, predictor half, attainment**: the bound is proved
+   (`predAdv_le_maxMass`); the mode predictor witnessing equality is not.
+   Needs a choice of argmax per `(H, z)`, which is routine but unwritten.
 4. **Lemma 5.1 (flattening)**: reduce to sources supported on a fixed-size set.
 5. **Lemma 5.2 (mean at a fixed support)**.
 6. **Fact 2.2 (bounded differences)**, finite special case over the uniform
@@ -126,9 +140,10 @@ trivial), Fact 2.7 (`(1-1/R)^R ≥ 1/4` for `R ≥ 2`, which needs the
 monotonicity of `(1-1/R)^R` and so is not the one-liner it looks like).
 
 Realistic assessment: items 4 through 8 are the mathematics, and item 6 alone
-is a substantial project. What is done here is items 1 and 2 of the original
-plan plus half of item 3, which is the part that had to come first because
-everything above it is phrased in terms of it.
+is a substantial project. What is done here is Fact 2.1 in full, the
+game-to-analysis bridge in both directions, and the predictor bound: the part
+that had to come first, because everything above it is phrased in terms of
+it.
 
 ## Discipline
 

@@ -406,6 +406,71 @@ theorem isGreatest_extAdv (S : Source K D R Z) :
   ⟨⟨mapDist S, extAdv_mapDist S⟩,
    by rintro r ⟨Dist, rfl⟩; exact extAdv_le_SD_views S Dist⟩
 
+/-! ### The predictor side
+
+`Lemma 3.1` also identifies the best prediction advantage with an analytic
+quantity: the expected largest conditional mass. With everything finite that
+quantity can be written without any conditioning, as `∑ z, max_x p(x, z)`,
+because `p(z) · max_x p(x | z) = max_x p(x, z)`. -/
+
+/-- `∑ z, max_x Pr[(x, z)]`, the analytic form of the best prediction
+advantage on a fixed table. Equal to `𝔼_Z[ε_{H,Z}]` of `../latex/proof.tex`. -/
+noncomputable def maxMass (S : Source K D R Z) (H : Table K D R) : ℝ :=
+  ∑ z : Z, Finset.univ.sup' Finset.univ_nonempty fun x : D => rmass (S H) (x, z)
+
+omit [Nonempty K] [Nonempty D] in
+lemma predGame_toReal (S : Source K D R Z) (P : Predictor K D R Z) :
+    (predGame S P true).toReal
+      = ∑ H : Table K D R, rmass (PMF.uniformOfFintype (Table K D R)) H
+          * ∑ xz : D × Z, rmass (S H) xz * rmass (P H xz.2) xz.1 := by
+  have inner : ∀ (H : Table K D R) (xz : D × Z),
+      ((P H xz.2).bind fun x' => PMF.pure (decide (xz.1 = x'))) true
+        = (P H xz.2) xz.1 := by
+    intro H xz
+    rw [PMF.bind_apply, tsum_fintype]
+    rw [Finset.sum_eq_single xz.1]
+    · simp [PMF.pure_apply]
+    · intro x' _ hx
+      simp [PMF.pure_apply, Ne.symm hx]
+    · intro h; exact absurd (Finset.mem_univ _) h
+  have mid : ∀ H : Table K D R,
+      ((S H).bind fun xz => (P H xz.2).bind fun x' => PMF.pure (decide (xz.1 = x'))) true
+        = ∑ xz : D × Z, (S H) xz * (P H xz.2) xz.1 := by
+    intro H
+    rw [PMF.bind_apply, tsum_fintype]
+    exact Finset.sum_congr rfl fun xz _ => by rw [inner H xz]
+  have hne : ∀ (H : Table K D R) (xz : D × Z), (S H) xz * (P H xz.2) xz.1 ≠ ⊤ :=
+    fun H xz => ENNReal.mul_ne_top ((S H).apply_ne_top xz) ((P H xz.2).apply_ne_top xz.1)
+  rw [predGame, PMF.bind_apply, tsum_fintype,
+    ENNReal.toReal_sum (fun H _ => ENNReal.mul_ne_top
+      ((PMF.uniformOfFintype (Table K D R)).apply_ne_top H)
+      (by rw [mid H]; exact (ENNReal.sum_ne_top).2 fun xz _ => hne H xz))]
+  refine Finset.sum_congr rfl fun H _ => ?_
+  rw [mid H, ENNReal.toReal_mul, ENNReal.toReal_sum (fun xz _ => hne H xz)]
+  simp only [ENNReal.toReal_mul, rmass]
+
+omit [Nonempty K] in
+/-- **Lemma 3.1, predictor half (bound).**  No unbounded predictor beats the
+expected largest mass. -/
+theorem predAdv_le_maxMass (S : Source K D R Z) (P : Predictor K D R Z) :
+    predAdv S P
+      ≤ ∑ H : Table K D R, rmass (PMF.uniformOfFintype (Table K D R)) H * maxMass S H := by
+  rw [predAdv, predGame_toReal]
+  refine Finset.sum_le_sum fun H _ => ?_
+  refine mul_le_mul_of_nonneg_left ?_ (rmass_nonneg _ _)
+  rw [Fintype.sum_prod_type_right]
+  refine Finset.sum_le_sum fun z _ => ?_
+  set M := Finset.univ.sup' Finset.univ_nonempty fun x : D => rmass (S H) (x, z) with hM
+  have hbound : ∀ x : D, rmass (S H) (x, z) * rmass (P H z) x ≤ M * rmass (P H z) x := by
+    intro x
+    exact mul_le_mul_of_nonneg_right
+      (Finset.le_sup' (fun x : D => rmass (S H) (x, z)) (Finset.mem_univ x))
+      (rmass_nonneg _ _)
+  calc ∑ x : D, rmass (S H) (x, z) * rmass (P H z) x
+      ≤ ∑ x : D, M * rmass (P H z) x := Finset.sum_le_sum fun x _ => hbound x
+    _ = M * ∑ x : D, rmass (P H z) x := by rw [Finset.mul_sum]
+    _ = M := by rw [sum_rmass, mul_one]
+
 end Bridge
 
 end Conjura0004

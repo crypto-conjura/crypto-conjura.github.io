@@ -105,7 +105,7 @@ good intentions.
 
 Conjura's default is to work in the open: prompts published, attribution
 recorded per artifact, partial progress shared as it happens rather than at the
-end. That default is stated on the [About page](https://crypto-conjura.github.io/about/)
+end. That default is stated on the [Philosophy page](https://crypto-conjura.github.io/about/)
 and it is meant seriously.
 
 Responsible disclosure is a deliberate, named exception to it, and the two are

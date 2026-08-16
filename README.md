@@ -47,7 +47,7 @@ Copy `_templates/statement.qmd` (or `_templates/problem.qmd`, or `papers/example
 See `CONTRIBUTING.md` for the full workflow (identifier allocation, the same-id-vs-new-id revision rule, adding a statement or a problem). In short:
 
 - **New statement, problem, paper, or prompt**: open a pull request adding the relevant files, after running the local checks below.
-- **Gap in a proof, or discussion of a conjecture** — open an issue.
+- **Gap in a proof, or discussion of a conjecture** -- open an issue.
 
 ## Local development
 
@@ -65,7 +65,7 @@ The `core.hooksPath` line enables `.githooks/pre-commit`, which runs the same
 four checks the publish workflow gates on. It matters because those checks run
 *before* `quarto render` in CI: a stale `statement_sha` fails the whole job, so
 one unregenerated edit blocks the site deploy on every push after it, not just
-its own. Editing prose inside a `## Statement` block is enough to cause this —
+its own. Editing prose inside a `## Statement` block is enough to cause this --
 the block is hashed. Bypass a single commit with `git commit --no-verify`.
 
 requires the [Quarto CLI](https://quarto.org/docs/get-started/) installed locally.

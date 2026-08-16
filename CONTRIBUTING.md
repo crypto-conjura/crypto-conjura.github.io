@@ -138,6 +138,20 @@ rest of the box in the HTML exactly as it does in the PDF. That is what the
 `--check` gate protects. Before this existed the numbers were hardcoded in
 `<ol start="N">` and nothing noticed when they went stale.
 
+That counter is reimplemented in Python, though, so `--check` only proves the
+page agrees with the fragment, never that either agrees with the book. To
+close that loop, run
+
+```
+python3 scripts/gen_interface.py --vs-pdf
+```
+
+which reads the numbers back out of `surveys/uc-for-gamers/pdf/main.pdf` and
+compares. It is not a CI gate on purpose: it needs `pdftotext`, and it reads a
+committed PDF that is only as current as its last rebuild, so a red result
+there can mean the PDF is stale rather than the boxes wrong. Run it after
+changing a fragment, and rebuild the book before believing a failure.
+
 Notation macros are read from `surveys/uc-for-gamers/latex/ucgamers.sty`, so a
 new `\newcommand` there is understood without touching the script -- unless its
 expansion is not valid MathJax (`\op` is `\textsc`, which MathJax cannot set),

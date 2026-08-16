@@ -18,6 +18,7 @@ having: without it the fragment is just a file the page happens to resemble.
     python3 scripts/gen_interface.py --check     # fail if any page has drifted
     python3 scripts/gen_interface.py f-sig       # one functionality
     python3 scripts/gen_interface.py --stdout f-sig
+    python3 scripts/gen_interface.py --vs-pdf    # numbers vs the printed book
 
 Line numbers are *computed*, never read out of the source. `algpseudocode`
 numbers each block from 1 and the book carries a running count across blocks
@@ -26,6 +27,12 @@ script runs that same counter, so a line inserted mid-box renumbers
 everything after it in the HTML exactly as it does in the PDF. That is the
 failure this whole arrangement exists to prevent: the old hand-written
 blocks hardcoded `<ol start="N">`, and nothing noticed when N went stale.
+
+Because that counter is *reimplemented* here rather than shared with LaTeX,
+`--check` can only prove the page agrees with the fragment, not that either
+agrees with the book. `--vs-pdf` closes that loop: it reads the numbers out
+of the compiled PDF's text layer and compares. It is a local verification
+aid, not a CI gate, for the reasons in check_vs_pdf's docstring.
 
 Macro meanings are read from ucgamers.sty rather than duplicated here, so a
 new `\\newcommand` in the book is understood without touching this file.
@@ -36,6 +43,7 @@ not something MathJax can render.
 import argparse
 import difflib
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -480,6 +488,42 @@ def to_html(box, macros):
 BLOCK = re.compile(r"```\{=html\}\n(<div class=\"cj-interface\">.*?)```\n", re.S)
 
 
+def pdf_line_numbers(fid, pages, want):
+    """The line numbers actually printed in the book, for one box.
+
+    Locates the box by its printed title and reads back the `N:` labels.
+    The subscript is set in small caps, so its case in the PDF text layer
+    varies per name (`FRand`, but `GPKI` and `FAC`); match case-insensitively.
+    """
+    kind, name = fid.split("-", 1)
+    rx = re.compile(r"Functionality\s+" + ("F" if kind == "f" else "G")
+                    + r"\s*" + name + r"\b", re.I)
+    labels = lambda t: [int(n) for n in re.findall(r"(?:^|\s)(\d{1,3}):\s", t)]
+    for i, page in enumerate(pages):
+        if not rx.search(page):
+            continue
+        here = labels(page)
+        nxt = labels(pages[i + 1]) if i + 1 < len(pages) else []
+        combined = here + [n for n in nxt if n > (here[-1] if here else 0)]
+        if not combined:
+            continue
+        # The name is discussed in the prose around the box as well, so the
+        # first page mentioning it need not be the one carrying it. Attribute
+        # the box to the page whose labels actually overlap what we computed.
+        box_page = i if set(want) & set(here) else i + 1
+        return combined, box_page + 1
+    return None, None
+
+
+def html_line_numbers(html):
+    """The line numbers the generated web block prints, in order."""
+    out = []
+    for start, body in re.findall(r'<ol class="cj-code" start="(\d+)">(.*?)</ol>',
+                                  html, re.S):
+        out.extend(range(int(start), int(start) + len(re.findall(r"<li>", body))))
+    return out
+
+
 def page_for(fid):
     hits = sorted(UC.glob("layer-*/%s/index.qmd" % fid))
     if len(hits) != 1:
@@ -497,13 +541,66 @@ def fragments(only=None):
     return ids
 
 
+def check_vs_pdf(ids):
+    """Confirm the computed line numbers are the ones the book prints.
+
+    `--check` proves the page matches the fragment. It cannot prove either
+    matches the book, because the running `\\algcont`/`\\algsave` count is
+    reimplemented here rather than shared with LaTeX. This closes that loop
+    against the compiled PDF.
+
+    Deliberately not a CI gate. It needs `pdftotext` (poppler), it reads a
+    committed PDF that is only as fresh as its last rebuild, and it leans on
+    the text layer of a small-caps subscript. A false red here would block
+    the site deploy for a reason that has nothing to do with the site.
+    """
+    pdf = LATEX.parent / "pdf" / "main.pdf"
+    if not pdf.exists():
+        print("no compiled book at %s" % pdf.relative_to(REPO))
+        return 1
+    try:
+        out = subprocess.run(["pdftotext", "-layout", str(pdf), "-"],
+                             capture_output=True, text=True, check=True).stdout
+    except (FileNotFoundError, subprocess.CalledProcessError) as e:
+        print("cannot run pdftotext (%s); install poppler to use --vs-pdf" % e)
+        return 1
+
+    pages = out.split("\f")
+    macros = load_macros()
+    bad = 0
+    for fid in ids:
+        want = html_line_numbers(to_html(parse_fragment(FRAGMENTS / (fid + ".tex"),
+                                                        macros), macros))
+        got, page = pdf_line_numbers(fid, pages, want)
+        if got is None:
+            print("%-9s NOT FOUND in the PDF" % fid)
+            bad += 1
+            continue
+        span = sorted({n for n in got if want[0] <= n <= want[-1]})
+        if span == sorted(set(want)):
+            print("%-9s lines %d..%d (%d) match PDF page %d, printed folio %d"
+                  % (fid, want[0], want[-1], len(want), page, page - 1))
+        else:
+            print("%-9s MISMATCH\n   computed: %s\n   printed : %s  (PDF page %d)"
+                  % (fid, want, span, page))
+            bad += 1
+    print("\n%d box(es) checked against the PDF, %d mismatched" % (len(ids), bad))
+    return 1 if bad else 0
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("ids", nargs="*", help="functionality ids; default all")
     ap.add_argument("--check", action="store_true",
                     help="report drift and exit non-zero; write nothing")
     ap.add_argument("--stdout", action="store_true", help="print the HTML instead")
+    ap.add_argument("--vs-pdf", action="store_true",
+                    help="compare computed line numbers against the printed PDF "
+                         "(needs pdftotext; not a CI gate, see below)")
     args = ap.parse_args()
+
+    if args.vs_pdf:
+        return check_vs_pdf(fragments(args.ids))
 
     macros = load_macros()
     drift, wrote = [], []

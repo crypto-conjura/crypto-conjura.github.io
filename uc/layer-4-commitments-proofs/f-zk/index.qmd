@@ -8,7 +8,90 @@ layer: 4
 
 *F-COM*, *F-ZK*, *F-OT*, and most of *F-SFE* are unrealizable in the plain model (with no trusted setup) — some setup assumption, such as a CRS, is required.
 
+The prover hands over a statement *and a witness*; the verifier is told the statement, and only if the witness checks. Zero knowledge here is not a simulation argument to be made later — it is the observation that the witness appears in no return value and in no call.
+
+## Functionality
+
+Reading the box: $\mathcal{A}(\cdot)$ is a call on the adversary slot whose answer is not used, so it is a notification rather than a query; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it; $\square$ marks a value never set; $R$, the parameter on the header line, is the relation the instance proves statements in.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{ZK}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := R\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{P} \gets \square\); &nbsp;\(\mathtt{V} \gets \square\)<span class="cj-comment">// prover, verifier</span></li>
+<li>\(\mathtt{x} \gets \square\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Prove(<span class="cj-id">V</span>, <span class="cj-id">x</span>, <span class="cj-id">w</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="3">
+<li>\(\textbf{require}\ \mathtt{x} = \square\)<span class="cj-comment">// one proof to an instance</span></li>
+<li>\(\textbf{require}\ R(x, w) = 1\)<span class="cj-comment">// a false statement never leaves</span></li>
+<li>\(\mathtt{P} \gets \mathit{id}.P\); &nbsp;\(\mathtt{V} \gets V\); &nbsp;\(\mathtt{x} \gets x\)</li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Prove},\ \mathtt{P},\ \mathtt{V},\ \mathtt{x}\bigr)\)<span class="cj-comment">// the statement, never the witness</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Read()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="8">
+<li>\(\textbf{require}\ \mathit{id}.P = \mathtt{V}\)</li>
+<li>\(\textbf{return}\ (\mathtt{P},\ \mathtt{x})\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="10">
+<li>\(\textbf{if}\ \mathtt{x} = \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \bot\)</span></li>
+<li>\(\textbf{return}\ (\mathtt{P},\ \mathtt{V},\ \mathtt{x})\)</li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+The box is transcribed from Canetti, Lindell, Ostrovsky and Sahai, *Universally composable two-party and multi-party secure computation*, ePrint 2002/140, revision `20030714:190611`, Figure 6, p. 48 — "the single-session $\mathcal{F}_{\mathsf{ZK}}$ functionality", which on $(\textsf{ZK-prover}, \mathit{sid}, x, w)$ from $P$ sends $(\textsf{ZK-proof}, \mathit{sid}, x)$ to $V$ and $\mathcal{S}$ if $R(x,w) = 1$, and otherwise halts.
+
+Three lines to read, and one absence:
+
+- **Line 4 is soundness, and it is total.** A statement with no witness never reaches the verifier, because the functionality refuses the call outright rather than forwarding a rejection. There is no soundness error to bound — this is where a UC proof system differs from an interactive one, and it is why the functionality is a *proof of knowledge*: the prover has to hand over $w$, not merely assert that one exists.
+- **Line 6 is zero knowledge.** The adversary is told the prover, the verifier and the statement. The witness is an argument to $\mathsf{Prove}$ and is never stored, never returned, never leaked; the property is a syntactic fact about the box rather than a claim needing a simulator.
+- **Line 9 is what the verifier gets:** the statement and who proved it, and nothing about *how*. A verifier that could distinguish two proofs of one statement would be reading something this box does not have.
+
+Two conventions the source leaves open, decided here:
+
+- **The verifier is named at proof time, not at instantiation.** The source runs $\mathcal{F}_{\mathsf{ZK}}$ "with a prover $P$, a verifier $V$", fixed in advance. Here the prover is whoever calls, and the verifier is an argument, which keeps the box uniform with the rest of the encyclopedia — a functionality does not know its parties before they act. Line 8 then restricts the read to the party named.
+- **"Otherwise, halt" becomes a refusal.** The source halts on a false statement, ending the instance; here line 4 refuses and the instance stays alive, so a prover that mistypes a witness may try again. This weakens nothing — a refused call returns $\textsf{rej}$ and leaves no trace in the state — but it is a difference, and a reader who needs the one-shot reading should take line 3 as the whole of it: one *successful* proof per instance.
+
+## Known realizations
+
+The paper the box is taken from uses $\mathcal{F}_{\mathsf{ZK}}$ mainly as a building block rather than a target: its commit-and-prove functionality $\mathcal{F}_{\mathsf{CP}}$ is realized *in the $\mathcal{F}_{\mathsf{ZK}}$-hybrid model*, by protocol `SCP` for static adversaries (Proposition 7.1, from any perfectly binding commitment) and by protocol `ACP` for adaptive ones (Proposition 7.2, from one-way functions).
+
+For realizing $\mathcal{F}_{\mathsf{ZK}}$ itself, what the paper states is the one-to-many form: Proposition 9.4 gives a protocol UC-realizing $\mathcal{F}^{1:M}_{\mathsf{ZK}}$ in the $(\mathcal{F}^{1:M}_{\mathsf{COM}}, \mathcal{F}_{\mathsf{BC}})$-hybrid model against malicious, adaptive adversaries, by having the prover prove separately to every party. Composed with Proposition 9.3 — a non-interactive protocol realizing $\mathcal{F}^{1:M}_{\mathsf{MCOM}}$ in the $(\mathcal{F}_{\mathsf{CRS}}, \mathcal{F}_{\mathsf{BC}})$-hybrid model from enhanced trapdoor permutations, using a *single* copy of the reference string — this is the route from a CRS to zero knowledge that the rest of the paper runs on.
+
+## Properties
+
+- **Soundness, with error exactly $0$**: no execution in which $R(x,w) \neq 1$ produces a $\mathsf{Read}$ that returns $x$. Not "with negligible probability" — the test is on line 4 and the call does not proceed.
+- **Zero knowledge, with error exactly $0$**: the verifier's view is $(\mathtt{P}, \mathtt{x})$ and the adversary's is $(\mathtt{P}, \mathtt{V}, \mathtt{x})$, neither of which is a function of $w$. Two witnesses for one statement give identical transcripts, so the simulator's job is vacuous at the functionality and the whole content of a realization proof is elsewhere.
+- **Proof of knowledge, by construction**: the prover supplies $w$, so a realization must let the simulator extract it. This is what makes $\mathcal{F}_{\mathsf{ZK}}$ strictly stronger than a proof that a witness exists, and it is the reason it composes.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
+
 *References:*
 
-- Canetti et al. [*Universally composable two-party and multi-party secure computation*](https://eprint.iacr.org/2002/140). In 34th ACM Symposium on Theory of Computing (STOC), pages 494–503, 2002.
-- Goldwasser, Micali, and Rackoff. [*The knowledge complexity of interactive proof systems*](https://www.cs.miami.edu/home/burt/learning/csc609.221/goldwasser-micali-rackoff-knoweldge-complexity.pdf). SIAM Journal on Computing, 18(1):186–208, 1989.
+- Canetti, Lindell, Ostrovsky, and Sahai. [*Universally composable two-party and multi-party secure computation*](https://eprint.iacr.org/2002/140). In 34th ACM Symposium on Theory of Computing (STOC), pages 494–503, 2002. Figure 6, p. 48 of revision `20030714:190611`, the definition transcribed above; the one-to-many variant $\mathcal{F}^{1:M}_{\mathsf{ZK}}$ and its realization in Section 9; Propositions 7.1, 7.2, 9.3 and 9.4.
+- Goldwasser, Micali, and Rackoff. [*The knowledge complexity of interactive proof systems*](https://www.cs.miami.edu/home/burt/learning/csc609.221/goldwasser-micali-rackoff-knoweldge-complexity.pdf). SIAM Journal on Computing, 18(1):186–208, 1989. The origin of zero knowledge as a notion; it predates ideal functionalities and contains no box to transcribe.

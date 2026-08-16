@@ -4,13 +4,109 @@ status: "Canonical"
 layer: 5
 ---
 
-*F-OT* (Oblivious transfer) is part of *Oblivious Transfer and Correlated Randomness* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+*F-OT* (Oblivious transfer) is part of *Oblivious Transfer and Secure Computation* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
 
 *F-COM*, *F-ZK*, *F-OT*, and most of *F-SFE* are unrealizable in the plain model (with no trusted setup) — some setup assumption, such as a CRS, is required.
 
+A sender loads $\ell$ strings, a receiver takes exactly one, and neither learns anything about the other's choice: the sender does not learn which, the receiver does not learn the rest. It is complete for secure computation, which is why this one box carries a whole layer.
+
+## Functionality
+
+Reading the box: $\mathcal{A}(\cdot)$ is a call on the adversary slot whose answer is not used, so it is a notification rather than a query; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it; $\square$ marks a value never set; $\ell$ and $m$, the parameters on the header line, are the number of strings and their common length.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{OT}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := (\ell, m)\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{T} \gets \square\); &nbsp;\(\mathtt{R} \gets \square\)<span class="cj-comment">// sender, receiver</span></li>
+<li>\(\mathtt{x} : \{1,\ldots,\ell\} \to \{0,1\}^{m} \cup \{\square\}\)</li>
+<li>\(\mathtt{x}[*] \gets \square\); &nbsp;\(\mathtt{i} \gets \square\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Send(<span class="cj-id">x</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="4">
+<li>\(\textbf{require}\ \mathtt{T} = \square \ \wedge\ x \in (\{0,1\}^{m})^{\ell}\)<span class="cj-comment">// the \(\ell\) strings, all at once</span></li>
+<li>\(\mathtt{T} \gets \mathit{id}.P\)</li>
+<li>\(\mathtt{x}[j] \gets x_j\) &nbsp;for each \(j \in \{1,\ldots,\ell\}\)</li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Send},\ \mathtt{T}\bigr)\)<span class="cj-comment">// that a sender loaded, never what</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Choose(<span class="cj-id">i</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="9">
+<li>\(\textbf{require}\ \mathtt{T} \neq \square \ \wedge\ \mathtt{R} = \square \ \wedge\ i \in \{1,\ldots,\ell\}\)<span class="cj-comment">// nothing to choose from, nothing returned</span></li>
+<li>\(\mathtt{R} \gets \mathit{id}.P\); &nbsp;\(\mathtt{i} \gets i\)</li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Choose},\ \mathtt{R}\bigr)\)<span class="cj-comment">// that a choice was made, never which</span></li>
+<li>\(\textbf{return}\ \mathtt{x}[\mathtt{i}]\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="13">
+<li>\(\textbf{if}\ \mathit{id}.P = \mathtt{T}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \mathtt{x}\)</span><span class="cj-comment">// a sender's own inputs</span></li>
+<li>\(\textbf{if}\ \mathit{id}.P = \mathtt{R}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ (\mathtt{i},\ \mathtt{x}[\mathtt{i}])\)</span></li>
+<li>\(\textbf{return}\ (\mathtt{T},\ \mathtt{R})\)</li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+The box is transcribed from Canetti, Lindell, Ostrovsky and Sahai, *Universally composable two-party and multi-party secure computation*, ePrint 2002/140, revision `20030714:190611`, Figure 1, p. 23 — the functionality $\mathcal{F}^{\ell}_{\mathsf{OT}}$, which records $(x_1, \ldots, x_{\ell})$ on $(\texttt{sender}, \mathit{sid}, x_1, \ldots, x_{\ell})$ from the sender, and on $(\texttt{receiver}, \mathit{sid}, i)$ from the receiver sends $(\mathit{sid}, x_i)$ to the receiver and $(\mathit{sid})$ to the adversary, and halts.
+
+The two privacy properties are visible without an argument, one line each:
+
+- **Line 11 is receiver privacy.** The adversary is told that a choice was made and by whom, and $i$ appears nowhere in that call. The source is emphatic about this in the only way a definition can be — it sends the adversary the bare session identifier — and the translation keeps it: read line 11 for occurrences of $\mathtt{i}$ and there are none.
+- **Line 12 is sender privacy.** One index is projected out of the table, so exactly one string leaves the functionality. There is no operation that returns $\mathtt{x}$ to a receiver, and line 9 refuses a second $\mathsf{Choose}$, so the receiver cannot come back for another.
+
+Leakage is written per party rather than globally, which is worth reading closely: a corrupt sender's adversary gets that sender's own inputs (line 14), a corrupt receiver's gets its own index and output (line 16), and anyone else gets only who the parties were (line 17). Collapsing these into one table — as a functionality with a single global $\mathsf{Leak}$ would — would hand the adversary both sides at once and make the box unrealizable.
+
+Three conventions the source leaves open, decided here:
+
+- **The strings arrive together.** The source takes $(x_1, \ldots, x_{\ell})$ in one message, and line 4 requires all $\ell$ of them, of the common length $m$, in one call. A sender that could load the table incrementally would be a different functionality, and a more delicate one.
+- **"And halt" becomes state.** The source halts after the transfer; here $\mathtt{R}$ is set at line 10 and tested at line 9, so a second choice is refused rather than the instance dying. The source's parenthetical — if no sender message was previously sent, "send nothing to $\mathbf{R}$ (but continue running)" — is the same line: with $\mathtt{T} = \square$ the require fails, the call is refused, and the instance stays alive for the sender to load later.
+- **Delivery is a return, not a send.** The receiver gets $x_i$ as the return value of its own call, so no separate read operation is needed and no ordering question arises between output and adversary notification.
+
+## Known realizations
+
+In the paper the box is taken from, against semi-honest adversaries, with the malicious case obtained by compiling:
+
+- **Claim 4.1:** protocol `SOT` UC-realizes $\mathcal{F}_{\mathsf{OT}}$ against semi-honest, *static* adversaries, assuming $f$ is an enhanced trapdoor permutation.
+- **Claim 4.2:** protocol `AOT` UC-realizes $\mathcal{F}^{\ell}_{\mathsf{OT}}$ against semi-honest, *adaptive* adversaries, assuming an augmented non-committing encryption scheme.
+
+The reason this entry sits under a whole layer rather than beside it is the converse direction: the same paper realizes any adaptively well-formed functionality in the $\mathcal{F}_{\mathsf{OT}}$-hybrid model against semi-honest, adaptive adversaries. Oblivious transfer is complete, so a realization of this box is a realization of secure computation.
+
+The efficient line comes later. Peikert, Vaikuntanathan and Waters give a framework whose protocol `dm` securely realizes the multi-session extension $\hat{\mathcal{F}}_{\mathsf{OT}}$ in the [CRS model](/uc/layer-0-idealized-setup/f-crs/index.qmd) against *static* corruptions (their Theorem 4.1), instantiated from the decisional Diffie–Hellman, quadratic residuosity and decisional composite residuosity assumptions and from lattices — the last being the reason this functionality has a post-quantum realization at all. Their DDH and DCR constructions transfer multi-bit strings.
+
+## Properties
+
+- **Receiver privacy**, with probability exactly $0$ of leakage: no return value to the sender and no call on the adversary slot is a function of $\mathtt{i}$, except through the corrupt receiver's own leak at line 16. Two executions differing only in $i$ are identical in the sender's and the outsider's view.
+- **Sender privacy**, with probability exactly $0$ of leakage: the receiver's total view of the table is $\mathtt{x}[\mathtt{i}]$, obtained once. The other $\ell - 1$ strings are never returned and never leaked to anyone but the sender's own adversary.
+- **1-out-of-$\ell$, not 1-out-of-2.** The box above is the general case, with $\ell$ a parameter. Most of the literature — including the restatement in the framework paper of Peikert, Vaikuntanathan and Waters — fixes $\ell = 2$ and then reuses the letter $\ell$ for the *string length*, which is a notation collision worth being alert to when comparing definitions.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
+
 *References:*
 
-- Rabin. [*How to exchange secrets by oblivious transfer*](https://eprint.iacr.org/2005/187). Technical Report TR-81, Aiken Computation Laboratory, Harvard University, 1981.
-- Even, Goldreich, and Lempel. [*A randomized protocol for signing contracts*](https://web.cs.ucla.edu/~rafail/TEACHING/SPRING-2004/WEB-RESOURCES/EGL.pdf). Communications of the ACM, 28(6):637–647, 1985.
-- Garay and MacKenzie. [*Concurrent oblivious transfer*](https://ieeexplore.ieee.org/document/892120). In 41st IEEE Symposium on Foundations of Computer Science (FOCS), 2000.
-- Peikert, Vaikuntanathan, and Waters. [*A framework for efficient and composable oblivious transfer*](https://eprint.iacr.org/2007/348). In Advances in Cryptology – CRYPTO 2008, 2008.
+- Canetti, Lindell, Ostrovsky, and Sahai. [*Universally composable two-party and multi-party secure computation*](https://eprint.iacr.org/2002/140). In 34th ACM Symposium on Theory of Computing (STOC), pages 494–503, 2002. Figure 1, p. 23 of revision `20030714:190611`, the definition transcribed above; Claims 4.1 and 4.2, and the completeness of $\mathcal{F}_{\mathsf{OT}}$ for adaptively well-formed functionalities.
+- Peikert, Vaikuntanathan, and Waters. [*A framework for efficient and composable oblivious transfer*](https://eprint.iacr.org/2007/348). In Advances in Cryptology – CRYPTO 2008, 2008. Figure 2, p. 6 of revision `20190123:163037`, restates the functionality for $\ell = 2$ with $\ell$-bit strings, attributing it to the paper above; Theorem 4.1 and the dual-mode instantiations.
+- Rabin. [*How to exchange secrets by oblivious transfer*](https://eprint.iacr.org/2005/187). Technical Report TR-81, Aiken Computation Laboratory, Harvard University, 1981. The origin of the primitive, reposted to ePrint in 2005; it predates ideal functionalities and contains no $\mathcal{F}_{\mathsf{OT}}$ box.
+- Even, Goldreich, and Lempel. [*A randomized protocol for signing contracts*](https://web.cs.ucla.edu/~rafail/TEACHING/SPRING-2004/WEB-RESOURCES/EGL.pdf). Communications of the ACM, 28(6):637–647, 1985. The 1-out-of-2 formulation of the primitive, likewise with no functionality to transcribe.
+- Garay and MacKenzie. [*Concurrent oblivious transfer*](https://ieeexplore.ieee.org/document/892120). In 41st IEEE Symposium on Foundations of Computer Science (FOCS), 2000. Concurrent composition for OT, predating the UC treatment above.

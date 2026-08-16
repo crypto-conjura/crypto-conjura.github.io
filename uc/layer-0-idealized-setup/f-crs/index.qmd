@@ -6,8 +6,82 @@ layer: 0
 
 *F-CRS* (Common reference string) is part of *Idealized Setup and Resources* in the UC functionality encyclopedia. Status: an idealized setup assumption or shared resource.
 
+One string, drawn once from a fixed distribution and handed back unchanged to everyone who asks. It is the smallest setup that buys anything: [commitment](/uc/layer-4-commitments-proofs/f-com/index.qmd), [zero knowledge](/uc/layer-4-commitments-proofs/f-zk/index.qmd) and [oblivious transfer](/uc/layer-5-oblivious-transfer/f-ot/index.qmd) are each unrealizable without some setup and each realizable over this one.
+
+## Functionality
+
+Reading the box: $\square$ marks a value never set, as against $\bot$ for none or refused; $\mathtt{crs}$ is the functionality's state, shared by every party the instance serves; $\gets_{\$}$ samples; $D$, the parameter on the header line, is the distribution the string is drawn from. $\mathbf{U} := \varnothing$ says this functionality calls nothing at all — not even the adversary slot.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{CRS}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \varnothing\), &nbsp; \(\mathit{par} := D\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{crs} \gets \square\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Get()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="2">
+<li>\(\textbf{if}\ \mathtt{crs} = \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{crs} \gets_{\$} D\)</span><span class="cj-comment">// sampled once, on the first ask</span></li>
+<li>\(\textbf{return}\ \mathtt{crs}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="5">
+<li>\(\textbf{return}\ \mathtt{crs}\)<span class="cj-comment">// \(\square\) until a party asks</span></li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+The box is transcribed from Canetti and Fischlin, *Universally composable commitments*, ePrint 2001/055, revision `20010710:161305`, Figure 1, p. 8, where $\mathcal{F}_{\mathsf{CRS}}$ is "parameterized by a distribution $D$" and, "when activated for the first time on input $(\texttt{value}, \mathit{sid})$", chooses $d \xleftarrow{R} D$ and sends it back to the activating party, returning the same $d$ "in each other activation".
+
+Two lines carry the entire object.
+
+- **Line 3 samples once.** The guard above it is what makes the string common: the first caller pays for the draw and every later caller is answered from state. Sampling per call would be [*F-Rand*](/uc/layer-0-idealized-setup/f-rand/index.qmd), which is a different functionality entirely.
+- **Line 4 returns the same value to everyone.** That identity, not the distribution, is what a reader should take as the definition. A CRS is not "a random string"; it is *one* random string that every party in the instance sees alike.
+
+Two conventions the source does not fix, decided here:
+
+- **Leakage.** The source has no adversary interface at all, so the required $\mathsf{Leak}$ is added: line 5 hands over the string, because a common reference string is public by construction and there is nothing about it to hide. What line 5 does *not* do is sample. An adversary that reads before any party has asked gets $\square$, so reading cannot bring the string into existence — the source leaves this open, since its sampling is triggered by "the first activation" without saying whose.
+- **One instance, one string.** The process id stays a parameter, so a second instance draws a second string. This is the local, per-session reading, and it is the one Canetti and Fischlin intend: they stress that under composition "each copy of protocol $\rho$ within the composed protocol $\pi^{\rho}$ should have its own copy of the reference string", and that the composition theorem "no longer holds in general" otherwise.
+
+## Known realizations
+
+None, and there cannot be one in the sense the other entries mean: this is the setup, not something built from setups. What makes it worth an entry is that it is provably not free — Canetti and Fischlin's Theorem 6 shows there is no bilateral, terminating protocol realizing [*F-COM*](/uc/layer-4-commitments-proofs/f-com/index.qmd) in the plain model, so the CRS (or another setup) is bought rather than assumed away.
+
+Where it comes from in practice is a trusted sampling, and that is exactly the assumption a reader should weigh. Canetti, Dodis, Pass and Walfish's global treatment carries a far-reaching impossibility result for a *global* CRS $\bar{\mathcal{G}}_{\mathsf{crs}}$ — one string reused across sessions — and proposes the augmented CRS $\bar{\mathcal{G}}_{\mathsf{acrs}}$ as the "minimum interaction" global setup instead; see [*F-ACRS*](/uc/layer-0-idealized-setup/f-acrs/index.qmd). The box above is the local one, and the difference between the two is a whole literature.
+
+## Properties
+
+Both hold with probability exactly $1$, against every occupant of the adversary slot, because the adversary is never consulted:
+
+- **Agreement.** Any two calls to $\mathsf{Get}$ on one instance return the same string (line 4).
+- **Correct distribution.** That string is distributed exactly as $D$ (line 3), independently of anything any party does, since no input reaches the sampling.
+
+And one non-property, which is definitional rather than a defect: **the string is not secret.** Line 5 gives it to the adversary, and a protocol whose security needs the CRS hidden is not a protocol in this model.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
+
 *References:*
 
-- Canetti and Fischlin. [*Universally composable commitments*](https://eprint.iacr.org/2001/055). In Advances in Cryptology – CRYPTO 2001, volume 2139 of LNCS, pages 19–40, 2001.
-- Canetti. [*Universally composable security: A new paradigm for cryptographic protocols*](https://eprint.iacr.org/2000/067). In 42nd IEEE Symposium on Foundations of Computer Science (FOCS), pages 136–145, 2001.
-- Canetti et al. [*Universally composable two-party and multi-party secure computation*](https://eprint.iacr.org/2002/140). In 34th ACM Symposium on Theory of Computing (STOC), pages 494–503, 2002.
+- Canetti and Fischlin. [*Universally composable commitments*](https://eprint.iacr.org/2001/055). In Advances in Cryptology – CRYPTO 2001, volume 2139 of LNCS, pages 19–40, 2001. Figure 1, p. 8 of revision `20010710:161305`, the definition transcribed above.
+- Canetti. [*Universally composable security: A new paradigm for cryptographic protocols*](https://eprint.iacr.org/2000/067). In 42nd IEEE Symposium on Foundations of Computer Science (FOCS), pages 136–145, 2001. The framework the functionality is stated in.
+- Canetti et al. [*Universally composable two-party and multi-party secure computation*](https://eprint.iacr.org/2002/140). In 34th ACM Symposium on Theory of Computing (STOC), pages 494–503, 2002. Uses the CRS as the setup for general secure computation.
+- Peikert, Vaikuntanathan, and Waters. [*A framework for efficient and composable oblivious transfer*](https://eprint.iacr.org/2007/348). In Advances in Cryptology – CRYPTO 2008, 2008. Figure 1, p. 6 of revision `20190123:163037`, gives a two-party variant $\mathcal{F}^{\mathcal{D}}_{\mathsf{CRS}}$ that names sender and receiver, tells the adversary the string outright, and halts after the second party has read — a different object from the $n$-party one above, and the one to use when the pairing matters.
+- Canetti, Dodis, Pass, and Walfish. [*Universally composable security with global setup*](https://eprint.iacr.org/2006/432). In 4th Theory of Cryptography Conference (TCC), volume 4392 of LNCS, pages 61–85, 2007. The impossibility for a global CRS, and the augmented CRS proposed in its place.

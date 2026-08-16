@@ -1,0 +1,75 @@
+%% The interface box of f-com, the one source for both the book
+%% and uc/.../f-com/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fcom$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := \none$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{P} \gets \unset$; \ $\V{Q} \gets \unset$
+  \Comment{committer, receiver}
+\State $\V{b} \gets \unset$; \ $\V{open} \gets 0$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Commit}(Q, b)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{P} = \unset \ \wedge\ b \in \{0,1\}$} \label{ln:comonce}
+  \Comment{a second commit refuses}
+\State $\V{P} \gets \id.P$; \ $\V{Q} \gets Q$; \ $\V{b} \gets b$
+\State $\Adv\bigl(\id.\op{Commit},\ \V{P},\ \V{Q}\bigr)$ \label{ln:comreceipt}
+  \Comment{a receipt, carrying no bit}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Open}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{P} = \id.P$} \label{ln:comopener}
+  \Comment{the committer's to open, and only after a commit}
+\State $\V{open} \gets 1$
+\State $\Adv\bigl(\id.\op{Open},\ \V{P},\ \V{Q},\ \V{b}\bigr)$
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Read}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P = \V{Q}$}
+  \Comment{the receipt is the receiver's}
+\If{$\V{open} = 0$}
+  \State \textbf{return} $(\V{P},\ \V{Q})$ \label{ln:comhide}
+\EndIf
+\State \textbf{return} $(\V{P},\ \V{Q},\ \V{b})$ \label{ln:combind}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$\V{P} = \unset$}
+  \State \textbf{return} $\none$
+\EndIf
+\If{$\V{open} = 0$}
+  \State \textbf{return} $(\V{P},\ \V{Q})$ \label{ln:comleakhide}
+\EndIf
+\State \textbf{return} $(\V{P},\ \V{Q},\ \V{b})$
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

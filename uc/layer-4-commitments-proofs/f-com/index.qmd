@@ -8,6 +8,106 @@ layer: 4
 
 *F-COM*, *F-ZK*, *F-OT*, and most of *F-SFE* are unrealizable in the plain model (with no trusted setup) — some setup assumption, such as a CRS, is required.
 
+The sealed envelope, and exactly one of them: a committer fixes a bit that the receiver cannot read, and later opens to a value it cannot change. Both halves are one line each in the box below.
+
+## Functionality
+
+Reading the box: $\mathcal{A}(\cdot)$ is a call on the adversary slot whose answer is not used, so it is a notification rather than a query; **require** refuses the call and the framework answers $\textsf{rej}$, so no return is written for it; $\square$ marks a value never set, as against $\bot$ for none; $\mathtt{P}$, $\mathtt{Q}$, $\mathtt{b}$ and $\mathtt{open}$ are the functionality's state, shared across the parties the instance serves.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{Com}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := \bot\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{P} \gets \square\); &nbsp;\(\mathtt{Q} \gets \square\)<span class="cj-comment">// committer, receiver</span></li>
+<li>\(\mathtt{b} \gets \square\); &nbsp;\(\mathtt{open} \gets 0\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Commit(<span class="cj-id">Q</span>, <span class="cj-id">b</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="3">
+<li>\(\textbf{require}\ \mathtt{P} = \square \ \wedge\ b \in \{0,1\}\)<span class="cj-comment">// a second commit refuses</span></li>
+<li>\(\mathtt{P} \gets \mathit{id}.P\); &nbsp;\(\mathtt{Q} \gets Q\); &nbsp;\(\mathtt{b} \gets b\)</li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Commit},\ \mathtt{P},\ \mathtt{Q}\bigr)\)<span class="cj-comment">// a receipt, carrying no bit</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Open()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="7">
+<li>\(\textbf{require}\ \mathtt{P} = \mathit{id}.P\)<span class="cj-comment">// the committer's to open, and only after a commit</span></li>
+<li>\(\mathtt{open} \gets 1\)</li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Open},\ \mathtt{P},\ \mathtt{Q},\ \mathtt{b}\bigr)\)</li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Read()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="11">
+<li>\(\textbf{require}\ \mathit{id}.P = \mathtt{Q}\)<span class="cj-comment">// the receipt is the receiver's</span></li>
+<li>\(\textbf{if}\ \mathtt{open} = 0\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ (\mathtt{P},\ \mathtt{Q})\)</span></li>
+<li>\(\textbf{return}\ (\mathtt{P},\ \mathtt{Q},\ \mathtt{b})\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="15">
+<li>\(\textbf{if}\ \mathtt{P} = \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \bot\)</span></li>
+<li>\(\textbf{if}\ \mathtt{open} = 0\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ (\mathtt{P},\ \mathtt{Q})\)</span></li>
+<li>\(\textbf{return}\ (\mathtt{P},\ \mathtt{Q},\ \mathtt{b})\)</li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+The box is transcribed from Canetti and Fischlin, *Universally composable commitments*, ePrint 2001/055, revision `20010710:161305`, Figure 2, p. 10 — "the Ideal Commitment functionality for a single commitment", which records $b$ on $(\texttt{Commit}, \mathit{sid}, P_i, P_j, b)$ and sends a $\texttt{Receipt}$ to $P_j$ and to $\mathcal{S}$, "ignor[ing] any subsequent `Commit` messages", then on $(\texttt{Open}, \mathit{sid}, P_i, P_j)$ hands $(\texttt{Open}, \mathit{sid}, P_i, P_j, b)$ to $P_j$ and $\mathcal{S}$.
+
+The two security properties are two lines, and they are the same line twice:
+
+- **Hiding is line 13, and line 18.** Before opening, the receiver's read and the adversary's leak both return $(\mathtt{P}, \mathtt{Q})$ — who committed to whom, and nothing else. The bit is in the state and reachable from neither. That the same tuple appears in both places is the point: the receiver learns exactly what the adversary learns, which is what makes the simulation go through.
+- **Binding is line 4, and the absence of any other write to $\mathtt{b}$.** $\mathtt{b}$ is assigned once, behind the **require** on line 3 that refuses a second commit, and no operation writes it again. There is no equivocation interface, so a simulator that wants one has to get it from the protocol, not the functionality.
+
+Three conventions the source leaves open, decided here:
+
+- **Delivery is a pull, not a push.** The source *sends* the receipt to $P_j$; this framework returns values to callers, so the receipt is read out by the receiver, and line 11 refuses anyone else. Both the receipt and the opening are read through the same operation, which is why line 12 tests $\mathtt{open}$ rather than there being two.
+- **"And halt" becomes state.** The source's $\mathcal{F}_{\mathsf{COM}}$ halts after the opening; instances here are long-lived, so $\mathtt{open}$ is a flag rather than a death, and a second $\mathsf{Open}$ is idempotent rather than impossible. Nothing observable changes, because there is nothing left to change: the value is fixed and already published.
+- **Only the committer opens.** Line 7 tests $\mathtt{P} = \mathit{id}.P$, which the source obtains for free by taking $\texttt{Open}$ "from $P_i$". Written out, it is visibly a property of the functionality rather than of the framework's access control.
+
+## Known realizations
+
+Both from the paper the box is taken from, and both in the [CRS model](/uc/layer-0-idealized-setup/f-crs/index.qmd):
+
+- **Theorem 7:** protocol `UCCOneTime` securely realizes $\mathcal{F}_{\mathsf{COM}}$ in the CRS model. It is built from any family of trapdoor permutations, and it spends a fresh copy of the reference string on each commitment — so the string's length grows with the number of commitments the system will ever make.
+- **Theorem 8:** protocol `UCCReUse` securely realizes the multi-commitment $\mathcal{F}_{\mathsf{MCOM}}$ in the CRS model from a claw-free pair of trapdoor permutations together with a public encryption key, over a *single* reference string. Theorem 11 gives `UCCReUse/NotErase`, the variant that does not assume erasures.
+
+The impossibility that makes the setup necessary is Theorem 6 of the same paper: there is no bilateral, terminating protocol that securely realizes $\mathcal{F}_{\mathsf{COM}}$ in the plain model, and this holds even when the ideal-model adversary is allowed to depend on the environment.
+
+## Properties
+
+- **Binding**, with probability exactly $0$ of failure: after a successful $\mathsf{Commit}$, every $\mathsf{Read}$ that sees $\mathtt{open} = 1$ returns the $\mathtt{b}$ that was recorded at line 4. There is no interface through which any party, corrupt or not, writes $\mathtt{b}$ a second time.
+- **Hiding**, with probability exactly $0$ of failure: before $\mathsf{Open}$, no return value and no adversary call depends on $\mathtt{b}$ — a claim that can be checked by reading the box for occurrences of $\mathtt{b}$ outside $\mathsf{Initialize}$, of which there are four: the assignment on line 4, the notification on line 9 that $\mathsf{Open}$ itself sends, and the returns on lines 14 and 19, both behind the $\mathtt{open}$ test.
+- **A single commitment.** This box handles one. Reusing an instance is refused at line 3, and the functionality for many commitments under one reference string is $\mathcal{F}_{\mathsf{MCOM}}$, a genuinely different object with a commitment identifier threaded through every message — see the multi-commitment entry rather than reading this one as covering it.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
+
 *References:*
 
-- Canetti and Fischlin. [*Universally composable commitments*](https://eprint.iacr.org/2001/055). In Advances in Cryptology – CRYPTO 2001, 2001.
+- Canetti and Fischlin. [*Universally composable commitments*](https://eprint.iacr.org/2001/055). In Advances in Cryptology – CRYPTO 2001, volume 2139 of LNCS, pages 19–40, 2001. Figure 2, p. 10 of revision `20010710:161305`, the definition transcribed above; Figure 3, p. 10, the multi-commitment variant $\mathcal{F}_{\mathsf{MCOM}}$; Theorems 6, 7, 8 and 11.
+- Canetti et al. [*Universally composable two-party and multi-party secure computation*](https://eprint.iacr.org/2002/140). In 34th ACM Symposium on Theory of Computing (STOC), pages 494–503, 2002. Restates the multi-commitment functionality with subsession identifiers and adds the one-to-many form $\mathcal{F}^{1:M}_{\mathsf{MCOM}}$ (Figure 13, p. 72 of revision `20030714:190611`), in which the committer commits to a *set* of parties at once; Proposition 5.1 realizes $\mathcal{F}_{\mathsf{MCOM}}$ from enhanced trapdoor permutations in the CRS-hybrid model, against adaptive adversaries.

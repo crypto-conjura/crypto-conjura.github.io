@@ -1,0 +1,66 @@
+%% The interface box of f-ot, the one source for both the book
+%% and uc/.../f-ot/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fot$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := (\ell, m)$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{T} \gets \unset$; \ $\V{R} \gets \unset$
+  \Comment{sender, receiver}
+\State $\V{x} : \{1,\ldots,\ell\} \to \{0,1\}^{m} \cup \{\unset\}$
+\State $\V{x}[*] \gets \unset$; \ $\V{i} \gets \unset$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Send}(x)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{T} = \unset \ \wedge\ x \in (\{0,1\}^{m})^{\ell}$}
+  \Comment{the $\ell$ strings, all at once}
+\State $\V{T} \gets \id.P$
+\State $\V{x}[j] \gets x_j$ \ for each $j \in \{1,\ldots,\ell\}$
+\State $\Adv\bigl(\id.\op{Send},\ \V{T}\bigr)$ \label{ln:otsendleak}
+  \Comment{that a sender loaded, never what}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Choose}(i)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{T} \neq \unset \ \wedge\ \V{R} = \unset \ \wedge\ i \in \{1,\ldots,\ell\}$} \label{ln:otloaded}
+  \Comment{nothing to choose from, nothing returned}
+\State $\V{R} \gets \id.P$; \ $\V{i} \gets i$
+\State $\Adv\bigl(\id.\op{Choose},\ \V{R}\bigr)$ \label{ln:otchooseleak}
+  \Comment{that a choice was made, never which}
+\State \textbf{return} $\V{x}[\V{i}]$ \label{ln:otone}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$\id.P = \V{T}$}
+  \State \textbf{return} $\V{x}$
+    \Comment{a sender's own inputs}
+\EndIf
+\If{$\id.P = \V{R}$}
+  \State \textbf{return} $(\V{i},\ \V{x}[\V{i}])$
+\EndIf
+\State \textbf{return} $(\V{T},\ \V{R})$ \label{ln:otoutsider}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

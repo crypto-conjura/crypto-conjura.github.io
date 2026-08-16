@@ -6,7 +6,109 @@ layer: 1
 
 *F-auth* (Authenticated transmission) is part of *Channels, Agreement, Ledgers* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
 
+One message, from a named sender to a named receiver, which the adversary may delay, drop, or tamper with — but never tamper with silently. It is the weakest channel worth having, and the one every other channel in this layer is measured against: the [Δ-delayed network](/uc/layer-1-channels-agreement-ledgers/f-net/index.qmd) has no names on the wire at all, and [*F-AC*](/uc/layer-1-channels-agreement-ledgers/f-ac/index.qmd) is this guarantee made repeatable and put on a clock.
+
+## Functionality
+
+Reading the box: $\mathcal{A}(\cdot)$ is a call on the adversary slot whose answer is not used; $\mathcal{A}^{!}(\cdot)$ is a *responsive* call, so the answer comes back before anything else can run; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it; $\mathcal{M}$ is the message space; $\square$ marks a value never set; $\textsf{ok}$ is the atom the adversary answers with to deliver the message as sent.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{Auth}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := \bot\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{A} \gets \square\); &nbsp;\(\mathtt{B} \gets \square\)<span class="cj-comment">// sender, intended receiver</span></li>
+<li>\(\mathtt{m} \gets \square\)</li>
+<li>\(\mathtt{corr} \gets 0\); &nbsp;\(\mathtt{done} \gets 0\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Send(<span class="cj-id">B</span>, <span class="cj-id">msg</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="4">
+<li>\(\textbf{require}\ \mathtt{A} = \square \ \wedge\ \mathit{msg} \in \mathcal{M}\)<span class="cj-comment">// one message to an instance</span></li>
+<li>\(\mathtt{A} \gets \mathit{id}.P\); &nbsp;\(\mathtt{B} \gets B\); &nbsp;\(\mathtt{m} \gets \mathit{msg}\)</li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Send},\ \mathtt{A},\ \mathtt{B},\ \mathtt{m}\bigr)\)<span class="cj-comment">// in the clear: authenticity, not secrecy</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Report()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="8">
+<li>\(\textbf{require}\ \mathit{id}.P = \mathtt{A}\)</li>
+<li>\(\textbf{return}\ \mathtt{corr}\)<span class="cj-comment">// the sender may ask, afterwards</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Fetch()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="10">
+<li>\(\textbf{require}\ \mathtt{A} \neq \square \ \wedge\ \mathtt{done} = 0\)</li>
+<li>\(a \gets \mathcal{A}^{!}\bigl(\mathit{id}.\mathsf{Fetch},\ \mathit{id}.P\bigr)\)<span class="cj-comment">// the adversary decides when</span></li>
+<li>\((B', \mathit{msg}') \gets (\mathtt{B},\ \mathtt{m})\)</li>
+<li>\(\textbf{if}\ a \neq \mathsf{ok}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\((B', \mathit{msg}') \gets a\); &nbsp;\(\mathtt{corr} \gets 1\)</span><span class="cj-comment">// substituting is allowed, and is recorded</span></li>
+<li>\(\textbf{require}\ B' = \mathit{id}.P \ \wedge\ \mathit{msg}' \in \mathcal{M}\)</li>
+<li>\(\mathtt{done} \gets 1\)</li>
+<li>\(\textbf{return}\ (\mathtt{A},\ \mathit{msg}')\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="18">
+<li>\(\textbf{return}\ (\mathtt{A},\ \mathtt{B},\ \mathtt{m},\ \mathtt{corr})\)</li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+The box is transcribed from Canetti, *Universally composable security: A new paradigm for cryptographic protocols*, ePrint 2000/067, revision `20200212:021048`, Figure 12, p. 80 — "the Message Authentication functionality, $\mathcal{F}_{\mathsf{auth}}$", which on input $(\texttt{Send}, \mathit{sid}, R, m)$ sends the backdoor message $(\texttt{Sent}, \mathit{sid}, S, R, m)$ to the adversary; on backdoor $(\texttt{ok}, \mathit{sid})$ outputs $(\texttt{Sent}, \mathit{sid}, S, R, m)$ to $R$ if it has not yet generated output; on backdoor $(\texttt{Corrupt}, \mathit{sid}, m', R')$ records being corrupted and, if it has not yet generated output, delivers $m'$ to $R'$ instead; answers $(\texttt{ReportCorrupted}, \mathit{sid})$ from the sender with whether that happened; and ignores everything else.
+
+**Why this revision and not the famous one.** There are two formulations in circulation and they are not equivalent. The 2004 certification paper prints one in which the adversary may substitute the message and the recipient *only when the sender is corrupted* — itself a correction, whose footnote records that the formulation before it "failed to let the adversary change the delivered message and identity of the recipient in case that the sender gets corrupted between sending and delivery", giving a guarantee "in fact unrealizable by reasonable protocols". The framework paper has since been revised again, and its current Figure 12 solves the same problem differently: substitution is *always* available to the adversary, and is *recorded*, so the sender can ask afterwards whether its message was tampered with. This entry follows the current framework text, and the older gating on corruption is listed under *References* as the variant it is. A reader who cites "Canetti's $\mathcal{F}_{\mathsf{auth}}$" without a revision is not, on this point, saying anything definite.
+
+Three lines carry it:
+
+- **Lines 13–14 are the tamper path.** The adversary answers the responsive fetch with $\textsf{ok}$, and the message goes through as sent (line 12); anything else is read as a substitution, which delivers the adversary's message to the adversary's addressee and sets $\mathtt{corr}$. Both halves matter. Authentication here is not the impossibility of forgery — it is that forgery cannot be *quiet*.
+- **Line 9 is what makes that a guarantee rather than a hole.** The sender, and only the sender, can read $\mathtt{corr}$. A protocol built over this channel is entitled to treat a clean report as evidence, which is the interface the earlier formulation did not offer at all.
+- **Line 6 leaks the message in the clear.** Authentication is not secrecy. A protocol needing both composes this with an encryption functionality; asking this box for confidentiality is a category error.
+
+Three conventions the source leaves open, decided here:
+
+- **Delivery is a pull.** The source outputs to $R$; this framework returns to callers, so the receiver fetches and line 15 refuses anyone the adversary did not name. The adversary therefore controls *when* as well as *whether*, exactly as the backdoor message does.
+- **Corruption is recorded only when it changes something.** In the source, $(\texttt{Corrupt}, \ldots)$ records corruption unconditionally and substitutes only if output has not yet been generated, so an adversary can mark a message corrupted *after* it was delivered intact. Here the adversary's instruction arrives inside $\mathsf{Fetch}$, so a substitution that comes too late cannot be recorded at all. This is the one behaviour of Figure 12 the box does not carry, and it is a strengthening: a sender that reads $0$ from line 9 after delivery is safe here, and merely probably safe there.
+- **"Ignore all other inputs" becomes refusal**, and one message per instance (line 4) is the source's single-message scope made explicit rather than implied by the halt.
+
+## Known realizations
+
+Realized by signing, and not by anything weaker. In the certification paper, protocol `SBA` has the sender sign $(m, B)$ through a certification functionality and send signature and message on; **Claim 4** there proves it securely realizes $\mathcal{F}_{\mathsf{Auth}}$ in the $\mathcal{F}_{\mathsf{Cert}}$-hybrid model, with $\mathcal{F}_{\mathsf{Cert}}$ in turn realized from a signature functionality and a certification authority (Claim 3, protocol `CAS`), and the signature functionality realized exactly by schemes that are existentially unforgeable under chosen-message attack (Theorem 2) — see [*F-Sig*](/uc/layer-3-public-key-primitives/f-sig/index.qmd). Those claims are stated for that paper's own formulation of the functionality, which is the variant described above.
+
+What cannot be done is bootstrapping: **Claim 26** of the framework paper, attributed to the certification paper, states that any protocol UC-realizing $\mathcal{F}_{\mathsf{auth}}$ in the bare model is useless. Authentication comes from outside the wire — a pre-shared key, a registered public key, a bulletin board — or not at all.
+
+There is a modelling catch worth carrying away, which the framework paper spells out: a realization built on a long-term binding module, such as signatures plus a [public-key infrastructure](/uc/layer-0-idealized-setup/g-pki/index.qmd), "cannot be subroutine-respecting, unless each session of the protocol uses a new session of the long-term-binding module — which does not capture reality". A single-message functionality realized from a long-lived key is the standard motivation for joint state and for global setups, and it is why *G-PKI* in this encyclopedia is global and this box is not.
+
+## Properties
+
+- **Detectable authenticity.** A $\mathsf{Fetch}$ returns $(\mathtt{A}, \mathtt{m})$ unchanged whenever the adversary answers $\textsf{ok}$, and any other answer sets $\mathtt{corr}$. So the composite guarantee — *the receiver got what the sender sent, or the sender can find out it did not* — holds with probability exactly $1$, against every occupant of the adversary slot.
+- **No liveness, and provably so.** The adversary answers line 11, and nothing overrides a refusal to name the receiver, so a message may never arrive. This is not an oversight: an unbounded network cannot be given a delivery guarantee, and *F-Net* and *F-AC* buy theirs by taking a clock and a deadline $\Delta$ as parameters.
+- **No secrecy, and provably so.** Line 6 hands the message to the adversary before any delivery. An environment that distinguishes two messages wins with probability exactly $1$.
+- **One message.** Line 4 refuses a second $\mathsf{Send}$, and line 10 refuses a second $\mathsf{Fetch}$. Multi-message authenticated transmission is *F-AC*, not a loop over this.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
+
 *References:*
 
-- Canetti. [*Universally composable signature, certification, and authentication*](https://eprint.iacr.org/2003/239). In 17th IEEE Computer Security Foundations Workshop (CSFW), pages 219–233, 2004.
-- Bellare, Canetti, and Krawczyk. [*A modular approach to the design and analysis of authentication and key exchange protocols*](https://eprint.iacr.org/1998/009). In 30th ACM Symposium on Theory of Computing (STOC), 1998.
+- Canetti. [*Universally composable security: A new paradigm for cryptographic protocols*](https://eprint.iacr.org/2000/067). In 42nd IEEE Symposium on Foundations of Computer Science (FOCS), pages 136–145, 2001. Figure 12, p. 80 of revision `20200212:021048`, the definition transcribed above; Claim 26 and the discussion of realizing it from long-term binding modules.
+- Canetti. [*Universally composable signature, certification, and authentication*](https://eprint.iacr.org/2003/239). In 17th IEEE Computer Security Foundations Workshop (CSFW), pages 219–233, 2004. Figure 5, p. 18 of revision `20040815:140230`: the variant in which substitution is available to the adversary **only when the sender is corrupted**, with no report interface — an incomparable guarantee, not a weaker one, and the version most secondary literature reproduces. Footnote 3 there records the correction to the formulation that preceded both. Claims 3, 4 and 5, and Theorem 2, are the realization results quoted above.
+- Bellare, Canetti, and Krawczyk. [*A modular approach to the design and analysis of authentication and key exchange protocols*](https://eprint.iacr.org/1998/009). In 30th ACM Symposium on Theory of Computing (STOC), 1998. The authenticator paradigm the `SBA` protocol comes from; it predates ideal functionalities and prints no $\mathcal{F}_{\mathsf{auth}}$ box.

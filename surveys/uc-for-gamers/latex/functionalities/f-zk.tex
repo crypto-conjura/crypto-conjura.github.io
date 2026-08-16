@@ -1,0 +1,58 @@
+%% The interface box of f-zk, the one source for both the book
+%% and uc/.../f-zk/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fzk$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := R$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{P} \gets \unset$; \ $\V{V} \gets \unset$
+  \Comment{prover, verifier}
+\State $\V{x} \gets \unset$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Prove}(V, x, w)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{x} = \unset$}
+  \Comment{one proof to an instance}
+\Req{$R(x, w) = 1$} \label{ln:zksound}
+  \Comment{a false statement never leaves}
+\State $\V{P} \gets \id.P$; \ $\V{V} \gets V$; \ $\V{x} \gets x$
+\State $\Adv\bigl(\id.\op{Prove},\ \V{P},\ \V{V},\ \V{x}\bigr)$ \label{ln:zkleak}
+  \Comment{the statement, never the witness}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Read}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P = \V{V}$}
+\State \textbf{return} $(\V{P},\ \V{x})$ \label{ln:zkread}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$\V{x} = \unset$}
+  \State \textbf{return} $\none$
+\EndIf
+\State \textbf{return} $(\V{P},\ \V{V},\ \V{x})$
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

@@ -10,40 +10,68 @@ layer: 0
 
 ## Functionality
 
-State: a table $\mathsf{L} : \mathbb{N} \to \{0,1\}^* \cup \{\bot, \mathsf{gone}\}$, initially $\mathsf{L}[*] = \bot$. An index is in one of three conditions, kept deliberately distinct: $\bot$ if nothing was ever put there, a value if put and not erased, and $\mathsf{gone}$ if put and then erased — so a caller can tell "nothing was ever here" from "something was here and is gone," rather than a store that answers the same either way and cannot be asked whether an erasure actually happened.
+State: a table $\mathtt{L} : \mathbb{N} \to \{0,1\}^* \cup \{\bot, \square\}$, initially $\mathtt{L}[*] = \square$. An index is in one of three conditions, kept deliberately distinct: $\square$ if nothing was ever put there, a value if put and not erased, and $\bot$ if put and then erased — so a caller can tell "nothing was ever here" from "something was here and is gone," rather than a store that answers the same either way and cannot be asked whether an erasure actually happened.
 
-- **Put(i, x)**: requires $\mathsf{L}[i] \in \{\bot, \mathsf{gone}\}$ (an occupied index refuses); sets $\mathsf{L}[i] \gets x$ and returns $\mathsf{ok}$.
-- **Erase(i)**: sets $\mathsf{L}[i] \gets \mathsf{gone}$ and returns $\mathsf{ok}$ — erasing an index that holds nothing is a harmless no-op.
-- **Get(i)**: requires $\mathsf{L}[i] \neq \bot$ (never written refuses); returns $\mathsf{L}[i]$, which is $\mathsf{gone}$ if the entry was erased.
-- **Leak()**: returns $\mathsf{L}$ in full.
+- **Put(i, x)**: requires $\mathtt{L}[i] \in \{\bot, \square\}$ (an occupied index refuses); sets $\mathtt{L}[i] \gets x$ and returns $\mathsf{ok}$.
+- **Erase(i)**: sets $\mathtt{L}[i] \gets \bot$ and returns $\mathsf{ok}$ — erasing an index that holds nothing is a harmless no-op.
+- **Get(i)**: requires $\mathtt{L}[i] \neq \square$ (never written refuses); returns $\mathtt{L}[i]$, which is $\bot$ if the entry was erased.
+- **Leak()**: returns $\mathtt{L}$ in full.
 
 State is shared across every party the instance serves, exactly as for *F-Rand*: one party may retrieve what another put, which is what makes it a shared store rather than a per-party tape.
 
-::: {.callout-note title="Pseudocode"}
-**Initialize()**
+Below is the functionality itself, transcribed from [*UC for Gamers*](/surveys/uc-for-gamers/pdf/main.pdf#page=141) (§14.1, p. 140), line numbering and all. Two markers do the work of three conditions: $\square$ is never written, $\bot$ is written and since erased, and anything else is a value put and still there. The refusals are written as **require**s rather than as returns of $\mathsf{rej}$ — the framework answers a refused **require** with $\mathsf{rej}$, so lines 3 and 8 are exactly the two refusals a store owes.
 
-1. $\mathsf{L}[*] \gets \bot$
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{Store}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \emptyset\), &nbsp; \(\mathit{par} := \bot\)</div>
+</div>
+<div class="cj-interface-body">
 
-**Put(i, x)**
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{L} : \mathbb{N} \to \{0,1\}^{*} \cup \{\bot, \square\}\)</li>
+<li>\(\mathtt{L}[*] \gets \square\)</li>
+</ol>
+</div>
 
-1. require $\mathsf{L}[i] \in \{\bot, \mathsf{gone}\}$ (else refuse — an occupied index refuses)
-2. $\mathsf{L}[i] \gets x$
-3. **return** $\mathsf{ok}$
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Put(<span class="cj-id">i</span>, <span class="cj-id">x</span>)<span class="cj-op-from">from <span class="cj-id">id</span>′</span></div>
+<ol class="cj-code" start="3">
+<li>\(\textbf{require}\ \mathtt{L}[i] \in \{\bot, \square\}\)<span class="cj-comment">// an occupied index refuses</span></li>
+<li>\(\mathtt{L}[i] \gets x\)</li>
+<li>\(\textbf{return}\)&nbsp;<span class="cj-atom">ok</span></li>
+</ol>
+</div>
 
-**Erase(i)**
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Erase(<span class="cj-id">i</span>)<span class="cj-op-from">from <span class="cj-id">id</span>′</span></div>
+<ol class="cj-code" start="6">
+<li>\(\mathtt{L}[i] \gets \bot\)</li>
+<li>\(\textbf{return}\)&nbsp;<span class="cj-atom">ok</span></li>
+</ol>
+</div>
 
-1. $\mathsf{L}[i] \gets \mathsf{gone}$
-2. **return** $\mathsf{ok}$
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Get(<span class="cj-id">i</span>)<span class="cj-op-from">from <span class="cj-id">id</span>′</span></div>
+<ol class="cj-code" start="8">
+<li>\(\textbf{require}\ \mathtt{L}[i] \neq \square\)<span class="cj-comment">// never written refuses</span></li>
+<li>\(\textbf{return}\ \mathtt{L}[i]\)<span class="cj-comment">// \(\bot\) if erased</span></li>
+</ol>
+</div>
 
-**Get(i)**
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>′</span></div>
+<ol class="cj-code" start="10">
+<li>\(\textbf{return}\ \mathtt{L}\)</li>
+</ol>
+</div>
 
-1. require $\mathsf{L}[i] \neq \bot$ (else refuse — never written refuses)
-2. **return** $\mathsf{L}[i]$ ($\mathsf{gone}$ if erased)
-
-**Leak()**
-
-1. **return** $\mathsf{L}$
-:::
+</div>
+</div>
+```
 
 ## Known realizations
 

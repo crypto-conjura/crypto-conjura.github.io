@@ -10,7 +10,7 @@ Canetti's ideal signature functionality: a local, per-party functionality that g
 
 ## Functionality
 
-State per served party: a verification key in $\mathcal{K} \cup \{\square\}$, held in a table $\mathsf{VK}$, and a table $\mathsf{Ver} : \mathcal{K} \times \mathcal{M} \times \Sigma \to \{0,1\} \cup \{\square\}$ recording every verification verdict decided so far. Both start everywhere at $\square$, the marker that separates "not yet decided" from a recorded $0$ or $1$.
+State per served party: a verification key in $\mathcal{K} \cup \{\square\}$, held in a table $\mathtt{VK}$, and a table $\mathtt{Ver} : \mathcal{K} \times \mathcal{M} \times \Sigma \to \{0,1\} \cup \{\square\}$ recording every verification verdict decided so far. Both start everywhere at $\square$, the marker that separates "not yet decided" from a recorded $0$ or $1$.
 
 - **Gen()**, from party $P$: if $P$ already has a key, return it unchanged. Otherwise ask the adversary for one, sanitize it to be fresh (an actual key, not already issued to another party, and not already recorded valid on some message) and record it against $P$.
 - **Sign(msg)**, from party $P$: if $P$ has no key yet, return $\bot$. Otherwise ask the adversary for a signature, sanitize it to be an actual signature not already recorded invalid on this triple, record it valid, and return it.
@@ -30,23 +30,23 @@ Below is the functionality itself, transcribed from [*UC for Gamers*](/surveys/u
 <div class="cj-op">
 <div class="cj-op-sig">Initialize():</div>
 <ol class="cj-code" start="1">
-<li>\(\mathsf{VK} : \mathcal{F}_{\mathsf{Sig}}.\mathbf{P} \to \mathcal{K} \cup \{\square\}\)</li>
-<li>\(\mathsf{VK}[*] \gets \square\)</li>
-<li>\(\mathsf{Ver} : \mathcal{K} \times \mathcal{M} \times \Sigma \to \{0,1\} \cup \{\square\}\)</li>
-<li>\(\mathsf{Ver}[*,*,*] \gets \square\)</li>
+<li>\(\mathtt{VK} : \mathcal{F}_{\mathsf{Sig}}.\mathbf{P} \to \mathcal{K} \cup \{\square\}\)</li>
+<li>\(\mathtt{VK}[*] \gets \square\)</li>
+<li>\(\mathtt{Ver} : \mathcal{K} \times \mathcal{M} \times \Sigma \to \{0,1\} \cup \{\square\}\)</li>
+<li>\(\mathtt{Ver}[*,*,*] \gets \square\)</li>
 </ol>
 </div>
 
 <div class="cj-op">
 <div class="cj-op-sig"><span class="cj-id">id</span>.Gen()<span class="cj-op-from">from <span class="cj-id">id</span>′</span></div>
 <ol class="cj-code" start="5">
-<li>\(\textbf{if}\ \mathsf{VK}[\mathit{id}.P] \neq \square\ \textbf{then}\)</li>
-<li><span class="cj-ind">\(\textbf{return}\ \mathsf{VK}[\mathit{id}.P]\)</span></li>
+<li>\(\textbf{if}\ \mathtt{VK}[\mathit{id}.P] \neq \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \mathtt{VK}[\mathit{id}.P]\)</span></li>
 <li>\(\mathit{vk} \gets \mathcal{A}\bigl(\mathit{id}.\mathsf{Gen}\bigr)\)</li>
-<li>\(\textbf{if}\ \mathsf{VK}[\mathit{id}.P] \neq \square\ \textbf{then}\)</li>
-<li><span class="cj-ind">\(\textbf{return}\ \mathsf{VK}[\mathit{id}.P]\)</span><span class="cj-comment">// recorded while suspended</span></li>
-<li>\(\mathit{vk} \gets \mathsf{San}[\mathsf{Clean}_{\mathit{vk}}](\mathit{vk}; \mathsf{VK}, \mathsf{Ver})\)</li>
-<li>\(\mathsf{VK}[\mathit{id}.P] \gets \mathit{vk}\)</li>
+<li>\(\textbf{if}\ \mathtt{VK}[\mathit{id}.P] \neq \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \mathtt{VK}[\mathit{id}.P]\)</span><span class="cj-comment">// recorded while suspended</span></li>
+<li>\(\mathit{vk} \gets \mathsf{San}[\mathsf{Clean}_{\mathit{vk}}](\mathit{vk}; \mathtt{VK}, \mathtt{Ver})\)</li>
+<li>\(\mathtt{VK}[\mathit{id}.P] \gets \mathit{vk}\)</li>
 <li>\(\textbf{return}\ \mathit{vk}\)</li>
 </ol>
 </div>
@@ -54,12 +54,12 @@ Below is the functionality itself, transcribed from [*UC for Gamers*](/surveys/u
 <div class="cj-op">
 <div class="cj-op-sig"><span class="cj-id">id</span>.Sign(<span class="cj-id">msg</span>)<span class="cj-op-from">from <span class="cj-id">id</span>′</span></div>
 <ol class="cj-code" start="13">
-<li>\(\mathit{vk} \gets \mathsf{VK}[\mathit{id}.P]\)</li>
+<li>\(\mathit{vk} \gets \mathtt{VK}[\mathit{id}.P]\)</li>
 <li>\(\textbf{if}\ \mathit{vk} = \square\ \textbf{then}\)</li>
 <li><span class="cj-ind">\(\textbf{return}\ \bot\)</span></li>
 <li>\(\sigma \gets \mathcal{A}\bigl(\mathit{id}.\mathsf{Sign}, \mathit{msg}\bigr)\)</li>
-<li>\(\sigma \gets \mathsf{San}[\mathsf{Clean}_{\sigma}](\sigma; \mathit{msg}, \mathit{vk}, \mathsf{Ver})\)</li>
-<li>\(\mathsf{Ver}[\mathit{vk}, \mathit{msg}, \sigma] \gets 1\)</li>
+<li>\(\sigma \gets \mathsf{San}[\mathsf{Clean}_{\sigma}](\sigma; \mathit{msg}, \mathit{vk}, \mathtt{Ver})\)</li>
+<li>\(\mathtt{Ver}[\mathit{vk}, \mathit{msg}, \sigma] \gets 1\)</li>
 <li>\(\textbf{return}\ \sigma\)</li>
 </ol>
 </div>
@@ -67,16 +67,16 @@ Below is the functionality itself, transcribed from [*UC for Gamers*](/surveys/u
 <div class="cj-op">
 <div class="cj-op-sig"><span class="cj-id">id</span>.Verify(<span class="cj-id">vk</span>, <span class="cj-id">msg</span>, <span class="cj-id">σ</span>)<span class="cj-op-from">from <span class="cj-id">id</span>′</span></div>
 <ol class="cj-code" start="20">
-<li>\(\textbf{if}\ \mathsf{Ver}[\mathit{vk}, \mathit{msg}, \sigma] \neq \square\ \textbf{then}\)</li>
-<li><span class="cj-ind">\(\textbf{return}\ \mathsf{Ver}[\mathit{vk}, \mathit{msg}, \sigma]\)</span></li>
+<li>\(\textbf{if}\ \mathtt{Ver}[\mathit{vk}, \mathit{msg}, \sigma] \neq \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \mathtt{Ver}[\mathit{vk}, \mathit{msg}, \sigma]\)</span></li>
 <li>\(b \gets \mathcal{A}\bigl(\mathit{id}.\mathsf{Verify}, \mathit{vk}, \mathit{msg}, \sigma\bigr)\)</li>
-<li>\(\textbf{if}\ \mathsf{Ver}[\mathit{vk}, \mathit{msg}, \sigma] \neq \square\ \textbf{then}\)</li>
-<li><span class="cj-ind">\(\textbf{return}\ \mathsf{Ver}[\mathit{vk}, \mathit{msg}, \sigma]\)</span><span class="cj-comment">// recorded while suspended</span></li>
+<li>\(\textbf{if}\ \mathtt{Ver}[\mathit{vk}, \mathit{msg}, \sigma] \neq \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \mathtt{Ver}[\mathit{vk}, \mathit{msg}, \sigma]\)</span><span class="cj-comment">// recorded while suspended</span></li>
 <li>\(\textbf{if}\ b \notin \{0,1\}\ \textbf{then}\)</li>
 <li><span class="cj-ind">\(b \gets 0\)</span></li>
-<li>\(\textbf{if}\ \exists\, P' \notin \mathbf{C} \,:\, \mathit{vk} = \mathsf{VK}[P']\ \textbf{then}\)</li>
+<li>\(\textbf{if}\ \exists\, P' \notin \mathbf{C} \,:\, \mathit{vk} = \mathtt{VK}[P']\ \textbf{then}\)</li>
 <li><span class="cj-ind">\(b \gets 0\)</span><span class="cj-comment">// no forgery under an honest key</span></li>
-<li>\(\mathsf{Ver}[\mathit{vk}, \mathit{msg}, \sigma] \gets b\)</li>
+<li>\(\mathtt{Ver}[\mathit{vk}, \mathit{msg}, \sigma] \gets b\)</li>
 <li>\(\textbf{return}\ b\)</li>
 </ol>
 </div>
@@ -84,24 +84,24 @@ Below is the functionality itself, transcribed from [*UC for Gamers*](/surveys/u
 <div class="cj-op">
 <div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>′</span></div>
 <ol class="cj-code" start="31">
-<li>\(\textbf{if}\ \mathsf{VK}[\mathit{id}.P] = \square\ \textbf{then}\)</li>
+<li>\(\textbf{if}\ \mathtt{VK}[\mathit{id}.P] = \square\ \textbf{then}\)</li>
 <li><span class="cj-ind">\(\textbf{return}\ (\bot, \emptyset)\)</span></li>
-<li>\(\textbf{return}\ \bigl(\mathsf{VK}[\mathit{id}.P],\ \{\, (\mathit{msg},\sigma) : \mathsf{Ver}[\mathsf{VK}[\mathit{id}.P],\mathit{msg},\sigma] = 1 \,\}\bigr)\)</li>
+<li>\(\textbf{return}\ \bigl(\mathtt{VK}[\mathit{id}.P],\ \{\, (\mathit{msg},\sigma) : \mathtt{Ver}[\mathtt{VK}[\mathit{id}.P],\mathit{msg},\sigma] = 1 \,\}\bigr)\)</li>
 </ol>
 </div>
 
 <div class="cj-op">
 <div class="cj-op-sig">Clean<sub><span class="cj-id">vk</span></sub>(<span class="cj-id">vk</span>; <span class="cj-rm">VK</span>, <span class="cj-rm">Ver</span>):</div>
 <ol class="cj-code" start="34">
-<li>\(\textbf{return}\ \mathit{vk} \in \mathcal{K} \ \wedge\ \neg\exists\, P : \mathsf{VK}[P] = \mathit{vk}\)</li>
-<li><span class="cj-ind">\(\wedge\ \neg\exists\, \mathit{msg},\sigma : \mathsf{Ver}[\mathit{vk},\mathit{msg},\sigma] = 1\)</span></li>
+<li>\(\textbf{return}\ \mathit{vk} \in \mathcal{K} \ \wedge\ \neg\exists\, P : \mathtt{VK}[P] = \mathit{vk}\)</li>
+<li><span class="cj-ind">\(\wedge\ \neg\exists\, \mathit{msg},\sigma : \mathtt{Ver}[\mathit{vk},\mathit{msg},\sigma] = 1\)</span></li>
 </ol>
 </div>
 
 <div class="cj-op">
 <div class="cj-op-sig">Clean<sub><span class="cj-id">σ</span></sub>(<span class="cj-id">σ</span>; <span class="cj-id">msg</span>, <span class="cj-id">vk</span>, <span class="cj-rm">Ver</span>):</div>
 <ol class="cj-code" start="36">
-<li>\(\textbf{return}\ \sigma \in \Sigma \wedge \mathsf{Ver}[\mathit{vk},\mathit{msg},\sigma] \neq 0\)</li>
+<li>\(\textbf{return}\ \sigma \in \Sigma \wedge \mathtt{Ver}[\mathit{vk},\mathit{msg},\sigma] \neq 0\)</li>
 </ol>
 </div>
 
@@ -109,7 +109,7 @@ Below is the functionality itself, transcribed from [*UC for Gamers*](/surveys/u
 </div>
 ```
 
-Two lines in the box exist only to guard against re-entrance: a suspended instance may be re-entered between the test of a table entry and the write to it, so *Gen* (line 8) and *Verify* (line 23) re-test on resumption and a value recorded meanwhile wins. Without them two nested calls could issue two keys to one party, or return different verdicts on one triple — the very consistency $\mathsf{Ver}$ exists to record. Locality of *Gen* and *Sign* additionally asks that the simulator answer without passing the token elsewhere: a restriction to *responsive* simulators, which costs nothing for non-interactive, stateless signatures.
+Two lines in the box exist only to guard against re-entrance: a suspended instance may be re-entered between the test of a table entry and the write to it, so *Gen* (line 8) and *Verify* (line 23) re-test on resumption and a value recorded meanwhile wins. Without them two nested calls could issue two keys to one party, or return different verdicts on one triple — the very consistency $\mathtt{Ver}$ exists to record. Locality of *Gen* and *Sign* additionally asks that the simulator answer without passing the token elsewhere: a restriction to *responsive* simulators, which costs nothing for non-interactive, stateless signatures.
 
 ## Known realizations
 

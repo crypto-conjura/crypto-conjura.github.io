@@ -10,7 +10,7 @@ A clock-parameterized specialization of unauthenticated diffusion (see *F-diffus
 
 ## Functionality
 
-Parameterized by a delay bound $\Delta$; uses the global clock and the adversary. State: a buffer of entries $(m, P, \mathsf{msg}, \tau)$ indexed by message id $m$, and a "released to" table.
+Parameterized by a delay bound $\Delta$; uses the global clock and the adversary. State: a buffer $\mathtt{buf}$ of entries $(m, P, \mathit{msg}, \tau)$ indexed by message id $m$, and a "released to" table.
 
 - **Send(msg)**, from party $P$: read the current time $\tau$ off the clock, store $(m, P, \mathsf{msg}, \tau)$ under a fresh id $m$, notify the adversary of the send, and return $m$.
 - **Fetch()**, from party $P$: read the current time $\tau$; ask the adversary which stored ids to release to $P$ early and what fresh (unattributed) messages to inject; return, for every entry addressed — implicitly, since delivery is diffusion to everyone — either already released to $P$ or aged past $\tau_{\text{sent}} + \Delta$, the pair $(m, \mathsf{msg})$ (never the sender). Injected messages are delivered with no id-history, carry no sender, and never ripen — they are the adversary's own traffic, on the wire only because it wrote there.
@@ -18,33 +18,63 @@ Parameterized by a delay bound $\Delta$; uses the global clock and the adversary
 
 Both slot calls (send-notification and the fetch query) are *responsive*: the adversary's answer comes back before anything else can run, so a fetch reads one consistent snapshot of the clock rather than racing it.
 
-::: {.callout-note title="Pseudocode"}
-**Initialize()**
+Below is the functionality itself, transcribed from [*UC for Gamers*](/surveys/uc-for-gamers/pdf/main.pdf#page=170) (§18.1, p. 169), line numbering and all. Reading it: $\mathcal{A}^{!}(\cdot)$ is a *responsive* call on the adversary slot, so a fetch reads one consistent snapshot rather than racing the clock; $\mathit{id}_{\mathcal{G}_{\mathsf{Clock}}}.\mathsf{FullRead}()$ is a call on the global clock's full interface, guard included; $\mathcal{M}$ is the message space. Lines 13–14 are the inline sanitization of the slot's answer, and line 20 reads $\mathtt{rel}$ *or* the deadline, so the adversary's silence past $\Delta$ is ignored rather than punished.
 
-1. $\mathsf{ctr} \gets 0$; $\mathsf{buf} \gets \emptyset$ (entries $(m, P, \mathsf{msg}, \tau)$)
-2. $\mathsf{rel}[*,*] \gets 0$ (what is released to whom)
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{Net}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{G}_{\mathsf{Clock}}, \mathsf{serves}),\, (\mathcal{A}, \mathsf{serves})\}\), &nbsp; \(\mathit{par} := \Delta\)</div>
+</div>
+<div class="cj-interface-body">
 
-**Send(msg)**, from party $P$
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{ctr} \gets 0\)</li>
+<li>\(\mathtt{buf} \gets \emptyset\)<span class="cj-comment">// entries \((m, P, \mathit{msg}, \tau)\)</span></li>
+<li>\(\mathtt{rel} : \mathbb{N} \times \mathcal{F}_{\mathsf{Net}}.\mathbf{P} \to \{0,1\}\)</li>
+<li>\(\mathtt{rel}[*,*] \gets 0\)<span class="cj-comment">// what is released to whom</span></li>
+</ol>
+</div>
 
-1. $\tau \gets$ read the current time off the clock
-2. $m \gets \mathsf{ctr}$; $\mathsf{ctr} \gets \mathsf{ctr} + 1$
-3. $\mathsf{buf} \gets \mathsf{buf} \cup \{(m, P, \mathsf{msg}, \tau)\}$
-4. notify the adversary of $(m, \mathsf{msg})$ (responsive; the network is public)
-5. **return** $m$
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Send(<span class="cj-id">msg</span>)<span class="cj-op-from">from <span class="cj-id">id</span>′</span></div>
+<ol class="cj-code" start="5">
+<li>\(\tau \gets \mathit{id}_{\mathcal{G}_{\mathsf{Clock}}}.\mathsf{FullRead}() \text{ as } \mathit{id}\)</li>
+<li>\(m \gets \mathtt{ctr}\);&nbsp;\(\mathtt{ctr} \gets \mathtt{ctr} + 1\)</li>
+<li>\(\mathtt{buf} \gets \mathtt{buf} \cup \{(m, \mathit{id}.P, \mathit{msg}, \tau)\}\)</li>
+<li>\(\mathcal{A}^{!}\bigl(\mathit{id}.\mathsf{Send},\ m,\ \mathit{msg}\bigr)\)<span class="cj-comment">// the network is public</span></li>
+<li>\(\textbf{return}\ m\)</li>
+</ol>
+</div>
 
-**Fetch()**, from party $P$
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>′</span></div>
+<ol class="cj-code" start="10">
+<li>\(\textbf{return}\ (\mathtt{buf},\ \mathtt{rel})\)</li>
+</ol>
+</div>
 
-1. $\tau \gets$ read the current time off the clock
-2. $(S, I) \gets$ ask the adversary which stored ids to release to $P$ early and which fresh (unattributed) messages to inject (responsive; a non-pair answer reads as $(\emptyset,\emptyset)$)
-3. sanitize inline: $S \gets S \cap \{m : (m,\cdot,\cdot,\cdot) \in \mathsf{buf}\}$; $I \gets I \cap \mathsf{Msgs}$
-4. $\mathsf{rel}[m, P] \gets 1$ for each $m \in S$
-5. for each injected $\mathsf{msg} \in I$: $\mathsf{buf} \gets \mathsf{buf} \cup \{(\mathsf{ctr}, \bot, \mathsf{msg}, \infty)\}$; $\mathsf{rel}[\mathsf{ctr}, P] \gets 1$; $\mathsf{ctr} \gets \mathsf{ctr} + 1$
-6. **return** every $(m, \mathsf{msg})$ with $(m, P', \mathsf{msg}, \tau_s) \in \mathsf{buf}$ such that $\mathsf{rel}[m, P] = 1$ or $\tau_s + \Delta \le \tau$ (never the sender $P'$)
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Fetch()<span class="cj-op-from">from <span class="cj-id">id</span>′</span></div>
+<ol class="cj-code" start="11">
+<li>\(\tau \gets \mathit{id}_{\mathcal{G}_{\mathsf{Clock}}}.\mathsf{FullRead}() \text{ as } \mathit{id}\)</li>
+<li>\((S, I) \gets \mathcal{A}^{!}\bigl(\mathit{id}.\mathsf{Fetch},\ \tau\bigr)\)<span class="cj-comment">// a non-pair reads as \((\emptyset,\emptyset)\)</span></li>
+<li>\(S \gets S \cap \{m : (m,\cdot,\cdot,\cdot) \in \mathtt{buf}\}\);</li>
+<li>\(I \gets I \cap \mathcal{M}\)<span class="cj-comment">// sanitized inline</span></li>
+<li>\(\mathtt{rel}[m, \mathit{id}.P] \gets 1\) &nbsp;for each \(m \in S\)</li>
+<li>\(\textbf{for each}\ \mathit{msg} \in I:\)</li>
+<li><span class="cj-ind">\(\mathtt{buf} \gets \mathtt{buf} \cup \{(\mathtt{ctr}, \bot, \mathit{msg}, \infty)\}\);</span></li>
+<li><span class="cj-ind">\(\mathtt{rel}[\mathtt{ctr}, \mathit{id}.P] \gets 1\);&nbsp;\(\mathtt{ctr} \gets \mathtt{ctr} + 1\)</span></li>
+<li>\(\textbf{return}\ \bigl\{(m, \mathit{msg}) : (m, P', \mathit{msg}, \tau_s) \in \mathtt{buf}\)</li>
+<li><span class="cj-ind">\({}\wedge\ \bigl(\mathtt{rel}[m, \mathit{id}.P] = 1 \ \vee\ \tau_s + \Delta \leq \tau\bigr)\bigr\}\)</span></li>
+</ol>
+</div>
 
-**Leak()**
-
-1. **return** $(\mathsf{buf}, \mathsf{rel})$
-:::
+</div>
+</div>
+```
 
 ## Known realizations
 

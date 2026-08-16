@@ -18,33 +18,60 @@ Parameterized by a delay bound $\Delta$; uses the global clock and the adversary
 
 Both slot calls are responsive, for the same reason as *F-Net*'s: a fetch's clock read and its aging test have to be one atomic moment, or the adversary could stall between them and unlawfully withhold a message past its deadline.
 
-::: {.callout-note title="Pseudocode"}
-**Initialize()**
+Below is the functionality itself, transcribed from [*UC for Gamers*](/surveys/uc-for-gamers/pdf/main.pdf#page=179) (§19.1, p. 178), line numbering and all. Reading it: $\mathcal{A}^{!}(\cdot)$ is a *responsive* call on the adversary slot; $\mathit{id}_{\mathcal{G}_{\mathsf{Clock}}}.\mathsf{FullRead}()$ is a call on the global clock's full interface, guard included; $\mathcal{M}$ is the message space. The predicate sanitizing the early release at line 14 is defined in the source's prose rather than in the box: $\mathsf{Clean}_{\mathsf{addr}}(S; \mathtt{list}, P)$ holds exactly when $S \subseteq \{i : \mathtt{list}[i] = (\cdot, P, \cdot, \cdot)\}$ — the slot may release early only undrained entries addressed to the fetching party, and a bad answer is repaired to $\emptyset$. Line 16 drains what it returns, so each entry is delivered exactly once.
 
-1. $\mathsf{ctr} \gets 0$; $\mathsf{list}[*] \gets \bot$ (entries $(P, Q, \tau, \mathsf{msg})$)
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{AC}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{G}_{\mathsf{Clock}}, \mathsf{serves}),\, (\mathcal{A}, \mathsf{serves})\}\), &nbsp; \(\mathit{par} := \Delta\)</div>
+</div>
+<div class="cj-interface-body">
 
-**Send(Q, msg)**, from party $P$
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{ctr} \gets 0\)</li>
+<li>\(\mathtt{list} : \mathbb{N} \to (\mathcal{F}_{\mathsf{AC}}.\mathbf{P}^{2} \times \mathbb{N} \times \mathcal{M}) \cup \{\bot\}\)</li>
+<li>\(\mathtt{list}[*] \gets \bot\)<span class="cj-comment">// entries \((P, Q, \tau, \mathit{msg})\)</span></li>
+</ol>
+</div>
 
-1. $\tau \gets$ read the current time off the clock
-2. $\mathsf{ctr} \gets \mathsf{ctr} + 1$
-3. $\mathsf{list}[\mathsf{ctr}] \gets (P, Q, \tau, \mathsf{msg})$
-4. notify the adversary of $(\mathsf{ctr}, Q, \tau, \mathsf{msg})$
-5. **return** $\mathsf{ok}$
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Send(<span class="cj-id">Q</span>, <span class="cj-id">msg</span>)<span class="cj-op-from">from <span class="cj-id">id</span>′</span></div>
+<ol class="cj-code" start="4">
+<li>\(\tau \gets \mathit{id}_{\mathcal{G}_{\mathsf{Clock}}}.\mathsf{FullRead}() \text{ as } \mathit{id}\)</li>
+<li>\(\mathtt{ctr} \gets \mathtt{ctr} + 1\)</li>
+<li>\(\mathtt{list}[\mathtt{ctr}] \gets (\mathit{id}.P,\, Q,\, \tau,\, \mathit{msg})\)</li>
+<li>\(\mathcal{A}^{!}\bigl(\mathit{id}.\mathsf{Send},\ \mathtt{ctr},\ Q,\ \tau,\ \mathit{msg}\bigr)\)</li>
+<li>\(\textbf{return}\)&nbsp;<span class="cj-atom">ok</span></li>
+</ol>
+</div>
 
-**Leak()**
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>′</span></div>
+<ol class="cj-code" start="9">
+<li>\(\textbf{return}\ \mathtt{list}\)</li>
+</ol>
+</div>
 
-1. **return** $\mathsf{list}$
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Fetch()<span class="cj-op-from">from <span class="cj-id">id</span>′</span></div>
+<ol class="cj-code" start="10">
+<li>\(\tau \gets \mathit{id}_{\mathcal{G}_{\mathsf{Clock}}}.\mathsf{FullRead}() \text{ as } \mathit{id}\)</li>
+<li>\(R \gets \{m : \mathtt{list}[m] = (\cdot,\, \mathit{id}.P,\, \tau_m,\, \cdot)\)</li>
+<li><span class="cj-ind">\({}\wedge\ \tau_m + \Delta \leq \tau\}\)</span><span class="cj-comment">// come of age</span></li>
+<li>\(S \gets \mathcal{A}^{!}\bigl(\mathit{id}.\mathsf{Fetch},\ \tau\bigr)\)<span class="cj-comment">// released early</span></li>
+<li>\(S \gets \mathsf{San}[\mathsf{Clean}_{\mathsf{addr}}]\bigl(S;\ \mathtt{list},\, \mathit{id}.P\bigr)\)</li>
+<li>\(M \gets \{\mathtt{list}[m] : m \in R \cup S\}\)</li>
+<li>\(\mathtt{list}[m] \gets \bot\) &nbsp;for each \(m \in R \cup S\)</li>
+<li>\(\textbf{return}\ M\)</li>
+</ol>
+</div>
 
-**Fetch()**, from party $Q$
-
-1. $\tau \gets$ read the current time off the clock
-2. $R \gets \{m : \mathsf{list}[m] = (\cdot, Q, \tau_m, \cdot) \wedge \tau_m + \Delta \le \tau\}$ (come of age)
-3. $S \gets$ ask the adversary which not-yet-aged entries addressed to $Q$ to release early
-4. sanitize $S$ against $\mathsf{list}$ and $Q$ (released early)
-5. $M \gets \{\mathsf{list}[m] : m \in R \cup S\}$
-6. $\mathsf{list}[m] \gets \bot$ for each $m \in R \cup S$
-7. **return** $M$
-:::
+</div>
+</div>
+```
 
 ## Known realizations
 

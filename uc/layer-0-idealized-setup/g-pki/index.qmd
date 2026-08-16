@@ -10,35 +10,69 @@ A single, shared directory binding a verification key to the party that register
 
 ## Functionality
 
-State: a table $\mathsf{VK} : \mathsf{Parties} \to \mathsf{Keys} \cup \{\bot\}$, initially everywhere $\bot$.
+State: a table $\mathtt{VK} : \mathcal{G}_{\mathsf{PKI}}.\mathbf{P} \to \mathcal{K} \cup \{\square\}$, initially everywhere $\square$.
 
 - **Register(vk)**, from party $P$: an outsider (the adversary or the environment) acting for an *honest* $P$ only gets a peek at what's on file, never a write. Otherwise, if $P$ already has a key on file, that key is returned unchanged — the first successful call wins, permanently. Otherwise the offered key is sanitized to be fresh (not already claimed by another party) and recorded against $P$, then returned.
-- **Retrieve(P)**: returns whatever is on file for $P$, or $\bot$ if nobody has registered — answered to any caller, since a directory is public by nature.
+- **Retrieve(P)**: returns whatever is on file for $P$, or $\square$ if nobody has registered — answered to any caller, since a directory is public by nature.
 - **Leak()**: returns the whole table, which is no more than *Retrieve* already gives out one entry at a time.
 
 There is deliberately no *Deregister*: a key once bound stays bound. Revocation would be a genuine addition to this functionality, not a gap left open by oversight.
 
-::: {.callout-note title="Pseudocode"}
-**Initialize()**
+Below is the functionality itself, transcribed from [*UC for Gamers*](/surveys/uc-for-gamers/pdf/main.pdf#page=153) (§16.1, p. 152), line numbering and all. Reading it: $\mathsf{San}[\mathsf{Clean}](\cdot)$ resamples until the named predicate holds, with $\mathsf{Clean}_{\mathsf{reg}}$ written out at the end of the box; $\mathbf{C}$ is the set of corrupted parties; $A$ and $Z$ are the adversary's and environment's name components, so line 3 is the test that an outsider calling for an honest party gets a peek and not a write. The process id is pinned to a constant and $\mathbf{N}$ admits every standard, adversarial and environment id — that is what makes the directory *global*.
 
-1. $\mathsf{VK}[*] \gets \bot$
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{G}_{\mathsf{PKI}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid} := (\mathsf{GPKI},0,0)\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N} := \mathbf{Std} \cup \mathbf{A} \cup \mathbf{Z}\), &nbsp; \(\mathbf{U} := \emptyset\), &nbsp; \(\mathit{par} := \bot\)</div>
+</div>
+<div class="cj-interface-body">
 
-**Register(vk)**, from party $P$
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{VK} : \mathcal{G}_{\mathsf{PKI}}.\mathbf{P} \to \mathcal{K} \cup \{\square\}\)</li>
+<li>\(\mathtt{VK}[*] \gets \square\)</li>
+</ol>
+</div>
 
-1. if the caller is the adversary or environment acting for an *honest* $P$: **return** $\mathsf{VK}[P]$ (a peek, not a write)
-2. if $\mathsf{VK}[P] \neq \bot$: **return** $\mathsf{VK}[P]$
-3. sanitize $\mathsf{vk}$: require $\mathsf{vk} \in \mathsf{Keys}$ and not already claimed by another party
-4. $\mathsf{VK}[P] \gets \mathsf{vk}$
-5. **return** $\mathsf{vk}$
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Register(<span class="cj-id">vk</span>)<span class="cj-op-from">from <span class="cj-id">id</span>′</span></div>
+<ol class="cj-code" start="3">
+<li>\(\textbf{if}\ \mathit{id}'.F \in \{A,Z\} \ \wedge\ \mathit{id}.P \notin \mathbf{C}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \mathtt{VK}[\mathit{id}.P]\)</span><span class="cj-comment">// a peek, not a write</span></li>
+<li>\(\textbf{if}\ \mathtt{VK}[\mathit{id}.P] \neq \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \mathtt{VK}[\mathit{id}.P]\)</span></li>
+<li>\(\mathit{vk} \gets \mathsf{San}[\mathsf{Clean}_{\mathsf{reg}}](\mathit{vk}; \mathtt{VK})\)</li>
+<li>\(\mathtt{VK}[\mathit{id}.P] \gets \mathit{vk}\)</li>
+<li>\(\textbf{return}\ \mathit{vk}\)</li>
+</ol>
+</div>
 
-**Retrieve(P)**
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Retrieve(<span class="cj-id">P</span>)<span class="cj-op-from">from <span class="cj-id">id</span>′</span></div>
+<ol class="cj-code" start="10">
+<li>\(\textbf{return}\ \mathtt{VK}[P]\)</li>
+</ol>
+</div>
 
-1. **return** $\mathsf{VK}[P]$
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>′</span></div>
+<ol class="cj-code" start="11">
+<li>\(\textbf{return}\ \mathtt{VK}\)</li>
+</ol>
+</div>
 
-**Leak()**
+<div class="cj-op">
+<div class="cj-op-sig">Clean<sub><span class="cj-rm">reg</span></sub>(<span class="cj-id">vk</span>; <span class="cj-rm">VK</span>):</div>
+<ol class="cj-code" start="12">
+<li>\(\textbf{return}\ \mathit{vk} \in \mathcal{K} \ \wedge\ \neg\exists\, P : \mathtt{VK}[P] = \mathit{vk}\)</li>
+</ol>
+</div>
 
-1. **return** $\mathsf{VK}$
-:::
+</div>
+</div>
+```
 
 ## Known realizations
 

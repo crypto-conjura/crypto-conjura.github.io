@@ -10,36 +10,61 @@ A source of uniform bits shared across the parties it serves, paired with an era
 
 ## Functionality
 
-Parameterized by a bit-width $n$. State: a counter $\mathsf{ctr}$ and a table $\mathsf{L} : \mathbb{N} \to \{0,1\}^n \cup \{\bot\}$, initially $\mathsf{ctr} = 0$ and $\mathsf{L}[*] = \bot$.
+Parameterized by a bit-width $n$. State: a counter $\mathtt{ctr}$ and a table $\mathtt{L} : \mathbb{N} \to \{0,1\}^n \cup \{\square\}$, initially $\mathtt{ctr} = 0$ and $\mathtt{L}[*] = \square$.
 
-- **Rnd()**, from any admitted caller: increment $\mathsf{ctr}$, sample $r \gets_\$ \{0,1\}^n$, set $\mathsf{L}[\mathsf{ctr}] \gets r$, and return $(\mathsf{ctr}, r)$ — the index is returned alongside the value precisely so the caller can name the draw later.
-- **Erase(i)**: set $\mathsf{L}[i] \gets \bot$ and return $\mathsf{ok}$.
-- **Leak()**: return $\mathsf{L}$ in full (the adversary at a corrupt party sees every draw not yet erased).
+- **Rnd()**, from any admitted caller: increment $\mathtt{ctr}$, sample $r \gets_\$ \{0,1\}^n$, set $\mathtt{L}[\mathtt{ctr}] \gets r$, and return $(\mathtt{ctr}, r)$ — the index is returned alongside the value precisely so the caller can name the draw later.
+- **Erase(i)**: set $\mathtt{L}[i] \gets \square$ and return $\mathsf{ok}$.
+- **Leak()**: return $\mathtt{L}$ in full (the adversary at a corrupt party sees every draw not yet erased).
 
 The counter is shared across every party the instance serves — two parties drawing from the same instance draw distinct entries — which is what makes it a shared *source* rather than a per-party generator, and what a protocol relies on to keep two draws from colliding.
 
-::: {.callout-note title="Pseudocode"}
-**Initialize()**
+Below is the functionality itself, transcribed from [*UC for Gamers*](/surveys/uc-for-gamers/pdf/main.pdf#page=137) (§13.1, p. 136), line numbering and all. The header line fixes the process id, the served parties $\mathbf{P}$, the admitted callers $\mathbf{N}$, the used slots $\mathbf{U}$ (none: the source draws on nothing outside itself) and the parameter $\mathit{par} := n$, the width of a draw. Inside, $\square$ marks an entry the table has no value at — either never reached by the counter, or erased.
 
-1. $\mathsf{ctr} \gets 0$
-2. $\mathsf{L}[*] \gets \bot$
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{Rand}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \emptyset\), &nbsp; \(\mathit{par} := n\)</div>
+</div>
+<div class="cj-interface-body">
 
-**Rnd()**, from any admitted caller
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{ctr} \gets 0\)</li>
+<li>\(\mathtt{L} : \mathbb{N} \to \{0,1\}^{n} \cup \{\square\}\)</li>
+<li>\(\mathtt{L}[*] \gets \square\)</li>
+</ol>
+</div>
 
-1. $\mathsf{ctr} \gets \mathsf{ctr} + 1$
-2. $r \gets_\$ \{0,1\}^n$
-3. $\mathsf{L}[\mathsf{ctr}] \gets r$
-4. **return** $(\mathsf{ctr}, r)$
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Rnd()<span class="cj-op-from">from <span class="cj-id">id</span>′</span></div>
+<ol class="cj-code" start="4">
+<li>\(\mathtt{ctr} \gets \mathtt{ctr} + 1\)</li>
+<li>\(r \gets_{\$} \{0,1\}^{n}\)<span class="cj-comment">// the one sampling in the paper</span></li>
+<li>\(\mathtt{L}[\mathtt{ctr}] \gets r\)</li>
+<li>\(\textbf{return}\ (\mathtt{ctr},\, r)\)<span class="cj-comment">// the index, so a caller may erase</span></li>
+</ol>
+</div>
 
-**Erase(i)**
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Erase(<span class="cj-id">i</span>)<span class="cj-op-from">from <span class="cj-id">id</span>′</span></div>
+<ol class="cj-code" start="8">
+<li>\(\mathtt{L}[i] \gets \square\)</li>
+<li>\(\textbf{return}\)&nbsp;<span class="cj-atom">ok</span></li>
+</ol>
+</div>
 
-1. $\mathsf{L}[i] \gets \bot$
-2. **return** $\mathsf{ok}$
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>′</span></div>
+<ol class="cj-code" start="10">
+<li>\(\textbf{return}\ \mathtt{L}\)</li>
+</ol>
+</div>
 
-**Leak()**
-
-1. **return** $\mathsf{L}$
-:::
+</div>
+</div>
+```
 
 ## Known realizations
 

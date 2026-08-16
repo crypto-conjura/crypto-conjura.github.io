@@ -4,6 +4,8 @@ Ordered by difficulty: web-related tweaks, new web content, new conjectures, new
 
 Last reconciled against `main` at `4fae707` on 16 August 2026.
 
+Completed tasks are deleted from this file rather than checked off and kept: this is a list of live work, and `git log` is the record of what closed and when.
+
 - [ ] **DEFERRED: supply the c/0004 session transcript** -- the original session that produced `latex/proof.tex` could not be found (confirmed 16 August 2026). `c/0004/sessions/` stays empty rather than reconstructed, and the About page now states that no result on the site carries a session log.
 
 - [ ] **Move the UC Encyclopedia under Surveys (~30 min — decide the URL question before touching anything)**
@@ -95,16 +97,3 @@ Last reconciled against `main` at `4fae707` on 16 August 2026.
   - **Misconception-based distractors for the multiple-choice tiers.** Each wrong option should be "wrong for a reason" — a specific, real misunderstanding a UC newcomer plausibly holds (e.g. conflating the security parameter with a corruption bound, assuming the environment can see a functionality's internal coins, forgetting a shell has to be built to the *strictest* verdict it serves) — not an arbitrary false statement. This directly serves the harder-quizzes tier: a true/false statement that inverts logic should invert a *specific* convention from the paper's notation-conventions list, so a wrong answer diagnoses which convention the reader hasn't internalized yet.
   - **Deep-dive quizzes as combinatorial retrieval, not just recall.** The puzzle tier should force recombining a later chapter's functionality with an earlier chapter's property or shell.
   - **Light gamification paired with spaced review, not gamification alone.** Streaks/XP/progress bars alone are a weak retention lever; the literature's stronger result is spaced repetition *combined* with light game mechanics. Concretely: resurface a prior chapter's quiz question (in a new combination) a chapter or two later rather than only in that chapter's own quiz, and track a streak across that resurfacing rather than only within one session.
-
-## Completed 16 August 2026
-
-Bodies deleted rather than left as completion narrative. `git log` is the record.
-
-- [x] **Merge the CI-gate branch** -- PR #12, `checks.yml` passed on its own PR in 2m1s, merged as `4fae707`
-- [x] **Usability on iPhone, Android, and other handheld devices** -- `pdf/main.pdf#page=N` fragments confirmed working on real handsets, 16 August 2026
-- [x] **Consolidate Vision, Philosophy and the mission statement into one page** -- `/about/`, both old URLs aliased
-- [x] **State the case against the venues' AI posture, and for a journal of AI-assisted research**
-- [x] **Read the IACR, ACM and IEEE AI policies and place them against what Conjura does** -- read at source, and the evidence moved the framing
-- [x] **Say that research shouldn't belong to whoever can afford the most compute**
-- [x] **Write the responsible-disclosure statement, and the guardrails behind it** -- `SECURITY.md`, private vulnerability reporting enabled
-- [x] **Remove the audio files**

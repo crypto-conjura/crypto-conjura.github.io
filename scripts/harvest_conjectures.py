@@ -643,9 +643,12 @@ def process(pdf_path, backend, prompts, args, ledger):
     for r in extracted.get("rejected") or []:
         print(f"          - passed over: {r.get('what', '')[:70]} -- {r.get('why', '')[:70]}")
 
-    written, run_meta = [], {"at": now(), "backend": backend.name, "effort": args.effort}
+    written, dropped = [], []
+    run_meta = {"at": now(), "backend": backend.name, "effort": args.effort}
+    considered = candidates[: args.max_conjectures]
+    over_cap = len(candidates) - len(considered)
 
-    for cand in candidates[: args.max_conjectures]:
+    for cand in considered:
         title = cand.get("title") or cand.get("slug") or "(untitled)"
         print(f"\n  -- {title}")
 
@@ -661,6 +664,7 @@ def process(pdf_path, backend, prompts, args, ledger):
             print("     DROPPED -- did not ground:")
             for reason in reasons:
                 print(f"           {reason}")
+            dropped.append((title, "quotes did not ground: " + "; ".join(reasons)))
             continue
 
         # --- 3. verify ----------------------------------------------------
@@ -688,6 +692,7 @@ def process(pdf_path, backend, prompts, args, ledger):
                       f"{str(c.get('finding', ''))[:90]}")
         if verdict in ("unfaithful", "not-a-conjecture") and not args.keep_unfaithful:
             print(f"     DROPPED -- {verify.get('reason', '')[:160]}")
+            dropped.append((title, f"adversarial check: {verdict}"))
             continue
 
         # --- 4. typeset ---------------------------------------------------
@@ -719,6 +724,7 @@ def process(pdf_path, backend, prompts, args, ledger):
         tex = (rendered.get("tex") or "").strip()
         if "\\documentclass{conjura-conjecture}" not in tex or "\\end{document}" not in tex:
             print("     DROPPED -- rendered statement.tex is not a complete document")
+            dropped.append((title, "typeset output was not a complete document"))
             continue
 
         folder = claim_folder(cand["slug"])
@@ -753,6 +759,8 @@ def process(pdf_path, backend, prompts, args, ledger):
         written.append(folder)
         print(f"     -> {folder.relative_to(ROOT)}")
 
+    report_verdict(pdf_path, candidates, written, dropped, over_cap)
+
     ledger["documents"][doc.sha256] = {
         "file": pdf_path.name,
         "title": meta.get("title", ""),
@@ -761,8 +769,36 @@ def process(pdf_path, backend, prompts, args, ledger):
         "backend": backend.name,
         "candidates_found": len(candidates),
         "conjectures_written": [str(f.relative_to(ROOT)) for f in written],
+        "dropped": [{"title": t, "why": w} for t, w in dropped],
     }
     return written, "ok", doc.sha256
+
+
+def report_verdict(pdf_path, candidates, written, dropped, over_cap=0):
+    """Say, for one paper, whether anything was found and whether it was kept.
+
+    The step-by-step trace above answers this only by implication: a paper
+    that yields nothing prints a `0 candidate(s)` line and then simply stops,
+    which is indistinguishable at a glance from a paper still being read. The
+    two numbers a reader actually wants are *found* -- did the paper pose an
+    open problem at all -- and *created* -- did one survive grounding, the
+    adversarial check and typesetting to become a folder on disk. They differ
+    whenever a check does its job, so neither implies the other.
+    """
+    name = pdf_path.name
+    if not candidates:
+        print(f"\n  = {name}: NO CONJECTURE FOUND -- the paper posed no open "
+              f"problem this run could use. Nothing written.")
+        return
+    print(f"\n  = {name}: {len(candidates)} found, {len(written)} created, "
+          f"{len(dropped)} dropped" + (f", {over_cap} over the cap" if over_cap else ""))
+    for folder in written:
+        print(f"      created: {folder.relative_to(ROOT)}")
+    for title, why in dropped:
+        print(f"      dropped: {title[:60]} -- {why[:90]}")
+    if not written:
+        print("      NO CONJECTURE CREATED -- every candidate failed a check "
+              "above; nothing was written.")
 
 
 def move_to_processed(pdf_path, sha256):
@@ -786,10 +822,17 @@ def do_report():
         print(f"{rec.get('processed_at', '?')}  {rec.get('file')}  [{sha[:12]}]")
         if rec.get("title"):
             print(f"    {rec['title']}")
-        print(f"    {rec.get('candidates_found', 0)} candidate(s) -> "
-              f"{len(written)} conjecture(s) kept")
+        found = rec.get("candidates_found", 0)
+        if not found:
+            print("    no conjecture found -- nothing written")
+        else:
+            print(f"    {found} candidate(s) -> "
+                  f"{len(written)} conjecture(s) kept"
+                  + ("" if written else "  (NONE CREATED)"))
         for w in written:
-            print(f"      {w}")
+            print(f"      created: {w}")
+        for d in rec.get("dropped") or []:
+            print(f"      dropped: {str(d.get('title'))[:60]} -- {str(d.get('why'))[:80]}")
     waiting = sorted(p for p in HARVEST.glob("*.pdf"))
     print(f"\n{len(waiting)} PDF(s) waiting in {HARVEST.relative_to(ROOT)}/")
 
@@ -850,24 +893,45 @@ def main():
         print(f"Backend: {backend.name}, effort {args.effort}")
     ledger = read_ledger()
 
-    total, failures = [], []
+    total, failures, outcomes = [], [], []
     for pdf in pdfs:
         try:
             written, status, sha = process(pdf, backend, prompts, args, ledger)
-        except (ModelError, RuntimeError) as exc:
+        except (ModelError, RuntimeError, OSError) as exc:
             print(f"  ! {exc}")
             print("    Left in place so the run can be retried.")
             failures.append((pdf.name, str(exc)))
+            outcomes.append((pdf.name, "failed", 0))
             continue
         total += written
+        outcomes.append((pdf.name, status, len(written)))
         if status in ("ok", "skipped-duplicate") and not args.keep:
             dest = move_to_processed(pdf, sha)
             print(f"  moved to {dest.relative_to(ROOT)}")
         if status == "ok":
             write_ledger(ledger)
 
+    # Every paper gets a line here whether or not it produced anything. A run
+    # that listed only its successes would let a paper that yielded nothing
+    # leave no trace at all in the summary, which is the case most worth
+    # seeing: it is either a paper with no open problem in it, or a prompt
+    # that failed to find the one that is there.
     print(f"\n{'=' * 60}")
-    print(f"{len(total)} conjecture folder(s) written:")
+    print(f"{len(outcomes)} paper(s) seen:\n")
+    label = {
+        "ok": "read",
+        "failed": "FAILED",
+        "skipped-duplicate": "skipped, already in the ledger",
+        "no-text-layer": "SKIPPED, no text layer (run OCR)",
+        "dry-run": "not read (dry run)",
+    }
+    for name, status, count in outcomes:
+        if status == "ok":
+            verdict = f"{count} conjecture(s) created" if count else "no conjecture created"
+        else:
+            verdict = label.get(status, status)
+        print(f"  {name:<28} {verdict}")
+    print(f"\n{len(total)} conjecture folder(s) written:")
     for folder in total:
         print(f"  {folder.relative_to(ROOT)}")
     if failures:

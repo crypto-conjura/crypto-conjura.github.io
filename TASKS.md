@@ -1,12 +1,87 @@
 # Tasks
 
-Split into two sections: **Website and repository** (~5.5h) covers the site, its build tooling and the repository's configuration; **Conjectures and papers** (~6.0h) covers the mathematics — proving conjectures, and writing and checking the papers that report them. Within each section, tasks are ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~19.5h** (rough; the UC Encyclopedia content dominates the uncertainty and could run well over its estimate).
+Split into two sections: **Website and repository** (~6.25h) covers the site, its build tooling and the repository's configuration; **Conjectures and papers** (~6.0h) covers the mathematics — proving conjectures, and writing and checking the papers that report them. Within each section, tasks are ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~20.25h** (rough; the UC Encyclopedia content dominates the uncertainty and could run well over its estimate).
 
 Last reconciled against `main` at `f8237dc` on 17 August 2026.
 
 Completed tasks are deleted from this file rather than checked off and kept: this is a list of live work, and `git log` is the record of what closed and when.
 
 ## Website and repository
+
+- [ ] **Add a refuted variant of the status badge — same geometry, red instead of green (~0.75h)**
+
+  Today the badge has no way to say a statement turned out to be *false*. A
+  machine-checked refutation and a machine-checked proof both land on `π = 4`
+  and render the identical dark-green sealed badge, because the six graded
+  fields say how well established the work is and nothing says which way it
+  points. Wanted: the same badge as a proven conjecture, on a red ramp.
+
+  The direction has to come from somewhere, so this needs a seventh field in
+  the `status:` block — `proof_direction: proves | refutes` — optional and
+  defaulting to `proves`, so all 18 existing statement pages and
+  `papers/uber-groups-rsr/` keep their current badge byte-for-byte and CI stays
+  green without touching them. It is deliberately *not* a grade: it must not
+  enter σ or π, so `--self-test`'s monotonicity argument is unaffected. Add
+  the constraint that `refutes` requires `proof_informal != open` (there is no
+  refutation without a proof of one), alongside the two existing dependency
+  constraints in `validate()`.
+
+  Files, and why each one:
+
+  - [scripts/status_badge.py](scripts/status_badge.py) — parse and default the
+    field in `parse_status_block()` (same `setdefault` pattern as
+    `FREE_TEXT_FIELDS`), validate it, then in `render_badge_svg()` add a
+    `cj-refuted` modifier class to the `<svg>` and swap the π = 4 glyph from
+    `✓` to `✗`. Keep the gold seal for a sealed refutation: the seal means
+    de-Bruijn-complete, not "true". `render_caption()` should say
+    "Refutation: …" in place of "Proof: …" — that caption is also the `<a>`'s
+    `aria-label`, so it is what a screen reader announces.
+  - [scripts/build_index.py](scripts/build_index.py) — listing tables do *not*
+    reuse the rendered `status_badge:` string; `listing_item()` re-derives the
+    badge from primitives (`badge_sigma`, `badge_pi`, `badge_sealed`,
+    `badge_dash`, `badge_glyph`). Add `badge_refuted` and make `badge_glyph`
+    direction-aware, or the red badge appears on statement pages only and
+    silently stays green in every listing. Also accept the new field in the
+    `STATUS_FIELDS` validation loop, which currently errors on anything
+    missing and would need it as a separate optional dict.
+  - [_listing-templates/statement-table.ejs.md:27](_listing-templates/statement-table.ejs.md#L27)
+    — emit `cj-refuted` on the `<svg>` when `item.badge_refuted`.
+  - [theme-light.scss:323-336](theme-light.scss#L323-L336) and
+    [theme-dark.scss:325-338](theme-dark.scss#L325-L338) — add
+    `.cj-refuted .cj-ring-N` / `.cj-refuted .cj-disc-N` overrides. Specificity
+    (0,2,0) beats the existing (0,1,0) rules, so no `!important` is needed.
+    Match the green ramp's lightness steps step for step, including
+    `disc-4 == ring-5`, so a red badge reads as exactly as strong as a green
+    one at equal grade rather than as a warning.
+  - [open-problems/status-legend/index.qmd](open-problems/status-legend/index.qmd)
+    — the legend is hand-written HTML, not generated: add the refuted rows to
+    the symbol key and a fifth worked example (sealed refutation) to the
+    example table, and update the "Reading the badge" paragraph.
+  - [schema/index.qmd:37](schema/index.qmd#L37) — the `status` row still says
+    "the six existing graded fields"; and
+    [_templates/statement.qmd](_templates/statement.qmd), whose `status:` block
+    is what every new leaf is copied from.
+
+  One thing to get right rather than skip: red-vs-green is the classic
+  colour-blind pair, so the direction must survive greyscale. The `✗` glyph
+  does that at π = 4. At π = 1–3 (a refutation drafted but not formalized)
+  colour is the *only* channel, and the honest fix is that the caption,
+  `aria-label` and `status_summary` carry it in words — worth stating in the
+  legend rather than leaving implied.
+
+  Also worth fixing while in there, since the `✗` depends on it: the centre
+  glyph is currently near-invisible at several grades. Light theme paints it
+  `#2a2a28` over `disc-4` `#2e6b3f` (~1.6:1); dark theme paints it `#f5f4ef`
+  over `disc-4` `#a8e092` and over `disc-0` `#ffffff`, so today's π = 0 badge
+  has an invisible `–` in dark mode. A sibling selector on the `<text>` that
+  directly follows the disc (`.cj-disc-4 + .cj-glyph`, etc.) flips the ink
+  without touching the SVG, and the legend's standalone glyph examples, which
+  have no preceding disc, are unaffected.
+
+  No statement on the site is currently refuted, so nothing turns red on
+  landing — the legend example is the only visible change until the first
+  `proof_direction: refutes` is set. The `relations` vocabulary already has
+  `refutes` / `refuted-by`, so the naming is consistent with what exists.
 
 - [ ] **Decide what to do with `lhl-k-source`, the one remaining unpromoted draft (~0.5h — decision, then either a promotion or a deletion)**
 

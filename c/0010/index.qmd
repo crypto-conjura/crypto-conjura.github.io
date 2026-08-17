@@ -1,0 +1,94 @@
+---
+id: "0010"
+problem: split-source-decomposition
+title: "Decomposition into Bit-Fixing Mixtures for Two Split Unpredictable Random-Oracle Sources"
+short_title: "Split-source decomposition"
+areas: [idealized-models, information-theoretic, foundations]
+model: rom
+form: tight-bound
+assumption_class: unconditional
+category: research-open
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: new-idea
+  by: ai
+  note: "Presampling is a single-preprocessing-stage technique and no published argument runs it across parties that read the oracle independently; the paper raising the question reaches its bounds by compression instead, and compression is what stalls on the constructions the decomposition is wanted for."
+status_summary: "Open for a query budget of two or more: whether a random oracle decomposes into bit-fixing mixtures when the advice is produced by two sources that never communicate. Proved and tight at q = 0, and proved at q = 1 under an extra hypothesis."
+status_updated: 2026-08-17
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Coretti, Farshim, Harasser, Southern, Multi-Source Randomness Extraction and Generation in the Random-Oracle Model, ITC 2025", url: "https://eprint.iacr.org/2025/1258"}
+  - {cite: "Coretti, Dodis, Guo, Steinberger, Random Oracles and Non-Uniformity, EUROCRYPT 2018, pp. 227-258", url: "https://eprint.iacr.org/2017/937"}
+  - {cite: "Dodis, Guo, Katz, Fixing Cracks in the Concrete: Random Oracles with Auxiliary Input, Revisited, EUROCRYPT 2017, pp. 473-495", url: "https://doi.org/10.1007/978-3-319-56614-6_16"}
+  - {cite: "Unruh, Random Oracles and Auxiliary Input, CRYPTO 2007, pp. 205-223", url: "https://doi.org/10.1007/978-3-540-74143-5_12"}
+revision: 2
+statement_sha: "26f7b2d870b1b04c5c7859bdb512b3ac87a1410d55e9ab9502a1fb98b78b2a7b"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+Two parties each read an entire random function and each output one input point, together with a little leakage about the function. They never communicate, and neither party's point can be guessed by anyone who sees all of the leakage and the whole function. The conjecture says that, given the leakage, the random function is then close to a mixture of functions fixed in advance on a short list of points, where the list is chosen without any knowledge of the two parties' points.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [Download LaTeX source](latex/main.tex)
+
+Fix $N, M \in \mathbb{N}$ and let $\mathsf{Fun} := \{f : [N] \times [N] \to [M]\}$, with $H \gets_{\$} \mathsf{Fun}$. The oracle's domain is a pair of coordinates, one produced by each source. Write $\sigma_1, \sigma_2$ for bounds on the leakage each source outputs, $\sigma := \sigma_1 + \sigma_2$, and $\sigma' := \sigma + 2\log N$. Let $\delta \in (0,1]$ be the unpredictability parameter, $q$ the observer's query budget and $q^{+} := q + 1$, $P$ the number of points a mixture may fix, and $\gamma \in (0,1)$ an additive slack. All algorithms are computationally unbounded; only queries are counted.
+
+A pair $(S_1, S_2)$ is **split** when the two sources use independent coins and neither sees the other's output, and **$\delta$-unpredictable** when no predictor given $H$ and the whole leakage vector guesses either point with probability more than $\delta$.
+
+**Conjecture.** There are absolute constants $c, C$ such that for all $N$ and $M$, every split $\delta$-unpredictable pair $(S_1, S_2)$ with leakage bounded by $\sigma_1, \sigma_2$, every $P \in \mathbb{N}$ and every $\gamma \in (0,1)$, there is a family
+$$\mathcal{Y} = \{Y_{f,\zeta}\}, \qquad f \in \mathsf{Fun}, \quad \zeta \in \{0,1\}^{*} \times \{0,1\}^{*},$$
+depending only on $S_1$, $S_2$, $P$ and $\gamma$, in which every $Y_{f,\zeta}$ is a $P$-mixture consistent with $f$, such that for every $q \in \mathbb{N} \cup \{0\}$ and every $q$-query challenge-oblivious observer $D$,
+$$\mathsf{Adv}_{\mathcal{Y},D} \;\leq\; \frac{c(\sigma' + \log \gamma^{-1})\, q^{+}}{P} \;+\; C\sqrt{\sigma'\, q^{+}\, \delta} \;+\; \gamma.$$
+
+Three parts of the quantification are the statement rather than decoration.
+
+- **The family is indexed by the oracle as well as the leakage.** This is the one departure from the classical single-source lemma, where it is indexed by the advice alone, and it is what permits a single *joint* decomposition rather than one per source. It may not be chosen using the sources' points, which is why the index set is $\mathsf{Fun} \times (\{0,1\}^{*})^{2}$ and nothing larger.
+- **The family is chosen before $q$.** It comes after $P$ and $\gamma$ but before the observer's budget, so no part of it may be tuned to that budget. Relaxing this makes the statement easier in a way the intended applications cannot use.
+- **Consistency with $f$ is essential.** It keeps the fixed values compatible with the leakage the observer already holds.
+
+## Proof
+
+Open for $q \geq 2$. The case $q = 0$ is proved and tight, and $q = 1$ is proved under an extra hypothesis.
+
+**A single source will not do.** The conjecture is false with one source, and the counterexample is explicit. Take $M$ even, let $S$ draw $x \gets_{\$} [N]$, query $H$ at $x$, and output $x$ together with the one-bit leakage $z := \mathbb{1}[H(x) \leq M/2]$; let $D$ be the $0$-query observer returning $\mathbb{1}[\mathbb{1}[y \leq M/2] = z]$. Then $S$ is $\delta$-unpredictable with $\delta \leq 2/N$, the real experiment outputs $1$ always, and any fixed set of size $P \ll N$ leaves the decomposed experiment near $1/2$.
+
+That fixes what a proof must do. It has to fail visibly when the two sources are replaced by one, and it cannot draw its use of their independence solely from a bound on the probability that the fixed set contains the challenge, since such bounds hold for a single source as well.
+
+**What it would buy.** Conditional on the conjecture, extraction for split unpredictable sources follows: $\kappa(q) \leq (4c + 2C + 4)\sqrt{\sigma'\, q^{+}\, \delta} + q\delta$, so $\kappa(q) = O(\sqrt{\sigma'\, q^{+}\, \delta})$. That implication is proved; only its hypothesis is missing.
+
+## Discussion
+
+Presampling assumes a single preprocessing stage. Running it across parties that read the oracle independently is the gap, and it is why [Coretti, Farshim, Harasser and Southern](https://eprint.iacr.org/2025/1258) obtain their multi-source bounds by compression instead. Compression is also what stalls for non-monolithic constructions such as Merkle-Damgård and sponge, which is the practical reason to want the decomposition route rather than a sharper compression argument.
+
+:::
+
+## Open obligations
+
+- [ ] Settle the case $q \geq 2$, or refute it. The two proved cases, $q = 0$ tight and $q = 1$ under an extra hypothesis, are the evidence such as it is.
+- [ ] Discharge the extra hypothesis the $q = 1$ case currently assumes, or show it cannot be dropped.
+- [ ] Formalize the statement in Lean. Nothing exists yet: the split and unpredictability definitions, the $P$-mixture and consistency notions, and the challenge-oblivious observer all need writing before the conjecture itself can be stated.
+- [ ] Check whether the single-source counterexample generalizes to any weakening of the quantifier order, which would say the order is not merely convenient but forced.
+
+## Sources
+
+- Coretti, Farshim, Harasser, and Southern. [*Multi-Source Randomness Extraction and Generation in the Random-Oracle Model*](https://eprint.iacr.org/2025/1258). ITC 2025.
+- Coretti, Dodis, Guo, and Steinberger. [*Random Oracles and Non-Uniformity*](https://eprint.iacr.org/2017/937). EUROCRYPT 2018, pages 227–258.
+- Dodis, Guo, and Katz. [*Fixing Cracks in the Concrete: Random Oracles with Auxiliary Input, Revisited*](https://doi.org/10.1007/978-3-319-56614-6_16). EUROCRYPT 2017, pages 473–495.
+- Unruh. [*Random Oracles and Auxiliary Input*](https://doi.org/10.1007/978-3-540-74143-5_12). CRYPTO 2007, pages 205–223.

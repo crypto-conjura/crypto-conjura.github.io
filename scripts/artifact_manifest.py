@@ -33,6 +33,7 @@ import argparse
 import hashlib
 import json
 import pathlib
+import re
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
@@ -73,19 +74,47 @@ def artifacts():
         ["papers/uber-groups-rsr/pdf/*.pdf", "papers/uber-groups-rsr/latex/**/*"],
         "cd latex/papers/uber-groups-rsr && pdflatex main.tex, then copy source and PDF into papers/uber-groups-rsr/",
     ))
+    book = book_inputs()
     out.append((
         "surveys/uc-for-gamers/pdf",
-        ["surveys/uc-for-gamers/latex/**/*"],
+        book,
         ["surveys/uc-for-gamers/pdf/*.pdf"],
         "cd surveys/uc-for-gamers/latex && pdflatex main.tex",
     ))
     out.append((
         "surveys/uc-for-gamers/html",
-        ["surveys/uc-for-gamers/latex/**/*"],
+        book,
         ["surveys/uc-for-gamers/html/*"],
         "scripts/build_uc_html.sh   # ~4 minutes; needs TeX Live, make4ht, TeX Live's dvisvgm",
     ))
     return out
+
+
+def book_inputs():
+    """Globs for the files the book is actually built from.
+
+    Not `latex/**/*`: `functionalities/` holds one fragment per encyclopedia
+    entry, and `main.tex` `\\input`s only the handful of boxes the book itself
+    typesets. The other ninety-odd are the encyclopedia's source, rendered to
+    `uc/.../index.qmd` by `gen_interface.py` and gated by its `--check`, so
+    counting them here would ask for a book rebuild every time an entry is
+    filled in -- a rebuild that cannot change a single page of the book. That
+    is the same reasoning that keeps `latex/uc/**` out of this file entirely.
+
+    Read from `main.tex` rather than hardcoded, so a fragment promoted into
+    the book starts being watched the moment it is `\\input`.
+    """
+    latex = ROOT / "surveys" / "uc-for-gamers" / "latex"
+    globs = ["surveys/uc-for-gamers/latex/*.tex",
+             "surveys/uc-for-gamers/latex/*.sty"]
+    main = latex / "main.tex"
+    if main.exists():
+        for m in re.finditer(r"\\input\{(functionalities/[^}]+)\}",
+                             main.read_text()):
+            name = m.group(1)
+            globs.append("surveys/uc-for-gamers/latex/%s%s"
+                         % (name, "" if name.endswith(".tex") else ".tex"))
+    return globs
 
 
 def digest(path):

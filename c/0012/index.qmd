@@ -1,0 +1,105 @@
+---
+id: "0012"
+problem: censored-cipher-transfer
+draft: censoring-conjecture
+title: "The Censoring Conjecture for AES"
+short_title: "Censoring can only hurt"
+areas: [symmetric-key, foundations]
+model: standard
+form: lower-bound
+assumption_class: unconditional
+category: research-open
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: new-idea
+  by: ai
+  note: "The only comparable theorem, Peres and Winkler's, holds for Glauber dynamics on a monotone spin system and the source paper states its hypotheses do not cover block ciphers. The informal justification -- deleting mixing can only slow convergence -- is pattern-agnostic, so any argument matching it would prove the stronger universally-quantified variant the source declines to pose."
+status_summary: "Open. The censored side is proved at essentially optimal round count with matching lower bounds; what is missing is the transfer of any such bound to uncensored AES at the same round count."
+status_updated: 2026-08-17
+relations:
+  - {kind: variant-of, target: "0011", note: "Both ask whether an unconditional statistical result about a simplified cipher licenses a conclusion about the real one; this one weakens the cipher's diffusion, c/0011 weakens its independence order."}
+lean:
+  mode: none
+sources:
+  - {cite: "Jain, Liu, Mizgerd, Pelecanos, Tessaro, Vaikuntanathan, How Fast Does the Inverse Walk Approximate a Random Permutation?, Cryptology ePrint Archive, Paper 2024/1795", url: "https://eprint.iacr.org/2024/1795"}
+  - {cite: "Liu, Pelecanos, Tessaro, Vaikuntanathan, Layout Graphs, Random Walks and the t-wise Independence of SPN Block Ciphers, CRYPTO 2023, LNCS 14083, pp. 694-726", url: "https://eprint.iacr.org/2024/083"}
+  - {cite: "Liu, Tessaro, Vaikuntanathan, The t-wise Independence of Substitution-Permutation Networks, CRYPTO 2021", url: "https://eprint.iacr.org/2021/507"}
+  - {cite: "Baigneres, Vaudenay, Proving the security of AES substitution-permutation network, SAC 2005, LNCS 3897, pp. 65-81", url: "https://doi.org/10.1007/11693383_5"}
+revision: 1
+statement_sha: "82e52ecb8ff43bc76e509318106556b6113cac4dff7685e81a0b5e6d6f8992d6"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+The line of work proving unconditional statistical guarantees for AES's concrete S-box does not analyse AES. It analyses *censored* AES, in which many of the linear mixing layers are deleted and replaced by the identity, because long runs of key-addition and S-box application with no mixing between them behave like a random walk that can be studied one byte at a time. Everyone expects the mixing layers to help rather than hurt, so the censored cipher should be the harder case and its bound should carry over to full AES at the same round count. This conjecture is exactly that transfer.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [Download LaTeX source](latex/main.tex)
+
+Let $\mathbb{F}$ be the AES field, so the state space is $\mathbb{F}^{16}$. Write $\mathsf{ARK}$ for round-key addition, $\mathsf{INV}$ for the S-box layer applied bytewise, and $L : \mathbb{F}^{16} \to \mathbb{F}^{16}$ for the linear mixing layer, an $\mathbb{F}_2$-linear bijection with maximal branch number. The source does not decompose $L$ further, and neither does this statement.
+
+**$C$-censored $r$-round AES.** For $r \geq 1$ and $C \subseteq \{1, \dots, r\}$, put $L^{C}_{i} := \mathrm{id}_{\mathbb{F}^{16}}$ when $i \in C$ and $L^{C}_{i} := L$ otherwise, and let $\mathcal{F}^{(r)}_{C}$ be the distribution of the resulting $r$-round cipher under independent uniform round keys. So $\mathcal{F}^{(r)}_{\emptyset}$ applies $L$ in *every* round, and is uncensored $r$-round AES.
+
+**The censoring set of censored AES.** Fix the instantiation in which each $\mathrm{SPN}^{*}$ S-box layer is replaced by a run of consecutive $(\mathsf{ARK}, \mathsf{INV})$ operations. Then $C^{*}(r) \subseteq \{1, \dots, r\}$ is the set of rounds whose linear mixing layer falls strictly inside one of those runs.
+
+**$\varepsilon$-approximate $t$-wise independence.** For a distribution $\mu$ on permutations of a finite set $D$ and $2 \leq t \leq |D|$: $\mu$ is $\varepsilon$-approximately $t$-wise independent if for every tuple $(x_1, \dots, x_t)$ of distinct elements of $D$, the law of $(f(x_1), \dots, f(x_t))$ for $f \sim \mu$ is within $\varepsilon$ in total variation of the uniform distribution on distinct $t$-tuples.
+
+**Conjecture (censoring can only hurt).** For every integer $t \geq 2$ there is a constant $r_{\mathrm{thresh}} = r_{\mathrm{thresh}}(t) > 0$ such that for every integer $r > r_{\mathrm{thresh}}$ and every $\varepsilon \in (0,1)$,
+$$\mathcal{F}^{(r)}_{C^{*}(r)} \text{ is } \varepsilon\text{-approx. } t\text{-wise independent} \;\Longrightarrow\; \mathcal{F}^{(r)}_{\emptyset} \text{ is } \varepsilon\text{-approx. } t\text{-wise independent},$$
+with $D = \mathbb{F}^{16}$.
+
+Three parts of the quantification are the statement rather than decoration.
+
+- **One censoring pattern, not all of them.** The hypothesis concerns the distinguished set $C^{*}(r)$, not an arbitrary $C \subseteq \{1,\dots,r\}$. The universally quantified variant is a strengthening the source does not pose, so a counterexample at some exotic $C$ would not by itself refute this. The informal justification for the conjecture *is* pattern-agnostic, which is what makes the stronger reading tempting and what a proof would have to earn.
+- **The threshold depends on $t$ alone, and $\varepsilon$ is universally quantified.** $r_{\mathrm{thresh}}$ exists only to let the cipher reach a generic state and excuse atypical behaviour in the first few rounds. If the intended reading also lets $r_{\mathrm{thresh}}$ depend on $\varepsilon$, the conjecture is weaker than the one stated here.
+- **Round keys are independent and uniform on both sides.** The AES key schedule is out of scope, and the conjecture says nothing about it.
+
+## Proof
+
+Open. Nothing proves any instance of the implication.
+
+**The hypothesis side is settled, sharply.** The source paper establishes the censored side at essentially optimal round count: $\Theta(n \log n + n \log(1/\varepsilon))$ rounds of the $\mathsf{INV}$ key-alternating cipher over a field of size $n$ give a permutation $\varepsilon$-close to uniform on the appropriate coset of the alternating group, with matching lower bounds. Combined with the $\mathrm{SPN}^{*}$ analysis of Liu, Pelecanos, Tessaro and Vaikuntanathan this yields, **for $t < 2^{(0.499 - 1/(4k))b}$**, that a $\Theta(b 2^{b} k)$-round censored SPN with $k$ blocks of $b$ bits and the AES S-box is $2^{-\Theta(kb)}$-approximately $t$-wise independent. The concrete instance recorded in that line of work is that $192$-round censored AES is $2^{-128}$-approximately pairwise independent.
+
+**The conclusion side has nothing.** No bound of this shape is known for uncensored AES at any round count, which is the entire reason the censored construction is studied.
+
+**The nearest analogue does not apply.** Peres and Winkler prove that extra updates cannot delay mixing, which is the right shape. Their hypotheses are Glauber dynamics on a monotone spin system, and the source paper states explicitly that they do not cover block ciphers. The paper reports this as the only comparable censoring theorem and offers no route from it.
+
+**What a proof must not do.** Any monotonicity argument general enough to be pattern-agnostic would prove the universally quantified variant, which the source declines to pose. Either that stronger statement is true and should be claimed, or the proof must use something specific to $C^{*}(r)$ — and knowing which is part of the problem.
+
+## Discussion
+
+Everything this research programme currently proves about the concrete AES S-box is proved about a cipher nobody uses. The conjecture is the single step that would turn those statements into statements about AES, and it is unusually well isolated: the hypothesis is proved and sharp, the conclusion is precise, and the gap between them contains no other unknowns.
+
+The asymmetry is worth naming. A proof upgrades a sharp body of unconditional results from an artificial construction to the real cipher at no cost in round count. A refutation would be more interesting still, because it would mean that deleting a large fraction of a cipher's diffusion can *help* it reach $t$-wise independence, which contradicts the intuition the whole censoring methodology rests on.
+
+:::
+
+## Open obligations
+
+- [ ] Prove the implication for the pattern $C^{*}(r)$, or refute it.
+- [ ] Decide whether the universally quantified variant over all $C \subseteq \{1,\dots,r\}$ is true. A pattern-agnostic proof would settle both; a counterexample at an exotic $C$ would separate them and leave this statement standing.
+- [ ] Determine whether $r_{\mathrm{thresh}}$ can be taken independent of $t$, and whether it must be allowed to depend on $\varepsilon$.
+- [ ] Extend, or rule out extending, Peres and Winkler's censoring theorem to key-alternating ciphers. The source states its hypotheses fail here; what is not known is whether they can be weakened.
+- [ ] Formalize the statement in Lean. The censored-cipher family, the censoring pattern and approximate $t$-wise independence over distinct tuples all need writing first.
+
+## Sources
+
+- Jain, Liu, Mizgerd, Pelecanos, Tessaro, and Vaikuntanathan. [*How Fast Does the Inverse Walk Approximate a Random Permutation?*](https://eprint.iacr.org/2024/1795). Cryptology ePrint Archive, Paper 2024/1795.
+- Liu, Pelecanos, Tessaro, and Vaikuntanathan. [*Layout Graphs, Random Walks and the t-wise Independence of SPN Block Ciphers*](https://eprint.iacr.org/2024/083). CRYPTO 2023, LNCS 14083, pages 694--726.
+- Liu, Tessaro, and Vaikuntanathan. [*The t-wise Independence of Substitution-Permutation Networks*](https://eprint.iacr.org/2021/507). CRYPTO 2021.
+- Baignères and Vaudenay. [*Proving the security of AES substitution-permutation network*](https://doi.org/10.1007/11693383_5). SAC 2005, LNCS 3897, pages 65--81.
+- Peres and Winkler. *Can extra updates delay mixing?* 2011.

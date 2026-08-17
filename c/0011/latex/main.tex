@@ -1,0 +1,301 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  Logarithmic independence implies pseudorandomness for local
+%  permutations.
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{LOGARITHMIC INDEPENDENCE FOR LOCAL PERMUTATIONS}
+
+\newcommand{\bits}{\{0,1\}}
+\newcommand{\NN}{\mathbb{N}}
+\newcommand{\cP}{\mathcal{P}}
+\newcommand{\cQ}{\mathcal{Q}}
+\newcommand{\negl}{\mathrm{negl}}
+\newcommand{\dTV}{d_{\mathrm{TV}}}
+\newcommand{\rnd}{\mathsf{r}}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{Logarithmic Independence Implies Pseudorandomness for Local
+Permutations}
+\cjsubtitle{Constant-locality round permutations at independence order
+$\log n$}
+\cjstatus{Statement: AI-written from Jesko Dujmovic, Angelos Pelecanos,
+  Stefano Tessaro, \emph{When Simple Permutations Mix Poorly: Limited
+  Independence Does Not Imply Pseudorandomness}, Cryptology ePrint
+  Archive 2026, not yet checked by a human. The original constant-order
+  conjecture (order $4$, and in fact every constant order $k$) is
+  refuted by the source paper's explicit construction, while the
+  logarithmic-order version stated here is untouched: the paper offers
+  neither a proof nor a counterexample, and states that an
+  unconditional proof would imply that one-way functions exist.}
+\cjcategory{\emph{Symmetric Cryptography \& Pseudorandomness}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+Many block cipher security proofs do not use computational assumptions
+at all: they show that the cipher's outputs on any few distinct inputs,
+under one random key, are statistically indistinguishable from a random
+tuple of distinct strings. It has long been asked whether this kind of
+limited-independence guarantee, for round-based ciphers whose single
+round is very simple, is enough to conclude full pseudorandomness.
+``Very simple'' here means local: every output bit of one round depends
+on only a bounded number of input bits, with the bound not growing with
+the block length. The paper this problem comes from settles the question
+negatively when the number of inputs is a fixed constant: it exhibits a
+local round permutation whose repeated composition is statistically
+close to $k$-wise independent for whatever constant $k$ you like, and
+yet is broken by an efficient attack that queries only $k+1$ points. The
+construction works by smuggling a small number of predictable invariants
+through the rounds and reading them off from a bounded number of wires.
+The conjecture recorded here is what survives that attack: raise the
+independence order from a constant to logarithmic in the block length,
+keep everything else the same, and the implication is conjectured to
+hold again. The authors' reason for believing it is that their
+counterexample would now have to sustain a growing number of invariants
+at once, which the technique cannot do. An unconditional proof is out of
+reach for the usual reasons --- it would imply that one-way functions
+exist --- so the realistic targets are a proof under standard
+assumptions or a genuinely new counterexample.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+Security proofs for block ciphers that avoid computational assumptions
+usually target \emph{$k$-wise independence}: one shows that the cipher's
+outputs on any $k$ distinct inputs, under a single random key, are
+statistically close to a uniformly random tuple of $k$ distinct strings.
+Already $k = 2$ rules out linear and differential cryptanalysis, and
+results of this shape are known for random local
+circuits~\cite{Gow96,BH08,GHP25,GHKO25} and for
+substitution--permutation networks~\cite{LTV21}.
+
+Hoory, Magen, Myers and Rackoff~\cite{HMMR04,HMMR05} proposed reading
+limited independence as evidence of full pseudorandomness. Let $\cP$ be
+a randomized permutation of $\bits^n$ that is \emph{local}, meaning each
+output bit depends on only a constant number of input bits, and let
+$\cP^{T}$ denote the composition of $T$ independent copies of $\cP$.
+Their conjecture: if $\cP^{T}$ is negligibly far from $4$-wise
+independent, then $\cP^{T}$ is a pseudorandom permutation. The constant
+$4$ is close to minimal, since counterexamples are known at $3$.
+
+The source paper~\cite{DPT26} refutes that conjecture. For every
+constant $k$, it constructs a local randomized permutation over a
+constant-size alphabet (of size depending on $k$) whose $(n-2)$-fold
+composition is negligibly far from $k$-wise independent, and yet is
+distinguished from a random permutation, with constant probability, by
+an efficient adversary querying only $k+1$ points. The construction
+carries a unary round counter inside the state, drives $k+1$ families of
+``special'' strings deterministically around cycles of length $n-2$ (one
+cycle per special value), while a conditional brickwork circuit
+randomizes everything else, and in the last round sends the $k+1$
+strings whose counter has run out to $k+1$ values obeying one linear
+relation that a random permutation would not obey.
+
+What that counterexample consumes is a constant amount of structure: a
+constant number of invariants, each detectable from a constant number of
+wires. The conjecture below is the variant the authors single out as
+untouched by their attack. Raising the order of independence from a
+constant to $\log n$ would force $\omega(1)$ invariants to be maintained
+at once, which they say their approach cannot do. The authors also
+record that a proof is not to be expected unconditionally, since it
+would imply the existence of one-way functions and that
+$\mathrm{P} \neq \mathrm{NP}$; they suggest proofs under non-trivial
+assumptions, or a refutation, as the realistic targets. They further
+note that Gowers' conjecture~\cite{Gow96}, made explicit by
+Barak~\cite{Bar17} and connected to obfuscation candidates by Canetti et
+al.~\cite{CCMR24}, is weaker, in the sense that refuting it would also
+refute the conjecture stated here.
+
+\textbf{Progress to date.} For each constant $k$, the paper's main
+theorem constructs a constant-locality randomized permutation over a
+constant-size alphabet (whose size grows with $k$) whose $(n-2)$-fold
+composition is negligibly far from $k$-wise independent while admitting
+an efficient $(k+1)$-query distinguisher, which refutes the
+constant-order form of the implication. Towards the logarithmic-order
+form it supplies only an obstruction: the counterexample depends on
+distinguishing a constant number of invariants from a constant number of
+wires, and the authors state that this approach is not viable once
+$\omega(1)$ invariants must be maintained. The paper additionally
+observes that no unconditional proof of this or its sibling conjectures
+should be expected, since such a proof would imply the existence of
+one-way functions and $\mathrm{P} \neq \mathrm{NP}$.
+
+\textbf{Why it matters.} The whole point of proving $k$-wise
+independence for a cipher is that one hopes it is evidence of something
+stronger. The source paper shows that at any constant order the hope is
+formally unfounded, which leaves the field without a threshold at which
+the evidence becomes conclusive. This conjecture proposes $\log n$ as
+that threshold. A proof, even under standard assumptions, would turn
+existing $\log n$-wise independence results for random local circuits
+into pseudorandomness results and would give the statistical-proof
+programme a genuine endpoint. A refutation would be at least as
+interesting: it would need a counterexample maintaining a growing number
+of locally checkable invariants, which is exactly the technique the
+paper says it does not have, and the same object would likely say
+something about how much structure can survive a mixing process.
+
+\section{Notation and parameters}\label{sec:notation}
+
+\begin{itemize}
+\item $n$ --- the block length in bits. All asymptotics are in $n$; a
+  function $\varepsilon$ is \emph{negligible}, written
+  $\varepsilon(n) = \negl(n)$, if for every constant $c > 0$ we have
+  $\varepsilon(n) < n^{-c}$ for all sufficiently large $n$.
+\item $[n] := \{1,\dots,n\}$.
+\item $\ell$ --- the locality parameter, a constant independent of $n$.
+\item $\cP = \{\cP_n\}_{n \in \NN}$ --- the one-round randomized
+  permutation family (Definition~\ref{def:local}).
+\item $T = T(n)$ --- the number of rounds; $\cP^{T}$ is the $T$-fold
+  sequential composition with fresh independent randomness in every
+  round (Definition~\ref{def:comp}).
+\item $k(n) = \lfloor \log_2 n \rfloor$ --- the order of independence at
+  which the implication is conjectured.
+\item $A^{(k)}$ --- the set of ordered $k$-tuples of pairwise distinct
+  elements of a set $A$; $U_{n,k}$ --- the uniform distribution on
+  $(\bits^n)^{(k)}$.
+\item $\dTV$ --- total variation distance,
+  $\dTV(p,q) = \tfrac{1}{2}\sum_{\omega}|p(\omega) - q(\omega)|$.
+\item $\Pi$ --- a uniformly random permutation of $\bits^n$.
+\end{itemize}
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{definition}[$\ell$-local randomized permutation family]
+\label{def:local}
+A \emph{randomized permutation} on $\bits^n$ is an algorithm $\cP_n$
+taking an input $v \in \bits^n$ and randomness $\rnd$, and returning
+$\cP_n(v;\rnd) \in \bits^n$, such that for every fixed value of $\rnd$
+the map $v \mapsto \cP_n(v;\rnd)$ is a permutation of $\bits^n$.
+Equivalently, sampling $\rnd$ uniformly makes $\cP_n$ a distribution
+over permutations of $\bits^n$; we write $\cP_n(v)$ for $\cP_n(v;\rnd)$
+with $\rnd$ uniform.
+
+For $\ell \in \NN$, such a $\cP_n$ is \emph{$\ell$-local} if for every
+value of $\rnd$ and every $j \in [n]$ there is a set $S \subseteq [n]$
+with $|S| \le \ell$ such that the $j$-th output bit of
+$\cP_n(\,\cdot\,;\rnd)$ is a function of the input bits indexed by $S$
+alone. A family $\cP = \{\cP_n\}_{n \in \NN}$ is $\ell$-local if every
+$\cP_n$ is $\ell$-local for the same constant $\ell$.
+\end{definition}
+
+\begin{definition}[sequential composition]\label{def:comp}
+For $T \in \NN$ and a randomized permutation $\cP_n$, the $T$-fold
+sequential composition $\cP^{T}$ is the randomized permutation
+\[
+  \cP^{T} \colon x \mapsto
+  \bigl(\cP_n(\,\cdot\,;\rnd_T) \circ \cdots \circ
+  \cP_n(\,\cdot\,;\rnd_1)\bigr)(x),
+\]
+where $\rnd_1,\dots,\rnd_T$ are independent and uniform. For a function
+$T = T(n)$ this defines a family $\{\cP^{T(n)}\}_{n \in \NN}$ of
+randomized permutations, again written $\cP^{T}$.
+\end{definition}
+
+\begin{definition}[negligibly far from $k(n)$-wise independence]
+\label{def:kwise}
+A family $\cQ = \{\cQ_n\}_{n \in \NN}$ of randomized permutations on
+$\bits^n$ is \emph{negligibly far from $k(n)$-wise independent} if there
+is a negligible $\varepsilon$ such that for every $n$ and every tuple of
+pairwise distinct inputs
+$(x^1,\dots,x^{k(n)}) \in (\bits^n)^{(k(n))}$,
+\[
+  \dTV\bigl(\,(\cQ_n(x^1),\dots,\cQ_n(x^{k(n)})),\ U_{n,k(n)}\,\bigr)
+  \;\le\; \varepsilon(n),
+\]
+where the $k(n)$ outputs are produced by one single sample of $\cQ_n$,
+so that the tuple lies in $(\bits^n)^{(k(n))}$.
+\end{definition}
+
+\begin{definition}[pseudorandom permutation]\label{def:prp}
+A family $\cQ = \{\cQ_n\}_{n \in \NN}$ of randomized permutations on
+$\bits^n$ is a \emph{pseudorandom permutation} if for every
+probabilistic oracle algorithm $D$ running in time polynomial in $n$,
+\[
+  \Bigl|\ \Pr\bigl[D^{\cQ_n}(1^n) = 1\bigr] \;-\;
+  \Pr\bigl[D^{\Pi}(1^n) = 1\bigr]\ \Bigr| \;=\; \negl(n),
+\]
+where in the first probability a single sample of $\cQ_n$ is fixed and
+$D$ may query it on inputs of its choice, in the second $\Pi$ is a
+uniformly random permutation of $\bits^n$, and in both cases $D$ is
+given forward evaluation queries only.
+\end{definition}
+
+\begin{conjecture}[logarithmic independence]\label{conj:main}
+Let $\ell \in \NN$ be a constant, let $\cP = \{\cP_n\}_{n \in \NN}$ be
+an $\ell$-local randomized permutation family in the sense of
+Definition~\ref{def:local}, and let $T \colon \NN \to \NN$ be arbitrary,
+with $\cP^{T}$ the $T(n)$-fold sequential composition of
+Definition~\ref{def:comp}. Set $k(n) := \lfloor \log_2 n \rfloor$.
+
+If $\cP^{T}$ is negligibly far from $k(n)$-wise independent in the sense
+of Definition~\ref{def:kwise}, then $\cP^{T}$ is a pseudorandom
+permutation in the sense of Definition~\ref{def:prp}.
+\end{conjecture}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem[Bar17]{Bar17}
+B. Barak.
+\emph{The complexity of public-key cryptography}.
+Tutorials on the Foundations of Cryptography: Dedicated to Oded
+Goldreich, pages 45--77, Springer, 2017.
+
+\bibitem[BH08]{BH08}
+A. Brodsky, S. Hoory.
+\emph{Simple permutations mix even better}.
+Random Structures and Algorithms, 32(3):274--289, 2008.
+
+\bibitem[CCMR24]{CCMR24}
+R. Canetti, C. Chamon, E. R. Mucciolo, A. E. Ruckenstein.
+\emph{Towards general-purpose program obfuscation via local mixing}.
+TCC 2024, Part IV, volume 15367 of LNCS, pages 37--70, Springer, 2024.
+
+\bibitem[DPT26]{DPT26}
+J. Dujmovic, A. Pelecanos, S. Tessaro.
+\emph{When Simple Permutations Mix Poorly: Limited Independence Does Not
+Imply Pseudorandomness}.
+Cryptology ePrint Archive, Paper 2025/2282, 2026. [UNVERIFIED]
+
+\bibitem[GHKO25]{GHKO25}
+W. Gay, W. He, N. Kocurek, R. O'Donnell.
+\emph{Pseudorandomness properties of random reversible circuits}.
+CRYPTO 2025, Part I, volume 16000 of LNCS, pages 651--678, Springer,
+2025.
+
+\bibitem[GHP25]{GHP25}
+L. Gretta, W. He, A. Pelecanos.
+\emph{More efficient approximate $k$-wise independent permutations from
+random reversible circuits via log-Sobolev inequalities}.
+36th SODA, pages 5582--5598, ACM-SIAM, 2025.
+
+\bibitem[Gow96]{Gow96}
+W. T. Gowers.
+\emph{An almost $m$-wise independent random permutation of the cube}.
+Combinatorics, Probability and Computing, 5:119--130, 1996.
+
+\bibitem[HMMR04]{HMMR04}
+S. Hoory, A. Magen, S. Myers, C. Rackoff.
+\emph{Simple permutations mix well}.
+ICALP 2004, volume 3142 of LNCS, pages 770--781, Springer, 2004.
+
+\bibitem[HMMR05]{HMMR05}
+S. Hoory, A. Magen, S. A. Myers, C. Rackoff.
+\emph{Simple permutations mix well}.
+Theoretical Computer Science, 348(2--3):251--261, 2005.
+
+\bibitem[LTV21]{LTV21}
+T. Liu, S. Tessaro, V. Vaikuntanathan.
+\emph{The $t$-wise independence of substitution-permutation networks}.
+CRYPTO 2021, Part IV, volume 12828 of LNCS, pages 454--483, Springer,
+2021.
+
+\end{conjurabibliography}
+
+\end{document}

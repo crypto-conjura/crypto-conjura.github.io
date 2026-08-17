@@ -1,0 +1,504 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  Three-move pairing-free blind signatures from discrete log.
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{THREE-MOVE BLIND SIGNATURES FROM DISCRETE LOG}
+
+\newcommand{\BS}{\mathsf{BS}}
+\newcommand{\GGen}{\mathsf{GGen}}
+\newcommand{\GG}{\mathbb{G}}
+\newcommand{\Zp}{\mathbb{Z}_p}
+\newcommand{\RO}{\mathsf{H}}
+\newcommand{\Setup}{\mathsf{Setup}}
+\newcommand{\KeyGen}{\mathsf{KeyGen}}
+\newcommand{\Sign}{\mathsf{Sign}}
+\newcommand{\Uu}{\mathsf{U}}
+\newcommand{\Ver}{\mathsf{Ver}}
+\newcommand{\pubp}{\mathsf{pp}}
+\newcommand{\seck}{\mathsf{sk}}
+\newcommand{\pubk}{\mathsf{pk}}
+\newcommand{\smsg}{\mathsf{smsg}}
+\newcommand{\umsg}{\mathsf{umsg}}
+\newcommand{\stS}{\mathsf{st_S}}
+\newcommand{\stU}{\mathsf{st_U}}
+\newcommand{\Adv}{\mathsf{Adv}}
+\newcommand{\DL}{\mathsf{DL}}
+\newcommand{\DDH}{\mathsf{DDH}}
+\newcommand{\CDH}{\mathsf{CDH}}
+\newcommand{\ROSassm}{\mathsf{ROS}}
+\newcommand{\Sorc}{\mathsf{S}}
+\newcommand{\cnt}{\mathsf{cnt}}
+\newcommand{\sessid}{\mathsf{sid}}
+\newcommand{\Adl}{\Adv^{\mathrm{dl}}}
+\newcommand{\Ablind}{\Adv^{\mathrm{blind}}}
+\newcommand{\Aomuf}{\Adv^{\mathrm{omuf}}}
+\newcommand{\rsample}{\leftarrow_{\$}}
+\newcommand{\advA}{\mathcal{A}}
+\newcommand{\advB}{\mathcal{B}}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{Three-Move Pairing-Free Blind Signatures from Discrete Log}
+\cjsubtitle{Black-box in the group, random oracle model only, unbounded
+  concurrency}
+\cjstatus{Statement: AI-written from Rutchathon Chairattana-Apirom,
+  Michael Reichle, Stefano Tessaro, \emph{Playing Tag with
+  Okamoto--Schnorr: Three-Move Pairing-Free Blind Signatures from DDH},
+  Cryptology ePrint Archive 2026 (full version of an article to appear
+  at CRYPTO 2026), not yet checked by a human. Settled are three moves
+  under $\DL$ but only in the algebraic group model on top of the random
+  oracle model, three moves under $\DDH$ in the random oracle model
+  alone (the source, and concurrently Chen), four moves under $\DL$ in
+  the random oracle model alone, and the impossibility of two moves for
+  schemes black-box in the group; open is the remaining cell --- three
+  moves, black-box in the group, random oracle model only, $\DL$ only.}
+\cjcategory{\emph{Public-Key Cryptography \& Assumptions}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+A blind signature lets a user get a signature on a message the signer
+never learns, and the signature cannot afterwards be linked back to the
+session that produced it. The security property that matters is one-more
+unforgeability: a user who completes some number of signing sessions must
+not walk away with even one signature more than that, no matter how many
+sessions are open at the same time. In ordinary elliptic-curve groups with
+no pairing, the cheapest known protocols exchange three messages, but
+until recently every three-message scheme with full concurrent security
+needed an idealized model of the group (the algebraic group model) on top
+of the random oracle. The source paper removes that: it gives a
+three-message scheme whose one-more unforgeability is proved in the random
+oracle model alone, but under decisional Diffie--Hellman rather than under
+the plain discrete logarithm assumption. Discrete log is the weakest and
+oldest assumption available in these groups, and three messages is known
+to be the fewest possible for schemes that treat the group as a black box,
+so one cell of the table is still empty. The conjecture is that this cell
+can be filled: that some three-message pairing-free blind signature, using
+the group only through generic group operations, is blind and one-more
+unforgeable in the random oracle model against adversaries running an
+unbounded polynomial number of concurrent sessions, assuming only that
+discrete logarithms are hard. The paper calls this the dream result of the
+area, names two specific reasons why gluing together the known techniques
+does not get there, and leaves it for future work.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+Blind signatures were introduced by Chaum~\cite{Cha82}, and the security
+notion that has organised the area since Juels, Luby and
+Ostrovsky~\cite{JLO97} is \emph{one-more unforgeability}: a malicious user
+who completes $\ell$ signing sessions, possibly all concurrently, must not
+obtain $\ell + 1$ signatures on distinct messages. Building such schemes
+over pairing-free groups is the practically relevant case, because these
+are the curves that cryptographic libraries actually support, and the
+theoretically interesting one, because such groups are close to the least
+structured algebraic setting in which efficient public-key cryptography
+lives.
+
+The obstruction is concurrency. Blind Schnorr and blind Okamoto--Schnorr
+are three-move protocols that are broken by the $\ROSassm$ attack of
+Benhamouda et al.~\cite{BLL21}, and the classical analyses~\cite{PS00}
+only cover a polylogarithmic number of concurrent sessions. Three-move
+schemes with \emph{full} one-more unforgeability do exist~\cite{Abe01,TZ22},
+but their proofs invoke the Algebraic Group Model~\cite{FKL18} on top of
+the random oracle model. Removing the AGM was achieved only recently, at
+the cost of a fourth move and usually of an assumption stronger than
+discrete log: four-move schemes from $\CDH$~\cite{CATZ24} and from
+$\DDH$~\cite{KR25}, and a four-move scheme from $\DL$~\cite{KLR25}.
+
+The source paper closes the round gap. It gives the first three-move
+pairing-free blind signature whose one-more unforgeability is proved in
+the random oracle model alone, under $\DDH$, by tagging the
+Okamoto--Schnorr nonce with an algebraic MAC and having the user blind the
+tag together with the transcript; the scheme is in fact one-more
+\emph{strongly} unforgeable. The same round complexity, also under $\DDH$,
+was obtained concurrently by Chen~\cite{Che26}.
+
+Three moves is optimal for this class of schemes: Dietz, Kastner and
+Tessaro~\cite{DKT26} show that no round-optimal (two-move) construction
+that uses the group only as a black box can be proved secure in the
+combined generic-group~\cite{Sho97,Mau05} and random-oracle model. The
+black-box restriction also matters on the assumption side: using the group
+non-black-box, via Fischlin's paradigm~\cite{Fis06} with generic NIZKs for
+group-dependent statements, one obtains two-move schemes in the random
+oracle model from a one-way function alone~\cite{CMV26}, so the
+interesting question is what the group buys when it is used \emph{as a
+group}.
+
+What remains is a single cell of the table, which the source paper calls
+the ``dream result'': three moves, black-box in the group, random oracle
+model only, and discrete log as the sole assumption. The paper names two
+concrete obstructions to reaching it by combining the known techniques.
+First, its own construction needs an algebraic MAC and a
+linearly-homomorphic extractable commitment; both are known from $\DDH$,
+and neither is known from $\DL$ in a black-box manner. Second, in the
+four-move $\DL$ scheme of~\cite{KLR25}, signatures are Fiat--Shamir proofs
+for a \emph{message-dependent} statement that the reduction punctures at
+the forgery message; because the statement depends on the message, the
+user must send the message in the first move, and the remaining three
+moves are consumed establishing the proof. The paper explicitly leaves the
+reconciliation of the two techniques open.
+
+Progress to date. What the source achieves is three moves, pairing-free,
+black-box in the group, in the random oracle model alone, with full
+(unbounded-concurrency) one-more strong unforgeability --- but under
+$\DDH$, in two instantiations: one with computational blindness and
+signatures of $15$ group elements plus $22$ scalars, and one with
+statistical blindness and signatures of $21$ group elements plus $35$
+scalars; communication is $17$ group elements plus $14$ scalars in both.
+The concurrent work of Chen~\cite{Che26} achieves three moves in the
+random oracle model from $\DDH$ by a different route, using one-time
+signatures together with encrypted-message blind signatures. From $\DL$
+alone, the best known in the random oracle model is four
+moves~\cite{KLR25}. From $\DL$ at three moves, the best known needs the
+AGM on top of the random oracle model~\cite{Abe01,TZ22}. Two moves is
+impossible for group-black-box schemes in the combined generic-group and
+random-oracle model~\cite{DKT26}, so three is the floor.
+
+\section{Notation and parameters}\label{sec:notation}
+
+\begin{itemize}
+  \item $\lambda \in \mathbb{N}$ is the security parameter, supplied to
+  all algorithms in unary as $1^\lambda$. A function
+  $\nu : \mathbb{N} \to [0,1]$ is \emph{negligible} if
+  $\nu(\lambda) = \lambda^{-\omega(1)}$. \emph{PPT} means probabilistic
+  polynomial time in $\lambda$. We write $x \rsample S$ for sampling $x$
+  uniformly from a finite set $S$.
+  \item A \emph{pairing-free group generator} $\GGen$ is a PPT algorithm
+  that on input $1^\lambda$ outputs $(\GG, p, G)$, where $\GG$ is a cyclic
+  group of prime order $p = p(\lambda)$ with
+  $\lceil \log_2 p \rceil = \Theta(\lambda)$, and $G$ generates $\GG$. We
+  write $\GG$ additively, so $xG$ denotes the $x$-fold sum of $G$ for
+  $x \in \Zp$. No bilinear map on $\GG$ is assumed, provided, or used.
+  \item The \emph{discrete logarithm advantage} of an algorithm $\advB$
+  is
+  \begin{align*}
+    \Adl_{\GGen}(\advB, \lambda) &:= \Pr\bigl[\, x' = x \;:\;\\
+    &\qquad (\GG, p, G) \sample \GGen(1^\lambda),\\
+    &\qquad x \rsample \Zp,\\
+    &\qquad x' \sample \advB(\GG, p, G, xG) \,\bigr].
+  \end{align*}
+  The \emph{discrete logarithm ($\DL$) assumption} holds relative to
+  $\GGen$ if this quantity is negligible for every PPT $\advB$.
+  \item $\RO$ denotes a random oracle, modelled as a uniformly random
+  function from $\{0,1\}^*$ to a range fixed by the scheme; every
+  algorithm and every adversary below has oracle access to $\RO$ unless
+  stated otherwise. It is the only idealized object allowed: in
+  particular the algebraic group model and the generic group model may
+  not be used in the security proof.
+  \item $\mu \in \{0,1\}^*$ denotes a message to be signed, $\sigma$ a
+  signature, $\pubp$ public parameters, and $(\seck, \pubk)$ a signing key
+  pair.
+  \item $\Ablind_{\BS}(\advA, \lambda)$ and
+  $\Aomuf_{\BS}(\advA, \lambda)$ are the blindness and one-more
+  unforgeability advantages of $\advA$ against a scheme $\BS$, defined in
+  Definitions~\ref{def:blind} and~\ref{def:omuf}.
+  \item $\ell$ is the number of signing sessions the adversary completes
+  in the one-more unforgeability game; it must not be able to produce more
+  than that many signatures on distinct messages.
+\end{itemize}
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{definition}[Three-move blind signature scheme]\label{def:bs}
+A \emph{three-move blind signature scheme} is a tuple
+\begin{align*}
+  \BS = (&\Setup, \KeyGen, \Sign_1, \Uu_1,\\
+         &\Sign_2, \Uu_2, \Ver)
+\end{align*}
+of PPT algorithms, each taking a group description $(\GG, p, G)$ as an
+implicit input and each with oracle access to $\RO$:
+\begin{itemize}
+  \item $\Setup(1^\lambda) \to \pubp$;
+  \item $\KeyGen(\pubp) \to (\seck, \pubk)$;
+  \item $\Sign_1(\pubp, \seck) \to (\smsg_1, \stS)$;
+  \item $\Uu_1(\pubp, \pubk, \mu, \smsg_1) \to (\umsg, \stU)$;
+  \item $\Sign_2(\umsg, \stS) \to \smsg_2$;
+  \item $\Uu_2(\smsg_2, \stU) \to \sigma \in \{0,1\}^* \cup \{\bot\}$;
+  \item $\Ver(\pubp, \pubk, \mu, \sigma) \to b \in \{0,1\}$,
+  deterministic.
+\end{itemize}
+A signing session on a message $\mu$ consists of exactly three transmitted
+messages: $\smsg_1$ from signer to user, then $\umsg$ from user to signer,
+then $\smsg_2$ from signer to user. No further communication is permitted.
+\end{definition}
+
+\begin{definition}[Correctness]\label{def:corr}
+$\BS$ is \emph{correct} if for every $\lambda$, every
+$\pubp \in \Setup(1^\lambda)$, every
+$(\seck, \pubk) \in \KeyGen(\pubp)$ and every $\mu \in \{0,1\}^*$, an
+honest execution
+\begin{align*}
+  (\smsg_1, \stS) &\sample \Sign_1(\pubp, \seck),\\
+  (\umsg, \stU) &\sample \Uu_1(\pubp, \pubk, \mu, \smsg_1),\\
+  \smsg_2 &\sample \Sign_2(\umsg, \stS),\\
+  \sigma &\sample \Uu_2(\smsg_2, \stU)
+\end{align*}
+satisfies $\Ver(\pubp, \pubk, \mu, \sigma) = 1$ with probability $1$, the
+probability being over the coins of the four algorithms and over $\RO$.
+\end{definition}
+
+\begin{definition}[Blindness]\label{def:blind}
+For an adversary $\advA$ acting as a malicious signer, consider the game:
+sample $\pubp \sample \Setup(1^\lambda)$ and run $\advA(\pubp)$, which
+outputs a public key $\pubk$, two messages
+$\mu_0, \mu_1 \in \{0,1\}^*$ and a state. Sample $b \rsample \{0,1\}$.
+The game then runs two user instances, one on $\mu_b$ and one on
+$\mu_{1-b}$, each executing $\Uu_1$ and then $\Uu_2$ with
+$(\pubp, \pubk)$; $\advA$ supplies all signer messages to both instances
+and chooses their interleaving. Let $\sigma_0$ and $\sigma_1$ be the
+outputs of the instances run on $\mu_0$ and on $\mu_1$ respectively. If
+$\sigma_0 = \bot$ or $\sigma_1 = \bot$, then $\advA$ is given
+$(\bot, \bot)$; otherwise $\advA$ is given $(\sigma_0, \sigma_1)$.
+Finally $\advA$ outputs $b' \in \{0,1\}$. Set
+\[
+  \Ablind_{\BS}(\advA, \lambda) := \bigl| \Pr[b' = b] - \tfrac{1}{2}
+  \bigr| .
+\]
+$\BS$ is \emph{blind} if this is negligible for every PPT $\advA$.
+\end{definition}
+
+\begin{definition}[One-more unforgeability]\label{def:omuf}
+For an adversary $\advA$ acting as a malicious user, consider the game:
+sample $\pubp \sample \Setup(1^\lambda)$ and
+$(\seck, \pubk) \sample \KeyGen(\pubp)$, initialise a counter
+$\cnt \sample 0$, a closed-session counter $\ell \sample 0$ and a set
+$\mathcal{S} \sample \emptyset$, and run $\advA(\pubp, \pubk)$ with two
+oracles:
+\begin{itemize}
+  \item $\Sorc_1()$: set $\cnt \sample \cnt + 1$, compute
+  $(\smsg_{1}, \stS^{(\cnt)}) \sample \Sign_1(\pubp, \seck)$, and return
+  $(\cnt, \smsg_{1})$;
+  \item $\Sorc_2(\sessid, \umsg)$: if
+  $\sessid \notin \{1, \dots, \cnt\}$ or $\sessid \in \mathcal{S}$,
+  return $\bot$; otherwise set
+  $\mathcal{S} \sample \mathcal{S} \cup \{\sessid\}$, set
+  $\ell \sample \ell + 1$, and return
+  $\Sign_2(\umsg, \stS^{(\sessid)})$.
+\end{itemize}
+$\advA$ finally outputs pairs
+$(\mu^{(1)}, \sigma^{(1)}), \dots, (\mu^{(k)}, \sigma^{(k)})$ and wins if
+$k \geq \ell + 1$, the messages $\mu^{(1)}, \dots, \mu^{(k)}$ are pairwise
+distinct, and $\Ver(\pubp, \pubk, \mu^{(i)}, \sigma^{(i)}) = 1$ for all
+$i \in \{1, \dots, k\}$. Set
+$\Aomuf_{\BS}(\advA, \lambda) := \Pr[\advA \text{ wins}]$. $\BS$ is
+\emph{one-more unforgeable} if this is negligible for every PPT $\advA$.
+Note that $\advA$ may interleave its $\Sorc_1$ and $\Sorc_2$ queries
+arbitrarily, so any polynomial number of sessions may be open at once.
+\end{definition}
+
+\begin{definition}[Black-box use of the group]\label{def:bb}
+$\BS$ \emph{makes black-box use of the group} if there is a single tuple
+of oracle PPT algorithms such that, for every group description
+$(\GG, p, G)$, the algorithms of $\BS$ on that description are obtained by
+giving those oracle algorithms the following interface, and nothing else:
+(i) the order $p$ and an opaque handle for the generator $G$; (ii) an
+oracle that, given handles for $X, Y \in \GG$, returns a handle for
+$X + Y$, and one that, given a handle for $X$, returns a handle for $-X$;
+(iii) an oracle that, given handles for $X, Y$, returns $1$ if $X = Y$ and
+$0$ otherwise; (iv) an oracle returning a handle for a uniformly random
+element of $\GG$. The algorithms never read the bit representation of a
+group element, and group elements appearing in $\pubp$, $\pubk$, protocol
+messages and signatures are transmitted as group elements. Equivalently,
+$\BS$ is well defined as a scheme in the generic group model of
+Shoup~\cite{Sho97} and Maurer~\cite{Mau05}. Adversaries are \emph{not}
+restricted in this way: in Definitions~\ref{def:blind} and~\ref{def:omuf}
+the adversary receives the real group description and may exploit the
+representation of group elements arbitrarily.
+\end{definition}
+
+\begin{conjecture}[three moves, black-box in the group, from $\DL$]
+\label{conj:main}
+There exist oracle PPT algorithms
+\begin{align*}
+  \BS = (&\Setup, \KeyGen, \Sign_1, \Uu_1,\\
+         &\Sign_2, \Uu_2, \Ver)
+\end{align*}
+which form a three-move blind signature scheme in the sense of
+Definition~\ref{def:bs}, which make black-box use of the group in the
+sense of Definition~\ref{def:bb}, and which have access to a random
+oracle $\RO$, such that the following holds for \emph{every} pairing-free
+group generator $\GGen$. Write $\BS[\GGen]$ for the scheme obtained by
+sampling $(\GG, p, G) \sample \GGen(1^\lambda)$ and running the
+algorithms of $\BS$ on the group description $(\GG, p, G)$. Then:
+\begin{enumerate}
+  \item \emph{(Correctness.)} $\BS[\GGen]$ is correct in the sense of
+  Definition~\ref{def:corr}.
+  \item \emph{(Blindness from $\DL$.)} If the discrete logarithm
+  assumption holds relative to $\GGen$, then for every PPT adversary
+  $\advA$ with access to $\RO$, $\Ablind_{\BS[\GGen]}(\advA, \lambda)$ as
+  in Definition~\ref{def:blind} is negligible in $\lambda$.
+  \item \emph{(One-more unforgeability from $\DL$.)} If the discrete
+  logarithm assumption holds relative to $\GGen$, i.e.\
+  $\Adl_{\GGen}(\advB, \lambda)$ is negligible for every PPT $\advB$,
+  then $\Aomuf_{\BS[\GGen]}(\advA, \lambda)$ as in
+  Definition~\ref{def:omuf} is negligible for every PPT adversary
+  $\advA$ with access to $\RO$. Here $\advA$ is an arbitrary (not
+  necessarily group-generic, not necessarily algebraic) PPT algorithm
+  which receives the actual group description $(\GG, p, G)$, and there is
+  no a~priori bound on the number of signing sessions $\advA$ opens, nor
+  on how many of them it keeps open concurrently, beyond $\advA$ running
+  in polynomial time.
+\end{enumerate}
+\end{conjecture}
+
+\begin{remark}[the black-box clause is a formalisation]\label{rem:bb}
+Definition~\ref{def:bb} is read off the source paper's framing rather than
+copied from a definition it states, and it is what makes
+Conjecture~\ref{conj:main} open. Without it the statement is already
+settled: Fischlin's paradigm~\cite{Fis06} with generic NIZKs and
+non-black-box use of the group yields two-move schemes in the random
+oracle model from a one-way function alone~\cite{CMV26}, which $\DL$
+implies. The source restricts its comparison table to schemes that make
+black-box use of the group, and invokes~\cite{DKT26} for the optimality of
+its own round complexity precisely because it makes only generic use of
+the group. A reviewer should check that Definition~\ref{def:bb} is a
+faithful and workable rendering; competing formalisations (algebraic
+algorithms, Maurer-style generic algorithms with or without an equality
+oracle or a random-element oracle) differ at the margins, and one of them
+could conceivably make the question easier or harder.
+\end{remark}
+
+\begin{remark}[blindness is conditioned on $\DL$]\label{rem:blind}
+Clause~2 of Conjecture~\ref{conj:main} asks for blindness only under the
+same hypothesis as clause~3, since an unconditional demand would also
+constrain generators relative to which discrete log is easy, which is more
+than ``a three-move blind signature from $\DL$'' means. The unconditional
+variant is not vacuous --- one of the source's two instantiations achieves
+statistical blindness --- but it is not what the source poses.
+\end{remark}
+
+\begin{remark}[asymptotic, not concrete]\label{rem:asympt}
+Clause~3 is stated asymptotically rather than as a concrete reduction on
+purpose. The source's own $\DDH$ proof loses a cube root in the $\DL$ term
+of one of its cases, so demanding a linear-loss reduction would be
+strictly stronger than what ``from $\DL$'' means in this literature.
+\end{remark}
+
+\begin{remark}[direction of the statement]\label{rem:direction}
+The conjecture is stated positively because that is the direction the
+source points. Refutation would require an impossibility result for
+three-move group-black-box schemes under $\DL$, which is a different kind
+of object from a construction; a reviewer may prefer a neutral ``decide''
+phrasing.
+\end{remark}
+
+\begin{remark}[what settling it would give]\label{rem:consequence}
+Discrete log is the minimal standard assumption in a pairing-free group,
+the random oracle model alone is the weakest idealisation the community
+accepts for these schemes, and three moves is provably optimal for
+group-black-box constructions. So this is not an incremental improvement:
+it is the last remaining cell of a table whose other cells have all been
+filled over the last two years, and it asks whether the three-move round
+complexity that all practically deployed pairing-free blind signature
+candidates use can be justified from the same assumption that Schnorr
+signatures themselves rest on. A positive answer would make three-move
+pairing-free blind signatures rest on nothing more than the hardness of
+discrete logarithms; a negative answer would be the first separation
+showing that concurrent blind signing genuinely costs more than plain
+signing in terms of assumptions, at fixed optimal round complexity.
+\end{remark}
+
+\begin{remark}[a fast-moving area]\label{rem:fast}
+The source's reference list contains five works dated 2025 or 2026, two of
+them to appear at CRYPTO 2026, so it is possible that a three-move $\DL$
+construction has appeared since. No such claim appears in the source, and
+the concurrent work of Chen~\cite{Che26} also stops at $\DDH$.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem[Abe01]{Abe01}
+M. Abe.
+\emph{A secure three-move blind signature scheme for polynomially many
+signatures}.
+EUROCRYPT 2001, LNCS 2045, pages 136--151, Springer, 2001.
+
+\bibitem[BLL21]{BLL21}
+F. Benhamouda, T. Lepoint, J. Loss, M. Orr\`u, M. Raykova.
+\emph{On the (in)security of ROS}.
+EUROCRYPT 2021, Part I, LNCS 12696, pages 33--53, Springer, 2021.
+
+\bibitem[CATZ24]{CATZ24}
+R. Chairattana-Apirom, S. Tessaro, C. Zhu.
+\emph{Pairing-free blind signatures from CDH assumptions}.
+CRYPTO 2024, Part I, LNCS 14920, pages 174--209, Springer, 2024.
+
+\bibitem[Cha82]{Cha82}
+D. Chaum.
+\emph{Blind signatures for untraceable payments}.
+CRYPTO'82, Plenum Press, pages 199--203, 1982.
+
+\bibitem[Che26]{Che26}
+Y. Chen.
+\emph{Three-move blind signatures in pairing-free groups}.
+To appear at CRYPTO 2026.
+
+\bibitem[CMV26]{CMV26}
+M. Ciampi, P. Della Monica, I. Visconti.
+\emph{Round-optimal GUC-secure blind signatures from minimal computational
+and setup assumptions}.
+Cryptology ePrint Archive, Paper 2026/145, 2026.
+
+\bibitem[DKT26]{DKT26}
+M. Dietz, J. Kastner, S. Tessaro.
+\emph{On the impossibility of round-optimal pairing-free blind signatures
+in the ROM}.
+To appear at CRYPTO 2026.
+
+\bibitem[Fis06]{Fis06}
+M. Fischlin.
+\emph{Round-optimal composable blind signatures in the common reference
+string model}.
+CRYPTO 2006, LNCS 4117, pages 60--77, Springer, 2006.
+
+\bibitem[FKL18]{FKL18}
+G. Fuchsbauer, E. Kiltz, J. Loss.
+\emph{The algebraic group model and its applications}.
+CRYPTO 2018, Part II, LNCS 10992, pages 33--62, Springer, 2018.
+
+\bibitem[JLO97]{JLO97}
+A. Juels, M. Luby, R. Ostrovsky.
+\emph{Security of blind digital signatures (extended abstract)}.
+CRYPTO'97, LNCS 1294, pages 150--164, Springer, 1997.
+
+\bibitem[KLR25]{KLR25}
+M. Kloo\ss{}, R. W. F. Lai, M. Reichle.
+\emph{Blind signatures from arguments of inequality}.
+Cryptology ePrint Archive, Report 2025/1886, 2025.
+
+\bibitem[KR25]{KR25}
+M. Kloo\ss{}, M. Reichle.
+\emph{Blind signatures from proofs of inequality}.
+CRYPTO 2025, Part VI, LNCS 16005, pages 157--189, Springer, 2025.
+
+\bibitem[Mau05]{Mau05}
+U. M. Maurer.
+\emph{Abstract models of computation in cryptography (invited paper)}.
+10th IMA International Conference on Cryptography and Coding, LNCS 3796,
+pages 1--12, Springer, 2005.
+
+\bibitem[PS00]{PS00}
+D. Pointcheval, J. Stern.
+\emph{Security arguments for digital signatures and blind signatures}.
+Journal of Cryptology, 13(3):361--396, 2000.
+
+\bibitem[Sho97]{Sho97}
+V. Shoup.
+\emph{Lower bounds for discrete logarithms and related problems}.
+EUROCRYPT'97, LNCS 1233, pages 256--266, Springer, 1997.
+
+\bibitem[TZ22]{TZ22}
+S. Tessaro, C. Zhu.
+\emph{Short pairing-free blind signatures with exponential security}.
+EUROCRYPT 2022, Part II, LNCS 13276, pages 782--811, Springer, 2022.
+
+\end{conjurabibliography}
+
+\end{document}

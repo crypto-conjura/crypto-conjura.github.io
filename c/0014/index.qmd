@@ -1,0 +1,107 @@
+---
+id: "0014"
+problem: pairing-free-blind-signature-rounds
+draft: three-move-bs-dl
+title: "Three-Move Pairing-Free Blind Signatures from Discrete Log"
+short_title: "Three moves from DL, ROM only"
+areas: [public-key, idealized-models]
+model: rom
+form: assumption
+assumption_class: falsifiable
+category: research-open
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: new-idea
+  by: ai
+  note: "The source names two obstructions rather than one gap. Its algebraic MAC and its linearly-homomorphic extractable commitment are known from DDH but not black-box from DL; and the message-dependent punctured statement that makes the four-move DL scheme work forces the message into the first move, which is what costs the extra rounds. Gluing the known techniques together is explicitly said not to reach it."
+status_summary: "Open: three moves, black-box in the group, ROM only, from DL alone. Three moves is achieved from DDH in the ROM and from DL in AGM+ROM; four moves is achieved from DL in the ROM."
+status_updated: 2026-08-17
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Chairattana-Apirom, Reichle, Tessaro, Playing Tag with Okamoto-Schnorr: Three-Move Pairing-Free Blind Signatures from DDH, CRYPTO 2026", url: "https://eprint.iacr.org/2026/571"}
+  - {cite: "Chen, Three-Move Blind Signatures in Pairing-Free Groups, Cryptology ePrint Archive, Paper 2026/593", url: "https://eprint.iacr.org/2026/593"}
+  - {cite: "Klooss, Lai, Reichle, Blind Signatures from Arguments of Inequality, CRYPTO 2026", url: "https://eprint.iacr.org/2025/1886"}
+  - {cite: "Abe, A secure three-move blind signature scheme for polynomially many signatures, EUROCRYPT 2001, LNCS 2045, pp. 136-151", url: "https://doi.org/10.1007/3-540-44987-6_9"}
+  - {cite: "Tessaro, Zhu, Short pairing-free blind signatures with exponential security, EUROCRYPT 2022, LNCS 13276, pp. 782-811", url: "https://doi.org/10.1007/978-3-031-07085-3_27"}
+revision: 1
+statement_sha: "a9dbcca5ee4d6f86b7e95c758a091913ad6a16eccbfcd6f3d7f532291c5db3cd"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+Discrete log is the weakest and oldest assumption available in a pairing-free group, and three moves is the fewest possible for a scheme that treats the group as a black box. The source paper reaches three moves in the random oracle model alone — removing the algebraic group model that every previous three-move scheme needed — but under decisional Diffie–Hellman rather than plain discrete log. One cell of the table is therefore still empty, and the source paper calls filling it the dream result of the area.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [Download LaTeX source](latex/main.tex)
+
+A **three-move blind signature** is a tuple $\mathsf{BS} = (\mathsf{Setup}, \mathsf{KeyGen}, \mathsf{Sign}_1, \mathsf{U}_1, \mathsf{Sign}_2, \mathsf{U}_2, \mathsf{Ver})$ in which the signer speaks first, the user replies, and the signer speaks once more, after which $\mathsf{U}_2$ outputs the signature. It makes **black-box use of the group** when its algorithms access $(\mathbb{G}, p, G)$ only through the group operation and equality testing, never through representations of elements. $\mathsf{GGen}$ is a pairing-free group generator, and $\mathsf{BS}[\mathsf{GGen}]$ is the scheme obtained by sampling $(\mathbb{G}, p, G) \gets \mathsf{GGen}(1^\lambda)$ and running $\mathsf{BS}$ on that description.
+
+**Conjecture.** There exist oracle PPT algorithms $\mathsf{BS}$ forming a three-move blind signature scheme, making black-box use of the group, with access to a random oracle $\mathcal{H}$, such that for **every** pairing-free group generator $\mathsf{GGen}$:
+
+1. *(Correctness.)* $\mathsf{BS}[\mathsf{GGen}]$ is correct.
+2. *(Blindness from DL.)* If the discrete logarithm assumption holds relative to $\mathsf{GGen}$, then every PPT adversary with access to $\mathcal{H}$ has negligible blindness advantage.
+3. *(One-more unforgeability from DL.)* If the discrete logarithm assumption holds relative to $\mathsf{GGen}$, then every PPT adversary has negligible one-more-unforgeability advantage, under unbounded concurrency.
+
+Four parts of the quantification are the statement rather than decoration.
+
+- **One scheme, every generator.** The algorithms are quantified *outside* $\mathsf{GGen}$, so a single scheme must work for every pairing-free group. A scheme tailored to a particular family would not answer the question.
+- **Blindness is conditioned on DL too.** Asking for blindness unconditionally would demand it even relative to generators where discrete log is easy, which is stronger than the source's own guarantee. Both security clauses carry the same hypothesis.
+- **Black-box in the group is the whole point.** Dropping it makes the question easy in the wrong way: the three-move floor is a theorem about group-black-box schemes, and a non-generic scheme is not competing in the same class.
+- **Correctness here is the standard notion, not the source's.** The source paper requires *perfect* correctness and proves exactly that for its scheme. This statement asks only for correctness in the usual sense, so it is the weaker and therefore easier target; a scheme meeting the source's stronger bar would also settle this.
+
+## Proof
+
+Open. The surrounding cells are all settled, which is what makes this one sharp.
+
+**What the source achieves.** Three moves, pairing-free, black-box in the group, random oracle model only, with full unbounded-concurrency one-more *strong* unforgeability — but under DDH. Two instantiations: one with computational blindness and signatures of $15$ group elements plus $22$ scalars, and one with statistical blindness and signatures of $21$ group elements plus $35$ scalars; communication is $17$ group elements plus $14$ scalars in both.
+
+**Concurrent work reaches the same cell.** Chen achieves three moves in the ROM from DDH by a different route, via one-time signatures plus encrypted-message blind signatures.
+
+**What is known from DL alone.** In the ROM, the best is four moves (Klooß, Lai and Reichle). At three moves, DL suffices only with the algebraic group model on top of the ROM (Abe; Tessaro and Zhu; Snowblind).
+
+**Why three is the floor.** Two moves is impossible for group-black-box schemes in GGM+ROM, at least for logarithmic query budgets — see [c/0013](/c/0013/), which is the open form of that impossibility. So this statement asks for the optimal round complexity under the minimal assumption.
+
+**The two named obstructions.** The source does not present this as a gap to be closed by assembling existing pieces, and says so explicitly:
+
+- Its algebraic MAC and its linearly-homomorphic extractable commitment are known from DDH but not black-box from DL.
+- The message-dependent punctured statement that makes the four-move DL scheme work forces the message into the first move, and that is precisely what costs the extra rounds.
+
+## Discussion
+
+This is the last empty cell of an otherwise complete table, and both outcomes are substantial. A construction would give the area its round-optimal scheme under its minimal assumption, in the weakest idealisation the community accepts for these schemes. An impossibility would be the first separation between DL and DDH for a natural primitive at fixed round complexity, which is a considerably stronger statement than anything currently known in that direction.
+
+The gap is exactly one assumption wide and one round deep, and the two obstructions the source names are concrete enough to attack separately: either build the missing algebraic MAC and commitment from DL black-box, or find a punctured statement that does not need the message in the first move.
+
+:::
+
+## Open obligations
+
+- [ ] Construct a three-move, group-black-box, pairing-free blind signature proved blind and one-more unforgeable under DL in the ROM, or prove no such scheme exists.
+- [ ] Build a linearly-homomorphic extractable commitment and an algebraic MAC from DL with black-box use of the group, or show they are not obtainable that way.
+- [ ] Find a punctured statement for the four-move DL scheme that does not force the message into the first move, which is what the extra rounds currently pay for.
+- [ ] Settle whether perfect correctness, which the source achieves under DDH, is compatible with DL at three moves, or whether the relaxation this statement allows is necessary.
+- [ ] Formalize the statement in Lean. The three-move syntax, black-box group access, blindness and one-more unforgeability under unbounded concurrency all need writing first.
+
+## Sources
+
+- Chairattana-Apirom, Reichle, and Tessaro. [*Playing Tag with Okamoto-Schnorr: Three-Move Pairing-Free Blind Signatures from DDH*](https://eprint.iacr.org/2026/571). CRYPTO 2026.
+- Chen. [*Three-Move Blind Signatures in Pairing-Free Groups*](https://eprint.iacr.org/2026/593). Cryptology ePrint Archive, Paper 2026/593.
+- Klooß, Lai, and Reichle. [*Blind Signatures from Arguments of Inequality*](https://eprint.iacr.org/2025/1886). CRYPTO 2026.
+- Abe. [*A secure three-move blind signature scheme for polynomially many signatures*](https://doi.org/10.1007/3-540-44987-6_9). EUROCRYPT 2001, LNCS 2045, pages 136--151.
+- Tessaro and Zhu. [*Short pairing-free blind signatures with exponential security*](https://doi.org/10.1007/978-3-031-07085-3_27). EUROCRYPT 2022, LNCS 13276, pages 782--811.

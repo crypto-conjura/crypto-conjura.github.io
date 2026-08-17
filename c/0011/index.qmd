@@ -1,0 +1,103 @@
+---
+id: "0011"
+problem: limited-independence-pseudorandomness
+draft: log-independence-prp
+title: "Logarithmic Independence Implies Pseudorandomness for Local Permutations"
+short_title: "Logarithmic independence implies PRP"
+areas: [symmetric-key, foundations]
+model: standard
+form: characterization
+assumption_class: falsifiable
+category: research-open
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: new-idea
+  by: ai
+  note: "The refuting construction spends a constant number of invariants read off a constant number of wires, and its authors state the approach is not viable once omega(1) invariants must be maintained, so a counterexample needs a mechanism that scales. A proof cannot be unconditional: the source paper records that one would imply one-way functions exist and P != NP."
+status_summary: "Open at independence order log n. The same implication is refuted at order 4 and at every constant order by an explicit construction; the logarithmic-order form is untouched, and no unconditional proof of it can be expected."
+status_updated: 2026-08-17
+relations:
+  - {kind: variant-of, target: "0012", note: "Both ask whether an unconditional statistical result about a simplified cipher licenses a conclusion about the real one; this one weakens the cipher's independence order, c/0012 weakens its diffusion."}
+lean:
+  mode: none
+sources:
+  - {cite: "Dujmovic, Pelecanos, Tessaro, When Simple Permutations Mix Poorly: Limited Independence Does Not Imply Pseudorandomness, EUROCRYPT 2026", url: "https://eprint.iacr.org/2025/2282"}
+  - {cite: "Hoory, Magen, Myers, Rackoff, Simple permutations mix well, Theoretical Computer Science 348(2-3):251-261, 2005", url: "https://doi.org/10.1016/j.tcs.2005.09.016"}
+  - {cite: "Liu, Tessaro, Vaikuntanathan, The t-wise Independence of Substitution-Permutation Networks, CRYPTO 2021", url: "https://eprint.iacr.org/2021/507"}
+  - {cite: "Gowers, An almost m-wise independent random permutation of the cube, Combinatorics, Probability and Computing 5:119-130, 1996", url: "https://doi.org/10.1017/S0963548300001917"}
+revision: 1
+statement_sha: "5daf79e3ecab8617b94276d77f687369d278345146e3cbb1abebfd89ab473418"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+Many block-cipher security proofs use no computational assumptions at all: they show that the cipher's outputs on a few distinct inputs, under one random key, are statistically close to a random tuple of distinct strings. It has long been asked whether that kind of guarantee, for a cipher whose single round is very simple, is enough to conclude full pseudorandomness. The source paper settles the question negatively whenever the number of inputs is a fixed constant. The conjecture recorded here is what survives that attack: raise the order of independence from a constant to logarithmic in the block length, keep everything else the same, and the implication is conjectured to hold again.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [Download LaTeX source](latex/main.tex)
+
+Write $n$ for the block length, with all asymptotics in $n$, and call $\varepsilon$ *negligible* if $\varepsilon(n) < n^{-c}$ for every constant $c > 0$ and all large enough $n$. For a set $A$, let $A^{(k)}$ be the ordered $k$-tuples of pairwise distinct elements of $A$, and $U_{n,k}$ the uniform distribution on $(\{0,1\}^n)^{(k)}$. Let $d_{\mathrm{TV}}$ be total variation distance and $\Pi$ a uniformly random permutation of $\{0,1\}^n$.
+
+A **randomized permutation** on $\{0,1\}^n$ is an algorithm $\mathcal{P}_n(v; \mathsf{r})$ that is a permutation of $\{0,1\}^n$ in $v$ for every fixed $\mathsf{r}$; sampling $\mathsf{r}$ uniformly makes it a distribution over permutations. It is **$\ell$-local** if for every $\mathsf{r}$ and every output position $j$ there is a set $S \subseteq [n]$ with $|S| \leq \ell$ such that output bit $j$ depends only on the input bits indexed by $S$. A family $\mathcal{P} = \{\mathcal{P}_n\}$ is $\ell$-local if every member is, for the same constant $\ell$. Write $\mathcal{P}^{T}$ for the $T$-fold sequential composition with fresh independent randomness in each round.
+
+$\mathcal{P}^{T}$ is **negligibly far from $k(n)$-wise independent** if for some negligible $\varepsilon$, every $n$ and every tuple of pairwise distinct $(x^1, \dots, x^{k(n)})$,
+$$d_{\mathrm{TV}}\bigl((\mathcal{P}^{T}(x^1), \dots, \mathcal{P}^{T}(x^{k(n)})),\ U_{n,k(n)}\bigr) \;\leq\; \varepsilon(n),$$
+the $k(n)$ outputs coming from a *single* sample of $\mathcal{P}^{T}$. It is a **pseudorandom permutation** if every probabilistic oracle algorithm $D$ running in time $\mathrm{poly}(n)$, given forward queries only, has
+$$\bigl|\Pr[D^{\mathcal{P}^{T}}(1^n) = 1] - \Pr[D^{\Pi}(1^n) = 1]\bigr| = \mathrm{negl}(n).$$
+
+**Conjecture.** Let $\ell$ be a constant, let $\mathcal{P}$ be an $\ell$-local randomized permutation family, and let $T : \mathbb{N} \to \mathbb{N}$ be arbitrary. Set $k(n) := \lfloor \log_2 n \rfloor$. If $\mathcal{P}^{T}$ is negligibly far from $k(n)$-wise independent, then $\mathcal{P}^{T}$ is a pseudorandom permutation.
+
+Three parts of the quantification carry weight.
+
+- **$T$ is arbitrary.** Neither the original conjecture nor this one constrains the number of rounds; the hypothesis does all the work. A version that fixed $T$ would be a statement about one construction rather than about what independence buys.
+- **The independence order grows, the locality does not.** $\ell$ is a constant while $k(n) = \lfloor \log_2 n \rfloor$ grows. This is the whole content of the change from the refuted form, and reading $\log n$ in base two fixes a base the source leaves implicit.
+- **A single sample, and distinct inputs.** The $k(n)$ outputs are produced by one draw of the round randomness, and the reference distribution is uniform over *distinct* tuples, not over all tuples. Both are needed for the hypothesis to be the one the unconditional literature actually proves.
+
+## Proof
+
+Open. Nothing proves any instance of the implication at logarithmic order; what is settled is its failure at every constant order.
+
+**Refuted at every constant order.** For each constant $k$, the source paper constructs a local randomized permutation over a constant-size alphabet, the size depending on $k$, whose $(n-2)$-fold composition is negligibly far from $k$-wise independent and is nonetheless distinguished from random, with constant probability, by an efficient adversary querying only $k + 1$ points. The construction carries a unary round counter inside the state, drives $k + 1$ families of "special" strings deterministically around cycles of length $n - 2$, one cycle per special value, while a conditional brickwork circuit randomizes everything else; in the last round it sends the $k+1$ strings whose counter has run out to $k+1$ values obeying a single linear relation that a random permutation would not obey.
+
+**Why the mechanism stops.** The attack consumes a constant amount of structure: a constant number of invariants, each detectable from a constant number of wires. At order $\log n$ the same approach would have to maintain $\omega(1)$ invariants simultaneously, which the authors state it cannot do. That is the entire positive evidence for the conjecture, and it is evidence about one attack rather than about all attacks.
+
+**No unconditional proof.** The source paper records that a proof of this statement, or of its siblings, would imply that one-way functions exist and that $\mathrm{P} \neq \mathrm{NP}$. So a proof must be conditional, and the honest reading of the conjecture is "true under standard assumptions" rather than "true".
+
+**A smaller target for a refutation.** Gowers' conjecture, made explicit by Barak and connected to obfuscation candidates by Canetti, Chamon, Mucciolo and Ruckenstein, is weaker in the precise sense that refuting it would also refute this statement.
+
+## Discussion
+
+The point of proving $k$-wise independence for a concrete cipher is that one hopes it is evidence of something stronger. The source paper shows that at any constant order the hope is formally unfounded, which leaves the field with a technique that proves limited independence for real constructions, a theorem saying limited independence is not evidence, and no threshold at which the evidence becomes real. This cell is that threshold, at the first order where the known refutation runs out of room.
+
+The two outcomes are both worth having. A conditional proof restores the evidential reading of unconditional independence results at an order that existing techniques can plausibly reach. A refutation says that this whole style of result should not be read as a security argument at all, however high the order.
+
+:::
+
+## Open obligations
+
+- [ ] Settle the implication at $k(n) = \lfloor \log_2 n \rfloor$, or refute it. A refutation needs a construction whose distinguishing structure scales with the number of invariants rather than staying constant.
+- [ ] State and prove a conditional version. Since an unconditional proof would imply $\mathrm{P} \neq \mathrm{NP}$, the useful question is which standard assumption suffices.
+- [ ] Establish where the threshold actually sits, if it is not $\log n$. The refutation covers every constant and the conjecture claims $\log n$; nothing is known in between.
+- [ ] Check whether refuting Gowers' conjecture is strictly easier, or whether the two are closer to equivalent than the one-way implication suggests.
+- [ ] Formalize the statement in Lean. Nothing exists: locality, sequential composition, distance from $k$-wise independence over distinct tuples, and the PRP definition all need writing first.
+
+## Sources
+
+- Dujmović, Pelecanos, and Tessaro. [*When Simple Permutations Mix Poorly: Limited Independence Does Not Imply Pseudorandomness*](https://eprint.iacr.org/2025/2282). EUROCRYPT 2026.
+- Hoory, Magen, Myers, and Rackoff. *Simple permutations mix well*. Theoretical Computer Science 348(2--3):251--261, 2005; earlier at ICALP 2004, LNCS 3142, pages 770--781.
+- Liu, Tessaro, and Vaikuntanathan. [*The t-wise Independence of Substitution-Permutation Networks*](https://eprint.iacr.org/2021/507). CRYPTO 2021.
+- Gowers. *An almost m-wise independent random permutation of the cube*. Combinatorics, Probability and Computing 5:119--130, 1996.

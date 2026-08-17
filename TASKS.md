@@ -68,6 +68,32 @@ Completed tasks are deleted from this file rather than checked off and kept: thi
   Problems, Compute and bounties) rather than added as a second list saying the
   same thing.
 
+- [ ] **One page listing every UC functionality (~0.5h)**
+
+  Requested 18 August 2026. `uc/index.qmd` offers only a "Browse" list of the nine layer pages, so seeing all 104 functionalities means opening nine tables and holding the result in your head. There is no cross-layer view, and no way to answer "which entries are written" without `python3 scripts/uc_status.py --check` (currently 16 `Defined`, 88 `Not yet written`, 0 `No canonical definition`).
+
+  The precedent to copy is `open-problems/all/index.qmd`, which is the same page for statements and is four lines of frontmatter. Put the new one at `uc/all/index.qmd`, titled to match ("All functionalities"), and link it from `uc/index.qmd` above the Browse list — the layer list should stay, since it carries the dependency ordering the flat table cannot.
+
+  It needs no generator. Statements have `_generated/all.yml` because badges are computed by `scripts/build_index.py`; a functionality's four fields are already in its own frontmatter, all 104 pages carry all four, so a plain Quarto listing does it:
+
+  ```
+  listing:
+    id: all-functionalities
+    contents: "../layer-*/*/index.qmd"
+    type: table
+    fields: [title, layer, status, definition]
+    sort: [layer, title]
+  ```
+
+  Four things to get right, each of which has already bitten this repo:
+
+  - **The glob must not swallow the layer index pages.** `../layer-*/*/index.qmd` matches entries only; `../layer-*/index.qmd` would add nine rows that are not functionalities.
+  - **`layer:` is a bare integer 0–8**, not a name, so a Layer column reads "0" where the layer pages read "Idealized Setup and Resources". Either map the number to its name in a listing template (the mechanics are in `_listing-templates/statement-table.ejs.md`, whose header comment records that the engine is lodash templates and not full EJS) or set `field-display-names` and accept the number as a sort key. Do not invent a `layer_name:` field on 104 pages to avoid the choice.
+  - **`sort-ui: false` on a 104-row table is worth reconsidering.** The layer tables set it because eight rows do not need sorting; this one is the page where filtering by `definition` or by `status` earns its keep. If a filter box is added, note the same template comment: Quarto's own "no matching items" div is un-hidden from a List.js event that never fires on a listing with no filter UI, which is why that template says it itself.
+  - **The sidebar entry is the usual trap.** `_quarto.yml:112` has `uc/index.qmd` as a plain leaf under the Surveys section. Turning it into a `section:` with the new page as its only child is what `open-problems` does, but a `section:` needs `contents:` or Quarto renders it as an inert `<span>` and drops the href — the bug already recorded in the project notes. Adding the child is optional; linking from `uc/index.qmd` is not.
+
+  Status values across the 104 entries, for whoever designs the columns: 71 `Canonical`, 16 `Idealized Setup`, 9 `Emerging`, 8 `Open`.
+
 - [ ] **Stop encyclopedia macros from asking for a book rebuild (~0.5h)**
 
   Requested 17 August 2026, after the first three entries filled under the new artifact gate hit it. Every new functionality box needs one `\newcommand{\Fxxx}` in `surveys/uc-for-gamers/latex/ucgamers.sty`, because `scripts/gen_interface.py` reads macro meanings from that file and nowhere else. `ucgamers.sty` is a genuine input of the book, so `scripts/artifact_manifest.py --check` then reports the PDF and the HTML edition as stale and asks for `pdflatex main.tex` plus the four-minute `scripts/build_uc_html.sh` — for a macro the book never expands. Doing that 88 more times is 88 rebuilds and 88 title pages re-dated by `\today`, which is the *only* thing a rebuild changes: verified on 17 August by rebuilding at three passes and diffing the text layer, 211 pages, identical but for `August 15, 2026` → `August 17, 2026`.

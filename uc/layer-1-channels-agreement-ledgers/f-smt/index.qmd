@@ -2,14 +2,129 @@
 title: "F-smt — Secure message transmission"
 status: "Canonical"
 layer: 1
-definition: "Not yet written"
+definition: "Defined"
 ---
 
 *F-smt* (Secure message transmission) is part of *Channels, Agreement, Ledgers* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
 
+One message, from a named sender to a named receiver, whose *contents* the adversary does not learn — but whose existence, endpoints and length it does. It is [*F-auth*](/uc/layer-1-channels-agreement-ledgers/f-auth/index.qmd) with the message replaced by a leakage function of it, and the source says so in as many words: $\mathcal{F}_{\mathsf{Auth}}$ is the special case of $\mathcal{F}^{l}_{\mathsf{SMT}}$ in which $l$ is the identity. Everything interesting about this box is in what $l$ is allowed to be and in what happens when an endpoint is corrupted.
+
 Under adaptive corruption, realizing this functionality requires non-committing encryption — the same underlying obstacle that blocks naive symmetric-encryption functionalities from being adaptively secure.
+
+## Functionality
+
+Reading the box: $\mathcal{A}(\cdot)$ is a call on the adversary slot whose answer is not used; $\mathcal{A}^{!}(\cdot)$ is a *responsive* call, so the answer comes back before anything else can run; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it; $\mathbf{C}$ is the corruption register, read as a snapshot; $\mathcal{M}$ is the message space; $\square$ marks a value never set; $l$, the parameter on the header line, is the leakage function.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{SMT}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := l\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{A} \gets \square\); &nbsp;\(\mathtt{B} \gets \square\)<span class="cj-comment">// sender, intended receiver</span></li>
+<li>\(\mathtt{m} \gets \square\)</li>
+<li>\(\mathtt{corr} \gets 0\); &nbsp;\(\mathtt{done} \gets 0\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Send(<span class="cj-id">B</span>, <span class="cj-id">msg</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="4">
+<li>\(\textbf{require}\ \mathtt{A} = \square \ \wedge\ \mathit{msg} \in \mathcal{M}\)<span class="cj-comment">// one message to an instance</span></li>
+<li>\(\mathtt{A} \gets \mathit{id}.P\); &nbsp;\(\mathtt{B} \gets B\); &nbsp;\(\mathtt{m} \gets \mathit{msg}\)</li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Send},\ \mathtt{A},\ \mathtt{B},\ l(\mathtt{m})\bigr)\)<span class="cj-comment">// who and when, but only \(l\) of what</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Report()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="8">
+<li>\(\textbf{require}\ \mathit{id}.P = \mathtt{A}\)</li>
+<li>\(\textbf{return}\ \mathtt{corr}\)<span class="cj-comment">// exposed or altered; the sender may ask</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Fetch()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="10">
+<li>\(\textbf{require}\ \mathtt{A} \neq \square \ \wedge\ \mathtt{done} = 0\)</li>
+<li>\(a \gets \mathcal{A}^{!}\bigl(\mathit{id}.\mathsf{Fetch},\ \mathit{id}.P\bigr)\)<span class="cj-comment">// the adversary decides when</span></li>
+<li>\((B', \mathit{msg}') \gets (\mathtt{B},\ \mathtt{m})\)</li>
+<li>\(\textbf{if}\ a \neq \mathsf{ok} \ \wedge\ \{\mathtt{A}, \mathtt{B}\} \cap \mathbf{C} \neq \varnothing\ \textbf{then}\)</li>
+<li><span class="cj-ind">\((B', \mathit{msg}') \gets a\); &nbsp;\(\mathtt{corr} \gets 1\)</span><span class="cj-comment">// substituting needs a corrupt endpoint</span></li>
+<li>\(\textbf{require}\ B' = \mathit{id}.P \ \wedge\ \mathit{msg}' \in \mathcal{M}\)</li>
+<li>\(\mathtt{done} \gets 1\)</li>
+<li>\(\textbf{return}\ (\mathtt{A},\ \mathit{msg}')\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="18">
+<li>\(\textbf{if}\ \mathtt{A} = \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \bot\)</span></li>
+<li>\(\textbf{if}\ \mathit{id}.P \in \{\mathtt{A}, \mathtt{B}\}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{corr} \gets 1\)</span><span class="cj-comment">// an endpoint's plaintext is out, and recorded</span></li>
+<li><span class="cj-ind">\(\textbf{return}\ (\mathtt{A},\ \mathtt{B},\ \mathtt{m})\)</span></li>
+<li>\(\textbf{return}\ (\mathtt{A},\ \mathtt{B},\ l(\mathtt{m}))\)<span class="cj-comment">// an outsider learns no more than the send did</span></li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+The box is transcribed from Canetti, *Universally composable security: A new paradigm for cryptographic protocols*, ePrint 2000/067, revision `20200212:021048`, Figure 13, p. 82 — "the Secure Message Transmission functionality parameterized by leakage function $l$", which on input $(\texttt{Send}, \mathit{sid}, R, m)$ sends the backdoor message $(\texttt{Sent}, \mathit{sid}, S, R, l(m))$ to the adversary; on backdoor $(\texttt{Corrupt}, \mathit{sid})$ records being corrupted and sends $m$ to the adversary; on backdoor $(\texttt{ok}, \mathit{sid}, m', R')$ delivers $m'$ to $R'$ if corrupted and otherwise the original $m$ to $R$, if it has not yet generated output; answers $(\texttt{ReportCorrupted}, \mathit{sid})$ from the sender; and ignores everything else.
+
+**What the leakage function is doing.** $l$ is not a modelling nicety; it is the whole of the confidentiality claim, and the box is only as strong as the $l$ someone instantiates it with. The source's own realization uses $l_{D}$, which returns $\bot$ on a plaintext inside the declared domain $D$ and returns the plaintext itself outside it — so a protocol that stays in its domain leaks nothing about the message, and one that strays leaks everything. The usual instantiation elsewhere is $l = |\cdot|$, the length. Line 6 hands $l(\mathtt{m})$ to the adversary and no other line ever hands it anything more, so an entry that cites "$\mathcal{F}_{\mathsf{SMT}}$" without saying which $l$ has not yet said what it is assuming.
+
+Three lines carry the rest:
+
+- **Line 13 is the corruption gate.** In $\mathcal{F}_{\mathsf{Auth}}$ substitution is always available to the adversary; here it is available only when an endpoint is in $\mathbf{C}$. That is the source's "if corrupted", read against a framework that has a corruption register rather than a self-declared flag, and it is a strengthening: the source's bit can be set by a backdoor message alone, with no party actually corrupt. The source declines to distinguish sender corruption from receiver corruption, so neither does the test.
+- **Line 21 is the source's `Corrupt` clause, and it writes.** A corrupt endpoint's $\mathsf{Leak}$ returns the plaintext *and records that it did*, so line 9 answers the sender's question truthfully: not "was my message altered", but the weaker and more useful "was my message exposed or altered". The source folds both into one bit for the same reason.
+- **Line 23 is the traffic-analysis clause.** A corrupt party who is neither endpoint gets exactly what the adversary already had from line 6, so corrupting bystanders buys nothing. The source has no third-party leakage at all; this is the reading that keeps the box from being accidentally stronger than the sentence "the adversary learns that a message was sent" allows.
+
+Three conventions the source leaves open, decided here:
+
+- **"First learn $m$, then choose $m'$" survives, but by another route.** The source is explicit that the adversary may learn the plaintext through the `Corrupt` backdoor before deciding on the substitution. A responsive call cannot be used for that here: inside $\mathcal{A}^{!}$ the responder may place no call at all, so it cannot leak during the fetch. The ordering is preserved because leakage happens *earlier* — the adversary corrupts an endpoint, calls $\mathsf{Leak}$, and only then answers line 11. What is lost is the ability to corrupt in the middle of a delivery, which the framework rules out on purpose.
+- **Delivery is a pull**, as in *F-auth*: the source outputs to $R$, and here the receiver fetches, so line 15 refuses anyone the adversary did not name.
+- **Nothing is erased.** The source's forward-secrecy variant is one line's difference from this box: gate line 21–22 on $\mathtt{done} = 0$ and a corruption after delivery yields no plaintext. It is left ungated here because the source's headline formulation is, in its own words, "meaningful even if the corruption takes place after the execution of the protocol has completed" — that is the property being defined, and forward secrecy is the stronger object described beside it.
+
+## Known realizations
+
+Encryption over an authenticated channel, and the strength required of the encryption is exactly what the corruption model demands.
+
+The source's protocol $\pi_{E}$ uses [*F-auth*](/uc/layer-1-channels-agreement-ledgers/f-auth/index.qmd) three times: an initialization message to the receiver, the receiver's freshly generated public key back to the sender, and the ciphertext onward. A key is used for one message and then abandoned, which is why nothing stronger than semantic security is needed:
+
+- **Claim 27:** if $E$ is semantically secure for domain $D$, then $\pi_{E}$ UC-realizes $\mathcal{F}^{l_{D}}_{\mathsf{SMT}}$ in the presence of non-adaptive corruptions.
+- The same claim continues: if $E$ is *non-committing*, $\pi_{E}$ realizes it under adaptive corruptions, and does so even without trusted erasures, the adversary seeing all past internal states of corrupted parties.
+
+The gap between those two sentences is the standard one. An adaptive adversary that corrupts the receiver after delivery demands a decryption key explaining a ciphertext the simulator has already produced, which a committing ciphertext cannot supply; non-committing encryption is the primitive built to answer it, and it is why this functionality is expensive in a way that *F-auth* is not.
+
+Running many sessions over one encryption session is a separate problem, and the answer changes with the corruption model: replayable chosen-ciphertext security (RCCA) suffices under non-adaptive corruptions, while the adaptive case needs stronger constructions, and universal composition with joint state is what licenses the analysis of the multi-session system either way.
+
+## Properties
+
+- **Confidentiality, up to $l$, with probability exactly $1$.** No return value to a non-endpoint and no call on the adversary slot is a function of $\mathtt{m}$ except through $l$ (line 6, line 23) or through an endpoint's own leak (line 22). Two executions differing in messages with the same $l$-image are identical in every other view. This is a statement *about $l$*: with $l$ the identity the guarantee is empty, and the box is $\mathcal{F}_{\mathsf{Auth}}$.
+- **No traffic-analysis protection, and deliberately so.** $\mathtt{A}$ and $\mathtt{B}$ go to the adversary in the clear at line 6. The source names this as a modelling choice and names the two weakenings that repair it — hide the send entirely, or hide the endpoints — neither of which is this box.
+- **Detectable exposure and substitution.** A $\mathsf{Fetch}$ returns $(\mathtt{A}, \mathtt{m})$ unchanged whenever no endpoint is corrupt, whatever the adversary answers at line 11; anything else sets $\mathtt{corr}$, which the sender alone may read. So *the receiver got what the sender sent and nobody else read it, or the sender can find out otherwise* holds with probability exactly $1$.
+- **No liveness.** The adversary answers line 11 and may never name the receiver. As with *F-auth*, a delivery guarantee has to be bought with a clock and a deadline, which is what [*F-Net*](/uc/layer-1-channels-agreement-ledgers/f-net/index.qmd) and [*F-AC*](/uc/layer-1-channels-agreement-ledgers/f-ac/index.qmd) do.
+- **One message.** Line 4 refuses a second $\mathsf{Send}$ and line 10 a second $\mathsf{Fetch}$. Multi-message secure transmission is multiple sessions, which is the source's explicit reason for the single-message scope: it is what lets protocols be analyzed one session at a time.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Pfitzmann and Waidner. [*A model for asynchronous reactive systems and its application to secure message transmission*](https://eprint.iacr.org/2000/066). In IEEE Symposium on Security and Privacy, pages 184–201, 2001.
-- Canetti. [*Universally composable security: A new paradigm for cryptographic protocols*](https://eprint.iacr.org/2000/067). In 42nd IEEE Symposium on Foundations of Computer Science (FOCS), pages 136–145, 2001.
+- Canetti. [*Universally composable security: A new paradigm for cryptographic protocols*](https://eprint.iacr.org/2000/067). In 42nd IEEE Symposium on Foundations of Computer Science (FOCS), pages 136–145, 2001. Figure 13, p. 82 of revision `20200212:021048`, the definition transcribed above; Claim 27 and the protocol $\pi_{E}$; the forward-secrecy and traffic-analysis variants; Figure 12, p. 80, is $\mathcal{F}_{\mathsf{Auth}}$, of which this is the generalization.
+- Pfitzmann and Waidner. [*A model for asynchronous reactive systems and its application to secure message transmission*](https://eprint.iacr.org/2000/066). In IEEE Symposium on Security and Privacy, pages 184–200, 2001. Contemporaneous, and a different object: Scheme 5.1 there is an *ideal system* in the reactive-simulatability model, not a UC functionality, and it is multi-party and multi-message, bounded to $s$ messages per user, gated on an explicit initialization, leaking $(u, i, \mathit{len}(m), v)$, and — unlike this box — it tolerates replay, the adversary being able to make an honest receiver accept the same message arbitrarily often. Cited here as the parallel line of work on the same abstraction, not as a source of the definition above.
+- Canetti, Feige, Goldreich, and Naor. [*Adaptively secure multi-party computation*](https://dl.acm.org/doi/10.1145/237814.238015). In 28th ACM Symposium on Theory of Computing (STOC), pages 639–648, 1996. Non-committing encryption, the primitive the adaptive half of Claim 27 rests on.
+- Canetti, Krawczyk, and Nielsen. [*Relaxing chosen-ciphertext security*](https://eprint.iacr.org/2003/174). In Advances in Cryptology – CRYPTO 2003, 2003. RCCA, and the multi-session-from-one-encryption-session result quoted above, for non-adaptive corruptions.
+- Canetti and Rabin. [*Universal composition with joint state*](https://eprint.iacr.org/2002/047). In Advances in Cryptology – CRYPTO 2003, 2003. The composition mechanism under which many sessions of this functionality may share one session of the protocol realizing it.

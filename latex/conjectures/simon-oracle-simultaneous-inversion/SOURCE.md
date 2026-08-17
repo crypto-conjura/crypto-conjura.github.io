@@ -79,3 +79,14 @@ Conjecture 6.7 is genuinely the paper's own, is stated on p.31 essentially as th
 
 The printed conjecture writes the first challenge as $\mathsf{P}(x_1)$ rather than $\mathsf{F}(x_1)$ in both the weak and the strong version. I have written $\mathsf{F}(x_1)$, which is what the surrounding prose and the proof of Theorem 6.8 require, but a reviewer should confirm this reading. Second, the printed display carries no quantifier over $\lambda$ and leaves $\mathrm{poly}(\lambda)$ unquantified; I have read this as ``there is a polynomial $q$, depending on the attacker, such that the bound holds for all sufficiently large $\lambda$'', and a reading with ``for all $\lambda$'' would be formally stronger. Third, the conjecture as printed demands exact recovery of both preimages, $(x_1,x_2)=A(\dots)$, whereas the statement derived from it in the proof of Theorem 6.8 is the weaker any-preimage form; I have kept the paper's exact-recovery form. Fourth, my definition of the collision finder spells out the recursion by nesting depth and the induced measure on deterministic finders, details the paper leaves to \cite{Sim98}; the intended object is Simon's, and any discrepancy should be resolved in Simon's favour. Finally, I have not exhaustively checked the post-2021 literature for a proof or a counterexample.
 
+
+## Not promoted: merged into c/0021
+
+This draft states the same conjecture as `simon-oracle-amplification`, and the two were
+published as the single statement [c/0021](../../../c/0021/index.qmd) on
+18 August 2026. `scripts/draft_status.py` will keep reporting this folder
+as unpromoted, which is correct and expected: a page names one draft, and
+that page names the other. **Do not promote it separately** — identifiers
+under `c/` are never reused, and a second id for this conjecture cannot be
+withdrawn cleanly. The merge, and why that draft rather than this one was
+taken, is recorded on the c/0021 page itself.

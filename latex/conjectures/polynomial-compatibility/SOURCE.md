@@ -71,3 +71,14 @@ The drafted statement is Conjecture 5.5 (p. 25) reproduced faithfully clause by 
 
 (1) Whether it has been resolved since February 2022. I am not aware of a proof or refutation, but I did not search the literature and a reviewer should check for follow-ups before publishing; the paper's own Section 1.3 notes the exponential-influence case follows the pattern of [DFKO06], which is where a refutation might come from. (2) The strength of the group quantifier: Conjecture 4.3/5.5 says there \emph{exists} a finite Abelian group that works, while Conjecture 1.2 in the introduction fixes the Boolean case $\mathcal{Y} = \mathbb{Z}_2$. I have stated the existential version because that is the one Theorems 4.5 and 6.3 use; the Boolean version is strictly stronger and also open. Anyone stating the Boolean case must not present it as the paper's main conjecture. (3) The influence condition is on the \emph{average} over the distribution, not on each polynomial in the support -- easy to strengthen by accident. (4) Conjecture 5.5 leaves $N$ free in the text; I have quantified it universally, which is explicit in the equivalent Conjecture 4.3 (``for any $d, N \in \mathbb{N}$''). (5) The paper's introduction writes the $\ell_2$ norm without the square root; since the constraint is that the norm equals $1$ this makes no difference, and I have used the standard normalisation.
 
+
+## Not promoted: merged into c/0023
+
+This draft states the same conjecture as `polynomial-compatibility-2`, and the two were
+published as the single statement [c/0023](../../../c/0023/index.qmd) on
+18 August 2026. `scripts/draft_status.py` will keep reporting this folder
+as unpromoted, which is correct and expected: a page names one draft, and
+that page names the other. **Do not promote it separately** — identifiers
+under `c/` are never reused, and a second id for this conjecture cannot be
+withdrawn cleanly. The merge, and why that draft rather than this one was
+taken, is recorded on the c/0023 page itself.

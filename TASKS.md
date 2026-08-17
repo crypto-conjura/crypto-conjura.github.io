@@ -1,8 +1,8 @@
 # Tasks
 
-Split into two sections: **Website and repository** (~5.5h) covers the site, its build tooling and the repository's configuration; **Conjectures and papers** (~7.5h) covers the mathematics — proving conjectures, and writing and checking the papers that report them. Within each section, tasks are ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~21.0h** (rough; the UC Encyclopedia content dominates the uncertainty and could run well over its estimate).
+Split into two sections: **Website and repository** (~5.5h) covers the site, its build tooling and the repository's configuration; **Conjectures and papers** (~4.5h) covers the mathematics — proving conjectures, and writing and checking the papers that report them. Within each section, tasks are ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~18.0h** (rough; the UC Encyclopedia content dominates the uncertainty and could run well over its estimate).
 
-Last reconciled against `main` at `6d01888` on 17 August 2026.
+Last reconciled against `main` at `bc52628` on 18 August 2026.
 
 Completed tasks are deleted from this file rather than checked off and kept: this is a list of live work, and `git log` is the record of what closed and when.
 
@@ -136,114 +136,6 @@ Completed tasks are deleted from this file rather than checked off and kept: thi
   Toolchain is pinned: `leanprover/lean4:v4.33.0`, Mathlib at the revision in `lake-manifest.json`. Keep `AuditProof.lean` passing throughout, since its entire purpose is that no declaration quietly acquires `sorryAx`, and update `LEDGER.md` as items close rather than at the end. Partial progress is worth committing: the ledger is designed for it, and an honest "items 1 to 3 done, 6 untouched" is more useful than nothing.
 
 ## Conjectures and papers
-
-- [ ] **Promote the 10 remaining harvested drafts (~3h — manual: every statement is AI output over someone else's paper, and every citation needs verifying)**
-
-  Requested 17 August 2026; the first group was published 18 August as
-  [c/0019](/c/0019/), [c/0020](/c/0020/) and [c/0021](/c/0021/) under the new
-  hub `p/black-box-uselessness/`, which leaves ten drafts. All are marked
-  `[harvested, unread]` — written by `scripts/harvest_conjectures.py` from PDFs,
-  with `SOURCE.md` saying in as many words that "nothing here was checked by a
-  human yet". Promoting one is an editorial act, not a build, which is why no
-  gate fails on the backlog (`--check` exits 0 on an unpromoted draft by design;
-  see `latex/README.md`).
-
-  **Four things the first group established, which will save the next one time.**
-  *Drafts can be duplicates of each other*: `simon-oracle-amplification` and
-  `simon-oracle-simultaneous-inversion` were both ePrint 2021/016's Conjecture
-  6.7, written up twice, and became one statement — check the conjecture
-  environments against each other before allocating an id, since ids are never
-  reused. **`polynomial-compatibility` and `polynomial-compatibility-2` are the
-  obvious next candidates for this**, and they come from *different* papers
-  (2022/218 and 2023/570), so the check is whether the two papers state the same
-  conjecture. *The corrections in `SOURCE.md` were already applied to the
-  `.tex`*: that file preserves what the adversarial checker asked for, and is not
-  a list of outstanding defects — diff it against the LaTeX rather than assuming
-  either way. *The bibliographic details verify*: all eight source papers were
-  checked against ePrint metadata on 18 August, correcting three the harvester
-  had inferred (2023/571's title carries "Constructions and Lower Bounds";
-  2022/1285 is TCC 2022; 2023/570 is EUROCRYPT 2023). *Crossref works where DBLP
-  rate-limits*: `api.crossref.org/works?query.bibliographic=` verified every
-  cited paper's authors, year and pages without being throttled.
-
-  The ten, grouped by the paper each was harvested from — one promotion per
-  draft, but the source reading is shared within a group:
-
-  - **Austrin, Chung, Chung, Fu, Lin & Mahmoody, "On the Impossibility of Key
-    Agreements from Quantum Random Oracles" (ePrint 2022/218, preprint)** —
-    `caqb-imperfect-completeness`, `polynomial-compatibility`.
-  - **Afshar, Couteau, Mahmoody & Sadeghi, "Fine-Grained Non-Interactive
-    Key-Exchange: Constructions and Lower Bounds" (ePrint 2023/571, EUROCRYPT
-    2023)** — `mggm-4nike-quadratic`, `sggm-3nike-quadratic-attack`.
-  - **Mahmoody, Qi & Rahimi, "Lower Bounds for the Number of Decryption Updates
-    in Registration-Based Encryption" (ePrint 2022/1285, TCC 2022)** —
-    `rbe-dynamic-update-times`, `rbe-loglog-update-gap`.
-  - One each from **Afshar, Chung, Hsieh, Lin & Mahmoody, "On the
-    (Im)possibility of Time-Lock Puzzles in the Quantum Random Oracle Model"
-    (ePrint 2023/932, preprint; the ASIACRYPT 2023 version is under a slightly
-    different title)** — `fully-quantum-tlp-attack`; **Buxbaum & Mahmoody, "A
-    Note on the Minimality of One-Way Functions in Post-Quantum Cryptography"
-    (ePrint 2024/2095, CiC 2024)** — `nonblackbox-owf-minimality`;
-    **Chung, Lin & Mahmoody, "Black-Box Separations for Non-Interactive
-    Commitments in a Quantum World" (ePrint 2023/570, EUROCRYPT 2023)** —
-    `polynomial-compatibility-2`; **Etesami, Gao, Mahloujifar & Mahmoody,
-    "Polynomial-time targeted attacks on coin tossing for any number of
-    corruptions" (ePrint 2021/1464, TCC 2021)** —
-    `optimal-martingale-gap-finders`.
-
-  Every line above is now the ePrint record rather than the harvester's guess,
-  checked on 18 August 2026. What is still unverified is each draft's *internal*
-  bibliography — the prior work it cites — which has to be checked per draft
-  before it appears on a page, the way the first group's six were.
-
-  Mechanics, so this does not turn into a discovery exercise:
-
-  - `latex/README.md` § "Publishing a draft" is the procedure. The `.tex` and
-    compiled PDF are copied into the new page's `latex/` and `pdf/`
-    subfolders (both tracked), and the statement is transcribed into
-    `index.qmd`. Model the frontmatter on `c/0018/`, the most recent page.
-  - **`draft: <folder-name>` under `problem:` is the only link back**, and has
-    to be written by hand — folder names are never the `problem:` slug, and
-    `groth16/statement.tex` and `split-nilp/statement.tex` are byte-identical
-    yet belong to different pages. Omit it and `draft_status.py` reports the
-    draft unpromoted forever.
-  - Most of these need a **new `p/<problem>/` page** too. `p/` now holds 14
-    problems, none covering quantum random oracles, fine-grained NIKE, RBE
-    update bounds, or coin-tossing attacks; `p/black-box-uselessness/` was
-    added for the first group and is the model to copy — motivation, provenance
-    with the ePrint link, a parameter lattice, and the list of statements. Where
-    two drafts share a problem they should share one `p/` page and become
-    sibling `c/` ids, the way `c/0019`–`c/0021` now do.
-  - **Two page mechanics that are easy to miss**, both of which cost a failed
-    gate the first time: a new leaf needs an empty
-    `<!-- status:start --> ... <!-- status:end -->` pair in the body before
-    `status_badge.py` will write anything into it, and `statement_sha: ""` is
-    filled by that same script rather than by hand. A new `c/<id>/latex/` +
-    `pdf/` pair is also a new artifact, so `artifact_manifest.py --update` has
-    to run after the PDF is compiled or the publish workflow fails.
-  - `areas` must come from the 19 fixed slugs (`scripts/build_index.py`
-    validates); `quantum`, `public-key`, `impossibility-results` and
-    `foundations` already exist as listing folders. Nothing needs adding to the
-    taxonomy.
-
-  Three judgment calls that should be made deliberately rather than in passing:
-
-  - **`sggm-3nike-quadratic-attack` and `fully-quantum-tlp-attack` are phrased
-    as attacks**, not conjectures. Check whether each is an open question or a
-    result the source paper proves — the harvester's known failure mode is
-    handing back a strengthening of a theorem the paper already has. If it is
-    not open, it does not belong in `c/` at all.
-  - **Two near-duplicate pairs.** `simon-oracle-amplification` and
-    `simon-oracle-simultaneous-inversion` differ only by "Given a" vs "With a"
-    in their titles, and `polynomial-compatibility` /
-    `polynomial-compatibility-2` are variants of one statement. Their
-    `statement.tex` files are *not* byte-identical, so these are four distinct
-    documents — decide per pair whether that is two statements or one drafted
-    twice, and delete rather than promote a redundant draft.
-  - **Leave `c/0006` empty.** It was removed on purpose (`e99c874`, "it was a
-    test placeholder, not a statement"), nothing in the tree references it, and
-    the next promotion should start at `c/0019`. The gap in the sequence is not
-    a missing page.
 
 - [ ] **Finish the Uber-assumption paper and run the checks on it (~1.5h — uncertain: the remaining mathematics is real work, not write-up)**
 

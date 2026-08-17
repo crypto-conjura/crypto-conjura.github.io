@@ -1,0 +1,71 @@
+%% The interface box of f-mcom, the one source for both the book
+%% and uc/.../f-mcom/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fmcom$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := \none$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{b} : \bits \times \Ps \times \Ps \to \{0,1\} \cup \{\unset\}$
+  \Comment{keyed by id, committer, receiver}
+\State $\V{open} : \bits \times \Ps \times \Ps \to \{0,1\}$
+\State $\V{b}[*] \gets \unset$; \ $\V{open}[*] \gets 0$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Commit}(c, Q, b)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{b}[c, \id.P, Q] = \unset \ \wedge\ b \in \{0,1\}$} \label{ln:mcomonce}
+  \Comment{one commitment per id, per pair}
+\State $\V{b}[c, \id.P, Q] \gets b$
+\State $\Adv\bigl(\id.\op{Commit},\ c,\ \id.P,\ Q\bigr)$ \label{ln:mcomreceipt}
+  \Comment{a receipt, carrying no bit}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Open}(c, Q)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{b}[c, \id.P, Q] \neq \unset$} \label{ln:mcomopener}
+  \Comment{the committer's to open, and only what it committed}
+\State $\V{open}[c, \id.P, Q] \gets 1$ \label{ln:mcomreopen}
+\State $\Adv\bigl(\id.\op{Open},\ c,\ \id.P,\ Q,\ \V{b}[c, \id.P, Q]\bigr)$
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Read}(c, P)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{b}[c, P, \id.P] \neq \unset$}
+  \Comment{the receipt is the receiver's, and names the committer}
+\If{$\V{open}[c, P, \id.P] = 0$}
+  \State \textbf{return} $(c,\ P)$ \label{ln:mcomhide}
+\EndIf
+\State \textbf{return} $(c,\ P,\ \V{b}[c, P, \id.P])$ \label{ln:mcombind}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $\V{b}[*, \id.P, *]$ \label{ln:mcomleak}
+  \Comment{a committer's own bits; a receiver holds none}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

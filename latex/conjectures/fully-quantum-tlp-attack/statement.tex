@@ -1,0 +1,356 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  Breaking fully quantum time-lock puzzles in the QROM.
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{FULLY QUANTUM TIME-LOCK PUZZLES IN THE QROM}
+
+\newcommand{\Gen}{\mathsf{Gen}}
+\newcommand{\Sol}{\mathsf{Sol}}
+\newcommand{\Ext}{\mathsf{E}}
+\newcommand{\puz}{\mathsf{P}}
+\newcommand{\solu}{\mathsf{s}}
+\newcommand{\solhon}{\mathsf{s}'}
+\newcommand{\solatt}{\mathsf{s}''}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{Breaking Fully Quantum Time-Lock Puzzles in the Quantum Random
+  Oracle Model}
+\cjsubtitle{Both the puzzle generator and the honest solver are quantum,
+  and so is the attacker}
+\cjstatus{Statement: AI-written from Abtin Afshar, Kai-Min Chung,
+  Yao-Ching Hsieh, Yao-Ting Lin and Mohammad Mahmoody, \emph{On the
+  (Im)possibility of Time-Lock Puzzles in the Quantum Random Oracle
+  Model}, Cryptology ePrint Archive 2023 (no venue or paper number is
+  printed on the PDF itself), not yet checked by a human. Settled in that
+  paper: a classical generator with a quantum solver (for arbitrary
+  completeness error, and round-optimally under perfect completeness), and
+  a quantum generator with a classical solver (under perfect
+  completeness); open, and conjectured below, is the fully quantum case,
+  where the paper presents no attack and shows that any attack asking only
+  classical queries would prove the Aaronson--Ambainis simulation
+  conjecture.}
+\cjcategory{\emph{Idealized Models \& Non-Uniformity}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+A time-lock puzzle locks a secret into a puzzle so that unwrapping it takes
+a long time even for someone with many computers running in parallel, while
+making the puzzle is cheap. If the only source of hardness is a random
+oracle, one can measure ``time'' by the number of rounds of oracle queries
+an algorithm needs, and ``parallelism'' by how many queries it may ask
+inside one round. Classically such puzzles cannot exist: whatever the
+generator does with its queries, an attacker recovers the solution using a
+number of query rounds proportional to the number of queries the generator
+made, no matter how many rounds the honest solver needs. The source paper
+extends this impossibility to a quantum honest solver querying in
+superposition, and separately to a quantum generator with a classical
+solver. The remaining case is the one where generator and solver are
+\emph{both} quantum; there the paper gives no attack, and it shows why its
+technique stalls, by exhibiting a scheme --- based on a long-standing
+conjecture about approximating quantum query algorithms classically being
+false --- that no attacker restricted to classical queries can break even
+with polynomially many queries and unlimited parallelism. The conjecture is
+that the impossibility nevertheless holds once the attacker is allowed
+quantum queries: for every such puzzle there is a quantum attacker that
+recovers the solution about as well as the honest solver does, using
+polynomially many quantum queries arranged into a number of rounds
+proportional to the generator's query count.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+Time-lock puzzles~\cite{RSW96} let a generator cheaply produce a puzzle
+$\puz$ hiding a solution $\solu$ so that recovering $\solu$ takes a long
+\emph{sequential} time, even for an adversary with unbounded parallelism.
+Whether such puzzles can be built from symmetric-key primitives alone is
+naturally studied in the random oracle model, where ``time'' has a clean
+information-theoretic proxy: the number of \emph{rounds} of oracle queries
+an algorithm needs, with arbitrarily many queries allowed inside a single
+round.
+
+In that model, Mahmoody, Moran and Vadhan~\cite{MMV11} ruled out time-lock
+puzzles outright: if the generator asks $n$ oracle queries and the honest
+solver asks $m$, there is always an attacker that recovers $\solu$ using
+only $O(n)$ rounds of queries and $\poly(n,m)$ queries in total, however
+sequential the honest solver is. They also showed $n$ rounds is the best one
+can hope for, via a ``pseudo-chain'' puzzle that genuinely needs $n$ rounds.
+
+Since random oracles can also be given in superposition~\cite{BDF11}, the
+barrier splits into three settings, according to which of the generator and
+the solver are quantum. The present paper closes two of them. When the
+generator is classical and the solver quantum, it exhibits an attacker
+asking $O(n)$ rounds of \emph{classical} queries and $\poly(n,m)$ queries
+total, so the solver's quantum power cannot be what makes the puzzle hard; a
+variant of the attack even runs in quantum polynomial time, which rules out
+ROM constructions that lean on additional computational assumptions. When
+the generator is quantum and the solver classical, it gives an attack in
+exactly $n$ rounds and $m \cdot n$ queries for perfectly complete schemes,
+by combining certificate-complexity ideas with the polynomial
+representation of a quantum party's state used in the key-agreement
+impossibility of~\cite{ACC22}. It also shows the pseudo-chain still needs
+$n$ rounds against a solver making parallel \emph{quantum} queries, so
+$O(n)$ rounds remains optimal in the quantum world.
+
+The remaining case --- generator and solver both quantum --- is left open,
+and the paper explains precisely what blocks the technique it uses
+elsewhere. Every one of its attacks asks only classical queries, and
+classical-query attacks cannot suffice unconditionally: assuming the
+paper's asymptotic Quantum Polynomial-Query Simulation Conjecture
+(Conjecture 6.1, p.~29) --- a weakening of the folklore simulation
+conjecture formally stated as Conjecture 4 of Aaronson and
+Ambainis~\cite{AA14} --- is \emph{false}, the paper builds a fully quantum
+time-lock puzzle that no classical-query adversary breaks, even with
+polynomially many queries and unlimited parallelism. It does so by
+amplifying the conditional one-way-communication quantum key agreement
+of~\cite{ACC22} to negligible completeness and soundness error and reading
+the resulting transcript as a puzzle. The simulation conjecture --- that
+the acceptance probability of an $n$-quantum-query algorithm can be
+approximated on most oracles using $\poly(n)$ classical queries --- is
+known only in the case where that probability is always $0$ or
+$1$~\cite{OSSS05} and has resisted proof for over a decade, so the barrier
+is unlikely to be removed soon. What is left, and what this conjecture asks
+for, is an attack that itself uses quantum queries.
+
+The stakes reach beyond time-lock puzzles. Under the reading of a
+key-agreement transcript as a puzzle, observed in~\cite{MMV11} and used
+here, round-efficient attacks on puzzles with quantum parties translate
+into round-efficient attacks on key agreement in the quantum
+ROM~\cite{ACC22}, and the paper notes that its techniques plausibly bear on
+the impossibility of verifiable delay functions from random
+oracles~\cite{MSW20}. Conversely, a resolution in the negative would be a
+genuine positive result: proofs of sequential work \emph{are} achievable
+against quantum adversaries from random oracles~\cite{CFHL21}, so the
+boundary between what sequential primitives survive quantum access and what
+do not is exactly what is at issue.
+
+Progress to date. The paper settles the two mixed settings. Theorem 3.1
+gives, for a classical generator and quantum solver, an attacker asking
+$4n^{2}m^{2}/(\varepsilon\delta^{2})$ classical queries in $n/\varepsilon$
+rounds with success at least $1 - \rho - \varepsilon - \delta$, and a second
+variant with $2n$ rounds; Theorem 3.12 makes the attack run in quantum
+polynomial time. Theorem 4.10 gives a round-optimal attack in at most $n$
+rounds and at most $mn$ queries with success probability $1$ for perfectly
+complete schemes with a classical generator and quantum solver, and Theorem
+4.6 does the same for a quantum generator and classical solver. Theorem 5.3
+shows the pseudo-chain puzzle of Mahmoody, Moran and Vadhan is still secure
+against solvers making $q$ rounds of $k$-parallel quantum queries, up to
+$O(\sqrt{kq^{3}/2^{\kappa}})$, so $O(n)$ rounds cannot be improved. For the
+fully quantum case there is no attack, only the conditional barrier of
+Theorem 6.2 against classical-query attackers.
+
+\section{Notation and parameters}\label{sec:notation}
+
+\begin{itemize}
+  \item $\kappa \in \mathbb{N}$ is the security parameter. All asymptotics
+    are in $\kappa$.
+  \item $\mathcal{X}$ and $\mathcal{Y}$ are finite nonempty sets with
+    $\mathcal{Y}$ carrying a group operation $\oplus$ (for concreteness one
+    may take $\mathcal{X} = \mathcal{Y} = \{0,1\}^{\kappa}$ with bitwise
+    XOR). The random oracle is $H \colon \mathcal{X} \to \mathcal{Y}$,
+    drawn uniformly from the set of all such functions.
+  \item Quantum access to $H$ is via the unitary
+    $O_H \colon |x\rangle|y\rangle \mapsto |x\rangle|y \oplus H(x)\rangle$
+    on $\mathbb{C}^{\mathcal{X}} \otimes \mathbb{C}^{\mathcal{Y}}$. For
+    $k \ge 1$ the $k$-parallel query operator is $O_H^{\otimes k}$, acting
+    on $k$ independent query/answer register pairs.
+  \item $n$ is the number of oracle queries of the puzzle generator, $m$
+    the number of oracle queries of the honest puzzle solver, and $\rho$
+    the completeness error of the puzzle (the honest solver fails with
+    probability at most $\rho$).
+  \item $\varepsilon, \delta \in (0,1]$ are slack parameters of the
+    attack: $\varepsilon$ controls its round budget and $\delta$ its
+    additional loss in success probability.
+  \item $r_G$ denotes the randomness of the puzzle generator, $\puz$ the
+    puzzle, $\solu$ the correct solution, $\solatt$ the attacker's output.
+  \item $p$ denotes a polynomial in four variables.
+\end{itemize}
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{definition}[rounds of quantum queries]\label{def:rounds}
+Let $H \colon \mathcal{X} \to \mathcal{Y}$. A quantum oracle algorithm
+$\mathsf{A}^{(\cdot)}$ \emph{asks at most $q$ queries in at most $d$ rounds}
+if, on every input, its execution relative to $H$ can be written as
+\[
+  U_{d}\, O_H^{\otimes k_{d}}\, U_{d-1} \cdots U_{1}\,
+  O_H^{\otimes k_{1}}\, U_{0}
+\]
+applied to a fixed initial state, followed by a measurement of a designated
+output register, where the unitaries $U_0, \dots, U_{d}$ do not depend on
+$H$ and the widths satisfy $k_1, \dots, k_{d} \ge 0$ and
+$\sum_{i=1}^{d} k_i \le q$. Randomized algorithms are included by letting
+$U_0$ prepare a uniform superposition over a randomness register that is
+measured at the start. A \emph{classical-query} algorithm is the special
+case in which every query register is measured in the computational basis
+immediately before each application of $O_H^{\otimes k_i}$.
+\end{definition}
+
+\begin{definition}[fully quantum time-lock puzzle in the quantum random
+oracle model]\label{def:qgqs-tlp}
+Let $n = n(\kappa)$, $m = m(\kappa)$ and $\rho = \rho(\kappa)$. A
+\emph{fully quantum time-lock puzzle with generator query complexity $n$,
+solver query complexity $m$ and completeness error $\rho$} is a pair
+$\Pi = (\Gen, \Sol)$ of quantum oracle algorithms such that:
+\begin{itemize}
+  \item $\Gen^{H}(r_G)$, on randomness $r_G$, makes at most $n$ quantum
+    queries to $H$ and outputs a pair of classical strings
+    $(\puz, \solu)$, the puzzle and its solution;
+  \item $\Sol^{H}(\puz)$ makes at most $m$ quantum queries to $H$ and
+    outputs a classical string $\solhon$;
+  \item (completeness)
+    \begin{multline*}
+      \Pr\bigl[\solu = \solhon \;:\;
+        (\puz, \solu) \leftarrow \Gen^{H}(r_G), \\
+        \solhon \leftarrow \Sol^{H}(\puz)\bigr] \;\ge\; 1 - \rho,
+    \end{multline*}
+    over the uniform choice of $H$, the choice of $r_G$, and the
+    measurements of $\Gen$ and $\Sol$.
+\end{itemize}
+No restriction is placed on the number of rounds in which $\Gen$ and $\Sol$
+ask their queries; in particular the honest solver may need all $m$ of its
+queries to be sequential, which is what a time-lock puzzle intends to
+exploit.
+
+The requirement that the puzzle $\puz$ and the solution $\solu$ be
+\emph{classical} is a restriction, and the conjecture below covers only
+puzzles of that form. It is the form taken by the source paper's own formal
+definition (Definition 2.6, p.~11) and by its fully quantum construction
+(Construction 6.13, p.~33, where $\puz = c_3$ and
+$\solu = \mathsf{key}_{A_3}$), and hence the form in which its Theorem 6.2
+barrier is proved. The paper explicitly contemplates, but never formalizes,
+the case in which the puzzle itself is a quantum object; that case is a
+strictly more general question which this statement does not address.
+\end{definition}
+
+\begin{conjecture}[breaking fully quantum time-lock puzzles with quantum
+queries]\label{conj:main}
+There is a fixed polynomial $p$, independent of everything below, such that
+the following holds.
+
+Let $\Pi = (\Gen, \Sol)$ be any fully quantum time-lock puzzle in the
+quantum random oracle model in the sense of
+Definition~\ref{def:qgqs-tlp}, with generator query complexity
+$n = n(\kappa)$, solver query complexity $m = m(\kappa)$, and completeness
+error $\rho = \rho(\kappa)$. Then for every
+$\varepsilon, \delta \in (0,1]$ there exists a quantum oracle algorithm
+$\Ext$ (allowed to depend on $\Pi$, on $\varepsilon$ and on $\delta$, and
+otherwise unrestricted in its internal computation, in particular not
+required to be efficient) such that:
+\begin{enumerate}
+  \item $\Ext$ makes at most $p(n, m, 1/\varepsilon, 1/\delta)$ quantum
+    queries to $H$;
+  \item those queries are arranged in at most
+    $\lceil n/\varepsilon \rceil$ rounds in the sense of
+    Definition~\ref{def:rounds}; and
+  \item
+    \begin{multline*}
+      \Pr\bigl[\solatt = \solu \;:\;
+        (\puz, \solu) \leftarrow \Gen^{H}(r_G), \\
+        \solatt \leftarrow \Ext^{H}(\puz)\bigr]
+        \;\ge\; 1 - \rho - \varepsilon - \delta,
+    \end{multline*}
+    where the probability is over the uniform choice of
+    $H \colon \mathcal{X} \to \mathcal{Y}$, the generator randomness
+    $r_G$, and the measurements of $\Ext$.
+\end{enumerate}
+Here $n$, $m$ and $\rho$ may be arbitrary functions of the security
+parameter $\kappa$, and the statement is asserted for all sufficiently
+large $\kappa$.
+\end{conjecture}
+
+\begin{corollary}[consequence, if the conjecture
+holds]\label{cor:consequence}
+Taking $\varepsilon = \delta = 1/4$ and $\rho \le 1/4$ would give, for
+every such $\Pi$, a quantum attacker asking $\poly(n,m)$ quantum queries in
+$O(n)$ rounds that recovers $\solu$ with probability at least $1/4$, so no
+fully quantum time-lock puzzle in the quantum random oracle model would
+have negligible soundness error against $O(n)$-round quantum attackers.
+\end{corollary}
+
+\begin{remark}[the quantitative shape is the sharp form]\label{rem:sharp}
+The source paper's own words are only that ``Theorem 1.1 could potentially
+be extended to the fully quantum setting using a quantum adversary'',
+without pinning down the round and query bounds. The shape asserted above
+--- $\lceil n/\varepsilon \rceil$ rounds,
+$p(n, m, 1/\varepsilon, 1/\delta)$ queries, success
+$1 - \rho - \varepsilon - \delta$ --- is therefore Theorem 3.1's shape
+transplanted verbatim to the new setting rather than a bound the paper
+writes down for it. An attacker achieving, say, $\poly(n)$ rounds, or
+merely non-negligible rather than near-honest success, would already answer
+what the authors are asking and would refute nothing here;
+Conjecture~\ref{conj:main} is the sharp form.
+\end{remark}
+
+\begin{remark}[scope]\label{rem:scope}
+As recorded at the end of Definition~\ref{def:qgqs-tlp}, the puzzle and its
+solution are classical here. The paper observes that in the fully quantum
+setting ``one can imagine the puzzle itself to be a quantum object'', and
+the restriction is deliberate: it matches the paper's Definition 2.6 and is
+the setting of its Theorem 6.2 barrier. It does mean that the
+quantum-puzzle variant is a strictly more general question, on which
+Conjecture~\ref{conj:main} is silent.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem[AA14]{AA14}
+S. Aaronson, A. Ambainis.
+\emph{The need for structure in quantum speedups}.
+2014. (No venue is given in the source reference list.)
+
+\bibitem[ACC22]{ACC22}
+P. Austrin, H. Chung, K.-M. Chung, S. Fu, Y.-T. Lin, M. Mahmoody.
+\emph{On the impossibility of key agreements from quantum random oracles}.
+Advances in Cryptology --- CRYPTO 2022: 42nd Annual International
+Cryptology Conference, Proceedings, Part II, pages 165--194, Springer,
+2022.
+
+\bibitem[BDF11]{BDF11}
+D. Boneh, O. Dagdelen, M. Fischlin, A. Lehmann, C. Schaffner, M. Zhandry.
+\emph{Random oracles in a quantum world}.
+Advances in Cryptology --- ASIACRYPT 2011, volume 7073 of Lecture Notes in
+Computer Science, pages 41--69, Springer, Heidelberg, 2011.
+
+\bibitem[CFHL21]{CFHL21}
+K.-M. Chung, S. Fehr, Y.-H. Huang, T.-N. Liao.
+\emph{On the compressed-oracle technique, and post-quantum security of
+proofs of sequential work}.
+Advances in Cryptology --- EUROCRYPT 2021, Part II, volume 12697 of Lecture
+Notes in Computer Science, pages 598--629, Springer, Heidelberg, 2021.
+
+\bibitem[MMV11]{MMV11}
+M. Mahmoody, T. Moran, S. P. Vadhan.
+\emph{Time-lock puzzles in the random oracle model}.
+Advances in Cryptology --- CRYPTO 2011, volume 6841 of Lecture Notes in
+Computer Science, pages 39--50, Springer, Heidelberg, 2011.
+
+\bibitem[MSW20]{MSW20}
+M. Mahmoody, C. Smith, D. J. Wu.
+\emph{Can verifiable delay functions be based on random oracles?}
+ICALP 2020: 47th International Colloquium on Automata, Languages and
+Programming, volume 168 of LIPIcs, pages 83:1--83:17, Schloss Dagstuhl,
+2020.
+
+\bibitem[OSSS05]{OSSS05}
+R. O'Donnell, M. Saks, O. Schramm, R. A. Servedio.
+\emph{Every decision tree has an influential variable}.
+46th Annual IEEE Symposium on Foundations of Computer Science (FOCS'05),
+pages 31--39, IEEE, 2005.
+
+\bibitem[RSW96]{RSW96}
+R. L. Rivest, A. Shamir, D. A. Wagner.
+\emph{Time-lock puzzles and timed-release crypto}.
+Massachusetts Institute of Technology, Laboratory for Computer Science,
+1996.
+
+\end{conjurabibliography}
+
+\end{document}

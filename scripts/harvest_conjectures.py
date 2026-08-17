@@ -403,14 +403,20 @@ def find_class_files():
 
 
 def claim_folder(slug):
-    """Take latex/conjectures/<slug>/, never overwriting an existing folder."""
-    folder = CONJECTURES / slug
-    n = 2
-    while folder.exists():
-        folder = CONJECTURES / f"{slug}-{n}"
-        n += 1
-    folder.mkdir(parents=True)
-    return folder
+    """Take latex/conjectures/<slug>/, never overwriting an existing folder.
+
+    The claim is the mkdir itself, not a preceding exists() check: several
+    papers can be read at once, and two of them arriving at the same slug a
+    millisecond apart must not both believe they own it.
+    """
+    for n in range(1, 100):
+        folder = CONJECTURES / (slug if n == 1 else f"{slug}-{n}")
+        try:
+            folder.mkdir(parents=True)
+            return folder
+        except FileExistsError:
+            continue
+    raise RuntimeError(f"could not claim a folder for {slug!r}")
 
 
 def compile_check(folder, no_compile=False):
@@ -573,8 +579,19 @@ def read_ledger():
 
 
 def write_ledger(ledger):
+    """Merge into whatever is on disk, then write.
+
+    Papers are read one process per paper when there are several to get
+    through, and each holds the ledger it read at startup. Writing that back
+    wholesale would drop every entry a sibling added in the meantime; merging
+    first costs nothing, since the entries are keyed by content hash and two
+    processes never write the same one.
+    """
     PROCESSED.mkdir(parents=True, exist_ok=True)
-    LEDGER.write_text(json.dumps(ledger, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    merged = read_ledger()
+    merged["documents"].update(ledger["documents"])
+    ledger["documents"] = merged["documents"]
+    LEDGER.write_text(json.dumps(merged, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
 def now():
@@ -843,7 +860,7 @@ def main():
             failures.append((pdf.name, str(exc)))
             continue
         total += written
-        if status == "ok" and not args.keep:
+        if status in ("ok", "skipped-duplicate") and not args.keep:
             dest = move_to_processed(pdf, sha)
             print(f"  moved to {dest.relative_to(ROOT)}")
         if status == "ok":

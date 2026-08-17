@@ -1,0 +1,27 @@
+{
+  // Cloudflare Workers deployment for the static site. GitHub Pages remains a
+  // deploy target too, built by .github/workflows/publish.yml from the same
+  // sources; see the note on site-url below before treating this origin as
+  // canonical.
+  "$schema": "node_modules/wrangler/config-schema.json",
+
+  // Must match the Worker that Cloudflare Workers Builds is already connected
+  // to. Changing it does not rename that Worker -- it deploys to a different
+  // one and leaves the old one serving the old content.
+  "name": "crypto-conjura-github-io",
+  "compatibility_date": "2026-08-17",
+
+  // Runs before every `wrangler deploy`. Without it, a clone holds .qmd
+  // sources and no HTML, and the assets directory below does not exist --
+  // which is the "Could not detect a directory containing static files" error
+  // this configuration was added to fix.
+  "build": {
+    "command": "bash scripts/cloudflare_build.sh"
+  },
+
+  // No "main": this is a static-assets-only Worker, with no server-side code.
+  // _site/ is gitignored and produced by the build command above.
+  "assets": {
+    "directory": "./_site"
+  }
+}

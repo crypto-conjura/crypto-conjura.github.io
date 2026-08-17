@@ -1,72 +1,12 @@
 # Tasks
 
-Split into two sections: **Website and repository** (~5.5h) covers the site, its build tooling and the repository's configuration; **Conjectures and papers** (~4.5h) covers the mathematics — proving conjectures, and writing and checking the papers that report them. Within each section, tasks are ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~18.0h** (rough; the UC Encyclopedia content dominates the uncertainty and could run well over its estimate).
+Split into two sections: **Website and repository** (~5.0h) covers the site, its build tooling and the repository's configuration; **Conjectures and papers** (~4.5h) covers the mathematics — proving conjectures, and writing and checking the papers that report them. Within each section, tasks are ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~17.5h** (rough; the UC Encyclopedia content dominates the uncertainty and could run well over its estimate).
 
-Last reconciled against `main` at `bc52628` on 18 August 2026.
+Last reconciled against `main` at `cbb23c7` on 18 August 2026.
 
 Completed tasks are deleted from this file rather than checked off and kept: this is a list of live work, and `git log` is the record of what closed and when.
 
 ## Website and repository
-
-- [ ] **Simplify the Steering page: names first, each with a home icon (~0.5h — manual: real people's names, affiliations and links)**
-
-  Requested 17 August 2026. `steering/index.qmd` is ten paragraphs wrapped
-  around a seven-name list. Wanted: the names at the top, each linking to that
-  person's own page through a house icon, a line saying the project wants more
-  steering members, and a note that Pooya Farshim currently maintains the
-  project.
-
-  Homepages, each fetched and confirmed to return 200 on 17 August 2026 — link
-  these rather than re-deriving them:
-
-  - Manuel Barbosa — `https://www.dcc.fc.up.pt/~mbb/`
-  - Pooya Farshim — `https://farshim.github.io/`
-  - Denis Firsov — `https://firsov.ee/`
-  - Jens Groth — `http://www0.cs.ucl.ac.uk/staff/j.groth/`
-  - Mohammad Mahmoody — `https://www.cs.virginia.edu/~mohammad/`
-  - Christian Rechberger — `https://www.isec.tugraz.at/person/christian-rechberger/`
-  - Stefano Tessaro — `https://homes.cs.washington.edu/~tessaro/`
-
-  Two of those need a decision rather than a paste. **Groth's page serves over
-  `http` only** — `https://www0.cs.ucl.ac.uk/...` and
-  `https://www.cs.ucl.ac.uk/staff/J.Groth/` both failed to connect from here,
-  while the `http` URL returned 200 and its CV is dated April 2026, so the page
-  is maintained and it is the TLS that is missing. An `http` link on an `https`
-  site is a mixed-content nag in some browsers; retest, and if it still fails,
-  either link it anyway with the plain URL or link his Nexus author page (he is
-  Chief Scientist there) instead. **Rechberger's page** answers on both
-  `iaik.tugraz.at` and `isec.tugraz.at` with the same content, the institute
-  having rebranded to ISEC — prefer the `isec` URL so the link does not depend
-  on a redirect.
-
-  One factual error to fix while rewriting the list: the page lists **Mohammad
-  Mahmoody under "Bilkent University"**, and his own homepage says he is an
-  associate professor in the Computer Science Department at the **University of
-  Virginia**. Correct it or drop affiliations from the list entirely — do not
-  publish it as it stands. Jens Groth is the one name with no affiliation at all
-  today.
-
-  Icon mechanics, so this does not turn into a dependency hunt: `_extensions/`
-  does not exist and no `.qmd` on the site uses an icon shortcode, but
-  `_quarto.yml`'s `navbar.right: - icon: github` proves Quarto's bundled
-  Bootstrap Icons ship with the theme, so an inline `<i class="bi
-  bi-house-door-fill">` needs no extension. Confirm that in the rendered
-  `_site` output rather than assuming it. An icon-only link has no accessible
-  name, so each one needs an `aria-label` naming the person; and the colour
-  should come from a `.cj-`-prefixed class defined in both `theme-light.scss`
-  and `theme-dark.scss` rather than being hard-coded, the way every other custom
-  element on the site is done.
-
-  What "much simpler" should not cut: the sentence that support is not an
-  endorsement or a review of any statement, the line that anyone listed can ask
-  to be removed without giving a reason, and the pointer to the
-  [provenance badge](/open-problems/status-legend/) — those exist because the
-  page puts real people's names next to unreviewed AI-written mathematics. The
-  recruiting line should say the project is looking for more steering members in
-  **cryptography, formal methods and DevOps, and anyone who can bring tokens**,
-  and it belongs folded into the existing "Supporting the project" list (Review,
-  Problems, Compute and bounties) rather than added as a second list saying the
-  same thing.
 
 - [ ] **One page listing every UC functionality (~0.5h)**
 

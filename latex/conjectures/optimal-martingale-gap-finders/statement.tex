@@ -1,0 +1,329 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  Asymptotically optimal gap finders for Boolean-terminal martingales.
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{OPTIMAL GAP FINDERS FOR MARTINGALES}
+
+\newcommand{\wv}{\mathbf{w}}
+\newcommand{\Supp}{\mathrm{Supp}}
+\newcommand{\Stop}{\mathsf{Stop}}
+\newcommand{\StopTime}{\mathsf{StopTime}}
+\newcommand{\Ex}{\mathbb{E}}
+\newcommand{\Nat}{\mathbb{N}}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{Asymptotically Optimal Gap Finders for Boolean-Terminal
+Martingales}
+\cjsubtitle{The small-bias regime, where the Cleve--Impagliazzo bound
+degrades}
+\cjstatus{Statement: AI-written from Omid Etesami, Ji Gao, Saeed
+  Mahloujifar and Mohammad Mahmoody, \emph{Polynomial-time targeted
+  attacks on coin tossing for any number of corruptions}, full version
+  of a paper appearing in the Theory of Cryptography Conference (TCC)
+  2021, 2021, not yet checked by a human. Settled for
+  $\mu = \Theta(1)$, where the Cleve--Impagliazzo gap finder already
+  gives $\rho\alpha = \Omega(\mu^{2}/\sqrt{n}) = \Omega(\mu/\sqrt{n})$;
+  open in the small-$\mu$ regime, where the known bound is a factor
+  $\mu$ short, and the paper states it does not know the answer for
+  general $\mu \le 1/2$.}
+\cjcategory{\emph{Information-Theoretic Cryptography}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+Think of a coin-tossing protocol in which $n$ parties each broadcast one
+message and a Boolean output bit is then determined. Tracking the
+conditional probability that the output is $1$ as the messages arrive
+gives a martingale that starts at the a-priori probability $\mu$ of the
+output being $1$ and ends at $0$ or $1$. A classical theorem says such a
+martingale must jump noticeably somewhere: there is an online rule,
+which watches the messages one by one and must commit to a step without
+seeing the future, that stops at a step where the jump is large. The
+quality of such a rule is measured by two numbers, the probability that
+it stops at a large jump and the size of the jump it guarantees; their
+product is exactly what an adversary who may replace one message can
+convert into bias. When $\mu = \Theta(1)$ the classical rule already
+meets the conjectured target, since $\Omega(\mu^{2}/\sqrt{n}) =
+\Omega(\mu/\sqrt{n})$ there; no matching upper bound showing that rule
+optimal is proved anywhere. When $\mu$ is small, the classical rule
+degrades quadratically in it, and the best known guarantee for the
+product falls short of the target by a factor $\mu$. The conjecture is
+that this loss is an artifact: a stopping rule achieving the target
+product should exist for every such martingale and every starting value
+at most one half. A second known family of rules controls only the
+expected jump rather than a probability-and-size pair, and the source
+paper does not know how to use that form in the targeted reduction it
+needs, so that route is unavailable to it; it does not show the form
+unusable in principle.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+Collective coin flipping~\cite{BOL90} asks how far an adversary who
+controls a few of $n$ parties can push the output bit of a protocol in
+which each party broadcasts one message. The standard analytic handle is
+the Doob martingale of the output bit: if $b = f(w_1,\dots,w_n)$ is the
+Boolean output and $\wv_i$ is the conditional probability that $b=1$
+given the first $i$ messages, then $(\wv_1,\dots,\wv_n)$ is a martingale
+that starts at $\mu = \Pr[b=1]$ and ends in $\{0,1\}$.
+
+Cleve and Impagliazzo~\cite{CI93} showed that such a martingale must
+jump: there is an \emph{online} stopping rule --- a ``gap finder'' ---
+that, with probability $\Omega(\mu)$, stops at a step whose increment
+has magnitude $\Omega(\mu/\sqrt{n})$, i.e.\ a $(\rho,\alpha)$ gap finder
+with $\rho\alpha = \Omega(\mu^{2}/\sqrt{n})$. Their theorem was proved
+for $\mu = 1/2$; the same argument gives the $\mu$-dependent bound
+above, and it is exactly this dependence that degrades as $\mu$ shrinks.
+Khorasgani, Maji and Mukherjee~\cite{KMM19} proved a different
+guarantee, an \emph{expected} gap of $2\mu(1-\mu)/\sqrt{2n-1}$, with no
+accompanying probability parameter; see also~\cite{KMW21}.
+
+Gap finders matter because they convert directly into attacks. It has
+long been known~\cite{CI93,KMM19} that a $(\rho,\alpha)$ gap finder
+yields a $1$-replacing \emph{non-targeted} attack of bias
+$\Omega(\rho\alpha)$: the adversary waits for the step where a large
+jump is about to occur, and either forces it (positive gap) or resamples
+to avoid it (negative gap). The source paper~\cite{EGMM21} closes the
+remaining half of that picture: it shows that a $(\rho,\alpha)$ gap
+finder also yields a \emph{targeted} $1$-replacing attack of bias
+$\Omega(\rho\alpha)$, one that pushes the output specifically
+towards $1$, and that the reduction survives replacing the exact
+martingale by an approximation, hence runs in polynomial time. It also
+shows that a $1$-replacing targeted attack composes recursively into a
+$k$-replacing one.
+
+A positive answer would have let the paper use the gap-finder-derived
+targeted attack in place of its Lemma~47 and obtain
+information-theoretic $k$-replacing attacks by the recursive
+composition of its Section~B (p.~45); the paper stresses that this route
+is included for completeness and that the results obtained this way are
+subsumed by its main theorem, Theorem~1 (p.~4). The paper achieves
+$1$-replacing targeted bias $\Omega(\mu/\sqrt{n})$ directly, by a
+bespoke Azuma-based argument, so the target quantity is known to be
+achievable \emph{as a bias}. But the route through gap finders currently
+loses a factor of $\mu$, because the only available $(\rho,\alpha)$ gap
+finder has $\rho\alpha = \Omega(\mu^{2}/\sqrt{n})$, and the paper does
+not know how to use the expected-gap form of~\cite{KMM19} in the
+targeted reduction. The question is whether the gap-finding theorem
+itself can be strengthened to match.
+
+\section{Notation and parameters}\label{sec:notation}
+
+\begin{itemize}
+\item $n \in \Nat$ is the number of steps and $[n] = \{1,\dots,n\}$.
+\item $\wv_{\le n} \equiv (\wv_1,\dots,\wv_n)$ is a sequence of jointly
+  distributed, discrete, real-valued random variables. For $i \in [n]$
+  we write $w_{\le i} = (w_1,\dots,w_i)$ for a prefix in the support
+  $\Supp(\wv_{\le i})$. The sequence is a \emph{martingale} if
+  $\Ex[\wv_{i+1} \mid \wv_{\le i} = w_{\le i}] = w_i$ for every
+  $i \in [n-1]$ and every $w_{\le i} \in \Supp(\wv_{\le i})$.
+\item The sequence is extended at both ends by the constant
+  $\wv_0 := \Ex[\wv_1]$ and by $\wv_{n+1} := \wv_n$, so that the
+  increments under consideration are $\wv_i - \wv_{i-1}$ for
+  $i \in [n] \cup \{n+1\}$, the last of which is identically $0$.
+\item $\mu := \Ex[\wv_1] = \wv_0$ is the starting value of the
+  martingale.
+\item $r$ denotes the randomness of a stopping algorithm,
+  $\tau \in [n] \cup \{n+1\}$ its stopping time, and
+  $|w_\tau - w_{\tau-1}|$ the \emph{gap} it exhibits.
+\item $\rho \in [0,1]$ and $\alpha > 0$ are the two parameters of a gap
+  finder, and $c > 0$ is a universal constant.
+\end{itemize}
+
+The parameters of the statement are:
+\begin{itemize}
+\item $n$, the number of steps of the martingale (in the coin-tossing
+  application, the number of parties, each sending one message).
+\item $\mu$, the starting value of the martingale, $\Ex[\wv_1]$; in the
+  application, the probability that the protocol outputs $1$ before any
+  attack. Restricted to $(0,1/2]$.
+\item $\alpha$, the guaranteed size of the jump that the stopping rule
+  exhibits at its stopping step.
+\item $\rho$, the probability, over the martingale and the rule's
+  randomness, that the stopping step really does exhibit a jump of size
+  at least $\alpha$.
+\item $\tau$, the step at which the online stopping rule stops; $n+1$ if
+  it never stops.
+\item $c$, a universal constant, independent of $n$, of $\mu$, and of
+  the martingale.
+\end{itemize}
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{definition}[Online stopping algorithm]\label{def:stop}
+Let $\wv_{\le n}$ be a sequence of jointly distributed discrete random
+variables. A (possibly randomized) algorithm $\Stop$ is an \emph{online
+stopping algorithm} for $\wv_{\le n}$ if for every fixing $r$ of its
+randomness:
+\begin{enumerate}
+\item $\Stop_r(w_{\le i}) \in \{0,1\}$ for every $i \in [n]$ and every
+  $w_{\le i} \in \Supp(\wv_{\le i})$, where the output $1$ is read as
+  ``stop''; and
+\item the decision is monotone: if $\Stop_r(w_{\le i}) = 1$ then
+  $\Stop_r(w_{\le j}) = 1$ for every $j \ge i$ and every
+  $w_{\le j} \in \Supp(\wv_{\le j})$ extending $w_{\le i}$.
+\end{enumerate}
+For $w_{\le n} \in \Supp(\wv_{\le n})$ the \emph{stopping time} is
+\[
+  \StopTime_r(w_{\le n}) := \min\{\, i \in [n] : \Stop_r(w_{\le i}) = 1
+  \,\}
+\]
+if this set is non-empty, and $\StopTime_r(w_{\le n}) := n+1$ otherwise.
+The algorithm is not required to be efficient.
+\end{definition}
+
+\begin{definition}[$(\rho,\alpha)$ gap finder]\label{def:gapfinder}
+Let $\wv_{\le n}$ be a martingale, extended by $\wv_0 := \Ex[\wv_1]$ and
+$\wv_{n+1} := \wv_n$. An online stopping algorithm $\Stop$ for
+$\wv_{\le n}$ is a \emph{$(\rho,\alpha)$ gap finder} if, over the joint
+choice of $w_{\le n} \leftarrow \wv_{\le n}$ and of the randomness $r$
+of $\Stop$, writing $\tau = \StopTime_r(w_{\le n})$,
+\[
+  \Pr\bigl[\, |w_\tau - w_{\tau-1}| \ge \alpha \,\bigr] \;\ge\; \rho .
+\]
+Note that stopping at $\tau = n+1$ contributes no gap, since
+$\wv_{n+1} = \wv_n$.
+\end{definition}
+
+\begin{conjecture}[Asymptotically optimal gap finders]\label{conj:main}
+There is a universal constant $c>0$ --- independent of $n$, of $\mu$,
+and of the martingale --- such that the following holds. For every
+$n \in \Nat$, every $\mu \in (0, 1/2]$, and every martingale
+$\wv_{\le n} \equiv (\wv_1,\dots,\wv_n)$ with $\Ex[\wv_1] = \mu$ and
+$\Pr[\wv_n \in \{0,1\}] = 1$, extended by $\wv_0 := \mu$ and
+$\wv_{n+1} := \wv_n$, there exist a real $\alpha > 0$ and an online
+stopping algorithm $\Stop$ for $\wv_{\le n}$ such that $\Stop$ is a
+$(\rho,\alpha)$ gap finder for $\wv_{\le n}$ with
+\[
+  \rho \cdot \alpha \;\ge\; \frac{c\,\mu}{\sqrt{n}},
+\]
+where
+\[
+  \rho \;=\; \Pr_{\,w_{\le n} \leftarrow \wv_{\le n},\; r}
+  \bigl[\, \bigl|w_{\tau} - w_{\tau-1}\bigr| \ge \alpha \,\bigr]
+\]
+and $\tau = \StopTime_r(w_{\le n})$. No bound is imposed on the running
+time of $\Stop$; the statement is information-theoretic.
+\end{conjecture}
+
+\begin{remark}[What is known]\label{rem:progress}
+The paper records the two known guarantees side by side (its
+Theorem~52): a $(\Omega(\mu), \Omega(\mu/\sqrt{n}))$ gap finder from
+Cleve--Impagliazzo, and an expected-gap bound
+$\alpha = 2\mu(1-\mu)/\sqrt{2n-1}$ from Khorasgani--Maji--Mukherjee. It
+notes the first was proved for $\mu = 1/2$ and that the same proof
+carries over to general $\mu$ with the stated $\mu$-dependence. It
+proves the converse half of the motivation --- that a $(\rho,\alpha)$
+gap finder yields a targeted $1$-replacing attack of bias
+$\Omega(\rho\alpha)$ (its Theorem~53), robust to
+$\varepsilon$-approximate martingale access (its Theorem~60) --- and it
+separately achieves targeted $1$-replacing bias $\Omega(\mu/\sqrt{n})$
+by a direct argument (its Lemma~47), which shows the target product is
+not larger than what an attack can already extract by other means.
+\end{remark}
+
+\begin{remark}[Openness]\label{rem:open}
+The paper's own formulation is: ``Then, can one always obtain an
+$(\rho, \alpha)$ gap finder for $\wv_{\le n}$ such that
+$\rho\alpha = \Omega(\mu/\sqrt{n})$?'' (p.~45), introduced by ``This
+motivates the following question, which as far as we know is open''
+(p.~45). The reason it is asked: ``Unfortunately, the bound of the
+$(\rho, \alpha)$ gap finder of [CI93] degrades with $\mu$, which means
+we cannot use their result to obtain an asymptotically similar result to
+that of our Lemma~47'' (p.~45), together with ``We do not know how to
+find (expected) $\alpha$ gap finders for this purpose. This means we
+cannot use the result of [KMM19] (see Theorem~52)'' (p.~45). On the
+consequence of a positive answer: ``A positive answer to the following
+question above would have allowed us to use the derived targeted attack
+instead of our Lemma~47 and obtain (information-theoretic)
+$k$-replacing attacks through recursive compositing, as stated in
+Section~B'' (p.~45). On the settled regime, the paper notes of the
+Cleve--Impagliazzo bound that ``their result is only proved for almost
+unbiased final bits in which both $\{0, 1\}$ happen with probability
+$\Omega(1)$'' (p.~44).
+\end{remark}
+
+\begin{remark}[Caveats for a reviewer]\label{rem:caveats}
+Four things to check. First, the printed question omits the hypothesis
+that the martingale's final value lies in $\{0,1\}$; taken literally it
+is false, since a martingale constant at $\mu$ has no gaps at all. That
+hypothesis has been restored above, which the surrounding text forces
+--- the appendix opens by describing the Cleve--Impagliazzo theorem as
+being about ``any $n$-step martingale in which the final value is in
+$\{0,1\}$'', and the reduction it feeds uses the Doob martingale of a
+Boolean function. A reviewer should confirm this is the right repair
+and not, say, a $[0,1]$-boundedness hypothesis instead. Second, the
+heading calls the target ``asymptotically optimal'', which suggests a
+matching $\rho\alpha = O(\mu/\sqrt{n})$ upper bound, but no such upper
+bound was found proved or cited anywhere in the paper;
+Conjecture~\ref{conj:main} as stated does not depend on it. Third, the
+printed question has been read as existential in the pair
+$(\rho,\alpha)$, uniformly over $n$, $\mu$ and the martingale; a reader
+could instead read $\rho$ or $\alpha$ as pinned down in advance. Fourth,
+the Khorasgani--Maji line of work on estimating martingale gaps was
+active around and after 2021; whether a later paper in that line settles
+this has not been checked, and it is the first place to look.
+\end{remark}
+
+\begin{remark}[Why it is worth settling]\label{rem:interest}
+This is a quantitative strengthening of a thirty-year-old structural
+theorem about bounded martingales, in the one regime where that theorem
+is known to be lossy, and the loss is exactly quadratic in the
+parameter. A positive answer would give a clean modular derivation of
+targeted coin-tossing attacks that are optimal up to constants for every
+corruption budget: gap finder, then the paper's targeted reduction, then
+its recursive composition. A negative answer would be at least as
+interesting, since it would separate what online stopping rules can
+certify about a martingale from what a one-message-replacing adversary
+can actually achieve against the same protocol --- the paper's own
+Lemma~47 already reaches bias $\Omega(\mu/\sqrt{n})$, so a refutation
+would show the gap-finder abstraction is strictly weaker than the
+attacks it was introduced to explain. The statement itself mentions no
+protocols, no adversaries and no cryptography: it is a question about
+real-valued martingales with Boolean terminal value and online stopping
+rules, stateable in half a page from
+Definitions~\ref{def:stop} and~\ref{def:gapfinder}, with one inequality,
+one universal constant, and two explicit bounds to beat.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem[BOL90]{BOL90}
+Michael Ben-Or and Nathan Linial.
+\emph{Collective coin flipping}.
+Advances in Computing Research, 5:91--115, 1990.
+
+\bibitem[CI93]{CI93}
+Richard Cleve and Russell Impagliazzo.
+\emph{Martingales, collective coin flipping and discrete control
+processes}.
+Manuscript, 1993.
+
+\bibitem[EGMM21]{EGMM21}
+Omid Etesami, Ji Gao, Saeed Mahloujifar, and Mohammad Mahmoody.
+\emph{Polynomial-time targeted attacks on coin tossing for any number of
+corruptions}.
+Theory of Cryptography Conference (TCC); full version, 2021. [UNVERIFIED]
+
+\bibitem[KMM19]{KMM19}
+Hamidreza Amini Khorasgani, Hemanta K. Maji, and Tamalika Mukherjee.
+\emph{Estimating gaps in martingales and applications to coin-tossing:
+constructions and hardness}.
+Theory of Cryptography Conference (TCC), pages 333--355, Springer, 2019.
+
+\bibitem[KMW21]{KMW21}
+Hamidreza Amini Khorasgani, Hemanta K. Maji, and Mingyuan Wang.
+\emph{Optimally-secure coin-tossing against a byzantine adversary}.
+2021 IEEE International Symposium on Information Theory (ISIT), pages
+2858--2863, 2021.
+
+\end{conjurabibliography}
+
+\end{document}

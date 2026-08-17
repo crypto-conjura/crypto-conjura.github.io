@@ -1,0 +1,89 @@
+---
+id: "0030"
+problem: coin-tossing-gap-finders
+draft: optimal-martingale-gap-finders
+title: "Asymptotically Optimal Gap Finders for Boolean-Terminal Martingales"
+short_title: "Optimal martingale gap finders"
+areas: [information-theoretic, foundations, consensus]
+model: standard
+form: lower-bound
+assumption_class: unconditional
+category: research-open
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: new-idea
+  note: "The Cleve-Impagliazzo argument was written for mu = 1/2, where its two factors of mu are constants and the loss is invisible; running it for general mu costs a factor mu that nobody has removed. The conjecture asks for a constant independent of mu, which is precisely the paper's own complaint about the existing bound, so a proof must find a stopping rule whose stopping probability does not degrade linearly as the martingale's start approaches zero. The statement is information-theoretic — no bound is placed on the stopping algorithm's running time — so the difficulty is not computational."
+  by: ai
+status_summary: "Open for small mu. Settled when mu is bounded away from zero, where the Cleve-Impagliazzo gap finder already gives the conjectured product; for general mu the known bound is a factor mu short and the paper states it does not know the answer."
+status_updated: 2026-08-18
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Etesami, Gao, Mahloujifar, Mahmoody, Polynomial-time targeted attacks on coin tossing for any number of corruptions, Cryptology ePrint Archive, Report 2021/1464; TCC 2021", url: "https://eprint.iacr.org/2021/1464"}
+revision: 1
+statement_sha: "159b9970d499b655a1f2c2fd3e5f82f95581da071712cdad175dc484c8a084ff"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+A martingale that starts at $\mu$ and ends in $\{0,1\}$ has to jump somewhere, and an attack on a coin-flipping protocol is a rule for catching a jump as it happens. The classical bound catches a jump of size $\Omega(\mu/\sqrt{n})$ with probability $\Omega(\mu)$ — a product with two factors of $\mu$ in it, which is harmless when $\mu$ is a constant and lossy when it is not. The conjecture is that one factor is an artifact.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [Download LaTeX source](latex/main.tex)
+
+For a martingale $\mathbf{w}_{\le n}$ and an online stopping algorithm $\mathsf{Stop}$ with stopping time $\tau$, call $\mathsf{Stop}$ a **$(\rho, \alpha)$ gap finder** if
+$$\rho = \Pr\left[\left|w_{\tau} - w_{\tau-1}\right| \ge \alpha\right],$$
+the probability over the martingale and $\mathsf{Stop}$'s coins. Online means the rule sees $w_1, \ldots, w_i$ and decides whether to stop, with no lookahead.
+
+**Conjecture.** There is a universal constant $c > 0$ — independent of $n$, of $\mu$, and of the martingale — such that for every $n$, every $\mu \in (0, 1/2]$, and every martingale $\mathbf{w}_{\le n}$ with $\mathbb{E}[\mathbf{w}_1] = \mu$ and $\Pr[\mathbf{w}_n \in \{0,1\}] = 1$, extended by $\mathbf{w}_0 := \mu$ and $\mathbf{w}_{n+1} := \mathbf{w}_n$, there exist a real $\alpha > 0$ and an online stopping algorithm $\mathsf{Stop}$ that is a $(\rho, \alpha)$ gap finder with
+$$\rho \cdot \alpha \ \ge\ \frac{c\,\mu}{\sqrt{n}}.$$
+
+No bound is placed on the running time of $\mathsf{Stop}$: the statement is information-theoretic. That the constant must be independent of $\mu$ is the whole point — it is exactly the paper's complaint about the existing bound.
+
+## Proof
+
+Open for small $\mu$, and the gap between what is known and what is asked is a single factor of $\mu$.
+
+**What is known.** Cleve and Impagliazzo give a gap finder with $\rho = \Omega(\mu)$ and $\alpha = \Omega(\mu/\sqrt{n})$, hence $\rho\alpha = \Omega(\mu^{2}/\sqrt{n})$. Their theorem was proved for $\mu = 1/2$; the same argument yields the $\mu$-dependent bound, and it is that dependence which degrades.
+
+**Where it is already enough.** For $\mu = \Theta(1)$ the two bounds coincide up to constants, so the conjecture is settled in that regime; the content is entirely in small $\mu$.
+
+**A neighbouring result that does not settle it.** Khorasgani, Maji and Mukherjee prove a different guarantee — an *expected* gap of $2\mu(1-\mu)/\sqrt{2n-1}$ — with no probability parameter attached. A gap finder has to name both how often it stops on a jump and how big that jump is, so an expectation bound is not directly comparable, and the source paper says it does not know how to convert it.
+
+## Discussion
+
+Gap finders matter because they convert into attacks: a rule that catches a large jump with decent probability is a strategy for a corrupted party to bias the outcome. The small-$\mu$ regime is the one that matters for strongly biased protocols, where the honest outcome is already rare and an attacker is trying to make it rarer.
+
+A note on how much weight to put on this. The appendix that poses the question describes itself as included "merely for sake of completeness", and its observations are subsumed by the paper's main theorem; the recursive composition it promises is, by the paper's own remark, super-polynomial for $k = \omega(1)$ corruptions. So this is a clean open question about martingales rather than the missing piece of the paper's headline result, and it is worth stating plainly which of the two it is.
+
+## Open obligations
+
+- [ ] Prove or refute the $\Omega(\mu/\sqrt{n})$ product bound for general $\mu \in (0, 1/2]$, with a $\mu$-independent constant.
+- [ ] Determine whether an expected-gap guarantee can be converted into a $(\rho, \alpha)$ gap finder, which the source says it does not know how to do.
+- [ ] Settle whether the conjectured bound is itself optimal, or whether the truth is larger still for small $\mu$.
+- [ ] Work out what the improvement would actually buy for coin-tossing attacks, given that the recursive composition is super-polynomial beyond constantly many corruptions.
+- [ ] Formalize the statement in Lean. Martingales with Boolean terminal value and online stopping rules need writing first.
+
+## Sources
+
+- Etesami, Gao, Mahloujifar, and Mahmoody. [*Polynomial-time targeted attacks on coin tossing for any number of corruptions*](https://eprint.iacr.org/2021/1464). Cryptology ePrint Archive, Report 2021/1464; TCC 2021. Appendix C, where the question is posed and declared open, and Remark 46 on the cost of the recursive composition.
+- Cleve and Impagliazzo. *Martingales, collective coin flipping and discrete control processes*. Unpublished manuscript, 1993. The gap finder the conjecture asks to improve; cited as the manuscript it is.
+- Khorasgani, Maji, and Mukherjee. *Estimating gaps in martingales and applications to coin-tossing: constructions and hardness*. TCC 2019, pp. 333–355. The expected-gap guarantee that does not directly compare.
+- Ben-Or and Linial. *Collective coin flipping, robust voting schemes and minima of Banzhaf values*. FOCS 1985, pp. 408–416. Where collective coin flipping is introduced.
+
+:::

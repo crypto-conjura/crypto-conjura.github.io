@@ -1,0 +1,91 @@
+---
+id: "0026"
+problem: rbe-update-lower-bounds
+draft: rbe-dynamic-update-times
+title: "Update Lower Bounds for Registration-Based Encryption with Key-Dependent Update Times"
+short_title: "RBE update bound, key-dependent schedules"
+areas: [public-key, foundations, impossibility-results]
+model: standard
+form: lower-bound
+assumption_class: unconditional
+category: research-open
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: adaptation
+  note: "The paper has already pushed its own argument twice — from schedules fixed by registration times to schedules that are any fixed function of the registered identity names and the CRS — so the technique is known to tolerate some dependence on the execution. What breaks at the key-dependent case is that the attack fixes an update graph in advance and counts skipping sequences in it, and when the schedule may react to sampled public keys there is no single graph to count in. That is an adaptation of an existing argument rather than a new mechanism, but it needs a combinatorial object that survives the adversary choosing the keys."
+  by: ai
+status_summary: "Open exactly when the update schedule may depend on the sampled public keys, which is the standard on-demand completeness notion. Proved when the schedule is any fixed function of registration times (Theorem 4.1) or of the registered identity names and the CRS (Theorem 4.12)."
+status_updated: 2026-08-18
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Mahmoody, Qi, Rahimi, Lower Bounds for the Number of Decryption Updates in Registration-Based Encryption, Cryptology ePrint Archive, Report 2022/1285; TCC 2022, pp. 559-587", url: "https://eprint.iacr.org/2022/1285"}
+revision: 1
+statement_sha: "0f885c3d6af74f6d0f2741335fdf04d664ded3c333d65f8d07a268e8a04131dd"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+Registration-based encryption keeps a compact public parameter and charges parties for *updates*: as others register, a party occasionally needs a fresh opening before it can decrypt again. The source paper proves that $\Omega(\log n / \log\log n)$ updates are necessary — but only when the schedule of updates is fixed in advance. The standard completeness notion is on demand: decryption returns "fetch an update" when it needs one, so *when* updates happen can depend on the sampled public keys. Whether the lower bound survives that is the conjecture.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [Download LaTeX source](latex/main.tex)
+
+Let $\Pi = (\mathsf{Gen}, \mathsf{Reg}, \mathsf{Enc}, \mathsf{Upd}, \mathsf{Dec})$ be an RBE scheme that is $\rho$-complete **with on-demand updates**, and write $n$ for the number of registrations, $d(n)$ for the number of updates any one identity needs over the first $n$, and $\alpha(n)$ for the size of the public parameter.
+
+**Conjecture.** For every $n$, every $\ell$ with
+$$n \ \ge\ \binom{\ell + d(n)}{\,d(n)+1\,},$$
+and every $\delta = 1/\mathrm{poly}(\kappa)$, there is a $\mathrm{poly}(\kappa)$-time adversary that registers at most $n$ identities and wins the $0$-corruption security game with probability at least
+$$\rho \ -\ \sqrt{\frac{\alpha(n)\ln 2}{2\ell}}\ -\ \delta.$$
+
+In particular, for each fixed $\kappa$: if $\Pi$ is $\rho$-complete with $\rho \ge 0.99$, is $0$-corruption secure, and has $\alpha(n) \le \mathrm{poly}(\kappa, \log n)$, then $d(n)$ is not $o(\log n / \log\log n)$ — there are a constant $c > 0$ and infinitely many $n$ with $d(n) \ge c \log n / \log\log n$.
+
+**One threshold to check.** The corollary is transcribed with $\rho \ge 0.99$ where the source's proof writes $\rho > 0.99$. The arithmetic goes through at $0.99$ either way, but a reader reconciling the two documents should know the inequality was not strict in the original.
+
+## Proof
+
+Open in exactly one case, and the boundary is drawn by the paper itself rather than inferred.
+
+**What is proved.** Theorem 4.1 gives the bound when the update schedule is a fixed function of the registration times. Theorem 4.12 extends it to schedules that are any fixed function of the sequence of registered identity names *and* of the CRS. Section 4.4 states the reach of that extension in as many words: it covers update graphs depending on "the registered identities and the CRS (but not on the keys)".
+
+**What is left.** Precisely the key-dependent case — equivalently, the standard on-demand notion in which decryption may return $\mathsf{GetUpd}$ and the party fetches then. Nothing in Theorem 4.12, the amortized remark, or the appendices closes it.
+
+**Why the argument stops there.** The attack fixes an update graph in advance and finds a *skipping sequence* in it: a set of registrations arranged so that one group of identities can manufacture the updates its own first member needs, which is what converts the graph's sparsity into a security break. When the schedule may react to the sampled public keys there is no single graph to find the sequence in, and the combinatorial step has nothing to bite on.
+
+## Discussion
+
+The gap between the settled and open cases is narrow on paper and wide in practice. Every deployed-style RBE hands out updates on demand, because that is what a party can actually implement: decrypt, and if the accumulator has moved, fetch. So the settled theorems cover the schedules a *proof* finds convenient, and the open case covers the schedules an *implementation* actually uses.
+
+Note the shape of a refutation. It would be a scheme whose update times depend on the sampled keys and which beats $\Omega(\log n/\log\log n)$ — that is, a genuinely better construction, not a technical dodge. The companion statement [c/0027](/c/0027/) asks the complementary question of how tight the bound is even in the settled case.
+
+## Open obligations
+
+- [ ] Prove or refute the lower bound when update times may depend on the sampled public keys.
+- [ ] Find a combinatorial object that plays the role of skipping sequences when no fixed update graph exists.
+- [ ] Settle whether the amortized version of the bound behaves differently in the key-dependent case.
+- [ ] Reconcile the $\rho \ge 0.99$ / $\rho > 0.99$ threshold against the source's proof.
+- [ ] Formalize the statement in Lean. The RBE syntax, the $0$-corruption game and on-demand completeness need writing first.
+
+## Sources
+
+- Mahmoody, Qi, and Rahimi. [*Lower Bounds for the Number of Decryption Updates in Registration-Based Encryption*](https://eprint.iacr.org/2022/1285). Cryptology ePrint Archive, Report 2022/1285; TCC 2022, pp. 559–587. Theorem 1.1 (the $\binom{\alpha+d}{d+1} \ge n$ trade-off), Theorem 4.1 and Corollary 4.2, Theorem 4.12, and Section 4.4's statement of what the extension does not cover.
+- Garg, Hajiabadi, Mahmoody, and Rahimi. *Registration-based encryption: removing private-key generator from IBE*. TCC 2018, pp. 689–718. Where the primitive is introduced.
+- Garg, Hajiabadi, Mahmoody, Rahimi, and Sekar. *Registration-based encryption from standard assumptions*. PKC 2019, pp. 63–93. The construction from CDH or LWE.
+- Goyal and Vusirikala. *Verifiable registration-based encryption*. CRYPTO 2020, Part I, LNCS 12170, pp. 621–651. The verifiable variant, also spending $\Theta(\log n)$ updates.
+
+:::

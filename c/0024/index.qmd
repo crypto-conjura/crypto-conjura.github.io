@@ -1,0 +1,93 @@
+---
+id: "0024"
+problem: fine-grained-nike
+draft: mggm-4nike-quadratic
+title: "A Four-Party Non-Interactive Key Exchange with Quadratic Security in Maurer's Generic Group Model"
+short_title: "Four-party NIKE, quadratic, Maurer's model"
+areas: [foundations, idealized-models, public-key]
+model: ggm
+form: separation
+assumption_class: unconditional
+category: research-open
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: new-idea
+  note: "The paper's own four-party construction is in Shoup's model and does not transfer, for a reason it states plainly: it works over a group of size about n^4, where honest parties can only hope for a prefix collision, and reconciles the two halves by running baby-step giant-step or Pollard's rho over an interval of size about n^2 at cost O(n). That step consumes explicit labels. Maurer's model has none — a party holds group elements in a private array and may only add them and test for zero — so a construction meeting this conjecture must find some other way for honest parties to exploit algebraic structure. The model is not vacuous for key exchange, since Diffie-Hellman can be stated in it, which is what keeps this a new idea rather than a barrier."
+  by: ai
+status_summary: "Open. Achieved in Shoup's generic group model by the source paper (Construction 9, Theorem 10); in Maurer's model the paper's own O(n^2) attack sets a ceiling that a construction would meet exactly, and nothing is known about reaching it."
+status_updated: 2026-08-18
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Afshar, Couteau, Mahmoody, Sadeghi, Fine-Grained Non-Interactive Key-Exchange: Constructions and Lower Bounds, Cryptology ePrint Archive, Report 2023/571; EUROCRYPT 2023", url: "https://eprint.iacr.org/2023/571"}
+revision: 1
+statement_sha: "94296abf4315d769c67c07ef787b63e291c699d3d6dc844c9c787e465ed0700a"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+In Shoup's generic group model four parties can agree on a key with a quadratic gap between their own work and an eavesdropper's. Maurer's model is the same group with the labels taken away: elements live in a private array and can only be added and compared. The eavesdropper is weaker there, but so are the honest parties, and the technique that delivers the Shoup construction consumes labels in an essential way. The conjecture is that a quadratic-gap four-party protocol exists in Maurer's model anyway — which would exactly meet the ceiling set by the paper's own attack.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [Download LaTeX source](latex/main.tex)
+
+In **Maurer's generic group model** over $\mathbb{Z}_p$ each party holds a private array of group elements, initialized with the public inputs, and may only add two entries, or test an entry for zero; there are no labels to hash or sort. A **four-party NIKE** is a two-round protocol in which each party broadcasts a message and then computes a key, the key being an element of the party's own array.
+
+**Conjecture.** There exist a prime family $p = p(\lambda)$, a function $n = n(\lambda) \to \infty$, parameters $\alpha, \beta, \gamma \le \tilde{O}(n)$, and a four-party NIKE protocol $\Pi$ in Maurer's generic group model over $\mathbb{Z}_p$ such that
+
+1. **Efficiency.** Each party makes at most $\tilde{O}(n(\lambda))$ queries to its array, across both rounds.
+2. **Correctness.** $\Pi$ has completeness error $\mathrm{negl}(\lambda)$: all four keys agree except with negligible probability.
+3. **Quadratic security.** For every $q$ with $q(n) = o(n^{2})$, every computationally unbounded eavesdropper making at most $q(n(\lambda))$ queries has advantage $o(1)$ as $\lambda \to \infty$.
+
+The $o(1)$ benchmark is not a self-serving weakening: it is what the paper's own Shoup-model theorem delivers, an advantage of $O(q^{2}/\lambda^{4} + q/\lambda^{2} + \mathrm{polylog}(\lambda)/\lambda)$, which is $o(1)$ without being negligible. One wrinkle a reviewer should note: the bound as transcribed is per-adversary rather than uniform over adversaries.
+
+## Proof
+
+Open, with both the target and the ceiling already established elsewhere.
+
+**What exists in the other model.** Construction 9 and Theorem 10 of the source paper give a four-party NIKE in *Shoup's* model with exactly this quadratic gap.
+
+**What sets the ceiling here.** Theorem 21 and its corollary give an $O(n^{2})$-query attack on every $n$-query three-party NIKE in *Maurer's* model, and by the paper's own footnote the argument covers every $K \ge 3$. So a protocol meeting this conjecture would be tight: $o(n^{2})$ queries do not break it, $O(n^{2})$ do.
+
+**Why the Shoup construction does not transfer.** It works over a group of size about $n^{4}$, so honest parties cannot hope for a full collision among their $n$ sampled elements — only a *prefix* collision, where two exponents agree on the first half. A party knowing the whole exponent and a party knowing only its prefix then reconcile by running a generic discrete-logarithm algorithm — baby-step giant-step, or Pollard's rho — over the remaining interval of size about $n^{2}$, which costs only $O(n)$ because generic discrete log over an interval runs in the square root of the search space. Every part of that step operates on explicit labels. Maurer's model has none, and the paper says plainly that its model is more limited for the honest parties as well as for the adversary.
+
+**And why the question is not vacuous.** Diffie–Hellman itself can be stated in Maurer's model, as the paper observes. The model supports key exchange; what is unclear is whether it supports *fine-grained* key exchange for four parties at the quadratic gap.
+
+## Discussion
+
+The pair of statements in this hub is the interesting object, not either alone. The paper achieves a quadratic gap for four parties in Shoup's model and proves an $O(n^2)$ attack for three parties in Maurer's; the two open cells are the diagonal. Here the ask is a *construction* in the weaker-honest-party model; in [c/0025](/c/0025/) it is an *attack* in the model where the paper's technique gives nothing.
+
+What makes this one worth attention is that a refutation would also be a real result. Showing no such four-party protocol exists in Maurer's model would be a strictly stronger impossibility than the $O(n^2)$ attack already proved — it would say the algebraic structure of a nameless generic group cannot be exploited by honest parties at all beyond what the attack already permits.
+
+## Open obligations
+
+- [ ] Construct such a protocol, or prove no four-party NIKE in Maurer's model achieves a quadratic gap.
+- [ ] Find any substitute, in a label-free model, for the interval discrete-logarithm step the Shoup construction depends on.
+- [ ] Settle whether the $o(1)$ advantage bound can be made uniform over adversaries rather than per-adversary.
+- [ ] Determine whether the answer changes for $K > 4$ parties, where the same ceiling applies.
+- [ ] Formalize the statement in Lean. Maurer's array model, and the two-round NIKE syntax, need writing first.
+
+## Sources
+
+- Afshar, Couteau, Mahmoody, and Sadeghi. [*Fine-Grained Non-Interactive Key-Exchange: Constructions and Lower Bounds*](https://eprint.iacr.org/2023/571). Cryptology ePrint Archive, Report 2023/571; EUROCRYPT 2023. Construction 9 and Theorem 10 (the Shoup-model four-party protocol); Theorem 21 and its corollary (the Maurer-model attack); Definitions 12 and 14; the open question posed on p. 3.
+- Maurer. *Abstract models of computation in cryptography*. IMA International Conference on Cryptography and Coding, LNCS 3796, pp. 1–12, 2005. The array model.
+- Shoup. *Lower bounds for discrete logarithms and related problems*. EUROCRYPT 1997, pp. 256–266. The labelled model it is being compared against.
+- Merkle. *Secure communications over insecure channels*. Communications of the ACM 21(4):294–299, 1978. The two-party fine-grained protocol this line generalizes.
+- Diffie and Hellman. *New directions in cryptography*. IEEE Transactions on Information Theory 22(6):644–654, 1976. Statable in Maurer's model, which is why the question is not vacuous.
+
+:::

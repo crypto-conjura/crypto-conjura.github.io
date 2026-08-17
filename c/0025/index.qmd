@@ -1,0 +1,90 @@
+---
+id: "0025"
+problem: fine-grained-nike
+draft: sggm-3nike-quadratic-attack
+title: "A Quadratic Attack on Three-Party Non-Interactive Key Exchange in Shoup's Generic Group Model"
+short_title: "Quadratic attack on 3-NIKE, Shoup's model"
+areas: [foundations, idealized-models, public-key]
+model: ggm
+form: lower-bound
+assumption_class: unconditional
+category: research-open
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: new-idea
+  note: "The paper settles the same question in Maurer's model, for every K >= 3 and including imperfect correctness, by exploiting the linear structure of what a party can hold: with no labels, every array entry is a known linear combination of the inputs, and the attack tracks that structure. In Shoup's model a party may hash or sort labels, or run a generic discrete-logarithm algorithm on them, so an array entry is no longer a linear form in anything the attacker can see, and the technique gives nothing. Since the paper's own three-party Shoup protocol reaches n^1.5, the truth lies in [n^1.5, n^2] and the conjecture picks the upper endpoint; a refutation would mean a protocol beating quadratic, which would be a positive result of its own."
+  by: ai
+status_summary: "Open in Shoup's model. Settled by the source paper in Maurer's model for every K at least 3, including imperfect correctness; its own three-party Shoup construction achieves only an n^1.5 gap, so the truth for three parties lies somewhere between n^1.5 and n^2."
+status_updated: 2026-08-18
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Afshar, Couteau, Mahmoody, Sadeghi, Fine-Grained Non-Interactive Key-Exchange: Constructions and Lower Bounds, Cryptology ePrint Archive, Report 2023/571; EUROCRYPT 2023", url: "https://eprint.iacr.org/2023/571"}
+revision: 1
+statement_sha: "a96fcbf75864ed3eb46e3b4772ff2987fd50681c280733bbbeba23545bcb8388"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+Every $n$-query two-party key agreement in the random oracle model falls to an $O(n^{2})$-query attack, and that is optimal. Does the same ceiling hold for three parties when the idealized object is a generic group with named elements? The source paper proves it does in Maurer's label-free model, for every $K \ge 3$. In Shoup's model, where a party may hash or sort labels and run generic discrete-logarithm algorithms on them, the technique gives nothing, and the paper's own three-party protocol there reaches only $n^{1.5}$ — so the answer lies somewhere in between, and this conjecture picks the top.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [Download LaTeX source](latex/main.tex)
+
+In **Shoup's generic group model** over $\mathbb{Z}_p$, group elements are explicit labels supplied by a random injective encoding $\sigma$, and every party — honest or not — accesses the group through an oracle $\mathcal{O}_{\sigma}$ for the group operation on labels. A **three-party NIKE** $\Pi = (\mathsf{Msg}, \mathsf{Key})$ has each party broadcast one message and then compute a key, with completeness error $\delta$.
+
+**Conjecture.** For every constant $\delta' \in (0,1)$ there is a constant $c = c(\delta') > 0$ such that the following holds. Let $n = n(\lambda)$, let $p = p(\lambda)$ be prime, and let $\Pi$ be any $n$-query three-party NIKE in Shoup's generic group model over $\mathbb{Z}_p$ with completeness error $\delta = \delta(\lambda)$. Then there is a computationally unbounded eavesdropper $\mathsf{E}$ which, given $1^{\lambda}$ and the transcript, with access to the same oracle, makes at most $c \cdot n(\lambda)^{2}$ oracle queries and satisfies
+$$\Pr\left[\mathsf{E}^{\mathcal{O}_{\sigma}}(1^{\lambda}, \mathrm{tran}) = \mathrm{key}_{1}\right] \ge 1 - 4\delta(\lambda) - \delta'$$
+for all sufficiently large $\lambda$, over the parties' randomness, the choice of the encoding, and $\mathsf{E}$'s coins.
+
+This is the transplant into Shoup's model of what the paper proves in Maurer's — the $1 - 4\delta - \delta'$ success bound, the dependence of $c$ on $\delta'$, and the $O(n^{2})$ query count are all as printed there.
+
+**One definitional point a reviewer should settle.** The paper's own definition requires the agreed key to be a *group element*, justified as without loss of generality by an argument specific to Maurer's model. The statement above allows an arbitrary bit-string key, which in Shoup's model is not obviously the same ask.
+
+## Proof
+
+Open in Shoup's model. The companion result and the obstruction are both precise.
+
+**What is settled.** In Maurer's model the paper gives an $O(n^{2})$-query attack on every $n$-query three-party NIKE — Theorem 21 and its corollary — and by its own footnote the argument covers every $K \ge 3$, imperfect correctness included.
+
+**Why the technique does not cross over.** Maurer's parties hold group elements in a private array with no labels, so every entry is a *known linear combination* of the inputs, and the attack works by tracking that linear structure. In Shoup's model a party sees labels: it may hash them, sort them, or feed them to a generic discrete-logarithm algorithm, and an array entry is then not a linear form in anything the attacker can observe. The paper's linear-structure technique gives nothing here.
+
+**Where the truth must lie.** The paper's own three-party protocol in Shoup's model achieves a gap of $n^{1.5}$, not $n^{2}$ — so the maximal achievable gap for three parties in Shoup's model is somewhere in $[n^{1.5}, n^{2}]$. Proving this conjecture pins it at the bottom of that range by ruling out anything better than quadratic; refuting it means exhibiting a protocol that beats quadratic, which would be a positive result rather than a technical correction.
+
+## Discussion
+
+The pairing with [c/0024](/c/0024/) is the point. The paper leaves two cells open and they are the diagonal of its own results: a construction in Maurer's model matching its attack, and an attack in Shoup's model matching its construction. Between them they would determine whether the *labels* — the one apparently cosmetic difference between the two generic group models — change what fine-grained key exchange can achieve.
+
+It is worth being explicit that the modelling choice is not cosmetic in the direction that matters here. Labels help honest parties (they enable the interval discrete-logarithm step behind the four-party Shoup construction) and they help adversaries (they defeat the linear-structure attack). Which effect dominates is exactly what these two statements ask.
+
+## Open obligations
+
+- [ ] Prove or refute the quadratic attack for three-party NIKE in Shoup's generic group model.
+- [ ] Close the $[n^{1.5}, n^{2}]$ gap from the other side: beat $n^{1.5}$ for three parties in Shoup's model, or show $n^{1.5}$ is optimal.
+- [ ] Settle whether requiring the key to be a group element, as the source's definition does, changes the statement in Shoup's model.
+- [ ] Decide whether the attack, if it exists, extends to $K > 3$ parties as the Maurer-model one does.
+- [ ] Formalize the statement in Lean. Shoup's encoding oracle and the NIKE syntax need writing first.
+
+## Sources
+
+- Afshar, Couteau, Mahmoody, and Sadeghi. [*Fine-Grained Non-Interactive Key-Exchange: Constructions and Lower Bounds*](https://eprint.iacr.org/2023/571). Cryptology ePrint Archive, Report 2023/571; EUROCRYPT 2023. Theorem 21 and its corollary (the Maurer-model attack transplanted above); Definitions 14 and 16; Remark 7 and the $n^{1.5}$ three-party protocol; the open question posed on p. 3.
+- Shoup. *Lower bounds for discrete logarithms and related problems*. EUROCRYPT 1997, pp. 256–266. The model this statement is about.
+- Maurer. *Abstract models of computation in cryptography*. IMA International Conference on Cryptography and Coding, LNCS 3796, pp. 1–12, 2005. The model the companion result is proved in.
+- Barak and Mahmoody. *Merkle's key agreement protocol is optimal: an $O(n^2)$ attack on any key agreement from random oracles*. Journal of Cryptology 30(3):699–734, 2017. The two-party random-oracle ceiling this asks to reproduce with algebraic structure.
+
+:::

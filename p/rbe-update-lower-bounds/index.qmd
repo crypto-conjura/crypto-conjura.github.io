@@ -1,0 +1,38 @@
+---
+title: "How many decryption updates does registration-based encryption need?"
+subtitle: "The known bound is Ω(log n / log log n), every construction spends Θ(log n), and the tool that proved the bound is provably out of room."
+---
+
+## Motivation
+
+Registration-based encryption removes the private-key generator that identity-based encryption depends on. Parties register their own public keys with a transparent accumulator, and a compact public parameter — $\mathrm{poly}(\kappa, \log n)$ bits, not $\Theta(n)$ — is all a sender needs to encrypt to an identity. The price is *updates*: as later parties register, the accumulator changes, and a registered party occasionally needs a fresh opening before it can decrypt again. How often is the question this hub tracks, and it is the one quantity that decides whether the primitive is practical.
+
+Every known construction spends $\Theta(\log n)$ updates per party. The source paper proves a lower bound of $\Omega(\log n / \log\log n)$, from a clean combinatorial trade-off: if the public parameter is $\alpha$ bits and each party needs at most $d$ updates, then $\binom{\alpha + d}{d+1} \ge n$. Two things are then open, and they are the two statements here — whether the bound survives when *when* to update may depend on the registered keys, and whether the true answer is $\log n / \log\log n$ or $\log n$.
+
+## Provenance and history
+
+One source paper: Mahmoody, Qi and Rahimi, [*Lower Bounds for the Number of Decryption Updates in Registration-Based Encryption*](https://eprint.iacr.org/2022/1285), ePrint 2022/1285; TCC 2022, pp. 559–587. Bibliographic details verified against ePrint and Crossref on 18 August 2026; the harvester's record carried no venue for it.
+
+Both statements were drafted by `scripts/harvest_conjectures.py` from that PDF and are AI-written and unreviewed, as the [status badges](/open-problems/status-legend/) say. One repair was applied before publication: the first draft asserted a specific accumulator shape — a Merkle *forest* merged like a binary counter — for the known constructions, where the paper describes a Merkle-tree root; the claim is now attributed to the construction papers rather than to this one.
+
+## Parameter lattice
+
+Two axes: what the update schedule may depend on, and how tight the bound is.
+
+| update schedule may depend on | lower bound | status |
+|---|---|---|
+| registration times only | $\Omega(\log n/\log\log n)$ | settled — Theorem 4.1 |
+| registered identity names and the CRS | $\Omega(\log n/\log\log n)$ | settled — Theorem 4.12 |
+| the sampled public keys (on-demand updates) | — | **open** — [c/0026](/c/0026/) |
+
+| regime | known lower bound | known upper bound | status |
+|---|---|---|---|
+| fixed update times, $\mathrm{poly}(\kappa,\log n)$ parameters | $\Omega(\log n/\log\log n)$ | $O(\log n)$ | **open** — [c/0027](/c/0027/) |
+| constant $d$ | $\alpha \ge \Omega(n^{1/(d+1)})$ | — | settled, from the same trade-off |
+
+The second table is the sharper question. Neither endpoint is known to be the truth, and the paper's own tool cannot decide it: Appendix C proves the skipping-sequence bound tight, so a better lower bound needs a different combinatorial object, and a better construction needs an accumulator nobody has built.
+
+## Statements in this hub
+
+- [Update lower bounds with key-dependent update times](/c/0026/) — open; the case where updates are fetched on demand, which is the standard completeness notion
+- [Logarithmically many updates are necessary](/c/0027/) — open; picks the $\log n$ end of the gap, and its refutation would be a better construction

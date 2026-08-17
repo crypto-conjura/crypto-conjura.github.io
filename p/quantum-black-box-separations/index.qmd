@@ -1,0 +1,41 @@
+---
+title: "Quantum black-box separations from random oracles"
+subtitle: "What survives when the parties are quantum: the attacks that still work, and the combinatorial conjecture the rest of them wait on."
+---
+
+## Motivation
+
+Classical black-box separations from a random oracle rest on a move that quantum queries destroy. The classical argument records which oracle positions a party asked, fixes a partial oracle consistent with that record, and argues the primitive survives on the rest. A superposition query cannot be recorded that way, so "the set of positions the sender asked" is not a partial function any more, and the whole family of arguments has to be rebuilt.
+
+The rebuild, due to Austrin, Chung, Chung, Fu, Lin and Mahmoody, works in the purified view of the honest party and represents the oracle register in the Fourier basis, following Zhandry's compressed-oracle technique. A $d$-query algorithm then has a sparse Fourier representation, and each branch of the purified party becomes a *distribution over degree-$d$, unit-norm, low-influence functions* on the oracle domain. Two things one wants to hold simultaneously — two openings of a commitment, two consistent executions — become one combinatorial question about such distributions: can one always find a function in the support of each, and a point where both are non-zero?
+
+That question is the **Polynomial Compatibility Conjecture**, and it is what several quantum separations are currently waiting on. This hub holds it, together with the one attack in the same line of work that needs no conjecture at all and is blocked instead by a hypothesis nobody has been able to remove: perfect completeness.
+
+## Provenance and history
+
+Two source papers, both verified against ePrint on 18 August 2026:
+
+- Austrin, Chung, Chung, Fu, Lin and Mahmoody, [*On the Impossibility of Key Agreements from Quantum Random Oracles*](https://eprint.iacr.org/2022/218), ePrint 2022/218; CRYPTO 2022, pp. 165–194. Introduces the conjecture and proves the unconditional classical-Alice attack.
+- Chung, Lin and Mahmoody, [*Black-Box Separations for Non-Interactive Commitments in a Quantum World*](https://eprint.iacr.org/2023/570), ePrint 2023/570; EUROCRYPT 2023. Restates the conjecture and builds its separation on top of it.
+
+Both statements were drafted by `scripts/harvest_conjectures.py` from those PDFs and are AI-written and unreviewed, as the [status badges](/open-problems/status-legend/) say. Two harvested drafts — `polynomial-compatibility` and `polynomial-compatibility-2` — turned out to state the same conjecture from the two papers respectively, so they are published here as the single statement [c/0023](/c/0023/). That merge also fixed a defect: the earlier draft rendered the influence bound as $\delta(d) \ge d^{-c}$, which forces $\delta(1) = 1$ and makes the statement false as written; the later draft's $\delta(d) \ge c_1 d^{-c_2}$ is the paper's $1/\mathrm{poly}(d)$ and is what this hub publishes.
+
+## Parameter lattice
+
+Where the two statements sit, and what separates the settled cells from the open ones.
+
+| question | regime | status |
+|---|---|---|
+| classical attack on classical-Alice / quantum-Bob key agreement | perfect completeness | settled — ACC+22 Theorem 3.1, $d_{\mathsf{A}}d_{\mathsf{B}}/\lambda$ queries |
+| the same | negligible completeness error | **open** — [c/0022](/c/0022/) |
+| the same, both parties quantum | imperfect completeness | barrier — a classical-query attack would settle the Simulation Conjecture |
+| polynomial compatibility | $\delta$ exponentially small | settled — ACC+22 Theorem 4.4, $\delta < \lvert\mathcal{Y}\rvert^{-d}/d$ |
+| the same | $\delta = 1/\mathrm{poly}(d)$ | **open** — [c/0023](/c/0023/) |
+| the same | $\delta \ge 1/(2d)$ | false — ACC+22 Appendix B |
+
+The second table is the more interesting one: the conjecture is known at one end, refuted at the other, and the whole content is where between $\lvert\mathcal{Y}\rvert^{-d}/d$ and $1/(2d)$ the truth lies. Any $\delta$ that is $1/\mathrm{poly}(d, \log\lvert\mathcal{Y}\rvert)$ already suffices for the intended polynomial-query attacks.
+
+## Statements in this hub
+
+- [Classical attacks on classical-Alice quantum-Bob key agreement without perfect completeness](/c/0022/) — open; the paper's own "intriguing question for future work"
+- [The Polynomial Compatibility Conjecture](/c/0023/) — open in the inverse-polynomial regime; load-bearing for both source papers

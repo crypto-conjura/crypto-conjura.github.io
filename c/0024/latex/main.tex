@@ -1,0 +1,345 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  A four-party NIKE with quadratic security in Maurer's generic group
+%  model.
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{FOUR-PARTY NIKE IN MAURER'S GGM}
+
+\newcommand{\Zp}{\mathbb{Z}_{p}}
+\newcommand{\Add}{\mathsf{Add}}
+\newcommand{\Zero}{\mathsf{Zero}}
+\newcommand{\Equal}{\mathsf{Equal}}
+\newcommand{\WriteQ}{\mathsf{Write}}
+\newcommand{\copyq}{\mathsf{copy}}
+\newcommand{\Arr}{\mathsf{Arr}}
+\newcommand{\Pty}{\mathsf{P}}
+\newcommand{\Ev}{\mathsf{E}}
+\newcommand{\tran}{\mathsf{tran}}
+\newcommand{\keyv}{\mathsf{key}}
+\newcommand{\rv}{\mathsf{r}}
+\newcommand{\mv}{\mathsf{m}}
+\newcommand{\qv}{\mathsf{q}}
+\newcommand{\negl}{\mathrm{negl}}
+\newcommand{\polylog}{\mathrm{polylog}}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{A Four-Party NIKE with Quadratic Security in Maurer's Generic
+Group Model}
+\cjsubtitle{Generic groups without labels, where discrete-log shortcuts
+are unavailable}
+\cjstatus{Statement: AI-written from Abtin Afshar, Geoffroy Couteau,
+  Mohammad Mahmoody and Elahe Sadeghi, \emph{Fine-Grained
+  Non-Interactive Key-Exchange: Constructions and Lower Bounds}, IACR
+  Cryptology ePrint Archive 2023, not yet checked by a human. The
+  analogous statement in Shoup's generic group model, where group
+  elements carry explicit labels, is settled by the paper itself
+  (Construction~9 and Theorem~10), while the statement below --- the
+  same quadratic gap in Maurer's label-free model, where the paper's own
+  attack shows that quadratic is the most that could be hoped for ---
+  is open.}
+\cjcategory{\emph{Idealized Models \& Non-Uniformity}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+Maurer's generic group model is the austere one: a group element is an
+entry in a private array, and a party can only ask the array to add two
+entries or to test whether a linear combination of entries is zero. It
+never sees a bit-string representation of a group element. The source
+paper builds a four-party non-interactive key exchange in the more
+permissive model, where elements do have explicit labels, with honest
+parties doing about $n$ units of work and every eavesdropper doing less
+than $n^{2}$ work left with vanishing advantage. That construction leans
+on labels in an essential way: after two parties find a partial
+collision, one of them recovers a missing half-exponent by running a
+square-root-time generic discrete-logarithm algorithm on the labels,
+which is not something a party in the label-free model can do. The same
+paper also proves that in the label-free model no protocol among three
+or more parties can resist an eavesdropper making $O(n^{2})$ queries, so
+a quadratic gap is the ceiling there. The conjecture is that the ceiling
+is reachable: a four-party protocol exists in the label-free model with
+honest parties making about $n$ queries and every eavesdropper making
+fewer than $n^{2}$ queries left with vanishing advantage.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+Merkle's puzzles~\cite{Mer78} give a two-party fine-grained key exchange
+from an idealized hash function: honest parties do $n$ work, an
+eavesdropper needs about $n^{2}$. The source paper asks how far
+algebraic structure pushes this for more parties, and gets a sharper
+answer in the permissive generic group model than in the austere one.
+Its four-party protocol lives in Shoup's model~\cite{Sho97}, where group
+elements carry explicit labels, and achieves a quadratic gap. Its lower
+bound lives in Maurer's model~\cite{Mau05}, where a group element is an
+array entry accessible only through addition and zero tests, and shows
+that no protocol among three or more parties there can survive an
+eavesdropper making $O(n^{2})$ queries. So in Maurer's model quadratic
+is a ceiling, and whether the ceiling is reachable is what the paper
+leaves open.
+
+There is a specific reason the paper's own construction does not
+transfer. It works over a group of size about $n^{4}$, so that honest
+parties cannot hope for a full collision among their $n$ sampled
+elements --- only a \emph{prefix} collision, in which two exponents
+agree on their first half. A party that knows the whole exponent and a
+party that knows only its first half then reconcile by having the second
+run a generic discrete-logarithm algorithm --- baby-step
+giant-step~\cite{Sha71} or Pollard's rho~\cite{Pol75} --- over the
+remaining
+interval of size about $n^{2}$, which costs only $O(n)$ because generic
+discrete logarithm over an interval runs in the square root of the
+search space. That step operates on explicit labels. In Maurer's model
+there are no labels for a party to sort, hash, or feed to such an
+algorithm; the paper states plainly that its model is more limited for
+the honest parties as well as for the adversary. A construction meeting
+this conjecture therefore has to find a different way to let honest
+parties exploit algebraic structure using only additions and zero tests
+--- or the conjecture is false, and its refutation would be a genuinely
+stronger impossibility for Maurer's model than the $O(n^{2})$ attack the
+paper already proves. Note that Maurer's model is not vacuous for key
+exchange: as the paper observes, the Diffie--Hellman
+protocol~\cite{DH76} can be stated in it.
+
+\section{Notation and parameters}\label{sec:notation}
+
+Throughout, $\lambda$ is the security parameter, $p = p(\lambda)$ is a
+prime, $\Zp$ is the additive group of integers modulo $p$, and
+$[k] = \{1,\dots,k\}$. A function is negligible, written
+$\negl(\lambda)$, if it is $\lambda^{-\omega(1)}$; $\tilde{O}(\cdot)$
+hides polylogarithmic factors. The quantity $n = n(\lambda)$ is the
+query budget of each honest party and $q$ that of the eavesdropper;
+queries are the only cost measure, and all algorithms are otherwise
+computationally unbounded. The protocol parameters $\gamma, \alpha,
+\beta$ count, respectively, the group elements each party broadcasts,
+and the $\Add$ and $\Zero$ queries each party makes after receiving the
+messages. Party $i$'s private randomness is $\rv_{i}$, its broadcast
+string is $\mv_{i}$, its broadcast group elements are
+$\overline{\qv}_{i} = (\qv_{i,1},\dots,\qv_{i,\gamma})$, and its output
+key is $\keyv_{i} \in \Zp$; $\tran = (\mv_{1},\dots,\mv_{4})$. The
+eavesdropper is $\Ev$, its advantage is $\rho$, and the protocol is
+$\Pi$.
+
+The parameters of the statement are:
+\begin{itemize}
+\item $\lambda$, the security parameter.
+\item $n$, the query budget of each honest party; the fine-grained cost
+  measure.
+\item $p$, the prime order of the generic group.
+\item $\gamma$, the number of group elements each party broadcasts
+  (copies into the others' arrays).
+\item $\alpha$, the number of $\Add$ queries each party makes after
+  receiving the messages.
+\item $\beta$, the number of $\Zero$ (zero-test) queries each party
+  makes after receiving the messages.
+\item $q$, the query budget of the eavesdropper.
+\item $\rho$, the eavesdropper's advantage, measured above the $1/p$
+  guessing probability.
+\end{itemize}
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{definition}[Maurer's generic group model]\label{def:mggm}
+Let $p$ be a prime. Each participant $\Pty$ holds a private array
+$\Arr_{\Pty}$ with entries in $\Zp$, initialized so that
+$\Arr_{\Pty}[1] = 1$ and every other index is empty; let $e$ denote the
+largest non-empty index (so $e = 1$ initially). The participant accesses
+group elements only through the following queries:
+\begin{itemize}
+  \item $\Add(i_{1}, i_{2}, c_{1}, c_{2})$, with $i_{1}, i_{2} \in [e]$
+    and $c_{1}, c_{2} \in \Zp$: writes
+    $c_{1} \cdot \Arr_{\Pty}[i_{1}] + c_{2} \cdot \Arr_{\Pty}[i_{2}]$ at
+    index $e+1$ and increments $e$. No value is returned.
+  \item $\Equal(i_{1}, i_{2})$, with $i_{1}, i_{2} \in [e]$: returns $1$
+    if $\Arr_{\Pty}[i_{1}] = \Arr_{\Pty}[i_{2}]$ and $0$ otherwise.
+  \item $\Zero(c_{1},\dots,c_{e})$, with $c_{i} \in \Zp$: returns $1$ if
+    $\sum_{i \in [e]} c_{i} \cdot \Arr_{\Pty}[i] = 0$ and $0$ otherwise.
+  \item $\WriteQ(x)$, for $x \in \Zp$: writes $x$ at index $e+1$ and
+    increments $e$.
+\end{itemize}
+A participant never receives a representation of a group element: the
+only information it learns from its array is the answers to its $\Equal$
+and $\Zero$ queries. The cost of a participant is its number of queries;
+local computation is free.
+\end{definition}
+
+\begin{definition}[Four-party NIKE in Maurer's generic group
+model]\label{def:nike}
+Fix parameters $\alpha, \beta, \gamma$, publicly known and fixed in
+advance. Four parties $\Pty_{1},\dots,\Pty_{4}$ each receive $1^{\lambda}$
+and $p$, sample private randomness $\rv_{i}$, and each hold a private
+array as above, all over the same $\Zp$. The protocol has two rounds.
+\begin{enumerate}
+  \item Party $\Pty_{i}$ interacts with its array, then simultaneously
+    (i) broadcasts a string $\mv_{i}$ and (ii) issues $\copyq(\gamma)$,
+    which appends the last $\gamma$ entries
+    $\overline{\qv}_{i} = (\qv_{i,1},\dots,\qv_{i,\gamma})$ of
+    $\Arr_{\Pty_{i}}$ to the end of every other party's array, in a fixed
+    canonical order. Set $\tran := (\mv_{1},\dots,\mv_{4})$.
+  \item Each party then makes exactly $\alpha$ further $\Add$ queries and
+    $\beta$ further $\Zero$ queries to its own array, and designates one
+    entry of its array as its key $\keyv_{i} \in \Zp$.
+\end{enumerate}
+The protocol has \emph{completeness error} $\delta$ if
+\[
+  \Pr[\keyv_{1} = \keyv_{2} = \keyv_{3} = \keyv_{4}] \;\ge\; 1 - \delta
+\]
+over the parties' randomness.
+
+The eavesdropper $\Ev$ receives $\tran$ and holds its own array
+containing $1$ followed by the $4\gamma$ broadcast elements
+$(\overline{\qv}_{1},\dots,\overline{\qv}_{4})$ in the canonical order;
+it may make its own $\Add$, $\Equal$ and $\Zero$ queries. $\Ev$
+\emph{wins} if it outputs an index $j$ of its array with
+$\Arr_{\Ev}[j] = \keyv_{1}$, and it has \emph{advantage} $\rho$ if it
+wins with probability at least $1/p + \rho$.
+\end{definition}
+
+\begin{conjecture}[Quadratic security for four-party NIKE in Maurer's
+model]\label{conj:main}
+There exist a prime family $p = p(\lambda)$, a function $n = n(\lambda)$
+with $n(\lambda) \to \infty$, parameters
+$\alpha, \beta, \gamma \le \tilde{O}(n)$, and a four-party NIKE protocol
+$\Pi$ in Maurer's generic group model over $\Zp$
+(Definitions~\ref{def:mggm} and~\ref{def:nike}) such that:
+\begin{enumerate}
+  \item \textbf{Efficiency.} Each party makes at most
+    $\tilde{O}(n(\lambda))$ queries to its array, across both rounds.
+  \item \textbf{Correctness.} $\Pi$ has completeness error
+    $\negl(\lambda)$, i.e.
+    $\Pr[\keyv_{1} = \keyv_{2} = \keyv_{3} = \keyv_{4}]
+    \ge 1 - \negl(\lambda)$.
+  \item \textbf{Quadratic security.} For every function $q$ with
+    $q(n) = o(n^{2})$, every computationally unbounded eavesdropper
+    $\Ev$ making at most $q(n(\lambda))$ queries has advantage
+    $\rho(\lambda) = o(1)$ as $\lambda \to \infty$.
+\end{enumerate}
+\end{conjecture}
+
+\begin{remark}[What is settled]\label{rem:progress}
+Nothing towards the construction. The paper builds the analogous
+protocol in Shoup's model (Construction~9) and proves (Theorem~10) that
+a $q$-query generic adversary outputs the right key with probability
+\[
+  O\bigl(q^{2}/\lambda^{4} + q/\lambda^{2}
+  + \polylog(\lambda)/\lambda\bigr),
+\]
+with honest parties running in time about $\lambda$; this is where the
+$o(1)$ advantage benchmark in Conjecture~\ref{conj:main} comes from. On
+the other side, the paper's Theorem~21 and its corollary show that any
+protocol meeting this conjecture would be optimal in Maurer's model,
+since an $O(n^{2})$-query eavesdropper always exists there. The paper
+also observes that the Shoup-model construction generalizes to a
+$2K$-NIKE with a quadratic gap in the generic $(K-1)$-linear group
+model, giving a 6-NIKE in the generic bilinear group model; that
+generalization also uses labels.
+\end{remark}
+
+\begin{remark}[Openness]\label{rem:open}
+The paper names the construction as one of the two routes to closing its
+own gap: ``We view as an interesting question the goal of closing the
+gap between our positive and negative results, either by building a
+4-NIKE protocol with quadratic security in Maurer's generic group model,
+or by extending our impossibility result to Shoup's generic group
+model'' (p.~3). The gap itself is stated plainly: ``In our third
+contribution, we prove our lower bound in Maurer's generic group model,
+whereas our positive result holds in Shoup's generic group model, which
+is more flexible: this leaves a gap between our positive and negative
+results'' (p.~3). Conjecture~\ref{conj:main} is the first of those two
+routes. What is proved is the Shoup-model form: ``In particular, we show
+that there is a 4-party NIKE in Shoup's generic group model with a
+quadratic gap between the number of queries by the honest parties
+vs.\ that of the adversary'' (p.~1).
+\end{remark}
+
+\begin{remark}[Why it would matter]\label{rem:why}
+It is the constructive half of the paper's own gap, and the answer is
+informative either way. A protocol would show that the label-free
+generic group model is as powerful as the labelled one for fine-grained
+multiparty key exchange, which would be surprising given that the only
+known route to the quadratic gap runs through a square-root-time
+discrete-logarithm computation on labels: ``known generic discrete
+logarithm algorithms actually run in time square root of the search
+space when the exponent search space is an interval. Therefore, the
+party can recover $x$ using, e.g., Pollard's rho algorithm in $O(n)$
+time'' (p.~5). A proof that no such protocol exists would be a strictly
+stronger impossibility result for Maurer's model than the paper's own,
+separating the two generic group models for a natural primitive rather
+than for a contrived one. The whole statement is a protocol plus two
+query counts, unconditional and information-theoretic. Maurer's model is
+small enough to write down completely --- four query types on an array,
+and ``there are no explicit labels for the group elements'' (p.~1) ---
+and the target parameters are already fixed by the paper's matching
+attack, so a candidate protocol either meets the quadratic gap or does
+not, with nothing to negotiate.
+\end{remark}
+
+\begin{remark}[Caveats for a reviewer]\label{rem:caveats}
+Three things to check. First, resolution: this is a 2023 ePrint and the
+papers citing it have not been checked; a follow-up may have built the
+protocol or ruled it out. Second, the formalization of ``quadratic
+security'': it is read here as advantage $o(1)$ against every
+$o(n^{2})$-query eavesdropper, because that is exactly what the paper's
+own Shoup-model theorem delivers (its bound is dominated by a
+$\polylog(\lambda)/\lambda$ term and is not negligible). A reviewer who
+reads ``quadratic security'' as negligible advantage would be asking for
+something stronger than the paper achieves anywhere except the random
+oracle model, so it is not stated that way here. Third, party count: the
+paper says four parties and Conjecture~\ref{conj:main} says four
+parties, even though three is the more interesting case; the paper's
+construction is inherently even-party, since it pairs parties up.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem[BGI08]{BGI08}
+E. Biham, Y. J. Goren, and Y. Ishai.
+\emph{Basing weak public-key cryptography on strong one-way functions}.
+TCC 2008, LNCS 4948, pages 55--72, Springer, 2008.
+
+\bibitem[DH76]{DH76}
+W. Diffie and M. E. Hellman.
+\emph{New directions in cryptography}.
+IEEE Transactions on Information Theory, 22(6):644--654, 1976.
+
+\bibitem[Mau05]{Mau05}
+U. M. Maurer.
+\emph{Abstract models of computation in cryptography (invited paper)}.
+10th IMA International Conference on Cryptography and Coding, LNCS 3796,
+pages 1--12, Springer, 2005.
+
+\bibitem[Mer78]{Mer78}
+R. C. Merkle.
+\emph{Secure communications over insecure channels}.
+Communications of the ACM, 21(4):294--299, 1978.
+
+\bibitem[Pol75]{Pol75}
+J. M. Pollard.
+\emph{A Monte Carlo method for factorization}.
+BIT, 15:331--334, 1975.
+
+\bibitem[Sha71]{Sha71}
+D. Shanks.
+\emph{Class number, a theory of factorization, and genera}.
+Proc.\ of Symp.\ Math.\ Soc., 1971, pages 41--440, 1971.
+
+\bibitem[Sho97]{Sho97}
+V. Shoup.
+\emph{Lower bounds for discrete logarithms and related problems}.
+EUROCRYPT'97, LNCS 1233, pages 256--266, Springer, 1997.
+
+\bibitem[Zha22]{Zha22}
+M. Zhandry.
+\emph{To label, or not to label (in generic groups)}.
+CRYPTO'22, 2022.
+
+\end{conjurabibliography}
+
+\end{document}

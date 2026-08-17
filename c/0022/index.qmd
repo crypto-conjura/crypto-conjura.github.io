@@ -1,0 +1,90 @@
+---
+id: "0022"
+problem: quantum-black-box-separations
+draft: caqb-imperfect-completeness
+title: "Classical Attacks on Classical-Alice Quantum-Bob Key Agreement Without Perfect Completeness"
+short_title: "CAQB key agreement, imperfect completeness"
+areas: [quantum, idealized-models, impossibility-results]
+model: qrom
+form: impossibility
+assumption_class: unconditional
+category: research-open
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: new-idea
+  note: "The known proof does not degrade gracefully — it stops. Its last step argues that if some full oracle is consistent with both the eavesdropper's sampled fake Alice view and Bob's registers, then the fake key equals Bob's key, and that inference is valid only because perfect completeness leaves no room for a consistent oracle on which the two disagree. Any completeness error, however small, admits such oracles and the step evaporates. What makes this a new idea rather than a barrier is that the paper's own barrier for the fully quantum case does not reach here: it is built on a protocol in which both parties run the hard-to-simulate quantum algorithm, which a classical Alice cannot do."
+  by: ai
+status_summary: "Open. Settled for perfect completeness by the source paper's Theorem 3.1; the argument's final step uses perfect completeness in a way that no known weakening survives, and the paper's Simulation-Conjecture barrier does not cover this party structure."
+status_updated: 2026-08-18
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Austrin, Chung, Chung, Fu, Lin, Mahmoody, On the Impossibility of Key Agreements from Quantum Random Oracles, Cryptology ePrint Archive, Report 2022/218; CRYPTO 2022, pp. 165-194", url: "https://eprint.iacr.org/2022/218"}
+revision: 1
+statement_sha: "585ca8c6523d8c06783d944b5d65922613a9f738f4c4d1ec6de0c7a5e35bf775"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+Merkle's protocol buys a quadratic gap between honest parties and an eavesdropper out of a random oracle alone, and classically that gap is optimal. The source paper carries the upper bound into the quantum world for the asymmetric case that matches reality — a quantum-capable server talking to a classical client — and shows that if Alice is classical, Bob is quantum, and they *always* agree on a key, a classical eavesdropper still wins. The conjecture is that "always" can be dropped. Nobody has managed it, because the final step of the known proof is not merely tuned to perfect completeness but logically dependent on it.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [Download LaTeX source](latex/main.tex)
+
+A **CAQB key agreement protocol in the QROM** is a two-party protocol over a random oracle $h$ in which Alice is classical, Bob is quantum, all communication is classical, Alice makes $d_{\mathsf{A}}$ classical queries and Bob $d_{\mathsf{B}}$ quantum queries, and the two output keys agree except with completeness error $\gamma$. The eavesdropper $\mathsf{E}$ is classical, sees the transcript, and is charged only for its queries to $h$.
+
+**Conjecture.** Let $\{\Pi_\kappa = (\mathsf{A}, \mathsf{B})\}$ be any family of CAQB key agreement protocols in the QROM such that (i) $d_{\mathsf{A}}(\kappa) + d_{\mathsf{B}}(\kappa) \le p_0(\kappa)$ for some polynomial $p_0$, and (ii) the completeness error is negligible, $\gamma(\kappa) = \mathrm{negl}(\kappa)$. Then for every constant $\lambda \in (0,1)$ there are a classical eavesdropper $\mathsf{E}$ and a polynomial $q$ such that for all sufficiently large $\kappa$, $\mathsf{E}$ makes at most $q(\kappa)$ classical queries to $h$ in expectation and
+$$\Pr[k_{\mathsf{E}} = k_{\mathsf{A}}] \ge 1 - \lambda,$$
+over the choice of $h$, the coins and measurement outcomes of $\mathsf{A}$ and $\mathsf{B}$, and the coins of $\mathsf{E}$. No bound is placed on the oracle's domain size, on its output length, or on $\mathsf{E}$'s computational complexity.
+
+The query bound is *in expectation*, which is how the settled perfect-completeness result is stated; a worst-case bound would be a different and stronger ask.
+
+## Proof
+
+Open. The perfect-completeness case is settled and the obstruction to removing that hypothesis is identified rather than guessed at.
+
+**What is settled.** Theorem 3.1 of the source paper: under perfect completeness a classical eavesdropper finds the key with probability $1 - \lambda$ using $d_{\mathsf{A}} \cdot d_{\mathsf{B}} / \lambda$ classical queries. It is unconditional — unlike the paper's other attack, which assumes the [Polynomial Compatibility Conjecture](/c/0023/).
+
+**The three ingredients.** A classical heavy-query learner for Alice, which needs no quantum generalization precisely because Alice is classical; an independence lemma, that conditioned on the transcript and the oracle the two parties' joint state is a product state; and a consistency lemma, that if the eavesdropper's learned partial oracle misses the maximal Fourier monomial of the joint state, some full oracle is consistent with both her sampled fake Alice view and the real execution.
+
+**Where perfect completeness enters, and why it is not cosmetic.** The last step turns that consistency into a win: the mere *existence* of one oracle consistent with the fake Alice view and Bob's registers forces the fake key to equal Bob's key. That inference is sound only when no consistent oracle can make the keys differ — which is exactly what perfect completeness provides. With any completeness error there are consistent oracles on which the keys differ, and the step is simply unavailable.
+
+**Why the paper's barrier does not settle it negatively.** Section 7 shows that if the Simulation Conjecture is false in the polynomial-time form the paper calls Conjecture 7.2, then there is a single-bit QCCC protocol and an infinite set of security parameters on which it has $(1-2^{-\kappa})$-completeness and $2^{-\kappa}$-security against classical polynomial-query eavesdroppers. So a general unconditional attack tolerating imperfect completeness would settle a long-standing question about quantum speedups. But in that construction *both* parties run the hard-to-simulate quantum algorithm and round their own empirical estimates against a common random shift — a classical Alice cannot do her half. The classical-Alice case escapes the barrier.
+
+## Discussion
+
+The interest of this cell is that it is squeezed from both sides and neither squeeze reaches it. The positive result covers it only under perfect completeness; the barrier covers imperfect completeness only when both parties are quantum. What sits in between is a party structure that is both the practically realistic one and the one where neither existing technique applies.
+
+A solver should be clear that the difficulty is not quantitative. The bound $d_{\mathsf{A}}d_{\mathsf{B}}/\lambda$ is not fragile; the *inference* at the end of the argument is what fails, and repairing it means finding a way to certify the eavesdropper's key without appealing to the non-existence of a consistent oracle that disagrees. That is the same shape of obstruction that appears in [c/0018](/c/0018/), where perfect uniqueness plays the role perfect completeness plays here.
+
+## Open obligations
+
+- [ ] Prove or refute the conjecture for negligible completeness error, with Alice classical and Bob quantum.
+- [ ] Decide whether the expected-query bound can be upgraded to worst case, which the settled result does not claim.
+- [ ] Determine whether a barrier can be built for the classical-Alice structure at all, given that the known one needs both parties quantum.
+- [ ] Settle the intermediate regimes — constant, or inverse-polynomial, completeness error — which may separate from the negligible case.
+- [ ] Formalize the statement in Lean. The QROM, purified views and expected-query accounting all need writing first.
+
+## Sources
+
+- Austrin, Chung, Chung, Fu, Lin, and Mahmoody. [*On the Impossibility of Key Agreements from Quantum Random Oracles*](https://eprint.iacr.org/2022/218). Cryptology ePrint Archive, Report 2022/218; CRYPTO 2022, pp. 165–194. Theorem 3.1 and its Lemmas 3.2 and 3.3; the future-work statement this conjecture transcribes; Section 7's barrier and its Conjecture 7.2.
+- Barak and Mahmoody. *Merkle's key agreement protocol is optimal: an $O(n^2)$ attack on any key agreement from random oracles*. Journal of Cryptology 30(3):699–734, 2017. The classical optimality result, and the heavy-query learner the attack reuses.
+- Brakerski, Katz, Segev, and Yerukhimovich. *Limits on the power of zero-knowledge proofs in cryptographic constructions*. TCC 2011, pp. 559–578. The other source of the learner.
+- Impagliazzo and Rudich. *Limits on the provable consequences of one-way permutations*. STOC 1989, pp. 44–61. Where the classical line of separations begins.
+
+:::

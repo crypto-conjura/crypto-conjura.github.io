@@ -1,0 +1,37 @@
+---
+title: "Fine-grained non-interactive key exchange in generic group models"
+subtitle: "How large a polynomial gap can three or four parties buy from a generic group, and does it depend on whether group elements have names?"
+---
+
+## Motivation
+
+Non-interactive key exchange for three or more parties is one of the few elementary primitives with no construction from standard assumptions outside pairings and obfuscation. Fine-grained cryptography lowers the bar: instead of security against all polynomial-time adversaries, ask for a fixed polynomial *gap* — honest parties make $n$ queries, and security holds against adversaries making $n^{c}$ for some $c > 1$. Merkle's puzzles give a two-party protocol of this kind in the random oracle model with $c$ approaching $2$, and Barak and Mahmoody proved $c = 2$ optimal there: every $n$-query key agreement in the random oracle model falls to an $O(n^{2})$-query attack.
+
+The question this hub tracks is what happens when the idealized object carries algebraic structure. A generic group is more than a random oracle, so more should be buyable — but *how much* more turns out to depend on a modelling choice that is usually treated as immaterial: whether group elements have explicit names.
+
+In **Shoup's** model a group element is a label, which a party may hash, sort, or feed to a generic discrete-log algorithm. In **Maurer's** model it lives in a private array reachable only through the group operations and equality tests. The source paper achieves a quadratic gap for four parties in Shoup's model and rules one out for three parties in Maurer's, leaving both diagonal cells open — and those two cells are exactly the statements here.
+
+## Provenance and history
+
+One source paper: Afshar, Couteau, Mahmoody and Sadeghi, [*Fine-Grained Non-Interactive Key-Exchange: Constructions and Lower Bounds*](https://eprint.iacr.org/2023/571), ePrint 2023/571; EUROCRYPT 2023. Bibliographic details verified against ePrint on 18 August 2026 — note the full title carries "Constructions and Lower Bounds", which the harvester's record had dropped.
+
+Both statements were drafted by `scripts/harvest_conjectures.py` from that PDF and are AI-written and unreviewed, as the [status badges](/open-problems/status-legend/) say. Each is posed by the paper itself, in its own voice, as a route to closing the gap its results leave.
+
+## Parameter lattice
+
+Two axes: the model, and the number of parties. Query counts are for the honest parties; the gap is the exponent an eavesdropper needs.
+
+| | Shoup's model (labelled elements) | Maurer's model (private array) |
+|---|---|---|
+| **2 parties** | $n^{2}$, and optimal — random oracle suffices | $n^{2}$ |
+| **3 parties** | $n^{1.5}$ achieved; **quadratic attack open** — [c/0025](/c/0025/) | $O(n^{2})$ attack, so $n^{2}$ is the ceiling |
+| **4 parties** | quadratic gap achieved (Construction 9, Theorem 10) | **quadratic construction open** — [c/0024](/c/0024/) |
+
+Read the diagonal. In Shoup's model four parties can already reach a quadratic gap, and the open question is whether three parties can be *attacked* quadratically — the paper's own three-party Shoup protocol reaches only $n^{1.5}$, so the truth for three parties lies somewhere in $[n^{1.5}, n^{2}]$ and nobody knows where. In Maurer's model the attack exists for every $K \ge 3$, so a quadratic four-party construction there would be exactly tight against it.
+
+The two questions are complementary rather than symmetric: [c/0025](/c/0025/) asks for an attack in the model where the paper's technique gives nothing, and [c/0024](/c/0024/) asks for a construction in the model where its own attack sets the ceiling.
+
+## Statements in this hub
+
+- [A four-party NIKE with quadratic security in Maurer's generic group model](/c/0024/) — open; a construction matching the paper's own ceiling
+- [A quadratic attack on three-party NIKE in Shoup's generic group model](/c/0025/) — open; an attack the paper's linear-structure technique cannot deliver

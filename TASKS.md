@@ -1,21 +1,12 @@
 # Tasks
 
-Split into two sections: **Website and repository** (~6.0h) covers the site, its build tooling and the repository's configuration; **Conjectures and papers** (~6.0h) covers the mathematics — proving conjectures, and writing and checking the papers that report them. Within each section, tasks are ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~20.0h** (rough; the UC Encyclopedia content dominates the uncertainty and could run well over its estimate).
+Split into two sections: **Website and repository** (~5.5h) covers the site, its build tooling and the repository's configuration; **Conjectures and papers** (~6.0h) covers the mathematics — proving conjectures, and writing and checking the papers that report them. Within each section, tasks are ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~19.5h** (rough; the UC Encyclopedia content dominates the uncertainty and could run well over its estimate).
 
 Last reconciled against `main` at `ee4b7cd` on 17 August 2026.
 
 Completed tasks are deleted from this file rather than checked off and kept: this is a list of live work, and `git log` is the record of what closed and when.
 
 ## Website and repository
-
-- [ ] **Decide which origin is canonical, Cloudflare or GitHub Pages (~0.5h — decision, not implementation)**
-
-  Raised 17 August 2026, when the Cloudflare deploy was fixed. The site now builds and deploys on both, from the same sources, and that is a decision left half-made rather than a feature:
-
-  - **`_quarto.yml:37` hardcodes `site-url: "https://crypto-conjura.github.io"`.** That value is what emits `sitemap.xml`, canonical `<link>` tags and the absolute URLs in the Open Graph and Twitter card metadata, so the Cloudflare-hosted copy currently advertises the Pages origin as canonical. That is the right default while Pages is authoritative and wrong the moment it isn't. If Cloudflare becomes canonical, this needs an env-var override rather than a flip in place, or the Pages build starts lying in the other direction instead.
-  - **`.github/workflows/publish.yml` still deploys to Pages on every push to `main`.** Either retire it or keep both deliberately.
-
-  Nothing is broken while both run; the cost is only that a search engine is told the wrong home. Whoever decides also owns `wrangler.jsonc`'s comment about it.
 
 - [ ] **Decide what to do with `lhl-k-source`, the one remaining unpromoted draft (~0.5h — decision, then either a promotion or a deletion)**
 

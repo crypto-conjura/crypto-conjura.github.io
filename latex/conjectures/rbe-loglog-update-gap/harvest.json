@@ -1,0 +1,269 @@
+{
+  "pdf": {
+    "name": "2022-1285.pdf",
+    "sha256": "8d37b65942fb164bb733a36dd85545fa92a21b4942ae816e41cbbe2968c8c85e",
+    "pages": 30
+  },
+  "run": {
+    "at": "2026-08-17T20:13:14Z",
+    "backend": "cli",
+    "effort": "high"
+  },
+  "document": {
+    "title": "Lower Bounds for the Number of Decryption Updates in Registration-Based Encryption",
+    "authors": [
+      "Mohammad Mahmoody",
+      "Wei Qi",
+      "Ahmadreza Rahimi"
+    ],
+    "year": "2022",
+    "venue_or_archive": "IACR Cryptology ePrint Archive; the acknowledgements thank the anonymous reviewers of TCC 2022, so the paper appeared at TCC 2022",
+    "identifier": "ePrint 2022/1285 (taken from the file name; no ePrint number is printed on the pages)",
+    "citation_confidence": "inferred"
+  },
+  "candidate": {
+    "slug": "rbe-loglog-update-gap",
+    "title": "The Exact Number of Decryption Updates in Compact Registration-Based Encryption",
+    "subtitle": "closing the loglog factor for fixed update times",
+    "category": "Information-Theoretic Cryptography",
+    "openness_kind": "paper-states-open",
+    "pages": [
+      1,
+      3,
+      4,
+      14,
+      17,
+      29,
+      30
+    ],
+    "one_line": "A secure registration-based encryption scheme with a fixed update schedule and a polylogarithmic public parameter should need logarithmically many decryption updates, matching the known constructions rather than the weaker known lower bound.",
+    "informal": "In registration-based encryption, a key curator keeps a short public parameter summarising the public keys of all registered parties, and a party who registered earlier must occasionally fetch \"decryption update\" information in order to keep decrypting. Every known scheme with a polylogarithmic public parameter makes each party fetch about $\\log n$ updates over the course of $n$ registrations. The best known lower bound is weaker by a $\\log\\log n$ factor: it only shows that some party must fetch about $\\log n / \\log\\log n$ updates. The conjecture is that the constructions are the truth and the lower bound is what should move: with a polylogarithmic public parameter, logarithmically many updates are unavoidable. What makes this a concrete target rather than a wish is that the source paper proves the combinatorial engine of its lower bound — that a directed graph of small out-degree on many vertices contains a long \"skipping sequence\" — is exactly tight, so no sharper analysis of that engine can close the gap; a proof must find a different route, and a refutation must be a scheme with a short public parameter that beats $\\log n$ updates.",
+    "notation_latex": "\\noindent\n$\\kappa$ is the security parameter and $\\mathrm{negl}(\\kappa)$ a negligible function. Identities are numbered by their registration order, so identity $i$ is the $i$-th identity to register; $n$ is the total number of registered identities and $\\mathsf{pp}_i$ is the public parameter after $i$ registrations. We write\n\\[\n  \\alpha(n) \\;=\\; \\max_{i \\le n} |\\mathsf{pp}_i|\n\\]\nfor the maximum bit length of the public parameter over the first $n$ registrations, maximised over executions. $G$ is the (infinite) update graph of the scheme and $G_n$ its restriction to the vertex set $[n] = \\{1,\\dots,n\\}$; $\\deg^{+}(u) = |\\{v : (u,v) \\in G\\}|$ is the out-degree of a vertex and $\\deg^{+}(G_n) = \\max_{u \\in [n]} |\\{v \\le n : (u,v) \\in G\\}|$ is the maximum out-degree of $G_n$, which is exactly the largest number of decryption updates that a single identity receives while the first $n$ identities register. $\\rho$ is the completeness probability, $p$ a polynomial, $c$ a positive constant, and $\\log$ is the base-$2$ logarithm.",
+    "definitions_latex": "\\begin{definition}[Registration-based encryption, syntax]\\label{def:rbe2}\nA \\emph{registration-based encryption} (RBE) scheme is a tuple of PPT algorithms $\\Pi = (\\mathsf{Gen}, \\mathsf{Reg}, \\mathsf{Enc}, \\mathsf{Upd}, \\mathsf{Dec})$, used together with a common random string $\\mathsf{crs} \\leftarrow \\{0,1\\}^{\\mathrm{poly}(\\kappa)}$ sampled once and published:\n\\begin{itemize}\n  \\item $\\mathsf{Gen}(1^{\\kappa}) \\to (\\mathsf{pk},\\mathsf{sk})$, run locally by a registering party;\n  \\item $\\mathsf{Reg}^{[\\mathsf{aux}]}(\\mathsf{crs},\\mathsf{pp},\\mathsf{id},\\mathsf{pk}) \\to \\mathsf{pp}'$, \\emph{deterministic}, run by the \\emph{key curator} (KC) with read/write access to an auxiliary state $\\mathsf{aux}$ it may modify; the system starts with $\\mathsf{pp} = \\mathsf{aux} = \\bot$;\n  \\item $\\mathsf{Enc}(\\mathsf{crs},\\mathsf{pp},\\mathsf{id},m) \\to \\mathsf{ct}$;\n  \\item $\\mathsf{Upd}^{\\mathsf{aux}}(\\mathsf{pp},\\mathsf{id},\\mathsf{pk}) \\to u$, \\emph{deterministic}, run by the KC with read-only access to $\\mathsf{aux}$;\n  \\item $\\mathsf{Dec}(\\mathsf{sk},u,\\mathsf{ct}) \\to m$, \\emph{deterministic}, outputting a message $m \\in \\{0,1\\}^{*}$, or $\\bot$ (syntax error), or $\\mathsf{GetUpd}$ (indicating that more recent update information than $u$ may be needed).\n\\end{itemize}\n\\end{definition}\n\n\\begin{definition}[Forward DAG]\\label{def:dag}\nA \\emph{forward DAG} is a directed acyclic graph $G$ with vertex set $\\mathbb{N}$ (or $[n]$) such that every edge $(i,j) \\in G$ satisfies $i \\le j$.\n\\end{definition}\n\n\\begin{definition}[$\\rho$-completeness with fixed update graph $G$]\\label{def:comp2}\nLet $G$ be an infinite forward DAG. Consider the following game between a challenger $\\mathcal{C}$ and a computationally unbounded adversary $\\mathcal{A}$ limited to $\\mathrm{poly}(\\kappa)$ rounds. $\\mathcal{C}$ sets $\\mathsf{pp} = \\mathsf{aux} = u = \\bot$, $\\mathcal{D} = \\emptyset$, $\\mathsf{id}^{*} = \\bot$, $t = 0$, samples $\\mathsf{crs}$ and sends it to $\\mathcal{A}$. In each round $\\mathcal{A}$ performs exactly one of:\n\\begin{enumerate}\n  \\item \\textbf{Registering an identity.} Either (i) $\\mathcal{A}$ sends a pair $(\\mathsf{id},\\mathsf{pk})$ with $\\mathsf{id} \\notin \\mathcal{D}$, where $\\mathsf{pk}$ may be arbitrary and adversarial, and $\\mathcal{C}$ sets $\\mathsf{pp} := \\mathsf{Reg}^{[\\mathsf{aux}]}(\\mathsf{crs},\\mathsf{pp},\\mathsf{id},\\mathsf{pk})$, $\\mathcal{D} := \\mathcal{D}\\cup\\{\\mathsf{id}\\}$; or (ii) if $\\mathsf{id}^{*} = \\bot$, $\\mathcal{A}$ sends $\\mathsf{id}^{*} \\notin \\mathcal{D}$ and $\\mathcal{C}$ samples $(\\mathsf{pk}^{*},\\mathsf{sk}^{*}) \\leftarrow \\mathsf{Gen}(1^{\\kappa})$, sets $\\mathsf{pp} := \\mathsf{Reg}^{[\\mathsf{aux}]}(\\mathsf{crs},\\mathsf{pp},\\mathsf{id}^{*},\\mathsf{pk}^{*})$, $\\mathcal{D} := \\mathcal{D}\\cup\\{\\mathsf{id}^{*}\\}$, and returns $\\mathsf{pk}^{*}$ to $\\mathcal{A}$. In either case, if $\\mathsf{id}^{*} \\neq \\bot$, letting $i$ be the registration index of $\\mathsf{id}^{*}$ and $j$ the registration index of the identity just registered, $\\mathcal{C}$ sets $u := \\mathsf{Upd}^{\\mathsf{aux}}(\\mathsf{pp},\\mathsf{id}^{*},\\mathsf{pk}^{*})$ whenever $(i,j) \\in G$, and does nothing otherwise.\n  \\item \\textbf{Encrypting for the target} (allowed only if $\\mathsf{id}^{*} \\neq \\bot$). $\\mathcal{C}$ sets $t := t+1$; $\\mathcal{A}$ sends $m_t$; $\\mathcal{C}$ sets $m'_t := m_t$ and returns $\\mathsf{ct}_t \\leftarrow \\mathsf{Enc}(\\mathsf{crs},\\mathsf{pp},\\mathsf{id}^{*},m_t)$.\n  \\item \\textbf{Decrypting for the target.} $\\mathcal{A}$ sends $j \\in [t]$; $\\mathcal{C}$ sets $m'_j := \\mathsf{Dec}(\\mathsf{sk}^{*},u,\\mathsf{ct}_j)$.\n\\end{enumerate}\n$\\mathcal{A}$ wins if $m'_j \\neq m_j$ for some $j \\in [t]$; in particular $\\mathcal{A}$ wins if decryption ever returns $\\mathsf{GetUpd}$, since updates are pushed only as $G$ dictates. The scheme is \\emph{$\\rho$-complete with fixed update graph $G$} if every such $\\mathcal{A}$ wins with probability at most $1-\\rho$. Thus the number of updates received by identity $i$ while the first $n$ identities register is $|\\{j \\le n : (i,j) \\in G\\}|$, and the worst case over identities is $\\deg^{+}(G_n)$.\n\\end{definition}\n\n\\begin{definition}[$0$-corruption security]\\label{def:sec2}\nConsider the following game between a PPT adversary $\\mathcal{A}$ and a challenger $\\mathcal{C}$. $\\mathcal{C}$ sets $\\mathsf{pp} = \\mathsf{aux} = \\bot$, $\\mathcal{D} = \\emptyset$, samples $\\mathsf{crs}$ and sends it to $\\mathcal{A}$. Repeatedly, $\\mathcal{A}$ sends some $\\mathsf{id} \\notin \\mathcal{D}$; $\\mathcal{C}$ samples $(\\mathsf{pk},\\mathsf{sk}) \\leftarrow \\mathsf{Gen}(1^{\\kappa})$, sets $\\mathsf{pp} := \\mathsf{Reg}^{[\\mathsf{aux}]}(\\mathsf{crs},\\mathsf{pp},\\mathsf{id},\\mathsf{pk})$, $\\mathcal{D} := \\mathcal{D}\\cup\\{\\mathsf{id}\\}$ and returns $\\mathsf{pk}$ to $\\mathcal{A}$; the adversary never receives a secret key. Then $\\mathcal{A}$ sends a target $\\mathsf{id}^{*}$ and messages $m_0,m_1$ with $|m_0| = |m_1|$; $\\mathcal{C}$ samples $b \\leftarrow \\{0,1\\}$ and returns $\\mathsf{ct} \\leftarrow \\mathsf{Enc}(\\mathsf{crs},\\mathsf{pp},\\mathsf{id}^{*},m_b)$; $\\mathcal{A}$ outputs $b'$ and wins if $b' = b$. The scheme is \\emph{$0$-corruption secure} if every PPT $\\mathcal{A}$ wins with probability at most $\\tfrac12 + \\mathrm{negl}(\\kappa)$.\n\\end{definition}",
+    "formal_statement_latex": "Let $\\Pi$ be an RBE scheme as in Definition~\\ref{def:rbe2} and let $G$ be an infinite forward DAG (Definition~\\ref{def:dag}) such that $\\Pi$ is $\\rho$-complete with fixed update graph $G$ (Definition~\\ref{def:comp2}) for some $\\rho \\ge 0.99$, and such that $\\Pi$ is $0$-corruption secure (Definition~\\ref{def:sec2}). Suppose further that there is a polynomial $p$ with $\\alpha(n) \\le p(\\kappa,\\log n)$ for all $n \\in \\mathbb{N}$.\n\nThen for every $\\kappa$ there are a constant $c > 0$ (depending on $\\Pi$, $p$ and $\\kappa$) and infinitely many $n \\in \\mathbb{N}$ such that\n\\[\n  \\deg^{+}(G_n) \\;\\ge\\; c \\log n .\n\\]\nEquivalently: $\\deg^{+}(G_n)$, the worst-case number of decryption updates that an identity needs over the first $n$ registrations, is not $o(\\log n)$.",
+    "parameters": [
+      {
+        "symbol": "\\kappa",
+        "meaning": "security parameter of the RBE scheme"
+      },
+      {
+        "symbol": "n",
+        "meaning": "number of identities registered with the key curator"
+      },
+      {
+        "symbol": "G, G_n",
+        "meaning": "the scheme's fixed update graph and its restriction to the first n registration indices"
+      },
+      {
+        "symbol": "\\deg^{+}(G_n)",
+        "meaning": "maximum out-degree of G_n, i.e. the worst-case number of updates an identity needs over n registrations"
+      },
+      {
+        "symbol": "\\alpha(n)",
+        "meaning": "maximum bit length of the public parameter over the first n registrations"
+      },
+      {
+        "symbol": "\\rho",
+        "meaning": "completeness probability of the scheme"
+      },
+      {
+        "symbol": "p",
+        "meaning": "polynomial bounding the length of the public parameter as p(kappa, log n)"
+      },
+      {
+        "symbol": "c",
+        "meaning": "positive constant in the conjectured logarithmic lower bound"
+      }
+    ],
+    "setting_latex": "In registration-based encryption \\cite{GHMR18}, parties generate their own keys and register their public keys with a key curator, who maintains a compact public parameter $\\mathsf{pp}_n$ that anyone can use to encrypt to any of the $n$ registered identities. Compactness forces registered parties to occasionally fetch \\emph{decryption update} information from the curator. All known schemes have the same efficiency profile: $|\\mathsf{pp}_n| \\le \\mathrm{poly}(\\kappa,\\log n)$ together with $\\Theta(\\log n)$ updates per party --- the obfuscation-based scheme of \\cite{GHMR18}, the standard-assumption schemes of \\cite{GHM19}, and the verifiable variant of \\cite{GV20} all commit to the registered keys with a forest of Merkle trees whose shape follows a binary counter, so a party's opening must be refreshed each of the $\\Theta(\\log n)$ times its tree is merged.\n\nThe source paper proves a lower bound in the opposite direction for all schemes with \\emph{fixed update times}, i.e.\\ schemes whose update schedule is an update graph $G$ fixed in advance: if the scheme is $0$-corruption secure with $|\\mathsf{pp}_i| \\le \\alpha$ and $\\deg^{+}(G_n) \\le d$, then $\\binom{\\alpha+d}{d+1} \\ge \\Omega(n)$, whence $d \\ge \\Omega(\\log n/\\log\\log n)$ for $\\alpha \\le \\mathrm{poly}(\\log n)$, and $\\alpha \\ge \\Omega(n^{1/(d+1)})$ for constant $d$. So for compact schemes with fixed update times the answer is pinned between $\\Omega(\\log n/\\log\\log n)$ and $O(\\log n)$, and the paper flags closing this gap as open twice: once in the introduction, and once at the head of the section developing its combinatorial tool.\n\nThat tool is the notion of a \\emph{skipping sequence}: a set $\\{u_1 < \\dots < u_k\\}$ of vertices of a forward DAG such that for every $t < k$, no edge leaves $u_t$ into $\\{u_{t+1}, u_{t+1}+1, \\dots, u_k\\}$. Skipping sequences are what let the attacker group identities so that one group can manufacture the updates needed by its own first member, and the paper shows that every forward DAG with $\\binom{k+d}{d+1}$ vertices and out-degree at most $d$ contains a skipping sequence of size $k$. The length of the skipping sequence is what the information-theoretic half of the attack converts into a small mutual information with $\\mathsf{pp}_n$, so a longer guaranteed skipping sequence would directly improve the update lower bound. The obstruction the paper records is that this cannot happen: it constructs, for every $k$ and $d$, a forward DAG with $\\binom{k+d}{d+1}-1$ vertices and out-degree $d$ whose skipping sequences all have size at most $k-1$. The skipping-sequence route is therefore exhausted, and the $\\log\\log n$ factor has to be removed either by a genuinely different lower-bound technique or by a construction that meets the current bound.",
+    "quotes": [
+      {
+        "page": 1,
+        "role": "statement",
+        "text": "As a corollary, we find that RBE systems with fixed update times and public parameters of length poly(log n), require Ω(log n/ loglog n) decryption updates, which is optimal up to a O(loglog n) factor."
+      },
+      {
+        "page": 4,
+        "role": "openness",
+        "text": "In addition, it remains open to close the rather small gap of 1/ loglog n factor between our lower bound and the upper bounds of previously constructed RBE schemes."
+      },
+      {
+        "page": 14,
+        "role": "openness",
+        "text": "This leaves open to close the gap between our lower bound and the upper bound of log n updates for future work."
+      },
+      {
+        "page": 14,
+        "role": "progress",
+        "text": "In Section C, we prove that the bounds of this section are tight. This means that our approach of using skipping sequences cannot improve our lower bound of log n/ loglog n updates in RBEs."
+      },
+      {
+        "page": 3,
+        "role": "parameter",
+        "text": "All the RBE schemes so far have the same asymptotic efficiency barriers built into them: they all use the same level of poly(κ, log n) compactness for the public parameter and require Θ(log n) number of updates to guarantee successful decryption."
+      }
+    ],
+    "status_note": "For schemes with fixed update times and polylogarithmic public parameters, the number of updates is known to be between Omega(log n / loglog n) (the paper's Corollary 4.2) and O(log n) (all known constructions). Neither endpoint is known to be the truth, and the paper's own combinatorial tool is proved tight, so it cannot decide the question.",
+    "progress_note": "The paper proves the trade-off binom(alpha+d, d+1) >= n for schemes with fixed update graphs (Theorem 4.1), giving d = Omega(log n / loglog n) for alpha <= poly(log n) and alpha = Omega(n^{1/(d+1)}) for constant d (Corollary 4.2). Appendix C proves the combinatorial half is exactly tight: for all k >= 1 and d >= 0 there is a forward DAG on binom(k+d, d+1) - 1 vertices with out-degree at most d having no skipping sequence of size k (Theorem C.1, Lemma C.3), so the skipping-sequence approach cannot yield more than log n / loglog n. The upper-bound side is unchanged since the original constructions: Theta(log n) updates with poly(kappa, log n) public parameters.",
+    "why_interesting": "It asks for the exact update complexity of a primitive whose whole point is that updates are the price of compactness, and the two candidate answers correspond to two different beliefs about the primitive: that Merkle-forest-style constructions are optimal, or that a fundamentally cheaper update schedule exists. The paper has already done the work of showing that its own technique is spent, which is unusual and useful: whoever attacks the lower-bound side knows in advance that a new tool is required, and whoever attacks the construction side knows exactly what parameters to hit.",
+    "why_clean": "The statement is a single inequality about one integer-valued quantity of a scheme (the maximum out-degree of its update graph, which is literally the number of updates a party needs), under two standard hypotheses (polylogarithmic public parameter, security). It needs only the RBE syntax, the fixed-update-graph completeness game and a weak security notion, all of which fit on a page, and it is falsifiable by a single construction.",
+    "risks": "The paper poses this as \"close the gap\" and does not commit to a side; I chose the lower-bound direction so that there is a definite claim to prove or refute, and a reviewer may reasonably object that the paper's own phrasing is direction-neutral. On the substance, I would bet against the conjecture as stated: replacing the binary-counter Merkle forest of the known constructions by a b-ary counter with b = polylog(n) plausibly gives polylog(kappa, log n) public parameters (the roots of the (b-1) log_b n trees) with only log_b n = O(log n / loglog n) merges affecting any given party, hence O(log n / loglog n) updates, which would meet the paper's bound and refute this statement. That is my own observation, not the paper's, and I have not checked whether the obfuscation- or garbling-based \"delayed encryption\" layer survives the larger arity with polylogarithmic ciphertexts and update lengths; if it does, the problem is much less hard than the paper's framing suggests, and this candidate should probably be dropped. Relatedly, I have not verified against the substantial post-2022 RBE literature whether such a scheme has already been published; if it has, this is resolved. Finally, note the gap is a loglog n factor, so a reviewer who requires that settling a conjecture change the qualitative state of knowledge may judge this below the bar even though the paper flags it as open twice.",
+    "bibliography": [
+      {
+        "key": "GHMR18",
+        "authors": "Sanjam Garg, Mohammad Hajiabadi, Mohammad Mahmoody, and Ahmadreza Rahimi",
+        "title": "Registration-based encryption: Removing private-key generator from IBE",
+        "venue": "TCC 2018: 16th Theory of Cryptography Conference, Part I, LNCS 11239, pages 689-718, Springer",
+        "year": "2018",
+        "verified": "printed-in-source-bibliography"
+      },
+      {
+        "key": "GHM19",
+        "authors": "Sanjam Garg, Mohammad Hajiabadi, Mohammad Mahmoody, Ahmadreza Rahimi, and Sruthi Sekar",
+        "title": "Registration-based encryption from standard assumptions",
+        "venue": "PKC 2019: 22nd International Conference on Theory and Practice of Public Key Cryptography, Part II, LNCS 11443, pages 63-93, Springer",
+        "year": "2019",
+        "verified": "printed-in-source-bibliography"
+      },
+      {
+        "key": "GV20",
+        "authors": "Rishab Goyal and Satyanarayana Vusirikala",
+        "title": "Verifiable registration-based encryption",
+        "venue": "CRYPTO 2020, Part I, LNCS 12170, pages 621-651, Springer",
+        "year": "2020",
+        "verified": "printed-in-source-bibliography"
+      }
+    ]
+  },
+  "grounding": [
+    {
+      "quote": "As a corollary, we find that RBE systems with fixed update times and public parameters of length poly(log n), require Ω(log n/ loglog n) decryption updates, which is optimal up to a O(loglog n) factor.",
+      "claimed_page": 1,
+      "found_page": 1,
+      "coverage": 1.0,
+      "longest_run": 0.0,
+      "status": "exact",
+      "role": "statement"
+    },
+    {
+      "quote": "In addition, it remains open to close the rather small gap of 1/ loglog n factor between our lower bound and the upper bounds of previously constructed RBE schemes.",
+      "claimed_page": 4,
+      "found_page": 4,
+      "coverage": 1.0,
+      "longest_run": 0.0,
+      "status": "exact",
+      "role": "openness"
+    },
+    {
+      "quote": "This leaves open to close the gap between our lower bound and the upper bound of log n updates for future work.",
+      "claimed_page": 14,
+      "found_page": 14,
+      "coverage": 1.0,
+      "longest_run": 0.0,
+      "status": "exact",
+      "role": "openness"
+    },
+    {
+      "quote": "In Section C, we prove that the bounds of this section are tight. This means that our approach of using skipping sequences cannot improve our lower bound of log n/ loglog n updates in RBEs.",
+      "claimed_page": 14,
+      "found_page": 14,
+      "coverage": 1.0,
+      "longest_run": 0.0,
+      "status": "exact",
+      "role": "progress"
+    },
+    {
+      "quote": "All the RBE schemes so far have the same asymptotic efficiency barriers built into them: they all use the same level of poly(κ, log n) compactness for the public parameter and require Θ(log n) number of updates to guarantee successful decryption.",
+      "claimed_page": 3,
+      "found_page": 3,
+      "coverage": 1.0,
+      "longest_run": 0.0,
+      "status": "exact",
+      "role": "parameter"
+    }
+  ],
+  "verify": {
+    "checks": [
+      {
+        "name": "existence",
+        "result": "pass",
+        "page": 4,
+        "finding": "The problem is in the paper, twice and in the paper's own voice. p.4: \"In addition, it remains open to close the rather small gap of 1/ loglog n factor between our lower bound and the upper bounds of previously constructed RBE schemes.\" p.14 (Section 3 preamble): \"This leaves open to close the gap between our lower bound and the upper bound of log n updates for future work.\" The two endpoints are also stated on p.1 (abstract: Omega(log n/loglog n), \"optimal up to a O(loglog n) factor\") and p.3 (all known schemes: poly(kappa, log n) pp with Theta(log n) updates)."
+      },
+      {
+        "name": "openness",
+        "result": "pass",
+        "page": 14,
+        "finding": "It stays open through the whole paper. A full-text grep for openness language returns exactly four open statements (p.4 twice, p.10, p.11, p.14); the gap-closing one is at p.4 and p.14. The later material does not touch it: Section 4.4 (pp.22-23) only extends the same Omega(log n/loglog n) lower bound to CRS/identity-dependent graphs, per-identity update budgets (Thm 4.11, Thm 4.12) and amortized budgets; Appendix A (p.26) gives the standard definitions; Appendix B (p.29) proves the twig lemma; Appendix C (pp.29-30) proves Theorem 3.2 tight, which cuts against closing the gap rather than closing it. The paper contains no construction at all, so the O(log n) side is untouched."
+      },
+      {
+        "name": "strength",
+        "result": "pass",
+        "page": 14,
+        "finding": "The drafted statement is the tight version of Corollary 4.2(3) (p.17), i.e. exactly the log n endpoint the paper names on p.14 (\"the upper bound of log n updates\"). Note recorded rather than charged as a failure: the paper poses a two-sided gap (\"close the gap\"), which a scheme with o(log n) updates would also close, whereas the draft commits to the lower-bound horn. The draft is explicit about this - the informal says a refutation must be \"a scheme with a short public parameter that beats log n updates\" - and it does not claim the authors predict this direction, so the commitment is disclosed rather than smuggled. It also correctly keeps the fixed-update-graph restriction and does not conflate this with the separate p.4 open problem about dynamic update times."
+      },
+      {
+        "name": "quantifiers-and-parameters",
+        "result": "pass",
+        "page": 17,
+        "finding": "Checked symbol by symbol against Corollary 4.2(3) (p.17): \"If |alpha_n| <= poly(kappa, log n) for security parameter kappa, then deg+(G) cannot be o(log n/loglog n). (I.e., there will be a constant c and an infinite sequence of n for which deg+(G) >= c log n/loglog n.)\" The draft preserves: kappa fixed (the corollary's proof says \"for (fixed kappa and) constant s\"), c depending on the scheme/p/kappa, infinitely many n, and the equivalence with \"not o(log n)\" (which is correct: not o(f) iff exists c>0 with f-ratio >= c infinitely often). alpha(n) = max_{i<=n}|pp_i| matches the corollary's alpha_n = max_{i in [n]}|pp_i|; deg+(G_n) as max out-degree over [n] with targets restricted to v <= n matches Theorem 4.1's \"deg+(G) <= d when we limit the graph G to the first n nodes/identities\" (p.17). rho >= 0.99 matches the corollary proof's \"complete rho > 0.99\". No quantifier is reordered and nothing is allowed to depend on anything the paper forbids."
+      },
+      {
+        "name": "attribution",
+        "result": "pass",
+        "page": 4,
+        "finding": "This is the harvested paper's own open problem: the p.4 sentence says \"our lower bound\" and the p.14 sentence says \"our lower bound\" and \"our approach of using skipping sequences\". The O(log n) upper-bound side is correctly credited to prior constructions [GHMR18, GHM+19, GV20] rather than to the source paper, matching p.3 and p.4. The bibliography entries for GHMR18, GHM+19 and GV20 match the paper's reference list on p.25 (authors, titles, venues, LNCS volumes 11239/11443/12170, page ranges 689-718 / 63-93 / 621-651); the draft's key \"GHM19\" for the paper's \"GHM+19\" is renaming, not redefinition."
+      },
+      {
+        "name": "definitions",
+        "result": "pass",
+        "page": 13,
+        "finding": "Every notion is the paper's. RBE syntax (deterministic Reg with read/write aux, deterministic Upd with read-only aux, Dec outputting m / bottom / GetUpd) = Def 2.1, p.11. Forward DAG = Def 2.3, p.12. Fixed-update-graph completeness = Def 2.4, p.13, including the load-bearing points that u is overwritten by Upd only when (i,j) in G, that the just-registered identity may be id* itself (footnote 9), and that a GetUpd output loses the game - this is what makes the definition stronger than the standard Def A.1 on p.26, whose step 2(d) refetches u on GetUpd, and the draft does not silently import the standard version. 0-corruption security = Def 2.2 (p.11-12) at k=0, where step 2(a) is unreachable since it requires |D_c| < 0, matching the paper's gloss \"the adversary is essentially an observer\". Skipping sequence, quoted in the setting, matches Def 3.1 (p.15) verbatim in content. rho-completeness as a parameterized version of Def 2.4 matches Theorem 4.1's \"completeness probability rho\" (p.17)."
+      },
+      {
+        "name": "fabrication",
+        "result": "fail",
+        "page": 3,
+        "finding": "Two unsupported assertions. (i) setting_latex: the known schemes \"all commit to the registered keys with a forest of Merkle trees whose shape follows a binary counter, so a party's opening must be refreshed each of the Theta(log n) times its tree is merged.\" The paper describes a single tree - \"the public parameter pp_n in [GHMR18] is the root of a Merkle tree that hashes all the public parameters of the registered identities\" (p.3) - and Remark 1.3 (pp.9-10) says only that the first component \"always consists of 'subsets' whose sizes determine the update times, while these sizes only depend on the number of identities registered so far.\" Forest, binary counter and tree merges appear nowhere. (ii) progress_note attributes \"the trade-off binom(alpha+d, d+1) >= n\" to Theorem 4.1; that inequality is Theorem 1.1 on p.4, while Theorem 4.1 (p.17) states only the attack succeeding with probability rho - sqrt(alpha ln2/(2 ell)) - delta whenever n >= binom(ell+d, d+1), from which the corollary's proof extracts alpha_n >= ell/10, not alpha_n >= ell. Everything else I checked is supported: the skipping-sequence grouping intuition (p.8), Theorem 3.2 (p.15), Theorem C.1 and Lemma C.3 (pp.29-30), Corollary 4.2 items 1 and 3 (p.17), and the Theta(log n)/poly(kappa, log n) profile of known schemes (p.3)."
+      },
+      {
+        "name": "self-containment",
+        "result": "pass",
+        "page": 0,
+        "finding": "A reader who has never opened the paper could act on the statement: the syntax, the fixed-update-graph completeness game, 0-corruption security, forward DAG, alpha(n) and deg+(G_n) are all spelled out in the draft, and the target inequality deg+(G_n) >= c log n for infinitely many n is unambiguous. No evidence page applies - this check is about the draft's own text."
+      }
+    ],
+    "confidence": "high",
+    "corrections": [
+      {
+        "field": "setting_latex",
+        "problem": "Asserts a construction mechanism the paper does not contain: that [GHMR18], [GHM+19] and [GV20] \"all commit to the registered keys with a forest of Merkle trees whose shape follows a binary counter, so a party's opening must be refreshed each of the Theta(log n) times its tree is merged.\" The paper says the public parameter is the root of a Merkle tree (p.3) and, in Remark 1.3 (pp.9-10), that the data structure consists of subsets whose sizes determine the update times; it never mentions a forest, a binary counter, or merges.",
+        "corrected": "Replace with the paper's own account: in [GHMR18] the public parameter is the root of a Merkle tree hashing the registered public keys, so a party must refresh the opening (decommitment) to its own key as the tree grows, which yields Theta(log n) updates (p.3); Remark 1.3 (pp.9-10) explains that in all known constructions the accumulator consists of subsets whose sizes - and hence the update times - depend only on the number of identities registered so far, which is why all of them have fixed update times."
+      },
+      {
+        "field": "progress_note",
+        "problem": "Attributes the trade-off \"binom(alpha+d, d+1) >= n\" to Theorem 4.1. Theorem 4.1 (p.17) states only that the attack succeeds with probability rho - sqrt(alpha ln 2/(2 ell)) - delta whenever n >= binom(ell+d, d+1) and |pp_i| <= alpha; the clean binomial trade-off is Theorem 1.1 on p.4 (stated as binom(|pp_n|+d, d+1) >= n, with |pp_n| assumed non-decreasing, cf. footnote 5).",
+        "corrected": "The paper states the trade-off binom(|pp_n|+d, d+1) >= n as Theorem 1.1 (p.4, assuming |pp_n| non-decreasing, WLOG by padding); its technical form is Theorem 4.1 (p.17), from which the proof of Corollary 4.2 derives alpha_n >= ell/10 when n = binom(ell+d, d+1) and rho > 0.99. The same wording should be fixed in setting_latex, which writes \"binom(alpha+d, d+1) >= Omega(n)\"."
+      }
+    ],
+    "fabrications": [
+      "setting_latex: \"all commit to the registered keys with a forest of Merkle trees whose shape follows a binary counter, so a party's opening must be refreshed each of the Theta(log n) times its tree is merged\" - the paper says \"root of a Merkle tree\" (p.3) and \"subsets whose sizes determine the update times\" (Remark 1.3, pp.9-10); no forest, binary counter or merging appears anywhere in the paper.",
+      "progress_note: the trade-off binom(alpha+d, d+1) >= n credited to \"Theorem 4.1\" - that inequality is Theorem 1.1 (p.4); Theorem 4.1 (p.17) states the attack's success probability, and combined with 0-corruption security it gives alpha_n >= ell/10, not alpha_n >= ell.",
+      "setting_latex/progress_note: \"binom(alpha+d, d+1) >= Omega(n)\" as the paper's stated inequality - the paper's stated form (Theorem 1.1, p.4) is binom(|pp_n|+d, d+1) >= n with |pp_n| non-decreasing in n, a hypothesis the draft drops without saying so (harmlessly, since it uses alpha(n) = max_{i<=n}|pp_i|)."
+    ],
+    "reason": "The problem is genuinely the paper's and genuinely open: the gap between Omega(log n/loglog n) and O(log n) for fixed-update-time schemes with poly(kappa, log n) public parameters is flagged open in the paper's own voice on p.4 and again on p.14, and nothing in Section 4.4 or Appendices A-C closes it - Appendix C only proves the skipping-sequence tool tight, which is the draft's stated obstruction, not a resolution. The formal statement matches Corollary 4.2(3) on p.17 clause for clause (fixed kappa, a constant c, infinitely many n, alpha_n as a max over the first n registrations, deg+ restricted to the first n nodes) with log n/loglog n replaced by log n, and the definitions are the paper's, including the non-obvious point that its completeness notion loses on a GetUpd output rather than refetching as standard Def A.1 does. What fails is fabrication: the setting invents a mechanism for the known constructions - a forest of Merkle trees shaped by a binary counter, with openings refreshed at each merge - that the paper never states and that sits against its own description of a single Merkle-tree root on p.3, and the binom(alpha+d, d+1) >= n trade-off is credited to Theorem 4.1 when it is Theorem 1.1.",
+    "verdict": "faithful-with-corrections"
+  },
+  "build": {
+    "compiled": true,
+    "chktex": [
+      "Warning 11 in statement.tex line 112: You should use \\cdots to achieve an ellipsis.",
+      "Warning 13 in statement.tex line 204: Intersentence spacing (`\\@') should perhaps be used."
+    ],
+    "lacheck": [
+      "\"statement.tex\", line 204: missing `\\@' before `.' in \"DAG.\"",
+      "\"statement.tex\", line 273: Whitespace before punctation mark in \" .\""
+    ],
+    "errors": []
+  }
+}

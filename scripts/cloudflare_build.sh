@@ -62,6 +62,12 @@ python3 scripts/artifact_manifest.py --check
 echo "--> Checking each UC entry says whether it has a definition"
 python3 scripts/uc_status.py --check
 
+# Report-only by design: an unpromoted draft is editorial backlog, not a broken
+# build, and this runs before the render. It exits 1 only on a `draft:` link
+# that contradicts the tree.
+echo "--> Reporting conjecture drafts with no site page"
+python3 scripts/draft_status.py --check
+
 echo "--> Rendering site"
 quarto render
 

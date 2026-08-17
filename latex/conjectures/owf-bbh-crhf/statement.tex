@@ -1,0 +1,372 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  Black-box helpfulness of one-way functions for collision resistance.
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{OWFS ARE BLACK-BOX HELPFUL FOR COLLISION RESISTANCE}
+
+\newcommand{\bits}{\{0,1\}}
+\newcommand{\Fc}{\mathcal{F}}
+\newcommand{\CRHc}{\mathcal{CRH}}
+\newcommand{\Zc}{\mathcal{Z}}
+\newcommand{\Pc}{\mathcal{P}}
+\newcommand{\Qc}{\mathcal{Q}}
+\newcommand{\Kc}{\mathcal{K}}
+\newcommand{\Fs}{\mathsf{F}}
+\newcommand{\Hs}{\mathsf{H}}
+\newcommand{\Ps}{\mathsf{P}}
+\newcommand{\Qs}{\mathsf{Q}}
+\newcommand{\Ss}{\mathsf{S}}
+\newcommand{\Zs}{\mathsf{Z}}
+\newcommand{\Coll}{\mathsf{Coll}}
+\newcommand{\simonpair}{(\pi,\Coll^{\pi})}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{Black-Box Helpfulness of One-Way Functions for Collision
+  Resistance}
+\cjsubtitle{The existence of an auxiliary primitive that only works with
+  a one-way function}
+\cjstatus{Statement: AI-written from Geoffroy Couteau, Pooya Farshim and
+  Mohammad Mahmoody, \emph{Black-Box Uselessness: Composing Separations
+  in Cryptography}, Cryptology ePrint Archive 2021, not yet checked by a
+  human. No case is settled: the paper proves only that two relaxations
+  --- distributional black-box helpfulness (Theorem~6.8) and class
+  helpfulness (Theorem~6.12) --- follow from an unproved amplification
+  conjecture about Simon's oracle, and the complementary statement that
+  one-way functions are black-box \emph{useless} for collision
+  resistance is likewise open.}
+\cjcategory{\emph{Black-Box Separations \& Reductions}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+Simon showed that collision-resistant hash functions cannot be built from
+one-way functions in a black-box way, by exhibiting a random permutation
+together with an oracle that returns collisions for any circuit built
+from it: relative to that pair, one-way permutations exist but
+collision-resistant hashing does not. This paper asks the sharper
+question of whether one-way functions are entirely \emph{useless} for
+collision resistance, meaning that no auxiliary primitive is ever made
+sufficient for collision resistance by adding a one-way function to it.
+The authors conjecture the opposite. That is, they conjecture that there
+exists some auxiliary primitive from which collision-resistant hashing
+cannot be built in a black-box way, but from which, together with an
+arbitrary one-way function, it can. This would exhibit a natural
+inhabitant of the gray zone between separation and uselessness, and would
+explain why one-way functions might yet play a role in future
+constructions of collision resistance from apparently weaker ingredients.
+The paper describes why proving it looks hard: Simon's result is an
+oracle separation and it is unclear how to relativize it, and the
+concrete candidate auxiliary primitive the authors propose reduces the
+conjecture to an unproved statement about the simultaneous hardness of
+inverting a one-way function and a random permutation.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+Simon~\cite{Sim98} separated collision-resistant hash functions from
+one-way functions (indeed from one-way permutations) by exhibiting a pair
+of oracles $\simonpair$, where $\pi$ is a random permutation and
+$\Coll^{\pi}$ takes as input a circuit with $\pi$-gates and returns a
+random collision for it, relative to which one-way permutations exist but
+collision-resistant hashing does not. This paper studies whether such
+separations \emph{compose}: a primitive $\Qc$ is called black-box useless
+for $\Pc$ if adding $\Qc$ to \emph{any} auxiliary primitive never enables
+a black-box construction of $\Pc$ that the auxiliary primitive did not
+already enable, and black-box helpful otherwise. The compiling-out
+separations lift to uselessness in full (Theorems~5.6 and~5.7); the
+transcript-sampling separations lift only partially, giving uselessness of
+one-way functions for perfectly correct unbalanced, constant-round
+imperfect, and one-round key agreement, with the general case left as an
+open conjecture. Simon's oracle separation, the authors observe, does not
+obviously lift at all, since it is not clear how to relativize an oracle
+separation of this kind. They conjecture that this failure is inherent,
+and that one-way functions are in fact helpful for collision resistance.
+
+The gray zone between separation and uselessness is known to be
+non-empty, but only for artificial reasons: taking the joint primitive
+consisting of a collision-resistant hash function and a trapdoor
+permutation, neither component alone black-box implies the pair
+(using~\cite{IR89} in one direction and Fischlin~\cite{Fis02} in the
+other), yet each is trivially helpful for it. A proof of this conjecture
+would give ``a natural (and important) example of a primitive which does
+not black-box imply another primitive, yet is black-box helpful for it'',
+and, as the paper stresses, would be an indication of why one-way
+functions could feature in future black-box constructions of collision
+resistance from seemingly weaker assumptions.
+
+The paper offers two routes. The first takes the candidate auxiliary
+primitive to be Simon's pair $\simonpair$ itself, and uses the result of
+Holmgren and Lombardi~\cite{HL18} that exponentially secure one-way
+\emph{product} functions black-box imply collision-resistant hashing;
+making this work requires showing that for every one-way function $\Fs$
+the pair $(\Fs,\simonpair)$ is product one-way, which the authors could
+not prove. The second route uses the backdoored random oracle model of
+Bauer, Farshim and Mazaheri~\cite{BFM18}, whose leakage oracle is strong
+enough to implement Simon's collision finder and where two independent
+instances combine into a collision-resistant hash function under a
+communication-complexity conjecture.
+
+Because proving the conjecture seems quite challenging, the paper
+formulates two relaxations to gauge its plausibility --- one using
+distributional black-box reductions, which need only work for a
+measure-one set of implementations, and one using class reductions in the
+sense of Shaltiel~\cite{Sha20}, which need only work for efficient
+implementations --- and shows that both follow from the amplification
+conjecture about Simon's oracle. The distributional route falls short of
+the full conjecture because the measure-one set of auxiliary
+implementations depends on the one-way function, so no universal
+auxiliary primitive can be extracted; restricting to efficient one-way
+functions is what recovers a single implementation via Borel--Cantelli.
+Reduction terminology throughout follows~\cite{RTV04}.
+
+\section{Notation and parameters}\label{sec:notation}
+
+\begin{itemize}
+\item $\lambda\in\mathbb N$ is the security parameter; PPT means
+  probabilistic polynomial time; an \emph{oracle-aided PPT} machine runs
+  in polynomial time relative to every oracle, counting each oracle call
+  as one step.
+\item $\Fc$ denotes the primitive of one-way functions, $\CRHc$ the
+  primitive of collision-resistant hash functions, and $\Zc$ an auxiliary
+  primitive; all three are cryptographic primitives in the sense of
+  Definition~\ref{def:prim}.
+\item $(\Fc,\Zc)$ denotes the joint primitive whose implementations are
+  pairs $(\Fs,\Zs)$ of implementations of $\Fc$ and $\Zc$, and which is
+  broken when either component is broken.
+\item Calligraphic letters $\Pc,\Qc,\Zc,\Fc,\CRHc$ denote primitives;
+  sans-serif letters $\Ps,\Qs,\Zs,\Fs,\Hs$ denote particular
+  implementations of them.
+\end{itemize}
+
+The parameters are:
+\begin{itemize}
+\item $\lambda$, the security parameter.
+\item $\Zc$, the auxiliary primitive whose existence is asserted; the
+  whole content of the conjecture is that some such primitive exists.
+\item $\Fc$, the primitive of one-way functions
+  (Definition~\ref{def:owf}).
+\item $\CRHc$, the primitive of collision-resistant hash functions
+  (Definition~\ref{def:crh}).
+\end{itemize}
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{definition}[Cryptographic primitive]\label{def:prim}
+A \emph{cryptographic primitive} is a pair $\Pc=(F_{\Pc},R_{\Pc})$, where
+$F_{\Pc}$ is the set of functions \emph{implementing} $\Pc$ and $R_{\Pc}$
+is a relation; for $\Ps\in F_{\Pc}$, $(\Ps,A)\in R_{\Pc}$ means the
+adversary $A$ \emph{breaks} $\Ps$. At least one $\Ps\in F_{\Pc}$ must be
+computable by a PPT algorithm.
+\end{definition}
+
+\begin{definition}[Joint primitive]\label{def:joint}
+Given $\Pc=(F_{\Pc},R_{\Pc})$ and $\Qc=(F_{\Qc},R_{\Qc})$, the joint
+primitive $(\Pc,\Qc)$ has implementations $F_{\Pc}\times F_{\Qc}$, and
+$((\Ps,\Qs),(A_{\Pc},A_{\Qc}))$ lies in its breaking relation iff
+$(\Ps,A_{\Pc})\in R_{\Pc}$ or $(\Qs,A_{\Qc})\in R_{\Qc}$.
+\end{definition}
+
+\begin{definition}[Fully black-box reduction]\label{def:fbb}
+A \emph{fully black-box reduction} of a primitive $\Pc$ to a primitive
+$\Qc$ is a pair $(\Ps,\Ss)$ of oracle-aided PPT machines such that for
+every implementation $\Qs\in F_{\Qc}$:
+\begin{itemize}
+\item (implementation reduction) $\Ps^{\Qs}\in F_{\Pc}$; and
+\item (security reduction) for every function $A$ with
+  $(\Ps^{\Qs},A)\in R_{\Pc}$, it holds that
+  $(\Qs,\Ss^{\Qs,A})\in R_{\Qc}$.
+\end{itemize}
+We say $\Qc$ \emph{fully black-box implies} $\Pc$ if such a pair exists.
+\end{definition}
+
+\begin{definition}[Fully black-box helpfulness]\label{def:bbh}
+A primitive $\Qc$ is \emph{fully black-box helpful} for a primitive $\Pc$
+if there exists an auxiliary primitive $\Zc$ such that the joint
+primitive $(\Qc,\Zc)$ fully black-box implies $\Pc$, yet $\Zc$ alone does
+not fully black-box imply $\Pc$. (This is the negation of $\Qc$ being
+fully black-box useless for $\Pc$.)
+\end{definition}
+
+\begin{definition}[One-way functions]\label{def:owf}
+The primitive $\Fc$ of one-way functions has as implementations all
+functions $\Fs$, and an adversary $A$ breaks $\Fs$ if there is a
+polynomial $p$ such that for infinitely many $\lambda\in\mathbb N$,
+\[
+  \Pr_{x\sample\bits^{\lambda}}
+  \big[\Fs\big(A(1^{\lambda},\Fs(x))\big)=\Fs(x)\big]
+  \ \ge\ \frac{1}{p(\lambda)} .
+\]
+\end{definition}
+
+\begin{remark}[what the paper actually states]\label{rem:owfrecon}
+The paper's Definition~2.6 (p.~10) defines a one-way function as an
+oracle-aided PPT machine relative to an oracle, secure against PPT
+adversaries with negligible advantage. The breaking relation displayed in
+Definition~\ref{def:owf} is the correct negation of that negligibility
+requirement, and the paper's Definition~2.2 does quantify over arbitrary
+functions $A$; but the reading of $F_{\Fc}$ as ``all functions $\Fs$'' is
+a reconstruction from the paper's usage $\Fs\in F_{\Fc}$ on p.~31 rather
+than a definition the paper gives.
+\end{remark}
+
+\begin{definition}[Collision-resistant hash functions]\label{def:crh}
+The primitive $\CRHc$ of collision-resistant hash functions has as
+implementations keyed compressing functions $\Hs$, which map a key
+$k\in\Kc_{\lambda}$ and an input $x$ to a shorter digest $\Hs(k,x)$; an
+adversary $A$ breaks $\Hs$ if there is a polynomial $p$ such that for
+infinitely many $\lambda\in\mathbb N$,
+\begin{align*}
+  \Pr_{k\sample\Kc_{\lambda}}\big[&(x,x')\sample A(1^{\lambda},k)\;:\\
+    &\ x\neq x'\ \wedge\ \Hs(k,x)=\Hs(k,x')\big]
+    \ \ge\ \frac{1}{p(\lambda)} .
+\end{align*}
+\end{definition}
+
+\begin{remark}[the syntax of $\CRHc$ is not fixed by the
+paper]\label{rem:crhrecon}
+The paper gives no definition of collision-resistant hash functions:
+its Section~2.2 (pp.~10--11) defines one-way functions (Definition~2.6),
+key agreement (Definition~2.7) and (approximate) indistinguishability
+obfuscation (Definition~2.8) only. Definition~\ref{def:crh} is therefore
+supplied by the drafter of this record, and is deliberately generic,
+since the paper leaves both the syntax and the compression parameters
+unspecified and any standard instantiation is intended. For concreteness
+one may read $\Kc_{\lambda}=\bits^{\lambda}$ with inputs
+$x\in\bits^{2\lambda}$ and digests $\Hs(k,x)\in\bits^{\lambda}$, but
+those parameters, and the compression ratio they fix, are the drafter's
+instantiation and not the paper's.
+\end{remark}
+
+\begin{conjecture}[one-way functions are black-box helpful for collision
+resistance]\label{conj:main}
+There exists a cryptographic primitive $\Zc$ such that:
+\begin{enumerate}
+\item there exists a fully black-box reduction of $\CRHc$ to the joint
+  primitive $(\Fc,\Zc)$; and
+\item there exists no fully black-box reduction of $\CRHc$ to $\Zc$
+  alone.
+\end{enumerate}
+Equivalently: $\Fc$ is \emph{fully black-box helpful} for $\CRHc$.
+\end{conjecture}
+
+\begin{remark}[the paper's own phrasing]\label{rem:phrasing}
+The conjecture is stated in the paper as ``One-way functions are fully
+black-box helpful for collision-resistant hash functions'' (p.~29), and
+announced already in the introduction as ``Indeed, we conjecture the
+opposite: OWFs are black-box helpful for building CRHFs'' (p.~7). The
+notion is defined there as: ``we call primitive Q black-box helpful (BBH)
+for P, if there exists an auxiliary primitive Z such that there exists a
+black-box construction of P from (Q, Z), but there exists no black-box
+construction of P from Z alone'' (p.~1). The unfolding in
+Conjecture~\ref{conj:main} and Definition~\ref{def:bbh} is a
+reconstruction at the level of primitives: the paper says of its
+Section~6 that it maintains ``a relatively informal discussion'', so
+while the unfolding matches the paper's informal definition and its
+formal distributional analogue (Definition~6.4), it is not stated by the
+paper in this form.
+\end{remark}
+
+\begin{remark}[openness]\label{rem:open}
+The conjecture is entirely open, and so is its complement. ``At first
+sight, it is not clear how one would extend Simon's strategy to prove
+that one-way functions are BBU for CRHFs. In fact, we believe that this
+is inherent: we conjecture that the answer to the above question is no''
+(p.~29), and ``While we believe that Conjecture 6.1 holds, proving it
+seems quite challenging'' (p.~29). Refuting the conjecture means proving
+that one-way functions are fully black-box \emph{useless} for collision
+resistance, which is itself a strong and unproved statement; a would-be
+refuter should be clear which direction is being attacked.
+\end{remark}
+
+\begin{remark}[what is proved]\label{rem:progress}
+``Towards getting a better understanding of its plausibility, we
+introduce two natural relaxations of the conjecture, and show that each
+of these natural relaxations would follow from a plausible conjecture
+regarding Simon's oracle, which might be of independent interest''
+(p.~29). Concretely, Theorem~6.8 shows that the distributional
+relaxation (Conjecture~6.5) follows from the amplification conjecture
+about Simon's oracle (Conjecture~6.7), and Theorem~6.12 shows that the
+class-reduction relaxation (Conjecture~6.11) follows from the same
+conjecture, using a Borel--Cantelli argument over the countable class of
+efficient one-way functions to extract a single auxiliary implementation
+that works for all of them. The distributional statement does not upgrade
+to the full conjecture because, in the paper's words (p.~32), ``the
+measure 1 of implementations $\Zs$ in $F_{\Zc}$ needs not be the same for
+every $\Fs$, which is the reason why we cannot extract from this proof a
+universal primitive''. Section~6.4 records a second, independent route via
+backdoored random oracles~\cite{BFM18}, conditional on a
+communication-complexity conjecture from that work.
+\end{remark}
+
+\begin{remark}[caveats for a reviewer]\label{rem:caveats}
+Four things a reviewer should check. First, the formalization of $\CRHc$
+is the drafter's (Remark~\ref{rem:crhrecon}); nothing in the conjecture
+should turn on keyed versus unkeyed hashing, or on the compression ratio,
+and that should be confirmed. Second, the primitive-level unfolding of
+``fully black-box helpful'' is a reconstruction from a section the paper
+itself calls informal (Remark~\ref{rem:phrasing}). Third, the direction
+of attack matters: a refutation is a uselessness theorem, not merely the
+absence of a helpful $\Zc$ (Remark~\ref{rem:open}). Fourth, no
+resolution since January~2021 is known to the author of this record, but
+follow-up work on one-way product functions and on Simon's oracle has not
+been exhaustively surveyed.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem[BFM18]{BFM18}
+Balthazar Bauer, Pooya Farshim, and Sogol Mazaheri.
+\emph{Combiners for backdoored random oracles}.
+Advances in Cryptology --- CRYPTO 2018, Part II, volume 10992 of Lecture
+Notes in Computer Science, pages 272--302, Springer, 2018.
+
+\bibitem[Fis02]{Fis02}
+Marc Fischlin.
+\emph{On the impossibility of constructing non-interactive
+statistically-secret protocols from any trapdoor one-way function}.
+Topics in Cryptology --- CT-RSA 2002, volume 2271 of Lecture Notes in
+Computer Science, pages 79--95, Springer, 2002.
+
+\bibitem[HL18]{HL18}
+Justin Holmgren and Alex Lombardi.
+\emph{Cryptographic hashing from strong one-way functions (or: One-way
+product functions and their applications)}.
+59th Annual Symposium on Foundations of Computer Science, pages
+850--858, IEEE Computer Society Press, 2018.
+
+\bibitem[IR89]{IR89}
+Russell Impagliazzo and Steven Rudich.
+\emph{Limits on the provable consequences of one-way permutations}.
+21st Annual ACM Symposium on Theory of Computing, pages 44--61, ACM
+Press, 1989.
+
+\bibitem[RTV04]{RTV04}
+Omer Reingold, Luca Trevisan, and Salil P. Vadhan.
+\emph{Notions of reducibility between cryptographic primitives}.
+TCC 2004: 1st Theory of Cryptography Conference, volume 2951 of Lecture
+Notes in Computer Science, pages 1--20, Springer, 2004.
+
+\bibitem[Sha20]{Sha20}
+Ronen Shaltiel.
+\emph{Is it possible to improve Yao's XOR lemma using reductions that
+exploit the efficiency of their oracle?}
+APPROX/RANDOM 2020, Schloss Dagstuhl--Leibniz-Zentrum fuer Informatik,
+2020.
+
+\bibitem[Sim98]{Sim98}
+Daniel R. Simon.
+\emph{Finding collisions on a one-way street: Can secure hash functions
+be based on general assumptions?}
+Advances in Cryptology --- EUROCRYPT'98, volume 1403 of Lecture Notes in
+Computer Science, pages 334--345, Springer, 1998.
+
+\end{conjurabibliography}
+
+\end{document}

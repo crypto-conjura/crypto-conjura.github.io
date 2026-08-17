@@ -1,0 +1,254 @@
+{
+  "pdf": {
+    "name": "2022-1285.pdf",
+    "sha256": "8d37b65942fb164bb733a36dd85545fa92a21b4942ae816e41cbbe2968c8c85e",
+    "pages": 30
+  },
+  "run": {
+    "at": "2026-08-17T20:13:14Z",
+    "backend": "cli",
+    "effort": "high"
+  },
+  "document": {
+    "title": "Lower Bounds for the Number of Decryption Updates in Registration-Based Encryption",
+    "authors": [
+      "Mohammad Mahmoody",
+      "Wei Qi",
+      "Ahmadreza Rahimi"
+    ],
+    "year": "2022",
+    "venue_or_archive": "IACR Cryptology ePrint Archive; the acknowledgements thank the anonymous reviewers of TCC 2022, so the paper appeared at TCC 2022",
+    "identifier": "ePrint 2022/1285 (taken from the file name; no ePrint number is printed on the pages)",
+    "citation_confidence": "inferred"
+  },
+  "candidate": {
+    "slug": "rbe-dynamic-update-times",
+    "title": "Update Lower Bounds for Registration-Based Encryption with Key-Dependent Update Times",
+    "subtitle": "dropping the fixed-update-times hypothesis",
+    "category": "Information-Theoretic Cryptography",
+    "openness_kind": "paper-states-open",
+    "pages": [
+      4,
+      9,
+      10,
+      11,
+      22
+    ],
+    "one_line": "The known trade-off between the number of decryption updates and the length of the public parameter in registration-based encryption should still hold when the times at which parties receive updates are allowed to depend on the registered public keys.",
+    "informal": "In registration-based encryption, each party generates its own keys and registers the public one with a key curator, who maintains a short public parameter that anybody can use to encrypt to any registered identity. Because that parameter is short, a party who registered earlier may have to come back to the curator from time to time and fetch \"decryption update\" information in order to keep decrypting. Every known scheme makes a party fetch about $\\log n$ updates over the course of $n$ registrations, and there is a nearly matching lower bound — but the lower bound only covers schemes whose update schedule is fixed in advance, so that a party knows from its own registration time and the number of parties registered so far exactly when it will need an update. The conjecture is that this restriction is inessential: the same trade-off between the number of updates and the length of the public parameter holds for every scheme, including one whose update schedule is allowed to react to the public keys that were registered. Concretely, a secure scheme whose public parameter stays polylogarithmic must force some party to fetch almost logarithmically many updates, however cleverly its update schedule depends on the keys.",
+    "notation_latex": "\\noindent\n$\\kappa$ is the security parameter and $\\mathrm{negl}(\\kappa)$ denotes a negligible function. $n$ is the number of registered identities, $\\mathsf{pp}_i$ is the public parameter held by the key curator after $i$ identities have registered, and\n\\[\n\\alpha(n) \\;=\\; \\max_{i \\le n} |\\mathsf{pp}_i|\n\\]\nis the maximum length (in bits) of the public parameter over the first $n$ registrations, maximised over executions. $d(n)$ is the maximum, over executions in which at most $n$ identities register, of the number of times the update algorithm $\\mathsf{Upd}$ is invoked for a single identity. $\\rho$ is the completeness probability of the scheme (Definition~\\ref{def:comp} below), $\\ell \\in \\mathbb{N}$ is a free parameter of the statement, $\\delta$ is an inverse-polynomial slack, $\\binom{a}{b}$ is a binomial coefficient, $\\ln$ is the natural logarithm and $\\log$ is the base-$2$ logarithm.",
+    "definitions_latex": "\\begin{definition}[Registration-based encryption, syntax]\\label{def:rbe}\nA \\emph{registration-based encryption} (RBE) scheme is a tuple of PPT algorithms $\\Pi = (\\mathsf{Gen}, \\mathsf{Reg}, \\mathsf{Enc}, \\mathsf{Upd}, \\mathsf{Dec})$, used together with a common random string $\\mathsf{crs} \\leftarrow \\{0,1\\}^{\\mathrm{poly}(\\kappa)}$ that is sampled once and published:\n\\begin{itemize}\n  \\item $\\mathsf{Gen}(1^{\\kappa}) \\to (\\mathsf{pk},\\mathsf{sk})$: run locally by a party that wishes to register.\n  \\item $\\mathsf{Reg}^{[\\mathsf{aux}]}(\\mathsf{crs},\\mathsf{pp},\\mathsf{id},\\mathsf{pk}) \\to \\mathsf{pp}'$: \\emph{deterministic}, run by the \\emph{key curator} (KC) with read/write access to an auxiliary state $\\mathsf{aux}$ that it may modify; it outputs the updated public parameter. The system is initialised with $\\mathsf{pp} = \\mathsf{aux} = \\bot$.\n  \\item $\\mathsf{Enc}(\\mathsf{crs},\\mathsf{pp},\\mathsf{id},m) \\to \\mathsf{ct}$.\n  \\item $\\mathsf{Upd}^{\\mathsf{aux}}(\\mathsf{pp},\\mathsf{id},\\mathsf{pk}) \\to u$: \\emph{deterministic}, run by the KC with read-only access to $\\mathsf{aux}$; it outputs update information for $\\mathsf{id}$.\n  \\item $\\mathsf{Dec}(\\mathsf{sk},u,\\mathsf{ct}) \\to m$: \\emph{deterministic}; it outputs a message $m \\in \\{0,1\\}^{*}$, or $\\bot$ (syntax error), or the special symbol $\\mathsf{GetUpd}$, indicating that more recent update information than $u$ may be needed.\n\\end{itemize}\n\\end{definition}\n\n\\begin{definition}[$\\rho$-completeness with on-demand updates]\\label{def:comp}\nConsider the following game between a challenger $\\mathcal{C}$ and a computationally unbounded adversary $\\mathcal{A}$ that is limited to $\\mathrm{poly}(\\kappa)$ rounds of interaction. $\\mathcal{C}$ sets $\\mathsf{pp} = \\mathsf{aux} = u = \\bot$, $\\mathcal{D} = \\emptyset$, $\\mathsf{id}^{*} = \\bot$, $t = 0$, samples $\\mathsf{crs}$ and sends it to $\\mathcal{A}$. In each round $\\mathcal{A}$ performs exactly one of:\n\\begin{enumerate}\n  \\item \\textbf{Registering a non-target identity.} $\\mathcal{A}$ sends $(\\mathsf{id},\\mathsf{pk})$ with $\\mathsf{id} \\notin \\mathcal{D}$ (the key may be arbitrary and adversarial); $\\mathcal{C}$ sets $\\mathsf{pp} := \\mathsf{Reg}^{[\\mathsf{aux}]}(\\mathsf{crs},\\mathsf{pp},\\mathsf{id},\\mathsf{pk})$ and $\\mathcal{D} := \\mathcal{D} \\cup \\{\\mathsf{id}\\}$.\n  \\item \\textbf{Registering the target identity} (allowed only if $\\mathsf{id}^{*} = \\bot$). $\\mathcal{A}$ sends $\\mathsf{id}^{*} \\notin \\mathcal{D}$; $\\mathcal{C}$ samples $(\\mathsf{pk}^{*},\\mathsf{sk}^{*}) \\leftarrow \\mathsf{Gen}(1^{\\kappa})$, sets $\\mathsf{pp} := \\mathsf{Reg}^{[\\mathsf{aux}]}(\\mathsf{crs},\\mathsf{pp},\\mathsf{id}^{*},\\mathsf{pk}^{*})$, $\\mathcal{D} := \\mathcal{D} \\cup \\{\\mathsf{id}^{*}\\}$, and returns $\\mathsf{pk}^{*}$ to $\\mathcal{A}$.\n  \\item \\textbf{Encrypting for the target} (allowed only if $\\mathsf{id}^{*} \\neq \\bot$). $\\mathcal{C}$ sets $t := t+1$; $\\mathcal{A}$ sends $m_t \\in \\{0,1\\}^{*}$; $\\mathcal{C}$ sets $m'_t := m_t$ and returns $\\mathsf{ct}_t \\leftarrow \\mathsf{Enc}(\\mathsf{crs},\\mathsf{pp},\\mathsf{id}^{*},m_t)$.\n  \\item \\textbf{Decrypting for the target.} $\\mathcal{A}$ sends $j \\in [t]$; $\\mathcal{C}$ sets $m'_j := \\mathsf{Dec}(\\mathsf{sk}^{*},u,\\mathsf{ct}_j)$, and if $m'_j = \\mathsf{GetUpd}$ then $\\mathcal{C}$ sets $u := \\mathsf{Upd}^{\\mathsf{aux}}(\\mathsf{pp},\\mathsf{id}^{*},\\mathsf{pk}^{*})$ and re-sets $m'_j := \\mathsf{Dec}(\\mathsf{sk}^{*},u,\\mathsf{ct}_j)$.\n\\end{enumerate}\n$\\mathcal{A}$ wins if $m'_j \\neq m_j$ for some $j \\in [t]$. The scheme is \\emph{$\\rho$-complete with on-demand updates} if every such $\\mathcal{A}$ wins with probability at most $1-\\rho$. The quantity $d(n)$ of the notation is the maximum number of invocations of $\\mathsf{Upd}$ in step~4 across all executions of this game in which $|\\mathcal{D}| \\le n$; no restriction is placed on \\emph{when} those invocations occur, so the update times may depend on the sampled keys and on $\\mathsf{crs}$.\n\\end{definition}\n\n\\begin{definition}[$0$-corruption security]\\label{def:sec}\nConsider the following game between a PPT adversary $\\mathcal{A}$ and a challenger $\\mathcal{C}$. $\\mathcal{C}$ sets $\\mathsf{pp} = \\mathsf{aux} = \\bot$, $\\mathcal{D} = \\emptyset$, samples $\\mathsf{crs}$ and sends it to $\\mathcal{A}$. Repeatedly, $\\mathcal{A}$ sends some $\\mathsf{id} \\notin \\mathcal{D}$; $\\mathcal{C}$ samples $(\\mathsf{pk},\\mathsf{sk}) \\leftarrow \\mathsf{Gen}(1^{\\kappa})$, sets $\\mathsf{pp} := \\mathsf{Reg}^{[\\mathsf{aux}]}(\\mathsf{crs},\\mathsf{pp},\\mathsf{id},\\mathsf{pk})$, $\\mathcal{D} := \\mathcal{D} \\cup \\{\\mathsf{id}\\}$, and returns $\\mathsf{pk}$ to $\\mathcal{A}$; the adversary never receives any secret key. Then $\\mathcal{A}$ sends a target $\\mathsf{id}^{*}$ (registered or not) together with two messages $m_0, m_1$ with $|m_0| = |m_1|$; $\\mathcal{C}$ samples $b \\leftarrow \\{0,1\\}$ and returns $\\mathsf{ct} \\leftarrow \\mathsf{Enc}(\\mathsf{crs},\\mathsf{pp},\\mathsf{id}^{*},m_b)$; $\\mathcal{A}$ outputs $b'$ and wins if $b' = b$. The scheme is \\emph{$0$-corruption secure} if every PPT $\\mathcal{A}$ wins with probability at most $\\tfrac12 + \\mathrm{negl}(\\kappa)$.\n\\end{definition}",
+    "formal_statement_latex": "Let $\\Pi = (\\mathsf{Gen},\\mathsf{Reg},\\mathsf{Enc},\\mathsf{Upd},\\mathsf{Dec})$ be an RBE scheme as in Definition~\\ref{def:rbe} that is $\\rho$-complete with on-demand updates as in Definition~\\ref{def:comp}, and let $n, d(n), \\alpha(n)$ be as in the notation. Then for every $n \\in \\mathbb{N}$, every $\\ell \\in \\mathbb{N}$ with\n\\[\n  n \\;\\ge\\; \\binom{\\ell + d(n)}{\\,d(n)+1\\,},\n\\]\nand every $\\delta = 1/\\mathrm{poly}(\\kappa)$, there is a $\\mathrm{poly}(\\kappa)$-time adversary $\\mathcal{A}$ that registers at most $n$ identities and wins the $0$-corruption security game of Definition~\\ref{def:sec} with probability at least\n\\[\n  \\rho \\;-\\; \\sqrt{\\frac{\\alpha(n)\\ln 2}{2\\ell}} \\;-\\; \\delta ,\n\\]\nthat is, with advantage at least $\\rho - \\tfrac12 - \\sqrt{\\alpha(n)\\ln 2/(2\\ell)} - \\delta$.\n\nIn particular, for every fixed $\\kappa$: if $\\Pi$ is $\\rho$-complete with $\\rho \\ge 0.99$, is $0$-corruption secure, and satisfies $\\alpha(n) \\le \\mathrm{poly}(\\kappa,\\log n)$ for all $n$, then $d(n)$ is not $o(\\log n/\\log\\log n)$; i.e.\\ there are a constant $c > 0$ (depending on $\\Pi$ and $\\kappa$) and infinitely many $n$ with $d(n) \\ge c \\log n / \\log\\log n$.",
+    "parameters": [
+      {
+        "symbol": "\\kappa",
+        "meaning": "security parameter of the RBE scheme"
+      },
+      {
+        "symbol": "n",
+        "meaning": "number of identities registered with the key curator"
+      },
+      {
+        "symbol": "d(n)",
+        "meaning": "maximum number of decryption updates a single identity needs over the first n registrations"
+      },
+      {
+        "symbol": "\\alpha(n)",
+        "meaning": "maximum bit length of the public parameter over the first n registrations"
+      },
+      {
+        "symbol": "\\ell",
+        "meaning": "free integer parameter of the trade-off; the binomial condition n >= C(l+d, d+1) trades l against d"
+      },
+      {
+        "symbol": "\\rho",
+        "meaning": "completeness probability of the scheme"
+      },
+      {
+        "symbol": "\\delta",
+        "meaning": "inverse-polynomial slack in the attack's success probability"
+      }
+    ],
+    "setting_latex": "Registration-based encryption (RBE) was introduced by Garg, Hajiabadi, Mahmoody and Rahimi \\cite{GHMR18} to obtain the functionality of identity-based encryption without a private-key generator holding a master secret. Parties generate their own keys, register their public keys with a \\emph{key curator} (KC) who runs a deterministic, transparent algorithm, and the KC maintains a short public parameter $\\mathsf{pp}_n$ that suffices to encrypt to any of the $n$ registered identities. Since $\\mathsf{pp}_n$ is required to be compact --- $|\\mathsf{pp}_n| \\le \\mathrm{poly}(\\kappa,\\log n)$ is the default level of compactness proposed in \\cite{GHMR18} --- a registered party may need to periodically fetch \\emph{decryption update} information from the KC in order to keep decrypting ciphertexts created under later public parameters. If compactness is dropped, RBE is trivial ($\\mathsf{pp}_n$ can simply be the concatenation of all public keys) and no updates are needed, so the interesting question is the trade-off between $|\\mathsf{pp}_n|$ and the number of updates.\n\nAll known constructions --- \\cite{GHMR18} from indistinguishability obfuscation, \\cite{GHM19} from standard assumptions such as CDH or LWE, and the verifiable variant of Goyal and Vusirikala \\cite{GV20} --- realise $|\\mathsf{pp}_n| \\le \\mathrm{poly}(\\kappa,\\log n)$ with $\\Theta(\\log n)$ updates per party, because $\\mathsf{pp}_n$ is (essentially) a Merkle-forest commitment to the registered public keys and a party's opening changes each time its tree is merged.\n\nThe source paper proves an almost matching lower bound: for any RBE whose \\emph{update times are fixed} --- i.e.\\ whether the $i$-th registered identity needs an update after the $j$-th registration is determined in advance by an ``update graph'' $G$ on the registration indices --- security forces $\\binom{|\\mathsf{pp}_n| + d}{d+1} \\ge n$, and hence $d \\ge \\Omega(\\log n/\\log\\log n)$ when $|\\mathsf{pp}_n| \\le \\mathrm{poly}(\\log n)$. The attack combines an information-theoretic part (the public parameter is short, so it has small mutual information with the keys of \\emph{some} group of parties, whose keys the adversary may therefore re-sample) with a combinatorial part (a low-out-degree forward DAG contains a long ``skipping sequence'', which tells the adversary which group to re-sample and which fake updates to manufacture for itself). The paper also extends the bound to update graphs that are an arbitrary fixed function of the registered identity names and of the CRS, and to schemes where only an average-case bound on the number of updates holds.\n\nWhat remains is exactly the case where the update times may depend on the sampled \\emph{public keys}, equivalently the standard RBE completeness notion in which a party fetches an update precisely when decryption returns $\\mathsf{GetUpd}$. The paper isolates why its technique fails there: the partition of the keys into groups is derived from the update graph, so if the graph can be correlated with $\\mathsf{pp}_n$ the graph itself carries information about the keys; and if one instead samples the graph from the execution, then re-sampling the keys of a group can change the update times, so even an adversary holding the \\emph{real} keys of that group may fail to decrypt. The paper points to data-dependent memory-hard functions \\cite{BH22}, where provable barriers for data-\\emph{independent} graphs were overcome by making the graph depend on the input, as a precedent for the possibility that key-dependent update schedules genuinely help. Note also that a merely contrived key-dependence does not suffice to refute the statement: the refuting scheme must beat the trade-off, not just have update times that formally mention the keys.",
+    "quotes": [
+      {
+        "page": 4,
+        "role": "statement",
+        "text": "Our main result provides an answer to the question above by proving an almost tight lower bound for the number of updates of any RBE schemes in which the update times are fixed."
+      },
+      {
+        "page": 4,
+        "role": "openness",
+        "text": "Our result leaves it open to either extend our lower bound to RBE schemes with dynamic update times that depend on the public keys or to invent new RBE schemes with dynamic update times that bypass our lower bound."
+      },
+      {
+        "page": 11,
+        "role": "openness",
+        "text": "Our completeness is stronger than (and implies) the standard completeness definition of RBEs; in our definition, the update times are fixed. It remains open to extend our lower bounds to the standard completeness definition of RBE or to find a new construction that bypasses our lower bound."
+      },
+      {
+        "page": 10,
+        "role": "progress",
+        "text": "As it remains open to potentially bypass our lower bound by leveraging on dynamic update times that depend on the registered keys, we point out a success story that might have some resemblance."
+      },
+      {
+        "page": 9,
+        "role": "progress",
+        "text": "Alternatively, one might try to first sample and fix the graph G based on the execution of the system."
+      }
+    ],
+    "status_note": "Proved when the update schedule is a fixed function of registration times (the paper's Theorem 4.1), and by the paper's Theorem 4.12 also when the schedule is any fixed function of the sequence of registered identity names and of the CRS. It is open exactly when the schedule may depend on the sampled public keys, equivalently under the standard RBE completeness notion where updates are fetched on demand after decryption returns GetUpd.",
+    "progress_note": "The paper proves the stated trade-off under the fixed-update-graph hypothesis, with the same conclusion and the same quantitative attack success probability (Theorem 4.1), and derives the corollaries that d = O(1) forces public parameters of length Omega(n^{1/(d+1)}) and that polylogarithmic public parameters force d = Omega(log n / loglog n) (Corollary 4.2). Section 4.4 removes the hypothesis in two directions: the update graph may be an arbitrary fixed function of the identity names and of the CRS (Theorem 4.12), and it suffices that at least binom(l+d, d+1) of the n identities receive at most d updates, which yields an amortized version (if the expected number of updates is d, then at least n/2 parties receive at most 2d). The lower bound is proved against a weakened security notion (0-corruption, where the adversary gets no secret keys), which makes it stronger.",
+    "why_interesting": "The fixed-update-times hypothesis is the single assumption standing between this theorem and an unconditional statement about all registration-based encryption. Settling it decides whether the logarithmic update cost of RBE is a real barrier for the primitive or an artifact of the fact that every known construction is built from Merkle forests whose shape depends only on how many parties have registered. A refutation would be at least as valuable: it would be the first RBE whose update schedule is genuinely key-dependent, a new design principle for the primitive, and the direct analogue of how data-dependent memory-hard functions escaped the barriers proved for data-independent ones.",
+    "why_clean": "The statement is the paper's own main theorem with exactly one hypothesis deleted; nothing else about the model, the security notion or the quantitative bound changes. Everything needed (RBE syntax, standard completeness with GetUpd, 0-corruption security) is standard and fits on a page, and both resolutions are recognisable: a proof is an explicit polynomial-time attack on every compact RBE, a refutation is a construction that beats the trade-off.",
+    "risks": "Two things a reviewer should check hardest. First, the formalisation of \"at most d updates\" once update times are dynamic: I took the worst case over executions of the on-demand completeness game, counting invocations of Upd for the target identity. The paper does not fix this definition for the dynamic case (its Definition 2.4 is graph-based), so an average-case or with-high-probability variant is defensible; the paper's own amortized extension suggests such variants should also be in scope, and someone attacking the problem should be told which version they are settling. Second, direction: the paper poses this as a disjunction (extend the bound, or construct a scheme that bypasses it) and does not say which it believes; if anything its pointer to data-dependent memory-hard functions hints that the authors consider a bypass plausible, so the conjecture as stated may well be refuted rather than proved, and it should be presented as \"prove or refute\". Also note the paper phrases this open problem twice (page 4 in terms of dynamic update times, page 11 in terms of the standard completeness definition); I have treated these as one problem, which I believe is right since on-demand updates are exactly key-dependent update times, but a reader who thinks they differ would see two candidates here. Finally, the RBE literature grew substantially after 2022 (registered ABE, pairing- and lattice-based schemes); I am not aware of any follow-up that either removes this hypothesis or exhibits a genuinely key-dependent update schedule, but I have not verified this against the post-2022 literature and someone should.",
+    "bibliography": [
+      {
+        "key": "GHMR18",
+        "authors": "Sanjam Garg, Mohammad Hajiabadi, Mohammad Mahmoody, and Ahmadreza Rahimi",
+        "title": "Registration-based encryption: Removing private-key generator from IBE",
+        "venue": "TCC 2018: 16th Theory of Cryptography Conference, Part I, LNCS 11239, pages 689-718, Springer",
+        "year": "2018",
+        "verified": "printed-in-source-bibliography"
+      },
+      {
+        "key": "GHM19",
+        "authors": "Sanjam Garg, Mohammad Hajiabadi, Mohammad Mahmoody, Ahmadreza Rahimi, and Sruthi Sekar",
+        "title": "Registration-based encryption from standard assumptions",
+        "venue": "PKC 2019: 22nd International Conference on Theory and Practice of Public Key Cryptography, Part II, LNCS 11443, pages 63-93, Springer",
+        "year": "2019",
+        "verified": "printed-in-source-bibliography"
+      },
+      {
+        "key": "GV20",
+        "authors": "Rishab Goyal and Satyanarayana Vusirikala",
+        "title": "Verifiable registration-based encryption",
+        "venue": "CRYPTO 2020, Part I, LNCS 12170, pages 621-651, Springer",
+        "year": "2020",
+        "verified": "printed-in-source-bibliography"
+      },
+      {
+        "key": "BH22",
+        "authors": "Jeremiah Blocki and Blake Holman",
+        "title": "Sustained space and cumulative complexity trade-offs for data-dependent memory-hard functions",
+        "venue": "Cryptology ePrint Archive, Paper 2022/832",
+        "year": "2022",
+        "verified": "printed-in-source-bibliography"
+      }
+    ]
+  },
+  "grounding": [
+    {
+      "quote": "Our main result provides an answer to the question above by proving an almost tight lower bound for the number of updates of any RBE schemes in which the update times are fixed.",
+      "claimed_page": 4,
+      "found_page": 4,
+      "coverage": 1.0,
+      "longest_run": 0.0,
+      "status": "exact",
+      "role": "statement"
+    },
+    {
+      "quote": "Our result leaves it open to either extend our lower bound to RBE schemes with dynamic update times that depend on the public keys or to invent new RBE schemes with dynamic update times that bypass our lower bound.",
+      "claimed_page": 4,
+      "found_page": 4,
+      "coverage": 1.0,
+      "longest_run": 0.0,
+      "status": "exact",
+      "role": "openness"
+    },
+    {
+      "quote": "Our completeness is stronger than (and implies) the standard completeness definition of RBEs; in our definition, the update times are fixed. It remains open to extend our lower bounds to the standard completeness definition of RBE or to find a new construction that bypasses our lower bound.",
+      "claimed_page": 11,
+      "found_page": 11,
+      "coverage": 1.0,
+      "longest_run": 0.0,
+      "status": "exact",
+      "role": "openness"
+    },
+    {
+      "quote": "As it remains open to potentially bypass our lower bound by leveraging on dynamic update times that depend on the registered keys, we point out a success story that might have some resemblance.",
+      "claimed_page": 10,
+      "found_page": 10,
+      "coverage": 1.0,
+      "longest_run": 0.0,
+      "status": "exact",
+      "role": "progress"
+    },
+    {
+      "quote": "Alternatively, one might try to first sample and fix the graph G based on the execution of the system.",
+      "claimed_page": 9,
+      "found_page": 9,
+      "coverage": 1.0,
+      "longest_run": 0.0,
+      "status": "exact",
+      "role": "progress"
+    }
+  ],
+  "verify": {
+    "checks": [
+      {
+        "name": "Existence",
+        "result": "pass",
+        "page": 4,
+        "finding": "The problem is posed verbatim on p. 4: \"Our result leaves it open to either extend our lower bound to RBE schemes with dynamic update times that depend on the public keys or to invent new RBE schemes with dynamic update times that bypass our lower bound.\" Restated on p. 11 as extending the bound to the standard completeness definition. All five of the draft's quotes match the PDF exactly, on the pages claimed (4, 9, 10, 11)."
+      },
+      {
+        "name": "Openness",
+        "result": "pass",
+        "page": 22,
+        "finding": "Read past the cited passages through the end. Section 4.4 (p. 22) states the boundary explicitly: the bound extends to graphs depending on \"the registered identities and the CRS (but not on the keys)\". Theorem 4.12 and the amortized remark (p. 23) are the final body results and both stay inside the fixed-graph regime; Appendices A-C are standard definitions, information-theoretic lemmas, and the tightness of Theorem 3.2. The key-dependent case is never resolved."
+      },
+      {
+        "name": "Strength",
+        "result": "pass",
+        "page": 17,
+        "finding": "The drafted statement is Theorem 4.1's conclusion with exactly one hypothesis removed - the fixed update graph - and replaced by on-demand completeness. That is precisely what the paper means by \"extend our lower bound\" (p. 4) / \"extend our lower bounds to the standard completeness definition\" (p. 11). Not a generalization beyond it: it does not touch the CRS/identity-dependence already proved (Thm 4.12), and it does not attempt the separate open problem of closing the 1/loglog n gap, which the draft correctly leaves out of the statement."
+      },
+      {
+        "name": "Quantifiers and parameters",
+        "result": "pass",
+        "page": 17,
+        "finding": "Clause by clause against Thm 4.1 and Cor. 4.2: binomial n >= C(l+d, d+1) same direction and same indices; alpha as an upper bound on |pp_i| over the first n registrations; success probability rho - sqrt(alpha*ln2/(2l)) - delta and advantage rho - 1/2 - ... reproduced exactly; delta = 1/poly(kappa) arbitrarily small, chosen after the scheme; d as max updates per single identity matches deg+(G) as out-degree (edge (i,j) = id_i updated after id_j registers). Cor. 4.2(3) reproduced including the \"infinitely many n\" reading and the constant depending on the scheme. Sole discrepancy: the corollary's proof assumes rho > 0.99, the draft writes rho >= 0.99; the bound still holds at 0.99 (forces alpha >= 0.69*l, well above the l/10 used), so this is not a defect."
+      },
+      {
+        "name": "Attribution",
+        "result": "pass",
+        "page": 4,
+        "finding": "The open problem is the harvested paper's own, raised about its own Theorem 1.1/4.1 in the introduction (p. 4) and again after its own definitions (p. 11). Nothing is borrowed from a cited work and presented as this paper's. BH22 is correctly presented as a cited analogy the paper points to, not as a result of this paper."
+      },
+      {
+        "name": "Definitions",
+        "result": "pass",
+        "page": 26,
+        "finding": "Def. 1 matches Def. 2.1 (p. 11): Reg deterministic with read/write aux, Upd deterministic with read-only aux, Dec deterministic outputting m, bottom, or GetUpd, system initialized pp = aux = bottom. Def. 3 is Def. 2.2 (p. 12) at k=0, an instantiation the paper explicitly sanctions. Def. 2 is Def. A.1 (p. 26) with negligible error generalized to 1-rho, which is what Thm 4.1's \"completeness probability rho\" must mean, and d(n) is counted exactly as A.1's efficiency clause counts it (\"total number of invocations of Upd for identity id* in Step 2(d)\"). Draft writes Upd(pp, id*, pk*) where A.1 abbreviates Upd(pp, id*); the three-argument form is the paper's own syntax in Def. 2.1, so this is expansion, not redefinition."
+      },
+      {
+        "name": "Fabrication",
+        "result": "pass",
+        "page": 23,
+        "finding": "Every attributed claim checks out: iO/CDH-LWE/verifiable constructions with poly(kappa, log n) pp and Theta(log n) updates (p. 3); the failure analysis for key-dependent graphs, both branches, nearly verbatim (p. 9); the BH22 data-dependent memory-hard function analogy (p. 10); Thm 4.12 covering identity names and CRS (pp. 22-23); the amortized version with \"at least n/2 of the parties ... at most 2d\" (p. 23); 0-corruption being a weaker security notion hence a stronger lower bound (p. 11); Cor. 4.2(1) giving Omega(n^{1/(d+1)}) (p. 17). All four bibliography entries match pp. 24-25 including volume and page numbers. The one flourish not literally in the paper is \"Merkle-forest ... each time its tree is merged\" where p. 3 says \"root of a Merkle tree\" whose decommitments go stale - same mechanism, background prose only, absent from the statement."
+      },
+      {
+        "name": "Self-containment",
+        "result": "pass",
+        "page": 0,
+        "finding": "Syntax, completeness with on-demand updates, and 0-corruption security are all given inline, and the notation block fixes kappa, n, alpha(n), d(n), l, rho, delta. A reader who has never opened the paper knows exactly what must be constructed (an attacker) and under what hypotheses. The only forward reference is internal (Definition ref:comp), which is supplied."
+      }
+    ],
+    "confidence": "high",
+    "corrections": [],
+    "fabrications": [],
+    "reason": "The decisive check is openness, and the paper draws the boundary itself in the one place a draft like this usually overreaches: Section 4.4 (p. 22) says the lower bound extends to update graphs depending on \\\"the registered identities and the CRS (but not on the keys)\\\", and nothing in Theorem 4.12, the amortized remark (p. 23), or Appendices A-C closes the key-dependent case - so the draft's residue is exactly the residue the paper leaves. Compared symbol by symbol with Theorem 4.1 and Corollary 4.2 (p. 17), the formal statement reproduces the binomial condition, the success probability rho - sqrt(alpha*ln2/(2l)) - delta, the quantifier order on delta, and the Omega(log n/loglog n) corollary without strengthening or weakening any clause, and the three inlined definitions are the paper's Def. 2.1, Def. 2.2 at k=0, and Def. A.1 with negligible error generalized to 1-rho. The only discrepancies I found are the corollary threshold written rho >= 0.99 where the paper's proof says rho > 0.99 (the arithmetic holds at 0.99 either way) and the background phrase \\\"Merkle-forest\\\" where p. 3 says \\\"Merkle tree\\\"; neither changes what a proof would have to establish.",
+    "verdict": "faithful"
+  },
+  "build": {
+    "compiled": true,
+    "chktex": [
+      "Warning 13 in statement.tex line 41: Intersentence spacing (`\\@') should perhaps be used.",
+      "Warning 2 in statement.tex line 89: Non-breaking space (`~') should have been used.",
+      "Warning 2 in statement.tex line 90: Non-breaking space (`~') should have been used."
+    ],
+    "lacheck": [],
+    "errors": []
+  }
+}

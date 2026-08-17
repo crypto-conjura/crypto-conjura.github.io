@@ -1,0 +1,294 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  Simultaneous inversion of a one-way function and a random permutation
+%  in the presence of Simon's collision finder.
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{SIMULTANEOUS INVERSION WITH A COLLISION FINDER}
+
+\newcommand{\Fs}{\mathsf{F}}          % the one-way function oracle
+\newcommand{\RP}{\mathsf{RP}}         % the random permutation
+\newcommand{\Coll}{\mathsf{Coll}}     % Simon's collision finder
+\newcommand{\Oc}{\mathsf{O}}
+\newcommand{\bits}{\{0,1\}}
+\newcommand{\Perm}{\mathrm{Perm}}
+\newcommand{\negl}{\mathrm{negl}}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{Simultaneous Inversion of a One-Way Function and a Random
+Permutation With a Collision Finder}
+\cjsubtitle{The strong amplification conjecture behind Simon's oracle}
+\cjstatus{Statement: AI-written from Geoffroy Couteau, Pooya Farshim and
+  Mohammad Mahmoody, \emph{Black-Box Uselessness: Composing Separations
+  in Cryptography}, IACR Cryptology ePrint Archive 2021, not yet checked
+  by a human. Open: the paper's weaker version without the collision
+  finder is settled only in the case where the hard function is itself a
+  random oracle and is open for an arbitrary one-way function, so the
+  version stated here, with the collision finder, is open in every case;
+  what the paper does establish is the two consequences, that this
+  conjecture implies both the distributional and the class-reduction
+  relaxations of its main helpfulness conjecture.}
+\cjcategory{\emph{Impossibility Results \& Black-Box Separations}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+Fix any function family that is hard to invert, in the sense that no
+efficient attacker succeeds on a random input with probability better
+than some bound. Now independently sample a random permutation, and hand
+the attacker a further oracle that, given any circuit built out of the
+permutation and out of recursive calls to that same further oracle,
+returns a random collision for it. The attacker is handed two challenges
+at once, the image of a random input under the hard function and the
+image of a random input under the permutation, and must recover both
+inputs. The conjecture is that its success probability is at most the
+hardness bound for the function, multiplied by the probability of
+guessing a permutation preimage outright, up to a polynomial factor. In
+words: the two inversion tasks are so independent that the attacker can
+do no better than solve them separately, and the collision-finding
+oracle does not help. The paper's weaker version of this statement, in
+which the collision finder is dropped, is known when the hard function
+is itself a random oracle but not when it is an arbitrary one-way
+function; the version with the collision finder is stated here as a
+conjecture and is not claimed to be known in any case. Beyond its own
+interest as a statement about random permutations, the conjecture
+matters because the collision-finding oracle is exactly Simon's, the one
+used to separate collision-resistant hashing from one-way functions, and
+because a known construction turns any pair of simultaneously
+hard-to-invert functions into a collision-resistant hash function.
+Proving it therefore settles two weakenings of the question of whether
+one-way functions can help build collision resistance.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+Simon~\cite{Sim98} separated collision-resistant hash functions from
+one-way functions by exhibiting a random permutation $\RP$ together with
+a collision finder $\Coll^{\RP}$, relative to which one-way permutations
+exist but collision resistance does not. It is standard~\cite{IR89} that
+a random permutation cannot be inverted with probability better than
+$\poly(\lambda)/2^{\lambda}$ for a measure-one choice of the
+permutation, and Simon's analysis shows that this survives the presence
+of the collision finder, and indeed the presence of any independent
+auxiliary oracle.
+
+The conjecture asks for the corresponding \emph{simultaneous} statement
+against an arbitrary independent hard function. The paper's motivation
+is a route to its main helpfulness conjecture. Holmgren and
+Lombardi~\cite{HL18} show how to build collision-resistant hash
+functions in a black-box way from exponentially secure one-way product
+functions, i.e.\ tuples of functions no efficient adversary can invert
+simultaneously on random inputs with probability better than
+$\negl(n)/2^{n}$; the paper notes in a footnote that their result as
+stated requires the two components to be equal and injective, with an
+extra-loss black-box reduction from an arbitrary pair. Taking one
+component to be an arbitrary one-way function $\Fs$ and the other to be
+$\RP$, the conjecture supplies exactly the product hardness the
+construction needs, and so yields an auxiliary primitive, namely a
+random permutation packaged with a collision finder, from which no
+collision-resistant hash function can be built alone, by Simon's
+separation, but from which one can be built once any one-way function is
+added. The paper proves that this route works for two relaxed notions of
+black-box reduction: one where reductions need only succeed for a
+measure-one set of implementations of the auxiliary primitive, and one
+where they are class reductions in the sense of Shaltiel~\cite{Sha20},
+restricted to the efficient one-way functions. The paper also flags a
+weaker version of the conjecture in which the collision finder is
+dropped, notes that it is known when $\Fs$ is itself a random oracle but
+not for an arbitrary one-way function, and says its study might be of
+interest beyond black-box helpfulness, for instance in hardness
+amplification. A footnote suggests an even weaker stepping stone: an
+$\varepsilon$-secure one-way permutation together with a plain random
+oracle. A second, independent route goes through the backdoored random
+oracle model of Bauer, Farshim and Mazaheri~\cite{BFM18}, whose leakage
+oracle can implement Simon's collision finder, conditional on a
+communication-complexity conjecture related to set intersection, and
+yielding in Section~6.4 the conclusion that a single backdoored random
+oracle, though black-box separated from collision-resistant hashing, is
+black-box helpful for it.
+
+\section{Notation and parameters}\label{sec:notation}
+
+Throughout, $\lambda\in\mathbb{N}$ is the security parameter and PPT
+abbreviates probabilistic polynomial time. An \emph{oracle-aided PPT
+machine} $A^{\Oc_1,\dots,\Oc_k}$ is a PPT machine with oracle access to
+$\Oc_1,\dots,\Oc_k$ that runs in probabilistic polynomial time for every
+choice of oracles, each oracle call counting as one step. We write
+$x\sample S$ for a uniform draw from a finite set $S$.
+
+Let $\Perm_\lambda$ denote the set of permutations of $\bits^{\lambda}$.
+We write
+$\Fs=\{\Fs_\lambda\colon\bits^{\lambda}\to\bits^{*}\}_{
+\lambda\in\mathbb{N}}$ for a family of functions regarded as a single
+oracle, $\RP=\{\RP_\lambda\}_{\lambda\in\mathbb{N}}$ with
+$\RP_\lambda\in\Perm_\lambda$ for a permutation family regarded as a
+single oracle, and $\Coll^{\RP}$ for the collision finder attached to
+$\RP$. The function $\varepsilon\colon\mathbb{N}\to[0,1]$ measures the
+hardness of inverting $\Fs$, and $q$ denotes a positive polynomial. We
+write $\pi$ and $\Coll^{\pi}$ when referring to the same two objects as
+they are named in Simon's original separation.
+
+The parameters of the statement are:
+\begin{itemize}
+\item $\lambda$, the security parameter, also the input length of both
+  challenge functions.
+\item $\varepsilon$, the inversion hardness of the one-way function
+  oracle; universally quantified over functions from the naturals to the
+  unit interval.
+\item $\Fs$, an arbitrary $\varepsilon$-secure one-way function family,
+  independent of the permutation.
+\item $\RP$, a uniformly random permutation family on bit strings of
+  each length.
+\item $\Coll^{\RP}$, Simon's collision finder for circuits built from
+  the permutation and from recursive calls to itself.
+\item $A$, the attacker, an oracle-aided PPT machine given all three
+  oracles and both challenges.
+\item $q$, the polynomial slack in the conclusion, allowed to depend on
+  the attacker.
+\end{itemize}
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{definition}[$\varepsilon$-secure one-way function
+oracle]\label{def:owf}
+Let $\varepsilon\colon\mathbb{N}\to[0,1]$. A family
+$\Fs=\{\Fs_\lambda\colon\bits^{\lambda}\to\bits^{*}\}_{
+\lambda\in\mathbb{N}}$ is \emph{$\varepsilon$-secure one-way} if for
+every oracle-aided PPT machine $B$ and all sufficiently large
+$\lambda\in\mathbb{N}$,
+\begin{align*}
+  \Pr_{x\sample\bits^{\lambda}}\big[\Fs_{\lambda}\big(&
+    B^{\Fs}(1^{\lambda},\Fs_{\lambda}(x))\big)\\
+  &=\Fs_{\lambda}(x)\big]\ \le\ \varepsilon(\lambda).
+\end{align*}
+\end{definition}
+
+\begin{definition}[Random permutation with Simon's collision
+finder]\label{def:coll}
+The \emph{random permutation}
+$\RP=\{\RP_\lambda\}_{\lambda\in\mathbb{N}}$ is obtained by drawing
+$\RP_\lambda\sample\Perm_\lambda$ independently for every $\lambda$; the
+associated measure on families is the product of the uniform measures.
+
+The \emph{collision finder} $\Coll^{\RP}$ is a randomised oracle defined
+by induction on the nesting depth of $\Coll$-gates. On input a circuit
+$C$ with $\RP$-gates and $\Coll^{\RP}$-gates computing a function
+$\bits^{m}\to\bits^{m'}$, it returns a pair $(u,u')$ obtained by drawing
+$u\sample\bits^{m}$ and then
+$u'\sample\{v\in\bits^{m}: C(v)=C(u)\}$, so that $C(u)=C(u')$. Fixing,
+for every circuit, the coins used in this sampling yields a
+deterministic collision finder for $\RP$, and \emph{with probability $1$
+over the choice of $\Coll^{\RP}$} refers to the induced measure on these
+deterministic choices. This is the oracle written $\Coll^{\pi}$ for a
+random permutation $\pi$ in Simon's separation.
+\end{definition}
+
+\begin{conjecture}[Simultaneous inversion of $\Fs$ and $\RP$ given
+$\Coll^{\RP}$]\label{conj:main}
+Let $\varepsilon\colon\mathbb{N}\to[0,1]$. For every family
+$\Fs=\{\Fs_\lambda\}_{\lambda\in\mathbb{N}}$ that is
+$\varepsilon$-secure one-way (Definition~\ref{def:owf}) and every
+oracle-aided PPT machine $A$, there exists a polynomial $q$ such that,
+with probability $1$ over the choice of the random permutation $\RP$ and
+of the collision finder $\Coll^{\RP}$ (Definition~\ref{def:coll}), for
+all sufficiently large $\lambda\in\mathbb{N}$,
+\begin{multline*}
+  \Pr\big[(x_1,x_2)=A^{\Fs,\RP,\Coll^{\RP}}\big(1^{\lambda},\\
+    \Fs_{\lambda}(x_1),\ \RP_{\lambda}(x_2)\big)\big]\\
+  \le\ \varepsilon(\lambda)\cdot\frac{q(\lambda)}{2^{\lambda}},
+\end{multline*}
+where the probability is taken over
+$(x_1,x_2)\sample(\bits^{\lambda})^{2}$ and the coins of $A$.
+\end{conjecture}
+
+\begin{remark}[Independence of the two challenges]\label{rem:indep}
+Note that $\Fs$ is fixed before $\RP$ and $\Coll^{\RP}$ are sampled, so
+it is independent of them.
+\end{remark}
+
+\begin{remark}[Openness]\label{rem:open}
+The paper does not prove the conjecture: ``We did not manage to prove
+this conjecture, and leave it as an interesting open problem which might
+be of independent interest'' (p.~8). Of the weak version without the
+collision finder it records that ``The above conjecture is known in the
+case where F is itself a random oracle, but not when it is an arbitrary
+one-way function'' (p.~31), and it introduces the version stated here
+with ``In our context, though, we need an even stronger version, which
+we still deem plausible, where the random permutation comes with a
+collision finder Coll'' (p.~31). What the paper does prove are two
+consequences: Theorem~6.8, that the conjecture yields distributional
+black-box helpfulness of one-way functions for collision-resistant hash
+functions, and Theorem~6.12, that it yields class helpfulness over the
+class of efficient one-way functions, the latter via a Borel--Cantelli
+argument extracting a single auxiliary implementation good for all
+countably many efficient one-way functions. Both proofs are given as
+sketches, and both instantiate the pair of simultaneously hard functions
+as the given one-way function together with the random permutation,
+invoking Simon's analysis to see that the permutation stays
+exponentially one-way in the presence of the collision finder and of any
+independent oracle.
+\end{remark}
+
+\begin{remark}[Caveats for a reviewer]\label{rem:caveats}
+The printed conjecture writes the first challenge as $\mathsf{P}(x_1)$
+rather than $\Fs(x_1)$ in both the weak and the strong version. It is
+written here as $\Fs(x_1)$, which is what the surrounding prose and the
+proof of Theorem~6.8 require, but a reviewer should confirm this
+reading. Second, the printed display carries no quantifier over
+$\lambda$ and leaves $\poly(\lambda)$ unquantified; this has been read
+as ``there is a polynomial $q$, depending on the attacker, such that the
+bound holds for all sufficiently large $\lambda$'', and a reading with
+``for all $\lambda$'' would be formally stronger. Third, the conjecture
+as printed demands exact recovery of both preimages,
+$(x_1,x_2)=A(\dots)$, whereas the statement derived from it in the proof
+of Theorem~6.8 is the weaker any-preimage form; the paper's
+exact-recovery form has been kept. Fourth, the definition of the
+collision finder above spells out the recursion by nesting depth and the
+induced measure on deterministic finders, details the paper leaves
+to~\cite{Sim98}; the intended object is Simon's, and any discrepancy
+should be resolved in Simon's favour. Finally, the post-2021 literature
+has not been checked exhaustively for a proof or a counterexample.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem[BFM18]{BFM18}
+Balthazar Bauer, Pooya Farshim, and Sogol Mazaheri.
+\emph{Combiners for backdoored random oracles}.
+CRYPTO 2018, Part II, LNCS 10992, pages 272--302, Springer, 2018.
+
+\bibitem[HL18]{HL18}
+Justin Holmgren and Alex Lombardi.
+\emph{Cryptographic hashing from strong one-way functions (or: One-way
+product functions and their applications)}.
+59th Annual Symposium on Foundations of Computer Science, pages
+850--858, IEEE Computer Society Press, 2018.
+
+\bibitem[IR89]{IR89}
+Russell Impagliazzo and Steven Rudich.
+\emph{Limits on the provable consequences of one-way permutations}.
+21st Annual ACM Symposium on Theory of Computing, pages 44--61, ACM
+Press, 1989.
+
+\bibitem[Sha20]{Sha20}
+Ronen Shaltiel.
+\emph{Is it possible to improve Yao's XOR lemma using reductions that
+exploit the efficiency of their oracle?}
+APPROX/RANDOM 2020, Schloss Dagstuhl--Leibniz-Zentrum fur Informatik,
+2020.
+
+\bibitem[Sim98]{Sim98}
+Daniel R. Simon.
+\emph{Finding collisions on a one-way street: Can secure hash functions
+be based on general assumptions?}
+EUROCRYPT'98, LNCS 1403, pages 334--345, Springer, 1998.
+
+\end{conjurabibliography}
+
+\end{document}

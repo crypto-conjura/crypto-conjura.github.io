@@ -64,8 +64,10 @@ from __future__ import annotations
 import argparse
 import datetime
 import difflib
+import fcntl
 import hashlib
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -162,7 +164,7 @@ class PdfDoc:
     def _extract(self):
         proc = subprocess.run(
             ["pdftotext", "-layout", str(self.path), "-"],
-            capture_output=True, text=True,
+            capture_output=True, text=True, errors="replace",
         )
         if proc.returncode != 0:
             raise RuntimeError(f"pdftotext failed on {self.path.name}: {proc.stderr.strip()}")
@@ -429,7 +431,7 @@ def compile_check(folder, no_compile=False):
     for _ in range(2):
         proc = subprocess.run(
             ["pdflatex", "-interaction=nonstopmode", "-halt-on-error", tex.name],
-            cwd=folder, capture_output=True, text=True,
+            cwd=folder, capture_output=True, text=True, errors="replace",
         )
     result["compiled"] = proc.returncode == 0
     if proc.returncode != 0:
@@ -447,7 +449,7 @@ def compile_check(folder, no_compile=False):
     ):
         if not shutil.which(tool):
             continue
-        proc = subprocess.run(cmd, cwd=folder, capture_output=True, text=True)
+        proc = subprocess.run(cmd, cwd=folder, capture_output=True, text=True, errors="replace")
         lines = [ln for ln in (proc.stdout + proc.stderr).splitlines() if ln.strip()]
         result[tool] = [ln for ln in lines if head(ln)][:20]
 
@@ -579,19 +581,35 @@ def read_ledger():
 
 
 def write_ledger(ledger):
-    """Merge into whatever is on disk, then write.
+    """Merge into whatever is on disk, then replace it atomically.
 
     Papers are read one process per paper when there are several to get
     through, and each holds the ledger it read at startup. Writing that back
-    wholesale would drop every entry a sibling added in the meantime; merging
-    first costs nothing, since the entries are keyed by content hash and two
-    processes never write the same one.
+    wholesale would drop every entry a sibling added in the meantime, so the
+    on-disk copy is merged in first.
+
+    Merging alone is not enough, and this was learned the hard way: read and
+    write are two syscalls, so two processes can both read the same state and
+    the later writer still erases the earlier one's entry. The whole
+    read-modify-write therefore runs under an exclusive lock on a sidecar
+    file, and the write itself goes to a temporary file that is renamed over
+    the target, so a reader never sees a half-written ledger either.
     """
     PROCESSED.mkdir(parents=True, exist_ok=True)
-    merged = read_ledger()
-    merged["documents"].update(ledger["documents"])
-    ledger["documents"] = merged["documents"]
-    LEDGER.write_text(json.dumps(merged, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    lock = LEDGER.with_suffix(".lock")
+    with open(lock, "w") as handle:
+        fcntl.flock(handle, fcntl.LOCK_EX)
+        try:
+            merged = read_ledger()
+            merged["documents"].update(ledger["documents"])
+            ledger["documents"] = merged["documents"]
+            tmp = LEDGER.with_suffix(".json.tmp")
+            tmp.write_text(
+                json.dumps(merged, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+            )
+            os.replace(tmp, LEDGER)
+        finally:
+            fcntl.flock(handle, fcntl.LOCK_UN)
 
 
 def now():
@@ -770,6 +788,12 @@ def process(pdf_path, backend, prompts, args, ledger):
         "candidates_found": len(candidates),
         "conjectures_written": [str(f.relative_to(ROOT)) for f in written],
         "dropped": [{"title": t, "why": w} for t, w in dropped],
+        # The leads the extractor looked at and never promoted, in full. The
+        # console line is clipped to fit a terminal, and a paper that yields
+        # nothing is precisely the one whose reasoning you want afterwards --
+        # it is the only evidence of where the bar sits, and without it a run
+        # of empty papers cannot be told from a bar set too high.
+        "rejected": extracted.get("rejected") or [],
     }
     return written, "ok", doc.sha256
 
@@ -897,7 +921,7 @@ def main():
     for pdf in pdfs:
         try:
             written, status, sha = process(pdf, backend, prompts, args, ledger)
-        except (ModelError, RuntimeError, OSError) as exc:
+        except Exception as exc:  # one bad paper must not end the run
             print(f"  ! {exc}")
             print("    Left in place so the run can be retried.")
             failures.append((pdf.name, str(exc)))

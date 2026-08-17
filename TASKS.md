@@ -1,6 +1,6 @@
 # Tasks
 
-Split into two sections: **Website and repository** (~7.5h) covers the site, its build tooling and the repository's configuration; **Conjectures and papers** (~14.0h) covers the mathematics — proving conjectures, and writing and checking the papers that report them. Within each section, tasks are ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~20.5h** (rough; the UC Encyclopedia content dominates the uncertainty and could run well over its estimate).
+Split into two sections: **Website and repository** (~5.0h) covers the site, its build tooling and the repository's configuration; **Conjectures and papers** (~6.0h) covers the mathematics — proving conjectures, and writing and checking the papers that report them. Within each section, tasks are ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~19.0h** (rough; the UC Encyclopedia content dominates the uncertainty and could run well over its estimate).
 
 Last reconciled against `main` at `d06523e` on 17 August 2026.
 
@@ -23,28 +23,6 @@ Completed tasks are deleted from this file rather than checked off and kept: thi
   What the estimate is still carrying is the part the tooling cannot shortcut: choosing between incompatible variants, and verifying every citation is a real paper at a real venue in a real year. Expect the mismatch registers to be the most interesting output, and expect some functionalities to have no canonical printed definition at all — that finding is itself a page worth having.
 
   One ordering trap, which turns CI red for the whole site: `gen_interface.py --check` runs in both workflows over every fragment in `functionalities/` and errors if a fragment's page has no `.cj-interface` block to replace. The page scaffold and the fragment must land in the same commit.
-
-- [ ] **Regenerate derived artifacts when their `.tex` source changes (~1.5h)**
-
-  Requested 17 August 2026. Every `.tex` on this site has generated output committed beside it, and nothing currently detects when the two have drifted apart. Editing a source and forgetting to rebuild leaves a PDF or an HTML edition that silently disagrees with the LaTeX it claims to come from, which on this site is a content error rather than a build annoyance.
-
-  The pairs that exist today:
-
-  - `c/<id>/latex/main.tex` → `c/<id>/pdf/main.pdf`, for eight statements.
-  - `latex/papers/uber-groups-rsr/main.tex` → `papers/uber-groups-rsr/{latex,pdf}/`.
-  - `surveys/uc-for-gamers/latex/main.tex` → `pdf/main.pdf` **and** the 59-page HTML edition under `html/`, via `scripts/build_uc_html.sh`.
-  - `latex/uc/.../main.tex` → the UC encyclopedia interface boxes, via `scripts/gen_interface.py`.
-
-  **The pattern to copy already exists.** `gen_interface.py --check` regenerates a page's box from its fragment and fails CI when the two disagree; `status_badge.py` hashes each `## Statement` block into `statement_sha` and forces a revision bump when it moves. Both run in `checks.yml` and `publish.yml` today. The new work is extending that idea from fragments to whole artifacts, not inventing a mechanism.
-
-  Four things a naive implementation gets wrong:
-
-  - **`main.tex` is not the only input.** A build also depends on `conjura-conjecture.cls`, `conjura-solution.cls`, `ucgamers.sty` and, for the book, 14 `functionalities/*.tex` fragments. Hashing only `main.tex` misses a class-file edit entirely — and the line-anchor work on 16 August broke in exactly this way, because a change confined to `functionalities/` was invisible to a check that looked only at the main file. Hash the whole input set, and record which files were in it.
-  - **CI cannot build these today.** Both workflows run `ubuntu-latest`, and `build_uc_html.sh` hardcodes `/Library/TeX/texbin`, which is macOS-only, on top of needing TeX Live, `make4ht` and TeX Live's own `dvisvgm` rather than Homebrew's. A full TeX Live install in Actions costs minutes and about a gigabyte per run. Decide up front whether CI *builds* or merely *detects staleness*; the second is cheap and needs no TeX at all.
-  - **Detect-and-fail is more in keeping than regenerate-and-commit.** A bot pushing regenerated artifacts cannot reach `main` anyway now that the branch ruleset requires pull requests, and silent regeneration is against the grain of a repository whose other gates deliberately refuse to fix things quietly (`status_badge.py` forces the revision bump rather than re-baselining). Failing with "`c/0004/pdf/main.pdf` is stale against its source, run X" is the smaller and more honest feature.
-  - **The book build is slow.** `build_uc_html.sh` takes about four minutes end to end, measured repeatedly on 16 August. Running it on every push is not viable; running it only when its own input hashes change is the point of the feature.
-
-  Suggested shape: a `scripts/artifact_manifest.py` writing a committed manifest of input-hash → outputs per artifact, with `--check` for CI and `--update` after a real rebuild, registered alongside the four existing gates. Local rebuilds stay manual; the script only ever says whether the committed output matches the committed source.
 
 ## Formalizations
 

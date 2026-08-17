@@ -54,6 +54,12 @@ fi
 # content that no longer matches the source it was generated from -- for the
 # functionality boxes, where the usual cause is a line added to the .tex
 # leaving every later <ol start="N"> on the page off by one.
+if ! python3 scripts/artifact_manifest.py --check >/dev/null 2>&1; then
+  python3 scripts/artifact_manifest.py --check >&2
+  echo "pre-commit: a generated artifact no longer matches its LaTeX source." >&2
+  exit 1
+fi
+
 if ! python3 scripts/gen_interface.py --check >/dev/null; then
   python3 scripts/gen_interface.py --check >&2
   fail "a UC interface box is not what its .tex fragment produces." \

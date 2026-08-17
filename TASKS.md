@@ -2,7 +2,7 @@
 
 Split into two sections: **Website and repository** (~5.5h) covers the site, its build tooling and the repository's configuration; **Conjectures and papers** (~6.0h) covers the mathematics — proving conjectures, and writing and checking the papers that report them. Within each section, tasks are ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~19.5h** (rough; the UC Encyclopedia content dominates the uncertainty and could run well over its estimate).
 
-Last reconciled against `main` at `ee4b7cd` on 17 August 2026.
+Last reconciled against `main` at `f8237dc` on 17 August 2026.
 
 Completed tasks are deleted from this file rather than checked off and kept: this is a list of live work, and `git log` is the record of what closed and when.
 
@@ -10,11 +10,14 @@ Completed tasks are deleted from this file rather than checked off and kept: thi
 
 - [ ] **Decide what to do with `lhl-k-source`, the one remaining unpromoted draft (~0.5h — decision, then either a promotion or a deletion)**
 
-  Four of the five drafts this entry used to list are now pages: `c/0011`
-  (log-independence-prp), `c/0012` (censoring-conjecture), `c/0013`
-  (round-optimal-blind-ggm) and `c/0014` (three-move-bs-dl), under three new
-  hubs in `p/`. `latex/conjectures/lhl-k-source` is the one left, and it was
-  deliberately not promoted rather than overlooked.
+  Every other draft is now a page. `c/0011` (log-independence-prp), `c/0012`
+  (censoring-conjecture), `c/0013` (round-optimal-blind-ggm) and `c/0014`
+  (three-move-bs-dl) landed first; `c/0015` (best-first-optimality), `c/0016`
+  (level-optimal-monotone), `c/0017` (poly-round-ka-garbling) and `c/0018`
+  (vdfs-computational-uniqueness-rom) followed in `f8237dc`, under
+  `p/searchable-encryption-tree-optimization`, `p/garbling-public-key-barriers`
+  and `p/vdf-random-oracle-foundations`. `latex/conjectures/lhl-k-source` is
+  the one left, and it was deliberately not promoted rather than overlooked.
 
   It labels itself: `\runninghead{LHL EXTRACTION, K-SOURCE (TEST PLACEHOLDER)}`,
   a kicker reading `OPEN PROBLEM (TEST PLACEHOLDER)`, and an opening paragraph
@@ -37,9 +40,11 @@ Completed tasks are deleted from this file rather than checked off and kept: thi
   same as "no":
 
   - **Review and promote it.** Establish whether the $k$-source question is
-    open, state it against `c/0004`'s definitions, and give it `c/0015`. Strip
-    the placeholder markers from the running head, kicker and opening
-    paragraph first.
+    open, state it against `c/0004`'s definitions, and give it the next free
+    id (**`0019`**, since `c/0015`–`c/0018` are now taken). Strip the
+    placeholder markers from the running head, kicker and opening paragraph
+    first, and add `draft: lhl-k-source` under `problem:` so
+    `scripts/draft_status.py` stops reporting it.
   - **Delete the draft.** It is a staging-area file, and `git log` keeps it;
     `CONTRIBUTING.md`'s no-deletion rule binds `c/` pages, not
     `latex/conjectures/`. If the question is worth keeping without the draft,

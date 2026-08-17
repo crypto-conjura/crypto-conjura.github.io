@@ -1,0 +1,54 @@
+%% The interface box of f-bc, the one source for both the book
+%% and uc/.../f-bc/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fbc$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := \none$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{S} \gets \unset$
+  \Comment{the sender}
+\State $\V{m} \gets \unset$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Broadcast}(\msg)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{S} = \unset \ \wedge\ \msg \in \Msgs$} \label{ln:bconce}
+  \Comment{one broadcast to an instance}
+\State $\V{S} \gets \id.P$; \ $\V{m} \gets \msg$ \label{ln:bcfix}
+\State $\Adv\bigl(\id.\op{Broadcast},\ \V{S},\ \V{m}\bigr)$ \label{ln:bcleak}
+  \Comment{in the clear: agreement, not secrecy}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Fetch}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{S} \neq \unset$}
+\State \textbf{return} $(\V{S},\ \V{m})$ \label{ln:bcagree}
+  \Comment{the same pair to every caller, always}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $(\V{S},\ \V{m})$
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

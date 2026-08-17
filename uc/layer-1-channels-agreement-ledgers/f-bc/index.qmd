@@ -2,15 +2,105 @@
 title: "F-BC — Broadcast"
 status: "Canonical"
 layer: 1
-definition: "Not yet written"
+definition: "Defined"
 ---
 
 *F-BC* (Broadcast) is part of *Channels, Agreement, Ledgers* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
 
-As usually formulated, this functionality is not realizable against adaptive adversaries; a weakened variant is needed in that setting.
+One sender, one message, and every party gets the same message — including when the sender is dishonest and wants them not to. The box is four operations long, and almost all of the interest is in what is *missing* from it: there is no line by which the adversary influences what is delivered, and that absence is what makes the functionality hard, and in one standard communication model impossible, to realize.
+
+## Functionality
+
+Reading the box: $\mathcal{A}(\cdot)$ is a call on the adversary slot whose answer is not used, so it is a notification rather than a query; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it; $\mathcal{M}$ is the message space; $\square$ marks a value never set.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{BC}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := \bot\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{S} \gets \square\)<span class="cj-comment">// the sender</span></li>
+<li>\(\mathtt{m} \gets \square\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Broadcast(<span class="cj-id">msg</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="3">
+<li>\(\textbf{require}\ \mathtt{S} = \square \ \wedge\ \mathit{msg} \in \mathcal{M}\)<span class="cj-comment">// one broadcast to an instance</span></li>
+<li>\(\mathtt{S} \gets \mathit{id}.P\); &nbsp;\(\mathtt{m} \gets \mathit{msg}\)</li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Broadcast},\ \mathtt{S},\ \mathtt{m}\bigr)\)<span class="cj-comment">// in the clear: agreement, not secrecy</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Fetch()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="7">
+<li>\(\textbf{require}\ \mathtt{S} \neq \square\)</li>
+<li>\(\textbf{return}\ (\mathtt{S},\ \mathtt{m})\)<span class="cj-comment">// the same pair to every caller, always</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="9">
+<li>\(\textbf{return}\ (\mathtt{S},\ \mathtt{m})\)</li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+The box is transcribed from Garay, Katz, Kumaresan and Zhou, *Adaptively secure broadcast, revisited*, Figure 1, p. 6 — "the broadcast functionality", which on $(\textsf{Bcast}, \mathit{sid}, m)$ from $P_i$ sends $(\textsf{Bcast}, \mathit{sid}, P_i, m)$ to all parties in $\mathcal{P}$ and to $\mathcal{S}$. Hirt and Zikas print the same object in the appendix of *Adaptively secure broadcast* (ePrint 2009/230, revision `20090530:043804`, p. 13) in the pull form this box uses: record $x_s$ on $(\texttt{Broadcast}, \mathit{sid}, x_s)$ from $p_s$, and answer $(\texttt{ReceiveOutput}, \mathit{sid})$ from $p_i$ with $x_s$ if it was recorded.
+
+**The whole property is that line 8 has no adversary in it.** Every caller is answered from the same two cells, written once at line 4 and never written again. Consistency (all honest parties output the same value) and validity (if the sender is honest that value is the sender's) are then not two properties to be checked but one line to be read. That is the difference between a functionality and a property-based definition of broadcast, and it is why an entry like this one is short: a definition that spends lines on the adversary is defining something else.
+
+Three readings, two of which are the site's conventions and one of which is a real choice:
+
+- **Delivery is a pull, and undelayed.** The source sends to all parties at once; here each party fetches. No responsive call and no deadline appear, so the adversary controls neither the timing nor the content — unlike [*F-auth*](/uc/layer-1-channels-agreement-ledgers/f-auth/index.qmd), where the adversary answers the fetch, and unlike [*F-AC*](/uc/layer-1-channels-agreement-ledgers/f-ac/index.qmd), which buys a delivery guarantee with a clock and a deadline $\Delta$. This box is the synchronous abstraction: both sources assume a synchronous network around it, and putting the adversary back into $\mathsf{Fetch}$ would define a different, weaker object.
+- **One broadcast per instance** (line 3), which is the sources' single-$\mathit{sid}$ scope written out. Many broadcasts are many instances.
+- **The message goes to the adversary in the clear** (line 5). The source is explicit that this is a choice: "one can also consider a definition where the sender's message $m$ is not revealed to $\mathcal{S}$", and notes it only matters when the adversary corrupts nobody. Broadcast is agreement, not secrecy.
+
+**The two variants, which are the point of the literature this box comes from.** Both weaken exactly the thing line 4 is protecting, the fixing of the message before the adversary may act on it:
+
+- $\mathcal{F}_{\mathsf{UBC}}$, *unfair* broadcast (Hirt–Zikas, p. 13): the adversary may send $(\texttt{Modify}, \mathit{sid}, x'_{s})$ and change the recorded value, provided the sender has been corrupted and the value has not yet reached an uncorrupted party.
+- $\mathcal{F}_{\mathsf{RBC}}$, *relaxed* broadcast (Garay–Katz–Kumaresan–Zhou, Figure 2, p. 6): the message goes to the adversary first, and only then does the functionality deliver — the adversary's substitute if the sender is corrupted, the original otherwise. Their $\mathcal{F}^{+}_{\mathsf{RBC}}$ restricts the substitute to $\bot$, so an adaptive corruption can force agreement on failure but not on a different message.
+
+The pattern is the same in both: learn the message, then decide whether to corrupt the sender, then change what everyone agrees on. That is a real attack on real protocols, and it is precisely what this box forbids and those two permit.
+
+## Known realizations
+
+The results here are worth reading as a pair, because they look contradictory and are not.
+
+**Against $t < n/3$, unconditionally.** Hirt and Zikas realize $\mathcal{F}_{\mathsf{UBC}}$ perfectly with the classical protocol (their Lemma 1), then show that in a protocol whose broadcast values the adversary can predict, $\mathcal{F}_{\mathsf{UBC}}$ may be substituted for $\mathcal{F}_{\mathsf{BC}}$ (Lemma 2), and conclude with **Corollary 1**: for $t < n/3$ there is a protocol perfectly $t$-securely realizing $\mathcal{F}_{\mathsf{BC}}$. Their Remark 1 is worth the detour — the substitution is *not* generally sound, and their counterexample is a coin-flip by broadcast bits, where an unfair broadcast lets the adversary bias the outcome.
+
+**Against $t \le n/2$, with signatures.** Protocol `Broadcast` realizes $\mathcal{F}_{\mathsf{BC}}$ in the $\{\mathcal{F}_{\mathsf{UBC}}, \mathcal{F}_{\mathsf{SIG}}\}$-hybrid model for $t \le n/2$ (Lemma 7), giving **Corollary 4**. And **Lemma 8** shows the threshold is tight: no protocol computationally $t$-securely realizes $\mathcal{F}_{\mathsf{BC}}$ for $t > n/2$, statistically either. The argument is the attack above — corrupt half of the non-senders, learn the sender's input before the honest parties jointly do, and corrupt the sender on the strength of it.
+
+**Against $t < n$, in a different communication model.** Garay, Katz, Kumaresan and Zhou argue that the model behind that impossibility is unrealistically pessimistic, and re-run the question in a synchronous model with rushing where a party's simultaneous sends are *atomic*. There, **Theorem 3.2**: protocol $\pi_{\mathsf{BC}}$ securely realizes $\mathcal{F}_{\mathsf{BC}}$ in the $\mathcal{F}_{\mathsf{RBC}}$-hybrid model against an adaptive adversary corrupting any $t < n$, assuming an honest-binding commitment scheme; and $\mathcal{F}_{\mathsf{RBC}}$ is realizable from Dolev–Strong in the $\mathcal{F}_{\mathsf{CERT}}$-hybrid model (their Lemma 3.1). They say plainly which assumption is load-bearing: $\pi_{\mathsf{BC}}$ does *not* realize $\mathcal{F}_{\mathsf{BC}}$ non-atomically, and by the earlier impossibility it cannot.
+
+So the honest summary of what realizes this box is: it depends on whether one party's simultaneous messages can be split by an adaptive adversary. Nothing about the functionality decides that, which is the strongest argument for writing the functionality down separately from the network it runs on.
+
+## Properties
+
+- **Consistency, with probability exactly $1$.** Two $\mathsf{Fetch}$ calls return the same pair, because both read cells that only line 4 writes and that line 3 refuses to let it write twice.
+- **Validity, with probability exactly $1$.** The value returned is the value the sender passed at line 4, and no operation takes a replacement from the adversary slot.
+- **Termination is not in the box.** Nothing forces a party to fetch and nothing bounds when it does. Broadcast's third classical property is a liveness statement about a network, and this framework puts liveness in the clock-parameterized functionalities rather than here.
+- **No secrecy, deliberately.** Line 5 hands the message to the adversary before any fetch.
+- **Adaptive security is the whole difficulty.** Against a static adversary the sender's corruption is fixed before line 4 runs, and the classical protocols realize this box; the adaptive case is where line 4's "written once, before anyone may react to it" becomes a demand on the protocol that, in the non-atomic model, cannot be met beyond $t > n/2$.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Canetti. [*Universally composable security: A new paradigm for cryptographic protocols*](https://eprint.iacr.org/2000/067). In 42nd IEEE Symposium on Foundations of Computer Science (FOCS), pages 136–145, 2001.
-- Hirt and Zikas. [*Adaptively secure broadcast*](https://eprint.iacr.org/2009/230). In Advances in Cryptology – EUROCRYPT 2010, 2010.
-- Garay et al. [*Adaptively secure broadcast, revisited*](https://people.csail.mit.edu/ranjit/papers/asb.pdf). In 30th ACM Symposium on Principles of Distributed Computing (PODC), 2011.
+- Garay, Katz, Kumaresan, and Zhou. [*Adaptively secure broadcast, revisited*](https://people.csail.mit.edu/ranjit/papers/asb.pdf). In 30th ACM Symposium on Principles of Distributed Computing (PODC), pages 179–186, 2011. Read from the authors' full version, the undated 13-page PDF at `people.csail.mit.edu/ranjit/papers/asb.pdf` (SHA-256 prefix `b0b12fb51af5ff3d`, recorded in `_src/sources.json`), which carries no revision stamp — this paper has no ePrint posting to pin one against. Figure 1, p. 6, the definition transcribed above; Figure 2, p. 6, the relaxed variant $\mathcal{F}_{\mathsf{RBC}}$ and its strengthening $\mathcal{F}^{+}_{\mathsf{RBC}}$; Lemma 3.1 and Theorem 3.2, and the atomic-communication caveat on both.
+- Hirt and Zikas. [*Adaptively secure broadcast*](https://eprint.iacr.org/2009/230). In Advances in Cryptology – EUROCRYPT 2010, pages 466–485, 2010. Appendix, p. 13 of revision `20090530:043804`: the same functionality in pull form, and $\mathcal{F}_{\mathsf{UBC}}$ beside it; Lemmas 1, 2, 7 and 8, Corollaries 1 to 4, and Remark 1 on when unfair broadcast may not be substituted.
+- Canetti. [*Universally composable security: A new paradigm for cryptographic protocols*](https://eprint.iacr.org/2000/067). In 42nd IEEE Symposium on Foundations of Computer Science (FOCS), pages 136–145, 2001. The framework the definitions above are written in; it prints no broadcast functionality of its own, its network abstractions being [*F-auth*](/uc/layer-1-channels-agreement-ledgers/f-auth/index.qmd), $\mathcal{F}_{\mathsf{SMT}}$ and $\mathcal{F}_{\mathsf{SYN}}$.

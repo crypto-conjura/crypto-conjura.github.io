@@ -629,7 +629,12 @@ def check_vs_preview(ids, keep=None):
                     ["pdflatex", "-interaction=nonstopmode", "-halt-on-error",
                      "-jobname", fid, "-output-directory", str(out),
                      r"\def\FRAG{%s}\input{functionalities/preview}" % fid],
-                    cwd=LATEX, capture_output=True, text=True)
+                    cwd=LATEX, capture_output=True, text=True,
+                    # pdflatex writes font-encoded glyphs into its Overfull and
+                    # Underfull warnings -- a \bigl\{ in a narrow column is
+                    # enough -- and those bytes are not UTF-8. Decoding
+                    # strictly turns a *successful* compile into a traceback.
+                    errors="replace")
             except FileNotFoundError:
                 print("cannot run pdflatex; install TeX to use --vs-preview")
                 return 1

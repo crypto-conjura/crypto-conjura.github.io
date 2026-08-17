@@ -1,0 +1,82 @@
+%% The interface box of f-smt, the one source for both the book
+%% and uc/.../f-smt/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fsmt$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := l$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{A} \gets \unset$; \ $\V{B} \gets \unset$
+  \Comment{sender, intended receiver}
+\State $\V{m} \gets \unset$
+\State $\V{corr} \gets 0$; \ $\V{done} \gets 0$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Send}(B, \msg)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{A} = \unset \ \wedge\ \msg \in \Msgs$} \label{ln:smtonce}
+  \Comment{one message to an instance}
+\State $\V{A} \gets \id.P$; \ $\V{B} \gets B$; \ $\V{m} \gets \msg$
+\State $\Adv\bigl(\id.\op{Send},\ \V{A},\ \V{B},\ l(\V{m})\bigr)$ \label{ln:smtleak}
+  \Comment{who and when, but only $l$ of what}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Report}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P = \V{A}$}
+\State \textbf{return} $\V{corr}$ \label{ln:smtreport}
+  \Comment{exposed or altered; the sender may ask}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Fetch}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{A} \neq \unset \ \wedge\ \V{done} = 0$}
+\State $a \gets \Adv^{!}\bigl(\id.\op{Fetch},\ \id.P\bigr)$ \label{ln:smtdeliver}
+  \Comment{the adversary decides when}
+\State $(B', \msg') \gets (\V{B},\ \V{m})$ \label{ln:smthonest}
+\If{$a \neq \ok \ \wedge\ \{\V{A}, \V{B}\} \cap \Cs \neq \emptyset$}
+  \State $(B', \msg') \gets a$; \ $\V{corr} \gets 1$ \label{ln:smtsub}
+    \Comment{substituting needs a corrupt endpoint}
+\EndIf
+\Req{$B' = \id.P \ \wedge\ \msg' \in \Msgs$} \label{ln:smtaddr}
+\State $\V{done} \gets 1$
+\State \textbf{return} $(\V{A},\ \msg')$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$\V{A} = \unset$}
+  \State \textbf{return} $\none$
+\EndIf
+\If{$\id.P \in \{\V{A}, \V{B}\}$}
+  \State $\V{corr} \gets 1$ \label{ln:smtexposed}
+    \Comment{an endpoint's plaintext is out, and recorded}
+  \State \textbf{return} $(\V{A},\ \V{B},\ \V{m})$ \label{ln:smtplain}
+\EndIf
+\State \textbf{return} $(\V{A},\ \V{B},\ l(\V{m}))$ \label{ln:smtoutsider}
+  \Comment{an outsider learns no more than the send did}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

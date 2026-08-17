@@ -2,11 +2,116 @@
 title: "F-MCOM — Multi-session commitment"
 status: "Canonical"
 layer: 4
-definition: "Not yet written"
+definition: "Defined"
 ---
 
 *F-MCOM* (Multi-session commitment) is part of *Commitments and Proofs* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
 
+Many commitments, arbitrarily interleaved, inside one instance. It exists because [*F-COM*](/uc/layer-4-commitments-proofs/f-com/index.qmd) does not compose the way an implementer wants it to: a fresh session of *F-COM* per commitment means a fresh common reference string per commitment, and this box is what "one reference string, reused" is defined against. Its source prints the two side by side and the difference between them is a single argument — the commitment identifier.
+
+## Functionality
+
+Reading the box: $\mathcal{A}(\cdot)$ is a call on the adversary slot whose answer is not used, so it is a notification rather than a query; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it; $\square$ marks a value never set; $c$ is a commitment identifier, drawn from $\{0,1\}^{*}$, and $\mathtt{b}$ and $\mathtt{open}$ are tables keyed by the triple *(identifier, committer, receiver)*.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{MCom}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := \bot\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{b} : \{0,1\}^* \times \mathbf{P} \times \mathbf{P} \to \{0,1\} \cup \{\square\}\)<span class="cj-comment">// keyed by id, committer, receiver</span></li>
+<li>\(\mathtt{open} : \{0,1\}^* \times \mathbf{P} \times \mathbf{P} \to \{0,1\}\)</li>
+<li>\(\mathtt{b}[*] \gets \square\); &nbsp;\(\mathtt{open}[*] \gets 0\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Commit(<span class="cj-id">c</span>, <span class="cj-id">Q</span>, <span class="cj-id">b</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="4">
+<li>\(\textbf{require}\ \mathtt{b}[c, \mathit{id}.P, Q] = \square \ \wedge\ b \in \{0,1\}\)<span class="cj-comment">// one commitment per id, per pair</span></li>
+<li>\(\mathtt{b}[c, \mathit{id}.P, Q] \gets b\)</li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Commit},\ c,\ \mathit{id}.P,\ Q\bigr)\)<span class="cj-comment">// a receipt, carrying no bit</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Open(<span class="cj-id">c</span>, <span class="cj-id">Q</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="8">
+<li>\(\textbf{require}\ \mathtt{b}[c, \mathit{id}.P, Q] \neq \square\)<span class="cj-comment">// the committer's to open, and only what it committed</span></li>
+<li>\(\mathtt{open}[c, \mathit{id}.P, Q] \gets 1\)</li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Open},\ c,\ \mathit{id}.P,\ Q,\ \mathtt{b}[c, \mathit{id}.P, Q]\bigr)\)</li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Read(<span class="cj-id">c</span>, <span class="cj-id">P</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="12">
+<li>\(\textbf{require}\ \mathtt{b}[c, P, \mathit{id}.P] \neq \square\)<span class="cj-comment">// the receipt is the receiver's, and names the committer</span></li>
+<li>\(\textbf{if}\ \mathtt{open}[c, P, \mathit{id}.P] = 0\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ (c,\ P)\)</span></li>
+<li>\(\textbf{return}\ (c,\ P,\ \mathtt{b}[c, P, \mathit{id}.P])\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="16">
+<li>\(\textbf{return}\ \mathtt{b}[*, \mathit{id}.P, *]\)<span class="cj-comment">// a committer's own bits; a receiver holds none</span></li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+The box is transcribed from Canetti and Fischlin, *Universally composable commitments*, ePrint 2001/055, revision `20010710:161305`, Figure 3, p. 10 — "the Ideal Commitment functionality for multiple commitments", which on $(\texttt{Commit}, \mathit{sid}, \mathit{cid}, P_i, P_j, b)$ records the tuple $(\mathit{cid}, P_i, P_j, b)$ and sends a $\texttt{Receipt}$ to $P_j$ and $\mathcal{S}$, "ignor[ing] subsequent $(\texttt{Commit}, \mathit{sid}, \mathit{cid}, P_i, P_j, \ldots)$ values", and on $(\texttt{Open}, \mathit{sid}, \mathit{cid}, P_i, P_j)$ sends $(\texttt{Open}, \mathit{sid}, \mathit{cid}, P_i, P_j, b)$ to $P_j$ and $\mathcal{S}$ if that tuple is recorded and does nothing otherwise.
+
+**Why a sub-identifier reappears as data.** In this framework a session is a process id, so a functionality does not normally carry session identifiers in its messages at all — they are the address, not an argument. A multi-session functionality is exactly the case where that translation does not go through: the identifier is what the record table is keyed by, so it has to be an operand. That is the whole content of the difference between this box and *F-COM*, and it is also why the multi-session extension is not a free convenience. What buys back the composition theorem for a protocol that serves many commitments out of one instance is universal composition with joint state, and the reason the literature has a $\hat{\mathcal{F}}$ operator at all is that this box is what a single instance of it looks like written out by hand.
+
+Three lines are where the multi-session reading is decided:
+
+- **Line 4 keys the table on the triple, not on the identifier alone.** The source forbids re-use of a commitment id only "with the same committer and verifier", and that restraint is load-bearing: with a global key, a corrupt party could take out an identifier and block an honest committer from ever using it — a denial of service invented by the translation rather than found in the source. Keyed on the triple, a squatter blocks only itself.
+- **Line 9 may be reached more than once.** The source is explicit that a committer may open the same commitment several times to the same receiver, which is where the object differs from *F-COM* most sharply: that box's source *halts* after an opening. Nothing here refuses a second $\mathsf{Open}$, and $\mathtt{open}$ is a flag rather than a counter, so re-opening is idempotent rather than forbidden.
+- **Line 16 is one line because a receiver holds no secret.** Every receipt goes to the adversary as it is issued (line 6) and every opening as it happens (line 10), so the only state a corruption can expose that the adversary did not already have is a committer's own unopened bits. The leak is the slice of the table at the corrupt party *as committer*, written $\mathtt{b}[*, \mathit{id}.P, *]$; a whole-table dump would have leaked every other committer's unopened bits and made the box unrealizable.
+
+Two conventions the source leaves open, decided here:
+
+- **Delivery is a pull.** The source sends the receipt and the opening to $P_j$; here the receiver reads, naming the identifier and the committer, and gets the receipt before an opening (line 14) and the bit after (line 15). The interleaving the source insists on — "the various `Commit` and `Open` requests may be interleaved in an arbitrary way" — is then automatic rather than a promise, since nothing in the box orders operations across identifiers.
+- **"Otherwise, do nothing" becomes a refusal**, at line 8 for an opening with no commitment behind it and at line 12 for a read of one.
+
+**What the box does not have, on purpose.** The source's discussion is emphatic that neither this functionality nor *F-COM* permits "copying commitments": a receiver who holds a commitment to $x$ must not be able to commit to the same $x$ elsewhere before the original is opened. There is no line to point at for this, and that is the point — the guarantee is the *absence* of any operation by which a party learns something it could re-commit. A protocol that realizes this box therefore has to be non-malleable, without non-malleability appearing anywhere in the definition.
+
+## Known realizations
+
+In the source, from a single reference string, which is the entire object of the exercise:
+
+- **Theorem 8:** protocol `UCCReUse` securely realizes $\mathcal{F}_{\mathsf{MCOM}}$ in the CRS model, built from a claw-free pair of trapdoor permutations together with a public encryption key. It assumes erasures.
+- **Theorem 11:** `UCCReUse/NotErase` does the same without them, replacing the erased dummy ciphertext by one drawn from an obliviously samplable encryption scheme — instantiated there from Cramer–Shoup.
+
+Under [*F-CRS*](/uc/layer-0-idealized-setup/f-crs/index.qmd) rather than a bare string, and from a general assumption rather than a specific one, the reference is the later restatement: **Proposition 5.1** of Canetti, Lindell, Ostrovsky and Sahai proves that protocol `UAHC` UC-realizes $\mathcal{F}_{\mathsf{MCOM}}$ in the $\mathcal{F}_{\mathsf{CRS}}$-hybrid model assuming enhanced trapdoor permutations, non-interactively and against *adaptive* adversaries. That protocol is the one most subsequent work builds on, and its functionality is the variant described under *References* below.
+
+Setup is not optional: **Theorem 6** of the source rules out any bilateral, terminating protocol that securely realizes $\mathcal{F}_{\mathsf{COM}}$ in the plain model, and a realization of this box would give one.
+
+## Properties
+
+- **Binding, with probability exactly $0$ of failure.** Line 4 refuses to overwrite a recorded bit and no other line writes $\mathtt{b}$, so the value line 15 returns is the value committed. The committer cannot change it, and cannot decline to have committed.
+- **Hiding, with probability exactly $0$ of leakage.** Line 6 carries the identifier and the two parties and no bit; line 14 is the receipt a receiver sees before an opening, and it too carries no bit. A receiver's whole view of an unopened commitment is that it exists.
+- **Independence across identifiers.** Every operation reads and writes one key. Two commitments under different identifiers, or by different committers, share no state, which is what makes a single instance serving many commitments a faithful stand-in for many instances serving one — and, conversely, is what a realization has to earn against an adversary that sees all of them against one reference string.
+- **Reusable-CRS is a property of realizations, not of this box.** The source defines a protocol realizing $\mathcal{F}_{\mathsf{COM}}$ to be a UC commitment protocol and one realizing $\mathcal{F}_{\mathsf{MCOM}}$ to be a *reusable-CRS* UC commitment protocol (Definition 5). Nothing in the code above mentions a reference string; the phrase names what realizing it costs.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
+
 *References:*
 
-- Canetti and Fischlin. [*Universally composable commitments*](https://eprint.iacr.org/2001/055). In Advances in Cryptology – CRYPTO 2001, 2001.
+- Canetti and Fischlin. [*Universally composable commitments*](https://eprint.iacr.org/2001/055). In Advances in Cryptology – CRYPTO 2001, volume 2139 of LNCS, pages 19–40, 2001. Figure 3, p. 10 of revision `20010710:161305`, the definition transcribed above; Figure 2, p. 10, the single-commitment $\mathcal{F}_{\mathsf{COM}}$ beside it; Definition 5, Theorems 6, 8 and 11, and the discussion of copying commitments.
+- Canetti, Lindell, Ostrovsky, and Sahai. [*Universally composable two-party and multi-party secure computation*](https://eprint.iacr.org/2002/140). In 34th ACM Symposium on Theory of Computing (STOC), pages 494–503, 2002. Figure 4, p. 38 of revision `20030714:190611`: the same object restated, and the version most later work cites. It threads a sub-session identifier $\mathit{ssid}$ where the source above threads $\mathit{cid}$, names the phases `commit` and `reveal`, and takes the reveal request without the parties, recovering them from the record; the paper calls it "a re-formulation of $\hat{\mathcal{F}}_{\mathsf{COM}}$, the multi-session extension of" the single-session functionality. Proposition 5.1 and protocol `UAHC`. Figure 13, p. 72, is a different object — $\mathcal{F}^{1:M}_{\mathsf{MCOM}}$, one committer to a set of receivers — and is not what this entry defines.
+- Canetti and Rabin. [*Universal composition with joint state*](https://eprint.iacr.org/2002/047). In Advances in Cryptology – CRYPTO 2003, 2003. The composition theorem that makes a multi-session functionality a legitimate stand-in for many single-session ones, and the source of the $\hat{\mathcal{F}}$ notation the restatement above refers to.

@@ -1,0 +1,31 @@
+---
+title: "Can verifiable delay functions be based on random oracles?"
+subtitle: "Sequentiality is exactly what a random oracle provides. Uniqueness is what it appears to withhold."
+---
+
+## Motivation
+
+A verifiable delay function takes a long, inherently sequential time to evaluate, can be checked quickly, and has a unique accepted output. The random oracle model is a natural place to ask whether one can exist, because it makes the central quantity precise: sequential time is the number of *rounds* of adaptive oracle queries an algorithm needs, and an algorithm with unbounded parallelism is charged only for the depth of its query dependency, not their number. Iterated hashing is the obvious candidate — $T$ hashes cannot be compressed below $T$ rounds — and the difficulty is never sequentiality. It is verification and uniqueness.
+
+Mahmoody, Smith and Wu show the obvious candidate is not fixable. Relative to a random oracle, no construction can be simultaneously *perfectly* unique — no accepting proof for a wrong output exists at all — and genuinely sequential. The attack is a simulation: an adversary evaluates the honest algorithm in its head, answering oracle queries itself, and after each simulated execution asks all previously unasked queries to the real oracle in a single round. A majority vote over the simulated outputs recovers the true value in a number of real rounds that depends only on how many queries $\mathsf{Setup}$ and $\mathsf{Verify}$ make, never on $T$.
+
+## The lattice
+
+Two axes: the strength of the uniqueness requirement, and how close the sequentiality bound $\sigma$ sits to the honest evaluation time $T$.
+
+| Uniqueness | Non-tight $\sigma$ | Tight $\sigma$ (near $T$) |
+|---|---|---|
+| **Perfect** | **Refuted** — impossible for every $\sigma \ge 2(s+t)$. | Refuted. |
+| **Computational** | **Open** — [c/0018](/c/0018/) | Refuted — impossible even with *no* uniqueness assumption, for $\sigma > T(1 - 1/2(s+t))$ or $\sigma = T - T^{\rho}$. |
+
+The open cell is the one that matters, because computational uniqueness is what the definition of a VDF actually requires: wrong outputs with accepting proofs may well exist, provided no efficient adversary can find one. Perfect uniqueness is a strengthening adopted to make the impossibility go through, and the authors say so — the simulation attack "critically relies" on it, since the simulated executions are only guaranteed to agree with the real one when no wrong answer is acceptable at all.
+
+The tight-regime row is a different kind of result: it rules out constructions whose claimed sequentiality is very close to their honest running time, and needs no uniqueness hypothesis whatever. It leaves untouched the interesting regime where $\sigma$ is a fixed polynomial well below $T$.
+
+## Statements
+
+- [Ruling out computationally unique VDFs in the random oracle model](/c/0018/) — open.
+
+## Sources
+
+- Mahmoody, Smith, and Wu. [*Can Verifiable Delay Functions be Based on Random Oracles?*](https://eprint.iacr.org/2019/663). Cryptology ePrint Archive, Report 2019/663; ICALP 2020.

@@ -1,0 +1,94 @@
+---
+id: "0017"
+problem: garbling-public-key-barriers
+draft: poly-round-ka-garbling
+title: "No Key Agreement from Garbling One-Way-Function Circuits"
+short_title: "No key agreement from GC-OWF"
+areas: [impossibility-results, foundations, public-key]
+model: other
+form: separation
+assumption_class: unconditional
+category: research-open
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: adaptation
+  by: ai
+  note: "The obstruction is named and quantitative rather than conceptual: the compilation removes garbling-evaluation queries one round at a time and inflates communication by a polynomial factor per round, so a super-constant number of rounds compounds into a tower of polynomials. A proof needs an accounting that does not pay per round, not a new separation technique. That the plain-random-oracle analogue has been round-free since Impagliazzo-Rudich is the reason to expect one exists."
+status_summary: "Open for round complexity growing with the security parameter. Proved in full for two messages, which is public-key encryption; the constant-round extension is sketched in the paper's appendix without a theorem, its security half deferred to the PKE proof."
+status_updated: 2026-08-17
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Garg, Hajiabadi, Mahmoody, Mohammed, Limits on the Power of Garbling Techniques for Public-Key Encryption, Cryptology ePrint Archive, Report 2018/555", url: "https://eprint.iacr.org/2018/555"}
+  - {cite: "Impagliazzo, Rudich, Limits on the provable consequences of one-way permutations, STOC 1989, pp. 44-61", url: "https://doi.org/10.1145/73007.73012"}
+revision: 1
+statement_sha: "69d370eea7441e2fa97a4d4a99b5b7de37ca1ba29922c3e5e5b978341c0c3d1a"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+Garbled circuits are among the most powerful cryptographic techniques needing nothing beyond one-way functions. Garbling a circuit with one-way-function gates buried inside it is a genuinely non-black-box use of that function, even though the garbling machinery itself is used as a black box, so classical black-box impossibility results say nothing about it. The source paper shows the technique still cannot produce public-key encryption: relative to an oracle providing a random function together with garbling of circuits with gates for it, secure garbling exists but public-key encryption does not. Public-key encryption is exactly two-message key agreement, and the argument survives for any fixed number of rounds — but breaks once the round count may grow with the security parameter. The conjecture is that the separation holds anyway, with no restriction on rounds at all.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [Download LaTeX source](latex/main.tex)
+
+Fix a security parameter $\kappa$. An **oracle-aided circuit** $C^{(\cdot)}$ has gates that may query an oracle. A **garbling scheme** $L = (\mathsf{Garb}, \mathsf{Ev}, \mathsf{Sim})$ for oracle-aided circuits relative to $f$ is *correct* if for every polynomial $m$, every poly-size oracle circuit $C$ with input size $m$ and every input $x$, evaluating the garbled circuit on the garbled input returns $C^f(x)$ except with probability $\delta = 1/p(\kappa)$; it is *secure* if the joint distribution of the garbled circuit and garbled input is indistinguishable from $\mathsf{Sim}$ given only $C^f(x)$. The scheme is *projective*: the garbled input consists of one label per input bit. Write **GC-OWF** for the primitive giving a one-way $f$ together with such an $L$.
+
+A **key-agreement protocol** $\langle A, B \rangle$ is a $2m$-round interactive protocol in which both parties output the same key except with probability $\delta = 1/p(\kappa)$, and no PPT eavesdropper seeing the transcript guesses the key with advantage better than negligible.
+
+**Conjecture.** There is no fully black-box construction of a key-agreement protocol from GC-OWF. Explicitly: for every pair of oracle PPT interactive algorithms $(A,B)$ and every oracle PPT security reduction $S = (S_1, S_2)$, there exist a function $f\colon \{0,1\}^* \to \{0,1\}^*$ and a correct garbling scheme $L$ for oracle-aided circuits relative to $f$ such that at least one of the following fails:
+
+1. $\langle A^{f,L}, B^{f,L} \rangle$ is a correct key-agreement protocol;
+2. for every adversary $E$ breaking $\langle A^{f,L}, B^{f,L}\rangle$, either $S_1^{f,L,E}$ breaks the one-wayness of $f$ or $S_2^{f,L,E}$ breaks the security of $L$ relative to $f$.
+
+No bound is placed on the round complexity beyond the polynomial implied by $A$ and $B$ being PPT. That is the whole of the difference from what is proved.
+
+## Proof
+
+Open for super-constant round complexity.
+
+**The two-message case is a theorem.** The paper proves in full that no fully black-box construction of public-key encryption from GC-OWF exists, by exhibiting an oracle relative to which secure garbling exists and public-key encryption does not.
+
+**The constant-round case is only sketched.** The paper's appendix gives a one-round compilation procedure and correctness lemmas, and states that iterating it yields the constant-round key-agreement case; the security half is deferred with the remark that it "follows almost exactly the same as in the PKE case". No theorem is stated. A would-be prover should not treat constant-round key agreement as settled, and this page does not.
+
+**Why the argument stops.** The compilation removes garbling-evaluation queries one round at a time, and the paper states the polynomial parameter blow-up per iteration as the reason iteration cannot be carried a super-constant number of times. A growing number of rounds compounds the blow-up into a tower of polynomials, and the argument no longer closes.
+
+**Why the conjecture is nonetheless plausible.** For plain random oracles the corresponding statement — no key agreement, regardless of round complexity — has been known since Impagliazzo and Rudich, with no dependence on the number of rounds. The round restriction here therefore looks like an artifact of a per-round accounting rather than a feature of the primitive.
+
+## Discussion
+
+The interesting feature of this problem is that the obstruction is named, quantitative and local. It is not that nobody knows how to separate GC-OWF from key agreement — that is done for two messages — but that the technique pays a polynomial per round and there is no budget for super-constant rounds. A solution most likely replaces the per-round accounting with something amortised, rather than inventing a new separation.
+
+One definitional point is unresolved in the source and inherited here. The conjecture requires the constructed protocol to be correct in the $\delta = 1/p(\kappa)$ sense, whereas the paper's black-box definition for public-key encryption demands $(1 - 2^{-\kappa})$-correctness with a remark that this is without loss of generality by majority-boosting. The paper never states a black-box definition for key agreement, so which bar the conjecture inherits cannot be settled from the text. The choice made here makes the impossibility formally stronger, since it rules out more constructions.
+
+A different open question in the same paper, which this is not: garbling circuits that themselves contain garbling gates. That is a strictly more powerful primitive, and the separation for it is untouched.
+
+:::
+
+## Open obligations
+
+- [ ] Prove or refute the separation for round complexity growing with $\kappa$. The target is an argument whose cost does not scale with the number of rounds.
+- [ ] Turn the constant-round case into an actual theorem, with the security half written out rather than deferred to the PKE proof.
+- [ ] Settle which correctness bar the black-box definition for key agreement should carry, $\delta = 1/p(\kappa)$ or $(1 - 2^{-\kappa})$, and confirm the majority-boosting remark transfers to the interactive setting.
+- [ ] Determine whether the polynomial blow-up per round is inherent to this compilation or an artifact of its bookkeeping.
+- [ ] Formalize the statement in Lean. Fully black-box constructions, oracle-aided circuits and the garbling definitions all need writing first.
+
+## Sources
+
+- Garg, Hajiabadi, Mahmoody, and Mohammed. [*Limits on the Power of Garbling Techniques for Public-Key Encryption*](https://eprint.iacr.org/2018/555). Cryptology ePrint Archive, Report 2018/555.
+- Impagliazzo and Rudich. *Limits on the provable consequences of one-way permutations*. STOC 1989, pages 44--61.

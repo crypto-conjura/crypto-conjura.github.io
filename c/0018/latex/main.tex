@@ -1,0 +1,349 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  Ruling out computationally unique VDFs in the random oracle model.
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{COMPUTATIONALLY UNIQUE VDFS IN THE ROM}
+
+\newcommand{\RO}{\mathcal{O}}
+\newcommand{\Setup}{\mathsf{Setup}}
+\newcommand{\Eval}{\mathsf{Eval}}
+\newcommand{\Verify}{\mathsf{Verify}}
+\newcommand{\Adv}{\mathsf{Adv}}
+\newcommand{\pp}{\mathsf{pp}}
+\newcommand{\stt}{\mathsf{st}}
+\newcommand{\Xpp}{\mathcal{X}_{\pp}}
+\newcommand{\Ypp}{\mathcal{Y}_{\pp}}
+\newcommand{\negl}{\mathrm{negl}}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{Ruling Out Computationally Unique VDFs in the Random Oracle
+  Model}
+\cjsubtitle{Parallel random oracle model, perfect completeness, standard
+  (computational) uniqueness}
+\cjstatus{Statement: AI-written from Mohammad Mahmoody, Caleb Smith and
+  David J. Wu, \emph{Can Verifiable Delay Functions be Based on Random
+  Oracles?}, Cryptology ePrint Archive 2019 (full version of the ICALP
+  2020 paper, subsuming the earlier note \emph{A Note on the
+  (Im)possibility of Verifiable Delay Functions in the Random Oracle
+  Model}), not yet checked by a human. The paper settles the perfectly
+  unique case with perfect completeness, and the tight regime
+  $\sigma > T\cdot(1 - 1/2(s+t))$ or $\sigma = T - T^{\rho}$ even without
+  uniqueness; what is open, and what is conjectured below, is the same
+  impossibility under computational uniqueness, the notion the definition
+  of a VDF actually requires.}
+\cjcategory{\emph{Idealized Models \& Non-Uniformity}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+A verifiable delay function takes a long, inherently sequential time to
+evaluate, can be checked quickly, and has a unique accepted output. Can
+such an object be built out of nothing but an ideal hash function,
+modelled as a random oracle, where sequential time is measured by the
+number of rounds of adaptive oracle queries an algorithm needs? The answer
+is no when uniqueness is perfect, meaning that no accepting proof for a
+wrong output exists at all. What remains open is the standard notion,
+where wrong outputs with accepting proofs may well exist but no efficient
+adversary can find one. The conjecture is that the impossibility survives
+this weakening: relative to a random oracle, no construction can be both
+computationally unique and genuinely sequential.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+Verifiable delay functions were introduced by Boneh, Bonneau, B\"unz and
+Fisch~\cite{BBBF18}: a function that requires $T$ \emph{sequential} steps
+to evaluate, whose output can be verified in time $t \ll T$, and whose
+accepted output is unique. Every efficient construction known at the time
+of this work rests on structured algebraic assumptions --- groups of
+unknown order~\cite{Wes19,Pie19} or isogenies --- which raises the
+question of whether VDFs can instead be built generically from
+unstructured, symmetric primitives. The natural formalisation of that
+question is the \emph{parallel} random oracle model, where the total
+running time of an algorithm is its number of oracle queries and its
+parallel running time is its number of adaptive query \emph{rounds}; this
+is the model in which Mahmoody, Moran and Vadhan ruled out time-lock
+puzzles~\cite{MMV11}.
+
+The source paper settles two special cases. First, VDFs with \emph{perfect}
+uniqueness are impossible in this model: the attacker repeatedly simulates
+the honest evaluation in its head, answering oracle queries itself, and
+after each simulated execution asks all previously unasked queries to the
+real oracle in a single round; after $2(s+t)+1$ such simulated executions,
+using $2(s+t)$ rounds of real-oracle queries, a majority vote over the
+simulated outputs returns the true value. The counting argument is that a
+round can go wrong only by hitting, for the first time, one of the at most
+$s+t$ queries made by the real setup and verification, so at most $s+t$
+rounds are bad; in every good round the simulated execution is consistent
+with \emph{some} oracle $\RO'$, and perfect uniqueness relative to $\RO'$
+forces the simulated output to be the correct one. This also rules out
+strongly decodable VDFs and, as a warm-up via~\cite{MMV11}, the permutation
+VDFs that arise from combining reversible proofs of sequential
+work~\cite{AKK19} with the sloth function~\cite{LW15}, showing that some
+structured assumption is necessary there.
+
+Second, in the \emph{tight} regime studied concurrently by D\"ottling,
+Garg, Malavolta and Vasudevan~\cite{DGMV19}, where $\sigma$ is very close
+to $T$, the paper rules out even proofs of sequential
+work~\cite{MMV13,CP18}, which are VDFs without uniqueness: the attacker
+simulates a random subset of $G$ of the $T$ oracle queries and answers the
+rest honestly, succeeding unless one of the simulated queries is touched by
+setup or verification. This yields impossibility for
+$\sigma = T \cdot (1 - 1/2(s+t))$ and for $\sigma = T - T^{\rho}$ with
+constant $0 < \rho < 1$, and it is extended in the paper to an expensive
+private setup phase and to the random permutation oracle model.
+
+Neither technique reaches the notion actually used in practice. The first
+spends perfect uniqueness at exactly the step where a consistent simulated
+execution is declared correct, and offers nothing when wrong outputs with
+accepting proofs exist but are merely hard to find. The second cannot be
+pushed out of the tight regime on its own, because publicly-verifiable
+proofs of sequential work with $\sigma = T/2$ do exist in the random oracle
+model~\cite{MMV13}: any lower bound for non-tight parameters must therefore
+consume the uniqueness property, which is precisely what the second
+technique never touches. The paper poses closing this gap as its main open
+question. A proof would rule out black-box constructions of computationally
+unique VDFs with perfect completeness from ideal hash functions, leaving
+only the negligible-completeness-error case that the paper additionally
+asks for; a refutation --- a computationally unique, sequential
+construction relative to a random oracle --- would be a considerable
+surprise and would identify uniqueness error as the resource that makes
+random-oracle VDFs possible. The paper's own framing of the alternative is
+that any random-oracle construction of a VDF must either use non-black-box
+techniques or leverage its uniqueness error in a critical
+manner~\cite{MSW20}.
+
+Progress to date. Theorem 3.1 of the source gives, for any perfectly unique
+VDF with perfect completeness, an adversary asking $2T\cdot(s+t)$ queries
+in $2(s+t)$ rounds, which breaks $\sigma$-sequentiality for every
+$\sigma \ge 2(s+t)$. Proposition 3.2 derives the permutation-VDF case from
+the time-lock puzzle lower bound of Mahmoody, Moran and
+Vadhan~\cite{MMV11}. Theorem 3.6 and Corollary 3.7 rule out tight proofs of
+sequential work, hence tight VDFs, with no uniqueness assumption and
+tolerating completeness error; Theorem 4.1 and Corollary 4.2 extend this to
+a setup phase running in time $\poly(\lambda, T)$ with private coins, via a
+preprocessing step that learns the $\epsilon$-heavy setup queries, and
+Section 4.2 extends it to the random permutation oracle model. The
+concurrent work of D\"ottling, Garg, Malavolta and
+Vasudevan~\cite{DGMV19} independently gives a random oracle lower bound for
+tight VDFs. No progress is reported on computational uniqueness itself.
+
+\section{Notation and parameters}\label{sec:notation}
+
+\begin{itemize}
+  \item $\lambda \in \mathbb{N}$: the security parameter.
+    $T = T(\lambda) \in \mathbb{N}$: the time (delay) bound; it is also
+    the bound on the number of oracle queries and query rounds of the
+    honest evaluation algorithm.
+  \item $\mathcal{R}$: a finite range.
+    $\RO \colon \{0,1\}^{*} \to \mathcal{R}$: a random oracle, i.e.\ a
+    uniformly random function, to which all algorithms have oracle access.
+  \item An oracle-aided algorithm may issue many queries \emph{in
+    parallel} within a single round. Its \emph{total time} is its total
+    number of oracle queries; its \emph{parallel time} is its number of
+    query rounds. This is the parallel random oracle model.
+  \item $\Pi = (\Setup, \Eval, \Verify)$: the VDF, a triple of oracle-aided
+    algorithms. $\pp$: the public parameters output by $\Setup$; $\Xpp$
+    and $\Ypp$: the input and output spaces determined by $\pp$, with
+    $\Xpp$ uniformly samplable.
+  \item $s$: an upper bound on the number of oracle queries made by
+    $\Setup$; $t$: an upper bound on the number of oracle queries made by
+    $\Verify$.
+  \item $\gamma$: the completeness error of $\Pi$; $\sigma$: the
+    sequentiality parameter, measured in query rounds of the online
+    adversary.
+  \item $p$: a universal polynomial, quantified before $\Pi$;
+    $\negl(\lambda)$: a function that is $\lambda^{-\omega(1)}$;
+    $\poly(\cdot)$: a fixed polynomial in its arguments.
+\end{itemize}
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{definition}[VDF in the parallel random oracle model]\label{def:vdf}
+A \emph{verifiable delay function} in the parallel random oracle model is a
+triple $\Pi = (\Setup, \Eval, \Verify)$ of oracle-aided algorithms:
+\begin{itemize}
+  \item $\Setup^{\RO}(1^{\lambda}, 1^{T}) \to \pp$ makes at most $s$ oracle
+    queries and outputs public parameters $\pp$, which determine a
+    uniformly samplable input space $\Xpp$ and an output space $\Ypp$;
+  \item $\Eval^{\RO}(\pp, x) \to (y, \pi)$, for $x \in \Xpp$, makes at most
+    $T$ oracle queries in at most $T$ rounds and outputs a value
+    $y \in \Ypp$ together with a (possibly empty) proof $\pi$. The value
+    $y$ is required to be determined by $\pp$, $x$ and $\RO$ alone,
+    independently of the coins of $\Eval$; we write
+    $y = \Eval^{\RO}(\pp, x)$ for this value;
+  \item $\Verify^{\RO}(\pp, x, y, \pi) \to \{0,1\}$ makes at most $t$
+    oracle queries.
+\end{itemize}
+$\Pi$ has \emph{completeness error} $\gamma$ if for all
+$\lambda, T \in \mathbb{N}$,
+\[
+  \Pr\bigl[\, \Verify^{\RO}(\pp, x, y, \pi) = 1 \,\bigr] \;\ge\; 1 - \gamma,
+\]
+where the probability is taken over the experiment
+\begin{gather*}
+  \pp \sample \Setup^{\RO}(1^{\lambda}, 1^{T}), \qquad
+  x \sample \Xpp, \\
+  (y, \pi) \sample \Eval^{\RO}(\pp, x),
+\end{gather*}
+that is, over the choice of $\RO$, the coins of $\Setup$ and $\Eval$, and
+the uniform choice of $x$. \emph{Perfect completeness} is the case
+$\gamma = 0$.
+\end{definition}
+
+\begin{definition}[computational uniqueness]\label{def:cu}
+$\Pi$ is \emph{computationally unique} if for every oracle $\RO$ and every
+oracle-aided adversary $\Adv$ making at most $\poly(\lambda, T)$ oracle
+queries,
+\begin{multline*}
+  \Pr\bigl[\, y \ne \Eval^{\RO}(\pp, x) \;\wedge\;
+    \Verify^{\RO}(\pp, x, y, \pi) = 1 \,\bigr] \\
+  \le\; \negl(\lambda),
+\end{multline*}
+where
+\begin{gather*}
+  \pp \sample \Setup^{\RO}(1^{\lambda}, 1^{T}), \\
+  (x, y, \pi) \sample \Adv^{\RO}(1^{\lambda}, 1^{T}, \pp),
+\end{gather*}
+and the probability is over the coins of $\Setup$ and of $\Adv$ only, and
+\emph{not} over the choice of the oracle: the requirement is imposed for
+every fixed $\RO$. (\emph{Perfect uniqueness} is the stronger requirement
+that for every $\RO$, every $\pp$ in the support of $\Setup^{\RO}$ and
+every $x \in \Xpp$, no pair $(y, \pi)$ with $y \ne \Eval^{\RO}(\pp, x)$
+satisfies $\Verify^{\RO}(\pp, x, y, \pi) = 1$.)
+\end{definition}
+
+\begin{definition}[$\sigma$-sequentiality]\label{def:seq}
+$\Pi$ is \emph{$\sigma$-sequential}, where $\sigma$ may depend on
+$\lambda$, $T$, $s$ and $t$, if for every pair
+$\Adv = (\Adv_{0}, \Adv_{1})$ of oracle-aided algorithms making at most
+$\poly(\lambda, T)$ oracle queries in total and such that $\Adv_{1}$ makes
+at most $\sigma$ \emph{rounds} of oracle queries,
+\[
+  \Pr\bigl[\, y = \Eval^{\RO}(\pp, x) \,\bigr] = \negl(\lambda),
+\]
+where
+\begin{gather*}
+  \pp \sample \Setup^{\RO}(1^{\lambda}, 1^{T}), \qquad
+  \stt \sample \Adv_{0}^{\RO}(1^{\lambda}, 1^{T}, \pp), \\
+  x \sample \Xpp, \qquad
+  y \sample \Adv_{1}^{\RO}(\stt, x),
+\end{gather*}
+and the probability is over the choice of $\RO$, the coins of $\Setup$ and
+of $\Adv$, and the uniform choice of $x$. Here $\Adv_{0}$ is an
+unrestricted-round preprocessing algorithm and $\Adv_{1}$ is the online,
+round-bounded adversary.
+\end{definition}
+
+\begin{conjecture}[no computationally unique VDF in the parallel random
+oracle model]\label{conj:main}
+There exists a polynomial $p$ such that the following holds. Let
+$\lambda \in \mathbb{N}$ be the security parameter and let
+$T = T(\lambda)$ be the time bound. Let $\Pi = (\Setup, \Eval, \Verify)$
+be a VDF in the parallel random oracle model (Definition~\ref{def:vdf})
+with perfect completeness, i.e.\ completeness error $\gamma = 0$, in which
+$\Setup$ makes at most $s = s(\lambda, T)$ oracle queries, $\Eval$ makes at
+most $T$ oracle queries, and $\Verify$ makes at most $t = t(\lambda, T)$
+oracle queries. If $\Pi$ is computationally unique
+(Definition~\ref{def:cu}), then $\Pi$ is \emph{not} $\sigma$-sequential
+(Definition~\ref{def:seq}) for $\sigma = p(\lambda, s, t)$.
+\end{conjecture}
+
+\begin{remark}[the equivalent monotone form]\label{rem:monotone}
+Since $\sigma$-sequentiality is monotone in $\sigma$ (an algorithm running
+in at most $\sigma$ rounds also runs in at most $\sigma'$ rounds for every
+$\sigma' \ge \sigma$), the conclusion is equivalent to: for every
+$\sigma \ge p(\lambda, s, t)$ there is no $\Pi$ that simultaneously
+satisfies perfect completeness, computational uniqueness and
+$\sigma$-sequentiality in the parallel random oracle model. In particular,
+for the standard efficiency regime $s, t = \poly(\lambda, \log T)$ one has
+$p(\lambda, s, t) = \poly(\lambda, \log T) \ll T$, so no computationally
+unique VDF with perfect completeness in the parallel random oracle model
+achieves any nontrivial sequentiality.
+\end{remark}
+
+\begin{remark}[the quantifier order in computational uniqueness]
+\label{rem:quantifiers}
+Following the source paper's definition, the uniqueness probability is
+taken over the coins of $\Setup$ and of $\Adv$ but \emph{not} over the
+choice of the oracle, so Definition~\ref{def:cu} imposes the bound for
+every fixed $\RO$ against every query-bounded adversary. This is a strong
+reading. A version quantified instead with high probability over the choice
+of $\RO$ is a formally different statement, and the two are not obviously
+equivalent; the model choice made here is the paper's.
+\end{remark}
+
+\begin{remark}[scope, and what counts as a resolution]\label{rem:scope}
+Conjecture~\ref{conj:main} keeps perfect completeness, matching the
+hypotheses of the paper's first lower bound. The paper asks, in the same
+sentence, that an extension also tolerate negligible completeness error;
+the statement above does not claim that strengthening. The polynomial $p$
+is a rendering of what extending the perfect-uniqueness attack would mean:
+the paper commits to no bound on the attacker's rounds, so an impossibility
+proved with a worse but still $o(T)$ round bound should count as settling
+the question.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem[AKK19]{AKK19}
+H. Abusalah, C. Kamath, K. Klein, K. Pietrzak, M. Walter.
+\emph{Reversible proofs of sequential work}.
+EUROCRYPT 2019, pages 277--291.
+
+\bibitem[BBBF18]{BBBF18}
+D. Boneh, J. Bonneau, B. B\"unz, B. Fisch.
+\emph{Verifiable delay functions}.
+CRYPTO 2018, pages 757--788.
+
+\bibitem[CP18]{CP18}
+B. Cohen, K. Pietrzak.
+\emph{Simple proofs of sequential work}.
+EUROCRYPT 2018, pages 451--467.
+
+\bibitem[DGMV19]{DGMV19}
+N. D\"ottling, S. Garg, G. Malavolta, P. N. Vasudevan.
+\emph{Tight verifiable delay functions}.
+IACR Cryptology ePrint Archive, 2019:659.
+
+\bibitem[LW15]{LW15}
+A. K. Lenstra, B. Wesolowski.
+\emph{A random zoo: sloth, unicorn, and trx}.
+IACR Cryptology ePrint Archive, 2015:366.
+
+\bibitem[MMV11]{MMV11}
+M. Mahmoody, T. Moran, S. P. Vadhan.
+\emph{Time-lock puzzles in the random oracle model}.
+CRYPTO 2011, pages 39--50.
+
+\bibitem[MMV13]{MMV13}
+M. Mahmoody, T. Moran, S. P. Vadhan.
+\emph{Publicly verifiable proofs of sequential work}.
+ITCS 2013, pages 373--388.
+
+\bibitem[MSW20]{MSW20}
+M. Mahmoody, C. Smith, D. J. Wu.
+\emph{Can verifiable delay functions be based on random oracles?}
+ICALP 2020.
+
+\bibitem[Pie19]{Pie19}
+K. Pietrzak.
+\emph{Simple verifiable delay functions}.
+ITCS 2019, pages 60:1--60:15.
+
+\bibitem[Wes19]{Wes19}
+B. Wesolowski.
+\emph{Efficient verifiable delay functions}.
+Annual International Conference on the Theory and Applications of
+Cryptographic Techniques, pages 379--407, Springer, 2019.
+
+\end{conjurabibliography}
+
+\end{document}

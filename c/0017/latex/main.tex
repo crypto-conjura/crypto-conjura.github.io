@@ -1,0 +1,404 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  No key agreement from garbling one-way-function circuits.
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{NO KEY AGREEMENT FROM GARBLING}
+
+\newcommand{\bits}{\{0,1\}}
+\newcommand{\Cc}{\mathsf{C}}
+\newcommand{\Ct}{\widetilde{\mathsf{C}}}
+\newcommand{\lab}{\mathsf{label}}
+\newcommand{\labset}[1]{\{\lab_{i,#1}\}}
+\newcommand{\Garb}{\mathsf{Garb}}
+\newcommand{\Evl}{\mathsf{Eval}}
+\newcommand{\Sm}{\mathsf{Sim}}
+\newcommand{\gc}{\mathsf{gc}}
+\newcommand{\gi}{\mathsf{gi}}
+\newcommand{\evl}{\mathsf{eval}}
+\newcommand{\rev}{\mathsf{rev}}
+\newcommand{\inpsize}{\mathsf{inpsize}}
+\newcommand{\Trans}{\mathsf{Trans}}
+\newcommand{\Trc}{\mathsf{Tr}}
+\newcommand{\negl}{\mathrm{negl}}
+\newcommand{\cind}{\stackrel{c}{\approx}}
+\newcommand{\GCOWF}{\textup{GC-OWF}}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{No Key Agreement from Garbling One-Way-Function Circuits}
+\cjsubtitle{Arbitrary polynomial round complexity}
+\cjstatus{Statement: AI-written from Sanjam Garg, Mohammad Hajiabadi,
+  Mohammad Mahmoody and Ameer Mohammed, \emph{Limits on the Power of
+  Garbling Techniques for Public-Key Encryption}, Cryptology ePrint
+  Archive 2018, not yet checked by a human. The two-message case,
+  equivalent to public-key encryption, is proved as a theorem of the
+  paper, and the extension to $2m$-round key agreement for every constant
+  $m$ is asserted and sketched in the paper's Appendix~A but never stated
+  as a theorem; nothing at all is claimed for round complexity that grows
+  with the security parameter, which is exactly what the conjecture
+  asserts.}
+\cjcategory{\emph{Idealized Models \& Non-Uniformity}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+Garbled circuits are the most powerful cryptographic technique we know
+that needs nothing beyond one-way functions. Garbling a circuit that has
+one-way-function gates buried inside it is a genuinely non-black-box use
+of that one-way function, even though the garbling machinery itself is
+used as a black box, so classical black-box impossibility results say
+nothing about it. The paper studied here shows that this technique still
+cannot produce public-key encryption: relative to an idealized oracle
+providing a random function together with garbling of circuits with gates
+for that function, secure garbling exists but public-key encryption does
+not. Public-key encryption is exactly two-message key agreement, and the
+paper reports that its argument survives for any fixed number of rounds,
+but breaks once the number of rounds is allowed to grow with the security
+parameter: the proof removes the garbling-evaluation queries one round at
+a time, and each removal inflates the protocol's communication by a
+polynomial factor, so a growing number of rounds compounds into a tower
+of polynomials. The conjecture is that the separation nonetheless holds
+with no restriction on round complexity --- that garbling circuits with
+one-way-function gates cannot give any key agreement at all. For plain
+random oracles the corresponding statement has been known for decades,
+with no dependence on the number of rounds, so the round restriction here
+looks like an artifact of the proof rather than a feature of the world.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+Whether public-key encryption can be based on one-way functions is a
+foundational open question. Impagliazzo and Rudich~\cite{IR89} ruled out
+fully black-box constructions of key agreement --- and hence of public-key
+encryption --- from one-way functions, and Barak and
+Mahmoody~\cite{BMG09} sharpened this to an optimal query attack on any key
+exchange in the random-oracle model. Crucially, neither result restricts
+the round complexity of the protocol being attacked: for a plain random
+oracle, the number of rounds was never a parameter of the impossibility.
+
+These results say nothing about \emph{non-black-box} uses of the one-way
+function, and one of the most powerful classes of non-black-box techniques
+that can be based on one-way functions alone is Yao's garbled circuit
+technique~\cite{Yao86,BHR12}. Garbling a circuit that has one-way-function
+gates inside it uses the circuit description of the one-way function, and
+is therefore a non-black-box use of it in the taxonomy of~\cite{RTV04},
+even though the garbling mechanism itself is used only as a black box.
+That the distinction is not idle was shown by D\"ottling and
+Garg~\cite{DG17}, whose identity-based encryption construction uses
+precisely this technique to step around an earlier black-box barrier.
+
+The paper studied here closes that route for public-key encryption: there
+is no fully black-box construction of PKE from a one-way function $f$
+together with a garbling scheme for circuits with $f$-gates. The garbling
+is \emph{projective} --- labels are chosen per input bit, so garbled
+inputs can be assembled wire by wire --- which is what separates the
+result from the earlier separation of Asharov and Segev~\cite{AS15}, which
+covers only non-decomposable garbling, and from the zero-knowledge-based
+limitations of Brakerski, Katz, Segev and Yerukhimovich~\cite{BKSY11}. The
+proof is a compilation: relative to an idealized garbling oracle, the
+garbling-evaluation queries are removed from encryption and then from
+decryption, leaving a construction that is inefficient but still makes
+polynomially many queries to a plain random oracle, at which
+point~\cite{IR89} applies.
+
+Since public-key encryption is exactly two-message key agreement, the
+natural strengthening is to key agreement with no restriction on the
+number of rounds. The paper reports that its argument extends to any
+constant number of rounds and states exactly what stops it going further:
+the rounds are compiled out one at a time, and each compilation inflates
+the protocol's parameters --- notably its communication complexity --- by
+a polynomial factor, so a super-constant number of rounds produces a tower
+of polynomials and the argument dies. Settling the polynomial-round case
+would put garbling of one-way-function circuits on the same footing as the
+plain random oracle~\cite{IR89,BMG09}, and would say that this whole class
+of non-black-box techniques cannot produce \emph{any} public-key primitive
+at the key-agreement level, not merely the two-message ones.
+
+What is known. The paper gives the full proof for public-key encryption:
+an idealized oracle $(f,\gc,\gi,\evl,\rev)$ relative to which one-wayness
+and secure garbling of $f$-aided circuits both hold, plus a two-step
+compilation removing garbling-evaluation queries first from encryption and
+then from decryption, with correctness and security losses that are
+inverse-polynomial for suitable parameter choices. Appendix~A of the paper
+sketches the same compilation for one round of an interactive protocol,
+which yields the constant-round key-agreement case by iteration, and
+states the polynomial parameter blow-up per iteration as the reason
+iteration cannot be carried a super-constant number of times. Appendix~B
+additionally shows the same oracles support non-interactive
+witness-indistinguishable proofs for satisfiability of $f$-aided circuits,
+which resolves an open question of Brakerski et al.\ about protocols with
+imperfect completeness in the PKE and constant-round key-agreement cases.
+
+\section{Notation and parameters}\label{sec:notation}
+
+\begin{itemize}
+\item $\kappa\in\mathbb{N}$ is the security parameter and $\negl(\kappa)$
+  denotes an arbitrary function that is $\kappa^{-\omega(1)}$; a quantity
+  is \emph{non-negligible} if it is not of this form. \emph{PPT} means
+  probabilistic polynomial time, and an \emph{oracle PPT} is a PPT
+  algorithm that may make oracle calls.
+\item $f$ denotes a function $\bits^{*}\to\bits^{*}$. An oracle algorithm
+  $S$ \emph{breaks the one-wayness of} $f$ if
+  \[
+    \Pr_{x\leftarrow\bits^{\kappa}}
+      \bigl[S(1^{\kappa},f(x))\in f^{-1}(f(x))\bigr]
+  \]
+  is non-negligible in $\kappa$.
+\item A \emph{binary-output oracle-aided circuit} $\Cc$ is a circuit built
+  from Boolean gates together with \emph{oracle gates}, whose output is a
+  single bit. Its input size is $\inpsize(\Cc)$, its size $|\Cc|$ is its
+  number of gates and input wires, and $\Cc^{f}$ denotes $\Cc$ with every
+  oracle gate instantiated by $f$.
+\item $\Ct$ denotes a garbled circuit and $\lab_{i,b}$ the label for the
+  value $b\in\bits$ on the $i$-th input wire; for $x\in\bits^{m}$, $x_i$
+  is its $i$-th bit and $\labset{x_i}_{i\in[m]}$ is the garbled input
+  for $x$.
+\item $X\cind Y$ means that the two families of random variables indexed
+  by $\kappa$ are computationally indistinguishable: every PPT
+  distinguisher has advantage $\negl(\kappa)$.
+\item $\langle A^{O}(r_a),B^{O}(r_b)\rangle(1^{\kappa})$ denotes an
+  execution of an interactive protocol between oracle algorithms $A$ and
+  $B$ with oracle access to $O$, private randomness $r_a$ and $r_b$ and no
+  other inputs, and $\Trans\langle A(r_a),B(r_b)\rangle$ denotes the
+  resulting transcript. When $A$ and $B$ are given oracle access to both
+  $f$ and the three algorithms of a garbling scheme $L$ we write $A^{f,L}$
+  and $B^{f,L}$.
+\end{itemize}
+
+The parameters are:
+\begin{itemize}
+\item $\kappa$, the security parameter.
+\item $m$: in Definition~\ref{def:ka}, half the round complexity of the
+  protocol (the number of message pairs); in
+  Definition~\ref{def:garb}, the input size of the circuit being garbled.
+\item $\delta$, the key-disagreement probability; the protocol is correct
+  when $\delta(\kappa)\le 1/p(\kappa)$ for some polynomial $p$.
+\item $\gamma$, the eavesdropper's probability of outputting the agreed
+  key; the protocol is secure when this is negligible.
+\end{itemize}
+
+\begin{definition}[Garbling scheme for oracle-aided circuits relative to
+$f$]\label{def:garb}
+Fix a function $f$. A triple of algorithms $L=(\Garb,\Evl,\Sm)$ is a
+\emph{garbling scheme for oracle-aided circuits relative to $f$}
+(equivalently, \emph{with $f$-gates}) if:
+\begin{itemize}
+\item $\Garb(1^{\kappa},\Cc)$ takes the security parameter and a
+  binary-output oracle-aided circuit $\Cc$ with $m=\inpsize(\Cc)$, and
+  outputs a garbled circuit $\Ct$ together with a set of labels
+  $\labset{b}_{i\in[m],b\in\bits}$;
+\item $\Evl^{f}\bigl(\Ct,\labset{b_i}_{i\in[m]}\bigr)$ takes a garbled
+  circuit and a garbled input and outputs a value in
+  $\bits^{*}\cup\{\bot\}$;
+\item \textbf{Correctness.} For every binary-output oracle-aided circuit
+  $\Cc$ with $m=\inpsize(\Cc)$ and every $x\in\bits^{m}$,
+  \[
+    \Pr\bigl[\Cc^{f}(x)=
+      \Evl^{f}\bigl(\Ct,\labset{x_i}_{i\in[m]}\bigr)\bigr]=1,
+  \]
+  the probability being over
+  $(\Ct,\labset{b}_{i\in[m],b\in\bits})\leftarrow\Garb(1^{\kappa},\Cc)$;
+\item \textbf{Security.} For every polynomial $m=m(\kappa)$, every
+  poly-size binary-output oracle-aided circuit $\Cc$ with
+  $\inpsize(\Cc)=m$ and every $x\in\bits^{m}$,
+  \[
+    \bigl(\Ct,\labset{x_i}_{i\in[m]}\bigr)\cind
+      \Sm\bigl(1^{|\Cc|},m,\Cc^{f}(x)\bigr),
+  \]
+  where
+  $(\Ct,\labset{b}_{i\in[m],b\in\bits})\leftarrow\Garb(1^{\kappa},\Cc)$.
+\end{itemize}
+The labels are per input \emph{bit} (``projective'' or ``decomposable''
+garbling): a garbled input for a string is assembled wire by wire out of
+independently chosen labels. A scheme is \emph{correct} if it satisfies
+the correctness clause. The pair consisting of a one-way function $f$ and
+such a scheme $L$ is the primitive \GCOWF{}.
+\end{definition}
+
+\begin{definition}[Key-agreement protocol]\label{def:ka}
+For $m\in\mathbb{N}$, a \emph{$2m$-round key-agreement protocol} is a pair
+of PPT interactive algorithms $(A,B)$ such that
+$\langle A(r_a),B(r_b)\rangle(1^{\kappa})=(k_a,k_b)$ for private
+randomness $r_a,r_b$; write $k:=k_a$.
+\begin{itemize}
+\item \textbf{Correctness.} For a function $\delta(\cdot)$ the protocol is
+  \emph{$(1-\delta)$-correct} if $\Pr[k_a=k_b]\ge 1-\delta(\kappa)$ for
+  every $\kappa$, the probability being over the randomness of $A$ and
+  $B$. It is \emph{correct} if it is $(1-\delta)$-correct with
+  $\delta(\kappa)=1/p(\kappa)$ for some polynomial $p$.
+\item \textbf{Security.} For a function $\gamma(\cdot)$ the protocol is
+  \emph{$\gamma$-secure} if for every PPT adversary $E$ and every
+  $\kappa$, $\Pr[E(1^{\kappa},\Trc)=k]\le\gamma(\kappa)$, where
+  $\Trc\leftarrow\Trans\langle A(r_a),B(r_b)\rangle$ and the probability
+  is over the randomness of $E$, $A$ and $B$. It is \emph{secure} if it is
+  $\gamma$-secure for some $\gamma(\kappa)=\negl(\kappa)$. An adversary
+  $E$ \emph{breaks} the protocol if $\Pr[E(1^{\kappa},\Trc)=k]$ is
+  non-negligible in $\kappa$.
+\end{itemize}
+\end{definition}
+
+\begin{definition}[Fully black-box construction of key agreement from
+GC-OWF]\label{def:bb}
+A \emph{fully black-box construction of a key-agreement protocol from}
+\GCOWF{} consists of a pair of oracle PPT interactive algorithms $(A,B)$
+together with an oracle PPT security reduction $S=(S_1,S_2)$, such that
+for every function $f$ and every correct garbling scheme
+$L=(\Garb,\Evl,\Sm)$ for oracle-aided circuits relative to $f$
+(Definition~\ref{def:garb}) both of the following hold.
+\begin{itemize}
+\item \textbf{Correctness.} $\langle A^{f,L},B^{f,L}\rangle$ is a correct
+  key-agreement protocol in the sense of Definition~\ref{def:ka}. (The
+  paper's Definition~3.6 states this bar as
+  $(1-\frac{1}{2^{\kappa}})$-correctness and remarks that the choice is
+  without loss of generality by correctness boosting.)
+\item \textbf{Security.} For every adversary $E$ that breaks
+  $\langle A^{f,L},B^{f,L}\rangle$, either
+  \begin{itemize}
+  \item $S_1^{f,L,E}$ breaks the one-wayness of $f$; or
+  \item $S_2^{f,L,E}$ breaks the security of $L$ relative to $f$: for some
+    binary-output oracle-aided circuit $\Cc$ with $m=\inpsize(\Cc)$ and
+    some $x\in\bits^{m}$, the algorithm $S_2^{f,L,E}$ distinguishes
+    $\bigl(\Ct,\labset{x_i}_{i\in[m]}\bigr)$ from
+    $\Sm\bigl(1^{|\Cc|},1^{|x|},\Cc^{f}(x)\bigr)$ with non-negligible
+    advantage, where
+    $(\Ct,\labset{b}_{i\in[m],b\in\bits})\leftarrow\Garb(1^{\kappa},\Cc)$.
+  \end{itemize}
+\end{itemize}
+The round complexity of $\langle A,B\rangle$ is whatever $(A,B)$
+prescribe. Since $A$ and $B$ are PPT it is bounded by a polynomial in
+$\kappa$; it is \emph{not} required to be bounded by a constant.
+\end{definition}
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{conjecture}[no key agreement from \GCOWF{}]\label{conj:main}
+There is no fully black-box construction of a key-agreement protocol from
+\GCOWF{} in the sense of Definition~\ref{def:bb}.
+
+Equivalently and explicitly: for every pair of oracle PPT interactive
+algorithms $(A,B)$ and every oracle PPT security reduction $S=(S_1,S_2)$,
+there exist a function $f\colon\bits^{*}\to\bits^{*}$ and a correct
+garbling scheme $L=(\Garb,\Evl,\Sm)$ for oracle-aided circuits relative to
+$f$ (Definition~\ref{def:garb}) such that at least one of the following
+fails:
+\begin{enumerate}
+\item $\langle A^{f,L},B^{f,L}\rangle$ is a correct key-agreement protocol
+  (Definition~\ref{def:ka});
+\item for every adversary $E$ that breaks
+  $\langle A^{f,L},B^{f,L}\rangle$ (Definition~\ref{def:ka}), either
+  $S_1^{f,L,E}$ breaks the one-wayness of $f$ or $S_2^{f,L,E}$ breaks the
+  security of $L$ relative to $f$ (Definition~\ref{def:bb}).
+\end{enumerate}
+\end{conjecture}
+
+\begin{remark}[round complexity is the whole content]\label{rem:rounds}
+No bound is placed on the round complexity of $\langle A,B\rangle$ beyond
+the polynomial bound implied by $A$ and $B$ being PPT. The two-message
+case, which is equivalent to public-key encryption, is a theorem of the
+paper (Theorem~4.1). The paper further asserts, and sketches in its
+Appendix~A, the extension to $2m$-round key agreement for every constant
+$m$. The content of the conjecture is protocols whose round complexity is
+$\omega(1)$ as a function of $\kappa$.
+\end{remark}
+
+\begin{remark}[why it matters, and where to attack]\label{rem:why}
+It is the difference between ``garbling one-way-function circuits cannot
+give you public-key encryption'' and ``garbling one-way-function circuits
+cannot give you public-key cryptography at all''. Round complexity is not
+a restriction in the corresponding random-oracle
+results~\cite{IR89,BMG09}, so a gap that exists only for super-constant
+rounds looks like an artifact of the compilation technique rather than a
+real boundary; if instead it is real, then there is a genuinely
+interactive way of exploiting garbling that nobody has found, which would
+be a much more interesting outcome. Either answer is informative, and the
+class of techniques covered is broad: the paper notes that all known
+constructions combining garbling with one-way functions fall inside its
+model. The obstruction is a single named quantity --- the polynomial
+blow-up in the protocol's parameters incurred per round of compilation ---
+which can be attacked directly, either by finding a compilation whose cost
+does not compound, or by proving the separation without round-by-round
+compilation at all.
+\end{remark}
+
+\begin{remark}[caveats for a reviewer]\label{rem:caveats}
+The paper poses this as a future direction, not as a numbered conjecture,
+so the \emph{direction} of the answer --- that the separation does extend
+to polynomially many rounds --- is the paper's evident expectation but is
+never asserted by it; the alternative framing would be a question rather
+than a conjecture. Second, Conjecture~\ref{conj:main} is a transposition:
+it mirrors the paper's Definition~3.6 (fully black-box construction of PKE
+from \GCOWF{}) with the key-agreement notion of the paper's Appendix~A
+substituted for the PKE notion. The paper never writes that combined
+definition out, so the wording here is faithful but not quoted. Third, the
+correctness notion of Definition~\ref{def:ka} permits inverse-polynomial
+disagreement, which is unusually weak; anyone attacking the problem should
+decide whether they want that or negligible error, and the answer might
+differ between the two. Fourth, the constant-round case is only sketched
+in the paper's appendix, so a would-be prover should not assume the
+constant-round machinery is fully written down anywhere. Finally, no
+follow-up work settling the polynomial-round case is known to the author
+of this record, but this has not been verified against the post-2018
+literature and should be checked before publication.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem[AS15]{AS15}
+Gilad Asharov and Gil Segev.
+\emph{Limits on the power of indistinguishability obfuscation and
+functional encryption}.
+Foundations of Computer Science (FOCS), 2015 IEEE 56th Annual Symposium
+on, pages 191--209, IEEE, 2015.
+
+\bibitem[BHR12]{BHR12}
+Mihir Bellare, Viet Tung Hoang, and Phillip Rogaway.
+\emph{Foundations of garbled circuits}.
+ACM CCS 12: 19th Conference on Computer and Communications Security,
+pages 784--796, ACM Press, 2012.
+
+\bibitem[BKSY11]{BKSY11}
+Zvika Brakerski, Jonathan Katz, Gil Segev, and Arkady Yerukhimovich.
+\emph{Limits on the power of zero-knowledge proofs in cryptographic
+constructions}.
+Theory of Cryptography Conference, pages 559--578, Springer, 2011.
+
+\bibitem[BMG09]{BMG09}
+Boaz Barak and Mohammad Mahmoody-Ghidary.
+\emph{Merkle puzzles are optimal --- an $O(n^{2})$-query attack on any key
+exchange from a random oracle}.
+Advances in Cryptology --- CRYPTO 2009, volume 5677 of Lecture Notes in
+Computer Science, pages 374--390, Springer, 2009.
+
+\bibitem[DG17]{DG17}
+Nico D\"ottling and Sanjam Garg.
+\emph{Identity-based encryption from the Diffie-Hellman assumption}.
+Advances in Cryptology --- CRYPTO 2017, Part I, volume 10401 of Lecture
+Notes in Computer Science, pages 537--569, Springer, 2017.
+
+\bibitem[IR89]{IR89}
+Russell Impagliazzo and Steven Rudich.
+\emph{Limits on the provable consequences of one-way permutations}.
+21st Annual ACM Symposium on Theory of Computing, pages 44--61, Seattle,
+WA, USA, ACM Press, 1989.
+
+\bibitem[RTV04]{RTV04}
+Omer Reingold, Luca Trevisan, and Salil P. Vadhan.
+\emph{Notions of reducibility between cryptographic primitives}.
+TCC 2004: 1st Theory of Cryptography Conference, volume 2951 of Lecture
+Notes in Computer Science, pages 1--20, Springer, 2004.
+
+\bibitem[Yao86]{Yao86}
+Andrew Chi-Chih Yao.
+\emph{How to generate and exchange secrets (extended abstract)}.
+27th Annual Symposium on Foundations of Computer Science, pages 162--167,
+IEEE Computer Society Press, 1986.
+
+\end{conjurabibliography}
+
+\end{document}

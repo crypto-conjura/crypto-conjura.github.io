@@ -1,0 +1,39 @@
+---
+title: "Optimizing search trees for encrypted indexes"
+subtitle: "Two heuristics build the tree an encrypted search walks down. What can be proved about the cost of the trees they build?"
+---
+
+## Motivation
+
+A tree-based encrypted index puts every file at a leaf, tagged with the set of keywords that file contains, and tags every internal node with the union of the tags below it. A search walks down from the root and descends below a node only when that node's tag is consistent with the query. The cost of the search is the number of nodes it touches, so the cost of every future query is fixed the moment the tree is built — by which files were placed next to which.
+
+Etemad, Mahmoody and Evans reduce that design choice to one number. For a query distribution $\mathcal{Q}$ and a tree $T$, the *search-leakage cost* $\mathrm{SLC}_{\mathcal{Q}}(T)$ is the sum, over internal nodes $u$, of the probability that a random query is satisfied by $u$'s tag; the expected search cost is $1 + 2\,\mathrm{SLC}_{\mathcal{Q}}(T)$. Write $\mathrm{Opt}_{\mathcal{Q}}(L)$ for the minimum of $\mathrm{SLC}_{\mathcal{Q}}$ over *all* trees on the leaf set $L$, unbalanced ones included. The design question becomes an approximation question: how close to $\mathrm{Opt}_{\mathcal{Q}}(L)$ does a given construction get?
+
+The paper offers two constructions and proves something about only one of them.
+
+- **Level-optimal.** Build bottom-up, one level at a time, pairing the current nodes by a minimum-weight perfect matching whose edge weights are the probability that a random query is satisfied by the merged node. The output is balanced, which is what encrypted search wants: an unbalanced tree leaks its own shape and costs more rounds of interaction.
+- **Best-first.** The Huffman-style greedy: repeatedly merge the two current nodes whose merged tag has the smallest query probability. It wins every experiment the paper runs and, on eight files, is essentially indistinguishable from brute-force search over all binary trees. Nothing at all is proved about it.
+
+## The lattice
+
+Two axes: which algorithm, and how wide a class of query distributions the guarantee has to cover.
+
+| | Disjunctive queries | A broader class | All monotone queries |
+|---|---|---|---|
+| **Level-optimal** | **Theorem** — $O(\log n)$ against $\mathrm{Opt}$, and the $\log n$ is shown necessary. | **Open** — [c/0016](/c/0016/) | Open, and recorded there as the maximal reading. |
+| **Best-first** | Open — no bound is proved for any class. | Open | **Open** — [c/0015](/c/0015/) |
+
+The asymmetry between the rows is the interesting part, and it is not an accident of effort. The proof for disjunctions never looks at the algorithm: if a query is a disjunction, a node can be consistent with it only when some matching file sits beneath that node, so *every* balanced tree is automatically within a logarithmic factor. The argument is about shape alone.
+
+That collapses the moment conjunctions are allowed. A node can be consistent with an AND of two keywords while no single file below it contains both, and the paper exhibits an arrangement where such a query sweeps the whole tree and returns nothing. So beyond disjunctions no shape-only argument can work, and a proof has to use something about the matchings the algorithm actually picks — which is why the level-optimal cell is a genuine conjecture rather than a missing lemma.
+
+The best-first row is open for a different reason: the paper's technique is layered and best-first is not, so the existing proof has nothing to say about it, and the authors name no obstruction. Note also that best-first is *not* exactly optimal — exhaustive search beats it on some inputs — so the only question available is the approximation ratio, and an unbounded-ratio workload settles it as decisively as a proof would.
+
+## Statements
+
+- [A constant-factor guarantee for Huffman-style search tree construction](/c/0015/) — open.
+- [Level-optimal search trees beyond disjunctive queries](/c/0016/) — open.
+
+## Sources
+
+- Etemad, Mahmoody, and Evans. [*Optimizing Trees for Static Searchable Encryption*](https://eprint.iacr.org/2018/052). IACR Cryptology ePrint Archive, Report 2018/052.

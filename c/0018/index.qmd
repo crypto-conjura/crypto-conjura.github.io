@@ -1,0 +1,92 @@
+---
+id: "0018"
+problem: vdf-random-oracle-foundations
+draft: vdfs-computational-uniqueness-rom
+title: "Ruling Out Computationally Unique VDFs in the Random Oracle Model"
+short_title: "Computationally unique VDFs in the ROM"
+areas: [idealized-models, impossibility-results, foundations]
+model: rom
+form: impossibility
+assumption_class: unconditional
+category: research-open
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: new-idea
+  by: ai
+  note: "The known attack is a simulation whose correctness rests on perfect uniqueness: it majority-votes over emulated executions, and the vote is only meaningful when no wrong output can be accepted at all. Under computational uniqueness wrong-but-accepted outputs may exist and simply be hard to find, so the emulations can agree on one and the vote proves nothing. The authors identify this as the load-bearing hypothesis, so a proof needs a different mechanism rather than a sharper count."
+status_summary: "Open under computational uniqueness, which is the notion the definition of a VDF actually requires. Settled for perfect uniqueness with perfect completeness, and settled in the tight regime even with no uniqueness assumption at all."
+status_updated: 2026-08-17
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Mahmoody, Smith, Wu, Can Verifiable Delay Functions be Based on Random Oracles?, Cryptology ePrint Archive, Report 2019/663; ICALP 2020", url: "https://eprint.iacr.org/2019/663"}
+revision: 1
+statement_sha: "0f9cc1b0c2e212a49b9bae75919b279598e70cc078606964a60395227963a0f7"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+A verifiable delay function takes a long, inherently sequential time to evaluate, can be checked quickly, and has a unique accepted output. Can one be built from nothing but an ideal hash function, modelled as a random oracle, with sequential time measured by the number of rounds of adaptive oracle queries an algorithm needs? The answer is no when uniqueness is perfect, meaning no accepting proof for a wrong output exists at all. What remains open is the standard notion, where wrong outputs with accepting proofs may well exist but no efficient adversary can find one. The conjecture is that the impossibility survives this weakening.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [Download LaTeX source](latex/main.tex)
+
+Let $\lambda$ be the security parameter and $T = T(\lambda)$ the time bound. A **VDF in the parallel random oracle model** is $\Pi = (\mathsf{Setup}, \mathsf{Eval}, \mathsf{Verify})$, where $\mathsf{Setup}$ makes at most $s = s(\lambda,T)$ oracle queries, $\mathsf{Eval}$ at most $T$, and $\mathsf{Verify}$ at most $t = t(\lambda,T)$. It has **perfect completeness** ($\gamma = 0$) if an honestly produced output and proof always verify.
+
+$\Pi$ is **computationally unique** if for every adversary running in time $\mathrm{poly}(\lambda,T)$, given the public parameters, the probability of outputting $(x, y, \pi)$ where $\pi$ verifies for $y$ on $x$ but $y$ is not the honest output is negligible — the probability taken over $\mathsf{Setup}$ and the adversary's coins, but *not* over the oracle. **Perfect uniqueness** is the $\varepsilon = 0$, computationally unbounded case: no such $(x,y,\pi)$ exists at all.
+
+$\Pi$ is **$\sigma$-sequential** if no pair $(\mathrm{Adv}_0, \mathrm{Adv}_1)$ with total time $\mathrm{poly}(\lambda,T)$, where $\mathrm{Adv}_1$ additionally runs in parallel time at most $\sigma$, computes the honest output with better than negligible probability.
+
+**Conjecture.** There is a polynomial $p$ such that: if $\Pi$ is a VDF in the parallel random oracle model with perfect completeness and $\Pi$ is computationally unique, then $\Pi$ is **not** $\sigma$-sequential for $\sigma = p(\lambda, s, t)$.
+
+Note what the bound does and does not say. The number of rounds $p(\lambda,s,t)$ depends only on the query counts of $\mathsf{Setup}$ and $\mathsf{Verify}$ — never on $T$ — so the attack it asserts breaks sequentiality by an unbounded margin as $T$ grows. Since breaking $\sigma$-sequentiality also breaks $\sigma'$-sequentiality for every $\sigma' \ge \sigma$, this is the strongest form of the conclusion.
+
+## Proof
+
+Open under computational uniqueness.
+
+**The perfect-uniqueness case is settled.** For perfectly unique VDFs with perfect completeness, no construction is $\sigma$-sequential for $\sigma \ge 2(s+t)$. The attack simulates: it runs the honest evaluation in its head, answering oracle queries itself, and after each simulated execution asks all previously unasked queries to the real oracle in a single round. After $2(s+t)+1$ such simulated executions, using $2(s+t)$ rounds of real-oracle queries, a majority vote over the simulated outputs returns the true value. The count is a charging argument: only so many simulated executions can differ from the real one before the real oracle has been queried on everything that matters.
+
+**Why it does not survive the weakening.** The majority vote is meaningful only because, under perfect uniqueness, an output that verifies *is* the honest one. Under computational uniqueness a wrong output with an accepting proof may exist and merely be hard to find — and nothing stops the simulated executions from agreeing on such an output, since the simulator is not bound by the efficiency assumption that makes uniqueness hold. The authors identify this hypothesis as the one the argument "critically relies" on.
+
+**The tight regime is settled separately, and does not help.** With no uniqueness assumption at all, no VDF is $\sigma$-sequential for $\sigma > T(1 - 1/2(s+t))$, or for $\sigma = T - T^{\rho}$. Those results rule out constructions claiming sequentiality very close to their honest running time; they say nothing about the regime this conjecture addresses, where $\sigma$ is a fixed polynomial in $\lambda, s, t$ far below $T$.
+
+## Discussion
+
+This is the paper's own "main open question remaining", posed in the introduction and again in the conclusion, and it is the version that matters: computational uniqueness is what the definition of a VDF requires, so a proof would close the question of whether VDFs can be based on ideal hash functions in the non-tight regime, while the existing result closes only a strengthened variant adopted to make the proof work.
+
+Two scope limits are worth stating plainly, because the temptation is to read the conjecture as more than it is.
+
+- **Perfect completeness is retained.** The paper asks, in the same sentence, for an extension that also tolerates negligible completeness error. The conjecture here keeps $\gamma = 0$, matching the hypotheses of the settled perfect-uniqueness result. A solver should decide which of the two they are attacking; the answer may differ.
+- **It is not a claim that VDFs cannot be based on ideal hash functions outright.** With perfect completeness retained and the tight regime handled by different results, a proof would settle one cell, not the whole table.
+
+The interesting feature is that the obstruction is a *definitional* dependence rather than a counting one. The known attack does not fail because its bound is too weak; it fails because its correctness argument invokes exactly the hypothesis being removed. So a proof is unlikely to come from sharpening the charging argument, and more likely from a mechanism that certifies an output without relying on the non-existence of accepting proofs for wrong ones.
+
+:::
+
+## Open obligations
+
+- [ ] Prove or refute the impossibility under computational uniqueness with perfect completeness, for $\sigma$ a fixed polynomial in $\lambda, s, t$.
+- [ ] Settle the same question allowing negligible completeness error, which the source paper asks for in the same breath and which is not covered here.
+- [ ] Determine whether any simulation-and-vote argument can work at all under computational uniqueness, or whether the mechanism has to change.
+- [ ] Close the gap between the two settled regimes: nothing is known for $\sigma$ between $p(\lambda,s,t)$ and $T(1 - 1/2(s+t))$ under computational uniqueness.
+- [ ] Formalize the statement in Lean. The parallel random oracle model, round-depth accounting, and the three VDF properties all need writing first.
+
+## Sources
+
+- Mahmoody, Smith, and Wu. [*Can Verifiable Delay Functions be Based on Random Oracles?*](https://eprint.iacr.org/2019/663). Cryptology ePrint Archive, Report 2019/663; ICALP 2020.

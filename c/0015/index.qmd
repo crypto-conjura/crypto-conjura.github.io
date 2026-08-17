@@ -1,0 +1,99 @@
+---
+id: "0015"
+problem: searchable-encryption-tree-optimization
+draft: best-first-optimality
+title: "A Constant-Factor Guarantee for Huffman-Style Search Tree Construction"
+short_title: "Best-first search trees"
+areas: [privacy, foundations]
+model: standard
+form: tight-bound
+assumption_class: unconditional
+category: research-open
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: new-idea
+  by: ai
+  note: "The source paper names no obstruction, which is itself the difficulty: there is no partial result to extend. Its own proof for the level-optimal algorithm is a shape-only argument that never inspects the algorithm, and best-first is not layered, so nothing in that proof transfers. The only hard evidence is negative -- exhaustive search beats best-first on some inputs -- which rules out exact optimality and leaves the ratio untouched."
+status_summary: "Open, with no bound of any kind proved for the best-first algorithm on any class of query distributions. Exact optimality is already refuted by the paper's own exhaustive search, so only the approximation ratio remains, and a workload on which greedy is off by an unbounded factor would settle it."
+status_updated: 2026-08-17
+relations:
+  - {kind: variant-of, target: "0016", note: "The same objective and the same source paper, asked of the paper's other algorithm. This one has no proved bound at all; c/0016 asks how far an existing logarithmic bound extends."}
+lean:
+  mode: none
+sources:
+  - {cite: "Etemad, Mahmoody, Evans, Optimizing Trees for Static Searchable Encryption, IACR Cryptology ePrint Archive, Report 2018/052", url: "https://eprint.iacr.org/2018/052"}
+revision: 1
+statement_sha: "97b97eca34b7ab60489003bea2da70686375d140c9ea8b739c25f06abe2d2fb8"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+Every file in a tree-based encrypted index sits at a leaf tagged with its keyword set, every internal node carries the union of the tags below it, and a query costs one unit for each node it touches on the way down. Choosing which files to place next to each other therefore fixes the cost of every future search. The source paper reduces that choice to a clean objective and gives a greedy heuristic borrowed from Huffman coding: repeatedly merge the two current nodes whose merged tag is least likely to satisfy a random query. It wins every experiment the paper runs, and on eight files it is almost indistinguishable from brute-force search over all binary trees. What is missing is any theoretical guarantee whatever. The conjecture recorded here is the strongest reading of what the authors expect: that the greedy tree is always within an absolute constant factor of the best tree of any shape.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [Download LaTeX source](latex/main.tex)
+
+Fix a dictionary size $m \ge 1$ and write $\mathcal{M}_m$ for the monotone Boolean formulas over $x_1,\dots,x_m$. A **leaf set** is $L = \{(f_1,\bar f_1),\dots,(f_n,\bar f_n)\}$ with $\bar f_i \in \{0,1\}^m$ the keyword indicator of file $f_i$. An **OR tree** over $L$ is a full binary tree whose leaves are the elements of $L$ and in which every internal node $u$ carries the bitwise OR $\bar u$ of the labels beneath it.
+
+For a distribution $\mathcal{Q}$ over $\mathcal{M}_m$ and a node $u$, let $P_{\mathcal{Q}}(u) := \Pr_{q \leftarrow \mathcal{Q}}[\,q(\bar u) = 1\,]$, and for a tree $T$ with internal nodes $I(T)$ define the **search-leakage cost**
+$$\mathrm{SLC}_{\mathcal{Q}}(T) \;:=\; \sum_{u \in I(T)} P_{\mathcal{Q}}(u),$$
+so that the expected number of nodes a query visits is $1 + 2\,\mathrm{SLC}_{\mathcal{Q}}(T)$. Write $\mathrm{Opt}_{\mathcal{Q}}(L)$ for the minimum of $\mathrm{SLC}_{\mathcal{Q}}$ over **all** OR trees over $L$, unbalanced ones included.
+
+The **best-first** algorithm starts from the $n$ leaves and repeatedly replaces the pair $\{u,v\}$ minimising $P_{\mathcal{Q}}(u \vee v)$ by a new parent labelled $\bar u \vee \bar v$, until one node remains. It is defined only up to the choice of minimising pair, so its output is a *set* of trees; write $\mathrm{BF}(L,\mathcal{Q})$ for that set.
+
+**Conjecture.** There is an absolute constant $c > 0$ such that for every $m \ge 1$, every $n \ge 2$, every leaf set $L$, every distribution $\mathcal{Q}$ over $\mathcal{M}_m$, and every $T \in \mathrm{BF}(L,\mathcal{Q})$,
+$$\mathrm{SLC}_{\mathcal{Q}}(T) \;\le\; c \cdot \mathrm{Opt}_{\mathcal{Q}}(L).$$
+
+Three parts of the quantification are the statement rather than decoration.
+
+- **No height restriction on either side.** $\mathrm{Opt}_{\mathcal{Q}}(L)$ ranges over all OR trees, so the greedy tree is compared against the cheapest tree of any shape, not the cheapest balanced one.
+- **Every tie-breaking.** The conjecture quantifies over every $T \in \mathrm{BF}(L,\mathcal{Q})$. A bound proved for one canonical tie-breaking rule is a partial answer and worth reporting as such.
+- **The constant is absolute.** It may not depend on $m$, $n$, $L$ or $\mathcal{Q}$.
+
+## Proof
+
+Open. No bound on best-first's approximation ratio is proved anywhere in the source paper, for any class of query distributions.
+
+**What is settled is the negative half.** The paper's exhaustive search over all binary trees on eight files finds trees strictly better than the best-first tree, so best-first is not exactly optimal and the exact-optimality reading of the question is already refuted. That is what makes this an approximation-ratio question and nothing weaker.
+
+**What the paper proves instead concerns the other algorithm.** Its bounds are for the level-optimal construction: an $O(\log n)$ approximation against $\mathrm{Opt}_{\mathcal{Q}}(L)$ when $\mathcal{Q}$ is supported on disjunctive queries, with a matching $\Omega(\log n)$ instance, and a constant-factor comparison against the optimal *balanced* tree for $\mathcal{Q}$ uniform over single keywords under a density hypothesis. The hybrid algorithm is left unanalyzed alongside best-first.
+
+**Why the existing technique does not transfer.** The disjunctive proof is a shape-only argument — for a disjunctive query, a node can be consistent only when a matching file sits beneath it, so any balanced tree is automatically within a logarithmic factor. It never inspects the algorithm. Best-first is not layered and produces unbalanced trees, so there is nothing in that argument to reuse. This is a reading of the proof rather than a claim the authors make.
+
+**The conjecture may well be false, and the authors do not assert it.** The paper leaves open "a theoretical analysis of the optimality" of best-first without naming a target bound. The constant factor comes from a neighbouring sentence expecting the algorithms to be "probably within a constant factor of optimal", and that sentence is hedged to real data. A worst-case constant-factor claim over all monotone $\mathcal{Q}$ therefore goes beyond anything the paper states, and a counterexample would settle this problem without contradicting the paper.
+
+## Discussion
+
+The natural first target is the conjecture restricted to $\mathcal{Q}$ uniform over single keywords, where the objective becomes $\frac{1}{m}\sum_{u \in I(T)} \mathrm{HW}(\bar u)$, the total Hamming weight of the internal labels. That is the version closest to what the paper proves elsewhere, and it is where the real content sits. The objective is also available in closed form for the other family the paper singles out: for $\mathcal{Q}$ uniform over $k$-keyword conjunctions, $P_{\mathcal{Q}}(u)$ is a fixed polynomial in $\mathrm{HW}(\bar u)$.
+
+One point a solver should know that the paper does not discuss: computing $\mathrm{Opt}_{\mathcal{Q}}(L)$ may itself be NP-hard. That would not affect the conjecture, which is about a ratio rather than about computing the optimum, but it shapes what a proof can look like.
+
+Unlike the neighbouring question about the level-optimal algorithm, this one comes with no obstruction named by its authors — there is no partial result to extend and no barrier to route around, which is the whole of its difficulty.
+
+:::
+
+## Open obligations
+
+- [ ] Prove or refute the constant-factor bound for arbitrary monotone $\mathcal{Q}$. A workload on which best-first is off by an unbounded factor settles it as decisively as a proof.
+- [ ] Settle the single-keyword special case first: $\mathcal{Q}$ uniform over single keywords, objective $\frac{1}{m}\sum_{u} \mathrm{HW}(\bar u)$.
+- [ ] Decide whether the bound holds for every tie-breaking rule or only for a canonical one, and report which.
+- [ ] Establish whether any bound at all — not necessarily constant — holds for best-first on disjunctive queries, where the level-optimal algorithm has one.
+- [ ] Formalize the statement in Lean. Nothing exists: OR trees, the leakage cost, the greedy procedure and the optimum over all shapes all need writing first.
+
+## Sources
+
+- Etemad, Mahmoody, and Evans. [*Optimizing Trees for Static Searchable Encryption*](https://eprint.iacr.org/2018/052). IACR Cryptology ePrint Archive, Report 2018/052.

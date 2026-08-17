@@ -1,0 +1,348 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  Level-optimal search trees beyond disjunctive queries.
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{LEVEL-OPTIMAL SEARCH TREES}
+
+\newcommand{\bits}{\{0,1\}}
+\newcommand{\Qd}{\mathcal{Q}}
+\newcommand{\Mon}{\mathcal{M}}
+\newcommand{\ORv}{\mathrm{OR}}
+\newcommand{\Pcost}{\mathsf{P}}
+\newcommand{\SLC}{\mathrm{SLC}}
+\newcommand{\Opt}{\mathrm{Opt}}
+\newcommand{\OptBal}{\mathrm{OptBal}}
+\newcommand{\LO}{\mathsf{LO}}
+\newcommand{\Exp}{\mathop{\mathbb{E}}}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{Level-Optimal Search Trees Beyond Disjunctive Queries}
+\cjsubtitle{Balanced OR trees against the unbalanced optimum}
+\cjstatus{Statement: AI-written from Mohammad Etemad, Mohammad Mahmoody
+  and David Evans, \emph{Optimizing Trees for Static Searchable
+  Encryption}, IACR Cryptology ePrint Archive 2018, not yet checked by a
+  human. Proved for every distribution supported on disjunctive queries,
+  where the $\log n$ factor is also shown to be necessary; open for every
+  larger class, and in particular for distributions over conjunctive
+  queries, where the paper's proof technique demonstrably fails.}
+\cjcategory{\emph{Searchable Encryption \& Encrypted Data Structures}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+Tree-based encrypted search stores each file at a leaf of a binary tree,
+tagged with the set of keywords it contains, and tags every internal node
+with the union of the keyword sets below it. A query is answered by walking
+down from the root, descending only below nodes whose tag is consistent
+with the query, so the cost of a search is the number of nodes touched ---
+and that number depends entirely on which files were placed next to each
+other when the tree was built. The paper gives an algorithm that builds the
+tree bottom-up, one level at a time, pairing up the current nodes by a
+minimum-weight perfect matching whose edge weights are the probability that
+a random query is satisfied by the merged node. The resulting tree is
+balanced, which is what you want for encrypted search, because an
+unbalanced tree leaks its own shape and costs more rounds of interaction.
+The authors prove that when every query is a disjunction of keywords, this
+balanced tree is never worse than a logarithmic factor times the cheapest
+tree of any shape, and they show a family of file sets where that
+logarithmic loss really is unavoidable. They conjecture the same guarantee
+survives for a wider class of query distributions. The reason this is not
+routine is that their proof never looks at the algorithm at all: for
+disjunctions, every balanced tree is automatically within a logarithmic
+factor, because a node can only be consistent with a disjunctive query if
+some matching file sits beneath it. That fails as soon as conjunctions are
+allowed --- a node can be consistent with an AND of two keywords while no
+single file below it contains both --- and the paper exhibits a file
+arrangement where an AND query sweeps the entire tree and returns nothing.
+So for conjunctions no shape-only argument can work, and any proof has to
+use something about the matchings the algorithm actually picks.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+Tree-based searchable symmetric encryption stores the encrypted index as a
+binary search tree~\cite{Goh03,KP13,BlindSeer}: each file sits at a leaf
+together with a vector saying which dictionary keywords it contains, and
+each internal node carries the bitwise OR of its children's vectors, so
+that a node's vector describes the union of the keywords of the files in
+its subtree. A monotone Boolean query $q$ is answered by starting at the
+root and descending below exactly those visited nodes whose label satisfies
+$q$; the satisfying leaves are the answer. Because every node is processed
+by the same constant-time (or same secure-computation) procedure, the
+search cost is proportional to the number of visited nodes, and this is the
+quantity that all of these schemes pay per query. The leakage of such a
+scheme is the usual access and search pattern~\cite{CGKO06} plus the set of
+visited nodes, which the paper calls the tree pattern.
+
+The observation driving the paper is that previous tree-based schemes
+assign files to leaves arbitrarily, while their security proofs do not
+depend on that assignment --- so the assignment is free to be optimized.
+Fix a distribution $\Qd$ over monotone queries and write $V_T(q)$ for the
+number of nodes visited when searching $q$ in a tree $T$. The paper shows
+(its Lemma~B.3) that for any OR tree $T$ over $L$,
+\begin{align*}
+  \Exp_{q \sample \Qd}\bigl[\,V_T(q)\,\bigr]
+    &\;=\; 1 + 2 \sum_{u \in I(T)} \Pcost_{\Qd}(u) \\
+    &\;=\; 1 + 2\,\SLC_{\Qd}(T),
+\end{align*}
+which turns tree design into the combinatorial problem of choosing the file
+grouping that minimizes the sum of the local costs $\Pcost_{\Qd}(u)$ over
+the $n-1$ internal nodes. The paper gives three heuristics for this: a
+Huffman-style greedy one (best-first) that produces unbalanced trees, the
+level-optimal algorithm of Definition~\ref{def:lo}, which pairs each level
+up by a minimum-weight perfect matching computed with Edmonds' blossom
+algorithm~\cite{Edm65}, and a cheaper hybrid. Balance is not cosmetic here:
+an unbalanced tree leaks its own shape at build time, has worst-case search
+cost linear in $n$, and costs more rounds when the node processing is done
+by secure computation as in Blind Seer~\cite{BlindSeer}. So the question is
+how much one loses by insisting on a balanced tree and on a level-by-level
+greedy construction of it.
+
+What is known. The paper proves that when $\Qd$ is supported on disjunctive
+queries, $\SLC_{\Qd}(\LO(L,\Qd)) = O(\log n \cdot \Opt_{\Qd}(L))$ (its
+Theorem~B.1), and that the logarithmic factor cannot be improved to
+$o(\log n)$: for $n$ files with pairwise disjoint keyword sets in which the
+$i$-th file has $2^{i-1}$ keywords, so that $m = 2^{n} - 1$, and for $\Qd$
+uniform over single keywords, the best-first solution costs less than
+$2^{n+2} \approx 4m$ while the level-optimal solution costs
+$2(2^{n}-1)\log n \approx 2m \log n$, so the ratio of the level-optimal
+cost to the best-first cost is $\Omega(\log n)$. Separately, for $\Qd$
+uniform over single keywords, $n$ even, and under the density hypothesis
+$\SLC_{\Qd}(\LO(L,\Qd)) = \alpha(n-1)$ with $\alpha > 1/2$, the paper
+proves the sharper bound
+\[
+  \SLC_{\Qd}(\LO(L,\Qd)) \;\le\;
+  \frac{\alpha}{2\alpha-1}\,\OptBal_{\Qd}(L),
+\]
+where $\OptBal$ is the optimum over balanced trees only (its
+Theorem~B.2); its proof works layer by layer, showing that the parents of
+the leaves chosen by the matching already carry at least half the
+zero-weight of any balanced tree. Nothing is proved for conjunctive or
+general monotone $\Qd$.
+
+Experimentally (Enron corpus, queries that are single keywords and
+conjunctions and disjunctions of two and three keywords), the level-optimal
+and best-first algorithms are compared for $n \le 2^{10}$, where their
+costs stay close; for $n > 2^{10}$, up to $n = 2^{14}$ in the paper's
+Figure~5, the cheaper hybrid algorithm is used in place of the
+level-optimal one. On $n = 8$ leaves, exhaustive search over all
+\emph{balanced} trees finds a tree better than the level-optimal one in $4$
+of $25$ experiment sets, with worst-case difference $0.07$ in cost, while
+exhaustive search over all $135{,}135$ trees finds a tree better than the
+\emph{best-first} one in $13$ of $25$, with difference $0.09$.
+
+Why the disjunctive proof stalls. The paper's Theorem~B.1 argument never
+inspects the algorithm: for a disjunctive $q = \bigvee_{j \in S} x_j$, a
+node's label satisfies $q$ only if some satisfying leaf lies beneath it, so
+the satisfying nodes of \emph{any} tree of depth $d$ lie on the
+$\le d$-long root paths of the $|S|$ satisfying leaves, giving
+$\SLC_q(T_d) \le |S| \cdot d$ against $\SLC_q(T) \ge |S|$ for every $T$.
+That is a bound on every balanced tree, not on the algorithm's output. It
+collapses for conjunctions, and the paper says why: a node can satisfy
+$w_1 \wedge w_2$ while the two keywords are contributed by different
+children, so no file below it satisfies the query. See
+Remark~\ref{rem:shape}.
+
+\section{Notation and parameters}\label{sec:notation}
+
+$[n] = \{1,\dots,n\}$, and $\log$ is to base $2$.
+
+The dictionary is a set of $m$ keywords $w_1,\dots,w_m$. A vector
+$\bar v \in \bits^m$ records a set of keywords, with $\bar v[j] = 1$
+meaning $w_j$ is present; $\ORv(\bar x,\bar y) \in \bits^m$ is the bitwise
+OR, i.e.\ $\ORv(\bar x,\bar y)[j] = \bar x[j] \vee \bar y[j]$ for all
+$j \in [m]$.
+
+$\Mon_m$ is the set of monotone Boolean formulas over variables
+$x_1,\dots,x_m$: formulas built from the variables using $\wedge$ and
+$\vee$ only, with no negation. For $q \in \Mon_m$ and
+$\bar v \in \bits^m$ we write $q(\bar v) = 1$ if $q$ evaluates to true
+under the assignment $x_j := \bar v[j]$ for all $j \in [m]$, and
+$q(\bar v) = 0$ otherwise. A \emph{disjunctive} query is one of the form
+$\bigvee_{j \in S} x_j$ and a \emph{conjunctive} query one of the form
+$\bigwedge_{j \in S} x_j$, for $S \subseteq [m]$.
+
+$L = \{(f_1,\bar f_1),\dots,(f_n,\bar f_n)\}$ is a set of $n$ file
+identifiers $f_i$ with vector labels $\bar f_i \in \bits^m$, where
+$\bar f_i[j] = 1$ iff file $f_i$ contains keyword $w_j$. For a tree $T$,
+$L(T)$ is its set of leaves, $I(T)$ its set of internal nodes, $\pi(u)$ the
+parent of a non-root node $u$, and $\Gamma(u)$ the set of children of an
+internal node $u$. Each node $u$ of $T$ carries a label
+$\bar u \in \bits^m$.
+
+$\Qd$ denotes a distribution over $\Mon_m$, and $q \sample \Qd$ a sample
+from it. For a node $u$ with label $\bar u$, its \emph{local cost} is
+\[
+  \Pcost_{\Qd}(u) \;=\; \Pr_{q \sample \Qd}\bigl[\,q(\bar u) = 1\,\bigr]
+  \;\in\; [0,1].
+\]
+For an OR tree $T$ (Definition~\ref{def:ortree}) the \emph{sum of local
+costs} and the \emph{optimum} over all OR trees on the same leaves are
+\[
+  \SLC_{\Qd}(T) \;=\; \sum_{u \in I(T)} \Pcost_{\Qd}(u),
+\]
+\[
+  \Opt_{\Qd}(L) \;=\; \min_{T \,:\, L(T) = L} \SLC_{\Qd}(T),
+\]
+the minimum in $\Opt_{\Qd}(L)$ ranging over all OR trees over $L$, balanced
+or not; $\OptBal_{\Qd}(L)$ denotes the same minimum restricted to balanced
+trees. Finally $\LO(L,\Qd)$ is the set of trees the level-optimal algorithm
+of Definition~\ref{def:lo} can output on $L$ and $\Qd$.
+
+The parameters are:
+\begin{itemize}
+\item $m$, the dictionary size, i.e.\ the number of keywords; labels are
+  vectors in $\bits^m$. Unbounded and independent of $n$.
+\item $n = 2^{k}$, the number of files, hence the number of leaves; a power
+  of two, as the level-optimal algorithm requires, with $k \ge 1$.
+\item $L$, the leaf set: $n$ file identifiers with their keyword vectors,
+  arbitrary.
+\item $\Qd$, the query distribution, a distribution over monotone Boolean
+  formulas on $m$ variables.
+\item $c$, the approximation constant, absolute: independent of $m$, $n$,
+  $L$ and $\Qd$.
+\end{itemize}
+
+\begin{definition}[OR tree over $L$]\label{def:ortree}
+Let $L = \{(f_1,\bar f_1),\dots,(f_n,\bar f_n)\}$ with
+$\bar f_i \in \bits^{m}$. An \emph{OR tree over $L$} is a full binary tree
+$T$ (every node has either $0$ or $2$ children) with $L(T) = L$, in which
+every leaf $f_i$ carries its given label $\bar f_i$ and every internal node
+$u \in I(T)$ with $\Gamma(u) = \{x,y\}$ carries the label
+$\bar u = \ORv(\bar x, \bar y)$. The labels are therefore determined by $L$
+together with the shape of $T$ and the assignment of files to leaves;
+$|I(T)| = n - 1$ always. We call $T$ \emph{balanced} if its height is at
+most $\lceil \log n \rceil$.
+\end{definition}
+
+\begin{definition}[the level-optimal algorithm $\LO$]\label{def:lo}
+On input a leaf set $L$ with $|L| = n = 2^k$ and access to the local cost
+function $\Pcost_{\Qd}(\cdot)$, the algorithm sets $W := L$ and, while
+$|W| > 1$, does the following. Form the complete graph on vertex set $W$
+and give each edge $\{x,y\}$, $x \neq y$, the weight
+$C(x,y) := \Pcost_{\Qd}(z)$ where $z$ is a new node with label
+$\bar z = \ORv(\bar x, \bar y)$. Compute a perfect matching $M$ on this
+graph, i.e.\ a set of $|W|/2$ disjoint edges, of minimum total weight
+$\sum_{\{x,y\} \in M} C(x,y)$. For every $\{x,y\} \in M$, create the node
+$z$ with label $\bar z = \ORv(\bar x, \bar y)$, set $\Gamma(z) = \{x,y\}$
+and $\pi(x) = \pi(y) = z$, remove $x$ and $y$ from $W$ and add $z$ to $W$.
+When $|W| = 1$ return the tree built, whose root is the single remaining
+element of $W$; it is a balanced OR tree over $L$ of height exactly $k$. We
+write $\LO(L,\Qd)$ for the set of all trees obtainable this way, over all
+choices of minimum-weight perfect matching at each level.
+\end{definition}
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{conjecture}[level-optimal beyond disjunctions]\label{conj:main}
+There are a class $\mathcal{C}$ of query distributions, strictly containing
+every distribution supported on disjunctive queries, and an absolute
+constant $c > 0$, such that the following holds for every dictionary size
+$m \ge 1$, every $k \ge 1$ with $n = 2^{k}$, every leaf set
+$L = \{(f_1,\bar f_1),\dots,(f_n,\bar f_n)\}$ with
+$\bar f_i \in \bits^{m}$, every $\Qd \in \mathcal{C}$ over $\Mon_m$, and
+every tree $T \in \LO(L,\Qd)$:
+\[
+  \SLC_{\Qd}(T) \;\le\; c \cdot \log n \cdot \Opt_{\Qd}(L).
+\]
+Equivalently, $\SLC_{\Qd}(T) = O(\log n \cdot \Opt_{\Qd}(L))$ with the
+hidden constant independent of $m$, $n$, $L$ and $\Qd$.
+\end{conjecture}
+
+The paper does not name $\mathcal{C}$: it writes only that it conjectures
+``a more general theorem (than our Theorem B.1) holds for a broader class
+of query distributions''. Identifying such a class is part of the problem.
+For every $\Qd$ supported on disjunctions $\bigvee_{j \in S} x_j$,
+$S \subseteq [m]$, the displayed bound is a theorem of the paper; the
+content of the conjecture is that $\mathcal{C}$ can be taken strictly
+larger.
+
+\begin{conjecture}[maximal formalization]\label{conj:max}
+Conjecture~\ref{conj:main} holds with $\mathcal{C}$ the class of
+\emph{all} distributions over $\Mon_m$.
+\end{conjecture}
+
+Conjecture~\ref{conj:max} is not the paper's statement. It is the largest
+class available in the paper's own framework --- the class over which the
+algorithms are defined and where the experiments live --- and it is
+recorded here as the maximal formalization of the paper's sentence, not as
+a claim about what the paper asserts.
+
+\begin{remark}[the conjunctive restriction]\label{rem:conj}
+The intermediate reading worth naming is Conjecture~\ref{conj:main} with
+$\mathcal{C}$ the distributions supported on conjunctive queries
+$\bigwedge_{j \in S} x_j$. That is the case the paper repeatedly singles
+out as the hard and interesting one, it is where the experiments of
+Section~\ref{sec:setting} live alongside the disjunctive ones, and settling
+it would discharge the paper's intent. A reviewer may reasonably prefer it
+to Conjecture~\ref{conj:max}.
+\end{remark}
+
+\begin{remark}[a deliberate strengthening: all matchings]\label{rem:ties}
+The paper's Definition~B.2 writes $T_{\LO}(L)$ as a single tree. The
+minimum-weight perfect matching of Definition~\ref{def:lo} need not be
+unique, so the algorithm's output is not either, and the conjectures above
+quantify over \emph{every} $T \in \LO(L,\Qd)$. This is a deliberate
+strengthening of the paper's formulation. A proof that covers only some
+canonical tie-breaking rule would be a partial answer, and worth reporting
+as such.
+\end{remark}
+
+\begin{remark}[the conjecture is about the algorithm, not about
+balance]\label{rem:shape}
+For disjunctive $\Qd$ the paper's bound happens to hold for every balanced
+tree, by the argument recalled in Section~\ref{sec:setting}. For
+conjunctive $\Qd$ that is false. Take $n$ files, half of them carrying
+$\{\mathit{Female},\mathit{Dept1}\}$ and half carrying
+$\{\mathit{Male},\mathit{Dept2}\}$, placed at alternate leaves of a
+balanced tree. The query $\mathit{Female} \wedge \mathit{Dept2}$ is
+satisfied at every internal node --- each has both keyword sets beneath it
+--- so it sweeps the whole tree and returns nothing, whereas grouping the
+two halves under the two children of the root, also a balanced tree, makes
+only the root satisfy the query. So for conjunctive $\Qd$ the gap between
+an arbitrary balanced tree and $\Opt_{\Qd}(L)$ can be $\Omega(n)$. Hence
+the quantification over $T \in \LO(L,\Qd)$ rather than over balanced trees
+is forced if the statement is to be non-trivial, and any proof must use a
+property of the matchings that Definition~\ref{def:lo} actually computes
+rather than only the height of the tree.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem[BlindSeer]{BlindSeer}
+V. Pappas, F. Krell, B. Vo, V. Kolesnikov, T. Malkin, S. G. Choi,
+W. George, A. Keromytis, S. Bellovin.
+\emph{Blind Seer: A Scalable Private DBMS}.
+35th IEEE Symposium on Security and Privacy, 2014.
+
+\bibitem[CGKO06]{CGKO06}
+R. Curtmola, J. Garay, S. Kamara, R. Ostrovsky.
+\emph{Searchable symmetric encryption: improved definitions and efficient
+constructions}.
+ACM CCS'06, 2006.
+
+\bibitem[Edm65]{Edm65}
+J. Edmonds.
+\emph{Paths, Trees, and Flowers}.
+Canadian Journal of Mathematics, 17(3):449--467, 1965.
+
+\bibitem[Goh03]{Goh03}
+E.-J. Goh.
+\emph{Secure indexes}.
+Technical report, Cryptology ePrint Archive, Report 2003/216, 2003.
+
+\bibitem[KP13]{KP13}
+S. Kamara, C. Papamanthou.
+\emph{Parallel and dynamic searchable symmetric encryption}.
+Financial Cryptography and Data Security, FC, 2013.
+
+\end{conjurabibliography}
+
+\end{document}

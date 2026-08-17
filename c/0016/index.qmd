@@ -1,0 +1,93 @@
+---
+id: "0016"
+problem: searchable-encryption-tree-optimization
+draft: level-optimal-monotone
+title: "Level-Optimal Search Trees Beyond Disjunctive Queries"
+short_title: "Level-optimal beyond disjunctions"
+areas: [privacy, foundations]
+model: standard
+form: tight-bound
+assumption_class: unconditional
+category: research-open
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+status_summary: "Open beyond disjunctive queries, and the authors state it as a conjecture without naming the broader class -- identifying one is part of the problem. Proved for every distribution supported on disjunctions, where the log n factor is also shown necessary. Wide open for conjunctive queries, where the paper's proof technique demonstrably fails."
+difficulty:
+  reach: new-idea
+  by: ai
+  note: "The proved case is carried by an argument that never inspects the algorithm: for a disjunctive query a node is consistent only if a matching file lies beneath it, so every balanced tree is within a log factor. That collapses for conjunctions -- the paper exhibits an AND query consistent with a node under which no file satisfies it -- so no shape-only argument can work and a proof must use a property of the matchings the algorithm picks. No such argument exists for any class."
+status_updated: 2026-08-17
+relations:
+  - {kind: variant-of, target: "0015", note: "The same objective and the same source paper, asked of the paper's other algorithm. This one asks how far an existing logarithmic bound extends; c/0015 has no proved bound at all."}
+lean:
+  mode: none
+sources:
+  - {cite: "Etemad, Mahmoody, Evans, Optimizing Trees for Static Searchable Encryption, IACR Cryptology ePrint Archive, Report 2018/052", url: "https://eprint.iacr.org/2018/052"}
+revision: 1
+statement_sha: "4d651a8aac97d085ae8d5841a08dab7faec18161badad4b4281be08a982c26bc"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+Tree-based encrypted search stores each file at a leaf tagged with its keyword set and tags every internal node with the union of the sets below it; a query descends only below nodes whose tag is consistent with it, so the cost of a search is the number of nodes touched. The source paper builds the tree bottom-up, one level at a time, pairing the current nodes by a minimum-weight perfect matching. The result is balanced, which is what encrypted search wants, since an unbalanced tree leaks its own shape. The authors prove that when every query is a disjunction of keywords this balanced tree is never worse than a logarithmic factor times the cheapest tree of any shape, and that the logarithmic loss is unavoidable. They conjecture the guarantee survives for a wider class of query distributions — without saying which, so naming the class is part of the problem.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [Download LaTeX source](latex/main.tex)
+
+Notation is as in [c/0015](/c/0015/): $\mathcal{M}_m$ is the monotone formulas over $x_1,\dots,x_m$; a leaf set $L$ carries keyword indicators $\bar f_i \in \{0,1\}^m$; an OR tree labels each internal node with the bitwise OR beneath it; $P_{\mathcal{Q}}(u) = \Pr_{q \leftarrow \mathcal{Q}}[q(\bar u) = 1]$; $\mathrm{SLC}_{\mathcal{Q}}(T) = \sum_{u \in I(T)} P_{\mathcal{Q}}(u)$; and $\mathrm{Opt}_{\mathcal{Q}}(L)$ is the minimum of $\mathrm{SLC}_{\mathcal{Q}}$ over all OR trees over $L$, including unbalanced ones.
+
+The **level-optimal** algorithm builds the tree bottom-up: at each level it pairs the current nodes by a perfect matching of minimum total weight, the weight of $\{u,v\}$ being $P_{\mathcal{Q}}(u \vee v)$, and replaces each matched pair by a parent. It requires $n = 2^k$ and yields a balanced tree. The minimum-weight matching need not be unique, so write $\mathrm{LO}(L,\mathcal{Q})$ for the set of trees obtainable.
+
+**Conjecture.** There are a class $\mathcal{C}$ of query distributions, strictly containing every distribution supported on disjunctive queries, and an absolute constant $c > 0$, such that for every $m \ge 1$, every $k \ge 1$ with $n = 2^k$, every leaf set $L$, every $\mathcal{Q} \in \mathcal{C}$ over $\mathcal{M}_m$, and every $T \in \mathrm{LO}(L,\mathcal{Q})$,
+$$\mathrm{SLC}_{\mathcal{Q}}(T) \;\le\; c \cdot \log n \cdot \mathrm{Opt}_{\mathcal{Q}}(L).$$
+
+The existential over $\mathcal{C}$ is the point. The paper writes only that it conjectures "a more general theorem (than our Theorem B.1) holds for a broader class of query distributions" and names no class; for every $\mathcal{Q}$ supported on disjunctions $\bigvee_{j \in S} x_j$ the displayed bound is already a theorem of the paper, so the content of the conjecture is exactly that $\mathcal{C}$ can be taken strictly larger.
+
+**Maximal formalization.** The same statement with $\mathcal{C}$ the class of *all* distributions over $\mathcal{M}_m$. This is **not** the paper's statement. It is the largest class available in the paper's own framework — the class over which the algorithms are defined and where the experiments live — and is recorded here as the maximal reading of the authors' sentence, not as a claim about what they assert.
+
+## Proof
+
+Open beyond disjunctions.
+
+**The proved case.** For every $\mathcal{Q}$ supported on disjunctive queries, the bound holds with a logarithmic factor, and the paper exhibits a family — files with pairwise disjoint keyword sets — showing the $\log n$ is necessary. So the disjunctive cell is closed in both directions.
+
+**Why that proof says nothing about any larger class.** It never looks at the algorithm. If $q$ is a disjunction, then $q(\bar u) = 1$ forces some file beneath $u$ to satisfy $q$, because $\bar u$ is the OR of the labels below. Consistency therefore implies a witness below, and *every* balanced tree is within a logarithmic factor for free. The guarantee is a property of the shape, not of the matchings.
+
+**Where it fails.** With conjunctions the implication breaks: a node can be consistent with an AND of two keywords while no single file beneath it contains both, since the OR label can collect the two keywords from two different files. The paper exhibits an arrangement in which such a query sweeps the entire tree and returns nothing. So for conjunctions no shape-only argument can work, and any proof must use something about the matchings the algorithm actually picks. Nothing of that kind is known for any class.
+
+**The only other proved case is a different comparison.** For $\mathcal{Q}$ uniform over single keywords the paper gives a constant-factor bound against the optimal *balanced* tree, not against $\mathrm{Opt}_{\mathcal{Q}}(L)$, and it needs $n$ even together with a density hypothesis. It is not an instance of the conjecture.
+
+## Discussion
+
+The conjecture is unusual in that its statement is partly the thing to be found. A solver is not handed a class and asked to prove a bound over it; they are asked to identify any class strictly larger than the disjunctions for which the bound survives, and the paper's own experiments — covering AND and OR of two and three keywords — suggest where to look without licensing any particular choice.
+
+Two natural targets sit at opposite ends. The maximal reading, all monotone distributions, is the largest class the framework supports and would be the strongest possible answer. At the other end, any concrete class properly containing the disjunctions — disjunctions of pairs, or bounded-width formulas — would settle the conjecture as stated. A negative result is equally valuable: a distribution class in which every level-optimal tree is $\omega(\log n)$ from optimal would show the disjunctive theorem is essentially maximal and that the conjecture's premise is wrong.
+
+Note also that $\mathrm{LO}(L,\mathcal{Q})$ is a set rather than a single tree, because minimum-weight matchings need not be unique. The conjecture as stated asks for the bound on every member; a result for one canonical choice of matching would be a partial answer, and the paper's own definition fixes a single returned tree rather than quantifying.
+
+:::
+
+## Open obligations
+
+- [ ] Identify a class $\mathcal{C}$ strictly containing the disjunctive distributions for which the $O(\log n)$ bound holds, and prove it.
+- [ ] Settle the conjunctive case, the paper's own motivation, where the shape-only argument is known to fail.
+- [ ] Settle the maximal reading — all distributions over $\mathcal{M}_m$ — or refute it with a family on which every level-optimal tree is $\omega(\log n)$ from optimal.
+- [ ] Decide whether the bound is meant for every minimum-weight matching or for one canonical choice, and prove the version claimed.
+- [ ] Formalize the statement in Lean. The level-optimal construction, the matching step, and the optimum over all shapes all need writing first.
+
+## Sources
+
+- Etemad, Mahmoody, and Evans. [*Optimizing Trees for Static Searchable Encryption*](https://eprint.iacr.org/2018/052). IACR Cryptology ePrint Archive, Report 2018/052.

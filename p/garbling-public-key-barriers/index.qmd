@@ -1,0 +1,35 @@
+---
+title: "Barriers to public-key cryptography from garbling"
+subtitle: "Garbled circuits use a one-way function non-black-box. How far past the black-box barriers does that actually get?"
+---
+
+## Motivation
+
+Impagliazzo and Rudich showed that key agreement cannot be built from a one-way function in a black-box way. Garbled circuits complicate that verdict rather than contradicting it. Garbling a circuit that has one-way-function gates buried inside it *is* a non-black-box use of the one-way function — the circuit's description is manipulated, not just its input-output behaviour — even though the garbling machinery itself is used as a black box. Classical black-box separations therefore say nothing about constructions of this shape, and several results that appeared to route around the barriers work exactly this way.
+
+Garg, Hajiabadi, Mahmoody and Mohammed measure how much this buys. Relative to an idealized oracle providing a random function $f$ together with a garbling scheme for circuits containing $f$-gates — call the primitive **GC-OWF** — secure garbling exists but public-key encryption does not. The technique is genuinely more powerful than a plain one-way function, and still not powerful enough for public-key encryption.
+
+## The lattice
+
+Public-key encryption is exactly two-message key agreement, so the natural axis is round complexity.
+
+| Rounds | Status |
+|---|---|
+| $2$ (public-key encryption) | **Theorem** — no fully black-box construction from GC-OWF. |
+| $2m$, $m$ constant in $\kappa$ | **Sketched** in the paper's appendix, by iterating the compilation; no theorem is stated and security is deferred to the PKE proof. |
+| $\omega(1)$ in $\kappa$ | **Open** — [c/0017](/c/0017/) |
+
+The reason the table stops is mechanical, and the authors say so. The proof removes garbling-evaluation queries one round at a time, and each removal inflates the protocol's communication by a polynomial factor. A constant number of rounds compounds to a polynomial; a growing number compounds to a tower of polynomials, and the argument dies.
+
+That looks like an artifact rather than a feature of the world. For plain random oracles the corresponding impossibility — no key agreement, whatever the round complexity — has been known since Impagliazzo–Rudich, with no dependence on the number of rounds at all. The open cell asks whether GC-OWF behaves the same way once the accounting is done differently.
+
+A separate axis the paper leaves open, and which is *not* this problem: garbling circuits that themselves contain garbling gates. That is a strictly more powerful primitive and a different question.
+
+## Statements
+
+- [No key agreement from garbling one-way-function circuits](/c/0017/) — open.
+
+## Sources
+
+- Garg, Hajiabadi, Mahmoody, and Mohammed. [*Limits on the Power of Garbling Techniques for Public-Key Encryption*](https://eprint.iacr.org/2018/555). Cryptology ePrint Archive, Report 2018/555.
+- Impagliazzo and Rudich. *Limits on the provable consequences of one-way permutations*. STOC 1989, pages 44--61.

@@ -67,6 +67,45 @@ longer the source of truth once it's copied into the tracked per-page
 (UC functionalities, which don't currently have their own tracked `latex/`
 subfolder on the site).
 
+**When you publish a conjecture, put `draft: <folder-name>` in the new
+`c/<id>/index.qmd`, right under `problem:`.** That one line is the only link
+between a draft and the page it became, and it has to be written by hand
+because nothing about the two can be matched automatically: folder names are
+never the `problem:` slug, `problem:` is shared by sibling statements, and
+`groth16/statement.tex` and `split-nilp/statement.tex` are byte-identical yet
+belong to different pages. Without it, `scripts/draft_status.py` reports the
+draft as unpromoted forever.
+
+One draft may be named by several pages — `lhl-public-seed/` is subtitled
+"Two Leftover-Hash-Lemma Conjectures" and is claimed by both `c/0004` and
+`c/0005` — so the field lives on the page, never on the draft. The check
+allows that only when the draft really does hold that many `\begin{conjecture}`
+environments; a single-conjecture draft claimed twice is a copy-paste error
+and fails.
+
+## Watching for drafts that never became pages
+
+```
+python3 scripts/draft_status.py           # the full picture
+python3 scripts/draft_status.py --check   # what CI runs
+```
+
+Nothing else in the repository looks at `latex/conjectures/`. Every other gate
+globs `c/` and `papers/`, so a statement that reaches `c/` reaches the site's
+listings on its own — `build_index.py` regenerates `_generated/all.yml` before
+every render — while a draft that never reaches `c/` is invisible to all of
+it. That was survivable when drafts arrived one at a time by hand; it stopped
+being survivable when `harvest_conjectures.py` started writing them from PDFs
+in batches.
+
+`--check` runs in both workflows and in `.githooks/pre-commit`. **It reports
+unpromoted drafts and passes.** Editorial backlog is a normal state, and these
+gates run *before* `quarto render` — a gate that failed on an unpromoted draft
+would stop the site deploying for everyone until somebody promoted it, which
+is what `status_badge.py` did for ~25 commits on 2026-08-15. It exits 1 only
+on metadata that contradicts the tree: a `draft:` naming a folder that isn't
+there, or a draft claimed by more pages than it has conjectures.
+
 ## `latex/harvest/` is not tracked
 
 `scripts/harvest_conjectures.py` reads papers dropped into `latex/harvest/`

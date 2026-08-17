@@ -84,4 +84,14 @@ else
   echo "  Install with: pip install -r requirements.txt" >&2
 fi
 
+# --- gate 5: draft links ------------------------------------------------------
+# stdlib-only. Only fails on a `draft:` field naming a folder that is not
+# there, which is a typo caught best at the moment it is typed. Unpromoted
+# drafts are reported by the same script and never block anything.
+if ! python3 scripts/draft_status.py --check >/dev/null 2>&1; then
+  python3 scripts/draft_status.py --check >&2
+  fail "a c/ page's draft: field does not match latex/conjectures/." \
+       "python3 scripts/draft_status.py   # then fix the draft: field"
+fi
+
 exit 0

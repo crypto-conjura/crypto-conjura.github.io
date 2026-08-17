@@ -1,6 +1,6 @@
 # Tasks
 
-Split into two sections: **Website and repository** (~5.75h) covers the site, its build tooling and the repository's configuration; **Conjectures and papers** (~6.0h) covers the mathematics — proving conjectures, and writing and checking the papers that report them. Within each section, tasks are ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~19.75h** (rough; the UC Encyclopedia content dominates the uncertainty and could run well over its estimate).
+Split into two sections: **Website and repository** (~5.75h) covers the site, its build tooling and the repository's configuration; **Conjectures and papers** (~8.0h) covers the mathematics — proving conjectures, and writing and checking the papers that report them. Within each section, tasks are ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~21.75h** (rough; the UC Encyclopedia content dominates the uncertainty and could run well over its estimate).
 
 Last reconciled against `main` at `f8237dc` on 17 August 2026.
 
@@ -115,6 +115,53 @@ Completed tasks are deleted from this file rather than checked off and kept: thi
   Toolchain is pinned: `leanprover/lean4:v4.33.0`, Mathlib at the revision in `lake-manifest.json`. Keep `AuditProof.lean` passing throughout, since its entire purpose is that no declaration quietly acquires `sorryAx`, and update `LEDGER.md` as items close rather than at the end. Partial progress is worth committing: the ledger is designed for it, and an honest "items 1 to 3 done, 6 untouched" is more useful than nothing.
 
 ## Conjectures and papers
+
+- [ ] **Re-download Kiayias, and add Unruh and Micciancio, to the harvester's inbox (~2h — manual: rate-limited downloads, then one harvest run per paper)**
+
+  Requested 17 August 2026. Three author corpora for `latex/harvest/`: **Aggelos
+  Kiayias** again because the first run did not finish, plus **Dominique Unruh**
+  and **Daniele Micciancio**, neither of which has been fetched at all.
+
+  Kiayias's folder is demonstrably truncated rather than complete. It holds 25
+  PDFs, 18 from 2020 and 7 from 2021, the last being `2021-747.pdf` — and the
+  query `latex/harvest/iacr-dl` issues is `submittedafter=2020`, so everything
+  from 2022 to 2026 is missing for one of the most prolific authors on ePrint.
+  The other four folders fetched the same way run to the present (Couteau: 52
+  papers, 2020 through 2026), so this is Kiayias's run stopping mid-loop, not
+  the query. The likely cause is worth knowing before re-running: ePrint
+  rate-limits, and a plain `curl` of that search URL returned **429 Too Many
+  Requests** when checked today. `iacr-dl` runs under `set -euo pipefail` with
+  `curl -sS`, so a 429 mid-loop kills the script after the files it had already
+  written — exactly the shape of what is on disk. Its one-second politeness
+  sleep is evidently not enough for a corpus this size; back off and retry
+  rather than raising the rate.
+
+  One trap the script does not currently guard: the skip test is `[ -s
+  "$FILE_PATH" ]`, file exists and is non-empty. An error page saved under a
+  `.pdf` name is non-empty, so it would be skipped as "already downloaded"
+  forever. Checked every PDF in the inbox tree today — 133 of them — and all
+  begin `%PDF`, so nothing is poisoned right now, but a re-run into a rate limit
+  is precisely
+  when that would happen, and it is worth making the download verify the magic
+  bytes and delete anything that fails.
+
+  Then the usual pipeline, which already exists and needs nothing invented:
+  `python3 scripts/harvest_conjectures.py` over the inbox, per
+  `prompts/harvest.md` — extract, adversarially verify, typeset; quotes grounded
+  against the PDF's own text layer; drafts landing in
+  `latex/conjectures/<slug>/` with `harvest.json` and `SOURCE.md`. Run
+  `latex/harvest/prune-papers` first so anything already in `processed/` is not
+  read twice. Two things to expect from these particular authors: Unruh and
+  Micciancio both have pre-2020 work that the `submittedafter=2020` default
+  excludes, so decide the year deliberately rather than inheriting it; and
+  Micciancio's older postings include scanned or PostScript-only items, which
+  `harvest_conjectures.py` refuses outright rather than reading unchecked — OCR
+  and re-drop, per `latex/harvest/README.md`.
+
+  Nothing here is committed: `/latex/harvest/` is gitignored whole, PDFs
+  included, because they are the authors'. The output of the task is drafts
+  under `latex/conjectures/`, and `scripts/draft_status.py` will report each one
+  until it becomes a page or is deleted.
 
 - [ ] **Mine IOG's 2026 research papers for open problems (~2.5h — manual: reading each paper for what it actually leaves open, and verifying every citation)**
 

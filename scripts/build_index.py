@@ -31,9 +31,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from status_badge import (  # noqa: E402
     compute_sigma,
     compute_pi,
+    direction_of,
+    glyph_for,
     render_caption,
     _DASH,
-    _GLYPH,
+    DIRECTIONS,
     LEGEND_URL,
 )
 
@@ -73,6 +75,14 @@ STATUS_FIELDS = {
     "proof_review": ("ai", "human"),
     "proof_formal": ("open", "ai", "human"),
 }
+
+# Validated when present, absent by default: the loop over STATUS_FIELDS
+# errors on anything missing, and proof_direction is optional so that every
+# page written before it existed stays valid. status_badge.py's validate()
+# owns the dependency constraint (refutes needs an informal proof); this is
+# only the enum check, so a typo fails here too rather than silently
+# rendering a green badge on a refutation.
+OPTIONAL_STATUS_FIELDS = {"proof_direction": DIRECTIONS}
 
 REQUIRED_FIELDS = [
     "id", "problem", "title", "areas", "model", "form", "assumption_class",
@@ -172,6 +182,9 @@ def validate_leaf(fm, path, errors):
             err(f"status.{field} missing")
         elif status[field] not in allowed:
             err(f"status.{field} = {status[field]!r} not in {allowed}")
+    for field, allowed in OPTIONAL_STATUS_FIELDS.items():
+        if field in status and status[field] not in allowed:
+            err(f"status.{field} = {status[field]!r} not in {allowed}")
 
     if not SHA_RE.match(str(fm.get("statement_sha", ""))):
         err("statement_sha is not a 64-character hex sha256 digest")
@@ -205,6 +218,11 @@ def listing_item(leaf_id, fm):
         status.get("statement_informal"), status.get("statement_formal"), status.get("statement_match")
     )
     pi = compute_pi(status.get("proof_informal"), status.get("proof_review"), status.get("proof_formal"))
+    # Direction has to travel with the primitives for the same reason the
+    # grades do: the template re-derives the badge rather than reusing the
+    # rendered status_badge: string, so a refutation left out here would show
+    # red on its own page and green in every listing.
+    direction = direction_of(status)
     return {
         "id": leaf_id,
         "title": fm["title"],
@@ -213,8 +231,9 @@ def listing_item(leaf_id, fm):
         "badge_sigma": sigma,
         "badge_pi": pi,
         "badge_sealed": pi == 4 and sigma >= 4,
+        "badge_refuted": direction == "refutes",
         "badge_dash": _DASH[status.get("statement_match")] or "",
-        "badge_glyph": _GLYPH[pi],
+        "badge_glyph": glyph_for(pi, direction),
         "badge_caption": render_caption(status),
         "badge_legend_url": LEGEND_URL,
         "status_summary": fm["status_summary"],

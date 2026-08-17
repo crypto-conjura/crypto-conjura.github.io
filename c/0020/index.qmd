@@ -1,0 +1,97 @@
+---
+id: "0020"
+problem: black-box-uselessness
+draft: owf-bbu-key-agreement
+title: "One-Way Functions Are Black-Box Useless for Key Agreement"
+short_title: "OWFs are black-box useless for key agreement"
+areas: [foundations, impossibility-results, public-key]
+model: other
+form: impossibility
+assumption_class: unconditional
+category: research-open
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: new-idea
+  note: "The paper names the obstruction rather than leaving it implicit: the known attacks repeatedly sample protocol views consistent with the transcript, and making those samplers efficient in the presence of the auxiliary primitive means invoking an inverter recursively, whose query complexity to the auxiliary oracle blows up fast enough that only constantly many sampling rounds can be afforded. The adaptivity-reduction technique that would ordinarily replace it needs the low-adaptivity attacker to simulate the original attacker in its head, which is not efficient outside constant-round protocols. The authors judge the general case 'may well be within reach', so this is a new idea rather than a barrier."
+  by: ai
+status_summary: "Open in the general case, which the paper names as the central open problem left by its work. Settled for three restricted protocol classes: constant-query perfect, constant-round constant-query imperfect, and Merkle-type."
+status_updated: 2026-08-18
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Couteau, Farshim, Mahmoody, Black-Box Uselessness: Composing Separations in Cryptography, Cryptology ePrint Archive, Report 2021/016", url: "https://eprint.iacr.org/2021/016"}
+revision: 1
+statement_sha: "8f4ab8b5f7ee5563bf5d5585eaa0dd38e1c8e14f953d3d1c377be5434c180c00"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+Impagliazzo and Rudich showed that one-way functions do not black-box imply key agreement. The composed question is harder and more useful: could a one-way function still *help*, turning some auxiliary primitive that is insufficient for key agreement into one that suffices? The conjecture is that it cannot — that one-way functions are black-box useless for key agreement, for arbitrary two-party protocols with no bound on rounds or query counts. The paper proves it for three restricted classes and names the general case as the central open problem it leaves behind.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [Download LaTeX source](latex/main.tex)
+
+A **cryptographic primitive** is a pair $\mathcal{P} = (F_{\mathcal{P}}, R_{\mathcal{P}})$ of an implementation set and a breaking relation, with at least one PPT-computable implementation; the **joint primitive** $(\mathcal{P}, \mathcal{Q})$ has implementations $F_{\mathcal{P}} \times F_{\mathcal{Q}}$ and is broken when either component is.
+
+There is a **semi-black-box reduction** of $\mathcal{P}$ to $\mathcal{Q}$ if some oracle-aided PPT $\mathsf{P}$ satisfies, for every $\mathsf{Q} \in F_{\mathcal{Q}}$: $\mathsf{P}^{\mathsf{Q}} \in F_{\mathcal{P}}$, and if some oracle-aided PPT $A$ breaks $\mathsf{P}^{\mathsf{Q}}$ then some oracle-aided PPT $\mathsf{S}$ breaks $\mathsf{Q}$. Swapping the quantifiers on the implementation — for every $\mathsf{Q}$ there *exists* an $\mathsf{P}$ — gives a **$\forall\exists$-semi-black-box reduction**.
+
+$\mathcal{Q}$ is **$[\mathrm{semi} \to \forall\exists\text{-semi}]$ black-box useless** for $\mathcal{P}$ if for every auxiliary primitive $\mathcal{Z}$, a semi-black-box reduction of $\mathcal{P}$ to $(\mathcal{Q}, \mathcal{Z})$ implies a $\forall\exists$-semi-black-box reduction of $\mathcal{P}$ to $\mathcal{Z}$ alone.
+
+**Conjecture.** The primitive $\mathcal{F}$ of one-way functions is $[\mathrm{semi} \to \forall\exists\text{-semi}]$ black-box useless for the primitive $\mathcal{KA}$ of key agreement: for every cryptographic primitive $\mathcal{Z}$, if there is a semi-black-box reduction of $\mathcal{KA}$ to $(\mathcal{F}, \mathcal{Z})$, then there is a $\forall\exists$-semi-black-box reduction of $\mathcal{KA}$ to $\mathcal{Z}$ alone.
+
+No restriction is placed on the protocols: the correctness function $\varepsilon$ is arbitrary, the number of rounds is any polynomial, and each party may make any polynomial number of queries to both the one-way function and the auxiliary primitive.
+
+**The flavour matters, and there are two readings.** The paper's theorems are proved for the infinitely-often primitives $\mathrm{io}\text{-}\mathcal{F}$ and $\mathrm{io}\text{-}\mathcal{KA}$, and its Remark 4.2 records that uselessness for the plain primitives is *strictly stronger* than uselessness for the infinitely-often ones. The statement above is the unqualified one, matching the abstract, the "open problems" section and the "dream result" passage; the infinitely-often form is named only parenthetically in the paper and is the weaker reading.
+
+## Proof
+
+Open in the general case. Three fragments are settled, and the obstruction to extending them is named rather than guessed at.
+
+**What is settled.**
+
+- **Theorem 4.1** — perfectly correct key agreement in which one party makes a constant number of one-way-function queries.
+- **Theorem 4.9** — constant-round imperfect key agreement in which both parties make a constant number of one-way-function queries.
+- **Theorem 4.12** — Merkle-type protocols, in which all one-way-function queries precede all messages, with *no* query bound.
+
+**Why the general case resists.** The attacks proceed by repeatedly sampling protocol views consistent with the transcript. Making those samplers efficient in the presence of the auxiliary primitive requires invoking an inverter recursively, and the query complexity to the auxiliary oracle blows up — the paper's own example is $O(n^2)$ becoming $O(n^4)$ — so "the recursive argument above can be applied for only a constant number of steps". That is exactly where the constant-round and constant-query hypotheses come from.
+
+**And why the standard repair does not apply.** The adaptivity-reduction technique of Mahmoody, Moran and Vadhan would ordinarily replace a high-adaptivity attacker by a low-adaptivity one, but it "requires the attacker with lower adaptivity to simulate in 'its head' the original attacker which cannot be done efficiently if the protocol was not constant-round".
+
+## Discussion
+
+This is the paper's central open problem: "the central open problem left by our work is that of black-box uselessness of OWFs for arbitrary key agreement protocols", with the assessment that "given our BBU results for special classes of KA protocols, this conjecture may well be within reach", while "a straightforward generalization seems to require a refined sampler technique with low adaptivity".
+
+Note what a candidate proof has to clear. Theorem 4.12 has already removed the query restriction in the Merkle-type case, so a general argument must *subsume* that case rather than reprove it — a technique that only works under a query bound would be a step sideways.
+
+The contrast with the sibling statement in this hub is the interesting part. Here the paper conjectures uselessness and proves fragments of it; for [collision resistance](/c/0019/) the same authors conjecture the opposite, because the relevant separation is Simon's oracle argument rather than a compiling-out separation. Uselessness is not a general upgrade of separation — which separation you start from decides whether the upgrade is available at all.
+
+## Open obligations
+
+- [ ] Prove or refute the conjecture for arbitrary protocols, with no bound on rounds or queries.
+- [ ] Find a sampler with low adaptivity, or show that no such refinement of the current technique can work.
+- [ ] Settle the infinitely-often reading separately if it is wanted: Remark 4.2 gives one implication only, so the weaker form does not follow from failure of the stronger.
+- [ ] Confirm that the primitive-level breaking relations used in the transcription match the paper's intent — the paper defines the underlying notions but never spells the primitives out as pairs.
+- [ ] Check the literature since January 2021, which the drafter did not survey exhaustively.
+- [ ] Formalize the statement in Lean.
+
+## Sources
+
+- Couteau, Farshim, and Mahmoody. [*Black-Box Uselessness: Composing Separations in Cryptography*](https://eprint.iacr.org/2021/016). Cryptology ePrint Archive, Report 2021/016. The conjecture (abstract, and Section 4); Theorems 4.1, 4.9 and 4.12; Remark 4.2 on the infinitely-often reading; the query-blow-up and adaptivity obstructions.
+- Impagliazzo and Rudich. *Limits on the provable consequences of one-way permutations*. STOC 1989, pp. 44–61. The separation this statement composes.
+- Mahmoody, Moran, and Vadhan. *Time-lock puzzles in the random oracle model*. CRYPTO 2011. The adaptivity-reduction technique the paper explains it cannot substitute here.
+- Reingold, Trevisan, and Vadhan. *Notions of reducibility between cryptographic primitives*. TCC 2004, LNCS 2951, pp. 1–20. The reduction taxonomy the flavours come from.

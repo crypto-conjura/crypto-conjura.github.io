@@ -1,0 +1,388 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  Black-box uselessness of one-way functions for key agreement.
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{OWFS ARE BLACK-BOX USELESS FOR KEY AGREEMENT}
+
+\newcommand{\bits}{\{0,1\}}
+\newcommand{\negl}{\mathrm{negl}}
+\newcommand{\iopref}{\mathrm{io}\text{-}}
+\newcommand{\Fc}{\mathcal{F}}
+\newcommand{\KAc}{\mathcal{KA}}
+\newcommand{\ioF}{\iopref\Fc}
+\newcommand{\ioKA}{\iopref\KAc}
+\newcommand{\Zc}{\mathcal{Z}}
+\newcommand{\Pc}{\mathcal{P}}
+\newcommand{\Qc}{\mathcal{Q}}
+\newcommand{\semibbu}{[\mathrm{semi}\to\forall\exists\text{-semi}]}
+\newcommand{\Oc}{\mathsf{O}}
+\newcommand{\Fs}{\mathsf{F}}
+\newcommand{\Ps}{\mathsf{P}}
+\newcommand{\Qs}{\mathsf{Q}}
+\newcommand{\Zs}{\mathsf{Z}}
+\newcommand{\Alice}{\mathsf{Alice}}
+\newcommand{\Bob}{\mathsf{Bob}}
+\newcommand{\Eve}{\mathsf{Eve}}
+\newcommand{\FO}{\Fs^{\Oc}}
+\newcommand{\kaexec}{\langle\Alice^{\Oc}(1^{\lambda}),\Bob^{\Oc}(1^{\lambda})\rangle}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{Black-Box Uselessness of One-Way Functions for Key Agreement}
+\cjsubtitle{Arbitrary protocols, no restriction on rounds or query
+  counts}
+\cjstatus{Statement: AI-written from Geoffroy Couteau, Pooya Farshim and
+  Mohammad Mahmoody, \emph{Black-Box Uselessness: Composing Separations
+  in Cryptography}, Cryptology ePrint Archive 2021, not yet checked by a
+  human. Three restricted classes are settled --- perfectly correct key
+  agreement in which one party makes a constant number of
+  one-way-function queries (Theorem~4.1), constant-round imperfect key
+  agreement in which both parties make a constant number of
+  one-way-function queries (Theorem~4.9), and Merkle-type protocols, in
+  which all one-way-function queries precede all messages, with no query
+  bound (Theorem~4.12) --- while the general case, with arbitrary rounds
+  and arbitrary polynomial query counts, is open and is named by the
+  paper as its central open problem.}
+\cjcategory{\emph{Black-Box Separations \& Reductions}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+Impagliazzo and Rudich showed that one-way functions alone cannot be used
+to build key agreement in a black-box way. That leaves open a
+weaker-sounding but much more useful possibility: perhaps one-way
+functions, while useless on their own, still help when combined with some
+other primitive that is itself insufficient for key agreement. The paper
+calls a primitive \emph{black-box useless} for a target if it never helps
+in this sense: for every auxiliary primitive you might add, if the pair
+yields a black-box construction of the target then the auxiliary
+primitive already yielded one by itself. The conjecture is that one-way
+functions are black-box useless for key agreement in exactly this sense,
+for arbitrary two-party protocols. The paper proves this only for
+restricted protocol classes: when one party queries the one-way function
+only a constant number of times and correctness is perfect; when both
+parties query it a constant number of times and the protocol has a
+constant number of rounds; and when all queries to the one-way function
+are made before any message is sent. The obstruction to the general case
+is named: the known attacks repeatedly sample protocol views consistent
+with the transcript, and making those samplers efficient in the presence
+of the auxiliary primitive requires recursively invoking an inverter,
+whose query complexity can blow up so fast that only constantly many
+sampling rounds can be afforded.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+Impagliazzo and Rudich~\cite{IR89} showed that relative to a random
+oracle (together with a $\mathsf{PSPACE}$ oracle) one-way functions exist
+but key agreement does not, ruling out fully black-box constructions of
+key agreement from one-way functions. Such a separation says nothing,
+however, about whether one-way functions can \emph{help}: it leaves open
+that some auxiliary primitive $\Zc$, itself insufficient for key
+agreement, becomes sufficient once one-way functions are added. The
+framework of \emph{black-box uselessness} introduced in this paper is
+designed exactly to rule this out, and it composes: if $\Qc_1$ and
+$\Qc_2$ are each black-box useless for $\Pc$, so is the joint primitive
+$(\Qc_1,\Qc_2)$. The notions of reduction used are those of Reingold,
+Trevisan and Vadhan~\cite{RTV04}.
+
+The paper establishes three restricted instances of the conjecture.
+(i)~Infinitely-often one-way functions are $\semibbu$ black-box useless
+for infinitely-often \emph{perfectly correct} key agreement whenever one
+of the two parties makes only a constant number of queries to the one-way
+function (arbitrarily many queries to $\Zc$ are allowed). (ii)~The same
+holds for imperfect key agreement when \emph{both} parties make a
+constant number of one-way-function queries \emph{and} the protocol has a
+constant number of rounds. (iii)~One-way functions are black-box useless
+for \emph{Merkle-type} protocols~\cite{Mer78}, in which both parties ask
+all of their one-way-function queries before exchanging any message, with
+no bound on the number of queries.
+
+All three proofs run the same case distinction. Fix the auxiliary
+implementation $\Zs$. Either an infinitely-often one-way function exists
+relative to $\Zs$, in which case it can be plugged into the candidate
+construction and the key agreement is obtained from $\Zs$ alone; or no
+such function exists relative to $\Zs$, in which case efficient inverters
+exist for every efficient $\Zs$-aided function (by hardness
+amplification~\cite{Yao82}, and in the distributional form
+of~\cite{IL89} as stated in~\cite{BHT14}), and these inverters are used
+to make the inefficient transcript-consistent-view-sampling attacks
+of~\cite{BKSY11} (for perfect correctness) and~\cite{IR89,BM09,BM17}
+(for imperfect correctness) efficient in the presence of $\Zs$.
+
+The obstruction to the general case is explicitly named. The sampling
+attacks are adaptive: each round of sampling is applied to a function
+that itself invokes the inverter from the previous round, so the query
+complexity to $\Zs$ can blow up (a sampler needing $\mathcal O(n^2)$
+queries to invert an $n$-query function leads to $\mathcal O(n^4)$ after
+one step), and only a constant number of such steps can be afforded. The
+adaptivity-reduction technique of~\cite{MMV11} does not remove the
+constant-round restriction, because the low-adaptivity attacker it
+produces must simulate the original attacker in its head, which is not
+efficient for protocols that are not constant round.
+
+\section{Notation and parameters}\label{sec:notation}
+
+\begin{itemize}
+\item $\lambda\in\mathbb{N}$ is the security parameter; $\negl(\lambda)$
+  denotes a negligible function; PPT means probabilistic polynomial time.
+\item An \emph{oracle-aided PPT} machine $A^{\Oc}$ is a PPT machine with
+  oracle access to $\Oc$, where each oracle call counts as one step, and
+  which runs in polynomial time for \emph{every} oracle $\Oc$.
+\item Calligraphic letters $\Pc,\Qc,\Zc,\Fc,\KAc$ denote cryptographic
+  primitives; sans-serif letters $\Ps,\Qs,\Zs,\Fs$ denote particular
+  implementations of them.
+\item $\ioF$ is the primitive of infinitely-often one-way functions and
+  $\ioKA$ the primitive of infinitely-often key agreement (defined
+  below).
+\item For an oracle $\Oc$, $\kaexec$ denotes the distribution of triples
+  $(T,K_A,K_B)$ over the randomness of the two parties, where $T$ is the
+  transcript and $K_A,K_B$ are the parties' outputs.
+\end{itemize}
+
+The parameters are:
+\begin{itemize}
+\item $\lambda$, the security parameter.
+\item $\Zc$, the auxiliary primitive, universally quantified over all
+  cryptographic primitives.
+\item $\varepsilon$, the correctness function of the key agreement;
+  unrestricted (Definition~\ref{def:ioka}, the paper's Definition~2.7,
+  places no lower bound on it).
+\item $q_A,q_B$, the number of oracle queries made by $\Alice$ and
+  $\Bob$; unrestricted (any polynomial) in the conjecture, restricted to
+  constants in the paper's theorems.
+\end{itemize}
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{definition}[Cryptographic primitive]\label{def:prim}
+A \emph{cryptographic primitive} is a pair $\Pc=(F_{\Pc},R_{\Pc})$, where
+$F_{\Pc}$ is a set of functions (the \emph{implementations} of $\Pc$) and
+$R_{\Pc}$ is a relation. For $\Ps\in F_{\Pc}$, the statement
+$(\Ps,A)\in R_{\Pc}$ means that the adversary $A$ \emph{breaks} the
+implementation $\Ps$. It is required that at least one $\Ps\in F_{\Pc}$
+is computable by a PPT algorithm.
+\end{definition}
+
+\begin{definition}[Joint primitive]\label{def:joint}
+Given primitives $\Pc=(F_{\Pc},R_{\Pc})$ and $\Qc=(F_{\Qc},R_{\Qc})$, the
+\emph{joint primitive}
+$(\Pc,\Qc)=(F_{(\Pc,\Qc)},R_{(\Pc,\Qc)})$ is defined by
+$F_{(\Pc,\Qc)}:=F_{\Pc}\times F_{\Qc}$, and for $\mathsf G=(\Ps,\Qs)$ and
+$A=(A_{\Pc},A_{\Qc})$ one sets $(\mathsf G,A)\in R_{(\Pc,\Qc)}$ iff
+$(\Ps,A_{\Pc})\in R_{\Pc}$ or $(\Qs,A_{\Qc})\in R_{\Qc}$.
+\end{definition}
+
+\begin{definition}[Semi- and $\forall\exists$-semi-black-box
+reductions]\label{def:semi}
+There is a \emph{semi-black-box reduction} of $\Pc$ to $\Qc$ if there is
+an oracle-aided PPT machine $\Ps$ such that for every implementation
+$\Qs\in F_{\Qc}$:
+\begin{itemize}
+\item (implementation) $\Ps^{\Qs}\in F_{\Pc}$; and
+\item (security) if there exists an oracle-aided PPT $A$ with
+  $(\Ps^{\Qs},A^{\Qs})\in R_{\Pc}$, then there exists an oracle-aided PPT
+  $\mathsf S$ with $(\Qs,\mathsf S^{\Qs})\in R_{\Qc}$.
+\end{itemize}
+If the order of quantifiers for the implementation is switched, namely if
+for every $\Qs\in F_{\Qc}$ there exists an oracle-aided PPT $\Ps$ for
+which the two conditions above hold, then the reduction is called a
+\emph{$\forall\exists$-semi-black-box reduction}.
+\end{definition}
+
+\begin{definition}[$\semibbu$ black-box uselessness]\label{def:bbu}
+A primitive $\Qc$ is \emph{$\semibbu$ black-box useless} for a primitive
+$\Pc$ if for every auxiliary primitive $\Zc$, whenever there exists a
+semi-black-box reduction of $\Pc$ to the joint primitive $(\Qc,\Zc)$,
+there also exists a $\forall\exists$-semi-black-box reduction of $\Pc$ to
+$\Zc$ alone.
+\end{definition}
+
+\begin{definition}[Infinitely-often one-way
+functions]\label{def:ioowf}
+An oracle-aided PPT machine $\Fs$ is an \emph{infinitely-often one-way
+function} relative to an oracle $\Oc$ if for every oracle-aided PPT
+adversary $A$ there is a negligible function $\negl$ and an infinite set
+$\Lambda\subseteq\mathbb N$ such that for all $\lambda\in\Lambda$,
+\[
+  \Pr_{x\sample\bits^{\lambda}}
+    \big[\FO\big(A^{\Oc}(1^{\lambda},\FO(x))\big)=\FO(x)\big]
+  =\negl(\lambda).
+\]
+The primitive $\ioF$ has as implementations all functions $\Fs$, and $A$
+breaks $\Fs$ iff the displayed probability is at least $1/p(\lambda)$ for
+some polynomial $p$ and all but finitely many $\lambda$.
+\end{definition}
+
+\begin{definition}[Infinitely-often key agreement]\label{def:ioka}
+Let $\varepsilon:\mathbb N\to[0,1]$. An \emph{$\varepsilon$-key
+agreement} relative to an oracle $\Oc$ is an interactive protocol between
+oracle-aided PPT machines $\Alice$ and $\Bob$ such that
+\begin{align*}
+  \Pr\big[&(T,K_A,K_B)\sample\kaexec \;:\; K_A=K_B\big]\\
+    &\qquad\ge\ \varepsilon(\lambda)\quad\text{for all }\lambda .
+\end{align*}
+It is \emph{secure} if for every PPT adversary $\Eve$, every polynomial
+$p$ and all sufficiently large $\lambda$,
+\begin{align*}
+  \Pr\big[&(T,K_A,K_B)\sample\kaexec,\\
+    &\ \ K_E\sample\Eve^{\Oc}(1^{\lambda},T)\;:\;K_E=K_B\big]\\
+    &\qquad\le\ \frac{\varepsilon(\lambda)}{p(\lambda)} .
+\end{align*}
+If the security condition is only required to hold for infinitely many
+$\lambda$ (in the sense that for every polynomial $p$ and every adversary
+there is an infinite set of $\lambda$ for which the winning probability
+is below $\varepsilon(\lambda)/p(\lambda)$), the protocol is an
+\emph{infinitely-often key agreement}. The primitive $\ioKA$ has as
+implementations all such pairs $(\Alice,\Bob)$, with $\Eve$ breaking an
+implementation iff the security condition fails.
+\end{definition}
+
+The unqualified primitives $\Fc$ and $\KAc$ named in
+Conjecture~\ref{conj:main} are the plain counterparts of
+Definitions~\ref{def:ioowf} and~\ref{def:ioka}, in which the security
+requirement is imposed for all sufficiently large $\lambda$ rather than
+only on an infinite set of them.
+
+\begin{conjecture}[one-way functions are black-box useless for key
+agreement]\label{conj:main}
+The primitive $\Fc$ of one-way functions is $\semibbu$ black-box useless
+for the primitive $\KAc$ of key agreement: for every cryptographic
+primitive $\Zc$, if there is a semi-black-box reduction of $\KAc$ to
+$(\Fc,\Zc)$, then there is a $\forall\exists$-semi-black-box reduction of
+$\KAc$ to $\Zc$ alone.
+
+No restriction whatsoever is placed on the key-agreement constructions
+considered: the correctness function $\varepsilon$ may be any function,
+the number of rounds of interaction may be any polynomial in $\lambda$,
+and each of $\Alice$ and $\Bob$ may make any polynomial number of queries
+both to the implementation of $\Fc$ and to the implementation of $\Zc$.
+\end{conjecture}
+
+\begin{remark}[the infinitely-often variant]\label{rem:io}
+The paper's theorems are proved for the infinitely-often primitives
+$\ioF$ and $\ioKA$ of Definitions~\ref{def:ioowf} and~\ref{def:ioka}, and
+the corresponding statement --- that $\ioF$ is $\semibbu$ black-box
+useless for $\ioKA$ --- is strictly weaker than
+Conjecture~\ref{conj:main}: Remark~4.2 (p.~11) records that
+``$\mathcal A$ is black-box useless for $\mathcal C$'' implies
+``$\iopref\mathcal A$ is black-box useless for $\iopref\mathcal C$''. The
+paper names that weaker form only parenthetically, when it speaks on
+p.~18 of ``(infinitely-often) OWFs \dots{} for more general forms of key
+agreement''. The central open problem, and hence
+Conjecture~\ref{conj:main}, is the unqualified one.
+\end{remark}
+
+\begin{remark}[what is settled]\label{rem:progress}
+Theorems~4.1, 4.9 and 4.12 give the three restricted results described in
+Section~\ref{sec:setting}. The paper also records why the natural route
+to the general case stalls: the recursive use of inverters inside the
+sampler blows up query complexity to the auxiliary oracle, limiting the
+argument to a constant number of sampling steps --- ``this in particular
+implies that the recursive argument above can be applied for only a
+constant number of steps'' (p.~4) --- and the adaptivity-reduction
+technique of~\cite{MMV11} cannot be substituted, because ``this technique
+requires the attacker with lower adaptivity to simulate in `its head' the
+original attacker which cannot be done efficiently if the protocol was
+not constant-round'' (p.~18).
+\end{remark}
+
+\begin{remark}[openness]\label{rem:open}
+The paper calls this its central open problem: ``the central open problem
+left by our work is that of black-box uselessness of OWFs for arbitrary
+key agreement protocols'' (p.~6), adding that ``given our BBU results for
+special classes of KA protocols, this conjecture may well be within
+reach'', while ``a straightforward generalization seems to require a
+refined sampler technique with low adaptivity''. Section~4 repeats this:
+the ``dream result'' would be ``to show that one-way functions are
+black-box useless for any key agreement'', and the paper leaves it ``as
+an intriguing open question'' (p.~11).
+\end{remark}
+
+\begin{remark}[caveats for a reviewer]\label{rem:caveats}
+Three things a reviewer should check. First, the flavour: the abstract
+states the conjecture with no flavour attached, while the paper's
+theorems and its Section~4.2 formulation are in the $\semibbu$ flavour;
+Conjecture~\ref{conj:main} follows the theorems in flavour but the
+abstract in taking plain rather than infinitely-often primitives, and
+Remark~\ref{rem:io} records the relation between the two readings.
+Second, the resolution status: no resolution of the general case since
+January~2021 is known to the author of this record, but follow-up work
+has not been exhaustively surveyed. Third, Theorem~4.12 already removes
+the query restriction in the Merkle-type case, so a candidate general
+proof must subsume that case, not merely reprove it.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem[BHT14]{BHT14}
+Itay Berman, Iftach Haitner, and Aris Tentes.
+\emph{Coin flipping of any constant bias implies one-way functions}.
+46th Annual ACM Symposium on Theory of Computing, pages 398--407, ACM
+Press, 2014.
+
+\bibitem[BKSY11]{BKSY11}
+Zvika Brakerski, Jonathan Katz, Gil Segev, and Arkady Yerukhimovich.
+\emph{Limits on the power of zero-knowledge proofs in cryptographic
+constructions}.
+TCC 2011: 8th Theory of Cryptography Conference, volume 6597 of Lecture
+Notes in Computer Science, pages 559--578, Springer, 2011.
+
+\bibitem[BM09]{BM09}
+Boaz Barak and Mohammad Mahmoody-Ghidary.
+\emph{Merkle puzzles are optimal --- an $O(n^{2})$-query attack on any
+key exchange from a random oracle}.
+Advances in Cryptology --- CRYPTO 2009, volume 5677 of Lecture Notes in
+Computer Science, pages 374--390, Springer, 2009.
+
+\bibitem[BM17]{BM17}
+Boaz Barak and Mohammad Mahmoody.
+\emph{Merkle's key agreement protocol is optimal: An $O(n^{2})$ attack on
+any key agreement from random oracles}.
+Journal of Cryptology, 30(3):699--734, 2017.
+
+\bibitem[IL89]{IL89}
+Russell Impagliazzo and Michael Luby.
+\emph{One-way functions are essential for complexity based cryptography
+(extended abstract)}.
+30th Annual Symposium on Foundations of Computer Science, pages 230--235,
+IEEE Computer Society Press, 1989.
+
+\bibitem[IR89]{IR89}
+Russell Impagliazzo and Steven Rudich.
+\emph{Limits on the provable consequences of one-way permutations}.
+21st Annual ACM Symposium on Theory of Computing, pages 44--61, ACM
+Press, 1989.
+
+\bibitem[Mer78]{Mer78}
+Ralph C. Merkle.
+\emph{Secure communications over insecure channels}.
+Communications of the ACM, 21(4):294--299, 1978.
+
+\bibitem[MMV11]{MMV11}
+Mohammad Mahmoody, Tal Moran, and Salil P. Vadhan.
+\emph{Time-lock puzzles in the random oracle model}.
+Advances in Cryptology --- CRYPTO 2011, volume 6841 of Lecture Notes in
+Computer Science, pages 39--50, Springer, 2011.
+
+\bibitem[RTV04]{RTV04}
+Omer Reingold, Luca Trevisan, and Salil P. Vadhan.
+\emph{Notions of reducibility between cryptographic primitives}.
+TCC 2004: 1st Theory of Cryptography Conference, volume 2951 of Lecture
+Notes in Computer Science, pages 1--20, Springer, 2004.
+
+\bibitem[Yao82]{Yao82}
+Andrew Chi-Chih Yao.
+\emph{Theory and applications of trapdoor functions (extended abstract)}.
+23rd Annual Symposium on Foundations of Computer Science, pages 80--91,
+IEEE Computer Society Press, 1982.
+
+\end{conjurabibliography}
+
+\end{document}

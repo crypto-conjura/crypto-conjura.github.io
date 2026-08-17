@@ -1,0 +1,348 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  The polynomial compatibility conjecture.
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{THE POLYNOMIAL COMPATIBILITY CONJECTURE}
+
+\newcommand{\Yc}{\mathcal{Y}}
+\newcommand{\Yd}{\hat{\mathcal{Y}}}
+\newcommand{\zc}{\hat{0}}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{The Polynomial Compatibility Conjecture}
+\cjsubtitle{Low-degree, low-influence polynomial distributions over an
+  Abelian group}
+\cjstatus{Statement: AI-written from Per Austrin, Hao Chung, Kai-Min
+  Chung, Shiuan Fu, Yao-Ting Lin, Mohammad Mahmoody, \emph{On the
+  Impossibility of Key Agreements from Quantum Random Oracles},
+  Cryptology ePrint Archive 2022, not yet checked by a human. The case
+  of exponentially small influences, $\delta < |\Yc|^{-d}/d$, is settled
+  by the source (Theorem 4.4) and its counterexamples rule out
+  $\delta \ge 1/(2d)$; the whole range in between --- in particular the
+  inverse-polynomial regime asserted here --- is open.}
+\cjcategory{\emph{Idealized Models \& Non-Uniformity}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+Take two probability distributions over real-valued functions on a grid,
+each function built from a fixed small number of coordinates at a time
+(degree at most $d$), each normalised so that its average squared value
+is one, and each coordinate carrying only a tiny share of the total
+weight on average (influence at most $\delta$). The conjecture says that
+if $\delta$ is small but still only inverse-polynomially small in $d$,
+then you can always draw one function from the first distribution and
+one from the second and find a single input at which both are nonzero.
+This is a purely Fourier-analytic statement, but it was isolated because
+it is exactly what is needed to break key agreement in the quantum
+random oracle model: the two distributions describe what the oracle
+looks like conditioned on the shared key being zero and on it being one,
+a common nonzero point is a single oracle consistent with both, and
+perfect agreement on the key then makes those two executions contradict
+each other. The authors could not prove it. They can prove it only when
+the influence bound is exponentially small in the degree, which still
+gives an attack, but an exponential-query one. They also give explicit
+counterexamples showing the influence bound cannot be relaxed beyond
+roughly one over twice the degree, and that dropping either the degree
+bound or the influence bound on either of the two distributions makes
+the statement false.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+Merkle's puzzles~\cite{Mer74} let two parties who share only a random
+oracle agree on a key using $d$ queries while an eavesdropper needs
+$\Omega(d^2)$ queries, and a long line of work~\cite{IR89,BMG09,BM17}
+showed that this quadratic gap is the best possible in the classical
+random oracle model. Quantum access changes the picture: Grover search
+breaks Merkle's protocol with $O(d)$ queries, but quantum honest parties
+can restore a super-linear gap~\cite{BS08}. Whether parties who compute
+quantumly but communicate classically --- the QCCC model --- can achieve
+\emph{super-polynomial} security in the quantum random oracle model was
+asked by Hosoyamada and Yamakawa~\cite{HY20} and is the motivating
+question of the source paper.
+
+The paper reduces that question, for protocols with perfect
+completeness, to a statement in Fourier analysis. Following Zhandry's
+way of recording quantum queries~\cite{Zha19}, one writes the oracle
+register in the Fourier basis; after the two parties make $d$ quantum
+queries in total, the joint state of the parties and the oracle is
+$d$-sparse there, which is the same thing as saying that the associated
+``state polynomial'' on the oracle's truth table has degree at most $d$
+and $\ell_2$ norm $1$. A query that the eavesdropper has not yet learned
+is one whose variable has small influence, so after an eavesdropper has
+learned all $\varepsilon$-heavy queries she is left with two
+distributions of exactly the kind in the conjecture: one for the
+residual state conditioned on the key being $0$, one conditioned on the
+key being $1$. A common point at which a polynomial from each is nonzero
+is a single oracle consistent with both executions, and perfect
+completeness then says the two executions cannot produce different keys.
+So the conjecture is precisely the missing step.
+
+Granting it, the paper obtains a $\poly(d, \log|\Yc|)$-query
+\emph{classical} attack on every perfectly complete QCCC key agreement
+protocol in the QROM, and, as a corollary, a conditional quantum
+black-box separation of QCCC key agreement from one-way functions,
+extending it to primitives such as oblivious transfer that imply key
+agreement in a black-box way. Unconditionally, the paper proves the
+conjecture only in the regime of exponentially small influences,
+$\delta < |\Yc|^{-d}/d$, which yields an attack of $2^{O(dm)} \cdot d^2$
+queries for oracles with $m$-bit outputs. Its counterexamples show the
+hypotheses cannot be dropped: both distributions need the degree bound,
+both need the influence bound, and $\delta$ must be below $1/(2d)$.
+
+The statement is a cousin of the Aaronson--Ambainis
+conjecture~\cite{AA14}, whose contrapositive also asserts that a
+low-degree polynomial with polynomially small influences must be large
+somewhere. Both are known when the influences are exponentially
+small~\cite{DFKO06}, and the degenerate case of no communication and
+perfect completeness is settled by~\cite{OSSS05}; but the paper reports
+that the two conjectures do not appear to be directly comparable, and
+that their cryptographic consequences are incomparable too.
+
+Progress to date. Theorem 4.4 proves the conjecture for
+$\delta < |\Yc|^{-d}/d$ by fixing a maximum-degree term of $f$ and
+showing that a $g$ with small influences has, in expectation over a
+random assignment to the remaining variables, a constant term dominating
+all $|\Yc|^{d}$ non-constant terms of the restriction; the $|\Yc|^{-d}$
+loss comes from that count (in the Boolean case $\Yc = \mathbb{Z}_2$
+this is the $2^{-d}$ of the paper's overview). The proof in fact uses no
+influence condition on $F$ and no degree bound on $G$. Theorem 5.6
+(Appendix A) shows it suffices to treat real-valued rather than
+complex-valued functions. Lemma 4.8 (Section 8) shows that the
+conjecture for one constant-size Abelian group already gives
+$\poly(d, \log|\Yc'|)$-query attacks for oracles with range any finite
+Abelian group $\Yc'$, so the choice of group in the conjecture is not
+the obstacle.
+
+\section{Notation and parameters}\label{sec:notation}
+
+Throughout, $\Yc$ is a finite Abelian group, written additively, and
+$\Yd$ is its dual group, i.e.\ the set of characters
+$\chi \colon \Yc \to \{\omega \in \mathbb{C} : |\omega| = 1\}$ satisfying
+$\chi(y + y') = \chi(y)\chi(y')$. The trivial character, $\chi(y) = 1$
+for all $y \in \Yc$, is denoted $\zc$. One has $|\Yd| = |\Yc|$.
+
+For $N \in \mathbb{N}$ write $[N] = \{1, \dots, N\}$. A tuple
+$\chi = (\chi_1, \dots, \chi_N) \in \Yd^N$ is viewed as the function
+$\chi(x) = \prod_{i=1}^{N} \chi_i(x_i)$ on
+$x = (x_1, \dots, x_N) \in \Yc^N$. These $|\Yc|^N$ functions form an
+orthonormal basis for the complex-valued functions on $\Yc^N$ under the
+inner product
+$\langle f, g \rangle = \mathbb{E}_{x}[f(x)\overline{g(x)}]$, where $x$
+is uniform on $\Yc^N$. Consequently every $f \colon \Yc^N \to \mathbb{R}$
+has a unique Fourier expansion
+\[
+  f(x) \;=\; \sum_{\chi \in \Yd^N} \hat{f}(\chi)\, \chi(x),
+  \qquad \hat{f}(\chi) \in \mathbb{C}.
+\]
+The $\ell_2$ norm is
+\[
+  \|f\|_2 \;=\; \bigl(\mathbb{E}_{x}[|f(x)|^2]\bigr)^{1/2}
+  \;=\; \Bigl(\sum_{\chi} |\hat{f}(\chi)|^2\Bigr)^{1/2},
+\]
+again with $x$ uniform on $\Yc^N$.
+
+For a probability distribution $F$ over functions
+$\Yc^N \to \mathbb{R}$, $\operatorname{supp}(F)$ denotes its support,
+and $f \sample F$ denotes a sample. The parameters are the degree bound
+$d \in \mathbb{N}$, the number of variables $N \in \mathbb{N}$, and the
+influence bound $\delta$.
+
+\begin{itemize}
+\item $\Yc$: a finite Abelian group; the range of the random oracle in
+  the cryptographic application. The conjecture asserts that some such
+  group works; the Boolean case $\Yc = \mathbb{Z}_2$ is the special case
+  stated as Conjecture 1.2 in the paper.
+\item $N$: number of variables, i.e.\ the size of the oracle's domain.
+  Universally quantified; the influence bound must not depend on it.
+\item $d$: degree bound on the polynomials; in the application, the
+  total number of quantum oracle queries made by the two honest parties.
+\item $\delta(d)$: bound on the average influence of each variable. The
+  conjecture requires $\delta(d)$ to be at least inverse polynomial in
+  $d$; the paper's counterexamples force $\delta(d) < 1/(2d)$.
+\item $F, G$: the two distributions over polynomials. In the application
+  they describe the oracle's state conditioned on the agreed key bit
+  being $0$ and being $1$ respectively.
+\end{itemize}
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{definition}[degree and influence]\label{def:deginf}
+For $\chi = (\chi_1, \dots, \chi_N) \in \Yd^N$ let
+$\deg(\chi) = \bigl|\{ i \in [N] : \chi_i \ne \zc \}\bigr|$. The
+\emph{degree} of $f \colon \Yc^N \to \mathbb{R}$ is
+\[
+  \deg(f) \;=\; \max\{ \deg(\chi) \;:\; \hat{f}(\chi) \ne 0 \},
+\]
+with $\deg(f) = 0$ for $f$ constant. For $i \in [N]$, the
+\emph{influence} of the $i$-th variable on $f$ is
+\[
+  \operatorname{Inf}_i(f) \;=\;
+  \sum_{\chi \,:\, \chi_i \ne \zc} \bigl|\hat{f}(\chi)\bigr|^2 .
+\]
+For $\Yc = \mathbb{Z}_2$, identifying $\Yc^N$ with $\{\pm 1\}^N$, these
+are the usual notions for multilinear polynomials: writing
+$f = \sum_{S \subseteq [N]} \alpha_S \prod_{i \in S} x_i$ with
+$\alpha_S \in \mathbb{R}$, one has
+\[
+  \deg(f) = \max_{\alpha_S \ne 0} |S|, \qquad
+  \operatorname{Inf}_i(f) = \sum_{S \ni i} \alpha_S^2, \qquad
+  \|f\|_2^2 = \sum_S \alpha_S^2 .
+\]
+\end{definition}
+
+\begin{conjecture}[polynomial compatibility]\label{conj:main}
+There exist a finite Abelian group $\Yc$, a constant $c > 0$, and a
+function $\delta \colon \mathbb{N} \to (0,1]$ with
+$\delta(d) \ge d^{-c}$ for all $d \in \mathbb{N}$, such that the
+following holds for all $d, N \in \mathbb{N}$. Let $F$ and $G$ be
+probability distributions over functions $\Yc^N \to \mathbb{R}$ such
+that:
+\begin{itemize}
+  \item \emph{unit $\ell_2$ norm:} $\|f\|_2 = 1$ for every
+    $f \in \operatorname{supp}(F)$ and $\|g\|_2 = 1$ for every
+    $g \in \operatorname{supp}(G)$;
+  \item \emph{degree at most $d$:} $\deg(f) \le d$ for every
+    $f \in \operatorname{supp}(F)$ and $\deg(g) \le d$ for every
+    $g \in \operatorname{supp}(G)$;
+  \item \emph{$\delta$-influences on average:} for every $i \in [N]$,
+    \begin{align*}
+      \mathbb{E}_{f \sample F}\bigl[\operatorname{Inf}_i(f)\bigr]
+        &\le \delta(d) \quad\text{and}\\
+      \mathbb{E}_{g \sample G}\bigl[\operatorname{Inf}_i(g)\bigr]
+        &\le \delta(d).
+    \end{align*}
+\end{itemize}
+Then there exist $f \in \operatorname{supp}(F)$,
+$g \in \operatorname{supp}(G)$ and $x \in \Yc^N$ such that
+$f(x) \cdot g(x) \ne 0$.
+\end{conjecture}
+
+\begin{remark}[which group, and how it is quantified]\label{rem:group}
+Conjecture~\ref{conj:main} is the \emph{existential} form: it asks only
+that some finite Abelian group $\Yc$ admit an inverse-polynomial
+$\delta$. This is the form taken by the source's Conjectures 4.3 and
+5.5, and it is the form its Theorems 4.5 and 6.3 use; by Lemma 4.8 one
+constant-size group already suffices for attacks against oracles whose
+range is any finite Abelian group, so the choice of group is not where
+the difficulty lies. The paper's introductory Conjecture 1.2 fixes the
+Boolean case $\Yc = \mathbb{Z}_2$; that version is strictly stronger and
+also open, and it must not be presented as the paper's main conjecture.
+\end{remark}
+
+\begin{remark}[how to read the hypotheses]\label{rem:reading}
+Three points are easy to get wrong. First, the influence bound is on the
+\emph{average} over the distribution,
+$\mathbb{E}_{f \sample F}[\operatorname{Inf}_i(f)]$, and not on each
+polynomial in the support; imposing it pointwise strengthens the
+hypothesis and so weakens the conjecture. Second, $N$ is universally
+quantified and $\delta$ depends on $d$ alone: the source's Conjecture
+5.5 leaves $N$ free in the text, and the universal reading is the one
+made explicit in the equivalent Conjecture 4.3 (``for any
+$d, N \in \mathbb{N}$''). Third, the paper's introduction writes the
+$\ell_2$ norm without the square root; since the constraint is that the
+norm equals $1$ this makes no difference, and the standard normalisation
+of Section~\ref{sec:notation} is used here.
+\end{remark}
+
+\begin{remark}[the window that is open]\label{rem:window}
+The source proves Conjecture~\ref{conj:main} (Theorem 4.4) whenever
+$\delta < |\Yc|^{-d}/d$, i.e.\ for exponentially small influences, and
+shows (Theorem 5.6) that this polynomial formulation is equivalent to
+the quantum-state formulation, its Conjecture 4.3. Appendix B rules out
+$\delta \ge 1/(2d)$ and shows that the degree and influence hypotheses
+are needed on both distributions. Everything between $|\Yc|^{-d}/d$ and
+$1/(2d)$ is open, and any $\delta$ that is $1/\poly(d,\log|\Yc|)$
+already suffices for a polynomial-query attack.
+\end{remark}
+
+\begin{remark}[what settling it would give]\label{rem:consequence}
+The conjecture is the whole gap between what is known and a full answer
+to the question of whether quantum parties talking over a classical
+channel can get super-polynomial security from a random oracle, at least
+in the perfectly complete case. Proving it gives an unconditional
+polynomial-query classical attack on every such protocol and a quantum
+black-box separation of QCCC key agreement --- hence oblivious transfer
+and public-key encryption with classical inputs and communication ---
+from one-way functions. Refuting it would not immediately give a secure
+protocol, but it would kill the only known route to one of the two main
+barriers in this area, and it would be a genuinely new phenomenon in the
+Fourier analysis of low-influence low-degree functions, a regime where
+the analogous Aaronson--Ambainis conjecture~\cite{AA14} is widely
+believed.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem[AA14]{AA14}
+S. Aaronson, A. Ambainis.
+\emph{The Need for Structure in Quantum Speedups}.
+2014. No venue printed in the source bibliography.
+
+\bibitem[BM17]{BM17}
+B. Barak, M. Mahmoody.
+\emph{Merkle's Key Agreement Protocol is Optimal: An $O(n^2)$ Attack on
+Any Key Agreement from Random Oracles}.
+Journal of Cryptology, 30(3), 2017.
+
+\bibitem[BMG09]{BMG09}
+B. Barak, M. Mahmoody-Ghidary.
+\emph{Merkle Puzzles are Optimal --- An $O(n^2)$-Query Attack on Any Key
+Exchange from a Random Oracle}.
+Advances in Cryptology --- CRYPTO 2009, LNCS 5677, pages 374--390,
+Springer, 2009.
+
+\bibitem[BS08]{BS08}
+G. Brassard, L. Salvail.
+\emph{Quantum Merkle Puzzles}.
+International Conference on Quantum, Nano and Micro Technologies
+(ICQNM), pages 76--79, IEEE Computer Society, 2008.
+
+\bibitem[DFKO06]{DFKO06}
+I. Dinur, E. Friedgut, G. Kindler, R. O'Donnell.
+\emph{On the Fourier Tails of Bounded Functions over the Discrete Cube}.
+Proceedings of the Thirty-Eighth Annual ACM Symposium on Theory of
+Computing, pages 437--446, 2006.
+
+\bibitem[HY20]{HY20}
+A. Hosoyamada, T. Yamakawa.
+\emph{Finding Collisions in a Quantum World: Quantum Black-Box
+Separation of Collision-Resistance and One-Wayness}.
+International Conference on the Theory and Application of Cryptology and
+Information Security, pages 3--32, Springer, 2020.
+
+\bibitem[IR89]{IR89}
+R. Impagliazzo, S. Rudich.
+\emph{Limits on the Provable Consequences of One-Way Permutations}.
+Proceedings of the 21st Annual ACM Symposium on Theory of Computing
+(STOC), pages 44--61, ACM Press, 1989.
+
+\bibitem[Mer74]{Mer74}
+R. Merkle.
+\emph{C.s.\ 244 Project Proposal}.
+1974. Facsimile available at \url{http://www.merkle.com/1974}.
+
+\bibitem[OSSS05]{OSSS05}
+R. O'Donnell, M. Saks, O. Schramm, R. A. Servedio.
+\emph{Every Decision Tree Has an Influential Variable}.
+46th Annual IEEE Symposium on Foundations of Computer Science
+(FOCS'05), pages 31--39, IEEE, 2005.
+
+\bibitem[Zha19]{Zha19}
+M. Zhandry.
+\emph{How to Record Quantum Queries, and Applications to Quantum
+Indifferentiability}.
+Annual International Cryptology Conference, pages 239--268, Springer,
+2019.
+
+\end{conjurabibliography}
+
+\end{document}

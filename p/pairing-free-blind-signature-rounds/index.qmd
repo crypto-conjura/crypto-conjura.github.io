@@ -1,0 +1,47 @@
+---
+title: "Round complexity of pairing-free blind signatures"
+subtitle: "How few messages can a blind signature exchange in an ordinary elliptic-curve group, and under what assumption?"
+---
+
+A blind signature lets a user obtain a signer's signature on a message the signer never learns, in a way that cannot afterwards be linked to the session that produced it. The property that matters is *one-more unforgeability*: a user who completes $\ell$ signing sessions must not walk away with $\ell + 1$ signatures, however many sessions run concurrently.
+
+In pairing-free groups — ordinary elliptic curves, no bilinear map — the cheapest known protocols exchange three messages, which forces the signer to keep per-session state. Round-optimal schemes, one message each way, are known only from RSA, lattices, pairings, or from generic transformations that compile a verification circuit into a zero-knowledge proof at considerable cost. Two questions have been open in parallel: whether the three-move barrier is real, and whether three moves can be reached from the weakest available assumption.
+
+## The lattice
+
+Rows are what a scheme achieves; the two open cells are the ones this hub collects. Throughout, *group-black-box* means the scheme touches the group only through generic operations, and *ROM only* means no algebraic group model on top.
+
+| Moves | Assumption | Idealisation | Status |
+|---|---|---|---|
+| 2 (round-optimal) | any | GGM + ROM, group-black-box | **Impossible** when $\mathsf{User}_2$ and $\mathsf{Verify}$ together make $O(\log \lambda)$ random-oracle queries (Dietz–Kastner–Tessaro). [c/0013](/c/0013/) — **open** for any polynomial query count. |
+| 3 | DL | AGM + ROM | Achieved (Abe; Tessaro–Zhu; Snowblind). |
+| 3 | DDH | ROM only | Achieved (Chairattana-Apirom–Reichle–Tessaro, and concurrently Chen by a different route). |
+| 3 | **DL** | **ROM only** | [c/0014](/c/0014/) — **open**. The source paper calls it the dream result of the area. |
+| 4 | DL | ROM only | Achieved (Klooß–Lai–Reichle), which the source paper reports as four moves. |
+
+Read together, the two open cells bracket the problem from both sides. If [c/0013](/c/0013/) holds at polynomial query count, three moves is the floor for every group-black-box scheme, and [c/0014](/c/0014/) is then the question of whether that floor is reachable from the minimal assumption. Neither implies the other; they are the lower and upper ends of one table.
+
+## Why these two cells
+
+**The impossibility has an artificial hypothesis.** The attack behind the two-move impossibility works by re-running the user's finalization and verification against re-randomized hash answers to learn linear relations among group elements. To do that it must decide, for each hash query, whether key generation or the signer already made that query in the session. It cannot tell, so it guesses, and all guesses are right only with probability exponentially small in the number of queries — which is why the theorem is stated for logarithmically many. The restriction is a property of the proof, not obviously of the world.
+
+**The feasibility gap is one assumption wide.** Discrete log is the weakest and oldest assumption available in these groups, and DDH is strictly stronger. Two named obstructions stand in the way of closing the gap: the algebraic MAC and the linearly-homomorphic extractable commitment used by the three-move DDH scheme are known from DDH but not black-box from DL; and the message-dependent punctured statement in the four-move DL scheme forces the message into the first move, which is exactly what costs the extra rounds.
+
+## Why it is worth stating separately
+
+Both cells are the last unknowns in an otherwise complete table, and each has a clear consequence. Settling the impossibility affirmatively would close round-optimality for the whole natural class of group-black-box schemes and say that anyone wanting a round-optimal pairing-free blind signature must leave that world entirely; refuting it would mean exhibiting a round-optimal pairing-free scheme, which would itself be a significant construction. Settling the feasibility question affirmatively would give the area its optimal scheme under its minimal assumption; a negative answer would be the first separation between DL and DDH for a natural primitive at fixed round complexity.
+
+## Statements
+
+- [Round-optimal blind signatures in the generic group and random oracle model](/c/0013/) — open, the impossibility side.
+- [Three-move pairing-free blind signatures from discrete log](/c/0014/) — open, the feasibility side.
+
+## Sources
+
+- Dietz, Kastner, and Tessaro. [*On the Impossibility of Round-Optimal Pairing-Free Blind Signatures in the ROM*](https://eprint.iacr.org/2026/090). CRYPTO 2026.
+- Chairattana-Apirom, Reichle, and Tessaro. [*Playing Tag with Okamoto-Schnorr: Three-Move Pairing-Free Blind Signatures from DDH*](https://eprint.iacr.org/2026/571). CRYPTO 2026.
+- Chen. [*Three-Move Blind Signatures in Pairing-Free Groups*](https://eprint.iacr.org/2026/593). Cryptology ePrint Archive, Paper 2026/593.
+- Klooß, Lai, and Reichle. [*Blind Signatures from Arguments of Inequality*](https://eprint.iacr.org/2025/1886). CRYPTO 2026.
+- Kastner, Tessaro, and Zaverucha. [*Round-Optimal Pairing-Free Blind Signatures*](https://eprint.iacr.org/2026/091). Cryptology ePrint Archive, Paper 2026/091.
+- Abe. *A secure three-move blind signature scheme for polynomially many signatures*. EUROCRYPT 2001, LNCS 2045, pages 136--151.
+- Chaum. *Blind signatures for untraceable payments*. CRYPTO'82, pages 199--203.

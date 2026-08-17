@@ -1,0 +1,104 @@
+---
+id: "0013"
+problem: pairing-free-blind-signature-rounds
+draft: round-optimal-blind-ggm
+title: "Round-Optimal Blind Signatures in the Generic Group and Random Oracle Model"
+short_title: "No round-optimal pairing-free blind signature"
+areas: [public-key, impossibility-results, idealized-models]
+model: ggm
+form: impossibility
+assumption_class: unconditional
+category: research-open
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: adaptation
+  by: ai
+  note: "The proved case stops at logarithmically many queries for one identifiable reason: the attacker must guess, per hash query, whether key generation or the signer already made it in this session, and all guesses are right only with probability 2^{-q}. Removing the restriction means replacing that guessing step, not finding a new attack; the source's own lemma bounding failure amplification by 2^q p is where the loss enters."
+status_summary: "Open for a polynomial query budget. The impossibility is proved when User_2 and Verify together make O(log lambda) random-oracle queries, including when oracle outputs contain group elements; the superpolynomial message space hypothesis is retained."
+status_updated: 2026-08-17
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Dietz, Kastner, Tessaro, On the Impossibility of Round-Optimal Pairing-Free Blind Signatures in the ROM, CRYPTO 2026", url: "https://eprint.iacr.org/2026/090"}
+  - {cite: "Kastner, Tessaro, Zaverucha, Round-Optimal Pairing-Free Blind Signatures, Cryptology ePrint Archive, Paper 2026/091", url: "https://eprint.iacr.org/2026/091"}
+  - {cite: "Maurer, Abstract models of computation in cryptography, 10th IMA International Conference on Cryptography and Coding, LNCS 3796, pp. 1-12, 2005", url: "https://doi.org/10.1007/11586821_1"}
+  - {cite: "Fischlin, Round-optimal composable blind signatures in the common reference string model, CRYPTO 2006, LNCS 4117, pp. 60-77", url: "https://doi.org/10.1007/11818175_4"}
+revision: 1
+statement_sha: "9cf3035094e1ccb9463315802162ad7736e88817e0c42302c701c668c35bb264"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+A round-optimal blind signature exchanges one message each way, so the signer keeps no per-session state. In pairing-free groups every known scheme needs at least three messages; round-optimal ones exist only from RSA, lattices, pairings, or expensive generic transformations. The source paper asks whether the three-move barrier is real for schemes that touch the group only through generic operations and treat the hash as a random oracle, and proves that it is — provided the user's final step and verification together make only logarithmically many oracle queries. Conjectured here is that the restriction is an artifact of the attack rather than a feature of the world.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [Download LaTeX source](latex/main.tex)
+
+Fix a family of groups $\mathbb{G} = \mathbb{G}(\lambda)$ of prime order $p = p(\lambda)$, together with a random oracle $\mathcal{H}$ whose outputs may contain group elements. A **generic** algorithm accesses $\mathbb{G}$ only through an oracle $\mathcal{O}_{\mathrm{grp}}$ offering the group operation and equality testing on handles, never through representations; a scheme's algorithms are *transformations of GGM algorithms* when each is obtained from such a generic algorithm in the standard way.
+
+A **round-optimal blind signature** is $\mathsf{BS} = (\mathsf{KeyGen}, \mathsf{User}_1, \mathsf{Sig}, \mathsf{User}_2, \mathsf{Ver})$ with message space $\mathcal{M} = \mathcal{M}(\lambda)$: the user sends one message, the signer replies once, and $\mathsf{User}_2$ produces the signature. *Blindness* is the usual indistinguishability of which of two messages was signed; *one-more unforgeability* is that no adversary completing $\ell$ signing sessions outputs $\ell + 1$ valid signatures on distinct messages.
+
+**Conjecture.** There is no round-optimal blind signature scheme $\mathsf{BS}$ in the ROM with message space $\mathcal{M}$ for which all of the following hold at once:
+
+1. $\mathsf{BS}$ is correct;
+2. $\mathsf{User}_1$, $\mathsf{User}_2$ and $\mathsf{Ver}$ are transformations of GGM algorithms;
+3. $|\mathcal{M}(\lambda)|$ is superpolynomial, $|\mathcal{M}(\lambda)| = \lambda^{\omega(1)}$;
+4. every ppt GGM blindness adversary has negligible advantage;
+5. every **computationally unbounded** GGM one-more-unforgeability adversary making at most **polynomially many** oracle calls has negligible advantage.
+
+Four parts of the quantification are the statement rather than decoration.
+
+- **The query budget in item 5 is the open cell.** The source proves the same statement with the adversary restricted so that $\mathsf{User}_2$ and $\mathsf{Ver}$ together make $O(\log \lambda)$ random-oracle queries. Replacing that with *any polynomial* is the whole content of the conjecture.
+- **The adversary is unbounded but query-efficient.** This is what makes the result an impossibility in the idealised model rather than a statement about a computational assumption: no assumption appears anywhere.
+- **Only $\mathsf{User}_1$, $\mathsf{User}_2$ and $\mathsf{Ver}$ must be generic.** $\mathsf{KeyGen}$ and $\mathsf{Sig}$ are not constrained, which makes the impossibility stronger than a fully generic one.
+- **A superpolynomial message space is required, and is not relaxed.** With a polynomial message space the user could enumerate, and the attack has nothing to exploit.
+
+## Proof
+
+Open for superlogarithmic, polynomially bounded query budgets. Proved below that.
+
+**What is proved.** The source establishes the full statement for $q \leq O(\log \lambda)$, where $q$ counts the random-oracle queries of $\mathsf{User}_2$ and $\mathsf{Ver}$ together. The adversary runs a learning phase that accumulates linear relations on a growing pile of group elements, then a forging phase that searches over simulated signer messages for one whose simulated $\mathsf{User}_2 + \mathsf{Ver}$ execution accepts with probability at least $1/4$. Blindness is converted into the statement that the verifier essentially never repeats a signer hash query except on "irrelevant" queries, of which there are few and which the attacker can harvest. Section 3.10 of the source extends everything to random oracles whose outputs contain group elements, so that restriction is already gone.
+
+**Where the logarithm enters.** The attack re-runs finalization and verification against re-randomized hash answers. To do that it must decide, for each hash query, whether $\mathsf{KeyGen}$ or the signer already made that query in this session. It cannot tell, so it guesses, and all guesses are simultaneously right only with probability exponentially small in the number of queries. The technical lemma carrying this — of independent interest — bounds by $2^{q} \cdot p$ the probability that a $q$-query procedure with failure probability $p$ can be made to fail once an adversarially chosen set of oracle outputs is fixed. The $2^{q}$ is the barrier, and it is a property of the proof strategy.
+
+**No progress is reported toward superlogarithmic $q$.** The source states the restriction and leaves it.
+
+**What a refutation would be.** Not a proof technique but a construction: a round-optimal pairing-free blind signature, generic in the group, correct, blind and one-more unforgeable. That would be a significant positive result in its own right, which is part of why the conjecture is interesting either way.
+
+## Discussion
+
+This is the exact remaining gap in the only formal evidence that the three-move barrier for pairing-free blind signatures is real. An affirmative answer closes round-optimality for the entire natural class of schemes that use the group as a black box, and says that anyone who wants a round-optimal pairing-free blind signature must leave that world — through pairings, lattices, RSA, or a non-generic use of the group.
+
+The conjecture is unusually well positioned for adaptation rather than invention. The obstruction is localised in a single lemma whose loss is $2^{q}$, and the question is whether the guessing step it accounts for can be replaced by something that does not pay per query. That is a different task from finding a new attack.
+
+:::
+
+## Open obligations
+
+- [ ] Prove the impossibility for any polynomially bounded query budget, or refute it with a construction.
+- [ ] Replace or sharpen the $2^{q} \cdot p$ failure-amplification lemma. If the guessing step can be derandomised, or the session-origin ambiguity resolved another way, the restriction goes with it.
+- [ ] Determine whether the superpolynomial message space hypothesis is necessary or merely convenient at superlogarithmic $q$.
+- [ ] Check whether the impossibility survives if $\mathsf{KeyGen}$ or $\mathsf{Sig}$ is also required to be generic, which would be a weaker theorem, or if either may be non-generic in ways the current proof does not permit.
+- [ ] Formalize the statement in Lean. The GGM-with-random-oracle model, the blind signature syntax and both security games need writing first.
+
+## Sources
+
+- Dietz, Kastner, and Tessaro. [*On the Impossibility of Round-Optimal Pairing-Free Blind Signatures in the ROM*](https://eprint.iacr.org/2026/090). CRYPTO 2026.
+- Kastner, Tessaro, and Zaverucha. [*Round-Optimal Pairing-Free Blind Signatures*](https://eprint.iacr.org/2026/091). Cryptology ePrint Archive, Paper 2026/091.
+- Maurer. [*Abstract models of computation in cryptography*](https://doi.org/10.1007/11586821_1). 10th IMA International Conference on Cryptography and Coding, LNCS 3796, pages 1--12, 2005.
+- Fischlin. [*Round-optimal composable blind signatures in the common reference string model*](https://doi.org/10.1007/11818175_4). CRYPTO 2006, LNCS 4117, pages 60--77.

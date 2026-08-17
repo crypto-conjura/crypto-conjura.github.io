@@ -1,0 +1,46 @@
+---
+title: "Limited independence as evidence of pseudorandomness"
+subtitle: "At what order of independence does a statistical guarantee about a simple cipher start to imply that it is pseudorandom?"
+---
+
+A large part of what is provable about concrete block ciphers is provable without computational assumptions. The target is *$k$-wise independence*: the cipher's outputs on any $k$ distinct inputs, under one random key, are statistically close to a uniformly random tuple of $k$ distinct strings. Already $k = 2$ rules out linear and differential cryptanalysis, and bounds of this shape are known for random local circuits and for substitution--permutation networks.
+
+The question is what that buys. Nobody wants $k$-wise independence for its own sake; it is wanted as evidence that the cipher is pseudorandom. Hoory, Magen, Myers and Rackoff proposed taking the evidence at face value for ciphers whose single round is *local* — every output bit of one round depends on a constant number of input bits, the constant not growing with the block length. Their conjecture: if the $T$-fold composition of a local round is negligibly far from $4$-wise independent, it is a pseudorandom permutation. Four is nearly minimal, since counterexamples are known at $3$.
+
+That conjecture is false, and false at every constant order. Dujmović, Pelecanos and Tessaro construct, for each constant $k$, a local randomized permutation whose composition is negligibly far from $k$-wise independent and is nonetheless distinguished from random, with constant probability, by an adversary querying $k + 1$ points.
+
+## The lattice
+
+The open cell is the order of independence. Locality, composition and the notion of pseudorandomness are fixed by the setting.
+
+| Order of independence $k$ | Status |
+|---|---|
+| $k = 3$ | Counterexamples known; the implication fails. |
+| $k = 4$ | **Refuted** — Dujmović–Pelecanos–Tessaro, EUROCRYPT 2026. |
+| every constant $k$ | **Refuted** by the same construction, one instance per $k$. |
+| $k = \log n$ | [c/0011](/c/0011/) — **open**. |
+| $k = n^{\Omega(1)}$ and above | Not studied here; presumed easier, and of less interest, since the hypothesis becomes hard to establish. |
+
+## Why the logarithmic cell is the interesting one
+
+The refutation consumes a *constant* amount of structure. It smuggles a constant number of predictable invariants through the rounds and reads them off a constant number of wires. Raise the required order of independence to $\log n$ and the same attack would have to sustain $\omega(1)$ invariants at once, which the authors state their approach cannot do. So the counterexample is not merely absent at logarithmic order: the mechanism behind it is known to run out.
+
+Two features make this a problem rather than a hopeful gap.
+
+- **An unconditional proof is not available.** The source paper records that proving the implication would imply that one-way functions exist, and hence that $\mathrm{P} \neq \mathrm{NP}$. So the realistic targets are a proof under standard assumptions, or a new counterexample built on a mechanism that scales with the number of invariants.
+- **A weaker conjecture sits underneath it.** Gowers' conjecture, made explicit by Barak and connected to obfuscation candidates by Canetti, Chamon, Mucciolo and Ruckenstein, is weaker in the precise sense that refuting it would also refute the statement here. A refutation therefore has a smaller target to aim at than the statement's own hypothesis suggests.
+
+## Why it is worth stating separately
+
+Without this cell, the field is in an awkward position: it has a technique that proves limited independence for real constructions, a theorem saying limited independence at any constant order is not evidence of pseudorandomness, and no threshold at which the evidence becomes real. Settling the logarithmic cell either restores the evidential reading of $k$-wise independence at a usable order, or removes it entirely and says that this style of unconditional result should not be read as a security argument at all.
+
+## Statements
+
+- [Logarithmic independence implies pseudorandomness for local permutations](/c/0011/) — open.
+
+## Sources
+
+- Dujmović, Pelecanos, and Tessaro. [*When Simple Permutations Mix Poorly: Limited Independence Does Not Imply Pseudorandomness*](https://eprint.iacr.org/2025/2282). EUROCRYPT 2026.
+- Hoory, Magen, Myers, and Rackoff. *Simple permutations mix well*. Theoretical Computer Science 348(2--3):251--261, 2005; earlier at ICALP 2004, LNCS 3142, pages 770--781.
+- Liu, Tessaro, and Vaikuntanathan. [*The t-wise Independence of Substitution-Permutation Networks*](https://eprint.iacr.org/2021/507). CRYPTO 2021.
+- Gowers. *An almost m-wise independent random permutation of the cube*. Combinatorics, Probability and Computing 5:119--130, 1996.

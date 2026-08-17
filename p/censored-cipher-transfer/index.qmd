@@ -1,0 +1,49 @@
+---
+title: "Transferring statistical bounds from a censored cipher to the real one"
+subtitle: "Everything provable about AES's concrete S-box is provable about a cipher with most of its mixing deleted. Does the bound carry over?"
+---
+
+A substitution--permutation network like AES alternates three operations: add a round key, apply the S-box to each byte independently, and apply a linear layer that mixes the bytes. The line of work that proves *unconditional* statistical guarantees for AES's concrete S-box does not analyse AES. It analyses **censored AES**, in which many of the linear mixing layers are deleted and replaced by the identity.
+
+Censoring is what makes the analysis possible. With no mixing between them, a long run of key-addition and S-box applications behaves like a random walk that can be studied one byte at a time, and it is that reduction which yields a bound. The guarantee obtained is *$\varepsilon$-approximate $t$-wise independence*: on any $t$ distinct inputs, the joint distribution of the $t$ outputs over the round keys is within $\varepsilon$ in total variation of a uniformly random tuple of $t$ distinct values.
+
+The gap is the obvious one. Nobody believes the mixing layers hurt. Everyone expects the censored cipher to be the harder case and the bound to carry over to real AES at the same round count. Nobody has proved it, and until someone does, the concrete-S-box results are theorems about a cipher nobody uses.
+
+## The lattice
+
+Both sides of the implication are settled or open independently; the transfer between them is the open cell.
+
+| Claim | Status |
+|---|---|
+| Censored side: round count for $\varepsilon$-approximate $t$-wise independence | **Proved**, at essentially optimal round count, with matching lower bounds (Jain, Liu, Mizgerd, Pelecanos, Tessaro, Vaikuntanathan) |
+| Concrete instance: $192$-round censored AES is $2^{-128}$-approximately pairwise independent | **Proved** |
+| Transfer: a censored bound implies the same bound for uncensored AES | [c/0012](/c/0012/) — **open** |
+| Transfer for an *arbitrary* censoring pattern | Not posed by the source; a strengthening, and a counterexample at an exotic pattern would not refute the conjecture |
+| Analogue in the Markov-chain literature (Peres--Winkler) | **Proved**, for a family of chains that explicitly excludes block ciphers |
+
+## Why the transfer is not a formality
+
+The informal justification — deleting mixing can only slow convergence — is pattern-agnostic, and that is exactly what makes it hard to turn into a proof. A monotonicity argument that worked would presumably work for every censoring pattern, but the conjecture is stated only for the one distinguished pattern the censored construction actually uses, so the strong reading is tempting and unsupported at the same time.
+
+The one comparable theorem is Peres and Winkler's, that extra updates cannot delay mixing. Its hypotheses are Glauber dynamics on a monotone spin system, and the source paper states explicitly that they do not cover block ciphers. So the transfer has an analogue in the probability literature and no applicable instance of it.
+
+Two boundaries are worth stating, because a proposed proof that ignores them is answering a different question.
+
+- **Round keys are independent and uniform** on both sides of the implication, as throughout this line of work. The AES key schedule is out of scope.
+- **A round threshold is allowed.** No claim is made below some $r_{\mathrm{thresh}}(t)$, which exists to let the cipher reach a generic state and excuse atypical behaviour in the first few rounds.
+
+## Why it is worth stating separately
+
+This is a single missing step with a disproportionate payoff. The censored-side theorems are already sharp; the transfer is the only thing standing between them and statements about the real cipher. It is also unusually well isolated for an open problem in symmetric cryptography: the hypothesis is proved, the conclusion is precisely stated, and the gap between them contains no other unknowns.
+
+## Statements
+
+- [The censoring conjecture for AES](/c/0012/) — open.
+
+## Sources
+
+- Jain, Liu, Mizgerd, Pelecanos, Tessaro, and Vaikuntanathan. [*How Fast Does the Inverse Walk Approximate a Random Permutation?*](https://eprint.iacr.org/2024/1795). Cryptology ePrint Archive, Paper 2024/1795.
+- Liu, Pelecanos, Tessaro, and Vaikuntanathan. [*Layout Graphs, Random Walks and the t-wise Independence of SPN Block Ciphers*](https://eprint.iacr.org/2024/083). CRYPTO 2023, LNCS 14083, pages 694--726.
+- Liu, Tessaro, and Vaikuntanathan. [*The t-wise Independence of Substitution-Permutation Networks*](https://eprint.iacr.org/2021/507). CRYPTO 2021.
+- Baignères and Vaudenay. *Proving the security of AES substitution-permutation network*. SAC 2005, LNCS 3897, pages 65--81.
+- Peres and Winkler. *Can extra updates delay mixing?* 2011.

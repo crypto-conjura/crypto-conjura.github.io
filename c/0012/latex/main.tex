@@ -1,0 +1,294 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  The censoring conjecture for AES.
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{THE CENSORING CONJECTURE FOR AES}
+
+\newcommand{\FF}{\mathbb{F}}
+\newcommand{\ARK}{\mathrm{ARK}}
+\newcommand{\INV}{\mathrm{INV}}
+\newcommand{\TV}{\mathrm{TV}}
+\newcommand{\id}{\mathrm{id}}
+\newcommand{\rth}{r_{\mathrm{thresh}}}
+\newcommand{\Fd}{\mathcal{F}}
+\newcommand{\vK}{\vec{K}}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{The Censoring Conjecture for AES}
+\cjsubtitle{Deleting linear mixing layers can only hurt approximate
+  $t$-wise independence}
+\cjstatus{Statement: AI-written from Vishesh Jain, Tianren Liu, Clayton
+  Mizgerd, Angelos Pelecanos, Stefano Tessaro, Vinod Vaikuntanathan,
+  \emph{How Fast Does the Inverse Walk Approximate a Random
+  Permutation?}, Cryptology ePrint Archive 2025, not yet checked by a
+  human. No instance of the implication is settled; what the source
+  settles is the hypothesis side, namely the round count at which the
+  censored construction becomes approximately $t$-wise independent.}
+\cjcategory{\emph{Symmetric-Key Cryptography}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+A substitution-permutation network like AES alternates three kinds of
+operation: adding a round key, applying the S-box to each byte
+independently, and applying a linear layer that mixes the bytes together.
+A line of work on provable security for AES proves statistical guarantees
+not for AES itself but for a weakened relative called \emph{censored} AES,
+in which many of the linear mixing layers are deleted and replaced by the
+identity. Censoring makes the analysis tractable, because long runs of
+key-addition and S-box applications with no mixing in between behave like
+a random walk that can be studied one byte at a time. The guarantee proved
+is approximate $t$-wise independence: on any $t$ distinct inputs, the joint
+distribution of the $t$ outputs, over the choice of round keys, is close in
+total variation distance to a uniformly random tuple of $t$ distinct
+values. Everyone believes the mixing layers help rather than hurt, so the
+censored cipher should be the harder case and the bound should carry over
+to full AES with the same round count. Nobody has proved this. The
+conjecture is exactly that transfer, with a small allowance for the first
+few rounds, during which the cipher may still behave atypically.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+Proving unconditional security statements about AES~\cite{DR02} is out of
+reach, so a line of work initiated by Liu, Tessaro and
+Vaikuntanathan~\cite{LTV21} and continued by Liu, Pelecanos, Tessaro and
+Vaikuntanathan~\cite{LPTV23} instead proves a statistical property:
+\emph{$\varepsilon$-approximate $t$-wise independence}. A cipher with this
+property resists every attack that looks at only $t$ input-output pairs and
+distinguishes statistically, which for $t = 2$ covers differential and
+linear cryptanalysis and for larger $t$ covers higher-order differential
+attacks.
+
+The technical difficulty is the substitution layer. It is sidestepped
+in~\cite{LPTV23} by analysing SPN$^{*}$, that paper's generalisation of the
+AES$^{*}$ construction of Baign\`eres and Vaudenay~\cite{BV05}, and proving
+that for $t < 2^{(0.499 - 1/(4k))b}$ a $\Theta(k)$-round SPN$^{*}$ with
+maximal-branch-number mixing is $2^{-\Theta(bk)}$-approximately $t$-wise
+independent for $k$ blocks of $b$ bits. In SPN$^{*}$ each S-box is a
+uniformly random secret permutation rather than the fixed AES S-box. To
+instantiate this with the concrete AES S-box, each random S-box is replaced
+by a run of consecutive AddRoundKey and $\INV$ operations --- the ``$\INV$
+key-alternating cipher'' --- and the linear mixing layers that fall inside
+such a run are \emph{censored}. The resulting object is what~\cite{LPTV23}
+call censored AES, and it is the object their theorems are about: for
+instance, $192$-round censored AES is $2^{-128}$-approximately pairwise
+independent.
+
+The present source removes the remaining quantitative bottleneck on the
+censored side. It determines the mixing time of the inverse walk exactly:
+over a field of size $n$, $r = \Theta(n \log n + n \log(1/\varepsilon))$
+rounds of the $\INV$ key-alternating cipher suffice and are necessary to
+come within total variation distance $\varepsilon$ of a uniformly random
+permutation of the appropriate sign, and it proves matching
+$\Omega(n \log(1/\varepsilon))$ and $\Omega(n \log n)$ lower bounds already
+against $4$-wise independence. Feeding this into the SPN$^{*}$ machinery
+upgrades the censored-AES statement from $t = 2$ to all $t$ up to roughly
+the square root of the field size.
+
+Progress to date. The censored side of the implication is established at
+essentially optimal round count, as just described, with matching lower
+bounds. Combined with the SPN$^{*}$ analysis of~\cite{LPTV23} this yields,
+for $t < 2^{(0.499 - 1/(4k))b}$, that a $\Theta(b 2^{b} k)$-round censored
+SPN with $k$ blocks of $b$ bits and the AES S-box is
+$2^{-\Theta(kb)}$-approximately $t$-wise independent. Towards the
+conjecture itself, nothing is proved: the only reported analogue is the
+censoring theorem of Peres and Winkler~\cite{PW11}, showing that extra
+updates cannot speed up mixing, whose hypotheses --- Glauber dynamics in a
+monotone spin system started from an extremal configuration --- are far
+from anything a block cipher satisfies. How censoring affects mixing time
+in general is itself unresolved.
+
+What remains between these theorems and AES itself is precisely the
+censoring step. The conjecture below says that it is free: that adding the
+deleted mixing layers back can only improve approximate $t$-wise
+independence, so that a bound for $r$-round censored AES transfers to
+$r$-round AES, modulo a threshold number of initial rounds.
+
+\section{Notation and parameters}\label{sec:notation}
+
+\begin{itemize}
+\item $\FF := \FF_{2^8}$, the AES byte field; the block cipher acts on
+  $\FF^{16}$ (that is, on $128$-bit blocks viewed as $16$ bytes).
+\item $\INV : \FF \to \FF$, $\INV(x) = x^{2^8 - 2}$, the patched inverse
+  permutation: $\INV(x) = x^{-1}$ for $x \ne 0$ and $\INV(0) = 0$. This is
+  the AES S-box up to a fixed affine map, which plays no role below.
+\item $S : \FF^{16} \to \FF^{16}$,
+  $S(x_1,\dots,x_{16}) = (\INV(x_1),\dots,\INV(x_{16}))$, the blockwise
+  substitution layer.
+\item $L : \FF^{16} \to \FF^{16}$, the linear mixing layer, an
+  $\FF_2$-linear bijection with maximal branch number (the source does not
+  decompose it further).
+\item $\ARK_{K} : \FF^{16} \to \FF^{16}$, $\ARK_{K}(x) = x + K$, the
+  AddRoundKey permutation for $K \in \FF^{16}$.
+\item $r \in \mathbb{N}$, the number of rounds;
+  $\vK = (K_0,\dots,K_r) \in (\FF^{16})^{r+1}$, the round keys, drawn
+  independently and uniformly (the round keys are modelled as independent,
+  not as the output of the AES key schedule).
+\item $t \in \mathbb{N}$ with $t \ge 2$, the order of independence;
+  $\varepsilon \in (0,1)$, the statistical slack.
+\item $\|\mu - \nu\|_{\TV} := \tfrac{1}{2}\sum_{\omega}
+  |\mu(\omega) - \nu(\omega)|$, the total variation distance between
+  distributions on a finite set.
+\item $C \subseteq \{1,\dots,r\}$, the set of rounds whose linear mixing
+  layer is censored; $C^{*}(r)$, the censoring set of $r$-round censored
+  AES (Definition~\ref{def:cstar}).
+\item $\rth$, the round threshold below which no claim is made; it depends
+  on $t$ alone.
+\end{itemize}
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{definition}[$C$-censored $r$-round AES]\label{def:censored}
+Let $r \ge 1$ and let $C \subseteq \{1,\dots,r\}$. For
+$i \in \{1,\dots,r\}$ put
+\[
+  L^{C}_{i} \;:=\;
+  \begin{cases}
+    \id_{\FF^{16}}, & i \in C,\\[2pt]
+    L, & \text{otherwise.}
+  \end{cases}
+\]
+For a key vector $\vK = (K_0, K_1, \dots, K_r) \in (\FF^{16})^{r+1}$
+define the permutation
+\begin{align*}
+  E^{(r)}_{C,\vK} \;:=\;
+  & \ARK_{K_r} \circ
+    \bigl( L^{C}_{r} \circ S \circ \ARK_{K_{r-1}} \bigr)\\
+  & \circ \bigl( L^{C}_{r-1} \circ S \circ \ARK_{K_{r-2}} \bigr)
+    \circ \cdots\\
+  & \circ \bigl( L^{C}_{1} \circ S \circ \ARK_{K_{0}} \bigr)
+\end{align*}
+of $\FF^{16}$, and let $\Fd^{(r)}_{C}$ denote the distribution of
+$E^{(r)}_{C,\vK}$ when $\vK$ is drawn uniformly from $(\FF^{16})^{r+1}$.
+The case $C = \emptyset$ is (round-key-independent) $r$-round AES, which
+applies $L$ in every one of its $r$ rounds and performs $r+1$ AddRoundKey
+operations; a nonempty $C$ records the rounds whose linear mixing layer has
+been censored, i.e.\ replaced by the identity.
+\end{definition}
+
+\begin{definition}[the censoring set of censored AES]\label{def:cstar}
+Fix the instantiation of~\cite{LPTV23} in which each SPN$^{*}$ S-box layer
+is replaced by a run of consecutive $(\ARK, \INV)$ operations. Then
+$C^{*}(r) \subseteq \{1,\dots,r\}$, the censoring set of $r$-round censored
+AES, is the set of rounds whose linear mixing layer falls strictly inside
+one of these runs.
+\end{definition}
+
+\begin{definition}[$\varepsilon$-approximate $t$-wise independence]
+\label{def:twise}
+Let $D$ be a finite set, let $2 \le t \le |D|$, and let $\mu$ be a
+probability distribution on the group of permutations of $D$. Say that
+$\mu$ is \emph{$\varepsilon$-approximately $t$-wise independent} if for
+every tuple $(x_1,\dots,x_t)$ of distinct elements of $D$,
+\[
+  \bigl\| \mathcal{L}\bigl( (f(x_1),\dots,f(x_t)) \bigr)_{f \sim \mu}
+  \;-\; \mathcal{U}_t \bigr\|_{\TV} \;\le\; \varepsilon,
+\]
+where $\mathcal{L}(\cdot)$ denotes the law of a random variable and
+$\mathcal{U}_t$ is the uniform distribution on ordered $t$-tuples of
+distinct elements of $D$.
+\end{definition}
+
+\begin{conjecture}[censoring can only hurt]\label{conj:main}
+For every integer $t \ge 2$ there exists a constant
+$\rth = \rth(t) > 0$ such that the following holds. For every integer
+$r > \rth$ and every $\varepsilon \in (0,1)$,
+\begin{align*}
+  &\Fd^{(r)}_{C^{*}(r)}
+   \text{ is } \varepsilon\text{-approximately } t\text{-wise
+   independent}\\
+  &\quad\Longrightarrow\quad
+   \Fd^{(r)}_{\emptyset}
+   \text{ is } \varepsilon\text{-approximately } t\text{-wise
+   independent},
+\end{align*}
+where $\Fd^{(r)}_{C}$ is the distribution of the $C$-censored $r$-round
+AES cipher of Definition~\ref{def:censored} under independent uniform round
+keys, $C^{*}(r)$ is the censoring set of Definition~\ref{def:cstar},
+$\Fd^{(r)}_{\emptyset}$ is the corresponding distribution for uncensored
+$r$-round AES, and $\varepsilon$-approximate $t$-wise independence is as in
+Definition~\ref{def:twise} with domain $D = \FF^{16}$.
+\end{conjecture}
+
+\begin{remark}[which censoring pattern]\label{rem:pattern}
+The hypothesis concerns the one distinguished set $C^{*}(r)$ of
+Definition~\ref{def:cstar}, not an arbitrary one. The variant that
+quantifies universally over all $C \subseteq \{1,\dots,r\}$ is a
+strengthening the source does not pose, so a counterexample at some exotic
+$C$ would not by itself refute Conjecture~\ref{conj:main}; the pattern of
+Definition~\ref{def:cstar} is the target. The informal justification
+offered --- that removing a large fraction of the mixing layers should only
+hurt convergence to $t$-wise independence --- is pattern-agnostic, which is
+what makes the stronger reading tempting.
+\end{remark}
+
+\begin{remark}[quantifier order and the threshold]\label{rem:quant}
+The slack $\varepsilon$ is read here as universally quantified, and
+$\rth$ depends on $t$ alone. The threshold exists only to let the cipher
+enter a generic state and so to excuse any non-typical behaviour during the
+first few rounds. If the intended reading lets $\rth$ depend on
+$\varepsilon$ as well, the conjecture is weaker than the one stated here.
+\end{remark}
+
+\begin{remark}[independent round keys]\label{rem:keys}
+Both sides of the implication use round keys drawn independently and
+uniformly, as throughout this line of work. The AES key schedule is out of
+scope, and Conjecture~\ref{conj:main} says nothing about it.
+\end{remark}
+
+\begin{remark}[what settling it would give]\label{rem:consequence}
+Everything this programme currently proves about the concrete AES S-box is
+proved about a cipher nobody uses: censored AES, with a large fraction of
+its diffusion deliberately removed. The conjecture is the single missing
+step that would turn those statements into statements about AES with
+independent round keys --- immediately, that $192$-round AES is
+$2^{-128}$-approximately pairwise independent, and, with the mixing-time
+theorem quoted in Section~\ref{sec:setting}, approximate $t$-wise
+independence of AES for $t$ up to roughly the square root of the S-box
+domain size. A refutation would be at least as interesting: it would
+exhibit a diffusion layer that actively destroys statistical independence
+over a fixed round budget, contradicting the design intuition the whole SPN
+paradigm rests on.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem[BV05]{BV05}
+T. Baign\`eres, S. Vaudenay.
+\emph{Proving the Security of AES Substitution-Permutation Network}.
+Selected Areas in Cryptography, 12th International Workshop, SAC 2005,
+LNCS 3897, pages 65--81, Springer, 2005.
+
+\bibitem[DR02]{DR02}
+J. Daemen, V. Rijmen.
+\emph{The Design of Rijndael: AES --- The Advanced Encryption Standard}.
+Information Security and Cryptography, Springer, 2002.
+
+\bibitem[LPTV23]{LPTV23}
+T. Liu, A. Pelecanos, S. Tessaro, V. Vaikuntanathan.
+\emph{Layout Graphs, Random Walks and the $t$-wise Independence of SPN
+Block Ciphers}.
+Advances in Cryptology --- CRYPTO 2023, LNCS 14083, pages 694--726,
+Springer, 2023.
+
+\bibitem[LTV21]{LTV21}
+T. Liu, S. Tessaro, V. Vaikuntanathan.
+\emph{The $t$-wise Independence of Substitution-Permutation Networks}.
+CRYPTO 2021.
+
+\bibitem[PW11]{PW11}
+Y. Peres, P. Winkler.
+\emph{Can Extra Updates Delay Mixing?}
+2011. No venue given in the source bibliography.
+
+\end{conjurabibliography}
+
+\end{document}

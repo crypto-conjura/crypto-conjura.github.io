@@ -1,8 +1,8 @@
 # Tasks
 
-Split into two sections: **Website and repository** (~7.5h) covers the site, its build tooling and the repository's configuration; **Conjectures and papers** (~6.0h) covers the mathematics — proving conjectures, and writing and checking the papers that report them. Within each section, tasks are ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~21.5h** (rough; the UC Encyclopedia content dominates the uncertainty and could run well over its estimate).
+Split into two sections: **Website and repository** (~6.0h) covers the site, its build tooling and the repository's configuration; **Conjectures and papers** (~6.0h) covers the mathematics — proving conjectures, and writing and checking the papers that report them. Within each section, tasks are ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~20.0h** (rough; the UC Encyclopedia content dominates the uncertainty and could run well over its estimate).
 
-Last reconciled against `main` at `d06523e` on 17 August 2026.
+Last reconciled against `main` at `ee4b7cd` on 17 August 2026.
 
 Completed tasks are deleted from this file rather than checked off and kept: this is a list of live work, and `git log` is the record of what closed and when.
 
@@ -17,27 +17,45 @@ Completed tasks are deleted from this file rather than checked off and kept: thi
 
   Nothing is broken while both run; the cost is only that a search engine is told the wrong home. Whoever decides also owns `wrangler.jsonc`'s comment about it.
 
-- [ ] **Promote the five conjecture drafts that have no page in `c/` (~2h — manual: the editorial frontmatter and verifying every citation, per draft)**
+- [ ] **Decide what to do with `lhl-k-source`, the one remaining unpromoted draft (~0.5h — decision, then either a promotion or a deletion)**
 
-  The watching half of this is done and in CI: `scripts/draft_status.py --check` runs in both workflows and in `.githooks/pre-commit`, every `c/` page now carries a `draft:` field naming the folder it came from, and `latex/README.md` documents the field and the check. What is left is the editorial act the script deliberately refuses to automate.
+  Four of the five drafts this entry used to list are now pages: `c/0011`
+  (log-independence-prp), `c/0012` (censoring-conjecture), `c/0013`
+  (round-optimal-blind-ggm) and `c/0014` (three-move-bs-dl), under three new
+  hubs in `p/`. `latex/conjectures/lhl-k-source` is the one left, and it was
+  deliberately not promoted rather than overlooked.
 
-  Five drafts have no page, four of them harvester output that no human has read:
+  It labels itself: `\runninghead{LHL EXTRACTION, K-SOURCE (TEST PLACEHOLDER)}`,
+  a kicker reading `OPEN PROBLEM (TEST PLACEHOLDER)`, and an opening paragraph
+  that says "This is a lattice test entry, not yet reviewed for provenance."
+  It also arrived incidentally, in commit 4075201 "Add task: remove Blog for
+  now", rather than being authored as content.
 
-  ```
-  latex/conjectures/censoring-conjecture      [harvested, unread]
-  latex/conjectures/log-independence-prp      [harvested, unread]
-  latex/conjectures/round-optimal-blind-ggm   [harvested, unread]
-  latex/conjectures/three-move-bs-dl          [harvested, unread]
-  latex/conjectures/lhl-k-source              hand-written, "Public Seed, $k$-Source Generalization"
-  ```
+  The question it asks is real — whether joint extraction from $k$ unpredictable
+  random-oracle sources beats the naive $k$-fold hybrid obtained by repeating
+  the $k=1$ argument of `c/0004` — and it would slot into the existing
+  `p/leftover-hash-lemma-extraction` lattice beside `c/0004` and `c/0005`
+  rather than needing a hub of its own. What it does not have is any of the
+  provenance the four harvested drafts came with: no source paper, no quotes
+  checked against a text layer, no adversarial pass. Promoting it therefore
+  means *authoring* a conjecture and verifying from scratch that the
+  generalization is genuinely open and correctly stated, which is a different
+  and larger job than transcribing a checked draft.
 
-  Run `python3 scripts/draft_status.py` for the current list rather than trusting this one: the harvester writes more every time it runs, and three of the four harvested drafts above appeared during a single afternoon.
+  So this is a decision with two honest outcomes, and "not ready" is not the
+  same as "no":
 
-  For each, decide first whether it is a conjecture worth publishing at all — that is the judgment the pipeline exists to leave to a person, and "no" is a legitimate answer that ends in deleting the draft rather than promoting it. For the ones that survive: allocate the next id (**`0011`** next; `0006` is vacant and stays vacant, `CONTRIBUTING.md:93`), copy the shape of `c/0010/` (`index.qmd`, `latex/{main.tex,conjura-conjecture.cls,.chktexrc}`, `pdf/main.pdf`, `lean/.gitkeep`, `sessions/.gitkeep`, with `statement.tex` renamed to `latex/main.tex`), and **add `draft: <folder>` under `problem:`** or the new page will keep being reported as missing.
+  - **Review and promote it.** Establish whether the $k$-source question is
+    open, state it against `c/0004`'s definitions, and give it `c/0015`. Strip
+    the placeholder markers from the running head, kicker and opening
+    paragraph first.
+  - **Delete the draft.** It is a staging-area file, and `git log` keeps it;
+    `CONTRIBUTING.md`'s no-deletion rule binds `c/` pages, not
+    `latex/conjectures/`. If the question is worth keeping without the draft,
+    record it as an open cell in `p/leftover-hash-lemma-extraction`'s lattice.
 
-  About half of `index.qmd`'s ~20 frontmatter fields are mechanical; the rest — `areas`, `model`, `form`, `assumption_class`, `category`, the six `status` flags, `difficulty.reach`/`note`, `status_summary`, `relations`, `sources` — are the estimate. Never hand-write `revision`, `statement_sha` or `status_badge`: `status_badge.py` generates them, and a stale hash fails the gate that blocks the whole deploy.
-
-  For a harvested draft, read its `SOURCE.md` first. It carries the source paper and its sha256, every quote with the page it came from and whether it matched the text layer exactly, the checks the adversarial pass ran, and any citation it could not find in the paper's own bibliography. That is the evidence `sources:` is meant to summarise, and the unverified citations are exactly the ones to check by hand before they reach a page.
+  Until one of those happens `scripts/draft_status.py` will keep reporting it,
+  which is the intended behaviour and not a failure.
 
 - [ ] **UC Encyclopedia content (~5h — manual: sourcing and verifying real citations per functionality, not just drafting text)**
 

@@ -1,0 +1,458 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  Round-optimal blind signatures in the generic group and random
+%  oracle model: beyond the logarithmic query bound.
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{ROUND-OPTIMAL BLIND SIGNATURES IN THE GGM+ROM}
+
+% The class loads no fraktur alphabet; group elements are set in
+% Euler Fraktur, which needs no extra package.
+\DeclareMathAlphabet{\mathfrak}{U}{euf}{m}{n}
+
+\newcommand{\GG}{\mathbb{G}}
+\newcommand{\MM}{\mathcal{M}}
+\newcommand{\HH}{\mathcal{H}}
+\newcommand{\negl}{\mathrm{negl}}
+\newcommand{\BS}{\mathsf{BS}}
+\newcommand{\KeyGen}{\mathsf{KeyGen}}
+\newcommand{\Userone}{\mathsf{User}_1}
+\newcommand{\Usertwo}{\mathsf{User}_2}
+\newcommand{\Usr}{\mathsf{User}}
+\newcommand{\Sig}{\mathsf{Sign}}
+\newcommand{\Ver}{\mathsf{Verify}}
+\newcommand{\sky}{\mathsf{sk}}
+\newcommand{\vky}{\mathsf{vk}}
+\newcommand{\stU}{\mathsf{stU}}
+\newcommand{\msgU}{\mathsf{msgU}}
+\newcommand{\msgS}{\mathsf{msgS}}
+\newcommand{\Oeq}{\mathcal{O}_{\mathsf{eq}}}
+\newcommand{\Ogrp}{\mathcal{O}_{\mathsf{grp}}}
+\newcommand{\OSign}{\mathcal{O}_{\mathsf{Sign}}}
+\newcommand{\Oinit}{\mathcal{O}_{\mathsf{init}}}
+\newcommand{\adv}{\mathrm{adv}}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{Round-Optimal Blind Signatures in the Generic Group and Random
+Oracle Model}
+\cjsubtitle{Beyond the logarithmic bound on user-side and verification
+hash queries}
+\cjstatus{Statement: AI-written from Marian Dietz, Julia Kastner,
+  Stefano Tessaro, \emph{On the Impossibility of Round-Optimal
+  Pairing-Free Blind Signatures in the ROM}, Cryptology ePrint Archive
+  2026, not yet checked by a human. Proved for $q\le O(\log\lambda)$
+  (Theorem 3.1 of the source), for random oracles with bitstring output
+  (Definition 2.2); Section 3.10 sketches, but does not carry out in
+  full, the extension to random oracles whose outputs also contain
+  group elements. Open for $q$ superlogarithmic and polynomially
+  bounded; the superpolynomial message space hypothesis is retained,
+  not relaxed.}
+\cjcategory{\emph{Idealized Models \& Non-Uniformity}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+A blind signature lets a user obtain a signer's signature on a message
+without the signer learning the message or being able to link the
+resulting signature to the session. Every known scheme built purely
+from ordinary elliptic curves (no pairings) needs at least three
+messages of interaction, which forces the signer to keep state;
+round-optimal schemes --- one message each way --- are only known from
+RSA, lattices, pairings, or from generic transformations that compile a
+signature verification circuit into a zero-knowledge proof, which is
+expensive. The source paper asks whether this three-move barrier is
+real for schemes that touch the group only through generic operations
+(add two elements, test two elements for equality) and treat the hash
+function as a random oracle. It proves that in this model no
+round-optimal scheme can be simultaneously correct, blind, and one-more
+unforgeable, provided the message space is superpolynomially large and
+the user's second algorithm together with the verification algorithm
+make at most logarithmically many random oracle queries. The
+logarithmic restriction is an artifact of the attack: the attacker
+learns linear relations among group elements by re-running the user's
+finalization and verification with re-randomized hash answers, and to
+do that it must decide, for each hash query, whether the key generator
+or the signer already made that query in this session; it cannot tell,
+so it guesses, and all guesses are right only with probability
+exponentially small in the number of queries. Conjectured here is that
+the restriction is not real: the same impossibility should hold when
+the user's final step and verification together make any polynomial
+number of random oracle queries. Settling it in the affirmative would
+close the question for the entire natural class of schemes that use the
+group as a black box; refuting it would mean exhibiting a round-optimal
+pairing-free blind signature in this model, which would be a
+significant construction.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+Blind signatures~\cite{Cha82} let a user obtain a signature on a message
+without the signer learning the message or being able to link a
+signature to the session that produced it. Practical deployments
+overwhelmingly use RSA-based schemes, largely because they are
+\emph{round optimal}: one message from the user, one from the signer, so
+the signer keeps no per-session state. Round-optimal schemes are also
+known from pairings and from lattices, and generically from Fischlin's
+transformation~\cite{Fis06}, which has the user prove in zero knowledge
+that it knows a signature on a commitment to the message --- a
+non-black-box use of the underlying signature scheme, and expensive.
+What is conspicuously missing is a round-optimal scheme from
+\emph{pairing-free} groups that uses the group as a black box: every
+such scheme known needs at least three moves.
+
+The source paper~\cite{DKT26} asks whether this three-move barrier is
+inherent, in a model it formalizes as GGM+ROM: Maurer's generic group
+model~\cite{Mau05} --- where algorithms manipulate group elements only
+through an addition oracle and an equality oracle, and in particular
+cannot exploit the bit representation of group elements --- combined
+with the random oracle model~\cite{BR93}, where the hash may take group
+elements as input. This model captures all existing black-box-group
+blind signatures and excludes Fischlin-style circuit-level proofs, while
+still permitting fully algebraic $\Sigma$-protocols. The starting point
+is the impossibility of purely algebraic signatures of D\"ottling et
+al.~\cite{DHHKSU}, whose attack maintains a space of learned linear
+constraints on the verification key and, whenever the constraints
+already imply the existence of a signature, produces one without asking
+the signer. Extending this to arbitrary (non-purely-algebraic)
+verification follows a generalization in the spirit of~\cite{CFGG22},
+and extending it across a random oracle is the paper's main technical
+contribution: the attacker simulates verification's group-equality
+checks and hash queries for free against a guessed constraint space, and
+it learns new constraints by re-running the user's finalization and
+verification many times with re-randomized hash answers on the
+\emph{same} signer message. Blindness is what makes this possible: a
+hash query made both by the signer and by verification would link
+sessions, so up to ``irrelevant'' queries the two query sets are
+disjoint.
+
+The result proved is that no scheme in this model can be correct, blind,
+and one-more unforgeable, under two hypotheses: the message space is
+superpolynomial, and $\Usertwo$ and $\Ver$ together make $O(\log\lambda)$
+hash queries. The second is where the argument stalls, and the paper
+says why: to re-randomize only the queries that are fresh in the current
+session, the attacker would have to know which queries $\KeyGen$ or
+$\Sig$ already made, and it cannot tell, so it guesses for every query,
+succeeding with probability $2^{-q}$. The factor $2^{q}$ is not confined
+to that one step --- it reappears in the number of re-randomization
+rounds, in the thresholds of the paper's bad events, and in its
+oracle-fixing lemma, which bounds by $2^{q}\cdot p$ the failure
+probability of a $q$-query procedure after an arbitrary set of hash
+outputs has been fixed. The conjecture is that all of this is an
+artifact: that the impossibility holds for any polynomial number of
+user-side and verification hash queries. Nothing in the paper suggests a
+scheme could exploit many hash queries; the paper's own framing is that
+folklore expects round-optimal pairing-free blind signatures to be
+impossible outright, and that both of its hypotheses hold for every
+existing black-box-group construction. Outside the model the picture is
+different and instructive: Katz, Schr\"oder and
+Yerukhimovich~\cite{KSY11} rule out blind signatures from one-way
+permutations by intersection-query techniques that the paper reports it
+does not know how to use here; Kastner, Nguyen and Reichle~\cite{KNR24}
+give a round-optimal pairing-free scheme that additionally assumes RSA
+and therefore escapes the model; and concurrent work~\cite{KTZ26}
+instantiates Fischlin's transform over pairing-free curves, using NIZKs
+about the correct evaluation of a conversion function from group
+elements to scalars --- a non-black-box technique that falls outside the
+model --- in a scheme based on variants of the Nyberg-Rueppel signature
+scheme. Settling the conjecture in the affirmative would close the
+black-box-group question completely; refuting it would produce a
+round-optimal pairing-free blind signature of a shape nobody currently
+knows how to build.
+
+Progress to date. The source proves the full statement for
+$q\le O(\log\lambda)$: a computationally unbounded but query-efficient
+GGM+ROM adversary that learns linear relations on a growing pile of
+group elements during a learning phase and then, in a forging phase,
+searches over simulated signer messages for one whose simulated
+$\Usertwo{+}\Ver$ execution accepts with probability at least $1/4$.
+Blindness is converted into the statement that the verifier essentially
+never repeats a signer hash query except on ``irrelevant'' queries, of
+which there are few and which the attacker can harvest. A technical
+lemma of independent interest bounds by $2^{q}\cdot p$ the probability
+that a $q$-query procedure with failure probability $p$ can be made to
+fail after an adversarially chosen set of random oracle outputs is
+fixed. Section 3.10 extends everything to random oracles whose outputs
+contain group elements. No progress toward superlogarithmic $q$ is
+reported.
+
+\section{Notation and parameters}\label{sec:notation}
+
+\begin{itemize}
+\item $\lambda$ --- the security parameter. $\negl(\lambda)$ denotes a
+  function that is $\lambda^{-\omega(1)}$; a quantity is
+  \emph{polynomial} if it is $O(\lambda^{c})$ for some constant $c$ and
+  \emph{superpolynomial} if it is $\lambda^{\omega(1)}$. \emph{ppt}
+  abbreviates probabilistic polynomial time.
+\item $\GG=\GG(\lambda)$, $p=p(\lambda)$ --- a family of groups of prime
+  order $p$, written additively, with neutral element $\mathfrak{o}$ and
+  fixed generator $\mathfrak{1}$; group elements are written in fraktur.
+  The group is accessed only generically.
+\item $\Oeq$, $\Ogrp$ --- the generic-group equality and group-operation
+  oracles (Definition~\ref{def:ggmrom}).
+\item $\HH$, $\overline{\HH}$ --- the random oracle, taking
+  $n^{\mathsf{H}}$ group elements and a bitstring and returning an
+  $r$-bit string, and the interface through which a GGM algorithm
+  queries it.
+\item $n^{\mathsf{H}}$, $r$ --- the number of group elements in a random
+  oracle input and the bitlength of its output.
+\item $\overline{A}$, $A$ --- a GGM algorithm and its transformation
+  into an algorithm on actual group elements; $\OSign$ (resp.\
+  $\overline{\OSign}$) is the signing oracle (resp.\ its GGM interface).
+\item $\BS=(\KeyGen,\Userone,\Sig,\Usertwo,\Ver)$ --- a round-optimal
+  blind signature scheme with message space $\MM=\MM(\lambda)$, which is
+  assumed of superpolynomial size.
+\item $q_{A}$ --- an upper bound on the number of $\HH$-queries made by
+  an algorithm $A$; $q:=q_{\Usertwo}+q_{\Ver}$. The known result assumes
+  $q\le O(\log\lambda)$; the conjecture allows any polynomial $q$.
+\item $\ell$ --- the number of signing-oracle calls made by the
+  one-more-unforgeability adversary.
+\item $\adv^{\mathbf{blind}}_{\BS,\mathcal{S}}$,
+  $\adv^{\mathbf{omuf}}_{\BS,\mathcal{U}}$ --- the blindness and
+  one-more-unforgeability advantages
+  (Definitions~\ref{def:blind} and~\ref{def:omuf}).
+\item $[n]$ denotes $\{1,\dots,n\}$ and $\oplus$ denotes exclusive or.
+\end{itemize}
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{definition}[GGM+ROM]\label{def:ggmrom}
+Let $\GG=\GG(\lambda)$ be a family of groups of prime order
+$p=p(\lambda)$, written additively, with neutral element $\mathfrak{o}$
+and a fixed generator $\mathfrak{1}$. In Maurer's generic group
+model~\cite{Mau05} a \emph{GGM algorithm} $\overline{A}$ never sees
+elements of $\GG$: it manipulates indices (labels) into a table
+$\mathtt{T}$ of group elements which is initialized with $\mathfrak{1}$
+followed by $\overline{A}$'s group-element inputs. It has access to two
+group oracles: $\Oeq(i,j)$ returns $1$ if $\mathtt{T}[i]=\mathtt{T}[j]$
+and $0$ otherwise, and $\Ogrp(i,j)$ appends $\mathtt{T}[i]+\mathtt{T}[j]$
+to $\mathtt{T}$ and returns its index. The output of $\overline{A}$
+consists of a list of indices together with a bitstring. Every GGM
+algorithm $\overline{A}$ induces an ordinary algorithm $A$, called its
+\emph{transformation}, which takes and returns actual group elements and
+maintains the table $\mathtt{T}$ externally.
+
+A \emph{random oracle for groups} with $n^{\mathsf{H}}$ input group
+elements and output length $r=r(\lambda)$ is a uniformly random function
+$\HH:\GG^{n^{\mathsf{H}}}\times\{0,1\}^{*}\to\{0,1\}^{r}$. A GGM
+algorithm queries it through an oracle $\overline{\HH}$ by supplying
+$n^{\mathsf{H}}$ indices and a bitstring, which are translated into the
+corresponding group elements before $\HH$ is evaluated; the answer is a
+bitstring. The \emph{GGM+ROM} is the model in which all algorithms and
+adversaries are GGM algorithms with access to $\Oeq$, $\Ogrp$ and
+$\overline{\HH}$.
+\end{definition}
+
+\begin{definition}[Round-optimal blind signature and correctness]
+\label{def:bs}
+A \emph{round-optimal blind signature scheme} in the ROM with message
+space $\MM=\MM(\lambda)$ is a tuple
+$\BS=(\KeyGen,\Userone,\Sig,\Usertwo,\Ver)$ of ppt algorithms with
+access to $\HH$, where for fixed polynomials
+$n^{\mathsf{vk}},n^{\mathsf{st}},n^{\mathsf{msgU}},n^{\mathsf{msgS}},
+n^{\mathsf{sig}}$ in $\lambda$:
+\begin{itemize}
+  \item $\KeyGen^{\HH}(1^{\lambda})$ outputs $(\sky,\vky)$ with
+    $\sky\in\{0,1\}^{*}$ and
+    $\vky\in\GG^{n^{\mathsf{vk}}}\times\{0,1\}^{*}$;
+  \item $\Userone^{\HH}(\vky,m)$, for $m\in\MM$, outputs a user message
+    $\msgU\in\GG^{n^{\mathsf{msgU}}}\times\{0,1\}^{*}$ and a state
+    $\stU\in\GG^{n^{\mathsf{st}}}\times\{0,1\}^{*}$;
+  \item $\Sig^{\HH}(\sky,\msgU)$ outputs a signer message
+    $\msgS\in\GG^{n^{\mathsf{msgS}}}\times\{0,1\}^{*}$;
+  \item $\Usertwo^{\HH}(\stU,\msgS)$ outputs a signature
+    $\sigma\in\GG^{n^{\mathsf{sig}}}\times\{0,1\}^{*}$;
+  \item $\Ver^{\HH}(\vky,m,\sigma)$ deterministically outputs a bit.
+\end{itemize}
+We write $\langle\Usr^{\HH}(\vky,m),\Sig^{\HH}(\sky)\rangle$ for the
+sequential execution
+$(\msgU,\stU)\leftarrow\Userone^{\HH}(\vky,m)$,
+$\msgS\leftarrow\Sig^{\HH}(\sky,\msgU)$,
+$\sigma\leftarrow\Usertwo^{\HH}(\stU,\msgS)$, whose output is $\sigma$.
+For an algorithm $A$ we write $q_{A}=q_{A}(\lambda)$ for an upper bound
+on the number of calls to $\HH$ made by $A$.
+
+$\BS$ is \emph{correct} if for every $m\in\MM(\lambda)$,
+\begin{align*}
+\Pr\bigl[\,
+  &(\sky,\vky)\leftarrow\KeyGen^{\HH}(1^{\lambda}),\\
+  &\sigma\leftarrow\langle\Usr^{\HH}(\vky,m),\Sig^{\HH}(\sky)\rangle:\\
+  &\qquad \Ver^{\HH}(\vky,m,\sigma)=1\,\bigr]
+   \ \ge\ 1-\negl(\lambda),
+\end{align*}
+the probability being over $\HH$ and the coins of the algorithms.
+\end{definition}
+
+\begin{definition}[Blindness]\label{def:blind}
+For a scheme $\BS$ and an adversary $\mathcal{S}$, the game
+$\mathbf{blind}_{\BS,\mathcal{S}}$ samples $b\leftarrow_{\$}\{0,1\}$ and
+a random oracle $\HH$ and runs
+\[
+  b'\leftarrow\mathcal{S}^{\HH,\Oinit,\mathcal{O}_{\Userone,0},
+  \mathcal{O}_{\Userone,1},\mathcal{O}_{\Usertwo,0},
+  \mathcal{O}_{\Usertwo,1}}(1^{\lambda}),
+\]
+where
+\begin{itemize}
+  \item $\Oinit(\vky,m_{0},m_{1})$ may be called at most once and stores
+    $\vky,m_{0},m_{1}$;
+  \item $\mathcal{O}_{\Userone,c}()$, for $c\in\{0,1\}$, may be called at
+    most once each and only after $\Oinit$, runs
+    $(\stU_{c},\msgU_{c})\leftarrow\Userone^{\HH}(\vky,m_{b\oplus c})$
+    and returns $\msgU_{c}$;
+  \item $\mathcal{O}_{\Usertwo,c}(\msgS_{c})$, for $c\in\{0,1\}$, may be
+    called at most once each and only after $\mathcal{O}_{\Userone,c}$,
+    computes and stores
+    $\sigma_{b\oplus c}\leftarrow\Usertwo^{\HH}(\stU_{c},\msgS_{c})$; if
+    $\mathcal{O}_{\Usertwo,1\oplus c}$ was already called and
+    $\Ver^{\HH}(\vky,m_{c},\sigma_{c})=1$ for both $c=0,1$, it returns
+    $(m_{0},\sigma_{0})$ and $(m_{1},\sigma_{1})$, and otherwise $\bot$.
+\end{itemize}
+The advantage is
+$\adv^{\mathbf{blind}}_{\BS,\mathcal{S}}
+ :=2\cdot\bigl|\Pr[b=b']-\tfrac{1}{2}\bigr|$.
+\end{definition}
+
+\begin{definition}[One-more unforgeability]\label{def:omuf}
+For a scheme $\BS$ and an adversary $\mathcal{U}$, the game
+$\mathbf{omuf}_{\BS,\mathcal{U}}$ samples a random oracle $\HH$ and
+$(\sky,\vky)\leftarrow\KeyGen^{\HH}(1^{\lambda})$, runs
+$(m_{i},\sigma_{i})_{i\in[\ell+1]}\leftarrow
+\mathcal{U}^{\HH,\OSign}(1^{\lambda},\vky)$ where
+$\OSign(\cdot):=\Sig^{\HH}(\sky,\cdot)$ and $\ell$ is the number of
+calls $\mathcal{U}$ made to $\OSign$, and outputs $1$ if
+$m_{i}\ne m_{j}$ for all $i\ne j$ and
+$\Ver^{\HH}(\vky,m_{i},\sigma_{i})=1$ for all $i\in[\ell+1]$. The
+advantage is
+$\adv^{\mathbf{omuf}}_{\BS,\mathcal{U}}
+ :=\Pr[\mathbf{omuf}_{\BS,\mathcal{U}}=1]$.
+\end{definition}
+
+\begin{conjecture}[no round-optimal blind signature in the GGM+ROM]
+\label{conj:main}
+Fix a family of groups $\GG=\GG(\lambda)$ of prime order $p=p(\lambda)$
+and a random oracle $\HH$ for groups as in
+Definition~\ref{def:ggmrom}. Then there does not exist a round-optimal
+blind signature scheme $\BS=(\KeyGen,\Userone,\Sig,\Usertwo,\Ver)$ in
+the ROM with message space $\MM=\MM(\lambda)$
+(Definition~\ref{def:bs}) for which all of the following hold
+simultaneously:
+\begin{enumerate}
+  \item $\BS$ is correct (Definition~\ref{def:bs});
+  \item the algorithms $\Userone$, $\Usertwo$ and $\Ver$ are
+    transformations of GGM algorithms $\overline{\Userone}$,
+    $\overline{\Usertwo}$ and $\overline{\Ver}$ in the sense of
+    Definition~\ref{def:ggmrom};
+  \item $|\MM(\lambda)|$ is superpolynomial in $\lambda$, i.e.\
+    $|\MM(\lambda)|=\lambda^{\omega(1)}$;
+  \item for every ppt GGM blindness adversary $\overline{\mathcal{S}}$,
+    the advantage $\adv^{\mathbf{blind}}_{\BS,\mathcal{S}}(\lambda)$
+    (Definition~\ref{def:blind}) is negligible in $\lambda$;
+  \item for every computationally unbounded GGM
+    one-more-unforgeability adversary $\overline{\mathcal{U}}$ that
+    makes at most a polynomial number of calls to its oracles $\Ogrp$,
+    $\overline{\HH}$ and $\overline{\OSign}$, the advantage
+    $\adv^{\mathbf{omuf}}_{\BS,\mathcal{U}}(\lambda)$
+    (Definition~\ref{def:omuf}) is negligible in $\lambda$.
+\end{enumerate}
+Equivalently, writing $q:=q_{\Usertwo}+q_{\Ver}$ for the total number of
+$\HH$-queries made by $\Usertwo$ and $\Ver$: for every polynomial $Q$
+there is no scheme as above with $q(\lambda)\le Q(\lambda)$.
+\end{conjecture}
+
+\begin{remark}[what is already a theorem]\label{rem:known}
+The case $q(\lambda)\le O(\log\lambda)$ is a theorem~\cite{DKT26}; the
+conjecture is that the restriction $q \le O(\log \lambda)$ may be
+dropped, no other hypothesis being changed.
+\end{remark}
+
+\begin{remark}[no query bound on the other algorithms]
+\label{rem:unbounded}
+Note that no bound on $q_{\KeyGen}$, $q_{\Userone}$ or $q_{\Sig}$ is
+imposed beyond the polynomial bound implied by these algorithms being
+ppt.
+\end{remark}
+
+\begin{remark}[what settling it would give]\label{rem:consequence}
+The conjecture is the exact remaining gap in the only formal evidence
+that the three-move barrier for pairing-free blind signatures is real. A
+proof would say that anyone who wants a round-optimal pairing-free blind
+signature must leave the black-box-group world entirely --- which is
+precisely what the concurrent Fischlin-instantiation line of work is
+doing, at substantial cost --- and it would do so for the whole class of
+schemes, not just those that hash a handful of times on the user's side.
+A refutation would be a construction of a kind nobody currently knows
+how to build, and it would tell us something surprising: that
+superlogarithmically many hash calls during finalization and
+verification are not a convenience but a resource that defeats
+generic-group extraction. Either way the answer is not a constant or an
+exposition improvement.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem[BR93]{BR93}
+M. Bellare, P. Rogaway.
+\emph{Random oracles are practical: A paradigm for designing efficient
+protocols}.
+ACM CCS 93, pages 62--73, ACM Press, 1993.
+
+\bibitem[CFGG22]{CFGG22}
+D. Catalano, D. Fiore, R. Gennaro, E. Giunta.
+\emph{On the impossibility of algebraic vector commitments in
+pairing-free groups}.
+TCC 2022, Part II, LNCS volume 13748, pages 274--299, Springer, 2022.
+
+\bibitem[Cha82]{Cha82}
+D. Chaum.
+\emph{Blind signatures for untraceable payments}.
+CRYPTO'82, pages 199--203, Plenum Press, 1982.
+
+\bibitem[DHHKSU]{DHHKSU}
+N. D\"ottling, D. Hartmann, D. Hofheinz, E. Kiltz, S. Sch\"age,
+B. Ursu.
+\emph{On the impossibility of purely algebraic signatures}.
+TCC 2021, Part III, LNCS volume 13044, pages 317--349, Springer, 2021.
+
+\bibitem[DKT26]{DKT26}
+M. Dietz, J. Kastner, S. Tessaro.
+\emph{On the Impossibility of Round-Optimal Pairing-Free Blind
+Signatures in the ROM}.
+Cryptology ePrint Archive, Paper 2026/090, 2026. [UNVERIFIED]
+
+\bibitem[Fis06]{Fis06}
+M. Fischlin.
+\emph{Round-optimal composable blind signatures in the common reference
+string model}.
+CRYPTO 2006, LNCS volume 4117, pages 60--77, Springer, 2006.
+
+\bibitem[KNR24]{KNR24}
+J. Kastner, K. Nguyen, M. Reichle.
+\emph{Pairing-free blind signatures from standard assumptions in the
+ROM}.
+CRYPTO 2024, Part I, LNCS volume 14920, pages 210--245, Springer, 2024.
+
+\bibitem[KSY11]{KSY11}
+J. Katz, D. Schr\"oder, A. Yerukhimovich.
+\emph{Impossibility of blind signatures from one-way permutations}.
+TCC 2011, LNCS volume 6597, pages 615--629, Springer, 2011.
+
+\bibitem[KTZ26]{KTZ26}
+J. Kastner, S. Tessaro, G. Zaverucha.
+\emph{Round-optimal pairing-free blind signatures}.
+Cryptology ePrint Archive, Paper 2026/091, 2026.
+
+\bibitem[Mau05]{Mau05}
+U. M. Maurer.
+\emph{Abstract models of computation in cryptography (invited paper)}.
+10th IMA International Conference on Cryptography and Coding, LNCS
+volume 3796, pages 1--12, Springer, 2005.
+
+\end{conjurabibliography}
+
+\end{document}

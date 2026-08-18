@@ -52,9 +52,13 @@ def artifacts():
 
     Deliberately not covered:
 
-    * `latex/uc/**` -> the encyclopedia interface boxes. `gen_interface.py
-      --check` already regenerates those from their fragment and fails on
-      disagreement, and two gates guarding one thing disagree eventually.
+    * `latex/uc/**` -> one survey document the UC encyclopedia's layout was
+      taken from. It is source material, not the source of any page: nothing
+      on the site is built from it, so there is no output to be stale
+      against. (The encyclopedia's interface boxes are a different folder,
+      `surveys/uc-for-gamers/latex/functionalities/`, and are gated by
+      `gen_interface.py --check` rather than here -- two gates guarding one
+      thing disagree eventually.)
     * `latex/conjectures/**`, `latex/books/**` -> the staging area for drafts
       that are not yet site pages. Promoting one is a manual editorial act,
       not a build, so there is no output to be stale against.
@@ -99,7 +103,8 @@ def book_inputs():
     `uc/.../index.qmd` by `gen_interface.py` and gated by its `--check`, so
     counting them here would ask for a book rebuild every time an entry is
     filled in -- a rebuild that cannot change a single page of the book. That
-    is the same reasoning that keeps `latex/uc/**` out of this file entirely.
+    is the same reasoning that keeps `latex/books/**` out of this file
+    entirely.
 
     Read from `main.tex` rather than hardcoded, so a fragment promoted into
     the book starts being watched the moment it is `\\input`.

@@ -1,0 +1,270 @@
+\documentclass{conjura-conjecture}
+\runninghead{PARTIAL PKI BEYOND ONE-QUARTER RESILIENCE}
+
+\newcommand{\pk}{\mathsf{pk}}
+\newcommand{\sk}{\mathsf{sk}}
+\newcommand{\DSig}{\mathsf{DSig}}
+\newcommand{\Gen}{\mathsf{Gen}}
+\newcommand{\Sig}{\mathsf{Sign}}
+\newcommand{\Ver}{\mathsf{Verify}}
+\newcommand{\Fdiff}{\mathcal{F}_{\mathsf{diff}}}
+\newcommand{\PPKISetup}{\mathsf{PartialPKISetup}}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{Consensus in the Partial PKI Setting Beyond One-Quarter Resilience}
+\cjsubtitle{up to the classical one-half bound}
+\cjstatus{Statement: AI-written from Damiano Abram, Marshall Ball, Juan Garay and Aggelos Kiayias, ``Permissionless Consensus from a Common Random String'', IACR Cryptology ePrint Archive, 2026; abridged version to appear in Proc.\ CRYPTO 2026, not yet checked by a human. Settled positively for $\gamma < (1/4)(1-3\epsilon)$ with $\epsilon \in (0,1/3)$ by the paper's PartialPhaseKing protocol (Theorem~5), and negatively at $\gamma = 1/4$, $\epsilon = 0$ for the class of ``simple'' protocols (Theorem~6, proved there for deterministic protocols); open for $1/4 \le \gamma < 1/2$, with no statement made about non-simple protocols at any $\gamma \ge 1/4$.}
+\cjcategory{\emph{Consensus \& Distributed Cryptography}}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+Suppose parties with no pre-existing identities bootstrap a public-key
+directory by spending computational effort: each party registers a key,
+and each party ends up with its own list of keys it considers valid. The
+lists are not identical --- a key one honest party accepts, another may
+never have seen --- but they overlap heavily, they all contain
+essentially every honest key, and honest keys make up all but a bounded
+fraction of the union of the lists. Given such a directory, this paper
+builds a Byzantine agreement protocol tolerating any adversarial share
+of the registered keys strictly below one quarter, and shows that one
+quarter is exactly the ceiling for the natural class of protocols in
+which honest parties sign everything they send and discard anything
+mentioning a signer they do not recognize. The classical limit for
+agreement of this kind is one half, and nothing is known to rule it out
+here; the authors expect that reaching it needs proofs of work that one
+party can forward to another, so that a proof accepted by one honest
+party is accepted by all. The conjecture is that agreement is achievable
+in this setting for every adversarial share below one half.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+Permissionless consensus without a PKI is often reached by first
+bootstrapping a \emph{partial} PKI: parties self-certify public keys by
+investing computational resources, as sketched by Aspnes, Jackson and
+Krishnamurthy and formalized by Andrychowicz and
+Dziembowski~\cite{AD15} in an idealized model. The directory that
+results is inconsistent: honest parties do not share the same view of
+which keys are valid.
+
+This paper obtains such a directory in the plain CRS model, from a new
+primitive it calls a multi-verifier signature of work. Abstracting away
+from how it is built, the resulting object is a
+$(\gamma,\epsilon)$-partial PKI: each honest party $P_i$ owns a run-time
+identity consisting of a verification key and a numerical identifier,
+and holds a set $G_i$ of run-time identities it recognizes; writing $H$
+for the set of honest run-time identities, every $G_i$ contains all but
+an $\epsilon$ fraction of $H$, and $H$ makes up all but a $\gamma$
+fraction of $\bigcup_i G_i$.
+
+On top of this abstraction the paper builds consensus by the
+graded-consensus-to-full-consensus route of Feldman and
+Micali~\cite{FM97}, using a variant of the phase king protocol of
+Berman, Garay and Perry~\cite{BGP89} adapted so that the ``king'' of a
+phase is whichever recognized identity carries the identifier equal to
+the phase number. This tolerates $\gamma < \frac{1}{4}(1-3\epsilon)$ for
+$\epsilon \in (0,1/3)$ (Theorem~5). The paper then proves a matching
+barrier: no \emph{simple} protocol --- one in which honest parties sign
+every message they send and ignore any message they cannot fully verify,
+whether because the signer is unrecognized or because the message
+references a signed message by an unrecognized signer --- achieves both
+Agreement and Validity at $\gamma = 1/4$, $\epsilon = 0$ (Theorem~6,
+proved in the appendix for deterministic protocols).
+
+The classical resilience limit for consensus of this type is one
+half~\cite{Fit02}, and the paper leaves the gap between $1/4$ and $1/2$
+open, naming the obstruction: multi-verifier signatures of work are not
+transferable, so one honest party may accept a proof that another
+rejects. With transferable proofs one would approach a \emph{ranked}
+partial PKI, from which $1/2$-resilient consensus follows via an
+adaptation of Dolev--Strong~\cite{DS83}, as in~\cite{AD15}. Note that in
+the end-to-end permissionless protocol the effective resilience is
+$\beta\gamma$, where $\beta$ is the slowdown factor coming from the
+fine-grained hardness assumption~\cite{BGH24a}; the conjecture below
+concerns $\gamma$ alone, which is where the paper's positive result and
+its impossibility both live.
+
+\section{Notation and parameters}\label{sec:notation}
+
+\begin{itemize}
+\item $\lambda \in \mathbb{N}$ is the security parameter; $n$ is the
+  number of parties $P_1,\dots,P_n$ and $n_{\max}$ is a public upper
+  bound on it, with $n \le n_{\max}$. The value of $n$ is not known to
+  the parties.
+\item $m$ is a public parameter, polynomial in $n_{\max}$, giving the
+  range $[m] = \{1,\dots,m\}$ of identifiers.
+\item $\DSig = (\Gen,\Sig,\Ver)$ is an existentially unforgeable
+  signature scheme. A \emph{run-time identity} is a pair $(\pk, r)$ with
+  $r \in [m]$; honest party $P_i$ owns $(\pk_i, r_i)$ and knows
+  $\sk_i$.
+\item $G_i$ is the set of run-time identities that $P_i$ recognizes as
+  valid, with $(\pk_i, r_i) \in G_i$. $H$ is the set of run-time
+  identities of honest parties.
+\item $\gamma \in [0,1)$ bounds the adversary's share of the recognized
+  identities and $\epsilon \in [0,1)$ bounds the disagreement between
+  honest views. The paper's protocol (Theorem~5, with Lemma~3) requires
+  $\epsilon \in (0,1/3)$ and $\gamma < \frac{1}{4}(1-3\epsilon)$; its
+  setup lemma (Lemma~1) takes $\epsilon \in (0,1)$.
+\item $t$ bounds the number of parties the adversary corrupts,
+  statically; $c$ bounds the computational steps any single party takes
+  per round; $\theta$ bounds the messages the adversary sends per round;
+  and $\beta$ is the slowdown factor of the fine-grained hardness
+  assumption.
+\item $\Fdiff$ is the diffusion channel of the execution model below.
+\item $b_i \in \{0,1\}$ is $P_i$'s input bit and $b_i' \in \{0,1\}$ its
+  output bit.
+\item $R$ denotes a round bound and $|S|$ the cardinality of a set $S$.
+\end{itemize}
+
+\begin{definition}[Execution model]\label{def:exec}
+Execution proceeds in synchronous rounds. Communication is over an
+unauthenticated diffusion channel $\Fdiff$: a message sent by an honest
+party in round $\rho$ is delivered to every party at the beginning of
+round $\rho+1$; the adversary chooses the order in which messages arrive
+at different parties and may send its own messages to an adaptively
+chosen subset of the parties, so parties cannot tell who sent a message.
+The adversary is active/Byzantine and statically corrupts up to $t$
+parties. Parties and adversary are Interactive Word RAM machines with
+$O(\log\lambda)$-bit words; every party, honest or corrupted, executes
+at most $c$ computational steps per round, the adversary sends at most
+$\theta$ messages per round, and a moderately hard function output
+requiring $s$ steps for an honest party requires at least
+$\beta \cdot s$ adversarial steps. The adversary controls every
+run-time identity in
+$\bigcup_i G_i \setminus H$, including the corresponding secret keys.
+Each honest party $P_i$ starts with input $b_i \in \{0,1\}$, the public
+parameters $(1^{\lambda}, n_{\max}, m)$, its key pair $(\pk_i, \sk_i)$,
+its identifier $r_i$, and the set $G_i$; the protocol logic may not
+depend on $n$ or on network identities.
+\end{definition}
+
+\begin{definition}[$(\gamma,\epsilon)$-partial PKI]\label{def:ppki}
+An assignment of run-time identities and recognized sets $(G_i)_i$ to
+the parties of an execution is a \emph{$(\gamma,\epsilon)$-partial PKI}
+if
+\begin{enumerate}
+\item $|H \cap G_i| \ge (1-\epsilon)\,|H|$ for every honest $P_i$, and
+\item $|H| \ge (1-\gamma)\,\big|\bigcup_i G_i\big|$.
+\end{enumerate}
+\end{definition}
+
+\begin{definition}[Consensus]\label{def:consensus}
+A protocol in which every honest $P_i$ has input $b_i \in \{0,1\}$ and
+outputs $b_i' \in \{0,1\}$ achieves \emph{consensus} if
+\begin{itemize}
+\item \textbf{Agreement:} all honest parties output the same bit;
+\item \textbf{Validity:} if every honest party has the same input $b$,
+  then every honest party outputs $b$;
+\item \textbf{Termination:} every honest party halts with an output.
+\end{itemize}
+\end{definition}
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{conjecture}[Consensus below one-half resilience]\label{conj:main}
+For every constant $\gamma$ with $0 \le \gamma < 1/2$ there exist a
+protocol $\Pi$ and a polynomial $R$ such that $\Pi$ achieves consensus
+in the sense of Definition~\ref{def:consensus} with resilience $\gamma$
+in the paper's permissionless common-random-string setting: for every
+$n_{\max} \in \mathbb{N}$, every $n \le n_{\max}$, every input vector
+$(b_1,\dots,b_n) \in \{0,1\}^{n}$ and every adversary subject to the
+conventions of Definition~\ref{def:exec} whose share of the registered
+run-time identities is at most $\gamma$, all honest parties halt within
+$R(n_{\max},\lambda)$ rounds and, except with probability negligible in
+$\lambda$, their outputs satisfy Agreement, Validity and Termination.
+\end{conjecture}
+
+Nothing in Conjecture~\ref{conj:main} constrains how $\Pi$ obtains its
+identities. In particular $\Pi$ may bootstrap a
+$(\gamma,\epsilon)$-partial PKI in the sense of
+Definition~\ref{def:ppki}, or a stronger setup abstraction --- for
+instance the ranked partial PKI that transferable proofs of work would
+yield, from which $1/2$-resilient consensus follows via an adaptation of
+Dolev--Strong~\cite{DS83}, and which is the route the paper itself
+points to.
+
+\begin{conjecture}[Fixed-setup strengthening; chosen by the harvester, not stated by the source paper]\label{conj:fixed}
+As Conjecture~\ref{conj:main}, but with the setup fixed in advance: for
+every constant $\gamma$ with $0 \le \gamma < 1/2$ there exist a protocol
+$\Pi$ and a polynomial $R$ such that the conclusion of
+Conjecture~\ref{conj:main} holds in every execution of $\Pi$ in the
+model of Definition~\ref{def:exec} whose run-time identities and
+recognized sets form a $(\gamma,0)$-partial PKI.
+\end{conjecture}
+
+\begin{remark}
+By Theorem~6 of the source paper, any $\Pi$ witnessing
+Conjecture~\ref{conj:fixed} with $\gamma \ge 1/4$ must not be
+``simple'': it cannot both sign every message honest parties send and
+discard every message it cannot fully verify. This rider attaches to the
+fixed-setup strengthening only. It says nothing about
+Conjecture~\ref{conj:main}, whose protocol is free to leave the
+$(\gamma,\epsilon)$-partial PKI abstraction behind, in which case
+Theorem~6 does not apply.
+\end{remark}
+
+\begin{remark}
+At $\epsilon = 0$ the positive result is a consequence of Theorem~5
+rather than an instance of it: a $(\gamma,0)$-partial PKI satisfies the
+conditions of Definition~\ref{def:ppki} for every $\epsilon > 0$, so
+choosing $\epsilon$ small enough that $\gamma < \frac{1}{4}(1-3\epsilon)$
+yields consensus for every $\gamma < 1/4$ at $\epsilon = 0$. Note also
+that $\epsilon = 0$ is not a setting the paper's $\PPKISetup$ can
+realize --- Theorem~4 with Lemma~1 gives $\epsilon > 0$ --- so
+Conjecture~\ref{conj:fixed} at $\epsilon = 0$ is narrower than the
+paper's question about its own setting, and a proof at $\epsilon = 0$
+does not automatically give one at $\epsilon > 0$.
+\end{remark}
+
+\begin{remark}
+Both conjectures are stated in terms of $\gamma$, the adversary's share
+of the run-time identities. In the end-to-end permissionless protocol
+the effective resilience is $\beta\gamma$, with $\beta$ the slowdown
+factor of the fine-grained hardness assumption; a solver should say
+which of the two quantities a claimed $1/2$ bound refers to.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem{AD15}
+Marcin Andrychowicz and Stefan Dziembowski.
+Pow-based distributed cryptography with no trusted setup.
+Annual Cryptology Conference, pages 379--399, Springer, 2015.
+
+\bibitem{BGH24a}
+Marshall Ball, Juan A. Garay, Peter Hall, Aggelos Kiayias, and Giorgos
+Panagiotakos.
+Towards permissionless consensus in the standard model via fine-grained
+complexity.
+CRYPTO 2024, Part II, volume 14921 of LNCS, pages 113--146, Springer,
+Cham, 2024.
+
+\bibitem{BGP89}
+Piotr Berman, Juan A. Garay, and Kenneth J. Perry.
+Towards optimal distributed consensus (extended abstract).
+30th Annual Symposium on Foundations of Computer Science, pages
+410--415, IEEE Computer Society, 1989.
+
+\bibitem{DS83}
+Danny Dolev and H. Raymond Strong.
+Authenticated algorithms for byzantine agreement.
+SIAM J. Comput., 12(4):656--666, 1983.
+
+\bibitem{FM97}
+Pesech Feldman and Silvio Micali.
+An optimal probabilistic protocol for synchronous byzantine agreement.
+SIAM Journal on Computing, 26(4):873--933, 1997.
+
+\bibitem{Fit02}
+Matthias Fitzi.
+Generalized communication and security models in Byzantine agreement.
+PhD thesis, ETH Zurich, 2002.
+
+\end{conjurabibliography}
+
+\end{document}

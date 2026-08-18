@@ -1,0 +1,288 @@
+{
+  "pdf": {
+    "name": "2026-1179.pdf",
+    "sha256": "46e589c2543acf0ca95cac43329b4b41aee4090496d733dfcb72855ceac255b3",
+    "pages": 33
+  },
+  "run": {
+    "at": "2026-08-18T17:26:34Z",
+    "backend": "cli",
+    "effort": "high"
+  },
+  "document": {
+    "title": "Permissionless Consensus from a Common Random String",
+    "authors": [
+      "Damiano Abram",
+      "Marshall Ball",
+      "Juan Garay",
+      "Aggelos Kiayias"
+    ],
+    "year": "2026",
+    "venue_or_archive": "IACR Cryptology ePrint Archive; abridged version to appear in Proc. CRYPTO 2026",
+    "identifier": "2026/1179",
+    "citation_confidence": "inferred"
+  },
+  "candidate": {
+    "slug": "dream-dpt-moderate-hardness",
+    "title": "A Dream Direct Product Theorem for a Moderately Hard Function",
+    "subtitle": "exponential multi-instance hardness from a standard fine-grained hypothesis",
+    "category": "Fine-Grained Hardness & Proofs of Work",
+    "openness_kind": "paper-asks-question",
+    "pages": [
+      4,
+      16,
+      22,
+      23
+    ],
+    "one_line": "There is a moderately hard function whose hardness amplifies with no loss in the exponent — a fast algorithm given many independent instances solves them all with probability at most the per-instance bound raised to the number of instances — and this can be proved from a standard fine-grained complexity hypothesis such as the nondeterministic strong exponential time hypothesis.",
+    "informal": "A proof of work is a puzzle that costs a lot of computation to solve and almost nothing to check. Building permissionless consensus without a random oracle needs a puzzle with an unusually strong amplification property: an adversary handed many independent puzzles, and given only about as much time as it takes to solve them one after another honestly, should succeed on all of them with probability at most its single-puzzle success probability raised to the number of puzzles, with no slack in the exponent. This matters because the machinery that lets parties agree on puzzles without a beacon loses a factor exponential in the number of participants, so only an exponentially small multi-instance success probability survives the loss. The obvious workaround — enlarge the security parameter until the puzzle is hard enough — is unavailable, because it also makes each honest party's work grow with the number of participants. Known puzzles built from fine-grained complexity assumptions do not reach the required level, while the ad hoc puzzles used in practice probably do. Since a strong enough succinct argument system turns any hard-to-compute function into an efficiently checkable puzzle, the whole gap reduces to a question in hardness amplification: exhibit a function, together with a standard fine-grained complexity hypothesis, for which computing many independent instances quickly is exactly as hard as the product of the individual instances.",
+    "setting_latex": "Permissionless consensus asks a set of parties with no PKI, no authenticated channels and no knowledge of each other to reach Byzantine agreement, tolerating an adversary that controls a fraction of the collective computational power. Every deployed protocol in this space, starting with Nakamoto's, relies on the random oracle heuristic or on ad hoc assumptions. Ball, Garay, Hall, Kiayias and Panagiotakos \\cite{BGH24a} gave the first provably secure protocol outside the random oracle model, but in the \\emph{random beacon model}: all parties are handed fresh public randomness at the start of each voting phase, which is what lets them agree on which proof-of-work challenges are legitimate.\n\nThe present paper removes the beacon. Its route is to let the parties generate the challenges themselves, in one round, with a \\emph{distributed sampler}, and then to verify a vote only against a challenge derived from the verifier's own sampler message. Because a single honest sampler message must be reused across many differently labelled executions, the paper introduces $d$-wise independent hardness-preserving distributed samplers and builds them from DDH and from LWE. Hardness preservation is a game-based, non-tight guarantee: an attack that succeeds with probability $p_{\\mathsf{real}}$ against the sampler's output translates into an attack succeeding with probability at least $p_{\\mathsf{real}}/\\eta - \\nu$ against a genuinely random sample. The paper shows the loss $\\eta$ must be exponential in the number $d$ of reused executions, and its constructions achieve $\\eta(t,\\lambda) = 2^{t\\cdot n^{\\gamma'}}$ for a constant $\\gamma' < 1$, where $n$ is the output length.\n\nConsequently the underlying proof of work must be secure against a multiplicative loss of that size. Corollary~3 of the paper composes the sampler with a $(d_0,d_1,\\beta,\\epsilon)$-moderately hard proof of work whose multi-instance soundness is $\\epsilon(t,\\lambda) = 2^{-t\\cdot n^{\\gamma}}$ for a constant $\\gamma>0$, and obtains a multi-verifier signature of work, from which the paper's consensus protocol follows. Two things block the instantiation. First, existing proofs of work built from fine-grained hardness assumptions \\cite{BGH24a} do not reach subexponential soundness. Second, complexity leveraging is ruled out: raising the security parameter of the puzzle in proportion to $d$ also raises the honest solving cost in proportion to $d$, so every honest vote would cost work proportional to the total number of participants.\n\nWhat the paper does show is that efficient verifiability is not the obstacle: any function that is moderately hard with the parameters of Corollary~3, even if it is not efficiently verifiable, becomes a proof of work when compiled with a subexponentially sound SNARG for $\\mathsf{P}$, which follows from subexponentially secure LWE by the work of Choudhuri, Jain and Jin \\cite{CJJ21}. So the entire remaining gap is a hardness amplification statement about a plain function, and the paper closes by asking for it: a tight ``dream'' strong direct product theorem for some function, assuming a standard fine-grained hypothesis such as NSETH \\cite{CGIMPS16}. Settling it would put permissionless consensus in the plain CRS model on standard complexity conjectures rather than on an assumed puzzle.",
+    "notation_latex": "\\begin{itemize}\n\\item $\\lambda \\in \\mathbb{N}$ is the security parameter and $s \\in \\mathbb{N}$ is a \\emph{time parameter}; both are given to all algorithms in unary. Running time is counted in the Word RAM model with $O(\\log \\lambda)$-bit words.\n\\item $n = n(\\lambda)$ is the challenge length; challenges are strings in $\\{0,1\\}^{n}$.\n\\item $\\mathsf{Gen}$ is a PPT \\emph{challenge sampler}: $\\mathsf{Gen}(1^{\\lambda})$ outputs $z \\in \\{0,1\\}^{n}$.\n\\item $f = \\{f_{s,\\lambda}\\}_{s,\\lambda \\in \\mathbb{N}}$ is a family of functions $f_{s,\\lambda} : \\{0,1\\}^{n} \\to \\{0,1\\}^{*}$, and $r(s,\\lambda)$ is the number of steps needed to evaluate $f_{s,\\lambda}$ on one input (the honest solving cost).\n\\item $\\beta = \\beta(s,\\lambda) \\in (0,1]$ is the \\emph{slowdown} factor: an adversary asked to solve $t$ challenges is granted $t \\cdot \\beta(s,\\lambda) \\cdot r(s,\\lambda)$ steps. Larger $\\beta$ means a tighter hardness guarantee.\n\\item $d_0 = d_0(\\lambda)$ and $d_1 = d_1(\\lambda)$ are polynomials bounding, respectively, the number of challenges handed to the adversary and the number of oracle calls it may make.\n\\item $\\mathcal{O}_f$ is the oracle that on input $z \\in \\{0,1\\}^{n}$ returns $f_{s,\\lambda}(z)$.\n\\item $\\epsilon = \\epsilon(t,\\lambda) \\in [0,1]$ bounds the adversary's success probability on $t$ challenges, and $\\gamma > 0$ is the constant governing it.\n\\item $N$ denotes the number of Boolean variables of a formula; it is used only in the statement of NSETH.\n\\item $[t]$ denotes $\\{1,2,\\dots,t\\}$.\n\\end{itemize}",
+    "definitions_latex": "\\begin{definition}[Moderately hard function]\nLet $d_0, d_1$ be polynomials, let $\\beta : \\mathbb{N} \\times \\mathbb{N} \\to (0,1]$ and $\\epsilon : \\mathbb{N} \\times \\mathbb{N} \\to [0,1]$ be functions, and let $(\\mathsf{Gen}, f)$ be a challenge sampler together with a function family as above, with evaluation cost $r(s,\\lambda)$. We say $(\\mathsf{Gen}, f)$ is \\emph{$(d_0,d_1,\\beta,\\epsilon)$-moderately hard} if for every $t \\le d_0(\\lambda)$ and every pair of PPT algorithms $\\mathcal{A} = (\\mathcal{A}_0, \\mathcal{A}_1)$ such that $\\mathcal{A}_1$ runs in at most $t \\cdot \\beta(s,\\lambda) \\cdot r(s,\\lambda)$ steps and makes at most $d_1(\\lambda)$ queries to $\\mathcal{O}_f$, none of which lies in $\\{z_1,\\dots,z_t\\}$, it holds for all sufficiently large $\\lambda, s \\in \\mathbb{N}$ that\n\\[\n\\Pr\\!\\left[\\, \\forall h \\in [t] : w_h = f_{s,\\lambda}(z_h) \\;\\middle|\\;\n\\begin{array}{l}\n\\mathsf{aux} \\leftarrow \\mathcal{A}_0(1^{\\lambda},1^{s}) \\\\\nz_1,\\dots,z_{d_0(\\lambda)} \\leftarrow \\mathsf{Gen}(1^{\\lambda}) \\ \\text{i.i.d.} \\\\\n(w_h)_{h \\in [t]} \\leftarrow \\mathcal{A}_1^{\\mathcal{O}_f}\\!\\big(1^{\\lambda},1^{s},(z_h)_{h \\in [d_0(\\lambda)]},\\mathsf{aux}\\big)\n\\end{array}\n\\right] \\;\\le\\; \\epsilon(t,\\lambda).\n\\]\n(The adversary is handed $d_0(\\lambda)$ challenges but is only required to solve the first $t$ of them. The restriction that the oracle is not queried on $z_1,\\dots,z_t$ is what makes the notion non-trivial when $d_1 \\ge t$.)\n\\end{definition}\n\n\\begin{definition}[NSETH]\nFor every $\\varepsilon > 0$ there exists $k \\in \\mathbb{N}$ such that $k$-$\\mathsf{TAUT}$ --- the problem of deciding whether a given $k$-DNF formula on $N$ variables is a tautology --- cannot be decided by a nondeterministic algorithm running in time $O(2^{(1-\\varepsilon)N})$.\n\\end{definition}",
+    "formal_statement_latex": "Assume NSETH. Then there exist a constant $\\gamma > 0$, polynomials $n, d_0, d_1$, a function $r$ with $s \\le r(s,\\lambda) \\le s \\cdot \\mathrm{poly}(\\lambda)$, a function $\\beta : \\mathbb{N} \\times \\mathbb{N} \\to (0,1]$ with $1/\\beta(s,\\lambda) \\le \\mathrm{poly}(\\lambda)$ for all $s$, a PPT challenge sampler $\\mathsf{Gen}$ with output length $n(\\lambda)$, and a family $f = \\{f_{s,\\lambda}\\}$ whose evaluation cost is $r(s,\\lambda)$, such that $(\\mathsf{Gen}, f)$ is $(d_0,d_1,\\beta,\\epsilon)$-moderately hard with\n\\[\n\\epsilon(t,\\lambda) \\;=\\; 2^{-\\,t \\cdot n(\\lambda)^{\\gamma}} \\qquad \\text{for every } t \\le d_0(\\lambda).\n\\]\nThat is, the per-instance bound $2^{-n(\\lambda)^{\\gamma}}$ amplifies to its exact $t$-th power over $t$ independent instances, with no loss in the exponent.",
+    "why_interesting": "This is the single assumption standing between the paper's main theorem and a permissionless consensus protocol whose security rests only on a CRS, standard lattice/group assumptions, and a standard fine-grained complexity conjecture — no random oracle, no beacon, no ad hoc puzzle. It is also a clean question in hardness amplification independent of the cryptographic application: dream (lossless) direct product theorems in a fine-grained, nondeterministic-hardness setting are exactly the kind of statement that resists the standard amplification toolbox, and a positive answer for even one function would be a result in its own right.",
+    "why_clean": "The statement is about a single function family and a single probability bound. It mentions no distributed sampler, no consensus protocol and no signature scheme: the reduction from the cryptographic setting has already been carried out by the paper, which shows that efficient verifiability can be added for free by a succinct argument. A solver needs only the definition of moderate hardness and a fine-grained hypothesis.",
+    "status_note": "Open. The paper reduces its consensus protocol to a proof of work with these parameters (Corollary 3), reduces that in turn to a moderately hard function via a subexponentially sound SNARG for P, and then leaves the construction of such a function from standard complexity conjectures explicitly open. Nothing later in the paper or its appendices supplies a candidate; the paper only remarks that ad hoc puzzles in current use are likely to satisfy the requirement.",
+    "progress_note": "The paper establishes: (i) the required soundness must be $\\epsilon \\le 2^{-\\Omega(d)}$ because the sampler's hardness-preservation loss is $\\eta = 2^{\\Omega(d)}$; (ii) complexity leveraging cannot supply it, since raising the puzzle's security parameter in proportion to $d$ raises honest solving time in proportion to $d$; (iii) existing proofs of work from fine-grained hardness assumptions (Ball et al.) fall short of subexponential soundness; (iv) efficient verifiability is not the bottleneck — a subexponentially sound SNARG for P, available from subexponentially secure LWE via Choudhuri--Jain--Jin, upgrades any such function to a proof of work.",
+    "risks": "Three things a reviewer should check hardest. (1) The paper writes ``assuming, say, NSETH'', so NSETH is its example rather than its commitment; hard-coding NSETH narrows the question, and a solver should feel free to substitute another standard fine-grained hypothesis. (2) The NSETH statement above is written from memory — it is not stated anywhere in the paper — and I have not verified the current status of NSETH in the literature (barriers, conditional refutations); the accompanying citation is marked unverified for the same reason. (3) The paper's Definition 14, which I have adapted here, does not as printed forbid the adversary from querying the solving oracle on the very challenges it must solve, which would make the property trivially false whenever $d_1 \\ge t$; I have added that restriction, and a reviewer should confirm this matches the intent (the reduction in the proof of Theorem 3 only ever queries the oracle on challenges derived from oracle-queried messages). Two further choices are mine: the requirement $1/\\beta \\le \\mathrm{poly}(\\lambda)$ (without some such condition the statement is vacuous, but the paper's own instantiations have $\\beta \\to 0$), and stating only the upper bound rather than also demanding that the per-instance bound be achievable, which is what ``tight'' would additionally require.",
+    "quotes": [
+      {
+        "page": 23,
+        "role": "openness",
+        "text": "For example, can one show a (tight) “dream” strong direct product theorem for some function assuming, say, NSETH?"
+      },
+      {
+        "page": 16,
+        "role": "statement",
+        "text": "We note that given any function f that is moderately-hard (Def. 14) with parameters as required by Corollary 3 but not necessarily efficiently verifiable, can be turned into a proof of work via any subexponentially sound SNARG for P. Thus, by the work of Choudhuri et al. [CJJ21], it suffices to assume the existence of this moderately (very) hard function and subexponentially secure LWE."
+      },
+      {
+        "page": 4,
+        "role": "progress",
+        "text": "Notice that not all proofs of work satisfy this property. Moreover, we cannot even hope to rely on complexity leveraging: If we select the security parameter of the PoW proportionally to d, also the time required to solve a single puzzle grows proportionally to d."
+      },
+      {
+        "page": 4,
+        "role": "parameter",
+        "text": "The existence of a PoW with the properties we desire is nevertheless feasible. Indeed, observe that the candidate ad hoc constructions that are currently in use are likely to satisfy our needs."
+      }
+    ],
+    "parameters": [
+      {
+        "symbol": "\\lambda",
+        "meaning": "security parameter"
+      },
+      {
+        "symbol": "s",
+        "meaning": "time parameter tuning the honest solving cost"
+      },
+      {
+        "symbol": "n(\\lambda)",
+        "meaning": "bit length of a challenge"
+      },
+      {
+        "symbol": "r(s,\\lambda)",
+        "meaning": "number of steps an honest party spends evaluating the function on one challenge"
+      },
+      {
+        "symbol": "\\beta(s,\\lambda)",
+        "meaning": "slowdown factor: the adversary gets t times beta times r steps to solve t challenges"
+      },
+      {
+        "symbol": "d_0(\\lambda)",
+        "meaning": "polynomial bound on the number of challenges handed to the adversary"
+      },
+      {
+        "symbol": "d_1(\\lambda)",
+        "meaning": "polynomial bound on the number of calls the adversary may make to a solving oracle"
+      },
+      {
+        "symbol": "\\gamma",
+        "meaning": "constant fixing the per-instance hardness 2^{-n^gamma}"
+      },
+      {
+        "symbol": "t",
+        "meaning": "number of challenges the adversary must solve simultaneously"
+      }
+    ],
+    "bibliography": [
+      {
+        "key": "BGH24a",
+        "authors": "Marshall Ball, Juan A. Garay, Peter Hall, Aggelos Kiayias, and Giorgos Panagiotakos",
+        "title": "Towards permissionless consensus in the standard model via fine-grained complexity",
+        "venue": "CRYPTO 2024, Part II, volume 14921 of LNCS, pages 113-146, Springer, Cham",
+        "year": "2024",
+        "verified": "printed-in-source-bibliography"
+      },
+      {
+        "key": "CJJ21",
+        "authors": "Arka Rai Choudhuri, Abhishek Jain, and Zhengzhong Jin",
+        "title": "Non-interactive batch arguments for NP from standard assumptions",
+        "venue": "CRYPTO 2021, Part IV, volume 12828 of LNCS, pages 394-423, Springer",
+        "year": "2021",
+        "verified": "printed-in-source-bibliography"
+      },
+      {
+        "key": "AWZ23",
+        "authors": "Damiano Abram, Brent Waters, and Mark Zhandry",
+        "title": "Security-preserving distributed samplers: How to generate any CRS in one round without random oracles",
+        "venue": "CRYPTO 2023, Part I, volume 14081 of LNCS, pages 489-514, Springer, Cham",
+        "year": "2023",
+        "verified": "printed-in-source-bibliography"
+      },
+      {
+        "key": "CGIMPS16",
+        "authors": "Marco L. Carmosino, Jiawei Gao, Russell Impagliazzo, Ivan Mihajlin, Ramamohan Paturi, and Stefan Schneider",
+        "title": "Nondeterministic extensions of the strong exponential time hypothesis and consequences for non-reducibility",
+        "venue": "ITCS 2016 (recalled from memory; not cited in the source paper)",
+        "year": "2016",
+        "verified": "unverified"
+      }
+    ]
+  },
+  "grounding": [
+    {
+      "quote": "For example, can one show a (tight) “dream” strong direct product theorem for some function assuming, say, NSETH?",
+      "claimed_page": 23,
+      "found_page": 23,
+      "coverage": 1.0,
+      "longest_run": 0.0,
+      "status": "exact",
+      "role": "openness"
+    },
+    {
+      "quote": "We note that given any function f that is moderately-hard (Def. 14) with parameters as required by Corollary 3 but not necessarily efficiently verifiable, can be turned into a proof of work via any subexponentially sound SNARG for P. Thus, by the work of Choudhuri et al. [CJJ21], it suffices to assume the existence of this moderately (very) hard function and subexponentially secure LWE.",
+      "claimed_page": 16,
+      "found_page": 16,
+      "coverage": 1.0,
+      "longest_run": 0.0,
+      "status": "exact",
+      "role": "statement"
+    },
+    {
+      "quote": "Notice that not all proofs of work satisfy this property. Moreover, we cannot even hope to rely on complexity leveraging: If we select the security parameter of the PoW proportionally to d, also the time required to solve a single puzzle grows proportionally to d.",
+      "claimed_page": 4,
+      "found_page": 4,
+      "coverage": 1.0,
+      "longest_run": 0.0,
+      "status": "exact",
+      "role": "progress"
+    },
+    {
+      "quote": "The existence of a PoW with the properties we desire is nevertheless feasible. Indeed, observe that the candidate ad hoc constructions that are currently in use are likely to satisfy our needs.",
+      "claimed_page": 4,
+      "found_page": 4,
+      "coverage": 1.0,
+      "longest_run": 0.0,
+      "status": "exact",
+      "role": "parameter"
+    }
+  ],
+  "verify": {
+    "checks": [
+      {
+        "name": "Existence",
+        "result": "pass",
+        "page": 23,
+        "finding": "The problem is posed in Section 5 (Extensions and Open Questions), in a sentence spanning pp. 22-23: \"constructing this moderately (very) hard function from standard complexity conjectures is an interesting open problem in hardness amplification. For example, can one show a (tight) \"dream\" strong direct product theorem for some function assuming, say, NSETH?\" The supporting reduction is on p16 (Corollary 3 plus the SNARG-for-P remark). All four of the draft's quotes are verbatim and on the pages claimed."
+      },
+      {
+        "name": "Openness",
+        "result": "pass",
+        "page": 22,
+        "finding": "It sits in the paper's final section, explicitly headed \"Extensions and Open Questions\", and is introduced as \"an interesting open problem\". Nothing after it resolves it: pp. 23-25 are acknowledgments and references; Appendix A (pp. 26-27) is background definitions (DDH, LWE, signatures, Defs 12-14 for proofs of work, NIZK); Appendix B (pp. 28-33) proves Theorems 1, 2 and 6 only. No candidate function, no partial construction, no table of results. The paper's only remark toward it is the negative-flavoured p4 observation that ad hoc deployed puzzles are \"likely to satisfy our needs\"."
+      },
+      {
+        "name": "Strength",
+        "result": "pass",
+        "page": 16,
+        "finding": "The paper frames the DPT question as an instance of the construction problem it just stated, and Corollary 3 (p16) fixes the target as epsilon(t,lambda) = 2^{-t*n^gamma} for a constant gamma > 0 with challenge space {0,1}^{n(lambda)}, which the draft's formal statement reproduces exactly, including the quantification over every t <= d_0(lambda). Merging \"construct this moderately (very) hard function from standard complexity conjectures\" with \"a (tight) dream strong DPT ... assuming, say, NSETH\" into one statement is defensible, since the paper presents the second as an example of the first. Note the draft's clause-level renaming of Corollary 1/2's gamma to gamma' is legitimate, not a redefinition."
+      },
+      {
+        "name": "Quantifiers and parameters",
+        "result": "fail",
+        "page": 27,
+        "finding": "The formal statement imposes two parameter constraints the paper never states: \"a function r with s <= r(s,lambda) <= s*poly(lambda)\" and \"beta with 1/beta(s,lambda) <= poly(lambda) for all s\". Definition 14 (p27) types beta as ℕ×ℕ → [0,1] with no lower bound and places no relation between r_PoW(s,lambda) and s; Corollary 3 (p16) constrains only beta'(s,lambda,L) >= beta(s,lambda)/2 for sufficiently large polynomial s. On p5 the paper's own protocol has lim_{lambda→∞} beta = 0, so a polynomial bound on 1/beta is not something the paper asks of the sought function. These additions make the drafted conjecture strictly stronger than the paper's ask. Also: Def 14 types beta into [0,1], not the draft's (0,1]."
+      },
+      {
+        "name": "Attribution",
+        "result": "pass",
+        "page": 22,
+        "finding": "This is the harvested paper's own open problem, stated in its own concluding section and tied to its own Corollary 3 and Section 3. NSETH is invoked as an external hypothesis rather than as someone else's open problem, and the draft's openness_kind of paper-asks-question is correct. The draft does not present anyone else's question as this paper's."
+      },
+      {
+        "name": "Definitions",
+        "result": "fail",
+        "page": 27,
+        "finding": "Definition 14 (Moderate Hardness), p27, reads in full: A_1 \"runs in time t(lambda)*beta(s,lambda)*r_PoW(s,lambda), makes at most d_1(lambda) queries to O^s_sigma and always outputs t candidate solutions\". There is no clause forbidding oracle queries on z_1,...,z_t; the draft inserts one. The analogous exclusion exists only in Definition 5 (p14), as m_h not in Q union {m_j}_{j!=h}, for MV-SoWs. Separately, Def 14 is stated for a proof of work: win condition Verify(sigma,z_h,w_h)=1, oracle returning Solve(1^s,sigma,z), CRS from Setup(1^lambda,1^s). The draft's plain-function rewrite (w_h = f_{s,lambda}(z_h), oracle O_f, no CRS) tracks the paper's informal p16 remark, not the printed definition. Def 14 also samples only z_1,...,z_t via Gen while passing A_1 the tuple (z_h)_{h in [d_0]}; the draft silently makes all d_0 i.i.d. Finally, NSETH is nowhere defined in the paper (single occurrence, p23), so the draft's Definition (NSETH) is imported, not the paper's."
+      },
+      {
+        "name": "Fabrication",
+        "result": "fail",
+        "page": 23,
+        "finding": "NSETH appears exactly once in all 33 pages (p23) with no definition and no citation; there is no Carmosino/Gao/Impagliazzo/Mihajlin/Paturi/Schneider entry in the references (pp. 23-25 are alphabetical and go straight from CFG+23 to CJJ21). setting_latex nonetheless prints \\cite{CGIMPS16} inline as if the paper carried the reference. Also fabricated: the oracle-exclusion clause and its stated rationale in definitions_latex; the two parameter constraints in formal_statement_latex. Minor over-extension: the notation block applies the Word RAM / O(log lambda)-bit-word convention to the moderately-hard-function setup, whereas the paper states it on p16 for the protocol execution model. Everything else the draft asserts checks out against pp. 2, 4, 5, 9, 11, 13, 16."
+      },
+      {
+        "name": "Self-containment",
+        "result": "pass",
+        "page": 0,
+        "finding": "A reader who has never opened the paper could tell what to prove: the notation block fixes lambda, s, n, Gen, f, r, beta, d_0, d_1, epsilon, gamma; the definitions block supplies both the hardness notion and NSETH; the formal statement quantifies the existentials explicitly. The caveat is that what such a reader would set out to prove is the draft's repaired notion, not the notion printed as Definition 14 on p27."
+      }
+    ],
+    "confidence": "high",
+    "corrections": [
+      {
+        "field": "definitions_latex (Moderately hard function)",
+        "problem": "The draft's definition forbids the adversary's oracle queries from lying in {z_1,...,z_t}, and adds a parenthetical claiming this restriction \"is what makes the notion non-trivial when d_1 >= t\". Definition 14 on p27 contains no such restriction and the paper offers no such rationale; it bounds only the number of queries by d_1(lambda).",
+        "corrected": "Either drop the clause \"none of which lies in {z_1,...,z_t}\" and its parenthetical, or keep it while stating explicitly that it is the draft's own repair of an apparent omission in Definition 14 (p27), noting that the analogous restriction does appear in Definition 5 (p14) as \"m_h not in Q union {m_j}_{j != h}\". As printed, Def 14 with d_1 >= t is trivially breakable, so the repair is substantive and must not be attributed to the paper."
+      },
+      {
+        "field": "formal_statement_latex",
+        "problem": "Two side conditions are asserted that the paper never states: \"a function r with s <= r(s,lambda) <= s*poly(lambda)\" and \"a function beta : NxN -> (0,1] with 1/beta(s,lambda) <= poly(lambda) for all s\". Corollary 3 (p16) constrains only beta'(s,lambda,L) >= beta(s,lambda)/2 for sufficiently large polynomial s; Def 14 (p27) places no relation between r_PoW and s; and p5 reports lim_{lambda->infinity} beta = 0 for the paper's own protocol.",
+        "corrected": "Delete both constraints, leaving \"polynomials n, d_0, d_1, a function r, a function beta : NxN -> [0,1], a PPT challenge sampler Gen with output length n(lambda), and a family f = {f_{s,lambda}} with evaluation cost r(s,lambda)\". If the drafter wants them for meaningfulness, mark them as the drafter's own additions rather than the paper's parameters."
+      },
+      {
+        "field": "definitions_latex (NSETH) and bibliography entry CGIMPS16, and the inline \\cite{CGIMPS16} in setting_latex",
+        "problem": "The paper mentions NSETH exactly once (p23), undefined and uncited; there is no Carmosino et al. entry in its references (pp. 23-25). The setting text nevertheless prints \\cite{CGIMPS16} as though the paper supplied the citation, and the definitions block presents NSETH as if it were the paper's definition.",
+        "corrected": "Drop the inline \\cite{CGIMPS16} from setting_latex, or replace it with an explicit note such as \"NSETH, which the paper invokes by name on p23 without defining or citing it\". Label the NSETH definition as supplied by the drafter from the standard literature, and keep the bibliography entry's honest \"unverified\" marking."
+      },
+      {
+        "field": "definitions_latex / notation_latex (which object Def 14 governs)",
+        "problem": "Definition 14 (p27) is stated for a proof of work PoW = (Setup, Gen, Solve, Verify): the win condition is Verify(sigma, z_h, w_h) = 1, the oracle O^s_sigma returns Solve(1^s, sigma, z), and there is a CRS sigma from Setup(1^lambda, 1^s). The draft presents a CRS-free, plain-function version with win condition w_h = f_{s,lambda}(z_h) and oracle O_f as if it were the paper's Definition 14.",
+        "corrected": "State that the paper's Def 14 is for a proof of work, and that the function-only reading follows the paper's informal remark on p16 (\"given any function f that is moderately-hard (Def. 14) ... but not necessarily efficiently verifiable\"), which drops Verify and the CRS. Also flag that Def 14 samples only z_1,...,z_t via Gen while handing A_1 the tuple (z_h)_{h in [d_0]}, an apparent typo the draft repairs by making all d_0 challenges i.i.d."
+      },
+      {
+        "field": "notation_latex (beta range and running-time model)",
+        "problem": "The draft types beta into (0,1]; Def 14 (p27) types it into [0,1]. The draft also asserts the Word RAM model with O(log lambda)-bit words as part of the moderately-hard-function setup, whereas the paper states this on p16 for its protocol execution model, not for Def 14.",
+        "corrected": "Change the range to [0,1], and attribute the Word RAM convention to Section 4.1 (p16) as the paper's ambient computational model rather than as part of Def 14."
+      }
+    ],
+    "fabrications": [
+      "The restriction that the adversary's oracle queries avoid {z_1,...,z_t} in the moderately-hard-function definition. Definition 14 (p27) has no such clause; it bounds only the query count by d_1(lambda).",
+      "The parenthetical claim that this oracle restriction \"is what makes the notion non-trivial when d_1 >= t\". The paper offers no such remark about Def 14.",
+      "The constraint s <= r(s,lambda) <= s*poly(lambda) on the honest evaluation cost. No such bound appears anywhere in the paper (checked Def 12, Def 14, Theorem 3, Corollary 3).",
+      "The constraint 1/beta(s,lambda) <= poly(lambda) for all s. Not in the paper; and p5 states lim_{lambda->infinity} beta = 0 for the paper's own protocol, so the paper does not treat 1/beta as polynomially bounded.",
+      "The definition of NSETH (k-TAUT, k-DNF tautology, nondeterministic time O(2^{(1-eps)N})). Correct as standard mathematics, but the paper never defines NSETH; it names it once on p23.",
+      "The citation \\cite{CGIMPS16} for NSETH inside setting_latex, presented as a reference of the paper. The paper's reference list (pp. 23-25) contains no Carmosino et al. entry, and the p23 mention of NSETH carries no citation at all.",
+      "Presenting a CRS-free plain-function notion with win condition w_h = f_{s,lambda}(z_h) as the paper's \"Definition 14\". Def 14 (p27) is stated for a proof of work with win condition Verify(sigma, z_h, w_h) = 1 and an oracle returning Solve(1^s, sigma, z).",
+      "The claim in notation_latex that running time in this setting is counted in the Word RAM model with O(log lambda)-bit words. The paper states this on p16 for its protocol execution and security model, not for Def 14 or Corollary 3. (Minor over-extension rather than a false assertion about the paper's content.)"
+    ],
+    "reason": "The problem is genuinely the paper's and genuinely open: it is stated in Section 5, \\\"Extensions and Open Questions\\\" (pp. 22-23), tied to Corollary 3's epsilon(t,lambda) = 2^{-t*n^gamma} on p16, and nothing in the remaining sections or in Appendices A and B supplies a candidate. But the draft's central definition is not the paper's: Definition 14 on p27 contains no clause excluding z_1,...,z_t from the adversary's oracle queries, and the draft both inserts that clause and invents a rationale for it — the analogous restriction exists only in Definition 5 (p14), for multi-verifier signatures of work. Two further parameter constraints (s <= r(s,lambda) <= s*poly(lambda) and 1/beta(s,lambda) <= poly(lambda), the latter cutting against p5's lim_{lambda->infinity} beta = 0) and the entire NSETH definition with its \\\\cite{CGIMPS16} are supplied from outside the paper, which names NSETH exactly once, on p23, undefined and uncited.",
+    "verdict": "faithful-with-corrections"
+  },
+  "build": {
+    "compiled": true,
+    "chktex": [
+      "Warning 13 in statement.tex line 34: Intersentence spacing (`\\@') should perhaps be used.",
+      "Warning 13 in statement.tex line 51: Intersentence spacing (`\\@') should perhaps be used.",
+      "Warning 13 in statement.tex line 72: Intersentence spacing (`\\@') should perhaps be used.",
+      "Warning 12 in statement.tex line 104: Interword spacing (`\\ ') should perhaps be used.",
+      "Warning 12 in statement.tex line 104: Interword spacing (`\\ ') should perhaps be used.",
+      "Warning 12 in statement.tex line 104: Interword spacing (`\\ ') should perhaps be used."
+    ],
+    "lacheck": [
+      "\"statement.tex\", line 34: missing `\\@' before `.' in \"LWE.\""
+    ],
+    "errors": []
+  }
+}

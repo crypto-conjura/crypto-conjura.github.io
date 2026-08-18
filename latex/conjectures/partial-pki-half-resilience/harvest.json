@@ -1,0 +1,282 @@
+{
+  "pdf": {
+    "name": "2026-1179.pdf",
+    "sha256": "46e589c2543acf0ca95cac43329b4b41aee4090496d733dfcb72855ceac255b3",
+    "pages": 33
+  },
+  "run": {
+    "at": "2026-08-18T17:26:34Z",
+    "backend": "cli",
+    "effort": "high"
+  },
+  "document": {
+    "title": "Permissionless Consensus from a Common Random String",
+    "authors": [
+      "Damiano Abram",
+      "Marshall Ball",
+      "Juan Garay",
+      "Aggelos Kiayias"
+    ],
+    "year": "2026",
+    "venue_or_archive": "IACR Cryptology ePrint Archive; abridged version to appear in Proc. CRYPTO 2026",
+    "identifier": "2026/1179",
+    "citation_confidence": "inferred"
+  },
+  "candidate": {
+    "slug": "partial-pki-half-resilience",
+    "title": "Consensus in the Partial PKI Setting Beyond One-Quarter Resilience",
+    "subtitle": "arbitrary protocols, up to the classical one-half bound",
+    "category": "Consensus & Distributed Cryptography",
+    "openness_kind": "paper-states-open",
+    "pages": [
+      17,
+      19,
+      22
+    ],
+    "one_line": "Byzantine agreement remains achievable in the partial PKI setting, where honest parties hold overlapping but unequal views of which public keys are valid, for every adversarial share of the registered keys below one half.",
+    "informal": "Suppose parties with no pre-existing identities bootstrap a public-key directory by spending computational effort: each party registers a key, and each party ends up with its own list of keys it considers valid. The lists are not identical — a key one honest party accepts, another may never have seen — but they overlap heavily, they all contain essentially every honest key, and honest keys make up all but a bounded fraction of the union of the lists. Given such a directory, this paper builds a Byzantine agreement protocol tolerating any adversarial share of the registered keys strictly below one quarter, and shows that one quarter is exactly the ceiling for the natural class of protocols in which honest parties sign everything they send and discard anything mentioning a signer they do not recognize. The classical limit for agreement of this kind is one half, and nothing is known to rule it out here; the authors expect that reaching it needs proofs of work that one party can forward to another, so that a proof accepted by one honest party is accepted by all. The conjecture is that agreement is achievable in this imperfect-directory setting for every adversarial share below one half — necessarily by protocols that do something useful with messages whose signers they do not recognize.",
+    "setting_latex": "Permissionless consensus without a PKI is often reached by first bootstrapping a \\emph{partial} PKI: parties self-certify public keys by investing computational resources, as sketched by Aspnes, Jackson and Krishnamurthy and formalized by Andrychowicz and Dziembowski \\cite{AD15} in an idealized model. The directory that results is inconsistent: honest parties do not share the same view of which keys are valid.\n\nThis paper obtains such a directory in the plain CRS model, from a new primitive it calls a multi-verifier signature of work. Abstracting away from how it is built, the resulting object is a $(\\gamma,\\epsilon)$-partial PKI: each honest party $P_i$ owns a run-time identity consisting of a verification key and a numerical identifier, and holds a set $G_i$ of run-time identities it recognizes; writing $H$ for the set of honest run-time identities, every $G_i$ contains all but an $\\epsilon$ fraction of $H$, and $H$ makes up all but a $\\gamma$ fraction of $\\bigcup_i G_i$.\n\nOn top of this abstraction the paper builds consensus by the graded-consensus-to-full-consensus route of Feldman and Micali \\cite{FM97}, using a variant of the phase king protocol of Berman, Garay and Perry \\cite{BGP89} adapted so that the ``king'' of a phase is whichever recognized identity carries the identifier equal to the phase number. This tolerates $\\gamma < \\frac{1}{4}(1-3\\epsilon)$ (Theorem~5). The paper then proves a matching barrier: no \\emph{simple} protocol --- one in which honest parties sign every message they send and ignore any message they cannot fully verify, whether because the signer is unrecognized or because the message references a signed message by an unrecognized signer --- achieves both Agreement and Validity at $\\gamma = 1/4$, $\\epsilon = 0$ (Theorem~6, proved in the appendix for deterministic protocols).\n\nThe classical resilience limit for consensus of this type is one half \\cite{Fit02}, and the paper leaves the gap between $1/4$ and $1/2$ open, naming the obstruction: multi-verifier signatures of work are not transferable, so one honest party may accept a proof that another rejects. With transferable proofs one would approach a \\emph{ranked} partial PKI, from which $1/2$-resilient consensus follows via an adaptation of Dolev--Strong \\cite{DS83}, as in \\cite{AD15}. Note that in the end-to-end permissionless protocol the effective resilience is $\\beta\\gamma$, where $\\beta$ is the slowdown factor coming from the fine-grained hardness assumption; the conjecture below concerns $\\gamma$ alone, which is where the paper's positive result and its impossibility both live.",
+    "notation_latex": "\\begin{itemize}\n\\item $\\lambda \\in \\mathbb{N}$ is the security parameter; $n$ is the number of parties $P_1,\\dots,P_n$ and $n_{\\max}$ is a public upper bound on it, with $n \\le n_{\\max}$. The value of $n$ is not known to the parties.\n\\item $m$ is a public parameter, polynomial in $n_{\\max}$, giving the range $[m] = \\{1,\\dots,m\\}$ of identifiers.\n\\item $\\mathsf{DSig} = (\\mathsf{Gen},\\mathsf{Sign},\\mathsf{Verify})$ is an existentially unforgeable signature scheme. A \\emph{run-time identity} is a pair $(\\mathsf{pk}, r)$ with $r \\in [m]$; honest party $P_i$ owns $(\\mathsf{pk}_i, r_i)$ and knows $\\mathsf{sk}_i$.\n\\item $G_i$ is the set of run-time identities that $P_i$ recognizes as valid, with $(\\mathsf{pk}_i, r_i) \\in G_i$. $H$ is the set of run-time identities of honest parties.\n\\item $\\gamma \\in [0,1)$ bounds the adversary's share of the recognized identities and $\\epsilon \\in [0,1)$ bounds the disagreement between honest views.\n\\item $\\mathcal{F}_{\\mathsf{diff}}$ is the diffusion channel of the execution model below.\n\\item $b_i \\in \\{0,1\\}$ is $P_i$'s input bit and $b_i' \\in \\{0,1\\}$ its output bit.\n\\item $R$ denotes a round bound and $|S|$ the cardinality of a set $S$.\n\\end{itemize}",
+    "definitions_latex": "\\begin{definition}[Execution model]\nExecution proceeds in synchronous rounds. Communication is over an unauthenticated diffusion channel $\\mathcal{F}_{\\mathsf{diff}}$: a message sent by an honest party in round $\\rho$ is delivered to every party at the beginning of round $\\rho+1$; the adversary chooses the order in which messages arrive at different parties and may send its own messages to an adaptively chosen subset of the parties, so parties cannot tell who sent a message. The adversary is PPT in $\\lambda$, is Byzantine, and controls every run-time identity in $\\bigcup_i G_i \\setminus H$, including the corresponding secret keys. Each honest party $P_i$ starts with input $b_i \\in \\{0,1\\}$, the public parameters $(1^{\\lambda}, n_{\\max}, m)$, its key pair $(\\mathsf{pk}_i, \\mathsf{sk}_i)$, its identifier $r_i$, and the set $G_i$; the protocol logic may not depend on $n$ or on network identities.\n\\end{definition}\n\n\\begin{definition}[$(\\gamma,\\epsilon)$-partial PKI]\nAn assignment of run-time identities and recognized sets $(G_i)_i$ to the parties of an execution is a \\emph{$(\\gamma,\\epsilon)$-partial PKI} if\n\\begin{enumerate}\n\\item $|H \\cap G_i| \\ge (1-\\epsilon)\\,|H|$ for every honest $P_i$, and\n\\item $|H| \\ge (1-\\gamma)\\,\\big|\\bigcup_i G_i\\big|$.\n\\end{enumerate}\n\\end{definition}\n\n\\begin{definition}[Consensus]\nA protocol in which every honest $P_i$ has input $b_i \\in \\{0,1\\}$ and outputs $b_i' \\in \\{0,1\\}$ achieves \\emph{consensus} if\n\\begin{itemize}\n\\item \\textbf{Agreement:} all honest parties output the same bit;\n\\item \\textbf{Validity:} if every honest party has the same input $b$, then every honest party outputs $b$;\n\\item \\textbf{Termination:} every honest party halts with an output.\n\\end{itemize}\n\\end{definition}",
+    "formal_statement_latex": "For every constant $\\gamma$ with $0 \\le \\gamma < 1/2$ there exist a protocol $\\Pi$ and a polynomial $R$ such that the following holds for every $n_{\\max} \\in \\mathbb{N}$, every $n \\le n_{\\max}$, every input vector $(b_1,\\dots,b_n) \\in \\{0,1\\}^{n}$ and every PPT Byzantine adversary: in every execution of $\\Pi$ in the model of the execution-model definition whose run-time identities and recognized sets form a $(\\gamma,0)$-partial PKI, all honest parties halt within $R(n_{\\max},\\lambda)$ rounds and, except with probability negligible in $\\lambda$, their outputs satisfy Agreement, Validity and Termination.\n\nBy Theorem~6 of the source paper, any such $\\Pi$ with $\\gamma \\ge 1/4$ must not be ``simple'': it cannot both sign every message honest parties send and discard every message it cannot fully verify.",
+    "why_interesting": "Resilience is the headline parameter of any consensus result, and here the gap is a factor of two: the paper achieves just under $1/4$ and the classical bound is just under $1/2$. Closing it would double the adversarial computational share that permissionless consensus in the standard model can survive. It is also a rare case where the paper supplies both halves of the picture — a protocol and a matching impossibility for the natural protocol class — so a solver knows exactly which door is shut and that any solution must go around it, by making unrecognized signers useful rather than ignorable.",
+    "why_clean": "The partial PKI abstraction is three lines: run-time identities, recognized sets, two counting conditions. Everything cryptographic — proofs of work, distributed samplers, the CRS — has already been discharged into that abstraction by the paper, so the conjecture is a purely distributed-computing statement about synchronous protocols with signatures and inconsistent key directories. It can be attacked with no knowledge of the paper's sampler constructions.",
+    "status_note": "Open for $1/4 \\le \\gamma < 1/2$. Settled positively for $\\gamma < \\frac{1}{4}(1-3\\epsilon)$ with $\\epsilon \\in (0,1/3)$ by the paper's PartialPhaseKing protocol (Theorem 5), which specializes to $\\gamma < 1/4$ at $\\epsilon = 0$. Settled negatively at $\\gamma = 1/4$, $\\epsilon = 0$ for the class of ``simple'' protocols (Theorem 6). No statement is made about non-simple protocols at any $\\gamma \\ge 1/4$.",
+    "progress_note": "The paper gives the $\\gamma < \\frac{1}{4}(1-3\\epsilon)$ protocol and the $\\gamma = 1/4$ impossibility for simple protocols, and identifies the route it believes is needed: transferable proofs of work, which would yield a ranked partial PKI, from which $1/2$-resilient consensus follows via an adaptation of Dolev--Strong. It states that multi-verifier signatures of work do not have this transferability property.",
+    "risks": "Four things to check. (1) The paper's sentence about reaching $1/2$ says ``in our setting''; I have read that as the partial PKI setting, because that is where both the achieved threshold and the impossibility are stated, but it could also be read as the full permissionless CRS model, in which case the effective resilience is $\\beta\\gamma$ and the slowdown factor $\\beta$ would have to enter the statement. (2) I fixed $\\epsilon = 0$ to line up with Theorem 6, which is stated at $\\epsilon = 0$; the paper's own protocol runs at $\\epsilon \\in (0,1/3)$ with a threshold degrading as $\\frac{1}{4}(1-3\\epsilon)$, so a solver may prefer the $\\epsilon$-parametrized version, and a proof at $\\epsilon = 0$ does not automatically give one at $\\epsilon > 0$. (3) The proof of Theorem 6 in Appendix B.3 says ``for simplicity we consider a deterministic protocol'', so even the impossibility for randomized simple protocols is arguably not fully covered — a reviewer should not overstate what is closed. (4) The paper's remark that transferable proofs would ``come closer'' to a ranked partial PKI suggests the route to $1/2$ may already be known to distributed-computing folklore given transferability; the open content is achieving it without transferable proofs, or building transferable ones.",
+    "quotes": [
+      {
+        "page": 22,
+        "role": "statement",
+        "text": "The theoretical limit for resiliency (according to the known lower bound for consensus [Fit02]) would be (less than) 1/2; so achieving it in our setting constitutes an interesting question for future work."
+      },
+      {
+        "page": 22,
+        "role": "openness",
+        "text": "We surmise that new techniques would be needed for this that go beyond multi-verifier signatures of work. Indeed, one key “deficiency” of MV-SoWs is that they are not transferable: One honest party could perceive a proof as valid, while a different honest party would not."
+      },
+      {
+        "page": 22,
+        "role": "progress",
+        "text": "Can the resiliency bound in the partial PKI setting be improved? Next, we prove that tolerating a 1/4 (or greater) threshold is infeasible for simple protocols, hence establishing that the bound achieved by PartialPhaseKing from the previous section is essentially tight for this class of protocols."
+      },
+      {
+        "page": 19,
+        "role": "definition",
+        "text": "We restrict ourselves to protocols where honest parties sign any message they send and ignore any message that they cannot fully verify, either due to the fact that the signer is unknown (to the recipient) or because the message contains a reference to a signed message by an unknown signer. We call such protocols “simple.”"
+      }
+    ],
+    "parameters": [
+      {
+        "symbol": "\\gamma",
+        "meaning": "upper bound on the adversary's share of the union of the recognized identity sets"
+      },
+      {
+        "symbol": "\\epsilon",
+        "meaning": "fraction of honest identities an honest party may fail to recognize; fixed to 0 in the conjecture"
+      },
+      {
+        "symbol": "n",
+        "meaning": "number of parties, unknown to the parties"
+      },
+      {
+        "symbol": "n_{\\max}",
+        "meaning": "public upper bound on the number of parties"
+      },
+      {
+        "symbol": "m",
+        "meaning": "size of the identifier range, polynomial in n_max"
+      },
+      {
+        "symbol": "\\lambda",
+        "meaning": "security parameter"
+      },
+      {
+        "symbol": "G_i",
+        "meaning": "set of run-time identities recognized by party P_i"
+      },
+      {
+        "symbol": "H",
+        "meaning": "set of run-time identities held by honest parties"
+      }
+    ],
+    "bibliography": [
+      {
+        "key": "Fit02",
+        "authors": "Matthias Fitzi",
+        "title": "Generalized communication and security models in Byzantine agreement",
+        "venue": "PhD thesis, ETH Zurich",
+        "year": "2002",
+        "verified": "printed-in-source-bibliography"
+      },
+      {
+        "key": "AD15",
+        "authors": "Marcin Andrychowicz and Stefan Dziembowski",
+        "title": "Pow-based distributed cryptography with no trusted setup",
+        "venue": "Annual Cryptology Conference, pages 379-399, Springer",
+        "year": "2015",
+        "verified": "printed-in-source-bibliography"
+      },
+      {
+        "key": "DS83",
+        "authors": "Danny Dolev and H. Raymond Strong",
+        "title": "Authenticated algorithms for byzantine agreement",
+        "venue": "SIAM J. Comput., 12(4):656-666",
+        "year": "1983",
+        "verified": "printed-in-source-bibliography"
+      },
+      {
+        "key": "BGP89",
+        "authors": "Piotr Berman, Juan A. Garay, and Kenneth J. Perry",
+        "title": "Towards optimal distributed consensus (extended abstract)",
+        "venue": "30th Annual Symposium on Foundations of Computer Science, pages 410-415, IEEE Computer Society",
+        "year": "1989",
+        "verified": "printed-in-source-bibliography"
+      },
+      {
+        "key": "FM97",
+        "authors": "Pesech Feldman and Silvio Micali",
+        "title": "An optimal probabilistic protocol for synchronous byzantine agreement",
+        "venue": "SIAM Journal on Computing, 26(4):873-933",
+        "year": "1997",
+        "verified": "printed-in-source-bibliography"
+      },
+      {
+        "key": "BGH24a",
+        "authors": "Marshall Ball, Juan A. Garay, Peter Hall, Aggelos Kiayias, and Giorgos Panagiotakos",
+        "title": "Towards permissionless consensus in the standard model via fine-grained complexity",
+        "venue": "CRYPTO 2024, Part II, volume 14921 of LNCS, pages 113-146, Springer, Cham",
+        "year": "2024",
+        "verified": "printed-in-source-bibliography"
+      }
+    ]
+  },
+  "grounding": [
+    {
+      "quote": "The theoretical limit for resiliency (according to the known lower bound for consensus [Fit02]) would be (less than) 1/2; so achieving it in our setting constitutes an interesting question for future work.",
+      "claimed_page": 22,
+      "found_page": 22,
+      "coverage": 1.0,
+      "longest_run": 0.0,
+      "status": "exact",
+      "role": "statement"
+    },
+    {
+      "quote": "We surmise that new techniques would be needed for this that go beyond multi-verifier signatures of work. Indeed, one key “deficiency” of MV-SoWs is that they are not transferable: One honest party could perceive a proof as valid, while a different honest party would not.",
+      "claimed_page": 22,
+      "found_page": 22,
+      "coverage": 1.0,
+      "longest_run": 0.0,
+      "status": "exact",
+      "role": "openness"
+    },
+    {
+      "quote": "Can the resiliency bound in the partial PKI setting be improved? Next, we prove that tolerating a 1/4 (or greater) threshold is infeasible for simple protocols, hence establishing that the bound achieved by PartialPhaseKing from the previous section is essentially tight for this class of protocols.",
+      "claimed_page": 22,
+      "found_page": 22,
+      "coverage": 1.0,
+      "longest_run": 0.0,
+      "status": "exact",
+      "role": "progress"
+    },
+    {
+      "quote": "We restrict ourselves to protocols where honest parties sign any message they send and ignore any message that they cannot fully verify, either due to the fact that the signer is unknown (to the recipient) or because the message contains a reference to a signed message by an unknown signer. We call such protocols “simple.”",
+      "claimed_page": 19,
+      "found_page": 19,
+      "coverage": 1.0,
+      "longest_run": 0.0,
+      "status": "exact",
+      "role": "definition"
+    }
+  ],
+  "verify": {
+    "checks": [
+      {
+        "name": "Existence",
+        "result": "pass",
+        "page": 22,
+        "finding": "Located in §5 (\"Extensions and Open Questions\"), first paragraph, p22: \"The theoretical limit for resiliency (according to the known lower bound for consensus [Fit02]) would be (less than) 1/2; so achieving it in our setting constitutes an interesting question for future work.\" The surrounding scaffolding is also present: §4.4 opens on p22 with \"Can the resiliency bound in the partial PKI setting be improved?\", Theorem 5 (γ < 1/4(1−3ε)) is at the top of p22, Theorem 6 (no simple protocol at γ=1/4, ε=0) immediately below it."
+      },
+      {
+        "name": "Openness",
+        "result": "pass",
+        "page": 22,
+        "finding": "§5 is the paper's final section and is titled \"Extensions and Open Questions\", opening \"We conclude the paper by discussing a number of directions that remain open.\" I read past it: pp23–31 are references and Appendix A (background definitions A.1–A.4: assumptions, signatures, PoWs, NIZKs); Appendix B contains only B.1 (proof of Thm 1), B.2 (proof of Thm 2), and B.3 (proof of Thm 6, pp32–33). Nothing in the appendices, footnotes, or any table narrows the 1/4–1/2 gap. The paper's own last words on the topic project the work forward (\"We surmise that new techniques would be needed\"), not backward to a result."
+      },
+      {
+        "name": "Strength",
+        "result": "fail",
+        "page": 22,
+        "finding": "The draft's statement is strictly stronger than the paper's question. The paper asks about \"achieving it in our setting\" and then names its own route: \"With transferable proofs one could come closer to building a *ranked* partial PKI, from which we know from [AD15] that we can get consensus with 1/2 resilience via an adaptation of the Dolev-Strong protocol [DS83]\" (p22). That route replaces the (γ,ε)-partial PKI abstraction with a stronger one — a ranked partial PKI — which Theorem 6 says nothing about. The draft instead freezes the setup as a (γ,0)-partial PKI and asserts the resolution must be a protocol that is not \"simple\" over that same setup (subtitle \"arbitrary protocols\"; informal \"necessarily by protocols that do something useful with messages whose signers they do not recognize\"). Solving the draft's statement would imply the paper's question; the converse fails, because the paper explicitly contemplates strengthening the setup rather than the protocol."
+      },
+      {
+        "name": "Quantifiers and parameters",
+        "result": "fail",
+        "page": 16,
+        "finding": "Two deviations. (a) p16: \"The adversary is active/Byzantine and can corrupt up to t parties (statically)\", and \"Both the parties and the adversary are modeled as Interactive Word RAM machines\" with a concrete bound of c computational steps per round (p17), plus an upper bound θ on the number of messages the adversary can send per round (p17). The draft's execution-model definition says only \"The adversary is PPT in λ, is Byzantine\" — dropping staticity, the concrete-complexity model, and θ, so the conjecture quantifies over adaptive, unmetered adversaries the paper's model excludes. (b) p22: Theorem 5 and Lemma 3 require ε ∈ (0,1/3), an open interval excluding 0, yet the draft's notation declares ε ∈ [0,1) and its status note presents \"specializes to γ < 1/4 at ε = 0\" as Theorem 5's content. Also note the paper writes the identifier range as [m(n)] for a polynomial m(n) on p17 and fixes m = 4n_max² in Constructions 4 and 6; the draft's \"polynomial in n_max\" is consistent with the instantiation, so that part is fine."
+      },
+      {
+        "name": "Attribution",
+        "result": "pass",
+        "page": 22,
+        "finding": "The open question is the harvested paper's own — it appears in its §5 as a direction for future work, not as a problem credited elsewhere. The borrowed pieces are correctly credited in the draft: the 1/2 lower bound to [Fit02] (p22), the ranked-PKI/Dolev-Strong pathway to [AD15] and [DS83] (p22), the phase-king protocol to [BGP89] and graded-consensus-to-consensus to [FM97] (p4, p19–21), and the self-certification idea as \"first informally described in [AJK05] and later on formalized and proved in [AD15] assuming an idealized model (i.e., random oracles)\" (p4) — which the draft renders as \"sketched by Aspnes, Jackson and Krishnamurthy and formalized by Andrychowicz and Dziembowski.\" AJK05 is absent from the draft's bibliography but is named in prose, which is a citation gap, not a misattribution."
+      },
+      {
+        "name": "Definitions",
+        "result": "pass",
+        "page": 17,
+        "finding": "(γ,ε)-partial PKI matches p17 clause for clause: run-time identity = (pk_i, r_i) with r_i ∈ [m(n)]; recognized set G_i containing P_i's own identity; condition 1 \"∀i : |H ∩ G_i| ≥ (1−ε)|H|\"; condition 2 \"|H| ≥ (1−γ)|∪_i G_i|\". \"Simple\" matches p19 verbatim, including both disqualifying cases (unknown signer, or a reference to a signed message by an unknown signer). Consensus (Agreement/Validity/Termination) matches p1 and footnote 8 on p20. Nothing is silently swapped for a standard variant. The execution model is where the paper's meaning is altered, and I have charged that under check 4 rather than double-counting it here."
+      },
+      {
+        "name": "Fabrication",
+        "result": "fail",
+        "page": 22,
+        "finding": "Three unsupported assertions. (1) The status note attributes to Theorem 5 a claim it does not make: \"which specializes to γ < 1/4 at ε = 0\" — Theorem 5's range is ε ∈ (0,1/3). The specialization is in fact derivable (a (γ,0)-partial PKI satisfies the (γ,ε) conditions for every ε > 0), so this is the draft's own inference presented as the paper's text rather than a mathematical error. (2) The subtitle and informal assert the resolution must be a non-simple protocol over an unchanged partial PKI; the paper says only that \"new techniques would be needed for this that go beyond multi-verifier signatures of work\" (p22), i.e. a better setup primitive. (3) The execution-model definition attributes to the paper a PPT adversary with unrestricted corruption; p16 specifies static corruption of up to t parties by an Interactive Word RAM machine with c steps per round. Everything else I spot-checked in the setting and progress notes is supported: the CRS model, MV-SoWs, the phase-number-as-king adaptation (p21), the βγ effective resilience with lim β = 0 (p4), the deterministic-protocol restriction on Theorem 6's proof (p32), and all six bibliography entries as printed (pp23, 1455–1485 of the text layer)."
+      },
+      {
+        "name": "Self-containment",
+        "result": "pass",
+        "page": 0,
+        "finding": "A reader who has never opened the paper is given the execution model, the (γ,ε)-partial PKI definition, the consensus properties, and every symbol used in the formal statement, so they could tell what object to build and what to prove. Two blemishes short of a failure: the formal statement's second paragraph appeals to \"Theorem 6 of the source paper\" rather than restating the impossibility (though the definition of \"simple\" it depends on is supplied in the setting), and the model as given omits the concrete-complexity apparatus, so a reader would not know the paper's adversary is step-bounded and statically corrupting. No page evidence applies to this check — it is a property of the draft, not the paper."
+      }
+    ],
+    "corrections": [
+      {
+        "field": "formal_statement_latex / informal / subtitle",
+        "problem": "The statement freezes the setup as a (γ,0)-partial PKI and declares that any resolution must be a non-\"simple\" protocol over that setup. The paper's own proposed route (p22) is transferable proofs of work → a *ranked* partial PKI → Dolev-Strong, which leaves the (γ,ε)-partial PKI abstraction entirely, so Theorem 6 does not bear on it. The draft therefore poses a strictly stronger problem than the paper and rules out the paper's preferred answer.",
+        "corrected": "State the conjecture as the paper does: for every constant γ < 1/2 there is a consensus protocol achieving resilience γ in the paper's permissionless CRS setting — by any means, including a setup abstraction stronger than a (γ,ε)-partial PKI (e.g. the ranked partial PKI the paper points to). Drop \"arbitrary protocols\" from the subtitle and drop the \"necessarily by protocols that do something useful with messages whose signers they do not recognize\" clause from the informal. If the (γ,0)-fixed-setup version is kept, label it explicitly as a strengthening chosen by the harvester, and keep the Theorem 6 rider only under that labelling."
+      },
+      {
+        "field": "definitions_latex (Execution model)",
+        "problem": "The adversary is described as \"PPT in λ\" with no restriction on when corruptions happen and no per-round budget. Page 16 states that both parties and adversary are Interactive Word RAM machines with O(log λ)-bit words, that each party including corrupted ones has a concrete bound of c computational steps per round, and that the adversary \"can corrupt up to t parties (statically)\"; page 17 adds an upper bound θ on the number of messages the adversary can send per round and the slowdown parameter β.",
+        "corrected": "\"The adversary is active/Byzantine and statically corrupts up to t parties. Parties and adversary are Interactive Word RAM machines with O(\\log\\lambda)-bit words; every party, honest or corrupted, executes at most c computational steps per round, the adversary sends at most θ messages per round, and a moderately hard function output requiring r steps for an honest party requires at least β·r adversarial steps.\" At minimum, \"statically\" must be added, since the conjecture as written quantifies over adaptive adversaries the paper's model excludes."
+      },
+      {
+        "field": "notation_latex (ε range) and status_note",
+        "problem": "The notation declares ε ∈ [0,1) and the status note presents \"specializes to γ < 1/4 at ε = 0\" as content of Theorem 5. Theorem 5 and Lemma 3 (p20, p22) both require ε ∈ (0,1/3), an open interval that excludes 0, and Lemma 1 (p18) takes ε ∈ (0,1).",
+        "corrected": "Record Theorem 5's range as ε ∈ (0,1/3) and γ < (1/4)(1−3ε). Present the ε = 0 case as a consequence rather than as the theorem: since a (γ,0)-partial PKI satisfies the (γ,ε) conditions for every ε > 0, choosing ε small enough that γ < (1/4)(1−3ε) yields consensus for every γ < 1/4 at ε = 0. Also note that ε = 0 is not a setting PartialPKISetup can realize (Theorem 4 with Lemma 1 gives ε > 0), so the conjecture at ε = 0 is narrower than the paper's question about its own setting."
+      }
+    ],
+    "fabrications": [
+      "Status note: \"Theorem 5 ... specializes to γ < 1/4 at ε = 0\" — presented as content of Theorem 5, whose stated range is ε ∈ (0,1/3) (p22). The specialization does follow from the definitions, but the paper does not state it.",
+      "Subtitle \"arbitrary protocols\" and informal \"necessarily by protocols that do something useful with messages whose signers they do not recognize\" — the paper says only that \"new techniques would be needed for this that go beyond multi-verifier signatures of work\" (p22), pointing at a stronger setup primitive rather than at non-simple protocols over the same setup.",
+      "Execution model: \"The adversary is PPT in λ\" with unrestricted corruption timing — p16 specifies static corruption of up to t parties by an Interactive Word RAM machine bounded to c steps per round, and p17 adds a per-round message bound θ.",
+      "Notation: \"ε ∈ [0,1)\" — every place the paper quantifies ε it uses an open interval, ε ∈ (0,1) in Lemma 1 (p18) and ε ∈ (0,1/3) in Lemma 3 and Theorem 5 (pp20, 22)."
+    ],
+    "verdict": "faithful-with-corrections",
+    "confidence": "medium",
+    "reason": "The problem is genuinely posed and genuinely open — p22, §5, verbatim as quoted, with nothing in §5, the references, Appendix A, or B.1–B.3 resolving the 1/4–1/2 gap. The single most important defect is that the draft freezes the setup as a (γ,0)-partial PKI and declares the answer must come from a non-\\\"simple\\\" protocol over that setup, while the paper's own named route on the same page — transferable proofs of work yielding a *ranked* partial PKI, then Dolev-Strong — abandons that abstraction and so is untouched by Theorem 6; the draft thus poses a strictly stronger problem than the paper and excludes the paper's preferred answer. Secondarily, the execution model drops the static corruption and concrete-complexity bounds stated on p16–17, and the ε ranges are widened from the paper's open intervals; all three are repairable, which is why this is corrections rather than unfaithful."
+  },
+  "build": {
+    "compiled": true,
+    "chktex": [
+      "Warning 13 in statement.tex line 46: Intersentence spacing (`\\@') should perhaps be used.",
+      "Warning 13 in statement.tex line 56: Intersentence spacing (`\\@') should perhaps be used.",
+      "Warning 8 in statement.tex line 83: Wrong length of dash may have been used.",
+      "Warning 8 in statement.tex line 186: Wrong length of dash may have been used.",
+      "Warning 13 in statement.tex line 195: Intersentence spacing (`\\@') should perhaps be used."
+    ],
+    "lacheck": [],
+    "errors": []
+  }
+}

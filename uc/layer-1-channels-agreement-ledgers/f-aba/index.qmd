@@ -2,12 +2,113 @@
 title: "F-ABA — Asynchronous Byzantine agreement"
 status: "Canonical"
 layer: 1
-definition: "Not yet written"
+definition: "Defined"
 ---
 
 *F-ABA* (Asynchronous Byzantine agreement) is part of *Channels, Agreement, Ledgers* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
 
+Agreement with no clock. Everyone inputs a value, and once enough parties have been admitted the functionality decides one value for all of them — the plurality if there is a clear one, and otherwise a value the adversary chooses *from among those honest parties actually proposed*. That last clause is what the source calls **intrusion tolerance**, and it is the difference between this box and one where a corrupt majority of the input set can invent an outcome.
+
+Asynchrony appears here not as a network but as a pair of per-party counters the adversary decrements at will (lines 8–9). There is no bound on them, which is exactly what "asynchronous" means: every party is eventually served, no party is served by any deadline. Compare [*F-AC*](/uc/layer-1-channels-agreement-ledgers/f-ac/index.qmd), which buys a deadline with a clock, and [*F-diffuse*](/uc/layer-1-channels-agreement-ledgers/f-diffuse/index.qmd), whose delays are capped by a parameter $\Delta$.
+
+## Functionality
+
+Reading the box: $\mathcal{A}(\cdot)$ is a call on the adversary slot whose answer is used; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it; $\mathbf{C}$ is the set of corrupted parties and $|\mathbf{P}| = n$; $\square$ marks a value never set, and $\bot$ is both "no input yet" and the failure output — the source distinguishes them with $\bot$ and $\bot'$, and the mapping is recorded below; $V$ and $t$ are the parameters, a value domain and a corruption bound.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{A\text{-}BA}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := (V, t)\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{v}[*] \gets \bot\); &nbsp;\(\mathtt{in}[*] \gets 0\)<span class="cj-comment">// inputs, and who has been admitted</span></li>
+<li>\(\mathtt{D}[*, \mathsf{in}] \gets 1\); &nbsp;\(\mathtt{D}[*, \mathsf{out}] \gets 1\)<span class="cj-comment">// per-party delays, set by the adversary</span></li>
+<li>\(\mathtt{y} \gets \square\); &nbsp;\(\mathtt{a} \gets \bot\)<span class="cj-comment">// the decision, and the adversary's bid</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Input(<span class="cj-id">v</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="4">
+<li>\(\textbf{require}\ v \in V \ \wedge\ \mathtt{v}[\mathit{id}.P] = \bot\)</li>
+<li>\(\mathtt{v}[\mathit{id}.P] \gets v\)</li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Input},\ \mathit{id}.P,\ v\bigr)\)<span class="cj-comment">// corruption-unfair: the input leaks at once</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Fetch()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="8">
+<li>\((\tau, \delta, \mathtt{a}) \gets \mathcal{A}\bigl(\mathit{id}.\mathsf{Fetch},\ \mathit{id}.P\bigr)\)</li>
+<li>\(\mathtt{D}[\mathit{id}.P, \tau] \gets \max(1, \mathtt{D}[\mathit{id}.P, \tau] + \delta)\)<span class="cj-comment">// delay may grow without bound</span></li>
+<li>\(\textbf{if}\ \mathtt{in}[\mathit{id}.P] = 0 \ \wedge\ \mathtt{v}[\mathit{id}.P] \neq \bot\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{D}[\mathit{id}.P, \mathsf{in}] \gets \mathtt{D}[\mathit{id}.P, \mathsf{in}] - 1\)</span></li>
+<li><span class="cj-ind">\(\textbf{if}\ \mathtt{D}[\mathit{id}.P, \mathsf{in}] = 0\ \textbf{then}\)</span></li>
+<li><span class="cj-ind">\(\mathtt{in}[\mathit{id}.P] \gets 1\)</span></li>
+<li>\(\textbf{require}\ \textstyle\sum_{P} \mathtt{in}[P] \geq |\mathbf{P}| - t\)<span class="cj-comment">// no output before \(n-t\) have been admitted</span></li>
+<li>\(\mathtt{D}[\mathit{id}.P, \mathsf{out}] \gets \mathtt{D}[\mathit{id}.P, \mathsf{out}] - 1\)</li>
+<li>\(\textbf{require}\ \mathtt{D}[\mathit{id}.P, \mathsf{out}] = 0\)</li>
+<li>\(\textbf{if}\ \mathtt{y} = \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{y} \gets \bot\)</span></li>
+<li><span class="cj-ind">\(\textbf{if}\ \exists!\, x \in V : |\{P : \mathtt{in}[P] = 1 \wedge \mathtt{v}[P] = x\}| \geq |\mathbf{P}| - 2t\ \textbf{then}\)</span></li>
+<li><span class="cj-ind">\(\mathtt{y} \gets x\)</span><span class="cj-comment">// an \(n-2t\) plurality decides</span></li>
+<li><span class="cj-ind">\(\textbf{if}\ \mathtt{y} = \bot \ \wedge\ \exists\, P \notin \mathbf{C} : \mathtt{v}[P] = \mathtt{a}\ \textbf{then}\)</span></li>
+<li><span class="cj-ind">\(\mathtt{y} \gets \mathtt{a}\)</span><span class="cj-comment">// else the adversary picks, but only from honest inputs</span></li>
+<li>\(\textbf{return}\ \mathtt{y}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="24">
+<li>\(\textbf{return}\ (\mathtt{v}, \mathtt{in}, \mathtt{y})\)</li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+The box is transcribed from Cohen, Forghani, Garay, Patel and Zikas, *Concurrent asynchronous Byzantine agreement in expected-constant rounds, revisited*, ePrint 2023/1003, revision `20231222:083024`, Figure 4, p. 16 (PDF page 18) — "the (intrusion-tolerant) A-BA functionality". The rendered page is at `_src/cohen2023-p18.png`.
+
+**Lines 19–22 are the decision rule and they are ordered.** First, a unique value held by at least $n - 2t$ *admitted* parties wins outright (line 20) — that is validity, and it is why the bound is $n-2t$ rather than a simple majority. Only if no such value exists does the adversary's bid at line 8 matter, and line 21 constrains it: the bid is taken **only if some honest party proposed it**. So the adversary's power is to break ties among genuinely proposed values, never to introduce one. That is the intrusion tolerance, and it is one conjunct.
+
+**Line 21's fallback is $\bot$, and $\bot$ is a real outcome.** If neither branch fires, the decision stands at the $\bot$ written on line 18. Agreement on failure is still agreement, and a protocol realizing this box may legitimately produce it — a reader treating $\bot$ as a bug has misread the functionality.
+
+**Line 17 is what makes it agreement at all.** The decision is computed once, on whichever fetch first reaches line 17, and every later fetch returns the same cell. Consistency is therefore not a property to be checked but a consequence of a single write, exactly as in [*F-BC*](/uc/layer-1-channels-agreement-ledgers/f-bc/index.qmd).
+
+**Line 14 is the asynchronous quorum.** No output is released until $n - t$ parties have been *admitted* — not until they have provided input, which is line 5, but until their input delay has run down to zero at line 13. The distinction is the source's and it is load-bearing: an input that has been submitted but not yet admitted does not count toward the quorum and does not count in the plurality at line 19.
+
+**Line 6 is a weakening the source names.** The input is handed to the adversary the moment it is provided, which the paper calls *corruption-unfair* A-BA: an adaptive adversary may see a party's input and then corrupt it on the strength of what it saw. The paper is explicit that corruption fairness "can easily be defined by avoiding leaking honest parties' inputs before the output is generated", so the fair variant is line 6 deleted. This box takes the unfair version because that is the one the source defines and realizes.
+
+**Three things the translation had to decide.** The source keeps its two delay counters in separate clauses driven by an adversarial `delay` message; here the adversary sets them through the same call that ticks them (lines 8–9), which preserves the reachable states and removes an operation. The source's `max(1, ·)` is kept at line 9, and it matters — a delay can be lengthened without bound but never driven to zero, so the adversary cannot force an immediate output. And the source uses $\bot$ for "no input" and $\bot'$ for "undecided"; here $\square$ marks undecided and $\bot$ does the other two jobs, which is the house convention for a never-set cell but does mean line 18's $\bot$ and line 1's $\bot$ are different in kind.
+
+## Known realizations
+
+**The paper's subject is round complexity, not feasibility.** Its concern is *concurrent* A-BA in expected-constant rounds — running many instances at once without the round count degrading — and it revisits earlier claims in that setting. The functionality above is the target such protocols are proved against, and the intrusion-tolerant form is what their constructions actually achieve.
+
+**The classical bound behind the parameters.** The box initializes $t = \lceil n/3 \rceil - 1$, which is the asynchronous threshold: Byzantine agreement is unachievable for $t \geq n/3$ without further assumptions, and Canetti and Rabin's protocol — the stub's other reference — realizes agreement with statistical security for $t < n/3$ in constant expected rounds. That is the result this functionality is the modern restatement of, and the same paper's Proposition 2 uses it for asynchronous verifiable secret sharing on the way to A-BA.
+
+**Where the $n-2t$ in line 19 comes from.** With $t < n/3$, $n - 2t > n/3 > t$, so a value held by $n-2t$ admitted parties is held by at least one honest party — and the plurality branch cannot be captured by the corrupt set alone. The bound is not a design choice independent of the threshold; it is the weakest one for which line 20 is sound.
+
+## Properties
+
+- **Agreement, with probability exactly $1$.** Lines 17 and 23: written once, read by everyone.
+- **Validity, with probability exactly $1$ when a plurality exists.** Line 19–20: a unique value held by $n - 2t$ admitted parties is the output, and no later line overwrites $\mathtt{y}$.
+- **Intrusion tolerance, unconditionally.** Line 21: the adversary's bid is accepted only if an honest party proposed it. There is no branch by which a value nobody proposed becomes the output.
+- **No termination guarantee, by design.** Lines 8–9 let the adversary raise either delay without bound, so line 16's **require** may never be satisfied. Asynchronous agreement guarantees *what* is decided, never *when*; a protocol's expected-round claim is a statement about the protocol, not about this box.
+- **No input privacy.** Line 6 leaks every input at once. The fair variant deletes that line, and the source says so.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
+
 *References:*
 
-- Cohen, Forghani, Garay, Patel, and Zikas. [*Concurrent Asynchronous Byzantine Agreement in Expected-Constant Rounds, Revisited*](https://eprint.iacr.org/2023/1003). In 21st Theory of Cryptography Conference (TCC), Part IV, volume 14372 of LNCS, pages 422–451, 2023.
-- Canetti and Rabin. [*Optimal asynchronous byzantine agreement*](http://people.csail.mit.edu/canetti/materials/cr93.ps). In 25th ACM Symposium on Theory of Computing (STOC), pages 42–51, 1993.
+- Cohen, Forghani, Garay, Patel, and Zikas. [*Concurrent asynchronous Byzantine agreement in expected-constant rounds, revisited*](https://eprint.iacr.org/2023/1003). In 21st Theory of Cryptography Conference (TCC), Part IV, volume 14372 of LNCS, pages 422–451, 2023. Read at ePrint revision `20231222:083024`. Figure 4, p. 16 (PDF page 18), the definition transcribed above, together with its Input Submission and Output Release procedures; the preceding page for the corruption-unfairness discussion and for the $n-2t$ rule; Proposition 2 for the A-VSS result and the $t < n/3$ threshold. Authors, venue and page range confirmed against DBLP, which records five authors.
+- Canetti and Rabin. [*Optimal asynchronous Byzantine agreement*](http://people.csail.mit.edu/canetti/materials/cr93.ps). In 25th ACM Symposium on Theory of Computing (STOC), pages 42–51, 1993. Carried over from the stub's reference list. The harvester could not read it — the only posting is PostScript — so it is cited for the classical $t < n/3$ result the paper above attributes to it, and not as a source for any box: at 1993 it predates ideal-functionality notation, as [*F-OT*](/uc/layer-5-oblivious-transfer/f-ot/index.qmd)'s Rabin reference does.

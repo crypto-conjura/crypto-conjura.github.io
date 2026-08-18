@@ -1,13 +1,105 @@
 ---
-title: "F-rbc — Reliable broadcast"
+title: "F-RBC — Relaxed broadcast"
 status: "Canonical"
 layer: 1
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-rbc* (Reliable broadcast) is part of *Channels, Agreement, Ledgers* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+*F-RBC* (Relaxed broadcast) is part of *Channels, Agreement, Ledgers* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+
+[*F-BC*](/uc/layer-1-channels-agreement-ledgers/f-bc/index.qmd) with the one guarantee removed that makes broadcast hard: here the adversary sees the sender's message *before* it must decide whether to substitute another, and if the sender is corrupt at that moment the substitute is what everyone agrees on. Everything else — one message, one sender, everyone reads the same thing — is unchanged.
+
+Read the two boxes side by side and the difference is four lines. `F-BC` fixes the message at its line 4 and never consults the adversary about content again. This box asks (line 5), then tests corruption (line 7), then may overwrite (line 8). That ordering is the whole object, and it is a real attack on real protocols rather than a modelling artefact: learn the message, decide on the strength of it whether to corrupt the sender, and change what everyone agrees on.
+
+## Functionality
+
+Reading the box: $\mathcal{A}(\cdot)$ is a call on the adversary slot whose answer *is* used; $\mathsf{San}[\mathsf{Clean}_{\mathit{msg}}]$ re-asks it until the predicate at the end of the box holds; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it; $\mathbf{C}$ is the set of corrupted parties; $\square$ marks a value never set and $\bot$ an absence; $\mathcal{M}$ is the message space.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{RBC}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := \bot\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{S} \gets \square\)<span class="cj-comment">// the sender</span></li>
+<li>\(\mathtt{m} \gets \square\); &nbsp;\(\mathtt{out} \gets \square\)<span class="cj-comment">// what was said, what is agreed</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Broadcast(<span class="cj-id">msg</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="3">
+<li>\(\textbf{require}\ \mathtt{S} = \square \ \wedge\ \mathit{msg} \in \mathcal{M}\)</li>
+<li>\(\mathtt{S} \gets \mathit{id}.P\); &nbsp;\(\mathtt{m} \gets \mathit{msg}\)</li>
+<li>\(\mathit{msg}' \gets \mathcal{A}\bigl(\mathit{id}.\mathsf{Broadcast},\ \mathtt{S},\ \mathtt{m}\bigr)\)<span class="cj-comment">// the message first, the substitute after</span></li>
+<li>\(\mathtt{out} \gets \mathtt{m}\)</li>
+<li>\(\textbf{if}\ \mathtt{S} \in \mathbf{C}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{out} \gets \mathsf{San}[\mathsf{Clean}_{\mathit{msg}}](\mathit{msg}')\)</span><span class="cj-comment">// corruption tested here, after line 3</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Fetch()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="10">
+<li>\(\textbf{if}\ \mathtt{out} = \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \bot\)</span></li>
+<li>\(\textbf{return}\ (\mathtt{S},\ \mathtt{out})\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="13">
+<li>\(\textbf{return}\ (\mathtt{S},\ \mathtt{m})\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig">Clean<sub><span class="cj-id">msg</span></sub>(<span class="cj-id">msg'</span>):</div>
+<ol class="cj-code" start="14">
+<li>\(\textbf{return}\ \mathit{msg}' \in \mathcal{M}\)</li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+The box is transcribed from Garay, Katz, Kumaresan and Zhou, *Adaptively secure broadcast, revisited*, Figure 2, p. 6 — "the relaxed broadcast functionality". Read from the authors' full version, the undated 13-page PDF at `people.csail.mit.edu/ranjit/papers/asb.pdf` (SHA-256 prefix `b0b12fb51af5ff3d`, recorded in `_src/sources.json`), which carries no revision stamp: this paper has no ePrint posting to pin one against. The same source's Figure 1 is what [*F-BC*](/uc/layer-1-channels-agreement-ledgers/f-bc/index.qmd) is transcribed from, so the two entries are line-comparable by construction.
+
+**A correction to the page's own title.** This stub was titled "Reliable broadcast", and $\mathcal{F}_{\textsc{rbc}}$ in this paper is *relaxed* broadcast — the caption says so. The two are different notions: reliable broadcast, in the asynchronous literature, weakens *termination* while keeping agreement and validity intact; relaxed broadcast keeps termination and weakens *validity*, and only against a corrupt sender. Nothing on this page is about reliable broadcast, and the Ben-Or–Canetti–Goldreich reference the stub carried is retained for the asynchronous setting rather than for a definition it does not print.
+
+**Line 7 is the security property, stated as a timing.** The corruption test happens *after* line 5 has handed the message over. An adversary that corrupts the sender before line 7 gets its substitute; one that corrupts afterwards does not. In `F-BC` there is no such window because there is no line 8 to reach. This is exactly the attack the paper's impossibility result is built from, and the reason it exists as a separate functionality is that the classical protocols realize *this* and not `F-BC`.
+
+**Line 6 before line 8, rather than an `else`.** The honest case is written first and overwritten, which is a house constraint — the generator's subset has no `else` — and it happens to read the way the source's two bullets do.
+
+**Substitution is sanitized but not otherwise constrained** (line 8, line 14). The source says only "upon receiving $m'$ from $\mathcal{S}$"; the type test is this framework's, not the paper's. Note what is *not* required: $m'$ need not differ from $\mathtt{m}$, need not be related to it, and there is no bound on how long the adversary may take to answer — line 5 is an ordinary call, not a responsive one, so other machinery may run first.
+
+**The strengthening the same paper prints, and why it matters.** $\mathcal{F}^{+}_{\textsc{rbc}}$ restricts the substitute to $\bot$: an adaptive corruption can force agreement on *failure* but not on a different message. That is the version their protocol actually needs, and it is strictly between this box and `F-BC`. It belongs on this page as a variant rather than its own entry, because it differs from the box above in one line — replace $\mathsf{Clean}_{\mathit{msg}}$ with the predicate $\mathit{msg}' = \bot$.
+
+## Known realizations
+
+**From Dolev–Strong, given certification.** The paper's Lemma 3.1: the Dolev–Strong protocol securely realizes $\mathcal{F}_{\textsc{rbc}}$ in the [*F-CERT*](/uc/layer-0-idealized-setup/f-cert/index.qmd)-hybrid model against an adaptive adversary corrupting any $t < n$. That threshold is what makes this functionality interesting: `F-BC` is unrealizable beyond $t > n/2$ in the standard communication model, and this box is achievable for every $t$.
+
+**What it buys: Theorem 3.2.** Protocol $\pi_{\textsc{bc}}$ realizes `F-BC` in the $\mathcal{F}_{\textsc{rbc}}$-hybrid model against an adaptive adversary corrupting any $t < n$, assuming honest-binding commitments — but only in a synchronous model with rushing where a party's simultaneous sends are **atomic**. The paper is explicit that $\pi_{\textsc{bc}}$ does not realize `F-BC` non-atomically, and by the earlier impossibility it cannot. So the gap between this box and `F-BC` is closable, and what closes it is an assumption about the network rather than anything cryptographic.
+
+## Properties
+
+- **Agreement, with probability exactly $1$.** Every $\mathsf{Fetch}$ reads the single cell $\mathtt{out}$, written once during the broadcast call. Whatever the adversary does at line 8, it does once and to everybody.
+- **Validity, with probability exactly $1$ — but only for an honest sender.** Line 6 is the honest branch and line 7 guards the other. The quantifier is the interesting part: honest *at line 7*, not honest at the start of the execution.
+- **No secrecy, deliberately.** Line 5 hands the message over before anything is decided, and line 13 hands it over again. As in `F-BC`, broadcast here is agreement, not confidentiality.
+- **Termination is not in the box.** Nothing forces a fetch and nothing bounds when it happens; and line 5 lets the adversary sit on its answer indefinitely, so $\mathtt{out}$ may stay $\square$ forever.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Garay et al. [*Adaptively secure broadcast, revisited*](https://people.csail.mit.edu/ranjit/papers/asb.pdf). In 30th ACM Symposium on Principles of Distributed Computing (PODC), 2011.
-- Ben-Or, Canetti, and Goldreich. [*Asynchronous secure computation*](https://doi.org/10.1145/167088.167109). In 25th ACM Symposium on Theory of Computing (STOC), pages 52–61, 1993.
+- Garay, Katz, Kumaresan, and Zhou. [*Adaptively secure broadcast, revisited*](https://people.csail.mit.edu/ranjit/papers/asb.pdf). In 30th ACM Symposium on Principles of Distributed Computing (PODC), pages 179–186, 2011. Read from the authors' full version, undated and carrying no revision stamp, SHA-256 prefix `b0b12fb51af5ff3d`. Figure 2, p. 6, the definition transcribed above; Figure 1, p. 6, the strong broadcast functionality that [*F-BC*](/uc/layer-1-channels-agreement-ledgers/f-bc/index.qmd) takes; Figure 2's $\mathcal{F}^{+}_{\textsc{rbc}}$ for the $\bot$-only strengthening; Lemma 3.1 and Theorem 3.2, and the atomic-communication caveat on both.
+- Ben-Or, Canetti, and Goldreich. [*Asynchronous secure computation*](https://doi.org/10.1145/167088.167109). In 25th ACM Symposium on Theory of Computing (STOC), pages 52–61, 1993. Carried over from the stub's reference list and kept for the asynchronous setting, not for a definition: the harvester could not fetch it — it resolves to a DOI landing page rather than a PDF — and it is a 1993 paper, so it predates ideal-functionality notation in any case. It is not the source of the box above, and the *reliable* broadcast notion the stub's old title named would have to be sourced separately.

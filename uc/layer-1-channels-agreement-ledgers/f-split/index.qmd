@@ -1,12 +1,112 @@
 ---
-title: "F-split — Unauthenticated channels, split adversary"
+title: "F-SA — Split authentication, unauthenticated channels"
 status: "Canonical"
 layer: 1
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-split* (Unauthenticated channels, split adversary) is part of *Channels, Agreement, Ledgers* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+*F-SA* (Split authentication, unauthenticated channels) is part of *Channels, Agreement, Ledgers* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+
+What authentication can still mean when there is no setup at all. The adversary partitions the parties into disjoint *authentication sets*; inside your set, messages from honest parties are authentic exactly as in [*F-auth*](/uc/layer-1-channels-agreement-ledgers/f-auth/index.qmd); across sets, the adversary may say anything it likes in anyone's name. A man-in-the-middle who separates the network into two halves and runs each against the other is not an attack this functionality prevents — it is the functionality's *definition*, made explicit so that protocols can be proved secure against everything else.
+
+The point is what remains achievable. The paper's own result is that this is realizable in the **bare model with no setup whatsoever**, which is exactly what [*F-auth*](/uc/layer-1-channels-agreement-ledgers/f-auth/index.qmd) and [*F-CERT*](/uc/layer-0-idealized-setup/f-cert/index.qmd) are not.
+
+## Functionality
+
+Reading the box: $\mathcal{A}(\cdot)$ is a call on the adversary slot whose answer is used at lines 4 and 13 and discarded at line 10; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it; $\mathbf{C}$ is the set of corrupted parties; $\square$ marks a value never set; $\uplus$ and $\setminus$ are multiset operations, since the same triple may wait more than once; $2^{\mathbf{P}}$ is the set of party sets.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{SA}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := \bot\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{H} : \mathcal{F}_{\mathsf{SA}}.\mathbf{P} \to 2^{\mathbf{P}} \cup \{\square\}\)<span class="cj-comment">// each party's authentication set</span></li>
+<li>\(\mathtt{H}[*] \gets \square\); &nbsp;\(\mathtt{W} \gets \varnothing\)<span class="cj-comment">// \(\mathtt{W}\) is a multiset of waiting sends</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Join()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="3">
+<li>\(\textbf{require}\ \mathtt{H}[\mathit{id}.P] = \square\)</li>
+<li>\(H \gets \mathcal{A}\bigl(\mathit{id}.\mathsf{Join},\ \mathit{id}.P\bigr)\)<span class="cj-comment">// the adversary partitions, once per party</span></li>
+<li>\(\textbf{require}\ \mathit{id}.P \in H \ \wedge\ \forall P : \mathtt{H}[P] \in \{\square, H\} \ \vee\ \mathtt{H}[P] \cap H \subseteq \mathbf{C}\)</li>
+<li>\(\mathtt{H}[\mathit{id}.P] \gets H\)</li>
+<li>\(\textbf{return}\ H\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Send(<span class="cj-id">Q</span>, <span class="cj-id">msg</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="8">
+<li>\(\textbf{require}\ Q \in \mathbf{P} \ \wedge\ \mathit{msg} \in \mathcal{M}\)</li>
+<li>\(\mathtt{W} \gets \mathtt{W} \uplus \{(\mathit{id}.P, Q, \mathit{msg})\}\)</li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Send},\ \mathit{id}.P,\ Q,\ \mathit{msg}\bigr)\)<span class="cj-comment">// no secrecy is claimed</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Fetch()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="12">
+<li>\(\textbf{require}\ \mathtt{H}[\mathit{id}.P] \neq \square\)<span class="cj-comment">// nothing arrives before joining</span></li>
+<li>\((P, \mathit{msg}) \gets \mathcal{A}\bigl(\mathit{id}.\mathsf{Fetch},\ \mathit{id}.P\bigr)\)</li>
+<li>\(\textbf{if}\ P \in \mathtt{H}[\mathit{id}.P] \ \wedge\ P \notin \mathbf{C}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{require}\ (P, \mathit{id}.P, \mathit{msg}) \in \mathtt{W}\)</span><span class="cj-comment">// inside the set: only what was sent</span></li>
+<li><span class="cj-ind">\(\mathtt{W} \gets \mathtt{W} \setminus \{(P, \mathit{id}.P, \mathit{msg})\}\)</span><span class="cj-comment">// one appearance</span></li>
+<li><span class="cj-ind">\(\textbf{return}\ (P, \mathit{msg})\)</span></li>
+<li>\(\textbf{return}\ (P, \mathit{msg})\)<span class="cj-comment">// outside, or corrupt: unchecked</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="19">
+<li>\(\textbf{return}\ (\mathtt{H}, \mathtt{W})\)</li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+The box is transcribed from Barak, Canetti, Lindell, Pass and Rabin, *Secure computation without authentication*, ePrint 2007/464, revision `20100820:181600`, Figure 3, p. 22 (PDF page 24) — "the split authentication functionality". The rendered page is at `_src/baraketal2011-p24.png`.
+
+**Line 5 is the split, and it is a constraint on the adversary rather than a service to the parties.** The printed condition is that for every already-recorded set $H'$, either $H \cap H'$ contains only corrupted parties and the two sets carry different identifiers, or $H' = H$ with the same identifier. Read plainly: the sets are disjoint *as far as honest parties are concerned*, and a corrupt party may appear in several. That is the strongest statement the model can make — the adversary chooses the partition, but having chosen, it cannot put two honest parties in different sets and also let them talk.
+
+**Lines 14–18 are the two worlds, and they are one comparison apart.** If the alleged sender is inside the fetching party's set and honest, line 15 requires that the message actually be waiting — full authentication, and the multiset removal at line 16 means a message sent twice may be delivered twice and no more. Otherwise line 18 returns whatever the adversary named, with no reference to $\mathtt{W}$ at all. A reader looking for where the guarantee lives should look at line 14: everything else is bookkeeping.
+
+**Delivery becomes a pull, and that is a real change.** The source's clause is `(Deliver, sid, P, P', m)` *from the adversary* — the adversary decides when and to whom. Here the recipient fetches and the adversary answers with the alleged sender and message. The set of outcomes is the same, and the reason to prefer the pull is that it matches [*F-auth*](/uc/layer-1-channels-agreement-ledgers/f-auth/index.qmd) so the two boxes can be compared line by line. What is lost is that the source's adversary can deliver to a party that never asks; here nothing arrives unless fetched, which is the same convention `F-auth` already adopts.
+
+**Line 12 is the source's case (a), and it is easy to misread as bookkeeping.** A party that has not joined receives nothing — not even a forgery. Authentication sets are assigned once, by the adversary, at a moment of its choosing, and until then a party is simply not on the network.
+
+**Two things recorded rather than modelled.** The source threads a set identifier $\mathit{sid}_{H}$ through initialization and outputs it to the party; here the set itself is returned, since the identifier's only role is to distinguish sets and the sets are already distinct objects. And the source has no leakage interface; line 19 returns the partition and the waiting list, which is what a corrupt party's adversary already knows — it chose the partition at line 4 and saw every send at line 10.
+
+## Known realizations
+
+**In the bare model, with no setup at all — Theorem 11.** Protocol 1 realizes this functionality with UC security against malicious, adaptive adversaries, assuming only a signature scheme existentially unforgeable under chosen-message attack. The protocol is the obvious one: each party generates its own keys, signs each message together with its session identifier, the recipient's identity and a counter, and the recipient checks the counter has not been seen and the signature verifies.
+
+That result is the reason this functionality exists. [*F-CERT*](/uc/layer-0-idealized-setup/f-cert/index.qmd) is *not* realizable without setup — the same literature proves it — so if authentication is wanted from nothing, the notion has to be weakened, and the split is where it can be weakened without becoming vacuous. The counter in the protocol is what line 16's multiset removal corresponds to: replay is prevented, but only up to the number of times a message was genuinely sent.
+
+**What the paper builds on top.** The split-authentication channel is the substrate for secure computation without authentication in the same work, where the guarantee inherits the same shape: parties in one authentication set get the usual security, and the adversary's ability to partition is the residual attack that cannot be removed.
+
+## Properties
+
+- **Authentication inside a set, with probability exactly $1$.** Lines 14–15: for an honest sender in the recipient's own set, only a message in $\mathtt{W}$ is delivered, and $\mathtt{W}$ is written only at line 9 by the sender itself.
+- **No authentication across sets, by construction.** Line 18 returns the adversary's pair unchecked. This is not a bound that degrades with parameters; it is unconditional, and it is the definition.
+- **Replay is bounded by real sends.** Line 16 removes one appearance, so a triple sent $k$ times is deliverable at most $k$ times. The source is explicit that the same triple may appear in the list more than once.
+- **Honest parties are never split from each other.** Line 5's condition, read across all recorded sets: any two honest parties that both joined are in the same set, or in sets whose intersection is entirely corrupt — which for two honest parties means they are in the same set.
+- **No secrecy at all.** Line 10 hands every send to the adversary in the clear. This is an authentication functionality; [*F-SMT*](/uc/layer-1-channels-agreement-ledgers/f-smt/index.qmd) is the one that adds confidentiality.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Barak et al. [*Secure computation without authentication*](https://eprint.iacr.org/2007/464). Journal of Cryptology, 24(4):720–760, 2011.
+- Barak, Canetti, Lindell, Pass, and Rabin. [*Secure computation without authentication*](https://eprint.iacr.org/2007/464). Journal of Cryptology, 24(4):720–760, 2011. Read at ePrint revision `20100820:181600`. Figure 3, p. 22 (PDF page 24), the definition transcribed above; §4.2.1 for the informal description of the split; Figure 2 for the multi-session authentication functionality $\mathcal{F}_{\mathsf{mauth}}$ it is built beside; Protocol 1 and Theorem 11 for the bare-model realization. Authors, venue and page range confirmed against DBLP, which records five authors and the *Journal of Cryptology* publication the stub already cited.

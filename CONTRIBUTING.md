@@ -153,6 +153,44 @@ list several; don't rename or merge a slug without updating both
 `_quarto.yml`'s sidebar and `AREA_SLUGS` in `scripts/build_index.py` together,
 in the same commit.
 
+## Provenance tags
+
+`tags:` is a second, optional list on a statement, and it answers a different
+question from `areas:`. An area says what a statement is *about*; a tag says
+where it came from. They are kept apart deliberately -- folding provenance
+into the subject taxonomy would put an affiliation into the by-area browse,
+where a reader looking for `consensus` would find it sitting beside them.
+
+```yaml
+tags: [iog]
+```
+
+The vocabulary is closed, held in `TAG_SLUGS` in `scripts/build_index.py`, for
+the same reason `AREA_SLUGS` is: a free-text field grows typos and
+near-synonyms, and nothing would catch `IOG` written against `iog`. Adding a
+slug means editing `TAG_SLUGS` and adding a facet page under
+`open-problems/tags/<slug>/`, copying an existing one.
+
+One slug exists today.
+
+**`iog`** -- a cited source has an author affiliated with
+[Input Output Research](https://www.iog.io/papers). It renders as an outlined
+`IOG` chip in the Tags column of every statement listing, linking to
+[the tag page](/open-problems/tags/iog/), and pairs with the inline
+[affiliation mark](#the-input-output-affiliation-mark) on the reference line
+itself. The tag is the coarse, browsable signal; the mark says which reference
+earned it.
+
+It claims what the mark claims and no more: that an author is affiliated, not
+that the paper was published, funded or endorsed by them, and nothing at all
+about the statement -- which is this site's formalization of a question the
+paper left open, not the paper's own work. Verify the affiliation before
+adding the tag, under the citation rule above; an affiliation is a factual
+claim about a real person.
+
+Nothing derives the tag automatically. A statement citing an IO-affiliated
+author needs both the tag and the mark added by hand.
+
 ## Before you open a public pull request or issue
 
 Every route in this file is public, and that is almost always right. The one

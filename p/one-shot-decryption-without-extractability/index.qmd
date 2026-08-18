@@ -1,0 +1,35 @@
+---
+title: "Can one-shot decryption drop the extractability assumption?"
+subtitle: "The construction needs the witness-encryption extractor to run the reduction; nothing else known does the job"
+---
+
+## Motivation
+
+Proactive secret sharing keeps a secret alive against a mobile adversary that eventually corrupts everyone, by refreshing shares each epoch — and every classical version of it assumes share-holders can *securely erase* their old state. Quantum mechanics offers a way out: measurement is irreversible, so a quantum share can be *consumed* rather than erased.
+
+The engine behind that idea is a new primitive, threshold public-key encryption with **one-shot decryption**: a committee can jointly decrypt one ciphertext of its choosing, and no matter what happens afterwards — even total posterior corruption of every key-holder — a second ciphertext under the same public keys can never be decrypted. The one known construction gets there from one-shot signatures plus witness encryption, but only the *extractable* flavour of witness encryption, a knowledge-type assumption with no satisfying post-quantum instantiation. The question this hub tracks is whether that knowledge assumption is load-bearing or just a proof artifact.
+
+## Provenance and history
+
+From Cojocaru, Kiayias, Shen and Wallden, [*Proactive Secret Sharing without Erasures*](https://eprint.iacr.org/2026/1072), Cryptology ePrint Archive, Report 2026/1072. The paper proves the primitive is constructible from one-shot signatures and post-quantum extractable witness encryption (its Theorem 2, for every corruption threshold $f < 1/2$), builds three proactive secret sharing protocols on top of it, and states in its own voice, on the underlying-assumptions discussion:
+
+> "An important direction left open by our work is whether the extractability requirements underlying our constructions can be weakened or eliminated altogether, for example by relying on more structured or restricted knowledge assumptions, or by developing alternative realizations of one-shot decryption without extractability."
+
+## Why extractability is load-bearing, not decorative
+
+The construction witness-encrypts to the statement "at least $(1-f)n$ of the committee signed this tag." That statement is always *true* when honestly generated, so plain indistinguishability security of the witness encryption is vacuous against it — the proof needs an actual extractor to pull $(1-f)n$ one-shot signatures out of a successful distinguisher, one of which lets it forge a second signature and break one-shot-ness. There is no known substitute technique, and the paper reports no progress toward one.
+
+## What is settled and what is not
+
+| | status |
+|---|---|
+| one-shot decryption from one-shot signatures + *extractable* witness encryption | **proved** — the source's Theorem 2 |
+| the single-receiver (non-threshold) variant | **refuted** — a gentle-measurement rewinding attack breaks it for any threshold |
+| one-shot decryption from one-shot signatures + witness encryption *without* extractability | **open** — tracked as [c/0039](/c/0039/), in the strongest (elimination) reading |
+| the weaker reading — extractability reduced to a structured or restricted knowledge assumption, e.g. an algebraic-group-model or lattice-based instantiation | **also counted by the source as progress**, and not separately tracked here |
+
+[c/0039](/c/0039/) states the strongest reading of the question — dropping extractability altogether, in favour of an ordinary indistinguishability-secure witness encryption — because that is the reading with a clean, self-contained formal statement. The source's own framing is broader: it treats a move from a general knowledge assumption to a *more structured* one, such as the algebraic-group-model construction of Fleischhacker–Hall-Andersen–Simkin or lattice-based knowledge assumptions, as meaningful progress in its own right, without requiring extractability to disappear completely.
+
+## Statements in this hub
+
+- [One-Shot Decryption Without Extractability](/c/0039/) — open; whether one-shot signatures plus an ordinary (non-extractable) witness encryption scheme already suffice for threshold one-shot decryption at every corruption threshold $f < 1/2$.

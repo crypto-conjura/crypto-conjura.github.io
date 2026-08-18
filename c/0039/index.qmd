@@ -1,0 +1,89 @@
+---
+id: "0039"
+problem: one-shot-decryption-without-extractability
+draft: extractability-free-osd
+title: "One-Shot Decryption Without Extractability"
+short_title: "Threshold one-shot decryption without extractability"
+areas: [quantum, public-key, secret-sharing]
+model: standard
+form: assumption
+assumption_class: falsifiable
+category: research-open
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: new-idea
+  note: "The one known construction (the source's Theorem 2) runs the witness-encryption extractor directly inside the security reduction: the statement being encrypted to is always true, so plain indistinguishability security is vacuous there and only an extractor recovers the signatures the reduction needs. No known technique reaches the same reduction without extraction, and post-quantum extractable witness encryption itself has no satisfying instantiation, so a positive resolution needs a genuinely different construction or proof strategy, not a tightening of the existing one."
+  by: ai
+status_summary: "Open: whether threshold one-shot decryption (for every corruption threshold f < 1/2) follows from one-shot signatures and an ordinary, non-extractable witness encryption scheme. The one known construction needs the witness-encryption extractor to run its security reduction, and the source paper leaves open whether extractability can be weakened or dropped altogether."
+status_updated: 2026-08-18
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Cojocaru, Kiayias, Shen, Wallden, Proactive Secret Sharing without Erasures, Cryptology ePrint Archive, Report 2026/1072", url: "https://eprint.iacr.org/2026/1072"}
+revision: 1
+statement_sha: "78e7e0f707dbe22eee6122fe8ded3cc1c07d4e368c034915c55e879a40b963ef"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [LaTeX source](latex/main.tex) · Formal statement — *not yet formalized*
+
+A **one-shot signature** (OSS) scheme is a quantum primitive whose signing key self-destructs: from one key, an adversary can produce a verifying signature on one message, but never on two different messages at once. **Witness encryption** for an NP relation $\mathsf{R}$ encrypts a message to a statement $\mathsf{stmt}$, decryptable by anyone holding a witness $\mathsf{w}$ with $(\mathsf{stmt}, \mathsf{w}) \in \mathsf{R}$; the source paper builds its construction from the *extractable* security notion — every successful distinguisher between encryptions of $m_0, m_1$ is accompanied by an efficient extractor that recovers a witness for the (necessarily true) statement — rather than the weaker, standard *indistinguishability* notion of Garg–Gentry–Sahai–Waters, under which nothing at all is guaranteed once the statement is true.
+
+Building on these, the source defines **threshold public-key encryption with one-shot decryption**: a committee of $n$ quantum key-holders, tolerating up to $fn$ corruptions, can jointly decrypt one ciphertext once at least $(1-f)n$ of them contribute a partial decryption — and no matter what happens afterwards, even if every key-holder is subsequently corrupted and hands over its entire remaining state, a second ciphertext under the same public keys can never be decrypted.
+
+**Theorem (the source's Theorem 2, informal).** For every constant $f < 1/2$, one-shot signatures together with *extractable* witness encryption give a threshold public-key encryption scheme with one-shot decryption.
+
+The proof runs the witness-encryption extractor directly: since the statement being encrypted to is always true, indistinguishability security alone says nothing, and the reduction needs the extractor to pull at least $(1-f)n$ one-shot signatures out of a successful distinguisher, one of which forges a second signature under an honest key.
+
+**Conjecture (one-shot decryption without extractability).** The same conclusion holds with witness encryption's *extractable* security weakened to its standard *indistinguishability* security: for every constant $f < 1/2$ and every polynomial $n = n(\lambda)$, one-shot signatures together with an indistinguishability-secure (not necessarily extractable) witness encryption scheme already give a threshold public-key encryption scheme with one-shot decryption for $(n, f)$ — hence no knowledge-type assumption is needed at all.
+
+This is the harvester's formalization of the strongest reading of the source's own question, which is broader and disjunctive: whether the extractability requirement "can be weakened or eliminated altogether, for example by relying on more structured or restricted knowledge assumptions, or by developing alternative realizations of one-shot decryption without extractability" (p. 7). The source explicitly counts a move to a *more structured* knowledge assumption — such as an algebraic-group-model or lattice-based instantiation of extractable witness encryption — as meaningful progress on its own, without requiring extractability to disappear completely; that weaker reading is not what is stated above, and is not separately conjectured here.
+
+### Sources
+
+- Cojocaru, Kiayias, Shen, and Wallden. [*Proactive Secret Sharing without Erasures*](https://eprint.iacr.org/2026/1072). Cryptology ePrint Archive, Report 2026/1072. The openness statement is on p. 7 ("An important direction left open by our work..."); one-shot signatures are Definition 5 (p. 12), extractable witness encryption is Definition 6 (p. 12), threshold one-shot decryption is Definition 10 (pp. 17–18), and the construction and its proof are Theorem 2 and Algorithm 1 (p. 20). The single-receiver impossibility (a gentle-measurement rewinding attack) is discussed on pp. 5 and 16.
+
+## Proof
+
+View PDF — *no proof written yet* · LaTeX source — *no proof written yet* · Formal proof — *not yet formalized*
+
+Open. The source proves the positive result only under extractable witness encryption (Theorem 2, p. 20) and reports no progress toward removing that assumption anywhere in the paper — every later result (Theorems 3–5, its three proactive secret sharing protocols) is built on Theorem 2 and inherits the same dependency.
+
+**Why the obvious fix does not work.** Indistinguishability security only promises something when the statement being encrypted to is *false*. In this construction the statement is "at least $(1-f)n$ committee members signed this tag," which is true whenever the protocol runs honestly — so an indistinguishability-secure witness encryption scheme gives the reduction nothing to work with once a real adversary is plugged in, and the extractor is not a proof convenience but the entire mechanism that recovers signatures to forge with.
+
+**What would count as progress short of a full resolution.** The source's own examples — extractable witness encryption in the algebraic group model, or from lattice-based knowledge assumptions — would weaken the assumption without eliminating it, and the paper counts that as meaningful progress in its own right. The conjecture above is the stronger, cleaner claim: no knowledge-type assumption at all.
+
+**What a negative resolution would look like.** The source never frames the question as a separation or a black-box impossibility, and neither does this page: a negative answer would need to exhibit some constant $f < 1/2$ for which no such scheme follows from these hypotheses, however that is shown.
+
+## Discussion
+
+The paper's title promises proactive secret sharing without erasures, and it delivers that — but the delivery is bought with a knowledge-type assumption that is, by the paper's own account, only understood post-quantumly from "strong knowledge-type assumptions," with no satisfying instantiation. That leaves the headline feasibility result standing on ground shakier than the primitive it is meant to explain: erasure-freeness is a physical assumption traded for extractability, a cryptographic one, and it is not obvious that is a good trade until someone either removes the second assumption or shows it cannot be removed.
+
+The single-receiver impossibility sharpens why the threshold structure is not just a convenience: a lone receiver can run decryption in superposition, measure, and rewind to recover an undisturbed key, which is exactly the attack behind single-decryptor encryption. Thresholding blocks this because a majority of *distinct* one-shot signing keys must be genuinely consumed — but nothing about that argument touches extractability, so the two features of the construction (thresholding, and the extractable-witness-encryption reduction) are solving different problems, and only the second is what this page is about.
+
+## Open obligations
+
+- [ ] Construct threshold one-shot decryption (Definition 10) from one-shot signatures and indistinguishability-secure witness encryption alone, for some constant $f < 1/2$, or show no such construction exists.
+- [ ] Failing full elimination, instantiate the paper's weaker reading: extractable witness encryption from a more structured or restricted knowledge assumption than general knowledge soundness, post-quantum.
+- [ ] Determine whether the reliance on an extractor is inherent to any proof of this shape, or an artifact of this particular reduction.
+- [ ] Check whether anything published since gives one-shot decryption, or an equivalent primitive, from non-extractable assumptions — the one-shot-signature literature is moving quickly.
+- [ ] Formalize the statement in Lean. One-shot signatures, witness encryption, and the threshold one-shot-decryption experiments need writing down first; no formalization of superposition-query security games exists in Mathlib.
+
+:::

@@ -1,13 +1,122 @@
 ---
-title: "F-leak — Leakage, physically observable computation"
-status: "Idealized Setup"
+title: "F-LSC — Leaky secure channel, bounded budget"
+status: "Canonical"
 layer: 0
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-leak* (Leakage, physically observable computation) is part of *Idealized Setup and Resources* in the UC functionality encyclopedia. Status: an idealized setup assumption or shared resource.
+*F-LSC* (Leaky secure channel, bounded budget) is part of *Idealized Setup and Resources* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+
+A secure channel that tolerates side-channel leakage up to a budget and then **gives up entirely**. Below the bound it is [*F-SMT*](/uc/layer-1-channels-agreement-ledgers/f-smt/index.qmd): the adversary learns the message length and nothing else. Cross the bound and it stops promising anything at all — not secrecy, and not authenticity either (lines 16–17). There is no graceful degradation.
+
+That cliff is the honest part of the definition. A functionality that leaked "a bit more" past the bound would be claiming a quantitative relationship between leaked bits and lost security that no proof establishes; this one says instead that the budget is where the argument stops working, which is what a leakage-tolerance result actually shows.
+
+## Functionality
+
+Reading the box: $\mathcal{A}(\cdot)$ is a call on the adversary slot whose answer is used at lines 14 and 17; $\mathsf{San}[\mathsf{Clean}_{\mathit{msg}}]$ re-asks it until the predicate at the end of the box holds; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it; $A$ is the adversary's name component; $\mathbf{C}$ is the set of corrupted parties; $\square$ marks a value never set; $S$, $R$ and $B$ are the parameters — the endpoints and the leakage bound.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{LSC}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := (S, R, B)\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{m}[*] \gets \square\); &nbsp;\(\mathtt{i} \gets 0\)<span class="cj-comment">// the messages sent so far</span></li>
+<li>\(\mathtt{leak} \gets 0\); &nbsp;\(\mathtt{gone} \gets 0\)<span class="cj-comment">// bits leaked since the last send, and give-up</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Send(<span class="cj-id">msg</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="3">
+<li>\(\textbf{require}\ \mathit{id}.P = S \ \wedge\ \mathit{msg} \in \mathcal{M}\)</li>
+<li>\(\mathtt{i} \gets \mathtt{i} + 1\); &nbsp;\(\mathtt{m}[\mathtt{i}] \gets \mathit{msg}\)</li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Send},\ |\mathit{msg}|\bigr)\)<span class="cj-comment">// the length only, which is what secrecy means here</span></li>
+<li>\(\mathtt{leak} \gets 0\)<span class="cj-comment">// a fresh send restores the budget</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leaked(<span class="cj-id">ell</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="8">
+<li>\(\textbf{require}\ \mathit{id}'.F = A \ \wedge\ \ell \geq 0\)</li>
+<li>\(\mathtt{leak} \gets \mathtt{leak} + \ell\)</li>
+<li>\(\textbf{if}\ \mathtt{leak} > B\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{gone} \gets 1\)</span><span class="cj-comment">// past the bound the box stops promising anything</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Fetch()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="13">
+<li>\(\textbf{require}\ \mathit{id}.P = R \ \wedge\ \mathtt{m}[\mathtt{i}] \neq \square\)</li>
+<li>\(d \gets \mathcal{A}\bigl(\mathit{id}.\mathsf{Fetch}\bigr)\)</li>
+<li>\(\textbf{require}\ d = \mathsf{ok}\)<span class="cj-comment">// the adversary schedules delivery</span></li>
+<li>\(\textbf{if}\ \mathtt{gone} = 1 \ \vee\ S \in \mathbf{C}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \mathsf{San}[\mathsf{Clean}_{\mathit{msg}}]\bigl(\mathcal{A}(\mathit{id}.\mathsf{Fetch}, \mathtt{i})\bigr)\)</span><span class="cj-comment">// authenticity is gone too, not only secrecy</span></li>
+<li>\(\textbf{return}\ \mathtt{m}[\mathtt{i}]\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="19">
+<li>\(\textbf{if}\ \mathtt{gone} = 1 \ \vee\ \mathit{id}.P \in \mathbf{C}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \mathtt{m}\)</span><span class="cj-comment">// every message, past and future</span></li>
+<li>\(\textbf{return}\ |\mathtt{m}[\mathtt{i}]|\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig">Clean<sub><span class="cj-id">msg</span></sub>(<span class="cj-id">msg</span>):</div>
+<ol class="cj-code" start="22">
+<li>\(\textbf{return}\ \mathit{msg} \in \mathcal{M}\)</li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+The box is transcribed from Bitansky, Canetti and Halevi, *Leakage tolerant interactive protocols*, Figure 15, p. 37 (PDF page 39) of ePrint 2011/204 — "the multi-message leaky secure channels functionality $\mathcal{F}^{+B}_{\mathsf{LSC}}$". Printed page numbers run two behind the PDF's paging; `_src/sources.json` records both. The rendered page is at `_src/bitansky2012-p39.png`.
+
+**On the title, and on what this page is not.** The stub read "Leakage, physically observable computation" and cited Micali and Reyzin's *Physically observable cryptography* first. That paper **prints no ideal functionality** — it introduces a model of computation in which leakage is a feature of every operation, not a UC notion with a box. There is no functionality on this site's terms to transcribe from it. So this page takes the closest printed object in the cited literature, which is a *channel*, and is retitled to say so. A reader arriving here looking for a general leakage model should read Micali–Reyzin directly; what this box gives is the leakage-tolerant analogue of a secure channel.
+
+**Line 6 is the clause that makes the bound usable.** The leakage counter resets on every send. So $B$ is not a lifetime budget but a **per-message** one: an adversary that leaks $B$ bits between two sends learns nothing extra, and the channel keeps working. That is why the source calls it *multi-message* — the alternative, a single global budget, would make the functionality useless after enough traffic.
+
+**Lines 10–11 are the cliff, and line 16 is what falls off it.** Once the accumulated leakage since the last send exceeds $B$, the box sets a flag and thereafter behaves like an unauthenticated, unencrypted pipe: the adversary supplies whatever the receiver reads (line 17) and reads every message stored, past and future (line 20). The source is explicit — "from this point on give-up" — and lists both losses. That authenticity goes too is the part most easily missed: leakage past the bound is not merely a confidentiality failure.
+
+**Line 16 conflates two situations the source keeps separate**, and this is the one place to read carefully. The source has a `Corruption` clause and a `Reaction to leakage` clause, and both end with the adversary able to substitute the message. Here a single test covers "the sender is corrupt" and "the budget is blown", because the consequence in this framework is identical. The register entry is that a reader cannot tell from this box *which* of the two happened; the source's separate clauses can.
+
+**Line 5 is the secrecy statement and it is one argument long.** The adversary gets $|\mathit{msg}|$. The source's caption makes the comparison itself: unlike the authenticated-channel functionality it sits beside, "here secrecy is also guaranteed. That is, the adversary only gets the message length $|m_{i}|$ rather than $m_{i}$ itself."
+
+**Two translations.** The source's `Leaky Virtual state` clause hands stored messages to an *aggregator* — a construct of that paper's leakage framework, which has no counterpart here; this box's $\mathsf{Leak}$ (lines 19–21) serves the same purpose against this framework's corruption model. And delivery becomes a pull, with the adversary scheduling it at line 14, which is how [*F-SMT*](/uc/layer-1-channels-agreement-ledgers/f-smt/index.qmd) already renders "once $\mathcal{S}$ allows forwarding the message".
+
+## Known realizations
+
+**The paper's subject is which protocols survive leakage at all**, and this channel is one of the tools rather than the result. Its main results are about leakage-tolerant interactive protocols: what security can be retained when the adversary sees a bounded function of honest parties' state, including state that a simulator would have had to commit to.
+
+**Why the bound cannot simply be removed.** Unbounded leakage of a party's state includes its secret keys, so no channel functionality can promise anything; the interesting question is what the *tolerance* buys, which is why the parameter is in the name. The paper's other printed functionalities — leakage-tolerant analogues of authenticated channels, commitment, oblivious transfer and zero knowledge — are recorded in `_src/sources.json` and are the natural next entries if the encyclopedia wants this family.
+
+## Properties
+
+- **Secrecy below the bound, unconditionally.** Line 5 passes the length; nothing else passes $\mathit{msg}$ to the adversary while $\mathtt{gone} = 0$ and $S \notin \mathbf{C}$.
+- **Authenticity below the bound, with probability exactly $1$.** Line 18 returns the stored message. There is no substitution path until line 16 fires.
+- **Both lost above the bound, unconditionally.** Lines 17 and 20. The failure is total and is meant to be.
+- **The budget is per message** (line 6), not per execution.
+- **No liveness.** Line 14 lets the adversary withhold delivery indefinitely, as in every channel on this site.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Micali and Reyzin. [*Physically observable cryptography*](https://eprint.iacr.org/2003/120). In 1st Theory of Cryptography Conference (TCC), volume 2951 of LNCS, 2004.
-- Bitansky, Canetti, and Halevi. [*Leakage-tolerant interactive protocols*](https://eprint.iacr.org/2011/204). In 9th Theory of Cryptography Conference (TCC), pages 266–284, 2012.
+- Bitansky, Canetti, and Halevi. [*Leakage tolerant interactive protocols*](https://eprint.iacr.org/2011/204). In 9th Theory of Cryptography Conference (TCC), pages 266–284, 2012. Read at ePrint revision `20110428:222549`, whose title page is dated 28 April 2011 and reads "Leakage Tolerant Interactive Protocols" without the stub's hyphen. Figure 15, p. 37 (PDF page 39), the definition transcribed above, including its give-up clause and its caption's comparison with the authenticated-channel version; the paper's other printed functionalities recorded in `_src/sources.json`. All three authors confirmed against the paper's own title page; the venue and page range are as the stub recorded them.
+- Micali and Reyzin. [*Physically observable cryptography*](https://eprint.iacr.org/2003/120). In 1st Theory of Cryptography Conference (TCC), volume 2951 of LNCS, 2004. Carried over from the stub's reference list, read at ePrint revision `20040601:191015`. **It prints no ideal functionality**, and nothing on this page is transcribed from it: it introduces a model of physically observable computation, in which leakage is a property of every operation rather than an interface on a box. It is the right reference for the *phenomenon* and the wrong one for a UC definition, which is why this page is titled after the channel it actually defines.

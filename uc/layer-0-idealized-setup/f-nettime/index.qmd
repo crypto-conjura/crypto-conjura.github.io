@@ -1,12 +1,111 @@
 ---
-title: "F-nettime — Attackable network time service"
-status: "Canonical"
+title: "F-nettime — Approximate timer, environment-skewed"
+status: "Idealized Setup"
 layer: 0
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-nettime* (Attackable network time service) is part of *Idealized Setup and Resources* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+*F-nettime* (Approximate timer, environment-skewed) is part of *Idealized Setup and Resources* in the UC functionality encyclopedia. Status: an idealized setup assumption or shared resource.
+
+A stopwatch whose error is chosen by the **environment**, not the adversary. That is the unusual thing about this box and the reason it is worth reading: the party that corrupts and schedules everything else in a UC execution has no interface here at all (line 16). Instead the environment installs a Turing machine (line 4) which is run on every measurement (line 11) and returns a skew — so inaccuracy is modelled as an *out-of-band* property of the deployment rather than as an attack inside the protocol.
+
+The source's own caption says it plainly: the environment "may influence the timer's accuracy" but "must do so 'out of band'", and "the adversary doesn't directly interact with $\mathcal{F}_{\mathsf{timer}}$ at all". Once the owner asks, it learns the answer instantaneously.
+
+## Functionality
+
+Reading the box: **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it; $Z$ is the environment's name component, so a test on $\mathit{id}'.F$ asks who is really calling; $\square$ marks a value never set and $\bot$ a refusal to answer; $\mathcal{G}_{\mathsf{Clock}}$ is the reference clock this box reads and does not control; $C$ and $\Delta$ are the parameters, the owner and the largest interval it will report.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{Timer}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{G}_{\mathsf{Clock}},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := (C, \Delta)\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{M} \gets \square\)<span class="cj-comment">// the skew, as a machine the environment supplies</span></li>
+<li>\(\mathtt{start} \gets \square\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.SetShift(<span class="cj-id">M</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="3">
+<li>\(\textbf{require}\ \mathit{id}'.F = Z\)<span class="cj-comment">// the environment's line, not the adversary's</span></li>
+<li>\(\mathtt{M} \gets M\)<span class="cj-comment">// replaces any previous code</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Start()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="6">
+<li>\(\textbf{require}\ \mathit{id}.P = C \ \wedge\ \mathtt{start} = \square\)<span class="cj-comment">// the owner, once</span></li>
+<li>\(\mathtt{start} \gets \mathcal{G}_{\mathsf{Clock}}.\mathsf{Get}()\)</li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Elapsed()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="9">
+<li>\(\textbf{require}\ \mathit{id}.P = C \ \wedge\ \mathtt{start} \neq \square\)</li>
+<li>\(g \gets \mathcal{G}_{\mathsf{Clock}}.\mathsf{Get}()\)</li>
+<li>\(\sigma \gets \mathtt{M}(\mathtt{start}, g)\)<span class="cj-comment">// \(\mathtt{M}\) keeps state across calls</span></li>
+<li>\(\delta \gets g - \mathtt{start} + \sigma\)</li>
+<li>\(\textbf{if}\ \delta > \Delta\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \bot\)</span><span class="cj-comment">// too far off: no answer rather than a wrong one</span></li>
+<li>\(\textbf{return}\ \delta\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="16">
+<li>\(\textbf{return}\ \bot\)<span class="cj-comment">// the adversary does not interact with this box</span></li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+The box is transcribed from Canetti, Hogan, Malhotra and Varia, *Universally composable network time*, Figure 5, p. 10 of ePrint 2017/1256 — the functionality $\mathcal{F}^{C,\Delta_{C},\Sigma_{C}}_{\mathsf{timer}}[\mathcal{G}_{\mathsf{refClock}}]$, "that returns to its owner $C$ the approximate relative time elapsed between the Start and TimeElapsed commands". The rendered page is at `_src/canettietal2017-p10.png`.
+
+**Line 4 is the design decision, and it inverts the usual one.** In almost every functionality on this site the adversary supplies the values a realization would compute — keys, ciphertexts, proofs. Here it supplies nothing, and the *environment* supplies a program. Why that is the right modelling: a clock's drift is a property of the machine it runs on, present whether or not anybody is attacking, and an adversary that could choose the drift per query would be a stronger attacker than reality provides. Putting the skew in the environment's hands makes it a fixed feature of the execution that the protocol must tolerate.
+
+**Line 11 runs the machine and keeps its state**, which matters more than it looks: the skew is not a fresh sample per call but the output of a stateful program, so it can drift monotonically, oscillate, or be adversarially correlated across measurements — anything a Turing machine can do. A protocol proved against this box is proved against every such pattern, which is a stronger statement than "the clock is off by at most $\Sigma$".
+
+**Line 13 is the one place accuracy is enforced, and it fails closed.** If the skewed interval exceeds $\Delta$, the box returns nothing rather than a wrong number. So the timer never lies by more than $\Delta$; it declines instead. That is the guarantee a caller may rely on, and it is worth contrasting with a clock that returns its best guess.
+
+**A parameter that the printed clauses do not use.** The functionality's name carries $\Sigma_{C}$, "the maximum allowable shift", alongside $\Delta_{C}$ — but the printed body tests only $\delta \leq \Delta_{C}$. $\Sigma_{C}$ appears in the companion clock functionality on the same page, where a shift exceeding it resets the answer to $\bot$ unless a named party is corrupted, and it is presumably carried here for the realization rather than the definition. This box therefore omits it, and says so rather than inventing a use for it.
+
+**On the name, and a collision avoided.** The same paper prints $\mathcal{G}^{P,S,\Sigma}_{\mathsf{clock}}[\mathcal{G}_{\mathsf{refClock}}]$ — a delayed, approximately accurate clock whose accuracy depends on the honesty of a named party. That would also have fitted this page's old title, "Attackable network time service", but it collides by name with the site's existing [*G-Clock*](/uc/layer-0-idealized-setup/g-clock/index.qmd), which is a different object from the book. Taking the timer instead avoids two functionalities sharing a name on one site; the clock is recorded in `_src/sources.json` for whoever wants it, and it needs that collision resolved first.
+
+**Two translations.** The source reads its reference clock by sending `GetTime` to $\mathcal{G}_{\mathsf{refClock}}$; here that is an ordinary call on a slot this box *uses*, which is what the $\mathbf{U}$ field in the header records. And the source's `Start` ignores a second invocation while this box refuses it (line 6) — the same outcome, made visible.
+
+## Known realizations
+
+**From NTP, which is the paper's point.** The work exists to give network time protocols a composable security statement, and the timer is the piece an application actually consumes: a program wants to know how long has passed, not what the wall-clock reading is. The paper's realizations run over its reference clock and its own authenticated-channel functionality.
+
+**What it is used to prove.** The paper's application is certificates with expiration and revocation — the security of which depends on parties agreeing, approximately, on what time it is. That is the argument for modelling time as a functionality rather than as an assumption in prose: the certificate result is a composition theorem, and it needs the clock to be an object.
+
+**Relative time, not absolute.** This box answers "how long since `Start`", never "what time is it". A protocol needing absolute time needs the clock functionality beside it, and that is a different and stronger assumption — one whose accuracy, in the same paper, depends on somebody's honesty.
+
+## Properties
+
+- **Bounded error, with probability exactly $1$.** Line 13: any answer returned is within $\Delta$ of the true elapsed interval as the reference clock measures it. Outside that, no answer.
+- **No adversary interface at all** (line 16). This is the only functionality on the site whose leak is unconditionally $\bot$, and it is the source's own claim about the object.
+- **Skew is arbitrary but out of band.** Line 11's machine is chosen once (line 4, replacing any previous) and may be stateful. The adversary cannot choose it, and cannot change it per query.
+- **The owner only** (lines 6 and 9). No other party can start the timer or read it, which is what makes it a *local* measurement rather than a shared clock.
+- **Instantaneous once asked.** No delay clause anywhere; the source stresses this in its caption.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Canetti et al. [*Universally composable network time*](https://eprint.iacr.org/2017/1256). In IEEE Computer Security Foundations Symposium (CSF), 2017.
+- Canetti, Hogan, Malhotra, and Varia. [*Universally composable network time*](https://eprint.iacr.org/2017/1256). In IEEE Computer Security Foundations Symposium (CSF), 2017. Read at ePrint revision `20171230:183935`. Figure 5, p. 10, the definition transcribed above, and its caption for the out-of-band claim and the absence of an adversary interface; Figure 4, same page, the delayed approximate clock $\mathcal{G}_{\mathsf{clock}}$ discussed above and not taken; the paper's other printed functionalities — $\mathcal{G}_{\mathsf{refClock}}$, $\mathcal{G}_{\mathsf{multiClock}}$, $\mathcal{G}_{\mathsf{timed-bb}}$ and an authenticated-channel functionality — recorded in `_src/sources.json`. All four authors confirmed against the paper's own title page, which is dated 29 December 2017; the venue is as the stub recorded it.

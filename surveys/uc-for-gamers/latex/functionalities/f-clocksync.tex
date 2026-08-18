@@ -1,0 +1,75 @@
+%% The interface box of f-clocksync, the one source for both the book
+%% and uc/.../f-clocksync/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Gilclock$ \\
+\params{$\PID := (\op{G}\op{ImpClock},0,0)$, \quad $\Ps$, \quad
+$\admits := \Stdpid \cup \Apid \cup \Zpid$, \quad $\uses := \emptyset$, \quad
+$\pars := \Delta$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{d}[*] \gets 0$
+  \Comment{has this party finished its round}
+\State $\V{dImp}[*] \gets 0$
+  \Comment{what the party is told instead}
+\State $\V{drift}[*] \gets 0$
+  \Comment{how far ahead it has been pushed}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Update}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $\V{d}[\id.P] \gets 1$; \ $\V{dImp}[\id.P] \gets 1$
+\State $\opl{RoundUpdate}()$
+\State $\Adv\bigl(\id.\op{Update},\ \id.P\bigr)$
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Push}(P)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F = A$} \label{ln:clkadvonly}
+  \Comment{the adversary's line, and the whole weakening}
+\Req{$\V{dImp}[P] = 1 \ \wedge\ \V{drift}[P] < \Delta$} \label{ln:clkbound}
+  \Comment{drift is capped, which is the guarantee}
+\State $\V{dImp}[P] \gets 0$; \ $\V{drift}[P] \gets \V{drift}[P] + 1$ \label{ln:clkpush}
+  \Comment{$P$ is told the round turned when it did not}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Get}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $\opl{RoundUpdate}()$
+\State \textbf{return} $\V{dImp}[\id.P]$ \label{ln:clkget}
+  \Comment{the perceived bit, never $\V{d}$}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\op{RoundUpdate}()$}:
+\begin{algorithmic}[1]
+\algcont
+\Req{$\forall P \in \Ps \setminus \Cs : \V{d}[P] = 1$} \label{ln:clkquorum}
+  \Comment{the round turns on the honest parties alone}
+\State $\forall P \in \Ps : \V{d}[P] \gets 0$ \label{ln:clkreset}
+\State $\forall P \in \Ps : \V{drift}[P] \gets \V{drift}[P] - 1$ \label{ln:clkrepay}
+\State $\forall P : \V{drift}[P] < 0 : \V{dImp}[P] \gets 0$; \ $\V{drift}[P] \gets 0$ \label{ln:clkcatch}
+  \Comment{a pushed party has already spent this round}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

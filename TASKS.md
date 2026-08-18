@@ -1,8 +1,8 @@
 # Tasks
 
-Split into four sections. **Credibility and distribution** (~7h) covers review, prior-art checking, external addressability and the two unkept promises on the [Philosophy](/philosophy/) page — it is first because the project's binding constraint is there rather than in content supply; **Website and repository** (~5h) covers the site, its build tooling and the repository's configuration; **Formalizations** covers machine-checked artifacts; **Conjectures and papers** (~4.5h) covers the mathematics — proving conjectures, and writing and checking the papers that report them. Within each section, tasks are ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~24.5h** (rough; the UC Encyclopedia content dominates the uncertainty and could run well over its estimate).
+Split into three sections. **Credibility and distribution** (~4h) covers review and prior-art checking — it is first because the project's binding constraint is there rather than in content supply; **Website and repository** (~5h) covers the site, its build tooling and the repository's configuration; **Conjectures and papers** (~4.5h) covers the mathematics — proving conjectures, and writing and checking the papers that report them. Within each section, tasks are ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~13.5h** (rough; the UC Encyclopedia content dominates the uncertainty and could run well over its estimate — more so now that the 8h formalization item is gone, since it is 5h of the 13.5).
 
-Last reconciled against `main` at `cbb23c7` on 18 August 2026.
+Last reconciled against `main` at `2f56125` on 19 August 2026.
 
 Completed tasks are deleted from this file rather than checked off and kept: this is a list of live work, and `git log` is the record of what closed and when.
 
@@ -94,74 +94,6 @@ supplied numbers and several had drifted or were slightly off:
   was already known. For each statement, follow citations *forward* from the
   source paper rather than searching the statement's own wording, since a
   resolution rarely reuses the phrasing of the question.
-
-- [ ] **Lower the contribution floor below "open a pull request" (~1h)**
-
-  Confirmed on 18 August 2026: **GitHub Discussions is disabled** on the
-  repository, so there is currently no way to say anything about a statement
-  short of a pull request. The review's evidence is that per-problem discussion
-  — not the catalogue — is what accumulated contributors on erdosproblems.com,
-  and it is the single cheapest thing on this list.
-
-  The friction is worse than it looks. `revision` and `statement_sha` are
-  script-maintained, `CONTRIBUTING.md` says so, the repository ships a
-  `.githooks/pre-commit`, and a stale hash fails the whole site build — the
-  gate that took the deploy down for ~25 commits on 15 August 2026. A
-  cryptographer will leave a remark on a page. They will not clone a Quarto
-  site, install a git hook and regenerate a badge to do it.
-
-  Enable Discussions, embed a per-statement thread on each `/c/<id>/` page, and
-  decide the AI-disclosure norm at the same time rather than later. The review
-  reports that Bloom settled on *disclosure plus verification* rather than
-  prohibition, on the reasoning that a ban is unenforceable and drives the use
-  underground — which is the position this site's badge system already takes
-  for its own content, so adopting it for comments is consistent rather than
-  novel.
-
-- [ ] **Publish the session logs, and fix the contradiction about them (~1h)**
-
-  The [Philosophy](/philosophy/) page calls session logs "the one promise still
-  unkept"; `schema/index.qmd` records that they "still live in each leaf's
-  `sessions/` folder for provenance (excluded from the site)" as a settled
-  design choice. Those two sentences cannot both stand. Decide which, and edit
-  the other — that decision is the task, and it is smaller than it looks
-  because the logs are already on disk.
-
-  Two facts to size it with. They exist for **9 of the 29** leaves, not all of
-  them, so publishing them makes an uneven record visible and the pages should
-  say so rather than imply the other twenty had no session. And publishing is a
-  redaction question before it is a configuration one: a session log is a raw
-  transcript and nobody has read these with an eye to what is in them.
-
-- [ ] **Fund one bounty end to end (~0.5h of our time — manual: the amount, the money and the adjudicator are the maintainer's call, not ours)**
-
-  The [Philosophy](/philosophy/) page has intended from the start "to let anyone
-  attach a bounty payable once a resolution is verified rather than when a
-  committee has met", and no bounty exists. The review's argument for doing one
-  now at any amount is that a working instance settles questions a general
-  scheme cannot: who adjudicates, what counts as verified, what happens on a
-  disputed claim. Name a human adjudicator, pick the statement, and write down
-  the rule before there is money on it.
-
-- [ ] **Stress-test the venue positioning on the Philosophy page (~0.5h — manual: three policies to read at source, and they change)**
-
-  `philosophy/index.qmd` rests its stance toward venues on the ACM policy's
-  requirement that a work be "not primarily the result of the tool's generative
-  capabilities", read at source on 16 August 2026, and says several results
-  here cross that line on purpose. The review's counter is that 2026 norms
-  converged on *disclosure plus human accountability* rather than prohibition,
-  and that none of FOCS, ICML or ICLR 2026 bars a heavily AI-assisted result
-  that a named human vouches for — so the site's badge system already exceeds
-  what the venues demand, and positioning the project as *more* transparent
-  than they require is a better recruiting pitch than positioning it outside
-  them.
-
-  That argument is worth taking seriously and its evidence is **unverified
-  here**: read the FOCS, ICML and ICLR 2026 policies at source before a word of
-  it reaches the page, and keep the ACM sentence, which was verified. If the
-  policies say what the review says they say, the rewrite is a repositioning
-  and not a retraction — the site would still be doing more than any of them
-  ask.
 
 ## Website and repository
 
@@ -399,23 +331,6 @@ supplied numbers and several had drifted or were slightly off:
   What the estimate is still carrying is the part the tooling cannot shortcut: choosing between incompatible variants, and verifying every citation is a real paper at a real venue in a real year. Expect the mismatch registers to be the most interesting output, and expect some functionalities to have no canonical printed definition at all — that finding is itself a page worth having.
 
   One ordering trap, which turns CI red for the whole site: `gen_interface.py --check` runs in both workflows over every fragment in `functionalities/` and errors if a fragment's page has no `.cj-interface` block to replace. The page scaffold and the fragment must land in the same commit.
-
-## Formalizations
-
-- [ ] **Formalize the proof of LHL extraction, public seed (~8h, highly uncertain: real formalization, and one item is a project on its own)**
-
-  `c/0004` is the only resolved statement on the site, and its proof is the obvious next artifact: the statement is formalized and matched, `Proof.lean` is 476 lines with no `sorry`, and everything is in place except the theorem itself. `c/0004/lean/Statement.lean:134` holds the single real `sorry`, on `Conjura0004.lhl_public_seed`. Discharging it is what moves `status.proof_formal` off `open`, and by the discipline recorded in `LEDGER.md` nothing else may move it.
-
-  Do not re-derive the plan. `c/0004/lean/LEDGER.md` already lists what is proved and what is outstanding, in dependency order, and it was written to be picked up:
-
-  - Items 1 to 3 are groundwork: dropping `[Fintype Z]` in favour of `tsum`, the second half of Lemma 3.1 (factoring the view distance as an average over rows, which is where publishing the seed does its work), and the attainment half of the predictor bound.
-  - Items 4, 5, 7 and 8 are the flattening argument, the mean at fixed support, the uniform deviation bound and the final assembly.
-  - **Item 6 is the one to size the task by.** Fact 2.2, bounded differences, in the finite special case. The ledger calls it "the single largest item, and the one Mathlib does not help with at all", and that was checked: Mathlib has no McDiarmid inequality and no bounded-differences lemma. It is a formalization project in its own right and could exceed the estimate for everything else combined.
-  - Seven supporting facts are named and unattempted. Fact 2.5 is Jensen and is in Mathlib; Fact 2.7 needs the monotonicity of $(1-1/R)^R$ and is not the one-liner it looks like.
-
-  **Consider doing item 6 as a Mathlib contribution rather than an in-repo lemma** (added 18 August 2026 from the strategic review). Bounded differences / McDiarmid is absent from Mathlib, which is why the ledger calls it the sizing item; that absence is also what makes it worth upstreaming. It converts the largest private item on this list into an externally reviewed artifact and a route into the Lean community, which pays down the review deficit in the one currency that is actually available. It will be slower than an in-repo proof, and that is the trade to weigh.
-
-  Toolchain is pinned: `leanprover/lean4:v4.33.0`, Mathlib at the revision in `lake-manifest.json`. Keep `AuditProof.lean` passing throughout, since its entire purpose is that no declaration quietly acquires `sorryAx`, and update `LEDGER.md` as items close rather than at the end. Partial progress is worth committing: the ledger is designed for it, and an honest "items 1 to 3 done, 6 untouched" is more useful than nothing.
 
 ## Conjectures and papers
 

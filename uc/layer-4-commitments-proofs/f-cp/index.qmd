@@ -2,11 +2,110 @@
 title: "F-CP — Commit-and-prove"
 status: "Canonical"
 layer: 4
-definition: "Not yet written"
+definition: "Defined"
 ---
 
 *F-CP* (Commit-and-prove) is part of *Commitments and Proofs* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
 
+Commit to witnesses, then prove statements about them. It generalizes [*F-COM*](/uc/layer-4-commitments-proofs/f-com/index.qmd) in the way that matters for building protocols: the second phase does not reveal what was committed, it asserts a relation between the commitment and a value the committer supplies. Take the relation to be equality and you have plain commitment back; take it to be anything else and you have the primitive the source's protocol compiler is built on.
+
+Two generalizations in the source are easy to miss and both are in the box. The committer may commit *many* times, and the relation is evaluated against the whole accumulated list — which is what makes it usable for reactive protocols, where inputs arrive over time. And the committer may prove *many* statements against the same list.
+
+## Functionality
+
+Reading the box: $\mathcal{A}(\cdot)$ is a call on the adversary slot whose answer is not used, so it is a notification rather than a query; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it; $\mathbf{C}$ is the set of corrupted parties; $\square$ marks a value never set and $\bot$ an absence; $\mathtt{ws}$ is the accumulated witness list and $\mathtt{X}$ the set of statements already proved; $k$ and $R$ are the parameters, a length and a relation.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{CP}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := (k, R)\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{C} \gets \square\); &nbsp;\(\mathtt{V} \gets \square\)<span class="cj-comment">// committer, receiver</span></li>
+<li>\(\mathtt{ws} \gets ()\); &nbsp;\(\mathtt{X} \gets \varnothing\)<span class="cj-comment">// the witness list, the proved statements</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Commit(<span class="cj-id">Q</span>, <span class="cj-id">w</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="3">
+<li>\(\textbf{require}\ w \in \{0,1\}^{k} \ \wedge\ (\mathtt{C} = \square \ \vee\ \mathtt{C} = \mathit{id}.P)\)<span class="cj-comment">// one committer, many commits</span></li>
+<li>\(\textbf{if}\ \mathtt{C} = \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{C} \gets \mathit{id}.P\); &nbsp;\(\mathtt{V} \gets Q\)</span></li>
+<li>\(\mathtt{ws} \gets \mathtt{ws} \,\|\, w\)</li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Commit},\ \mathtt{C},\ \mathtt{V}\bigr)\)<span class="cj-comment">// a receipt, carrying no witness</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Prove(<span class="cj-id">x</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="9">
+<li>\(\textbf{require}\ \mathit{id}.P = \mathtt{C} \ \wedge\ R(x, \mathtt{ws}) = 1\)<span class="cj-comment">// a false statement leaves no trace</span></li>
+<li>\(\mathtt{X} \gets \mathtt{X} \cup \{x\}\)</li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Prove},\ x\bigr)\)</li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Read()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="13">
+<li>\(\textbf{require}\ \mathit{id}.P = \mathtt{V}\)<span class="cj-comment">// the proofs are the receiver's</span></li>
+<li>\(\textbf{return}\ (\mathtt{C},\ \mathtt{X})\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="15">
+<li>\(\textbf{if}\ \mathtt{C} = \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \bot\)</span></li>
+<li>\(\textbf{if}\ \mathtt{C} \in \mathbf{C}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ (\mathtt{C},\ \mathtt{V},\ \mathtt{ws},\ \mathtt{X})\)</span></li>
+<li>\(\textbf{return}\ (\mathtt{C},\ \mathtt{V},\ \mathtt{X})\)<span class="cj-comment">// never \(\mathtt{ws}\) for an honest committer</span></li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+The box is transcribed from Canetti, Lindell, Ostrovsky and Sahai, *Universally composable two-party and multi-party secure computation*, ePrint 2002/140, revision `20030714:190611`, Figure 8, p. 50 (PDF page 52) — "the commit-and-prove functionality". Printed page numbers in that posting run two behind the PDF's paging; `_src/sources.json` records both. The rendered page is at `_src/canettietal2002-p52.png`.
+
+**Line 9 is the security property, and it is a refusal to speak.** The printed clause computes $R(x, \mathbf{w})$ and, if the answer is $0$, *ignores the message* — the source spells out the consequence: "the receiver $V$ receives no notification that an attempt at cheating in a proof took place". So a false statement leaves no trace anywhere in the state, which is why line 10 is unreachable for one and why $\mathtt{X}$ can be handed to the receiver wholesale at line 14 without any per-statement check. Soundness here is not a test the receiver performs; it is a branch the functionality never takes.
+
+One difference this creates, recorded rather than smoothed: **the prover does learn**. A refused **require** is answered $\textsf{rej}$ to its caller, so the committer finds out its statement was rejected, where the printed functionality is silent to everybody. The property the source cares about — that $V$ learns nothing — is preserved exactly; the prover's own view is strictly more informative here.
+
+**Line 6 is the accumulation, and line 3 is what keeps it coherent.** The source appends each new $w$ to a list and evaluates $R$ against the list, so the object being proved about grows. Line 3 admits a second commit only from the party that made the first, which the printed version leaves implicit in running "with a committer $C$" — a fixed role rather than a test. Making it a test is what this framework requires, since roles are not given in advance; the alternative reading, that any party may append to the list, would be a different and much weaker object.
+
+**The receipt carries nothing** (line 7). The source sends `(receipt, sid)` to $V$ and the adversary — not the witness, not its length, not the number of commits so far. This box matches that, and it matches [*F-COM*](/uc/layer-4-commitments-proofs/f-com/index.qmd)'s receipt line for line, which is deliberate: the two boxes should differ only where the functionalities do.
+
+**Leak is added, and it is where the corruption model actually lives** (lines 15–19). The source has none. A corrupt committer's adversary must be able to read the witnesses, since the real committer holds them; an honest committer's must not, since that is the hiding property. Line 17 is the test that separates those cases, and it is the only line in the box that consults $\mathbf{C}$.
+
+**One-to-many is a separate object, not a variant of this one.** The same paper prints $\mathcal{F}_{\textsc{cp}}^{1:M}$ (Figure 15, p. 74, PDF page 76), which runs with $P_1, \ldots, P_n$, records a *set* of receiving parties on the first commit, and sends receipts and proofs to all of them. It also adds a test the box above does not need: a later commit must name the same set, or it is ignored. That is a genuine generalization of the party structure and belongs on its own page if the encyclopedia ever wants it; it is not this box with more parties.
+
+## Known realizations
+
+**This is the box the compiler is built from.** The source's purpose in defining it is that a UC-secure commit-and-prove suffices to compile protocols secure against semi-honest adversaries into protocols secure against malicious ones — the role $\mathcal{F}_{\textsc{zk}}$ plays in earlier compilers, strengthened so that the prover is committed to a witness across many proofs. Section 7 of the paper gives protocols realizing it, in the static case first and then adaptively, over a common reference string.
+
+**What it costs is a setup.** Like [*F-COM*](/uc/layer-4-commitments-proofs/f-com/index.qmd), it is not realizable in the plain model, and for the same reason: the simulator needs a trapdoor the environment cannot obtain. Everything in that paper's construction runs over [*F-CRS*](/uc/layer-0-idealized-setup/f-crs/index.qmd).
+
+## Properties
+
+- **Hiding, with probability exactly $1$ against an honest committer.** The witness list is written only at line 6 and read only at line 9 and line 18, and line 18 is gated on the committer being corrupted. No path exists from $\mathtt{ws}$ to the receiver.
+- **Binding, with probability exactly $1$.** The relation at line 9 is evaluated against $\mathtt{ws}$ as it stands, and nothing overwrites an entry — line 6 only appends. A committer cannot change what it committed to; it can only add.
+- **Soundness, with probability exactly $0$ for a false statement.** Line 9 refuses, so no false $x$ ever reaches $\mathtt{X}$ and no false $x$ is ever readable at line 14.
+- **No proof of knowledge beyond the list.** The relation sees $x$ and $\mathtt{ws}$ and nothing else. What the box guarantees is that the prover's statement is true *of what it committed to* — not that it knows anything further, and not that the witness was well-formed when committed.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
+
 *References:*
 
-- Canetti et al. [*Universally composable two-party and multi-party secure computation*](https://eprint.iacr.org/2002/140). In 34th ACM Symposium on Theory of Computing (STOC), pages 494–503, 2002.
+- Canetti, Lindell, Ostrovsky, and Sahai. [*Universally composable two-party and multi-party secure computation*](https://eprint.iacr.org/2002/140). In 34th ACM Symposium on Theory of Computing (STOC), pages 494–503, 2002. Read at ePrint revision `20030714:190611`, the newest of three postings. Figure 8, p. 50 (PDF page 52), the definition transcribed above; the "no notification that an attempt at cheating took place" remark on the same page; Figure 15, p. 74 (PDF page 76), the one-to-many variant; Section 7 for the realizations. Authors, venue and page range confirmed against DBLP.

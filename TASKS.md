@@ -1,6 +1,6 @@
 # Tasks
 
-Split into four sections. **Credibility and distribution** (~8.5h) covers review, prior-art checking, external addressability and the two unkept promises on the [Philosophy](/about/) page — it is first because the project's binding constraint is there rather than in content supply; **Website and repository** (~5.5h) covers the site, its build tooling and the repository's configuration; **Formalizations** covers machine-checked artifacts; **Conjectures and papers** (~4.5h) covers the mathematics — proving conjectures, and writing and checking the papers that report them. Within each section, tasks are ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~26.5h** (rough; the UC Encyclopedia content dominates the uncertainty and could run well over its estimate).
+Split into four sections. **Credibility and distribution** (~7h) covers review, prior-art checking, external addressability and the two unkept promises on the [Philosophy](/about/) page — it is first because the project's binding constraint is there rather than in content supply; **Website and repository** (~5.5h) covers the site, its build tooling and the repository's configuration; **Formalizations** covers machine-checked artifacts; **Conjectures and papers** (~4.5h) covers the mathematics — proving conjectures, and writing and checking the papers that report them. Within each section, tasks are ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~25h** (rough; the UC Encyclopedia content dominates the uncertainty and could run well over its estimate).
 
 Last reconciled against `main` at `cbb23c7` on 18 August 2026.
 
@@ -94,32 +94,6 @@ supplied numbers and several had drifted or were slightly off:
   was already known. For each statement, follow citations *forward* from the
   source paper rather than searching the statement's own wording, since a
   resolution rarely reuses the phrasing of the question.
-
-- [ ] **Make the archive externally addressable: version `conjura.json`, then upstream the Lean statements (~1.5h)**
-
-  Two halves, and the first is nearly done already. `conjura.json` is built by
-  `scripts/build_index.py`, gitignored, and published at
-  `https://crypto-conjura.github.io/conjura.json` (200, 70 KB, 29 entries). It
-  is documented in `README.md`, `CONTRIBUTING.md` and `schema/index.qmd`. What
-  it lacks is what makes a file citable: its top level is bare statement ids
-  with no envelope, so there is no schema version, no generation timestamp, no
-  snapshot tag and nothing to cite. Add the envelope, publish immutable
-  snapshots, and put a citation stanza on `schema/index.qmd` next to the
-  description that is already there.
-
-  Copy the versioning discipline from `formal-conjectures`, whose README says
-  it plainly: tags are immutable, and a fix to a misformalization goes into the
-  next version rather than being patched into an existing one. That rule exists
-  because a benchmark that is silently corrected is not a benchmark, and it is
-  the same reason `CONTRIBUTING.md` already has a same-id-versus-new-id rule.
-
-  The second half is the one with an audience attached. `formal-conjectures`
-  has directories for Erdős, OEIS, Green, Hilbert, Kourovka, Litt, Millennium
-  and quantum problems, and none for cryptography — checked 18 August 2026.
-  Upstreaming the Lean statements under a cryptography directory costs nothing
-  the project is not already paying, and reaches exactly the audience the
-  benchmark argument on the [Philosophy](/about/) page depends on. Read their
-  contribution guide first; a rejected PR is worse than none.
 
 - [ ] **Lower the contribution floor below "open a pull request" (~1h)**
 

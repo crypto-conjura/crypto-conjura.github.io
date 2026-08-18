@@ -1,13 +1,110 @@
 ---
-title: "F-thdec — Threshold decryption"
+title: "F-thdec — Threshold decryption of LWE ciphertexts"
 status: "Canonical"
 layer: 6
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-thdec* (Threshold decryption) is part of *Secret Sharing, Threshold Cryptography, MPC* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+*F-thdec* (Threshold decryption of LWE ciphertexts) is part of *Secret Sharing, Threshold Cryptography, MPC* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+
+**Read the caveat before the box.** The source is unusually direct about what this functionality is *not*, and the warning is load-bearing: "We strongly emphasize that our $\mathcal{F}_{\mathsf{Decrypt}}$ is not a complete functionality for threshold encryption; it is just a key ingredient in a protocol to realize such a functionality. In order to be meaningfully secure, this protocol would need to be designed so that honest parties $\mathsf{Decrypt}$ only ciphertexts that are known to be suitably 'well formed.' Otherwise, the $\mathsf{Decrypt}$ command would act as an unrestricted decryption oracle, from which it is easy to learn the secret key using standard techniques."
+
+That is the whole of line 9 below. The box performs *no* well-formedness check, and a protocol that hands it arbitrary ciphertexts has handed the adversary the key. Anyone composing against this functionality owes the restriction elsewhere.
+
+## Functionality
+
+Reading the box: $\mathcal{A}(\cdot)$ is a call on the adversary slot; **require** refuses the call, and the framework answers $\textsf{rej}$; $\mathbf{C}$ is the set of corrupted parties; $\square$ marks a value never set; $q$ and $p$ are the ciphertext and plaintext moduli, and $\lfloor \cdot \rceil_p$ the rounding between them; $\mathsf{KeyGen}$ is a parameter.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{Decrypt}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := (\mathsf{KeyGen}, q, p)\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{Sk}, \mathtt{Pk} \gets \square\); &nbsp;&nbsp; \(\mathtt{Up} \gets \varnothing\)</li>
+<li>\(\mathtt{Ask} : \{0,1\}^* \to 2^{\mathbf{P}}\); &nbsp;&nbsp; \(\mathtt{Ask}[*] \gets \varnothing\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Init()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="3">
+<li>\(\textbf{require}\ \mathtt{Pk} = \square\)<span class="cj-comment">// one key per instance; later calls are refused</span></li>
+<li>\(\mathtt{Up} \gets \mathtt{Up} \cup \{\mathit{id}.P\}\)</li>
+<li>\(\textbf{require}\ \mathbf{P} \setminus \mathbf{C} \subseteq \mathtt{Up}\)<span class="cj-comment">// every honest party, and corrupt ones need not</span></li>
+<li>\((\mathtt{Pk}, \mathtt{Sk}) \gets \mathsf{KeyGen}()\)</li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Init}, \mathtt{Pk}\bigr)\)<span class="cj-comment">// the public key is public; \(\mathtt{Sk}\) never leaves</span></li>
+<li>\(\textbf{return}\ \mathtt{Pk}\) &nbsp;to every \(P \in \mathbf{P}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Decrypt(<span class="cj-id">c</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="9">
+<li>\(\textbf{require}\ \mathtt{Pk} \neq \square \ \wedge\ c \in \mathbb{Z}_q^{n+1}\)<span class="cj-comment">// an LWE ciphertext, and nothing is checked of it</span></li>
+<li>\(\mathtt{Ask}[c] \gets \mathtt{Ask}[c] \cup \{\mathit{id}.P\}\)</li>
+<li>\(\textbf{require}\ \mathbf{P} \setminus \mathbf{C} \subseteq \mathtt{Ask}[c]\)<span class="cj-comment">// every honest party must ask for this \(c\)</span></li>
+<li>\(m \gets \bigl\lfloor \langle c, \mathtt{Sk} \rangle \bigr\rceil_{p}\)<span class="cj-comment">// \(\lfloor x \rceil_{p} := \tfrac{p}{q} \cdot x \in \mathbb{Z}_p\)</span></li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Decrypt}, c, m\bigr)\)<span class="cj-comment">// the adversary learns the plaintext too</span></li>
+<li>\(\textbf{return}\ m\) &nbsp;to every \(P \in \mathbf{P}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="15">
+<li>\(\textbf{return}\ (\mathtt{Pk}, \mathtt{Ask})\)<span class="cj-comment">// \(\mathtt{Sk}\) is not leaked, at any corruption level</span></li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+*Source: Figure 2, PDF p. 5 of Zyskind, Zarchy, Leibovich and Peikert, "High-Throughput Universally Composable Threshold FHE Decryption", CCS 2025, ePrint 2025/1781. The proceedings pages carry a running head rather than a folio in the text layer, so the PDF page is the reliable pointer.*
+
+- **Line 9 is where the caveat lives, and it is a deliberate absence.** The only test is that $c$ is a syntactically valid LWE ciphertext. Nothing checks that it was honestly produced, that it decrypts to anything meaningful, or that it is unrelated to previous queries. Every guarantee this box offers is conditional on the caller not abusing it, and the source says so.
+- **Lines 5 and 11 are the same pattern twice, and it is what makes this *threshold* decryption.** Both key generation and each decryption require *every honest party* to have asked. A single honest party refusing to decrypt a ciphertext blocks it — which is precisely the protection the caveat asks a surrounding protocol to exercise. Corrupt parties are neither required nor trusted, so a corrupt minority can neither block nor force.
+- **Line 12 is the functionality's one computation, and note what it does not model.** The plaintext is the rounded inner product $\lfloor \langle c, \mathtt{Sk} \rangle \rceil_p$ — the *exact* LWE decryption, with no noise term and no failure probability. Real threshold decryption adds smudging noise and can fail; the ideal box does neither, and that gap is what the paper's protocol has to close.
+- **Line 13 gives the adversary the plaintext, and that is correct rather than a leak.** Decryption is a public act here: every party gets $m$ at line 14 anyway, so telling the adversary costs nothing. The secrecy claim is entirely about $\mathtt{Sk}$.
+- **Line 15 never discloses $\mathtt{Sk}$, at any corruption level.** There is no share structure in this box — the secret key is held whole by the functionality and no interface returns it. That is the sense in which this is an *ideal* threshold decryption: the sharing is the realization's business.
+- **Line 3 fixes one key per instance.** Re-keying means a new instance, matching the source's "Do not act on any further $\mathsf{Init}$ commands for this session."
+
+**Mismatch register.**
+
+| The source | This box | Why |
+|---|---|---|
+| "Once $(\mathsf{Init}, \mathit{sid})$ is received from each honest party" | Lines 4–5, an accumulating set and a `require` | Same condition; the set is needed because this framework's calls arrive one at a time. |
+| "On input $(\mathsf{Decrypt}, \mathit{sid}, c)$ from all the honest parties" | Lines 10–11, per ciphertext | Likewise, and keyed by $c$ so that unanimity is required for each ciphertext separately rather than once for all time. |
+| $\mathit{sid}$ threaded through every message | The process id | Nothing is conditional on it. |
+| No leakage interface | $\mathsf{Leak}$ at line 15 | Required here. Returns the public key and who has asked for what — both already public — and never $\mathtt{Sk}$. |
+| No corruption model stated | $\mathbf{C}$ at lines 5 and 11 | The source's "honest party" quantifier is exactly a test against the corruption set. |
+
+## Known realizations
+
+**The paper's own protocol, $\Pi_{\mathsf{Decrypt}}$**, realizes this functionality with high throughput — that being the contribution. The construction runs in the $\mathcal{F}_{\mathsf{ABB}}$-hybrid model, using the arithmetic black box of [*F-ABB*](/uc/layer-6-secret-sharing-mpc/f-abb/index.qmd) to hold the key shares, so the two entries on this site compose directly. The paper's Figure 1 reproduces an ABB functionality for that purpose.
+
+**What it does *not* give you.** By the caveat above, this is one ingredient of threshold encryption, not threshold encryption. The restrictions on which ciphertexts may be decrypted "have been considered in many prior works ... and are outside the scope of this work" — so a reader building on this box needs a second source for them.
+
+## Properties
+
+- **Key secrecy, with advantage exactly $0$ — conditional on well-formed queries.** $\mathtt{Sk}$ appears only at line 12 and in no return or adversary call. The conditional is the point: line 9 permits arbitrary $c$, and the source states that unrestricted queries recover the key by standard techniques. This is the one property on this site whose statement is *contingent on the caller*, and it is stated that way because the source states it that way.
+- **Unanimity among honest parties, with probability exactly $1$.** Lines 5 and 11.
+- **Correctness of decryption, exact.** Line 12 computes the rounded inner product with no error term. A realization must therefore make its own noise negligible.
+- **Agreement, with probability exactly $1$.** Line 14 returns the same $m$ to every party in one step.
+- **No robustness against a silent party.** Lines 5 and 11 wait with no deadline. An honest party that never calls blocks the instance forever.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Abe and Fehr. [*Adaptively secure feldman VSS and applications to universally-composable threshold cryptography*](https://eprint.iacr.org/2004/119). In Advances in Cryptology – CRYPTO 2004, pages 317–334, 2004.
-- Damgård and Nielsen. [*Universally composable efficient multiparty computation from threshold homomorphic encryption*](https://iacr.org/archive/crypto2003/27290247/27290247.pdf). In Advances in Cryptology – CRYPTO 2003, 2003.
+- Zyskind, Zarchy, Leibovich, and Peikert. [*High-throughput universally composable threshold FHE decryption*](https://eprint.iacr.org/2025/1781). In ACM Conference on Computer and Communications Security (CCS), 2025. The definition transcribed above is Figure 2, PDF p. 5; the caveat quoted above is the prose immediately following it; the realization is $\Pi_{\mathsf{Decrypt}}$ (Figure 3) in the $\mathcal{F}_{\mathsf{ABB}}$-hybrid model, with the ABB functionality reproduced as Figure 1. **Added to this page's references by this entry** — the two papers previously cited here print no threshold-decryption functionality, which is the "the box is in a paper the stub does not cite" case.
+- Abe and Fehr. [*Adaptively secure Feldman VSS and applications to universally-composable threshold cryptography*](https://eprint.iacr.org/2004/119). In Advances in Cryptology – CRYPTO 2004, pages 317–334, 2004. Prints $\mathcal{F}^{\mathrm{com}_K}_{\mathsf{VSS}}$ and $\mathcal{F}^{\mathrm{com}_K}_{\mathsf{SVSS}}$ — the objects of [*F-VSS*](/uc/layer-6-secret-sharing-mpc/f-vss/index.qmd) — and no threshold-decryption functionality. Its relevance here is the applications half of its title: adaptively secure VSS is what threshold schemes are built on.
+- Damgård and Nielsen. [*Universally composable efficient multiparty computation from threshold homomorphic encryption*](https://iacr.org/archive/crypto2003/27290247/27290247.pdf). In Advances in Cryptology – CRYPTO 2003, pages 247–264, 2003. Prints $\mathcal{F}_{\mathsf{ABB}}$ — the object of [*F-ABB*](/uc/layer-6-secret-sharing-mpc/f-abb/index.qmd) — and treats threshold decryption inside its protocol rather than as a functionality.

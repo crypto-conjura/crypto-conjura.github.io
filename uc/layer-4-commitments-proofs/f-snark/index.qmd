@@ -1,16 +1,118 @@
 ---
-title: "F-SNARK — Witness-succinct UC NIZK"
+title: "F-SNARK — Weak NIZK, maulable arguments"
 status: "Canonical"
 layer: 4
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-SNARK* (Witness-succinct UC NIZK) is part of *Commitments and Proofs* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+*F-SNARK* (Weak NIZK, maulable arguments) is part of *Commitments and Proofs* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
 
-A 2024 result that some deployed zkSNARKs are unconditionally UC-secure in the random oracle model strengthens this functionality's realizability picture.
+**A SNARK has no ideal functionality of its own, and that is the first thing to know about this slot.** Succinctness is a property of a *proof system* — the argument is short, and short independently of the witness — and an ideal functionality has no proof strings whose length it could constrain. What the SNARK literature targets is the NIZK functionality already on this site at [*F-NIZK*](/uc/layer-4-commitments-proofs/f-nizk/index.qmd). Ganesh, Orlandi, Pancholi, Takahashi and Tschudi, whose *witness-succinct universally-composable SNARKs* is this page's primary citation, say so explicitly: their functionality "is taken from [GOS12] with a minor difference being that $\mathcal{F}_{\mathsf{NIZK}}$ explicitly informs $\mathsf{Sim}$ of the associated session ID". That difference is a plumbing detail, and their box is otherwise the one *F-NIZK* already carries.
+
+So this page carries the one functionality in its citations that is genuinely *not* $\mathcal{F}_{\mathsf{NIZK}}$: Kosba et al.'s $\mathcal{F}_{\textsc{weak-nizk}}$, which is what an off-the-shelf SNARK realizes when it has only *weak* simulation extractability. It is $\mathcal{F}_{\mathsf{NIZK}}$ plus one interface, and that interface is the entire content of the weakening.
+
+## Functionality
+
+Reading the box: $\mathcal{A}^{!}(\cdot)$ is a *responsive* call on the adversary slot, meaning the answer comes back before anything else runs, and $\mathit{id}'.F = \mathbf{A}$ tests that the adversary is the caller; **require** refuses the call, and the framework answers $\textsf{rej}$; $R$ is the relation the instance is parameterized by; $\mathtt{Prf}$ is the set of statement–argument pairs the functionality has committed to accepting.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{wNIZK}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := R\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{Prf} \gets \varnothing\)<span class="cj-comment">// accepted statement--argument pairs</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Prove(<span class="cj-id">x</span>, <span class="cj-id">w</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="2">
+<li>\(\textbf{require}\ (x, w) \in R\)</li>
+<li>\(\pi \gets \mathcal{A}^{!}\bigl(\mathit{id}.\mathsf{Prove}, x\bigr)\)<span class="cj-comment">// \(w\) is never sent: this line is zero knowledge</span></li>
+<li>\(\mathtt{Prf} \gets \mathtt{Prf} \cup \{(x, \pi)\}\)</li>
+<li>\(\textbf{return}\ \pi\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Maul(<span class="cj-id">x</span>, <span class="cj-id">pi</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="6">
+<li>\(\textbf{require}\ \mathit{id}'.F = \mathbf{A}\)</li>
+<li>\(\textbf{require}\ \exists\, \pi' : (x, \pi') \in \mathtt{Prf}\)<span class="cj-comment">// same statement only: a fresh \(x\) is not maulable</span></li>
+<li>\(\mathtt{Prf} \gets \mathtt{Prf} \cup \{(x, \pi)\}\)<span class="cj-comment">// this line is the whole weakening</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Verify(<span class="cj-id">x</span>, <span class="cj-id">pi</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="10">
+<li>\(\textbf{if}\ (x, \pi) \in \mathtt{Prf}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ 1\)</span></li>
+<li>\(w \gets \mathcal{A}^{!}\bigl(\mathit{id}.\mathsf{Verify}, x, \pi\bigr)\)</li>
+<li>\(\textbf{if}\ (x, w) \in R\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{Prf} \gets \mathtt{Prf} \cup \{(x, \pi)\}\)</span><span class="cj-comment">// soundness: a new \(x\) still costs a witness</span></li>
+<li><span class="cj-ind">\(\textbf{return}\ 1\)</span></li>
+<li>\(\textbf{return}\ 0\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="17">
+<li>\(\textbf{return}\ \mathtt{Prf}\)</li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+*Source: Figure 3, p. 28 of Kosba, Zhao, Miller, Qian, Chan, Papamanthou, Pass, shelat and Shi, "C∅C∅: A Framework for Building Composable Zero-Knowledge Proofs", ePrint 2015/1093, revision `20170409:223905`, the newest of eight postings. The PDF's pages and its printed folios agree.*
+
+- **Lines 6–8 are the entire difference from [*F-NIZK*](/uc/layer-4-commitments-proofs/f-nizk/index.qmd).** Delete $\mathsf{Maul}$ and the two boxes are the same functionality. So the honest way to read this page is as a one-operation diff, and the diff is a *concession*: the adversary may manufacture new accepted arguments without a witness.
+- **Line 7 is what stops the concession from destroying soundness.** Mauling requires an existing accepted pair for the *same* statement $x$. The paper puts it plainly: "the weaker version may permit an adversary to maul an existing proof to a new proof, but for the same statement", and both versions "prevent the adversary from mauling a proof to a related statement". So $x$ must already be in the language, witnessed by whatever put the first pair in $\mathtt{Prf}$ — line 8 mints a new *string*, never a new *truth*.
+- **Line 8 is nonetheless a real loss, and it is not about soundness.** What it costs is *non-malleability of the argument object*. A protocol that treats an argument as a unique token — deduplicating on it, using it as a nonce, paying out once per distinct proof — is broken by this line and not by any weakening of soundness. That is exactly the class of application the strong notion exists for.
+- **Lines 12–15 are unchanged, and they are why the loss is bounded.** A statement with no accepted pair still costs the adversary a witness at line 13. Line 7 cannot bootstrap: an adversary holding nothing for $x$ cannot maul its way in.
+- **Line 3 is unchanged too.** Zero knowledge is untouched by the weakening — the witness is checked at line 2 and never leaves.
+
+**Mismatch register.**
+
+| The source | This box | Why |
+|---|---|---|
+| $\mathsf{Maul}$ is "ignore unless $(\mathit{stmt}, x)$ is already stored for some $\pi'$" | `require` at line 7 | The source's variable there is a typo — it writes $x$ where the stored pair's second component is a proof, and the quantifier $\exists \pi'$ makes the intent unambiguous. Transcribed as intended. |
+| Verification "return $(\mathit{stmt},\pi) \in \mathtt{Q}$" as one expression | Lines 10–16, an explicit branch | Same function, written in the house shape so that the soundness line is visible on its own. |
+| Session and sub-session identifiers threaded through every message | The process id | Nothing in the box is conditional on them. |
+| No leakage interface | $\mathsf{Leak}$ at line 17 | Required here. Everything in $\mathtt{Prf}$ is either the adversary's own output or something it opened with a witness. |
+
+## Known realizations
+
+**Weak simulation-extractability suffices: the paper's own framing.** Groth showed that the *stronger* notion of simulation extractability instantiates $\mathcal{F}_{\mathsf{NIZK}}$; Kosba et al. observe that "it is not hard to show that a weak SSE secure NIZK can be used to realize a weaker version of the ideal functionality called $\mathcal{F}_{\textsc{weak-nizk}}$". C∅C∅ is the compiler that lifts an ordinary NIZK to a UC-secure one, and the two notions of extractability are what separate the two targets.
+
+**And the weak notion is enough in practice, sometimes.** The paper notes that "depending on the application, sometimes the weak SSE notion suffices in protocol design, e.g., in Hawk". That is the practical reason this box exists rather than being a footnote to *F-NIZK*.
+
+**For the succinct case, the target is *F-NIZK* itself.** Ganesh et al. construct witness-succinct UC SNARKs against the unmodified $\mathcal{F}_{\mathsf{NIZK}}$; Chiesa and Fenzi treat zkSNARKs in the ROM with unconditional UC security. Neither introduces a succinctness-aware functionality, because there is nothing for one to say.
+
+## Properties
+
+- **Soundness, with probability exactly $0$ of accepting a false statement.** Lines 7 and 13 are the only two ways into $\mathtt{Prf}$ beyond an honest prove, and each requires $x$ to be in the language already — line 7 through an existing accepted pair, line 13 through a witness. Unconditional, as in the strong version.
+- **Perfect zero knowledge, with advantage exactly $0$.** Line 3.
+- **Argument non-malleability: *not* guaranteed.** Line 8, deliberately. This is the property the strong functionality has and this one does not, and it is the whole reason the page exists.
+- **Consistency, with probability exactly $1$.** $\mathtt{Prf}$ only grows, and both verification paths consult or extend it.
+- **No succinctness claim.** The box places no bound on $|\pi|$ and cannot: $\pi$ is whatever the adversary returns at line 3. Succinctness lives in the realization.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Ganesh et al. [*Witness-succinct universally-composable SNARKs*](https://eprint.iacr.org/2022/1618). In Advances in Cryptology – EUROCRYPT 2023, Part II, volume 14005 of LNCS, pages 315–346, 2023.
-- Chiesa and Fenzi. [*zkSNARKs in the ROM with unconditional UC-security*](https://eprint.iacr.org/2024/724). In 22nd Theory of Cryptography Conference (TCC), Part I, volume 15364 of LNCS, 2024.
-- Kosba et al. [*C0C0: A framework for building composable zero-knowledge proofs*](https://eprint.iacr.org/2015/1093). Cryptology ePrint Archive, Paper 2015/1093, 2015.
+- Kosba, Zhao, Miller, Qian, Chan, Papamanthou, Pass, shelat, and Shi. [*C∅C∅: A framework for building composable zero-knowledge proofs*](https://eprint.iacr.org/2015/1093). Cryptology ePrint Archive, Paper 2015/1093, 2015. The definition transcribed above is Figure 3, p. 28 of revision `20170409:223905`, the newest of eight postings; the weak and strong simulation-extractability notions it separates are in §2 and §5.
+- Ganesh, Orlandi, Pancholi, Takahashi, and Tschudi. [*Witness-succinct universally-composable SNARKs*](https://eprint.iacr.org/2022/1618). In Advances in Cryptology – EUROCRYPT 2023, Part II, volume 14005 of LNCS, pages 315–346, 2023. Prints $\mathcal{F}_{\mathsf{NIZK}}$ (Fig. 3, p. 12 of revision `20230426:003540`) and states that it is GOS12's functionality with the session-id difference noted above — so its target is [*F-NIZK*](/uc/layer-4-commitments-proofs/f-nizk/index.qmd), not a functionality of its own. Also prints $\mathcal{F}_{\mathsf{Setup}}$ and a global random oracle $\mathcal{G}_{\mathsf{RO}}$.
+- Chiesa and Fenzi. [*zkSNARKs in the ROM with unconditional UC-security*](https://eprint.iacr.org/2024/724). In 22nd Theory of Cryptography Conference (TCC), Part I, volume 15364 of LNCS, 2024. Read at revision `20240905:100210`; likewise targets the NIZK functionality rather than introducing a succinctness-aware one.

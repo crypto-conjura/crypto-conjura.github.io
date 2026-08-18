@@ -1,0 +1,65 @@
+%% The interface box of f-thdec, the one source for both the book
+%% and uc/.../f-thdec/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fthdec$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad
+$\pars := (\op{KeyGen}, q, p)$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{Sk}, \V{Pk} \gets \unset$; \quad $\V{Up} \gets \emptyset$
+\State $\V{Ask} : \bits \to 2^{\Ps}$; \quad $\V{Ask}[*] \gets \emptyset$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Init}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{Pk} = \unset$} \label{ln:thdeconce}
+  \Comment{one key per instance; later calls are refused}
+\State $\V{Up} \gets \V{Up} \cup \{\id.P\}$
+\Req{$\Ps \setminus \Cs \subseteq \V{Up}$} \label{ln:thdecall}
+  \Comment{every honest party, and corrupt ones need not}
+\State $(\V{Pk}, \V{Sk}) \gets \op{KeyGen}()$
+\State $\Adv\bigl(\id.\op{Init}, \V{Pk}\bigr)$ \label{ln:thdecpk}
+  \Comment{the public key is public; $\V{Sk}$ never leaves}
+\State \textbf{return} $\V{Pk}$ \ to every $P \in \Ps$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Decrypt}(c)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{Pk} \neq \unset \ \wedge\ c \in \mathbb{Z}_q^{n+1}$} \label{ln:thdecwf}
+  \Comment{an LWE ciphertext, and nothing is checked of it}
+\State $\V{Ask}[c] \gets \V{Ask}[c] \cup \{\id.P\}$
+\Req{$\Ps \setminus \Cs \subseteq \V{Ask}[c]$} \label{ln:thdecunan}
+  \Comment{every honest party must ask for this $c$}
+\State $m \gets \bigl\lfloor \langle c, \V{Sk} \rangle \bigr\rceil_{p}$ \label{ln:thdecround}
+  \Comment{$\lfloor x \rceil_{p} := \tfrac{p}{q} \cdot x \in \mathbb{Z}_p$}
+\State $\Adv\bigl(\id.\op{Decrypt}, c, m\bigr)$ \label{ln:thdecadv}
+  \Comment{the adversary learns the plaintext too}
+\State \textbf{return} $m$ \ to every $P \in \Ps$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $(\V{Pk}, \V{Ask})$ \label{ln:thdecleak}
+  \Comment{$\V{Sk}$ is not leaked, at any corruption level}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

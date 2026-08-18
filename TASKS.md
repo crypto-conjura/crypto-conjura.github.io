@@ -222,7 +222,7 @@ supplied numbers and several had drifted or were slightly off:
 
 - [ ] **UC Encyclopedia content (~5h — manual: sourcing and verifying real citations per functionality, not just drafting text)**
 
-  51 of the 104 functionality pages (`uc/layer-N-.../<id>/index.qmd`) are still stubs, one is marked *No canonical definition*, and fifty-two are written — measured 18 August 2026. Run `python3 scripts/uc_status.py --check` for the current split rather than trusting these numbers. Added 18 August: F-acc, F-TSIG, F-adsig, F-NIZK, F-PUF, then F-aPAKE, F-saPAKE, F-VSS, F-ABB and F-dauth, alongside the forty-two already listed in `git log`.
+  46 of the 104 functionality pages (`uc/layer-N-.../<id>/index.qmd`) are still stubs, three are marked *No canonical definition*, and fifty-five are written — measured 18 August 2026. Run `python3 scripts/uc_status.py --check` for the current split rather than trusting these numbers. Added 18 August: F-acc, F-TSIG, F-adsig, F-NIZK, F-PUF, then F-aPAKE, F-saPAKE, F-VSS, F-ABB, F-dauth, then F-SNARK, F-thdec and F-DKG with F-eqv and F-NMCOM as *No canonical definition*, alongside the forty-two already listed in `git log`.
 
   The tooling for this now exists end to end, so this is a matter of running it 97 times rather than inventing the process each time:
 
@@ -262,6 +262,36 @@ supplied numbers and several had drifted or were slightly off:
   write two guarded `\If`s instead, negating the first condition where the source's `else if` semantics
   require it. Every command must sit on **one source line** (a wrapped `\If{...}` condition raises), and a
   `\label` must share the line with its statement rather than sit on the next one.
+
+  **A fifth false-negative mode: the definition may not be in a figure at all.** `f-dkg` sat unwritten
+  because Wikström states it as a numbered `Functionality 4 (Distributed Key Generation)` environment in
+  running text, so both the harvester's box scan *and* the figure-caption sweep that found the previous ten
+  entries looked straight past it. Add `grep -nE 'Functionality [0-9]+ *\\('` to the sweep. The same paper
+  states its three hybrids the same way.
+
+  **"No canonical definition" now has two more worked examples, and both are structural rather than
+  accidental.** `f-eqv`: equivocability is a property of a *scheme*, not something a functionality can
+  express — a commitment box stores the value directly and has no ciphertext to reinterpret, so
+  equivocation is what the *simulator* does. `f-nmcom`: UC security already *implies* non-malleability,
+  against arbitrary other protocols and not merely other copies, so a non-malleable commitment
+  functionality would assert what `F-COM`/`F-MCOM` already give. Both pages were written only after a
+  forward search, per the rule below, and both say what would resolve them. Note the neat cross-check:
+  Kosba et al.'s $\\mathcal{F}_{\\textsc{weak-nizk}}$ needed an explicit `Maul` interface *added* in order
+  to permit mauling, which is the cleanest evidence available that the unmodified functionalities forbid it.
+
+  **A SNARK has no functionality of its own.** Succinctness is a property of a proof system, and an ideal
+  functionality has no proof strings whose length it could bound. Ganesh et al.'s box is GOS12's
+  $\\mathcal{F}_{\\mathsf{NIZK}}$ with one plumbing difference, so transcribing it would have duplicated
+  `f-nizk`; the `f-snark` slot carries $\\mathcal{F}_{\\textsc{weak-nizk}}$ instead, which is the one
+  genuinely distinct box in its citations.
+
+  **`f-thdec` gained a reference.** Its two cited papers print no threshold-decryption functionality; Zyskind,
+  Zarchy, Leibovich and Peikert (CCS 2025, ePrint 2025/1781) do, and it was added. That is the
+  "box printed in a paper the stub does not cite" mode, now seen three times. Their $\\mathcal{F}_{\\mathsf{Decrypt}}$
+  also carries the strongest caveat any source here has attached to its own box -- it "is not a complete
+  functionality for threshold encryption", and without an external well-formedness restriction the
+  `Decrypt` command "would act as an unrestricted decryption oracle, from which it is easy to learn the
+  secret key". The page leads with that rather than burying it.
 
   **Two more shading-coded figures, and the trap is now a pattern rather than an incident.** After
   `f-acc`'s colour key, the OPAQUE paper turned out to encode *three* functionalities in two figures by

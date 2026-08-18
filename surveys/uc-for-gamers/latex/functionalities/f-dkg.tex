@@ -1,0 +1,47 @@
+%% The interface box of f-dkg, the one source for both the book
+%% and uc/.../f-dkg/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fdkg$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad
+$\pars := (G_q, g, k, t := \lceil k/2 - 1 \rceil)$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{Pk} \gets \unset$
+\State $\V{Sh} : \{1..k\} \to \mathbb{Z}_q \cup \{\unset\}$; \quad $\V{Sh}[*] \gets \unset$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Generate}(\{s_j\}_{j \in I})$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F = \Apid \ \wedge\ \V{Pk} = \unset$} \label{ln:dkgonce}
+\Req{$I = \{\, j : M_j \in \Cs \,\} \ \wedge\ \forall j \in I : s_j \in \mathbb{Z}_q$} \label{ln:dkgcorrupt}
+  \Comment{the adversary fixes the corrupt parties' shares}
+\State $a_0, \dots, a_t \gets \$\, \mathbb{Z}_q$ \textbf{ s.t. } $\forall j \in I : a(j) = s_j$ \label{ln:dkgpoly}
+  \Comment{$a(z) := \sum_{\iota=0}^{t} a_{\iota} z^{\iota}$, of degree $t$}
+\State $\V{Sh}[j] \gets a(j)$ \ for every $j \in \{1..k\}$ \label{ln:dkgshares}
+\State $\V{Pk} \gets g^{a_0}$ \label{ln:dkgpub}
+\State \textbf{return} $(\V{Pk}, \V{Sh}[j])$ \ to each $M_j$, and $\V{Pk}$ to $\Adv$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $(\V{Pk}, \{\, \V{Sh}[j] : M_j \in \Cs \,\})$ \label{ln:dkgleak}
+  \Comment{an honest party's share never leaves}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

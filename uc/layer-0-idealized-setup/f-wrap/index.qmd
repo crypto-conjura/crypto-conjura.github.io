@@ -2,12 +2,104 @@
 title: "F-wrap — Tamper-proof hardware token"
 status: "Idealized Setup"
 layer: 0
-definition: "Not yet written"
+definition: "Defined"
 ---
 
 *F-wrap* (Tamper-proof hardware token) is part of *Idealized Setup and Resources* in the UC functionality encyclopedia. Status: an idealized setup assumption or shared resource.
 
+Seal a program inside a token, hand the token to somebody, and they may run it but not look inside. That is the whole assumption, and it is a setup assumption of an unusual kind: unlike a [reference string](/uc/layer-0-idealized-setup/f-crs/index.qmd) or a [registration service](/uc/layer-0-idealized-setup/f-reg-f-krk/index.qmd), nothing here is trusted *by* the recipient. The creator writes the code; the user gets black-box access and no promises about what the code does. What the functionality guarantees is only that the user cannot do better than black-box access — and that turns out to be enough for general secure computation.
+
+Two scoping facts to have in mind before reading the box. The printed definition is **specialized to a two-round machine** — its figure caption says so, and the general case is described in prose. And the token is per *pair*, not per session: the source enforces that a creator sends at most one token to a given user, used for all their interactions "throughout their lifetimes", which it notes is a simplification that suffices for honest parties.
+
+## Functionality
+
+Reading the box: $\mathcal{A}(\cdot)$ is a call on the adversary slot whose answer is not used, so it is a notification; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it; $\square$ marks a value never set and $\bot$ a non-answer; $p$ is the parameter, a polynomial bounding both the token's running time and its coins; $\kappa$ is the security parameter.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{Wrap}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := p\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{M}[*,*] \gets \square\)<span class="cj-comment">// the sealed machine, per creator-user pair</span></li>
+<li>\(\mathtt{i}[*,*] \gets 0\); &nbsp;\(\mathtt{st}[*,*] \gets \varnothing\)<span class="cj-comment">// which half of the round, and the saved state</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Create(<span class="cj-id">Q</span>, <span class="cj-id">M</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="3">
+<li>\(\textbf{require}\ Q \in \mathbf{P} \ \wedge\ \mathtt{M}[\mathit{id}.P, Q] = \square\)<span class="cj-comment">// one token per pair, for all time</span></li>
+<li>\(\mathtt{M}[\mathit{id}.P, Q] \gets M\)</li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Create},\ \mathit{id}.P,\ Q\bigr)\)<span class="cj-comment">// that a token exists, not what is in it</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Run(<span class="cj-id">P</span>, <span class="cj-id">msg</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="7">
+<li>\(\textbf{require}\ \mathtt{M}[P, \mathit{id}.P] \neq \square\)<span class="cj-comment">// only the user this token was given to</span></li>
+<li>\(\textbf{if}\ \mathtt{i}[P, \mathit{id}.P] = 0\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\omega \gets_{\$} \{0,1\}^{p(\kappa)}\)</span></li>
+<li><span class="cj-ind">\(\mathtt{st}[P, \mathit{id}.P] \gets (\mathit{msg}, \omega)\); &nbsp;\(\mathtt{i}[P, \mathit{id}.P] \gets 1\)</span></li>
+<li><span class="cj-ind">\(\textbf{return}\ \mathtt{M}[P, \mathit{id}.P](\mathit{msg}; \omega)\)</span><span class="cj-comment">// \(\bot\) if it does not halt in \(p(\kappa)\) steps</span></li>
+<li>\((\mathit{msg}_{1}, \omega) \gets \mathtt{st}[P, \mathit{id}.P]\)</li>
+<li>\(\mathtt{st}[P, \mathit{id}.P] \gets \varnothing\); &nbsp;\(\mathtt{i}[P, \mathit{id}.P] \gets 0\)</li>
+<li>\(\textbf{return}\ \mathtt{M}[P, \mathit{id}.P](\mathit{msg}_{1} \,\|\, \mathit{msg}; \omega)\)<span class="cj-comment">// same \(\omega\): the token is deterministic</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="15">
+<li>\(\textbf{return}\ \bigl(\{\, (Q, \mathtt{M}[\mathit{id}.P, Q]) : \mathtt{M}[\mathit{id}.P, Q] \neq \square \,\}, \{\, (P, \mathtt{st}[P, \mathit{id}.P]) : \mathtt{M}[P, \mathit{id}.P] \neq \square \,\}\bigr)\)<span class="cj-comment">// the machines it sealed, the state of tokens it holds</span></li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+The box is transcribed from Katz, *Universally composable multi-party computation using tamper-proof hardware*, Figure 1, p. 7 — "the $\mathcal{F}_{\mathsf{wrap}}$ functionality, specialized for the case when $M$ is a 2-round (i.e., 4-message) protocol". Read from the author's copy at `www.cs.umd.edu/~jkatz/papers/ec07b.pdf` (SHA-256 prefix `ecc0d90482086452`, in `_src/sources.json`), which carries no revision stamp. The rendered page is at `_src/katz2007-p7.png`.
+
+**Line 4 is the seal and it is the only line that touches $M$.** The machine is stored and thereafter appears only as something applied at lines 11 and 14. There is no operation that returns it, and line 15 returns it exclusively to the party that created it. That absence is the entire tamper-proofness assumption: not that the code is hidden by an expensive mechanism, but that no interface exists through which to ask.
+
+**Line 5 tells the adversary a token exists and not what is in it.** The source sends `(create, sid, P, P')` to $P'$ — the user learns it has been given a token, and learns nothing else. Since it carries no $M$, the notification is the same information the adversary would get from watching the network, which is why it is a plain notification here rather than a query.
+
+**Line 9 draws the coins once, and line 14 reuses them.** This is the detail most worth stopping on. $\omega$ is sampled on the first message of a round and stored with the state; the second message runs $M(\mathit{msg}_1 \| \mathit{msg}; \omega)$ on the *same* $\omega$. So the token is a deterministic function of its transcript and one fixed random string, and a user who could rewind it to line 12 would get the same answers. It cannot — line 13 clears the state — but the assumption being made is that a physical token behaves this way, and that is stronger than "the token is a randomized black box".
+
+**Line 7 is the access-control line and it names the pair, not the session.** A `Run` is admitted only from the party the token was given to, and the state at lines 8, 10 and 13 is indexed by the pair. Two protocol sessions between the same two parties share one token *and one round counter*, which is the simplification the source flags: an honest user alternates messages cleanly, and a corrupt one may interleave two sessions to desynchronise the counter. The source accepts this because it "suffices for honest parties"; a reader building on the box should know the interleaving is admissible here.
+
+**$\bot$ for a token that does not halt** (line 11). The source sets the output to $\bot$ if $M$ does not respond within $p(\kappa)$ steps. That is a real feature rather than hygiene: it is what stops a sealed machine from being a denial-of-service device against its own user, and it means the user always gets an answer.
+
+**Leak splits by role** (line 15). The source has no leakage interface. A corrupt creator's adversary knows the machines it sealed — it wrote them. A corrupt user's knows the state of the tokens it holds, which is the transcript so far and the coins, but never $M$: a corrupt user has exactly the access an honest one has, which is the point of the assumption.
+
+## Known realizations
+
+**Nothing realizes it; that is what makes it an assumption.** A tamper-proof token is a physical postulate, and the paper's contribution is what follows from it rather than how to build it.
+
+**What follows is general secure computation, and the interesting part is what is *not* needed.** The paper realizes commitment — and through it, by the standard route, any well-formed functionality — in this hybrid model, and does so **without any trusted setup**: no common reference string, no PKI, and no honest majority. The tokens are created by the parties themselves, and neither party need trust the other's token. Compare [*F-CRS*](/uc/layer-0-idealized-setup/f-crs/index.qmd), where the string must be trusted by everybody, and [*F-ACRS*](/uc/layer-0-idealized-setup/f-acrs/index.qmd), which exists precisely because a globally available reference string is not enough. A token assumption buys what those setups buy, from an object nobody has to trust.
+
+**The tampering literature it sits in.** Gennaro, Lysyanskaya, Malkin, Micali and Rabin's algorithmic tamper-proof security, the stub's other reference, is the complementary question — what a device can guarantee when the adversary *can* tamper — and prints no functionality of its own. It is retained as context for the assumption rather than as a source for the box.
+
+## Properties
+
+- **Black-box access only, unconditionally.** No line returns $\mathtt{M}$ to anybody but its creator (line 15). This is not a computational assumption with a bound; it is the absence of an interface.
+- **Determinism given the transcript and coins.** Lines 9 and 14: within a round, one $\omega$ serves both messages, so the token's behaviour is a function of $(\mathit{msg}_1, \mathit{msg}, \omega)$ alone.
+- **Always an answer, in at most $p(\kappa)$ steps.** Line 11's $\bot$ on timeout, and the same bound at line 14.
+- **One token per ordered pair, for all sessions.** Line 3 refuses a second creation. Whether that is a feature or a limitation depends on the caller: honest parties are unaffected, a corrupt user may interleave sessions against a shared counter.
+- **No guarantee about the token's contents.** The functionality says nothing about what $M$ computes. A protocol that needs the token to behave a particular way must prove that from its own construction, not from this box.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
+
 *References:*
 
-- Gennaro et al. [*Algorithmic tamper-proof (ATP) security: Theoretical foundations for security against hardware tampering*](https://cs.brown.edu/people/alysyans/papers/glmmr04.pdf). In 1st Theory of Cryptography Conference (TCC), volume 2951 of LNCS, 2004.
-- Katz. [*Universally composable multi-party computation using tamper-proof hardware*](http://www.cs.umd.edu/~jkatz/papers/ec07b.pdf). In Advances in Cryptology – EUROCRYPT 2007, 2007.
+- Katz. [*Universally composable multi-party computation using tamper-proof hardware*](http://www.cs.umd.edu/~jkatz/papers/ec07b.pdf). In Advances in Cryptology – EUROCRYPT 2007, pages 115–128, 2007. Read from the author's copy, which carries no revision stamp, SHA-256 prefix `ecc0d90482086452`. Figure 1, p. 7, the definition transcribed above, including the caption's restriction to a 2-round machine; the surrounding prose for the creator/user framing and for the one-token-per-pair simplification. Sole author, venue and page range confirmed against DBLP.
+- Gennaro, Lysyanskaya, Malkin, Micali, and Rabin. [*Algorithmic tamper-proof (ATP) security: Theoretical foundations for security against hardware tampering*](https://cs.brown.edu/people/alysyans/papers/glmmr04.pdf). In 1st Theory of Cryptography Conference (TCC), volume 2951 of LNCS, 2004. Carried over from the stub's reference list as context for the physical assumption; it prints no ideal functionality, and is not the source of the box above.

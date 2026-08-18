@@ -1,0 +1,83 @@
+%% The interface box of f-diffuse, the one source for both the book
+%% and uc/.../f-diffuse/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fnmc$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := \Delta$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{Q} \gets \emptyset$
+  \Comment{tuples $(\msg, \mathit{mid}, P)$ still in flight}
+\State $\V{D}[*] \gets \unset$; \ $\V{T}[*] \gets \unset$
+  \Comment{rounds left per $\mathit{mid}$, and total delay spent}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Multicast}(\msg)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\msg \in \Msgs$}
+\State $\forall P \in \Ps : \V{Q} \gets \V{Q} \uplus \{(\msg, \mathit{mid}_{P}, P)\}$ \label{ln:nmcfanout}
+  \Comment{one fresh $\mathit{mid}$ per recipient}
+\State $\forall P \in \Ps : \V{D}[\mathit{mid}_{P}] \gets 1$; \ $\V{T}[\mathit{mid}_{P}] \gets 1$
+\State $\Adv\bigl(\id.\op{Multicast},\ \id.P,\ \msg,\ \{\mathit{mid}_{P}\}_{P \in \Ps}\bigr)$ \label{ln:nmcleak}
+  \Comment{in the clear, with the handles}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Delay}(\mathit{mid}, \delta)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F = A \ \wedge\ \V{D}[\mathit{mid}] \neq \unset$} \label{ln:nmcadvonly}
+  \Comment{the adversary's line, and only its own}
+\Req{$\V{T}[\mathit{mid}] + \delta \leq \Delta$} \label{ln:nmcbound}
+  \Comment{the whole guarantee: total delay is capped}
+\State $\V{D}[\mathit{mid}] \gets \V{D}[\mathit{mid}] + \delta$; \ $\V{T}[\mathit{mid}] \gets \V{T}[\mathit{mid}] + \delta$
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Swap}(\mathit{mid}, \mathit{mid}')$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F = A \ \wedge\ \V{D}[\mathit{mid}] \neq \unset \ \wedge\ \V{D}[\mathit{mid}'] \neq \unset$}
+\State swap the positions of $\mathit{mid}$ and $\mathit{mid}'$ in $\V{Q}$ \label{ln:nmcswap}
+  \Comment{order is not guaranteed, only arrival}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Fetch}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $\forall (\msg, \mathit{mid}, \id.P) \in \V{Q} : \V{D}[\mathit{mid}] \gets \V{D}[\mathit{mid}] - 1$ \label{ln:nmctick}
+  \Comment{the clock is the recipient's own fetches}
+\State $R \gets \bigl(\, (\msg, \mathit{mid}) \in \V{Q} : \mathit{mid}$ is $\id.P$'s and $\V{D}[\mathit{mid}] = 0 \,\bigr)$
+\State $\V{Q} \gets \V{Q} \setminus R$ \label{ln:nmcdeliver}
+\State \textbf{return} $R$
+  \Comment{in $\V{Q}$'s order, which $\op{Swap}$ may have changed}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $(\V{Q}, \V{D}, \V{T})$ \label{ln:nmcleakall}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

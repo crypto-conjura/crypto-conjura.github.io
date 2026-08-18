@@ -1,0 +1,76 @@
+%% The interface box of f-split, the one source for both the book
+%% and uc/.../f-split/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fsa$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := \none$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{H} : \Fsa.\Ps \to 2^{\Ps} \cup \{\unset\}$
+  \Comment{each party's authentication set}
+\State $\V{H}[*] \gets \unset$; \ $\V{W} \gets \emptyset$
+  \Comment{$\V{W}$ is a multiset of waiting sends}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Join}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{H}[\id.P] = \unset$}
+\State $H \gets \Adv\bigl(\id.\op{Join},\ \id.P\bigr)$ \label{ln:sasetschosen}
+  \Comment{the adversary partitions, once per party}
+\Req{$\id.P \in H \ \wedge\ \forall P : \V{H}[P] \in \{\unset, H\} \ \vee\ \V{H}[P] \cap H \subseteq \Cs$} \label{ln:sadisjoint}
+\State $\V{H}[\id.P] \gets H$
+\State \textbf{return} $H$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Send}(Q, \msg)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$Q \in \Ps \ \wedge\ \msg \in \Msgs$}
+\State $\V{W} \gets \V{W} \uplus \{(\id.P, Q, \msg)\}$ \label{ln:sawait}
+\State $\Adv\bigl(\id.\op{Send},\ \id.P,\ Q,\ \msg\bigr)$ \label{ln:saleaksend}
+  \Comment{no secrecy is claimed}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Fetch}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{H}[\id.P] \neq \unset$} \label{ln:sajoinedfirst}
+  \Comment{nothing arrives before joining}
+\State $(P, \msg) \gets \Adv\bigl(\id.\op{Fetch},\ \id.P\bigr)$ \label{ln:saadvnames}
+\If{$P \in \V{H}[\id.P] \ \wedge\ P \notin \Cs$} \label{ln:sainside}
+  \Req{$(P, \id.P, \msg) \in \V{W}$} \label{ln:saauthentic}
+    \Comment{inside the set: only what was sent}
+  \State $\V{W} \gets \V{W} \setminus \{(P, \id.P, \msg)\}$
+    \Comment{one appearance}
+  \State \textbf{return} $(P, \msg)$
+\EndIf
+\State \textbf{return} $(P, \msg)$ \label{ln:saforge}
+  \Comment{outside, or corrupt: unchecked}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $(\V{H}, \V{W})$ \label{ln:saleak}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

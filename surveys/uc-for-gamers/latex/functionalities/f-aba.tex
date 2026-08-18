@@ -1,0 +1,78 @@
+%% The interface box of f-aba, the one source for both the book
+%% and uc/.../f-aba/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Faba$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := (V, t)$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{v}[*] \gets \none$; \ $\V{in}[*] \gets 0$
+  \Comment{inputs, and who has been admitted}
+\State $\V{D}[*, \op{in}] \gets 1$; \ $\V{D}[*, \op{out}] \gets 1$
+  \Comment{per-party delays, set by the adversary}
+\State $\V{y} \gets \unset$; \ $\V{a} \gets \none$
+  \Comment{the decision, and the adversary's bid}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Input}(v)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$v \in V \ \wedge\ \V{v}[\id.P] = \none$}
+\State $\V{v}[\id.P] \gets v$
+\State $\Adv\bigl(\id.\op{Input},\ \id.P,\ v\bigr)$ \label{ln:abaleak}
+  \Comment{corruption-unfair: the input leaks at once}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Fetch}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $(\tau, \delta, \V{a}) \gets \Adv\bigl(\id.\op{Fetch},\ \id.P\bigr)$ \label{ln:abaadv}
+\State $\V{D}[\id.P, \tau] \gets \max(1, \V{D}[\id.P, \tau] + \delta)$ \label{ln:abadelay}
+  \Comment{delay may grow without bound}
+\If{$\V{in}[\id.P] = 0 \ \wedge\ \V{v}[\id.P] \neq \none$}
+  \State $\V{D}[\id.P, \op{in}] \gets \V{D}[\id.P, \op{in}] - 1$
+  \If{$\V{D}[\id.P, \op{in}] = 0$}
+    \State $\V{in}[\id.P] \gets 1$ \label{ln:abaadmit}
+  \EndIf
+\EndIf
+\Req{$\textstyle\sum_{P} \V{in}[P] \geq |\Ps| - t$} \label{ln:abaquorum}
+  \Comment{no output before $n-t$ have been admitted}
+\State $\V{D}[\id.P, \op{out}] \gets \V{D}[\id.P, \op{out}] - 1$
+\Req{$\V{D}[\id.P, \op{out}] = 0$}
+\If{$\V{y} = \unset$} \label{ln:abadecide}
+  \State $\V{y} \gets \none$
+  \If{$\exists!\, x \in V : |\{P : \V{in}[P] = 1 \wedge \V{v}[P] = x\}| \geq |\Ps| - 2t$}
+    \State $\V{y} \gets x$ \label{ln:abavalidity}
+      \Comment{an $n-2t$ plurality decides}
+  \EndIf
+  \If{$\V{y} = \none \ \wedge\ \exists\, P \notin \Cs : \V{v}[P] = \V{a}$}
+    \State $\V{y} \gets \V{a}$ \label{ln:abaintrusion}
+      \Comment{else the adversary picks, but only from honest inputs}
+  \EndIf
+\EndIf
+\State \textbf{return} $\V{y}$ \label{ln:abaagree}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $(\V{v}, \V{in}, \V{y})$ \label{ln:abaleakall}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

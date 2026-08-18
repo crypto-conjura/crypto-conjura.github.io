@@ -1,12 +1,118 @@
 ---
-title: "F-diffuse — Diffusion, gossip channel"
+title: "F-diffuse — Multicast network, bounded delay"
 status: "Canonical"
 layer: 1
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-diffuse* (Diffusion, gossip channel) is part of *Channels, Agreement, Ledgers* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+*F-diffuse* (Multicast network, bounded delay) is part of *Channels, Agreement, Ledgers* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+
+The gossip layer the blockchain literature actually assumes: send once, everybody eventually receives, the adversary chooses the order and the lateness, and lateness is capped at $\Delta$. It sits between [*F-AC*](/uc/layer-1-channels-agreement-ledgers/f-ac/index.qmd), which buys a deadline with an explicit clock, and a fully asynchronous channel like the one inside [*F-ABA*](/uc/layer-1-channels-agreement-ledgers/f-aba/index.qmd), where lateness is unbounded.
+
+The mechanism worth understanding before reading the box is that **delivery is counted in the recipient's own fetches**. Each message in flight carries a counter; a party's fetch decrements the counters of everything addressed to it, and anything reaching zero is handed over. So the network has no clock of its own — a party that never fetches never receives, and the $\Delta$ bound constrains the adversary's *additions* to the counters, not wall-clock time.
+
+## Functionality
+
+Reading the box: $\mathcal{A}(\cdot)$ is a call on the adversary slot whose answer is not used; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it; $A$ is the adversary's name component, so a test on $\mathit{id}'.F$ asks who is really calling; $\square$ marks a value never set; $\uplus$ is multiset union, since the same message may be in flight to several parties; $\Delta$ is the parameter bounding total delay.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{N\text{-}MC}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := \Delta\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{Q} \gets \varnothing\)<span class="cj-comment">// tuples \((\mathit{msg}, \mathit{mid}, P)\) still in flight</span></li>
+<li>\(\mathtt{D}[*] \gets \square\); &nbsp;\(\mathtt{T}[*] \gets \square\)<span class="cj-comment">// rounds left per \(\mathit{mid}\), and total delay spent</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Multicast(<span class="cj-id">msg</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="3">
+<li>\(\textbf{require}\ \mathit{msg} \in \mathcal{M}\)</li>
+<li>\(\forall P \in \mathbf{P} : \mathtt{Q} \gets \mathtt{Q} \uplus \{(\mathit{msg}, \mathit{mid}_{P}, P)\}\)<span class="cj-comment">// one fresh \(\mathit{mid}\) per recipient</span></li>
+<li>\(\forall P \in \mathbf{P} : \mathtt{D}[\mathit{mid}_{P}] \gets 1\); &nbsp;\(\mathtt{T}[\mathit{mid}_{P}] \gets 1\)</li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Multicast},\ \mathit{id}.P,\ \mathit{msg},\ \{\mathit{mid}_{P}\}_{P \in \mathbf{P}}\bigr)\)<span class="cj-comment">// in the clear, with the handles</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Delay(<span class="cj-id">mathit{mid}</span>, <span class="cj-id">delta</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="8">
+<li>\(\textbf{require}\ \mathit{id}'.F = A \ \wedge\ \mathtt{D}[\mathit{mid}] \neq \square\)<span class="cj-comment">// the adversary's line, and only its own</span></li>
+<li>\(\textbf{require}\ \mathtt{T}[\mathit{mid}] + \delta \leq \Delta\)<span class="cj-comment">// the whole guarantee: total delay is capped</span></li>
+<li>\(\mathtt{D}[\mathit{mid}] \gets \mathtt{D}[\mathit{mid}] + \delta\); &nbsp;\(\mathtt{T}[\mathit{mid}] \gets \mathtt{T}[\mathit{mid}] + \delta\)</li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Swap(<span class="cj-id">mathit{mid}</span>, <span class="cj-id">mathit{mid}'</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="12">
+<li>\(\textbf{require}\ \mathit{id}'.F = A \ \wedge\ \mathtt{D}[\mathit{mid}] \neq \square \ \wedge\ \mathtt{D}[\mathit{mid}'] \neq \square\)</li>
+<li>swap the positions of \(\mathit{mid}\) and \(\mathit{mid}'\) in \(\mathtt{Q}\)<span class="cj-comment">// order is not guaranteed, only arrival</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Fetch()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="15">
+<li>\(\forall (\mathit{msg}, \mathit{mid}, \mathit{id}.P) \in \mathtt{Q} : \mathtt{D}[\mathit{mid}] \gets \mathtt{D}[\mathit{mid}] - 1\)<span class="cj-comment">// the clock is the recipient's own fetches</span></li>
+<li>\(R \gets \bigl(\, (\mathit{msg}, \mathit{mid}) \in \mathtt{Q} : \mathit{mid}\) is \(\mathit{id}.P\)'s and \(\mathtt{D}[\mathit{mid}] = 0 \,\bigr)\)</li>
+<li>\(\mathtt{Q} \gets \mathtt{Q} \setminus R\)</li>
+<li>\(\textbf{return}\ R\)<span class="cj-comment">// in \(\mathtt{Q}\)'s order, which \(\mathsf{Swap}\) may have changed</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="19">
+<li>\(\textbf{return}\ (\mathtt{Q}, \mathtt{D}, \mathtt{T})\)</li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+The box is transcribed from Badertscher, Gaži, Kiayias, Russell and Zikas, *Ouroboros Genesis: composable proof-of-stake blockchains with dynamic availability*, ePrint 2018/378, revision `20190222:180509`, the functionality $\mathcal{F}^{\Delta}_{\textsc{n-mc}}$ on p. 37 — "multi-cast" with a bounded delay. The rendered page is at `_src/badertscheretal2018-p37.png`. The site's page id is `f-diffuse`, which names the role the network plays in a blockchain protocol; the printed object is the multicast network, and this entry is retitled to match it.
+
+**Line 9 is the entire guarantee and it is a **require**, not an assignment.** The adversary may lengthen any message's counter, but only while the total it has added to that message stays within $\Delta$. Two things follow. Every message is delivered within $\Delta$ fetches of its recipient — that is the *bounded* in bounded delay. And $\mathtt{T}$ has to be tracked separately from $\mathtt{D}$: the source keeps both a current counter and a high-water mark for exactly this reason, because a counter that goes down at line 15 and up at line 10 would otherwise let the adversary buy unlimited delay in instalments.
+
+**Line 15 is where the clock actually is.** A fetch decrements every counter addressed to the fetching party — its own, not anybody else's. Delay is therefore measured in a recipient's activations, which is what makes this composable with a round-based protocol without a clock functionality: the protocol's own fetching *is* the round structure. It also means the guarantee is conditional in a way worth stating plainly: a party that stops fetching is not late, it is absent.
+
+**Line 4 is a fan-out, and the per-recipient handles are the point.** One multicast becomes $|\mathbf{P}|$ independent messages with independent counters. The adversary can therefore deliver the same message to different parties at different times, up to $\Delta$ apart — which is precisely the phenomenon a blockchain protocol has to tolerate, and it is why this is not simply [*F-BC*](/uc/layer-1-channels-agreement-ledgers/f-bc/index.qmd) with a delay bolted on: there is no moment at which everybody agrees on what has been sent.
+
+**Line 13 gives the adversary reordering for free, and it is separate from delay.** A swap changes the order of two in-flight messages without touching either counter, so ordering is not a consequence of timing and cannot be recovered from it. The source's clause returns an acknowledgement to the adversary, which is why the operation exists as a call rather than as an argument to something else.
+
+**Lines 8 and 12 are guards this framework needs and the source does not write.** In the source these clauses are activations *from the adversary*, so no test is required; here every operation is reachable by any admitted caller, and the test on $\mathit{id}'.F$ is what keeps `Delay` and `Swap` adversarial. Getting this wrong would hand honest parties the ability to delay each other, which is a different and much stranger network.
+
+**Two simplifications, both declared.** The source distinguishes an honest sender's multicast to the whole party set from an adversarial sender's *partial* multicast to a chosen subset; this box has only the first, because the second is what a corrupt sender achieves anyway by multicasting and then delaying the recipients it does not want to reach — up to $\Delta$, which is the one difference and is recorded here rather than modelled. And the source's party set grows and shrinks with registration, which this framework handles through $\mathbf{P}$ rather than through clauses in the box.
+
+## Known realizations
+
+**It is an assumption, and the paper's interest is in what rests on it.** Ouroboros Genesis is proved secure in a hybrid model whose network is exactly this functionality, alongside a [global clock](/uc/layer-0-idealized-setup/g-clock/index.qmd), a [global random oracle](/uc/layer-0-idealized-setup/g-ro/index.qmd), a key-evolving signature and a VRF. The $\Delta$ here is the network-delay parameter that appears in every synchronous blockchain security bound, and the reason a proof-of-stake protocol can be analysed at all in this framework is that the delay is a functionality parameter rather than a property of the real network.
+
+**Where a real gossip layer differs.** The source's network is an abstraction of flooding, and the abstraction is generous in one direction and stingy in another: generous in that a single multicast reaches every registered party with no relaying cost, stingy in that the adversary controls order and lateness completely within $\Delta$. A protocol proved here is not proved against a network that can drop messages — nothing in the box loses a message — which is the assumption most worth flagging to anyone reading a blockchain security proof.
+
+## Properties
+
+- **Eventual delivery within $\Delta$, with probability exactly $1$.** Line 9 caps the total delay per message; line 15 decrements on every fetch. No line removes an undelivered message from $\mathtt{Q}$ except line 17, which delivers it.
+- **No ordering guarantee whatever.** Line 13 permits arbitrary swaps of in-flight messages, and per-recipient counters at line 4 mean two parties may see the same pair of messages in opposite orders.
+- **No agreement at any instant.** Independent counters per recipient: at any point some parties have a message and others do not. Any agreement property must come from the protocol above, which is the whole design of the blockchain protocols that use it.
+- **No secrecy.** Line 6 hands each multicast to the adversary in the clear, with the message handles.
+- **No message loss.** There is no operation that discards an undelivered entry. Delay is the only adversarial power over content-free behaviour, and it is bounded.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Badertscher et al. [*Ouroboros genesis: Composable proof-of-stake blockchains with dynamic availability*](https://eprint.iacr.org/2018/378). In ACM Conference on Computer and Communications Security (CCS), pages 913–930, 2018.
+- Badertscher, Gaži, Kiayias, Russell, and Zikas. [*Ouroboros Genesis: composable proof-of-stake blockchains with dynamic availability*](https://eprint.iacr.org/2018/378). In 25th ACM Conference on Computer and Communications Security (CCS), pages 913–930, 2018. Read at ePrint revision `20190222:180509`. The functionality on p. 37, the definition transcribed above, including the partial-multicast clause not modelled here and the adversarial delay and swap clauses; the protocol sections for the hybrid model this network sits in alongside $\mathcal{G}_{\mathsf{clock}}$, $\mathcal{G}_{\mathsf{RO}}$, $\mathcal{F}_{\mathsf{INIT}}$, $\mathcal{F}_{\mathsf{KES}}$ and $\mathcal{F}_{\mathsf{VRF}}$. Authors, venue and page range confirmed against DBLP, which records five authors.

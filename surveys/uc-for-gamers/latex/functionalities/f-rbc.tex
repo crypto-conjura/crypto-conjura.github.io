@@ -1,0 +1,68 @@
+%% The interface box of f-rbc, the one source for both the book
+%% and uc/.../f-rbc/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Frbc$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := \none$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{S} \gets \unset$
+  \Comment{the sender}
+\State $\V{m} \gets \unset$; \ $\V{out} \gets \unset$
+  \Comment{what was said, what is agreed}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Broadcast}(\msg)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{S} = \unset \ \wedge\ \msg \in \Msgs$} \label{ln:rbconce}
+\State $\V{S} \gets \id.P$; \ $\V{m} \gets \msg$
+\State $\msg' \gets \Adv\bigl(\id.\op{Broadcast},\ \V{S},\ \V{m}\bigr)$ \label{ln:rbcask}
+  \Comment{the message first, the substitute after}
+\State $\V{out} \gets \V{m}$ \label{ln:rbchonest}
+\If{$\V{S} \in \Cs$} \label{ln:rbctest}
+  \State $\V{out} \gets \San[\Clean_{\msg}](\msg')$ \label{ln:rbcsub}
+    \Comment{corruption tested here, after line 3}
+\EndIf
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Fetch}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$\V{out} = \unset$}
+  \State \textbf{return} $\none$
+\EndIf
+\State \textbf{return} $(\V{S},\ \V{out})$ \label{ln:rbcread}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $(\V{S},\ \V{m})$ \label{ln:rbcleak}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\Clean_{\msg}(\msg')$}:
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $\msg' \in \Msgs$
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

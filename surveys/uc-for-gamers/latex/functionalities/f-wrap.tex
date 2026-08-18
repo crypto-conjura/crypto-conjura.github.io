@@ -1,0 +1,66 @@
+%% The interface box of f-wrap, the one source for both the book
+%% and uc/.../f-wrap/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fwrap$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := p$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{M}[*,*] \gets \unset$
+  \Comment{the sealed machine, per creator-user pair}
+\State $\V{i}[*,*] \gets 0$; \ $\V{st}[*,*] \gets \emptyset$
+  \Comment{which half of the round, and the saved state}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Create}(Q, M)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$Q \in \Ps \ \wedge\ \V{M}[\id.P, Q] = \unset$} \label{ln:wraponce}
+  \Comment{one token per pair, for all time}
+\State $\V{M}[\id.P, Q] \gets M$ \label{ln:wrapseal}
+\State $\Adv\bigl(\id.\op{Create},\ \id.P,\ Q\bigr)$ \label{ln:wrapnotify}
+  \Comment{that a token exists, not what is in it}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Run}(P, \msg)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{M}[P, \id.P] \neq \unset$} \label{ln:wrapmine}
+  \Comment{only the user this token was given to}
+\If{$\V{i}[P, \id.P] = 0$}
+  \State $\omega \gets_{\$} \{0,1\}^{p(\kappa)}$ \label{ln:wrapcoins}
+  \State $\V{st}[P, \id.P] \gets (\msg, \omega)$; \ $\V{i}[P, \id.P] \gets 1$
+  \State \textbf{return} $\V{M}[P, \id.P](\msg; \omega)$ \label{ln:wrapfirst}
+    \Comment{$\none$ if it does not halt in $p(\kappa)$ steps}
+\EndIf
+\State $(\msg_{1}, \omega) \gets \V{st}[P, \id.P]$
+\State $\V{st}[P, \id.P] \gets \emptyset$; \ $\V{i}[P, \id.P] \gets 0$ \label{ln:wrapreset}
+\State \textbf{return} $\V{M}[P, \id.P](\msg_{1} \,\|\, \msg; \omega)$ \label{ln:wrapsecond}
+  \Comment{same $\omega$: the token is deterministic}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $\bigl(\{\, (Q, \V{M}[\id.P, Q]) : \V{M}[\id.P, Q] \neq \unset \,\},$
+\Statex \quad\ $\{\, (P, \V{st}[P, \id.P]) : \V{M}[P, \id.P] \neq \unset \,\}\bigr)$ \label{ln:wrapleak}
+  \Comment{the machines it sealed, the state of tokens it holds}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

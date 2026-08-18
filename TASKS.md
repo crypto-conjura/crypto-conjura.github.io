@@ -222,7 +222,7 @@ supplied numbers and several had drifted or were slightly off:
 
 - [ ] **UC Encyclopedia content (~5h — manual: sourcing and verifying real citations per functionality, not just drafting text)**
 
-  61 of the 104 functionality pages (`uc/layer-N-.../<id>/index.qmd`) are still stubs, one is marked *No canonical definition*, and forty-two are written — measured 18 August 2026. Run `python3 scripts/uc_status.py --check` for the current split rather than trusting these numbers. Written so far: the seven ported from `surveys/uc-for-gamers/latex/main.tex` (F-Rand, F-Store, F-Sig, G-PKI, G-Clock, F-Net, F-AC), then F-CRS, F-COM, F-ZK, F-auth, F-OT, G-RO, then — 17 August — F-smt, F-MCOM and F-BC, and — 18 August — F-CERT, F-ACRS, F-PKI, F-syn, F-KR, F-CP, F-COT, F-RBC, F-SA, F-wrap, F-ABA, F-diffuse, F-PKE, F-rPKE, F-aPKE, F-pwKE, F-OLE, F-coin, F-beacon, F-BlSig, F-VRF, F-TLP, F-clocksync, F-nettime, F-LSC and F-OPRF, plus F-SFE as *No canonical definition*.
+  56 of the 104 functionality pages (`uc/layer-N-.../<id>/index.qmd`) are still stubs, one is marked *No canonical definition*, and forty-seven are written — measured 18 August 2026. Run `python3 scripts/uc_status.py --check` for the current split rather than trusting these numbers. Added 18 August: F-acc, F-TSIG, F-adsig, F-NIZK and F-PUF, alongside the forty-two already listed in `git log`.
 
   The tooling for this now exists end to end, so this is a matter of running it 97 times rather than inventing the process each time:
 
@@ -232,9 +232,52 @@ supplied numbers and several had drifted or were slightly off:
 
   Three things the runs so far have established, worth knowing before the next one. **A stub's own citations are often not where the definition is printed**: F-BC's three references include Canetti's framework paper, which prints no broadcast box at all, and the definition taken came from the two adaptive-broadcast papers instead. **A citation that yields no box is a result, not a gap** — Rabin 1981 contains no `F_OT` because it predates ideal functionalities, and Pfitzmann–Waidner's secure message transmission is an ideal *system* in the reactive-simulatability model, not a UC functionality; both pages say so. And **F-SFE has no printed box under that name** in either paper it cites (`uc/layer-6-secret-sharing-mpc/f-sfe/_src/sources.json` records that CLOS 2002 prints F_bc, F_cp, F_mcom, F_ot and F_zk, and no F_sfe), so that entry needs a forward literature search before it can be written, or a page saying the functionality is folklore.
 
-  **The pool of small clean boxes is exhausted.** Everything still unwritten is one of: a multi-page functionality (`g-ledger`/`f-ledger`, `f-cgka`, `f-sapake`, `f-chan`), a paper printing no box the scan can find (most of layers 2 and 7), or a stub citing nothing at all (the eleven listed below). Batches from here on should expect to take a large entry or resolve a naming question, not to find an easy transcription.
+  **~~The pool of small clean boxes is exhausted.~~ It is not, and the claim was an artefact of the harvester.**
+  Corrected 18 August 2026, after the batch that followed it found five. `uc_source.py`'s box scan reports
+  false negatives far more often than the three modes recorded below suggest: running
+  `pdftotext -layout <paper> | grep -E '(Figure|Fig\.) [0-9]+.*[Ff]unctionality'` over the *already cached*
+  PDFs turns up directly-named boxes the harvest missed in at least fourteen entries. Five were written
+  straight from that list. Before believing any "no box found" result, run that grep — it costs seconds,
+  the PDFs are already in `~/.cache/conjura-uc-sources`, and the harvester is not the authority its
+  `sources.json` looks like.
 
-  **"No canonical definition" now has a worked example: `f-sfe`.** The page shows the harvest that establishes the absence, rules out the three extraction failures seen earlier, explains why a compiler theorem has nothing to draw a box around, and gives the two routes out (find a paper that prints it, or retire the slot). Use it as the template for the other stubs whose sources genuinely print nothing — `f-ro`, `f-eqv`, `f-nizk` are the immediate candidates, all three harvested and recorded.
+  **The clearest case is `f-nizk`, which this file had listed as a candidate for a *No canonical definition*
+  page.** Its own primary citation — Groth, Ostrovsky and Sahai, JACM 2012 — prints $\mathcal{F}_{\mathsf{NIZK}}$
+  in Figure 4, and the harvest reported nothing. That is the fourth false-negative mode again, and it means
+  the other two names on that candidate list, `f-ro` and `f-eqv`, should be re-checked the same way before
+  anyone writes them off.
+
+  **Already located, for the next batches, with the box named in the cited paper:** `f-cred`
+  ($\mathcal{F}_{\mathsf{daa}}$, Camenisch et al. — note the name is DAA, not credentials, so it is a naming
+  judgment), `f-snark` ($\mathcal{F}_{\textsc{weak-nizk}}$, Kosba et al.), `f-ba` ($\mathcal{F}_{\mathsf{csf}}$,
+  Cohen et al.), `f-fhe` ($\mathcal{F}_{\mathsf{ABB}}$ and $\mathcal{F}_{\mathsf{Decrypt}}$ — the first is
+  arguably `f-abb`'s object, not this one), `f-mac` and `f-kdf` (both inside Küsters--Tuengerthal's single
+  $\mathcal{F}_{\mathsf{crypto}}$ library, so one reading serves two entries), `f-se`
+  ($\mathcal{F}_{\mathsf{senc}}$, Figures 10--12 — three figures, a sitting of its own) and `f-secmsg`
+  ($\mathcal{F}_{\mathsf{SM}}$, Figure 7 — large, and entangled with the paper's other four modules).
+
+  **The generator accepts a narrow LaTeX subset, and finding out the hard way costs a rebuild.**
+  `parse_fragment` handles `\State`, `\Req`, `\If`, `\EndIf`, `\Comment`, `\Statex`, `\algcont`,
+  `\algsave` and `\setcounter` — and nothing else. In particular there is **no `\Else` and no `\ElsIf`**:
+  write two guarded `\If`s instead, negating the first condition where the source's `else if` semantics
+  require it. Every command must sit on **one source line** (a wrapped `\If{...}` condition raises), and a
+  `\label` must share the line with its statement rather than sit on the next one.
+
+  **Two more stub titles were claims, and both were wrong (18 August).** `f-acc` read "Accumulator, vector
+  commitment" — the source defines no vector-commitment functionality and the phrase "vector commitment"
+  appears nowhere in it, checked; retitled to "Accumulator". `f-tsig` read "Threshold signature", but the
+  printed box requires *every* signatory to have asked before a signature exists, so it is the unanimous
+  ($n$-of-$n$) case and the threshold lives in the protocol; retitled "Threshold signature, unanimous".
+  That is eleven of the last nineteen entries retitled.
+
+  **A new paging trap: the archive listing and the PDF can disagree about the title.** ePrint 2021/060 is
+  posted as "UC Non-Interactive, Proactive, **Threshold** ECDSA with Identifiable Aborts", which is also the
+  CCS 2020 title of record, but the title page of its newest revision (`20241021:172019`) reads
+  "**Distributed** ECDSA". The rename is internal to the revision and never reached the metadata, so a
+  reader who fetches the PDF and one who reads the listing see different titles for one document. Record
+  both when this happens.
+
+  **"No canonical definition" now has a worked example: `f-sfe`.** The page shows the harvest that establishes the absence, rules out the three extraction failures seen earlier, explains why a compiler theorem has nothing to draw a box around, and gives the two routes out (find a paper that prints it, or retire the slot). Use it as the template for the other stubs whose sources genuinely print nothing — `f-ro` and `f-eqv` are the remaining candidates — but see the correction below before trusting either.
 
   **Stub titles are wrong so often that reading the source first is now the rule, and titles are not the only field affected.** Three ePrint postings have turned out to carry titles different from the ones their stubs cite — the ECVRF paper, and ePrint 2019/838, whose title page reads *"Ouroboros Chronos: Permissionless Clock Synchronization via Proof-of-Stake"* against the stub's *"Dynamic ad hoc clock synchronization"*. Authors matched in every case. Check the title page, not just the venue.
 

@@ -1,0 +1,61 @@
+%% The interface box of f-nizk, the one source for both the book
+%% and uc/.../f-nizk/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fnizk$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := R$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{Prf} \gets \emptyset$
+  \Comment{accepted statement--argument pairs}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Prove}(x, w)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$(x, w) \in R$} \label{ln:nizkrel}
+  \Comment{a false statement is refused, not proved}
+\State $\pi \gets \Adv^{!}\bigl(\id.\op{Prove}, x\bigr)$ \label{ln:nizkzk}
+  \Comment{$w$ is never sent: this line is zero knowledge}
+\State $\V{Prf} \gets \V{Prf} \cup \{(x, \pi)\}$
+\State \textbf{return} $\pi$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Verify}(x, \pi)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$(x, \pi) \in \V{Prf}$}
+\State \textbf{return} $1$ \label{ln:nizktrans}
+  \Comment{transferable: any holder of $\pi$ verifies}
+\EndIf
+\State $w \gets \Adv^{!}\bigl(\id.\op{Verify}, x, \pi\bigr)$ \label{ln:nizkext}
+\If{$(x, w) \in R$}
+\State $\V{Prf} \gets \V{Prf} \cup \{(x, \pi)\}$ \label{ln:nizksound}
+  \Comment{soundness: a new $\pi$ costs a witness}
+\State \textbf{return} $1$
+\EndIf
+\State \textbf{return} $0$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $\V{Prf}$ \label{ln:nizkleak}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

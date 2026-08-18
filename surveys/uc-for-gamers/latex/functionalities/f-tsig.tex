@@ -1,0 +1,132 @@
+%% The interface box of f-tsig, the one source for both the book
+%% and uc/.../f-tsig/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Ftsig$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := (P_0, \Sset)$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{Ver} \gets \unset$; \quad $\V{Ctr} \gets 0$
+\State $\V{Quar} : \Sset \to \{0,1\}$; \quad $\V{Quar}[*] \gets 0$
+\State $\V{Kg} : \Sset \to \{0,1\}$; \quad $\V{Kg}[*] \gets 0$
+\State $\V{Ask} : \Ids \times \Msgs \to 2^{\Sset}$; \quad $\V{Ask}[*,*] \gets \emptyset$
+\State $\V{Sig} : \Ids \times \Msgs \to \Sigs \cup \{\unset\}$
+\State $\V{Sig}[*,*] \gets \unset$; \quad $\V{Blame} \gets \unset$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\op{Spent}()$}:
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $\forall\, P \in \Sset : P \in \Cs \ \vee\ \V{Quar}[P] = 1$ \label{ln:tsigcomp}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{KeyGen}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P \in \Sset$}
+\State $\V{Kg}[\id.P] \gets 1$
+\Req{$\forall\, P \in \Sset : \V{Kg}[P] = 1 \ \wedge\ \V{Ver} = \unset$} \label{ln:tsigall}
+  \Comment{every signatory, once}
+\State $V \gets \Adv^{!}\bigl(\id.\op{KeyGen}\bigr)$
+\State $\V{Ver} \gets \San[\Clean_{V}](V)$ \label{ln:tsigvsan}
+\State \textbf{return} $\V{Ver}$ \ to $P_0$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Sign}(s, \msg)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P \in \Sset \ \wedge\ \V{Ver} \neq \unset \ \wedge\ \V{Sig}[s,\msg] = \unset$}
+\State $\V{Ask}[s,\msg] \gets \V{Ask}[s,\msg] \cup \{\id.P\}$
+\Req{$\V{Ask}[s,\msg] = \Sset$} \label{ln:tsigunan}
+  \Comment{unanimous: no $t$-of-$n$ here}
+\State $(\sigma, X) \gets \Adv^{!}\bigl(\id.\op{Sign}, s, \msg\bigr)$
+\State $\sigma \gets \San[\Clean_{\sigma}](\sigma)$
+\State $\V{Sig}[s,\msg] \gets \sigma$
+\If{$\V{Ver}(\msg, \sigma) = 0$} \label{ln:tsigblame}
+\State $\V{Blame} \gets X$ \textbf{if} $X \in \Cs$ \textbf{else} $\min \Cs$
+  \Comment{identifiable abort}
+\EndIf
+\State \textbf{return} $(\sigma, X)$ \ to $P_0$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Verify}(\msg, \sigma, V)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$V \neq \V{Ver}$}
+\State \textbf{return} $V(\msg, \sigma)$ \label{ln:tsigforeign}
+  \Comment{a foreign key: no guarantee}
+\EndIf
+\If{$\neg\op{Spent}() \ \wedge\ \forall\, s : \V{Ask}[s,\msg] \neq \Sset$}
+\State \textbf{return} $0$ \label{ln:tsigunforge}
+  \Comment{unforgeability, unconditional}
+\EndIf
+\State \textbf{return} $\V{Ver}(\msg, \sigma)$ \label{ln:tsigconsist}
+  \Comment{consistency, by determinism of $\V{Ver}$}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Refresh}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P \in \Sset \ \wedge\ \V{Ver} \neq \unset$}
+\State $\Adv^{!}\bigl(\id.\op{Refresh}\bigr)$
+\State $\V{Quar}[*] \gets 0$ \label{ln:tsigrefresh}
+  \Comment{quarantined become honest again}
+\State $\V{Ctr} \gets \V{Ctr} + 1$
+\State \textbf{return} $\V{Ctr}$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Quarantine}(P)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F = \Apid \ \wedge\ P \in \Sset$} \label{ln:tsigquar}
+  \Comment{only the adversary decorrupts}
+\State $\V{Quar}[P] \gets 1$
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Epoch}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $(\V{Ctr}, \V{Quar}[\id.P], \V{Blame})$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $(\V{Ver}, \V{Ctr}, \V{Ask}, \V{Sig})$ \label{ln:tsigleak}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\Clean_{V}(V)$}:
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $V$ is deterministic and total \label{ln:tsigclean}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

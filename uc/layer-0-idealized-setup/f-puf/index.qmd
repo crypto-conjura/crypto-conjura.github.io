@@ -2,11 +2,123 @@
 title: "F-PUF — Physically uncloneable function"
 status: "Idealized Setup"
 layer: 0
-definition: "Not yet written"
+definition: "Defined"
 ---
 
 *F-PUF* (Physically uncloneable function) is part of *Idealized Setup and Resources* in the UC functionality encyclopedia. Status: an idealized setup assumption or shared resource.
 
+The setup assumption here is *possession of an object*, and that is what makes this box unlike every other entry in layer 0. A common reference string is available to everyone at once; a PUF is somewhere, held by exactly one party, and it gets from one party to another by being physically carried. So the interface is not "query the resource" but "hold it, measure it, hand it over" — and the whole security content sits in what the adversary can do to the token while it is in the post.
+
+## Functionality
+
+Reading the box: $\mathcal{A}(\cdot)$ is a call on the adversary slot; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it; $\square$ marks a value never set and $\bot$ a value that is set but empty; $\mathit{id}'.F$ is the role of the caller, so $\mathit{id}'.F = \mathbf{A}$ tests that the adversary is the one calling; $\mathsf{Sample}$ and $\mathsf{Eval}$ are the two algorithms of the PUF family the instance is parameterized by.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{PUF}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := (\mathsf{Sample}, \mathsf{Eval})\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{Id}, \mathtt{Hold}, \mathtt{To}, \mathtt{Ntf} \gets \square\)<span class="cj-comment">// one token per instance</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Create()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="2">
+<li>\(\textbf{require}\ \mathtt{Id} = \square\)<span class="cj-comment">// a token is drawn once and never re-drawn</span></li>
+<li>\(\mathtt{Id} \gets \mathsf{Sample}()\)</li>
+<li>\(\mathtt{Hold} \gets \mathit{id}.P\); &nbsp;&nbsp; \(\mathtt{To} \gets \bot\)</li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Eval(<span class="cj-id">c</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="6">
+<li>\(\textbf{require}\ \mathtt{Id} \neq \square\)</li>
+<li>\(\textbf{if}\ \mathit{id}'.F = \mathbf{A}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{require}\ \mathtt{To} \neq \bot\)</span><span class="cj-comment">// in transit: the courier may measure it</span></li>
+<li>\(\textbf{if}\ \mathit{id}'.F \neq \mathbf{A}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{require}\ \mathtt{Hold} = \mathit{id}.P\)</span><span class="cj-comment">// possession, not a key, is the credential</span></li>
+<li>\(\textbf{return}\ \mathsf{Eval}(\mathtt{Id}, c)\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Handover(<span class="cj-id">P</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="12">
+<li>\(\textbf{require}\ \mathtt{Hold} = \mathit{id}.P \ \wedge\ \mathtt{To} = \bot \ \wedge\ P \in \mathbf{P}\)</li>
+<li>\(\mathtt{Hold} \gets \bot\); &nbsp;&nbsp; \(\mathtt{To} \gets P\)<span class="cj-comment">// nobody holds it while it travels</span></li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Handover}, \mathit{id}.P, P\bigr)\)</li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Deliver()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="16">
+<li>\(\textbf{require}\ \mathit{id}'.F = \mathbf{A} \ \wedge\ \mathtt{To} \neq \bot\)<span class="cj-comment">// the adversary schedules arrival</span></li>
+<li>\(\mathtt{Hold} \gets \mathtt{To}\); &nbsp;&nbsp; \(\mathtt{Ntf} \gets \mathtt{To}\)</li>
+<li>\(\mathtt{To} \gets \bot\)</li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Collect()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="20">
+<li>\(\textbf{require}\ \mathtt{Ntf} = \mathit{id}.P\)</li>
+<li>\(\mathtt{Ntf} \gets \square\)</li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="23">
+<li>\(\textbf{return}\ (\mathtt{Hold}, \mathtt{To})\)<span class="cj-comment">// \(\mathtt{Id}\) is not leaked: the token is unclonable</span></li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+*Source: Figure 2, p. 12 of Brzuska, Fischlin, Schröder and Katzenbeisser, "Physically Uncloneable Functions in the Universal Composition Framework", ePrint 2011/681, revision `20111218:161840`, the only posting. The PDF's pages and its printed folios agree, so the two numbers coincide here.*
+
+- **Lines 7–10 are the entire model, and they are a disjunction.** An honest party may evaluate the token only while it holds it (line 10); the adversary may evaluate it only while it does not (line 8). Those two conditions are exclusive by construction, because line 13 clears $\mathtt{Hold}$ at exactly the moment it sets $\mathtt{To}$. So the token answers precisely one party at a time, and the handover window is the only interval in which that party is the adversary. This is the formal content of "PUFs can be mailed", and it is why a PUF is not simply a random oracle with an owner.
+- **Line 13 is where the unclonability lives, and it is a deletion.** Handing over sets $\mathtt{Hold} \gets \bot$ before the token arrives anywhere. The sender does not retain a copy, cannot evaluate it in transit, and gets nothing back; there is no line anywhere in the box that lets two parties evaluate the same token in the same activation. Unclonability is not an assumption written into a parameter here — it is the absence of a second holder field.
+- **Line 23 leaks possession, never the token.** $\mathtt{Id}$ is the sampled PUF and it is deliberately not in the leak. A corrupted party learns who holds the token and where it is going, which is exactly what a real adversary watching the post learns, and it does not learn a description that would let it answer challenges it has not physically measured.
+- **Line 2 is a one-shot guard, and it carries a modelling assumption worth naming: the token is *certified*.** The paper is explicit immediately after the figure — "our definition requires that a PUF is somehow certified", so that "the adversary cannot replace a PUF sent to an honest party by a fake token". In this box that assumption is discharged structurally: there is exactly one $\mathtt{Id}$ per instance, drawn once at line 3, and no interface through which the adversary can substitute another. A reader who wants an uncertified PUF wants a different functionality, not a parameter change to this one.
+- **Line 16 gives the adversary the schedule but not the destination.** It may delay arrival indefinitely, which is the usual adversarial-delivery power, but $\mathtt{To}$ was fixed by the sender at line 13 and $\mathsf{Deliver}$ copies it rather than taking an argument. The adversary cannot redirect a token in transit.
+
+## Known realizations
+
+Nothing realizes this box, and that is the point of it. It is a setup assumption: a statement that the parties have access to a physical object with the stated behaviour, in the same way [*F-CRS*](/uc/layer-0-idealized-setup/f-crs/index.qmd) is a statement that they have access to a trusted string. What the paper provides instead is the other direction — what *this* functionality realizes:
+
+- **Oblivious transfer: Theorem 5.1, p. 15.** Protocol $\mathsf{PUF}_{\mathsf{OT}}$ securely realizes [*F-OT*](/uc/layer-5-oblivious-transfer/f-ot/index.qmd) in the $\mathcal{F}_{\mathsf{PUF}}$-hybrid model, assuming $(\mathsf{Gen}, \mathsf{Rep})$ is an $(m,\ell,t,\epsilon)$-fuzzy generator and the PUF family has matching parameters (Definition 3.2). The fuzzy extractor is doing real work: a PUF's responses are noisy, and the protocol needs them to be reproducible.
+- **Commitment: Theorem 6.1, p. 18.** The protocol of Figure 6 UC-realizes [*F-COM*](/uc/layer-4-commitments-proofs/f-com/index.qmd) in the $\mathcal{F}_{\mathsf{OT}}$-hybrid model — note the hybrid is OT, not PUF, so this is a step in a chain rather than a second direct construction. Composed with Theorem 5.1 it gives UC commitment from PUFs, which is the headline: UC commitment is impossible in the plain model, and this is one of the setup assumptions that buys it.
+- **Key exchange: Theorem 7.1, p. 21.** Protocol $\mathsf{PUF}_{\mathsf{KE}}$ securely realizes $\mathcal{F}_{\mathsf{KE}}$ in the $\mathcal{F}_{\mathsf{PUF}}$-hybrid model.
+
+## Properties
+
+- **Exclusive access, with probability exactly $1$.** For every reachable state, at most one of $\mathtt{Hold} \neq \bot$ and $\mathtt{To} \neq \bot$ holds: lines 4, 13 and 17–18 are the only writes to either, and each sets one and clears the other. Lines 8 and 10 are guarded by exactly those two conditions, so no two parties can evaluate the token concurrently.
+- **Unclonability, structurally rather than probabilistically.** There is no operation returning $\mathtt{Id}$, and $\mathsf{Leak}$ (line 23) omits it. The only way to learn anything about the token's behaviour is line 11, which requires current possession.
+- **Unpredictability is a parameter, not a guarantee of this box.** $\mathsf{Eval}$ is supplied by the PUF family, and the functionality runs it verbatim at line 11. Whether responses look random to someone who has not measured them is a property of the $(rg, d_{\mathsf{noise}}, d_{\mathsf{min}}, m)$-family in Definition 3.2, not something this code enforces. A page reading this box alone should not conclude that $\mathcal{F}_{\mathsf{PUF}}$ *is* a random oracle with an owner.
+- **Adversarial delay, unbounded.** Line 16 places no deadline on delivery, and no parameter of the box carries one. A protocol needing a bound must obtain it elsewhere; adding one here would change the object.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
+
 *References:*
 
-- Brzuska et al. [*Physically uncloneable functions in the universal composition framework*](https://eprint.iacr.org/2011/681). In Advances in Cryptology – CRYPTO 2011, 2011.
+- Brzuska, Fischlin, Schröder, and Katzenbeisser. [*Physically uncloneable functions in the universal composition framework*](https://eprint.iacr.org/2011/681). In Advances in Cryptology – CRYPTO 2011, volume 6841 of LNCS, pages 51–70, 2011. The definition transcribed above is Figure 2, p. 12 of ePrint 2011/681, revision `20111218:161840`, the only posting; the PUF-family definition is Definition 3.2; the three realizations are Theorems 5.1 (p. 15), 6.1 (p. 18) and 7.1 (p. 21).
+
+*Two defects in the printed figure, both of which the transcription above had to decide rather than copy.* The $\mathsf{ready}_{\mathsf{PUF}}$ bullet finds the tuple $(\mathit{sid}, \mathit{id}, \bot, \mathsf{trans}(P_j))$ and updates it to $(\mathit{sid}, \mathit{id}, P_i, \mathsf{notrans})$ — but $P_i$ is not bound anywhere in that bullet, and the receiver named by the tuple it just matched is $P_j$. Read literally the token is handed to a free variable; read as intended it goes to $P_j$, which is what line 17 does. Separately, the figure's tuples change arity between bullets, appearing as $(\mathit{sid}, *, *, *, *)$ and $(\mathit{sid}, \mathit{id}, P_i, *, \mathsf{notrans})$ in one place and $(\mathit{sid}, \mathit{id}, P_i, \mathsf{notrans})$ in another; the four-field reading is the one the operations actually use, and is what the state above records. Neither is a mathematical error in the paper — the intended object is unambiguous — but both are places where a transcription that copied the text would produce code that does not run.

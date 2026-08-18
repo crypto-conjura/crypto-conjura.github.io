@@ -1,0 +1,95 @@
+%% The interface box of f-puf, the one source for both the book
+%% and uc/.../f-puf/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fpuf$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad
+$\pars := (\op{Sample}, \op{Eval})$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{Id}, \V{Hold}, \V{To}, \V{Ntf} \gets \unset$
+  \Comment{one token per instance}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Create}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{Id} = \unset$} \label{ln:pufonce}
+  \Comment{a token is drawn once and never re-drawn}
+\State $\V{Id} \gets \op{Sample}()$
+\State $\V{Hold} \gets \id.P$; \quad $\V{To} \gets \none$
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Eval}(c)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{Id} \neq \unset$}
+\If{$\id'.F = \Apid$}
+\Req{$\V{To} \neq \none$} \label{ln:pufintransit}
+  \Comment{in transit: the courier may measure it}
+\EndIf
+\If{$\id'.F \neq \Apid$}
+\Req{$\V{Hold} = \id.P$} \label{ln:pufholder}
+  \Comment{possession, not a key, is the credential}
+\EndIf
+\State \textbf{return} $\op{Eval}(\V{Id}, c)$ \label{ln:pufeval}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Handover}(P)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{Hold} = \id.P \ \wedge\ \V{To} = \none \ \wedge\ P \in \Ps$}
+\State $\V{Hold} \gets \none$; \quad $\V{To} \gets P$ \label{ln:pufleave}
+  \Comment{nobody holds it while it travels}
+\State $\Adv\bigl(\id.\op{Handover}, \id.P, P\bigr)$
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Deliver}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F = \Apid \ \wedge\ \V{To} \neq \none$} \label{ln:pufsched}
+  \Comment{the adversary schedules arrival}
+\State $\V{Hold} \gets \V{To}$; \quad $\V{Ntf} \gets \V{To}$
+\State $\V{To} \gets \none$
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Collect}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{Ntf} = \id.P$}
+\State $\V{Ntf} \gets \unset$
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $(\V{Hold}, \V{To})$ \label{ln:pufleak}
+  \Comment{$\V{Id}$ is not leaked: the token is unclonable}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

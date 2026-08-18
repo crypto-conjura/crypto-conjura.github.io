@@ -2,13 +2,174 @@
 title: "F-adsig — Adaptor signature"
 status: "Canonical"
 layer: 3
-definition: "Not yet written"
+definition: "Defined"
 ---
 
 *F-adsig* (Adaptor signature) is part of *Public-Key Primitives, Key Exchange, Messaging* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
 
-Recently entered the encyclopedia via a 2025 paper on universally composable adaptor signatures.
+An adaptor signature ties a signature to a hard statement. The signer issues a *pre-signature* $\tilde{\sigma}$ on a message $\mathit{msg}$ and a statement $Y$; anyone holding a witness $y$ for $Y$ can *adapt* it into an ordinary signature $\sigma$; and anyone holding both $\tilde{\sigma}$ and $\sigma$ can *extract* $y$ back out. That last direction is the point — it is what makes atomic swaps work, since publishing the signature necessarily discloses the witness.
+
+The functionality below differs in shape from every other signature entry on this site, and the difference is deliberate: it does not take its algorithms from the adversary. $\mathsf{KeyGen}$, $\mathsf{Sign}$, $\mathsf{PreSign}$, $\mathsf{Verify}$, $\mathsf{PreVerify}$, $\mathsf{Adapt}$ and $\mathsf{Extract}$ are all *parameters*, fixed when the instance is created (line 1), and the functionality runs them itself. What it adds on top is a set of overrides: each guarded branch in $\mathsf{Verify}$ and $\mathsf{PreVerify}$ is one security property, forcing the answer when the scheme's own algorithm would have been allowed to get it wrong.
+
+## Functionality
+
+Reading the box: **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it; $\mathbf{C}$ is the set of corrupted parties; $\bot$ is a value that is set but empty; $S$ is the key owner and $R$ the hard relation, both parameters, and $\mathsf{DS}$ names the tuple of scheme algorithms the instance is parameterized by; $\mathcal{M}$ and $\Sigma$ are the message and signature spaces.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{aSig}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := (S, R, \mathsf{DS})\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\((\mathit{sk}, \mathit{vk}) \gets \mathsf{DS}.\mathsf{KeyGen}()\)</li>
+<li>\(\mathtt{Sig}, \mathtt{Pre}, \mathtt{PVer} : \mathcal{M} \to 2^{\Sigma}\)</li>
+<li>\(\mathtt{Sig}[*], \mathtt{Pre}[*], \mathtt{PVer}[*] \gets \varnothing\)</li>
+<li>\(\mathtt{Adapt} \gets \varnothing\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.PubKey()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="5">
+<li>\(\textbf{return}\ \mathit{vk}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Sign(<span class="cj-id">msg</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="6">
+<li>\(\textbf{require}\ \mathit{id}.P = S\)<span class="cj-comment">// one key pair per instance</span></li>
+<li>\(\sigma \gets \mathsf{DS}.\mathsf{Sign}(\mathit{sk}, \mathit{msg})\)</li>
+<li>\(\textbf{if}\ \sigma \neq \bot\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{Sig}[\mathit{msg}] \gets \mathtt{Sig}[\mathit{msg}] \cup \{\sigma\}\)</span></li>
+<li>\(\textbf{return}\ \sigma\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.PreSign(<span class="cj-id">msg</span>, <span class="cj-id">Y</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="11">
+<li>\(\textbf{require}\ \mathit{id}.P = S\)</li>
+<li>\(\tilde{\sigma} \gets \mathsf{DS}.\mathsf{PreSign}(\mathit{sk}, \mathit{msg}, Y)\)</li>
+<li>\(\textbf{if}\ \tilde{\sigma} \neq \bot\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{Pre}[\mathit{msg}] \gets \mathtt{Pre}[\mathit{msg}] \cup \{(\tilde{\sigma}, Y)\}\)</span></li>
+<li>\(\textbf{return}\ \tilde{\sigma}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Adapt(<span class="cj-id">vk'</span>, <span class="cj-id">tilde{\sigma}</span>, <span class="cj-id">y</span>, <span class="cj-id">Y</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="16">
+<li>\(\sigma \gets \mathsf{DS}.\mathsf{Adapt}(\mathit{vk}', \tilde{\sigma}, y, Y)\)</li>
+<li>\(\textbf{if}\ \mathit{vk}' = \mathit{vk} \ \wedge\ (Y, y) \in R\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{Adapt} \gets \mathtt{Adapt} \cup \{(\tilde{\sigma}, Y, y, \sigma)\}\)</span></li>
+<li>\(\textbf{return}\ \sigma\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Extract(<span class="cj-id">vk'</span>, <span class="cj-id">tilde{\sigma}</span>, <span class="cj-id">&sigma;</span>, <span class="cj-id">Y</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="20">
+<li>\(y \gets \mathsf{DS}.\mathsf{Extract}(\mathit{vk}', \tilde{\sigma}, \sigma, Y)\)</li>
+<li>\(\textbf{if}\ (Y, y) \notin R \ \wedge\ \exists\, y' : (\tilde{\sigma}, Y, y', \sigma) \in \mathtt{Adapt}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(y \gets y'\)</span><span class="cj-comment">// extract correctness</span></li>
+<li>\(\textbf{return}\ y\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.PreVerify(<span class="cj-id">vk'</span>, <span class="cj-id">msg</span>, <span class="cj-id">Y</span>, <span class="cj-id">tilde{\sigma}</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="24">
+<li>\(b \gets \mathsf{DS}.\mathsf{PreVerify}(\mathit{vk}', \mathit{msg}, Y, \tilde{\sigma})\)</li>
+<li>\(c \gets \bigl(\mathit{vk}' = \mathit{vk} \ \wedge\ (\tilde{\sigma}, Y) \in \mathtt{Pre}[\mathit{msg}]\bigr)\)</li>
+<li>\(\textbf{if}\ c\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(b \gets 1\)</span><span class="cj-comment">// pre-sign correctness</span></li>
+<li>\(\textbf{if}\ \neg c \ \wedge\ \mathit{vk}' = \mathit{vk} \ \wedge\ S \notin \mathbf{C} \ \wedge\ \mathtt{Sig}[\mathit{msg}] = \varnothing\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(b \gets 0\)</span><span class="cj-comment">// pre-signature unforgeability</span></li>
+<li>\(\textbf{if}\ \mathit{vk}' = \mathit{vk} \ \wedge\ b = 1\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{PVer}[\mathit{msg}] \gets \mathtt{PVer}[\mathit{msg}] \cup \{(\tilde{\sigma}, Y)\}\)</span></li>
+<li>\(\textbf{return}\ b\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Verify(<span class="cj-id">vk'</span>, <span class="cj-id">msg</span>, <span class="cj-id">&sigma;</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="33">
+<li>\(b \gets \mathsf{DS}.\mathsf{Verify}(\mathit{vk}', \mathit{msg}, \sigma)\)</li>
+<li>\(e \gets \exists\, (\tilde{\sigma}, Y) \in \mathtt{Pre}[\mathit{msg}] : (Y, \mathsf{DS}.\mathsf{Extract}(\mathit{vk}', \tilde{\sigma}, \sigma, Y)) \in R\)</li>
+<li>\(c \gets \bigl(\mathit{vk}' = \mathit{vk} \ \wedge\ \sigma \in \mathtt{Sig}[\mathit{msg}]\bigr)\)</li>
+<li>\(a \gets \bigl(\mathit{vk}' = \mathit{vk} \ \wedge\ \exists\, (\tilde{\sigma},Y) \in \mathtt{PVer}[\mathit{msg}], y : (\tilde{\sigma}, Y, y, \sigma) \in \mathtt{Adapt}\bigr)\)</li>
+<li>\(\textbf{if}\ c \ \vee\ a\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ 1\)</span><span class="cj-comment">// correctness; pre-signature adaptability</span></li>
+<li>\(\textbf{if}\ \mathit{vk}' = \mathit{vk} \ \wedge\ S \notin \mathbf{C} \ \wedge\ \mathtt{Sig}[\mathit{msg}] = \varnothing \ \wedge\ \neg e\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ 0\)</span><span class="cj-comment">// unforgeability and extractability</span></li>
+<li>\(\textbf{return}\ b\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="42">
+<li>\(\textbf{if}\ \mathit{id}.P = S\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ (\mathit{sk}, \mathit{vk}, \mathtt{Sig}, \mathtt{Pre})\)</span></li>
+<li>\(\textbf{return}\ (\mathit{vk}, \mathtt{Sig}, \mathtt{Pre})\)</li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+*Source: Figure 3, p. 14 of Gerhart, Rausch and Schröder, "Universally Composable Adaptor Signatures", ePrint 2025/1363, revision `20260815:213942`, the newer of two postings. The PDF's pages and its printed folios agree.*
+
+**The printed figure is the endpoint of a construction, not a first statement.** This matters for anyone comparing versions. The paper builds the functionality in stages — a baseline in Figure 2, then four modifications in Figures 10 to 14, each adding one property and each paired with a claim that the gap it introduces is negligible — and Figure 3 is the assembled result. So Figures 10–14 are *not* variants to choose between; they are intermediate stages of the same object, and citing one of them as "the functionality" would be citing a draft. Figure 16 (and Figure 18) give a genuinely *extended* functionality, for unique extractability, which is a different and stronger object.
+
+- **Line 35 is correctness, and it is the reason the box stores $\mathtt{Sig}$ at all.** The predicate $c$ says the signature is one this instance itself produced under its own key; lines 37–38 then accept it, whatever the scheme's own $\mathsf{Verify}$ says about it.
+- **Lines 39–40 carry two properties at once, and the conjunction is the delicate part.** The clause fires only when the key is this instance's, the owner is honest, nothing was signed for this message, *and* $\neg e$ — where $e$, computed at lines 33–34, says no recorded pre-signature for this message extracts a witness from $\sigma$. Dropping $\neg e$ would give plain unforgeability; keeping it is what makes the box state *extractability*, because it declines to reject exactly those signatures from which a witness can be recovered. The paper's own account of this is that the verification oracle "is extended to additionally check the extractability property, but only in those cases where the signature is not already guaranteed to verify by correctness or by pre-signature adaptability".
+- **Line 36 is pre-signature adaptability, and lines 37–38 must come before line 39 or the box is wrong.** The predicate $a$ holds of a signature obtained by adapting a pre-signature that previously passed $\mathsf{PreVerify}$; such a signature is forced to verify even though the owner may never have signed that message — precisely the situation lines 39–40 would otherwise reject. The ordering is the content here: accept on $c \vee a$ first, reject only after. The source writes the same priority as a chain of `else if`, and the two agree because $c$ and the rejection condition are mutually exclusive ($c$ needs a recorded signature, the rejection needs none).
+- **Lines 28–29 are pre-signature unforgeability, and the guard $\mathtt{Sig}[\mathit{msg}] = \emptyset$ is doing real work.** Once an ordinary signature on $\mathit{msg}$ exists, a pre-signature is no longer unforgeable in general, so the clause withdraws. This is the property the paper defers to its own Definition 2 and Figure 13.
+- **Lines 21–22 are extract correctness.** If the scheme's $\mathsf{Extract}$ returns something that is not a witness, but the pair was in fact produced by adapting with a witness $y'$, the functionality substitutes $y'$. So extraction never fails on a signature that honestly came from adaptation.
+- **Line 6 binds signing and pre-signing to $S$ and nothing else does.** Adapting, extracting and both verifications are open to any caller — correctly, since all four are public operations that take the key as an argument rather than using the stored one.
+
+**Mismatch register.**
+
+| The source | This box | Why |
+|---|---|---|
+| Algorithms as parameters, run by the functionality | Kept as parameters, $\mathsf{DS}$ | Unusual here — *F-Sig*, *F-CERT* and *F-acc* all take algorithms from the adversary — but it is what the source does, and changing it would change the object. |
+| $\mathit{corr}$, "true iff the key owner is corrupted" | $S \in \mathbf{C}$ | The framework's corruption set says the same thing; the source's flag is a local abbreviation for exactly this test. |
+| No leakage interface | $\mathsf{Leak}$ at lines 42–44 | Required here. The source's corruption note says the attacker "also learns $\mathit{sk}$" when the owner is corrupt, which is lines 42–43; the rest is public. |
+| Session id $\mathit{sid} = (\mathit{pid}, \mathit{sid}')$ carrying the owner | $S$, a parameter | Session identifiers live in the process id here. Clean, since the only use the source makes of $\mathit{sid}$ is to name the owner. |
+| $\mathcal{H}_{\mathsf{sign}}$, $\mathcal{H}_{\mathsf{pSign}}$, $\mathcal{H}_{\mathsf{adapt}}$, $\mathcal{H}_{\mathsf{pVerify}}$ | $\mathtt{Sig}$, $\mathtt{Pre}$, $\mathtt{Adapt}$, $\mathtt{PVer}$ | Renamed to the house convention; same contents. |
+
+## Known realizations
+
+**Any sufficiently strong adaptor signature scheme: Theorem 2, p. 17.** For an adaptor signature scheme $\mathsf{AS}_{\Sigma,R}$ over a correct signature scheme and a hard relation, with $\mathcal{F}_{\mathsf{aSig}}$ parameterized by *the same algorithms*: if $\mathsf{AS}_{\Sigma,R}$ is extractable, pre-signature adaptable, correct, and has strong existentially unforgeable pre-signatures, then $\mathsf{AS}_{\Sigma,R} \leq \mathcal{F}_{\mathsf{aSig}}$. The proof is a sequence of games following the staged construction of §4, deferred to Appendix C.
+
+**Staged, one property at a time: Claims 1 to 4, pp. 12–34.** Each claim shows the gap introduced by one modification is negligible given one more property of the scheme — Claim 1 needs message-boundedness and correctness, and Claim 4 closes the sequence with extractability (Definition 10). Reading the claims in order is the cheapest way to see which property each branch in the box is buying.
+
+**A concrete scheme: Theorem 3, p. 18.** The enhanced Schnorr adaptor signature construction (Construction 1) is correct and achieves extractability, pre-signature adaptability and unforgeable pre-signatures in the random oracle model — hence realizes the functionality by Theorem 2.
+
+**The extended object: Theorem 4, p. 38.** The same statement for $\mathcal{F}^{(\mathit{ext})}_{\mathsf{aSig}}$, the unique-extractability functionality of Figure 16. Not the box above.
+
+## Properties
+
+- **Correctness, with probability exactly $1$.** Lines 35 and 37–38: every signature the functionality issued verifies under the instance's own key, regardless of the scheme's algorithm.
+- **Pre-signature adaptability, with probability exactly $1$.** Lines 36 and 37–38, for any signature obtained by adapting a pre-signature that passed $\mathsf{PreVerify}$ under this key.
+- **Unforgeability and extractability, with probability exactly $0$ of a bad acceptance, while $S \notin \mathbf{C}$.** Lines 39–40. The quantifier is over messages the owner never signed, and the exception carved out by $\neg e$ is exactly the set of signatures from which a recorded pre-signature extracts a witness — which is what "extractability" means as a property of the box rather than of the scheme.
+- **Pre-signature unforgeability, with probability exactly $0$, while $S \notin \mathbf{C}$ and no signature on the message exists.** Lines 28–29.
+- **Extract correctness, with probability exactly $1$ on adapted pairs.** Lines 21–22.
+- **No hiding of the statement $Y$.** $Y$ travels in the clear through $\mathsf{PreSign}$, $\mathsf{Adapt}$ and both verifications, and $\mathtt{Pre}$ retains it. The functionality makes no secrecy claim about which statement a pre-signature is bound to.
+- **Nothing is promised for a foreign key.** Every override is guarded by $\mathit{vk}' = \mathit{vk}$; for any other key the box returns the scheme's own answer unmodified.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Gerhart, Rausch, and Schröder. [*Universally composable adaptor signatures*](https://eprint.iacr.org/2025/1363). Cryptology ePrint Archive, Paper 2025/1363, 2025.
+- Gerhart, Rausch, and Schröder. [*Universally composable adaptor signatures*](https://eprint.iacr.org/2025/1363). Cryptology ePrint Archive, Paper 2025/1363, 2025. The definition transcribed above is Figure 3, p. 14 of revision `20260815:213942`, the newer of two postings; the baseline it is built from is Figure 2, p. 12, and the four staged modifications are Figures 10–14 with Claims 1–4 (pp. 12–34); the realization is Theorem 2, p. 17; the concrete Schnorr construction is Theorem 3, p. 18; the extended unique-extractability functionality is Figure 16 with Theorem 4, p. 38. Figure 1 (p. 8) reproduces, in simplified form, the earlier functionality of Tairi, Moreno-Sanchez and Schneidewind that this paper's own §4 discusses and departs from — it is prior work shown for comparison, not a variant of the box above.

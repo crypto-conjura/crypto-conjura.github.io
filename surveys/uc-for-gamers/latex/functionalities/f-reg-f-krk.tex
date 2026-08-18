@@ -1,0 +1,74 @@
+%% The interface box of f-reg-f-krk, the one source for both the book
+%% and uc/.../f-reg-f-krk/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fkr$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := (f, k)$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{PK} : \Fkr.\Ps \to \Keys \cup \{\unset\}$
+\State $\V{PK}[*] \gets \unset$
+\State $\V{Good} \gets \emptyset$
+  \Comment{keys this box drew itself}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Register}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{PK}[\id.P] = \unset$}
+\State $p \gets \Adv\bigl(\id.\op{Register},\ \id.P\bigr)$
+\If{$p \notin \V{Good}$} \label{ln:krkonlygood}
+  \State $r \gets_{\$} \{0,1\}^{k}$; \ $p \gets f(r)$ \label{ln:krkdraw}
+    \Comment{$r$ is used here and never stored}
+  \State $\V{Good} \gets \V{Good} \cup \{p\}$
+\EndIf
+\State $\V{PK}[\id.P] \gets p$
+\State \textbf{return} $p$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{RegisterKnown}(r)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P \in \Cs \ \wedge\ \V{PK}[\id.P] = \unset$} \label{ln:krkcorruptonly}
+  \Comment{only a corrupt party may bring its own $r$}
+\State $\V{PK}[\id.P] \gets f(r)$ \label{ln:krkwellformed}
+  \Comment{well-formed, but not added to $\V{Good}$}
+\State \textbf{return} $\V{PK}[\id.P]$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Retrieve}(P)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $p \gets \Adv\bigl(\id.\op{Retrieve},\ P,\ \id.P\bigr)$
+\If{$p \neq \V{PK}[P]$} \label{ln:krkwithhold}
+  \State \textbf{return} $\none$
+    \Comment{withholding is the only power here}
+\EndIf
+\State \textbf{return} $p$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $\V{PK}$ \label{ln:krkleak}
+  \Comment{no secret is held to leak}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

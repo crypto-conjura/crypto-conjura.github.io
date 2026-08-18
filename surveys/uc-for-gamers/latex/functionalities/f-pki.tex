@@ -1,0 +1,60 @@
+%% The interface box of f-pki, the one source for both the book
+%% and uc/.../f-pki/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fpki$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := O$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{val} \gets \unset$
+  \Comment{one registrant, one value}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Register}(v)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$\id'.F \in \{A,Z\} \ \wedge\ \id.P \notin \Cs$}
+  \State \textbf{return} $\V{val}$ \label{ln:pkilocpeek}
+    \Comment{a peek, not a write}
+\EndIf
+\Req{$\id.P = O \ \wedge\ \V{val} = \unset \ \wedge\ v \in \Keys$} \label{ln:pkilocfirst}
+  \Comment{the first request only, and only $O$'s}
+\State $\V{val} \gets v$ \label{ln:pkilocwrite}
+  \Comment{no check on $v$ whatever}
+\State $\Adv\bigl(\id.\op{Register},\ v\bigr)$ \label{ln:pkilocnotify}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Retrieve}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$\V{val} = \unset$}
+  \State \textbf{return} $\none$ \label{ln:pkilocnone}
+    \Comment{nothing registered yet}
+\EndIf
+\State \textbf{return} $\V{val}$ \label{ln:pkilocsame}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $\V{val}$ \label{ln:pkilocleak}
+  \Comment{public by construction}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

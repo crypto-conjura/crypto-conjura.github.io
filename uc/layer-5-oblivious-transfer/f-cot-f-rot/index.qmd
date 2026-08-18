@@ -1,15 +1,135 @@
 ---
-title: "F-COT, F-ROT — Correlated, random OT"
+title: "F-COT — Correlated OT"
 status: "Canonical"
 layer: 5
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-COT, F-ROT* (Correlated, random OT) is part of *Oblivious Transfer and Correlated Randomness* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+*F-COT* (Correlated OT) is part of *Oblivious Transfer* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
 
-Treated as a single entry, the same way *F-PRF* and *F-PRP* are folded together above.
+Not oblivious transfer in the [*F-OT*](/uc/layer-5-oblivious-transfer/f-ot/index.qmd) sense. This is the correlation that modern MPC preprocessing actually consumes: one global key $\Delta$ fixed once, and then batches of the relation $w = v + u\Delta$, with the sender holding $v$, the receiver holding $(u, w)$, and $u$ uniform. It is a vector of one-out-of-two transfers whose two messages differ by a value that never changes, which is precisely what makes it cheap to generate in bulk and enough for authenticated secret sharing.
+
+The definition below is deliberately *weaker* than an idealized correlation, in a way the source is explicit about: a corrupted party chooses its own output. That is not sloppiness — the paper says it "appears necessary for the security proofs of many protocols instantiating this functionality", and cites a line of work using the same weakening. Reading lines 9–14 as a defect is the most likely way to misread this box.
+
+## Functionality
+
+Reading the box: $\mathsf{San}[\mathsf{Clean}_{v}]$ and $\mathsf{San}[\mathsf{Clean}_{uw}]$ re-ask the adversary slot until the named predicate holds, both written out at the end of the box; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it; $\mathbf{C}$ is the set of corrupted parties; $\square$ marks a value never set and $\bot$ an absence; $\mathbb{F}_{2^{\kappa}}$ and $\mathbb{F}_{2}$ are the extension field and the base field, and $\kappa$ is the parameter.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{COT}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := \kappa\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{S} \gets \square\); &nbsp;\(\mathtt{R} \gets \square\)<span class="cj-comment">// sender, receiver</span></li>
+<li>\(\mathtt{D} \gets \square\)<span class="cj-comment">// the global key \(\Delta\)</span></li>
+<li>\(\mathtt{v} \gets \square\); &nbsp;\(\mathtt{u} \gets \square\); &nbsp;\(\mathtt{w} \gets \square\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Init(<span class="cj-id">Q</span>, <span class="cj-id">Delta</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="4">
+<li>\(\textbf{require}\ \mathtt{D} = \square \ \wedge\ \Delta \in \mathbb{F}_{2^{\kappa}}\)<span class="cj-comment">// one \(\Delta\) for every extension</span></li>
+<li>\(\mathtt{S} \gets \mathit{id}.P\); &nbsp;\(\mathtt{R} \gets Q\); &nbsp;\(\mathtt{D} \gets \Delta\)</li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Extend(<span class="cj-id">ell</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="7">
+<li>\(\textbf{require}\ \mathtt{D} \neq \square \ \wedge\ \mathit{id}.P \in \{\mathtt{S}, \mathtt{R}\}\)</li>
+<li>\(\mathtt{v} \gets_{\$} \mathbb{F}_{2^{\kappa}}^{\ell}\)</li>
+<li>\(\textbf{if}\ \mathtt{S} \in \mathbf{C}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{v} \gets \mathsf{San}[\mathsf{Clean}_{v}](\mathcal{A}(\mathit{id}.\mathsf{Extend}, \ell); \ell, \kappa)\)</span></li>
+<li>\(\mathtt{u} \gets_{\$} \mathbb{F}_{2}^{\ell}\); &nbsp;\(\mathtt{w} \gets \mathtt{v} + \mathtt{u} \cdot \mathtt{D}\)</li>
+<li>\(\textbf{if}\ \mathtt{R} \in \mathbf{C}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\((\mathtt{u}, \mathtt{w}) \gets \mathsf{San}[\mathsf{Clean}_{uw}](\mathcal{A}(\mathit{id}.\mathsf{Extend}, \ell); \ell, \kappa)\)</span></li>
+<li><span class="cj-ind">\(\mathtt{v} \gets \mathtt{w} + \mathtt{u} \cdot \mathtt{D}\)</span><span class="cj-comment">// the correlation is restored, not checked</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Read()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="16">
+<li>\(\textbf{require}\ \mathtt{v} \neq \square\)</li>
+<li>\(\textbf{if}\ \mathit{id}.P = \mathtt{S}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \mathtt{v}\)</span></li>
+<li>\(\textbf{if}\ \mathit{id}.P = \mathtt{R}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ (\mathtt{u}, \mathtt{w})\)</span></li>
+<li>\(\textbf{return}\ \bot\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="22">
+<li>\(\textbf{if}\ \mathit{id}.P = \mathtt{S}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ (\mathtt{D}, \mathtt{v})\)</span></li>
+<li>\(\textbf{if}\ \mathit{id}.P = \mathtt{R}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ (\mathtt{u}, \mathtt{w})\)</span></li>
+<li>\(\textbf{return}\ \bot\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig">Clean<sub><span class="cj-id">v</span></sub>(<span class="cj-id">v</span>; <span class="cj-id">ell</span>, <span class="cj-id">kappa</span>):</div>
+<ol class="cj-code" start="27">
+<li>\(\textbf{return}\ v \in \mathbb{F}_{2^{\kappa}}^{\ell}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig">Clean<sub><span class="cj-id">uw</span></sub>(<span class="cj-id">(u</span>, <span class="cj-id">w)</span>; <span class="cj-id">ell</span>, <span class="cj-id">kappa</span>):</div>
+<ol class="cj-code" start="28">
+<li>\(\textbf{return}\ u \in \mathbb{F}_{2}^{\ell} \ \wedge\ w \in \mathbb{F}_{2^{\kappa}}^{\ell}\)</li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+The box is transcribed from Yang, Weng, Lan, Zhang and Wang, *Ferret: Fast extension for correlated OT with small communication*, ePrint 2020/924, revision `20200906:085646`, Figure 1, p. 6 — "Correlated OT functionality". The rendered page is at `_src/yang2020-p6.png`. The paper attributes the shape of the definition to earlier work and says so; it is not claiming the functionality as new.
+
+**Line 11 is the functionality and everything else is who gets to disturb it.** The correlation $w = v + u\Delta$ over a single $\Delta$ fixed at line 5 is the entire object. The reason $\Delta$ is fixed once rather than per-batch is what makes this useful downstream: the same $\Delta$ across every extension is what lets the shares be added, which is what turns correlated OT into authenticated sharing.
+
+**Lines 9–10 and 12–14 are the concession, and the two are not symmetric.** A corrupt *sender* replaces $v$ and the receiver's $(u,w)$ is then computed from it, so the correlation still holds and $u$ is still uniform. A corrupt *receiver* replaces both $u$ and $w$, and line 14 then **recomputes $v$ to restore the correlation** rather than checking it. That asymmetry is in the printed definition and it is the interesting part: the receiver can choose its choice bits and its own output arbitrarily, and the functionality quietly adjusts the honest sender's value to keep the relation true. What is preserved is the *relation*; what is given up is any claim that $u$ is uniform when the receiver is corrupt.
+
+**The sanitizers are mine; the field membership is the source's.** The printed clauses say the adversary supplies $v \in \mathbb{F}_{2^{\kappa}}^{\ell}$, and $u \in \mathbb{F}_{2}^{\ell}$, $w \in \mathbb{F}_{2^{\kappa}}^{\ell}$ — type constraints, with no statement of what happens if the adversary answers otherwise. This framework does not trust the slot, so the constraint becomes a predicate and the slot is re-asked until it is met. Nothing about the object changes; the mechanism for enforcing the type is written down rather than assumed.
+
+**Output is a pull, and the source pushes** (lines 16–21). The printed definition ends "send $v$ to $S$ and $(u,w)$ to $R$". Here each party fetches its own half, and line 21 refuses anybody who is neither. The translation is [*F-OT*](/uc/layer-5-oblivious-transfer/f-ot/index.qmd)'s and [*F-COM*](/uc/layer-4-commitments-proofs/f-com/index.qmd)'s, and it matters here for a reason it does not there: with a push, the two outputs are simultaneous, and a corrupt receiver that has already read $(u,w)$ before the sender reads $v$ learns nothing extra, because $v$ was fixed at line 14 before either read.
+
+**One batch, not a history.** Lines 3 and 11 hold the most recent extension only, where the source's `Extend` may be "repeatedly called to get multiple batches". Keeping every batch would change nothing about the guarantee and would add a table to the box; the honest statement is that this box models one batch at a time, and a protocol consuming $n$ batches is $n$ calls whose earlier outputs it is responsible for remembering. That is a real simplification and it is the one place this box says less than the paper.
+
+**Leak splits by role** (lines 22–27). The source has no leakage interface. A corrupt sender's adversary knows $\Delta$ and $v$; a corrupt receiver's knows $(u,w)$ and, notably, *not* $\Delta$ — which is the asymmetry the whole primitive rests on, since a receiver that learned $\Delta$ could compute the sender's value for any $u$ it liked.
+
+## Known realizations
+
+**Ferret realizes it in bulk, which is the paper's contribution.** The construction is a pseudorandom-correlation-generator extension: consume a small number of base correlated OTs and produce many more, with communication sublinear in the output. The paper's headline numbers are about throughput rather than feasibility — the functionality was realizable before; what is new is the cost.
+
+**A note on what "$\mathcal{F}_{\textsc{cot}}$" means elsewhere.** The paper is explicit that this is the definition "for binary field" and that it follows several earlier formulations, all sharing the corrupt-party-chooses-output weakening. Treat the name as under-determined in the literature: a correlated-OT functionality over a different field, or one where the receiver's choice bits are its *input* rather than sampled, is a different object. The source notes that chosen-choice-bit COT is obtainable from this one cheaply by a preprocessing technique, which is the right way to read the relationship — a construction, not the same box.
+
+**Random OT is a different functionality and this page does not define it.** The stub this page grew from was titled "F-COT, F-ROT — Correlated, random OT". Neither cited paper prints a box named $\mathcal{F}_{\textsc{rot}}$: Ferret prints $\mathcal{F}_{\textsc{cot}}$, $\mathcal{F}_{\textsc{mpcot}}$, $\mathcal{F}_{\textsc{spcot}}$ and $\mathcal{F}_{\mathsf{deal}}$, and MASCOT prints $\mathcal{F}_{\textsc{abb}}$, $\mathcal{F}_{\textsc{copee}}$, $\mathcal{F}_{J}$ and $\mathcal{F}_{\mathsf{Prep}}$. Random OT — both messages uniform and the choice bit sampled — is a standard object, but sourcing it needs a paper that prints it, so it is left for a future entry rather than invented here.
+
+## Properties
+
+- **The correlation holds with probability exactly $1$, in every corruption case.** Honest: line 11. Corrupt sender: line 11 runs after line 10. Corrupt receiver: line 14 restores it by construction.
+- **$u$ is uniform only while the receiver is honest.** Line 11 draws it; line 13 replaces it. Any downstream argument that needs unpredictable choice bits needs the receiver honest, and that is exactly the weakening the source flags.
+- **$\Delta$ is never returned to the receiver.** Lines 22–27: the sender's leak carries it, the receiver's does not. The receiver learns $\Delta$ only by breaking the protocol that realizes this box, never through the box.
+- **$\Delta$ is fixed for the lifetime of the instance.** Line 4 refuses a second $\mathsf{Init}$. Re-keying is a new instance, which is what makes cross-batch addition sound.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Yang, Weng, Lan, Zhang, and Wang. [*Ferret: Fast extension for correlated OT with small communication*](https://eprint.iacr.org/2020/924). In ACM Conference on Computer and Communications Security (CCS), 2020.
-- Keller, Orsini, and Scholl. [*MASCOT: Faster malicious arithmetic secure computation with oblivious transfer*](https://eprint.iacr.org/2016/505). In ACM Conference on Computer and Communications Security (CCS), 2016.
+- Yang, Weng, Lan, Zhang, and Wang. [*Ferret: Fast extension for correlated OT with small communication*](https://eprint.iacr.org/2020/924). In 27th ACM Conference on Computer and Communications Security (CCS), pages 1607–1626, 2020. Figure 1, p. 6, the definition transcribed above, and the paragraph beneath it for the corrupt-party-chooses-output rationale, the attribution to earlier formulations, and the remark on obtaining chosen-choice-bit COT. Authors, venue and page range confirmed against DBLP, which lists five authors.
+- Keller, Orsini, and Scholl. [*MASCOT: Faster malicious arithmetic secure computation with oblivious transfer*](https://eprint.iacr.org/2016/505). In 23rd ACM Conference on Computer and Communications Security (CCS), pages 830–842, 2016. Carried over from the stub's reference list and kept for the setting rather than the definition: it prints $\mathcal{F}_{\textsc{abb}}$, $\mathcal{F}_{\textsc{copee}}$, $\mathcal{F}_{J}$ and $\mathcal{F}_{\mathsf{Prep}}$, and no correlated-OT box under that name.

@@ -1,12 +1,101 @@
 ---
-title: "F-syn — Bounded-delay network"
+title: "F-syn — Synchronous network, round-based"
 status: "Idealized Setup"
 layer: 0
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-syn* (Bounded-delay network) is part of *Idealized Setup and Resources* in the UC functionality encyclopedia. Status: an idealized setup assumption or shared resource.
+*F-syn* (Synchronous network, round-based) is part of *Idealized Setup and Resources* in the UC functionality encyclopedia. Status: an idealized setup assumption or shared resource.
+
+The framework's own synchronous network: parties send a vector of messages, the round turns when everyone has spoken, and what was sent in a completed round can then be read. It buys four guarantees the source names — round awareness, synchronised delivery, guaranteed delivery, authentic delivery — and it is the abstraction against which the clock-parameterized functionalities on this site, [*F-Net*](/uc/layer-1-channels-agreement-ledgers/f-net/index.qmd) and [*F-AC*](/uc/layer-1-channels-agreement-ledgers/f-ac/index.qmd), should be read.
+
+Two things a reader should know before citing it. **It is rushing**: the source stresses that the order of activation within a round is adversarial, so a corrupted party's round-$r$ messages may depend on the honest parties' round-$r$ messages. And **the best-known criticism of this functionality was written against a different version of it** — see the provenance note below, which is the most useful thing on this page.
+
+## Functionality
+
+Reading the box: $\mathcal{A}(\cdot)$ is a call on the adversary slot whose answer is not used, so it is a notification rather than a query; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it; $\mathbf{C}$ is the set of corrupted parties and $\mathbf{P}$ the served parties; $\square$ marks a value never set and $\bot$ a refusal or an absence; $\mathtt{In}[P,\rho]$ is $P$'s inbox for round $\rho$.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{Syn}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := \bot\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{r} \gets 1\)<span class="cj-comment">// the current round</span></li>
+<li>\(\mathtt{sent}[*,*] \gets 0\); &nbsp;\(\mathtt{In}[*,*] \gets \varnothing\)<span class="cj-comment">// who has spoken, and every inbox</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Send(<span class="cj-id">M</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="3">
+<li>\(\textbf{require}\ \mathtt{sent}[\mathit{id}.P, \mathtt{r}] = 0\)<span class="cj-comment">// one vector per party per round</span></li>
+<li>\(\mathtt{sent}[\mathit{id}.P, \mathtt{r}] \gets 1\)</li>
+<li>\(\forall (P, m) \in M : \mathtt{In}[P, \mathtt{r}] \gets \mathtt{In}[P, \mathtt{r}] \cup \{(\mathit{id}.P, m)\}\)</li>
+<li>\(\textbf{if}\ \forall P \in \mathbf{P} \setminus \mathbf{C} : \mathtt{sent}[P, \mathtt{r}] = 1\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{r} \gets \mathtt{r} + 1\)</span><span class="cj-comment">// the round turns by itself</span></li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Send},\ \mathit{id}.P,\ M,\ \mathtt{r}\bigr)\)<span class="cj-comment">// in the clear, before the round turns</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Receive(<span class="cj-id">rho</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="10">
+<li>\(\textbf{if}\ \rho \geq \mathtt{r}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \bot\)</span><span class="cj-comment">// round \(\rho\) is not finished</span></li>
+<li>\(\textbf{return}\ \mathtt{In}[\mathit{id}.P, \rho]\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="13">
+<li>\(\textbf{return}\ \bigl(\mathtt{r},\ \{\, \mathtt{In}[\mathit{id}.P, \rho] : \rho < \mathtt{r} \,\}\bigr)\)</li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+The box is transcribed from Canetti, *Universally composable security: A new paradigm for cryptographic protocols*, ePrint 2000/067, revision `20200212:021048`, the functionality $\mathcal{F}_{\textsc{syn}}$ on p. 84 (PDF page 87). Printed page numbers in that posting run three behind the PDF's own paging; `_src/sources.json` records both.
+
+**The provenance note that matters, and the reason this page is worth having.** Katz, Maurer, Tackmann and Zikas prove that $\mathcal{F}_{\textsc{syn}}$ does not provide the guarantees expected of synchronous communication: on their reading, "$\mathcal{F}_{\textsc{syn}}$ requires the adversary to explicitly initiate the round switch", which lets the adversary stall the execution indefinitely by never switching, so no $\mathcal{F}_{\textsc{syn}}$-hybrid protocol realizes secure function evaluation with guaranteed termination for a function that is not locally computable. Their Appendix B reprints the functionality, and the reprint has exactly that: a clause `Advance-Round` taken **from the adversary**.
+
+The current revision of the framework paper does not. Step 2(c) of the definition above increments the round *itself*, the moment every uncorrupted party has provided its messages — line 7 of this box, with no adversary in it. So the criticism is aimed at a formulation the source has since replaced, and reading it against the 2020 revision would be a mistake in both directions: the impossibility argument does not go through against this box as printed, and this box is not the object their theorem is about. Anyone relying on either result should say which version they mean. This page takes the current revision, because the rule is to read the newest revision of the paper being cited; it records the older mechanism here rather than silently choosing.
+
+**Line 7 is therefore the whole design, and it is one line.** Round advance is a function of the honest parties' progress alone. Corrupted parties are excluded from the test — line 6 quantifies over $\mathbf{P} \setminus \mathbf{C}$ — which is what stops a corruption from freezing the network, and it is precisely the clause whose absence the criticism above turns on.
+
+**Line 8 is the rushing model, and its position is load-bearing.** The notification carries the sender's whole vector to the adversary, and it happens *after* the round may already have turned at line 7 but within the same call. What the adversary learns is every honest message of round $r$; what it does with that is send its own round-$r$ messages, which the source explicitly permits. A reader looking for the reason synchronous protocols need care with adaptive corruption should look here rather than at the delivery lines.
+
+**Delivery is a pull, and it refuses the future** (lines 10–12). The source answers a `Receive` for an incomplete round with "Round $r$ incomplete"; here that is $\bot$. Note what is *not* guarded: nothing stops a party reading a round it never sent in, and nothing bounds when it reads. Guaranteed delivery in this box means the message is in the inbox, not that anybody fetches it.
+
+**Two conventions and one restriction that are mine, not the source's.** The source keeps a per-round boolean and per-round inbox for every party and round $\rho \geq 0$; that is $\mathtt{sent}$ and $\mathtt{In}$. The source's step 4, a backdoor `corrupt P` message, becomes the framework's corruption register $\mathbf{C}$ and so has no line. And line 3 **adds a restriction the source does not have**: the printed clause sets $s^{r}_{S} \gets 1$ unconditionally, so a party may call `Send` twice in one round and add messages twice; this box refuses the second. The source's guarantee is stated in terms of *the* vector a party sends per round, so a single vector is the reading its own prose supports — but it is a strengthening, and a protocol that sends twice in a round is admissible there and not here.
+
+## Known realizations
+
+**It is a setup assumption, and the interesting results are about what it cannot do.** Katz, Maurer, Tackmann and Zikas's answer to the defect they identify is to build synchrony out of two pieces instead: a clock functionality plus bounded-delay channels, from which they realize synchronous computation *with* guaranteed termination. On this site that decomposition is what `F-Net` and `F-AC` are — a delivery guarantee bought with a clock and a deadline $\Delta$ — and their existence beside this box is the design decision this page documents.
+
+**Round awareness is optional and this box has it.** The source is careful here: it notes the first of its four guarantees, a common round number, "is not essential, i.e. there exist meaningful notions of synchronous communication which do not imply common knowledge of the round number", and chooses the stronger variant for simplicity. A protocol that needs only the weaker one is over-assuming if it cites this box.
+
+## Properties
+
+- **Guaranteed delivery, with probability exactly $1$.** Line 5 writes into the recipient's inbox at the moment of sending, and no later line removes anything. There is no adversary line between a send and a read.
+- **Authentic delivery, with probability exactly $1$.** Line 5 records $(\mathit{id}.P, m)$ — the real sender, taken from the caller's identity rather than from the message — so a corrupt party cannot attribute its message to anybody else.
+- **Synchronised delivery.** Lines 10–11 refuse any round not yet complete, so a party cannot read round $r$ before every uncorrupted party has sent for round $r$. That is the source's second guarantee, and lines 6–7 are what make it true.
+- **No secrecy at all.** Line 8 hands the sender's entire vector to the adversary in the clear. This is an authenticated network, not a private one; [*F-SMT*](/uc/layer-1-channels-agreement-ledgers/f-smt/index.qmd) is the box that adds confidentiality.
+- **Liveness is not here.** Nothing forces a party to send, so nothing forces the round to turn. The guarantee is conditional on the honest parties acting, which is the honest form of what a synchronous network provides.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Katz et al. [*Universally composable synchronous computation*](https://eprint.iacr.org/2011/310). In 10th Theory of Cryptography Conference (TCC), pages 477–498, 2013.
+- Canetti. [*Universally composable security: A new paradigm for cryptographic protocols*](https://eprint.iacr.org/2000/067). In 42nd IEEE Symposium on Foundations of Computer Science (FOCS), pages 136–145, 2001. Read at ePrint revision `20200212:021048`. The functionality on p. 84 (PDF page 87), the definition transcribed above, including the automatic round advance at step 2(c); the four guarantees and the rushing remark on the preceding page.
+- Katz, Maurer, Tackmann, and Zikas. [*Universally composable synchronous computation*](https://eprint.iacr.org/2011/310). In 10th Theory of Cryptography Conference (TCC), pages 477–498, 2013. Read at ePrint revision `20131026:194047`. Section 5.1 for the argument that the $\mathcal{F}_{\textsc{syn}}$-hybrid model cannot give guaranteed termination, and Appendix B, p. 28, for the reprint carrying the adversary-driven `Advance-Round` clause that the argument depends on. Authors and venue confirmed against DBLP.

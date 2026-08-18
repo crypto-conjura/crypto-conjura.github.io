@@ -1,0 +1,77 @@
+%% The interface box of f-cp, the one source for both the book
+%% and uc/.../f-cp/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fcp$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := (k, R)$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{C} \gets \unset$; \ $\V{V} \gets \unset$
+  \Comment{committer, receiver}
+\State $\V{ws} \gets ()$; \ $\V{X} \gets \emptyset$
+  \Comment{the witness list, the proved statements}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Commit}(Q, w)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$w \in \{0,1\}^{k} \ \wedge\ (\V{C} = \unset \ \vee\ \V{C} = \id.P)$} \label{ln:cpsame}
+  \Comment{one committer, many commits}
+\If{$\V{C} = \unset$}
+  \State $\V{C} \gets \id.P$; \ $\V{V} \gets Q$
+\EndIf
+\State $\V{ws} \gets \V{ws} \,\|\, w$ \label{ln:cpappend}
+\State $\Adv\bigl(\id.\op{Commit},\ \V{C},\ \V{V}\bigr)$ \label{ln:cpreceipt}
+  \Comment{a receipt, carrying no witness}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Prove}(x)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P = \V{C} \ \wedge\ R(x, \V{ws}) = 1$} \label{ln:cponlytrue}
+  \Comment{a false statement leaves no trace}
+\State $\V{X} \gets \V{X} \cup \{x\}$ \label{ln:cprecord}
+\State $\Adv\bigl(\id.\op{Prove},\ x\bigr)$
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Read}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P = \V{V}$}
+  \Comment{the proofs are the receiver's}
+\State \textbf{return} $(\V{C},\ \V{X})$ \label{ln:cpread}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$\V{C} = \unset$}
+  \State \textbf{return} $\none$
+\EndIf
+\If{$\V{C} \in \Cs$}
+  \State \textbf{return} $(\V{C},\ \V{V},\ \V{ws},\ \V{X})$ \label{ln:cpleakall}
+\EndIf
+\State \textbf{return} $(\V{C},\ \V{V},\ \V{X})$ \label{ln:cpleakhide}
+  \Comment{never $\V{ws}$ for an honest committer}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

@@ -1,0 +1,62 @@
+%% The interface box of f-syn, the one source for both the book
+%% and uc/.../f-syn/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fsyn$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := \none$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{r} \gets 1$
+  \Comment{the current round}
+\State $\V{sent}[*,*] \gets 0$; \ $\V{In}[*,*] \gets \emptyset$
+  \Comment{who has spoken, and every inbox}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Send}(M)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{sent}[\id.P, \V{r}] = 0$} \label{ln:synonce}
+  \Comment{one vector per party per round}
+\State $\V{sent}[\id.P, \V{r}] \gets 1$
+\State $\forall (P, m) \in M : \V{In}[P, \V{r}] \gets \V{In}[P, \V{r}] \cup \{(\id.P, m)\}$ \label{ln:syndeliver}
+\If{$\forall P \in \Ps \setminus \Cs : \V{sent}[P, \V{r}] = 1$}
+  \State $\V{r} \gets \V{r} + 1$ \label{ln:synadvance}
+    \Comment{the round turns by itself}
+\EndIf
+\State $\Adv\bigl(\id.\op{Send},\ \id.P,\ M,\ \V{r}\bigr)$ \label{ln:synrush}
+  \Comment{in the clear, before the round turns}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Receive}(\rho)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$\rho \geq \V{r}$}
+  \State \textbf{return} $\none$ \label{ln:synincomplete}
+    \Comment{round $\rho$ is not finished}
+\EndIf
+\State \textbf{return} $\V{In}[\id.P, \rho]$ \label{ln:synread}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $\bigl(\V{r},\ \{\, \V{In}[\id.P, \rho] : \rho < \V{r} \,\}\bigr)$ \label{ln:synleak}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

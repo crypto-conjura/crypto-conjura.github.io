@@ -1,12 +1,97 @@
 ---
-title: "F-ACRS — Augmented CRS, “sunspots”"
+title: "F-ACRS — Augmented CRS"
 status: "Idealized Setup"
 layer: 0
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-ACRS* (Augmented CRS, “sunspots”) is part of *Idealized Setup and Resources* in the UC functionality encyclopedia. Status: an idealized setup assumption or shared resource.
+*F-ACRS* (Augmented CRS) is part of *Idealized Setup and Resources* in the UC functionality encyclopedia. Status: an idealized setup assumption or shared resource.
+
+A [common reference string](/uc/layer-0-idealized-setup/f-crs/index.qmd) that will also hand a party a secret key derived from its own identity — but only if that party is already corrupted. The refusal is not a safety margin, it is the mechanism: it exists so that a simulator can obtain a trapdoor the environment cannot, which is exactly what a globally available CRS takes away. This is the smallest setup the paper found that escapes its own impossibility result, and it is why it exists at all.
+
+The box is global. Its process id is pinned to a constant and it admits every standard, adversarial and environment id, which on this site is what *global* means: one instance, reachable from every session. That is the source's $\bar{\mathcal{G}}_{\mathsf{acrs}}$, a *shared* functionality in GUC, and it is the reason a page filed under an `f-` id carries a $\mathcal{G}$ in its box — there is no local variant of this object in the source to write instead.
+
+## Functionality
+
+Reading the box: $\square$ marks a value never set; $\mathbf{C}$ is the set of corrupted parties; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it; $\mathsf{Setup}$ and $\mathsf{Extract}$ are the two parameters, a master-key generator and an identity-based key derivation; the pinned process id and $\mathbf{N} := \mathbf{Std} \cup \mathbf{A} \cup \mathbf{Z}$ are what make the instance global.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{G}_{\mathsf{ACRS}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid} := (\mathsf{GACRS},0,0)\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N} := \mathbf{Std} \cup \mathbf{A} \cup \mathbf{Z}\), &nbsp; \(\mathbf{U} := \varnothing\), &nbsp; \(\mathit{par} := (\mathsf{Setup}, \mathsf{Extract})\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{MSK} \gets \square\)</li>
+<li>\(\mathtt{PK} \gets \square\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Get()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="3">
+<li>\(\textbf{if}\ \mathtt{PK} = \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{MSK} \gets_{\$} \{0,1\}^{\lambda}\)</span></li>
+<li><span class="cj-ind">\(\mathtt{PK} \gets \mathsf{Setup}(\mathtt{MSK})\)</span><span class="cj-comment">// once, on the first ask</span></li>
+<li>\(\textbf{return}\ \mathtt{PK}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="7">
+<li>\(\textbf{return}\ \mathtt{PK}\)<span class="cj-comment">// never \(\mathtt{MSK}\)</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Retrieve()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="8">
+<li>\(\textbf{require}\ \mathit{id}.P \in \mathbf{C}\)<span class="cj-comment">// honest parties are refused their own key</span></li>
+<li>\(\textbf{if}\ \mathtt{PK} = \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{MSK} \gets_{\$} \{0,1\}^{\lambda}\)</span></li>
+<li><span class="cj-ind">\(\mathtt{PK} \gets \mathsf{Setup}(\mathtt{MSK})\)</span></li>
+<li>\(\textbf{return}\ \mathsf{Extract}(\mathtt{PK}, \mathit{id}.P, \mathtt{MSK})\)</li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+The box is transcribed from Canetti, Dodis, Pass and Walfish, *Universally composable security with global setup*, ePrint 2006/432, revision `20071002:061601`, Figure 6, printed p. 29 (PDF page 30) — "The Identity-Based Augmented CRS Functionality". Its three printed clauses are an Initialization Phase, Providing the public value, and a Dormant Phase; the rendered page is kept at `_src/canettietal2007-p30.png`.
+
+**Line 8 is the whole design, and it reads backwards.** A setup that refuses honest parties the key it will happily give a corrupt one looks like a defect until you ask what the key is for. It is a trapdoor for the *simulator*: in the proof the simulator is the one holding it, and the ideal-world adversary can extract it for any party it has corrupted. If honest parties could get theirs too, the environment could get one by corrupting nobody and simply asking, and the trapdoor would stop being simulator-only. The paper is direct about it — "it is even crucial that uncorrupted parties in the ACRS model never obtain their secret keys" — and about the consequence that a real trusted party cannot actually tell who is corrupt, so a realization hands the key to whoever asks and the argument has to survive that.
+
+**Line 4 is drawn once and never leaves the box.** $\mathtt{MSK}$ is sampled on the first call and is read only by $\mathsf{Extract}$ at line 12. $\mathsf{Leak}$ (line 7) returns $\mathtt{PK}$ and is commented to say what it does not return. In the source the master key is recorded and never sent anywhere; making that explicit is the one place where writing this in a leakage-based framework says something the printed clauses only imply.
+
+**The source pushes; this box is asked.** "Whenever activated, by any party requesting the CRS, return $PK$ to the requesting party **and to the adversary**." Handing a value to the adversary unprompted is the delayed-output idiom of the older framework; here the adversary reads through $\mathsf{Leak}$, and since $\mathtt{PK}$ is public the two are the same information. [*F-CRS*](/uc/layer-0-idealized-setup/f-crs/index.qmd) makes the identical translation, and keeping the two boxes parallel is what lets a reader see that the only real difference between them is $\mathsf{Retrieve}$.
+
+**Lazy sampling is load-bearing, not tidiness** (lines 3–5, repeated at 9–11). The string is drawn on the first ask rather than at initialization, which is what leaves a simulator free to choose it. Both entry points sample, because either can be the first: a corrupt party may call $\mathsf{Retrieve}$ before anyone has called $\mathsf{Get}$, and the source's "at the first activation" covers that case without distinguishing it.
+
+## Known realizations
+
+**Why this box exists: Theorem 3.1, printed p. 24.** No bilateral, terminating protocol GUC-realizes $\mathcal{F}_{\mathsf{Com}}$ using only the global CRS $\bar{\mathcal{G}}_{\mathsf{crs}}$ (Figure 3, printed p. 23) — and this holds even with ideally authentic communication. The reason is the one line 8 answers: the simulator gets the reference string from an external shared functionality instead of choosing it, so it cannot arrange to know a trapdoor. The paper conjectures that most plain-model impossibility results for UC lift to GUC with $\bar{\mathcal{G}}_{\mathsf{crs}}$ the same way.
+
+**What it buys: Theorem 4.2, printed p. 30.** There is a protocol that GUC-realizes $\mathcal{F}_{\mathsf{Com}}$ given access to $\bar{\mathcal{G}}_{\mathsf{acrs}}$, with corruptions adaptive and in the non-erasure model, as long as they are PID-wise. Because a GUC-secure commitment suffices to GUC-realize any well-formed multi-party functionality — through $\mathcal{F}_{\mathsf{ZK}}$ and the compiler the paper cites — this one setup recovers general feasibility, which is what Theorem 3.1 had removed. The tool is an identity-based trapdoor commitment, constructible from any signature scheme with a suitable $\Sigma$-protocol (Theorem 5.1, printed p. 35).
+
+**Realizing the setup itself.** The paper's answer is deliberately unglamorous: a trusted authority runs $\mathsf{Setup}$, publishes $PK$, and derives $SK_{P}$ on request. Two observations it makes are worth carrying: several instances may be run by different authorities, and — unlike its predecessor $\bar{\mathcal{G}}_{\mathsf{krk}}$ (key registration with knowledge, printed p. 27) — a party may take part in protocols while trusting an arbitrary authority *without ever having registered with any*. That is the practical difference between the two setups, and it is why the public value here is a single short master key rather than one value per identity.
+
+## Properties
+
+- **One string, and everyone gets the same one.** Lines 3–6: $\mathtt{PK}$ is written once and every later $\mathsf{Get}$ returns it. Same guarantee as *F-CRS*, and by the same argument.
+- **Honest parties hold no secret, with probability exactly $1$.** Line 8 refuses, and there is no other line that returns $\mathsf{Extract}$. Nothing about the setup gives an uncorrupted party a trapdoor, which is what makes protocols in this model deniable in the paper's sense.
+- **A corrupt party's key is its own.** Line 12 derives from $\mathit{id}.P$, so corrupting $P$ yields $SK_{P}$ and no other party's key. The security of the surrounding protocol rests on $\mathsf{Extract}$ being hard without $\mathtt{MSK}$; that is an assumption on the parameters, not something the box provides.
+- **The master key is never returned.** Line 7 is the only path by which the adversary reads state, and it returns $\mathtt{PK}$.
+- **Adaptive corruption is supported, PID-wise.** The functionality itself has no corruption-time reasoning in it at all — line 8 tests the register at the moment of the call — so a party that is corrupted later may then retrieve its key, which is precisely what the adaptive, non-erasure realization of Theorem 4.2 needs.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Canetti et al. [*Universally composable security with global setup*](https://eprint.iacr.org/2006/432). In 4th Theory of Cryptography Conference (TCC), volume 4392 of LNCS, pages 61–85, 2007.
+- Canetti, Dodis, Pass, and Walfish. [*Universally composable security with global setup*](https://eprint.iacr.org/2006/432). In 4th Theory of Cryptography Conference (TCC), volume 4392 of LNCS, pages 61–85, 2007. Read at ePrint revision `20071002:061601`, the newer of two postings, whose title page is dated 3 October 2007 and so matches the stamp. Figure 6, printed p. 29, the definition transcribed above; Figure 3, printed p. 23, the global CRS $\bar{\mathcal{G}}_{\mathsf{crs}}$; Theorem 3.1, printed p. 24; the comparison with $\bar{\mathcal{G}}_{\mathsf{krk}}$, printed p. 29; Theorem 4.2, printed p. 30; Theorem 5.1, printed p. 35. Printed page numbers run one behind the PDF's own paging, which is what `_src/sources.json` records.

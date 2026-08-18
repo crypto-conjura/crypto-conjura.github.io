@@ -1,0 +1,59 @@
+%% The interface box of f-acrs, the one source for both the book
+%% and uc/.../f-acrs/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Gacrs$ \\
+\params{$\PID := (\op{G}\op{ACRS},0,0)$, \quad $\Ps$, \quad
+$\admits := \Stdpid \cup \Apid \cup \Zpid$, \quad $\uses := \emptyset$, \quad
+$\pars := (\op{Setup}, \op{Extract})$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{MSK} \gets \unset$
+\State $\V{PK} \gets \unset$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Get}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$\V{PK} = \unset$}
+  \State $\V{MSK} \gets_{\$} \{0,1\}^{\lambda}$ \label{ln:acrsdraw}
+  \State $\V{PK} \gets \op{Setup}(\V{MSK})$
+    \Comment{once, on the first ask}
+\EndIf
+\State \textbf{return} $\V{PK}$ \label{ln:acrssame}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $\V{PK}$ \label{ln:acrsleak}
+  \Comment{never $\V{MSK}$}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Retrieve}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P \in \Cs$} \label{ln:acrscorrupt}
+  \Comment{honest parties are refused their own key}
+\If{$\V{PK} = \unset$}
+  \State $\V{MSK} \gets_{\$} \{0,1\}^{\lambda}$
+  \State $\V{PK} \gets \op{Setup}(\V{MSK})$
+\EndIf
+\State \textbf{return} $\op{Extract}(\V{PK}, \id.P, \V{MSK})$ \label{ln:acrsextract}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

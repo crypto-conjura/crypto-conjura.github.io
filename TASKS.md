@@ -1,10 +1,193 @@
 # Tasks
 
-Split into two sections: **Website and repository** (~5.5h) covers the site, its build tooling and the repository's configuration; **Conjectures and papers** (~4.5h) covers the mathematics — proving conjectures, and writing and checking the papers that report them. Within each section, tasks are ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~18.0h** (rough; the UC Encyclopedia content dominates the uncertainty and could run well over its estimate).
+Split into four sections. **Credibility and distribution** (~8.5h) covers review, prior-art checking, external addressability and the two unkept promises on the [Philosophy](/about/) page — it is first because the project's binding constraint is there rather than in content supply; **Website and repository** (~5.5h) covers the site, its build tooling and the repository's configuration; **Formalizations** covers machine-checked artifacts; **Conjectures and papers** (~4.5h) covers the mathematics — proving conjectures, and writing and checking the papers that report them. Within each section, tasks are ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~26.5h** (rough; the UC Encyclopedia content dominates the uncertainty and could run well over its estimate).
 
 Last reconciled against `main` at `cbb23c7` on 18 August 2026.
 
 Completed tasks are deleted from this file rather than checked off and kept: this is a list of live work, and `git log` is the record of what closed and when.
+
+## Credibility and distribution
+
+Added 18 August 2026 from an outside strategic review of the site, supplied in
+full. Its central argument is structural and worth stating before the tasks,
+because it is an argument *about this file*: the binding constraint on the
+project is not content supply, and until today the backlog was almost entirely
+content supply. The two pull against each other — every page the unreviewed
+pipeline adds enlarges the surface that the "AI-generated, not independently
+reviewed" notice has to cover, so the corpus's liability grows while its
+credibility does not. This section is placed first for that reason.
+
+**What was checked against the repository on 18 August 2026**, since the review
+supplied numbers and several had drifted or were slightly off:
+
+- *Confirmed.* 0 stars, 0 watchers, 0 forks, 0 open issues. Exactly one of the
+  statements carries a non-open badge (`c/0004`), and `proof_review: ai` on
+  **all** of them — no statement has been read by a human. `papers/reviews/` is
+  still a placeholder saying no committee has formed. GitHub Discussions is
+  **disabled** on the repository. The Philosophy page does call session logs
+  "the one promise still unkept" while `schema/index.qmd` records them as
+  "excluded from the site" — the contradiction the review names is real.
+- *Drifted upward, not wrong.* 388 commits, not 371; 29 statements, not 28.
+- *Corrected.* `conjura.json` is **not** undocumented: it is described in
+  `README.md`, `CONTRIBUTING.md` and `schema/index.qmd`, and it is served —
+  `https://crypto-conjura.github.io/conjura.json` returns 200 and 70 KB. What
+  it actually lacks is a version envelope (its top-level keys are bare
+  statement ids), immutable snapshots and a citation stanza. And session logs
+  are on disk for **9 of 29** leaves, not for each one.
+- *Context the review omits.* **The repository was created on 13 August 2026**,
+  five days before the review. Zero stars on a five-day-old repository is a
+  much weaker signal than zero stars on an established one, and the
+  recruitment items below should not be justified by that number.
+- *Not verified here, and load-bearing.* The Erdős figures (700 problems, 13
+  addressed, 4 novel, 9 already in the literature), the `formal-conjectures`
+  counts (2,615 / 1,029 / 836), the August 2025 comments date, and the FOCS,
+  ICML and ICLR 2026 policy summaries are all repeated from the review on its
+  own authority. Check each at source before any of it reaches a page —
+  the same rule the rest of this site is held to.
+- *Verified at source.* `google-deepmind/formal-conjectures` exists, is active
+  (pushed 17 August 2026, 1,185 stars), and its `FormalConjectures/` tree has
+  directories for Erdős, OEIS, Green, Hilbert, Kourovka, Litt, Millennium and
+  quantum problems and **none for cryptography**. Its README states the
+  discipline verbatim: "Tags are immutable: fixes to misformalizations are
+  never patched into an existing benchmark version but instead go into
+  `v{N+1}`."
+
+- [ ] **Ask the seven steering members for one review each (~1h of our time — manual: seven real people, and whether they reply is not ours to control)**
+
+  The sharpest number on the site is that `proof_review` is `ai` on all 29
+  statements. Seven established cryptographers already back the project on
+  `support/index.qmd`, and the ask that converts a name into a review is not a
+  committee seat but one statement in that person's own area — bounded, and
+  completable by a busy person in an evening. The review's suggested pairings,
+  which match the areas on each statement page:
+
+  - **Groth** — `c/0008` / `c/0009`, the split-NILP and Groth16 optimality pair.
+    His own EUROCRYPT 2016 paper posed the 2-element question as its closing
+    open problem, which makes this the least presumptuous ask on the list.
+  - **Tessaro** — `c/0001` (6-round Feistel indifferentiability) and `c/0002`
+    (generalized mirror theory).
+  - **Mahmoody** — the twelve statements at `c/0019`–`c/0030`, every one of
+    them harvested from a paper he co-authored. Ask for one, not twelve.
+  - **Rechberger** — `c/0012`, the censored-cipher transfer statement.
+  - **Barbosa** and **Firsov** — the Lean artifact on `c/0004`, the one
+    statement that is formalized and matched.
+
+  Seven of twenty-nine reviewed is the difference between an archive that can
+  be cited and one that cannot. Before sending anything, read the badge
+  semantics in `open-problems/status-legend/` so the ask names exactly which
+  flag a review moves and what it does not claim.
+
+- [ ] **Sweep every statement for a prior resolution already in the literature (~3h — manual: a real literature search per statement, and the failure mode is a false negative)**
+
+  The review's most useful borrowed finding is that on erdosproblems.com
+  "open" status tracked *obscurity* rather than difficulty — most of what a
+  large model resolved there turned out to be already solved in the
+  literature. Conjura is more exposed to this than that list is, because its
+  statements are harvested from other papers' open-problem sections, and an
+  open-problem section ages from the day it is printed. Twelve of the
+  twenty-nine — `c/0019`–`c/0030` — were promoted in a batch on 18 August 2026
+  from eight source papers, and none has had a forward-citation check.
+
+  Do this before spending compute on attacks, not after. It is cheap, it is
+  publishable on its own if it finds anything, and it forecloses the failure
+  the site could not recover from: announcing a resolution of something that
+  was already known. For each statement, follow citations *forward* from the
+  source paper rather than searching the statement's own wording, since a
+  resolution rarely reuses the phrasing of the question.
+
+- [ ] **Make the archive externally addressable: version `conjura.json`, then upstream the Lean statements (~1.5h)**
+
+  Two halves, and the first is nearly done already. `conjura.json` is built by
+  `scripts/build_index.py`, gitignored, and published at
+  `https://crypto-conjura.github.io/conjura.json` (200, 70 KB, 29 entries). It
+  is documented in `README.md`, `CONTRIBUTING.md` and `schema/index.qmd`. What
+  it lacks is what makes a file citable: its top level is bare statement ids
+  with no envelope, so there is no schema version, no generation timestamp, no
+  snapshot tag and nothing to cite. Add the envelope, publish immutable
+  snapshots, and put a citation stanza on `schema/index.qmd` next to the
+  description that is already there.
+
+  Copy the versioning discipline from `formal-conjectures`, whose README says
+  it plainly: tags are immutable, and a fix to a misformalization goes into the
+  next version rather than being patched into an existing one. That rule exists
+  because a benchmark that is silently corrected is not a benchmark, and it is
+  the same reason `CONTRIBUTING.md` already has a same-id-versus-new-id rule.
+
+  The second half is the one with an audience attached. `formal-conjectures`
+  has directories for Erdős, OEIS, Green, Hilbert, Kourovka, Litt, Millennium
+  and quantum problems, and none for cryptography — checked 18 August 2026.
+  Upstreaming the Lean statements under a cryptography directory costs nothing
+  the project is not already paying, and reaches exactly the audience the
+  benchmark argument on the [Philosophy](/about/) page depends on. Read their
+  contribution guide first; a rejected PR is worse than none.
+
+- [ ] **Lower the contribution floor below "open a pull request" (~1h)**
+
+  Confirmed on 18 August 2026: **GitHub Discussions is disabled** on the
+  repository, so there is currently no way to say anything about a statement
+  short of a pull request. The review's evidence is that per-problem discussion
+  — not the catalogue — is what accumulated contributors on erdosproblems.com,
+  and it is the single cheapest thing on this list.
+
+  The friction is worse than it looks. `revision` and `statement_sha` are
+  script-maintained, `CONTRIBUTING.md` says so, the repository ships a
+  `.githooks/pre-commit`, and a stale hash fails the whole site build — the
+  gate that took the deploy down for ~25 commits on 15 August 2026. A
+  cryptographer will leave a remark on a page. They will not clone a Quarto
+  site, install a git hook and regenerate a badge to do it.
+
+  Enable Discussions, embed a per-statement thread on each `/c/<id>/` page, and
+  decide the AI-disclosure norm at the same time rather than later. The review
+  reports that Bloom settled on *disclosure plus verification* rather than
+  prohibition, on the reasoning that a ban is unenforceable and drives the use
+  underground — which is the position this site's badge system already takes
+  for its own content, so adopting it for comments is consistent rather than
+  novel.
+
+- [ ] **Publish the session logs, and fix the contradiction about them (~1h)**
+
+  The [Philosophy](/about/) page calls session logs "the one promise still
+  unkept"; `schema/index.qmd` records that they "still live in each leaf's
+  `sessions/` folder for provenance (excluded from the site)" as a settled
+  design choice. Those two sentences cannot both stand. Decide which, and edit
+  the other — that decision is the task, and it is smaller than it looks
+  because the logs are already on disk.
+
+  Two facts to size it with. They exist for **9 of the 29** leaves, not all of
+  them, so publishing them makes an uneven record visible and the pages should
+  say so rather than imply the other twenty had no session. And publishing is a
+  redaction question before it is a configuration one: a session log is a raw
+  transcript and nobody has read these with an eye to what is in them.
+
+- [ ] **Fund one bounty end to end (~0.5h of our time — manual: the amount, the money and the adjudicator are the maintainer's call, not ours)**
+
+  The [Philosophy](/about/) page has intended from the start "to let anyone
+  attach a bounty payable once a resolution is verified rather than when a
+  committee has met", and no bounty exists. The review's argument for doing one
+  now at any amount is that a working instance settles questions a general
+  scheme cannot: who adjudicates, what counts as verified, what happens on a
+  disputed claim. Name a human adjudicator, pick the statement, and write down
+  the rule before there is money on it.
+
+- [ ] **Stress-test the venue positioning on the Philosophy page (~0.5h — manual: three policies to read at source, and they change)**
+
+  `about/index.qmd` rests its stance toward venues on the ACM policy's
+  requirement that a work be "not primarily the result of the tool's generative
+  capabilities", read at source on 16 August 2026, and says several results
+  here cross that line on purpose. The review's counter is that 2026 norms
+  converged on *disclosure plus human accountability* rather than prohibition,
+  and that none of FOCS, ICML or ICLR 2026 bars a heavily AI-assisted result
+  that a named human vouches for — so the site's badge system already exceeds
+  what the venues demand, and positioning the project as *more* transparent
+  than they require is a better recruiting pitch than positioning it outside
+  them.
+
+  That argument is worth taking seriously and its evidence is **unverified
+  here**: read the FOCS, ICML and ICLR 2026 policies at source before a word of
+  it reaches the page, and keep the ACM sentence, which was verified. If the
+  policies say what the review says they say, the rewrite is a repositioning
+  and not a retraction — the site would still be doing more than any of them
+  ask.
 
 ## Website and repository
 
@@ -134,6 +317,8 @@ Completed tasks are deleted from this file rather than checked off and kept: thi
   - Items 4, 5, 7 and 8 are the flattening argument, the mean at fixed support, the uniform deviation bound and the final assembly.
   - **Item 6 is the one to size the task by.** Fact 2.2, bounded differences, in the finite special case. The ledger calls it "the single largest item, and the one Mathlib does not help with at all", and that was checked: Mathlib has no McDiarmid inequality and no bounded-differences lemma. It is a formalization project in its own right and could exceed the estimate for everything else combined.
   - Seven supporting facts are named and unattempted. Fact 2.5 is Jensen and is in Mathlib; Fact 2.7 needs the monotonicity of $(1-1/R)^R$ and is not the one-liner it looks like.
+
+  **Consider doing item 6 as a Mathlib contribution rather than an in-repo lemma** (added 18 August 2026 from the strategic review). Bounded differences / McDiarmid is absent from Mathlib, which is why the ledger calls it the sizing item; that absence is also what makes it worth upstreaming. It converts the largest private item on this list into an externally reviewed artifact and a route into the Lean community, which pays down the review deficit in the one currency that is actually available. It will be slower than an in-repo proof, and that is the trade to weigh.
 
   Toolchain is pinned: `leanprover/lean4:v4.33.0`, Mathlib at the revision in `lake-manifest.json`. Keep `AuditProof.lean` passing throughout, since its entire purpose is that no declaration quietly acquires `sorryAx`, and update `LEDGER.md` as items close rather than at the end. Partial progress is worth committing: the ledger is designed for it, and an honest "items 1 to 3 done, 6 untouched" is more useful than nothing.
 

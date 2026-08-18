@@ -14,7 +14,7 @@ p/<slug>/                    problem hubs: one informal question, provenance, pa
 papers/<paper-slug>/         write-ups that don't resolve a conjecture
 surveys/<survey-slug>/       book-length expository work, with its own latex/ and pdf/
 uc/layer-N-<slug>/<id>/      UC encyclopedia: one page per ideal functionality
-open-problems/               generated facet listings (areas/model/form/assumption_class) + status legend
+problems/               generated facet listings (areas/model/form/assumption_class) + status legend
 prompts/                     reusable prompts (research, proof-checking, writing), one Markdown file each
 resources/                   reusable supporting material; books/ and papers/ hold local reference PDFs
 schema/                      the frontmatter contract, for humans and agents

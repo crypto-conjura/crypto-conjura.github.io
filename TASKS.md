@@ -1,6 +1,6 @@
 # Tasks
 
-Split into four sections. **Credibility and distribution** (~7h) covers review, prior-art checking, external addressability and the two unkept promises on the [Philosophy](/about/) page — it is first because the project's binding constraint is there rather than in content supply; **Website and repository** (~5h) covers the site, its build tooling and the repository's configuration; **Formalizations** covers machine-checked artifacts; **Conjectures and papers** (~4.5h) covers the mathematics — proving conjectures, and writing and checking the papers that report them. Within each section, tasks are ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~24.5h** (rough; the UC Encyclopedia content dominates the uncertainty and could run well over its estimate).
+Split into four sections. **Credibility and distribution** (~7h) covers review, prior-art checking, external addressability and the two unkept promises on the [Philosophy](/philosophy/) page — it is first because the project's binding constraint is there rather than in content supply; **Website and repository** (~5h) covers the site, its build tooling and the repository's configuration; **Formalizations** covers machine-checked artifacts; **Conjectures and papers** (~4.5h) covers the mathematics — proving conjectures, and writing and checking the papers that report them. Within each section, tasks are ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~24.5h** (rough; the UC Encyclopedia content dominates the uncertainty and could run well over its estimate).
 
 Last reconciled against `main` at `cbb23c7` on 18 August 2026.
 
@@ -74,7 +74,7 @@ supplied numbers and several had drifted or were slightly off:
 
   Seven of twenty-nine reviewed is the difference between an archive that can
   be cited and one that cannot. Before sending anything, read the badge
-  semantics in `open-problems/status-legend/` so the ask names exactly which
+  semantics in `problems/status-legend/` so the ask names exactly which
   flag a review moves and what it does not claim.
 
 - [ ] **Sweep every statement for a prior resolution already in the literature (~3h — manual: a real literature search per statement, and the failure mode is a false negative)**
@@ -120,7 +120,7 @@ supplied numbers and several had drifted or were slightly off:
 
 - [ ] **Publish the session logs, and fix the contradiction about them (~1h)**
 
-  The [Philosophy](/about/) page calls session logs "the one promise still
+  The [Philosophy](/philosophy/) page calls session logs "the one promise still
   unkept"; `schema/index.qmd` records that they "still live in each leaf's
   `sessions/` folder for provenance (excluded from the site)" as a settled
   design choice. Those two sentences cannot both stand. Decide which, and edit
@@ -135,7 +135,7 @@ supplied numbers and several had drifted or were slightly off:
 
 - [ ] **Fund one bounty end to end (~0.5h of our time — manual: the amount, the money and the adjudicator are the maintainer's call, not ours)**
 
-  The [Philosophy](/about/) page has intended from the start "to let anyone
+  The [Philosophy](/philosophy/) page has intended from the start "to let anyone
   attach a bounty payable once a resolution is verified rather than when a
   committee has met", and no bounty exists. The review's argument for doing one
   now at any amount is that a working instance settles questions a general
@@ -145,7 +145,7 @@ supplied numbers and several had drifted or were slightly off:
 
 - [ ] **Stress-test the venue positioning on the Philosophy page (~0.5h — manual: three policies to read at source, and they change)**
 
-  `about/index.qmd` rests its stance toward venues on the ACM policy's
+  `philosophy/index.qmd` rests its stance toward venues on the ACM policy's
   requirement that a work be "not primarily the result of the tool's generative
   capabilities", read at source on 16 August 2026, and says several results
   here cross that line on purpose. The review's counter is that 2026 norms
@@ -216,9 +216,9 @@ supplied numbers and several had drifted or were slightly off:
 
   What the rewrite must not drop, since it is why the wording is careful: that
   support is not an endorsement or a review of any statement, that reviews are
-  recorded only in the [provenance badge](/open-problems/status-legend/), that
+  recorded only in the [provenance badge](/problems/status-legend/), that
   anyone listed can ask to be removed without giving a reason, and the pointer
-  to [Philosophy](/about/) for the compute-not-budget argument.
+  to [Philosophy](/philosophy/) for the compute-not-budget argument.
 
 - [ ] **UC Encyclopedia content (~5h — manual: sourcing and verifying real citations per functionality, not just drafting text)**
 
@@ -423,7 +423,7 @@ supplied numbers and several had drifted or were slightly off:
 
   `latex/papers/uber-groups-rsr/main.tex` ("The Uber Assumption and its Random Self-Reducibility, in Non-Bilinear and Type 1, 2, 3 Bilinear Groups") is ~1,290 lines across 13 sections and compiles clean, but it is still a working draft — the last four commits were all substantive mathematics (2026-08-15/16: house-class conversion, a strengthened separation result, the decision procedure recast in standard algebra primitives). Finish it, then put it through the checks.
 
-  Publishing is done — `papers/uber-groups-rsr/` exists, badge generated, PDF and LaTeX copies in place, listed under Papers → Archive. Two of the checks are done too, and are recorded in a "Checks run" section on the page itself rather than only in `git log`:
+  Publishing is done — `projects/uber-groups-rsr/` exists, badge generated, PDF and LaTeX copies in place, listed under Papers → Archive. Two of the checks are done too, and are recorded in a "Checks run" section on the page itself rather than only in `git log`:
 
   - **Bibliography: verified, 16 August 2026.** All seventeen entries checked against their sources — author list, title, venue, volume, page range, year — including the two the paper leans on hardest, Galbraith–Paterson–Smart (*Discrete Applied Mathematics* 156(16):3113–3121, 2008) for the type classification and Boyen (Pairing 2008, LNCS 5209, pp. 39–56) for the Uber baseline. Nothing fabricated, misdated or misattributed, and the preliminary-version notes on Blum–Luby–Rubinfeld, Regev and Escala et al. check out. Nothing further owed here.
   - **`chktex` and `lacheck`: clean, 16 August 2026.** Two genuine hits fixed (intersentence spacing after "co-CDH", a missing `~` before a `\ref`), two source-hygiene spaces tidied, one inline suppression on the `\Span` definition. `latex/papers/uber-groups-rsr/.chktexrc` pins the four suppressed warnings with a documented reason each — 3, 24 and 36 as expected, plus 8, which fires only on correct en-dashes here and cannot mask a *missing* one. Re-run with `chktex -q -l .chktexrc main.tex` from that directory.

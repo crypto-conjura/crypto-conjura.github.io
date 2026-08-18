@@ -179,7 +179,7 @@ _LABEL = {"open": "none yet", "ai": "AI", "human": "human"}
 # A full absolute URL, not a relative or root-relative ('/...') path.
 # Two things rule those out: (1) Quarto's HTML post-processing rewrites
 # root-relative hrefs inside raw embedded HTML incorrectly (turns
-# '/open-problems/index.html' into '../open-problems/index.html', a 404);
+# '/problems/index.html' into '../problems/index.html', a 404);
 # (2) the SAME status_badge string this script writes into a conjecture's
 # frontmatter is also reused verbatim by Quarto's listing table on that
 # conjecture's (shallower) topic-listing page, so no single relative path
@@ -188,6 +188,11 @@ _LABEL = {"open": "none yet", "ai": "AI", "human": "human"}
 #
 # Trade-off: clicking a badge under `quarto preview` jumps to the live
 # production site rather than the local preview.
+# Deliberately still /open-problems/status-legend/, which is neither where the
+# page lives nor where the directory is any more. This string is written into
+# every statement's frontmatter and rendered badge, so changing it restates
+# forty pages; reviews/status-badge/index.qmd carries an alias for it, and the
+# redirect preserves the #status-legend fragment. Repoint both together.
 LEGEND_URL = "https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend"
 
 

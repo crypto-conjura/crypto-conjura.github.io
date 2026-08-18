@@ -73,10 +73,10 @@ def artifacts():
                 f"cd c/{d.name}/latex && pdflatex main.tex   # and any other .tex beside it",
             ))
     out.append((
-        "papers/uber-groups-rsr",
+        "projects/uber-groups-rsr",
         ["latex/papers/uber-groups-rsr/**/*"],
-        ["papers/uber-groups-rsr/pdf/*.pdf", "papers/uber-groups-rsr/latex/**/*"],
-        "cd latex/papers/uber-groups-rsr && pdflatex main.tex, then copy source and PDF into papers/uber-groups-rsr/",
+        ["projects/uber-groups-rsr/pdf/*.pdf", "projects/uber-groups-rsr/latex/**/*"],
+        "cd latex/papers/uber-groups-rsr && pdflatex main.tex, then copy source and PDF into projects/uber-groups-rsr/",
     ))
     book = book_inputs()
     out.append((

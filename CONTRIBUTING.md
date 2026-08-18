@@ -2,7 +2,7 @@
 
 Conjura has three content layers: **problems** (hubs, under `p/`), **statements**
 (leaves, under `c/`), and **facets** (generated listing pages under
-`open-problems/`, never hand-authored). See `/schema/` for the full frontmatter
+`problems/`, never hand-authored). See `/schema/` for the full frontmatter
 contract; this file covers the editorial rules and the day-to-day workflow.
 
 ## Adding a new statement
@@ -26,7 +26,7 @@ contract; this file covers the editorial rules and the day-to-day workflow.
 
 Copy `_templates/paper.qmd` to `papers/<slug>/index.qmd`, create the
 `latex/`, `pdf/` and `sessions/` folders beside it, and add the paper by
-hand to the "## Papers" list in `papers/archive/index.qmd` -- that list is
+hand to the "## Papers" list in `projects/archive/index.qmd` -- that list is
 written, not generated. Run `python3 scripts/status_badge.py` afterwards to
 populate `statement_sha` and the badge. A paper carries no id, hub, areas
 or relations, so `build_index.py` and `check_relations.py` do not apply.
@@ -34,7 +34,7 @@ or relations, so `build_index.py` and `check_relations.py` do not apply.
 ## Rebuilding a generated artifact
 
 Every `.tex` here has generated output committed beside it: the statement
-PDFs under `c/<id>/pdf/`, the paper under `papers/uber-groups-rsr/`, and the
+PDFs under `c/<id>/pdf/`, the paper under `projects/uber-groups-rsr/`, and the
 UC book's PDF and its 59-page HTML edition. `scripts/artifact_manifest.py`
 records the hash of each artifact's inputs beside the hash of its outputs, and
 `--check` fails when they diverge, in either direction: a source edited
@@ -169,14 +169,14 @@ The vocabulary is closed, held in `TAG_SLUGS` in `scripts/build_index.py`, for
 the same reason `AREA_SLUGS` is: a free-text field grows typos and
 near-synonyms, and nothing would catch `IOG` written against `iog`. Adding a
 slug means editing `TAG_SLUGS` and adding a facet page under
-`open-problems/tags/<slug>/`, copying an existing one.
+`problems/tags/<slug>/`, copying an existing one.
 
 One slug exists today.
 
 **`iog`** -- a cited source has an author affiliated with
 [Input Output Research](https://www.iog.io/papers). It renders as an outlined
 `IOG` chip in the Tags column of every statement listing, linking to
-[the tag page](/open-problems/tags/iog/), and pairs with the inline
+[the tag page](/problems/tags/iog/), and pairs with the inline
 [affiliation mark](#the-input-output-affiliation-mark) on the reference line
 itself. The tag is the coarse, browsable signal; the mark says which reference
 earned it.

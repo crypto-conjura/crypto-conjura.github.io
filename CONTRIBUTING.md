@@ -192,6 +192,40 @@ Never write a specific author/venue/year citation into `sources:` (or into
 prose) without having verified it's real. If you can't verify one, leave it
 out and flag the gap instead of guessing.
 
+### The Input Output affiliation mark
+
+A cited paper with an author affiliated with [Input Output Research](https://www.iog.io/papers)
+carries a small mark at the end of its reference line:
+
+```html
+<a class="cj-io" href="https://www.iog.io/papers"
+   title="An author of this paper is affiliated with Input Output Research"
+   aria-label="An author of this paper is affiliated with Input Output Research. Opens their publication list.">Input<span class="cj-io-bar"></span>Output</a>
+```
+
+Three rules, and they are about accuracy rather than taste.
+
+**It marks an author, not a paper.** The claim it makes is only the one a
+reference line can support: that somebody on the author list is affiliated
+with IO. It does *not* say the paper was published, funded or endorsed by
+them, and it must not be used to imply that. Where the two come apart --
+a paper by an IO-affiliated author that IO's own publication list does not
+carry -- the mark is still correct, because it is about the author.
+
+**Verify the affiliation before adding it, the same way `sources:` entries are
+verified.** An affiliation is a factual claim about a real person and belongs
+under the rule above, not under style.
+
+**It is not a logo.** The wordmark is set in the site's own type, with a CSS
+rule standing in for IO's separator. Do not substitute their SVG or brand
+assets; attribution does not need them, and reproducing them would imply a
+relationship that does not exist.
+
+Currently applied to: `c/0039` (Cojocaru, Kiayias, Shen, Wallden), whose
+author Aggelos Kiayias is Chief Scientist at Input Output. Nothing enforces
+this -- it is a hand-applied convention, so a new statement citing an
+IO-affiliated author needs the mark added by hand.
+
 ## Style
 
 No em-dashes in prose. Never hand-edit `status_badge:` -- it's always script

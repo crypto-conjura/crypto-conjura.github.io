@@ -1,0 +1,37 @@
+---
+title: "What setup does everlasting UC commitment need?"
+subtitle: "A physical assumption is provably necessary; a reference string is not known to be"
+---
+
+## Motivation
+
+*Everlasting* security asks a protocol to remain secure after its computational assumptions break: the attacker is efficient while the protocol runs and unbounded afterwards. It is the right notion when a transcript may be recorded now and attacked in twenty years.
+
+For composable commitment the picture is unusually clean at one end and open at the other. Prior work established that everlasting UC commitment is unachievable from a common reference string or a PKI alone — no purely digital setup suffices — so every construction rests on a **physical** assumption, typically a physically uncloneable function. That much is settled.
+
+What is not settled is how much *digital* setup has to sit on top of the physical one. Magri, Malavolta, Schröder and Unruh give the first construction in a model where the adversary may manufacture arbitrarily malicious tokens, and their protocol needs a common reference string — but for a reason internal to their proof, not because the model demands it. Whether it can go is the open question.
+
+## Provenance and history
+
+From Magri, Malavolta, Schröder and Unruh, [*Everlasting UC Commitments from Fully Malicious PUFs*](https://eprint.iacr.org/2021/248), ePrint 2021/248, *Journal of Cryptology* 2022. Read at the revision of 7 June 2022 — the later of two postings, and byte-identical to the copy harvested here.
+
+The paper's contribution is the malicious-token model: earlier everlasting constructions assumed the physical device was **honestly manufactured**, and this one allows the adversary to build tokens that are arbitrarily malicious, including tokens that encapsulate other tokens. The honest party's device is assumed only to be a PUF with stated reproducibility and unpredictability properties — strengthened, in this paper, to *adaptive* unpredictability.
+
+## The two setups, and why only one is negotiable
+
+| setup | status |
+|---|---|
+| a physical assumption (the PUF) | **provably necessary** — prior work rules out everlasting UC commitment from CRS or PKI alone |
+| a common reference string, on top of the PUF | **not known to be necessary**. Achievable with one (the paper's Theorem 31); removing it is open, and tracked as [c/0035](/c/0035/) |
+
+Keeping these apart matters. Nobody is asking for everlasting UC commitment from nothing — that is closed. The question is whether the reference string is doing real work or is an artefact of one proof technique.
+
+## Why it is hard, in the source's own terms
+
+The CRS is there to let the simulator equivocate — open a commitment both ways — which it can do because it knows how the string was generated. The standard way to avoid needing that is to simulate or extract from the protocol trace, and the source explains why that route is closed in this setting: the environment eventually becomes unbounded, and *"can distinguish a simulated trace once it becomes"* so. A simulation that is only computationally indistinguishable is worth nothing against a distinguisher that stops being efficient — which is the whole point of everlasting security.
+
+The source names one candidate route, from prior work it cites, and reports only that *"it is not clear"* whether those techniques adapt. That is an invitation rather than a barrier.
+
+## Related pages on this site
+
+The target functionality is [*F-MCOM*](/uc/layer-4-commitments-proofs/f-mcom/index.qmd), written up in the UC encyclopedia. The hybrid model is a hardware-token functionality; the encyclopedia's [*F-wrap*](/uc/layer-0-idealized-setup/f-wrap/index.qmd) is the idealisation of the **honest**-token case, and comparing the two shows how much convenience the fully malicious model gives up — a token that may wrap other tokens is not the black box `F-wrap` describes.

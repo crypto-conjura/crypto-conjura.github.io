@@ -1,0 +1,88 @@
+---
+id: "0035"
+problem: everlasting-uc-commitment-setup
+draft: crs-free-everlasting-commitment
+title: "Everlasting UC Commitment from Malicious PUFs Without a Common Reference String"
+short_title: "CRS-free everlasting commitment from malicious PUFs"
+areas: [universal-composability, foundations, impossibility-results]
+model: other
+form: assumption
+assumption_class: falsifiable
+category: research-open
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: new-idea
+  note: "The source names the obstruction and rules out the obvious way round it. The common reference string is used to equivocate commitments in the simulation, and the standard alternative -- extracting from a simulated trace -- fails here for a reason specific to everlasting security: the environment becomes unbounded afterwards and can distinguish a simulated trace once it does. So the missing ingredient is an equivocation technique that survives an eventually-unbounded distinguisher, which is not a gap in a calculation but a different simulation strategy."
+  by: ai
+status_summary: "Open: whether everlasting UC commitment is achievable in the fully malicious token model with no trusted setup. The source achieves it with a common reference string (its Theorem 31) and explicitly leaves removing the CRS as a question, noting that the usual equivocation techniques do not transfer to the everlasting setting."
+status_updated: 2026-08-18
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Magri, Malavolta, Schroder, Unruh, Everlasting UC Commitments from Fully Malicious PUFs, Cryptology ePrint Archive, Report 2021/248, revision of 2022-06-07; Journal of Cryptology, 2022", url: "https://eprint.iacr.org/2021/248"}
+revision: 1
+statement_sha: "2cdbde4dde745d0d36135b28a08f37ba31e3480a5aae9dccb5d148b17bd537f7"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [Download LaTeX source](latex/main.tex)
+
+*Everlasting* security asks that a protocol stay secure after the computational assumptions it used are broken: the attacker is efficient while the protocol runs and **unbounded afterwards**. Everlasting composable commitment is known to be unachievable from a common reference string or a PKI alone, so every construction rests on a physical assumption — and until this source, all of them also required the physical device to be honestly manufactured.
+
+The source removes that second requirement. In its *fully malicious token model* the adversary may build arbitrarily malicious hardware tokens — including tokens that encapsulate other tokens — while the honest party's device is only assumed to be a PUF with the stated reproducibility and unpredictability properties. Its Theorem 31 gives a protocol that everlastingly UC-realizes the multi-commitment functionality in that model, **using a common reference string**.
+
+**Conjecture (no trusted setup).** There exist a polynomial $\ell$, functions $\gamma, \delta$, a PUF family that is $\delta$-reproducible, $(\gamma,\delta)$-unpredictable and admits a lazy sampler, and a two-party protocol $\Pi$ with PPT honest parties, such that $\Pi$ everlastingly UC-realizes [$\mathcal{F}_{\mathsf{MCom}}$](/uc/layer-4-commitments-proofs/f-mcom/index.qmd) in the hardware-token hybrid model — **with no common reference string and no other trusted setup**.
+
+The statement is the affirmative direction. A refutation would be an impossibility theorem, and the source predicts neither.
+
+## Proof
+
+Open, and the source says exactly where the difficulty is.
+
+**Why the CRS is there.** *"Our protocol needs to assume the existence of a common reference string to equivocate commitments in the security proof."* The simulator must be able to open a commitment both ways, and it gets that ability from knowing how the reference string was generated.
+
+**Why the standard replacement fails.** The usual way to avoid a CRS is to extract from, or simulate, the protocol trace. The source rules that out for a reason peculiar to everlasting security: *"this class of techniques does not seem to apply to the everlasting setting since the environment can distinguish a simulated trace once it becomes"* unbounded. A simulation that is only computationally indistinguishable is worthless once the distinguisher stops being efficient — which is precisely the regime everlasting security is about.
+
+**A named avenue, not obviously closed.** The source considers adapting the techniques of the prior work it cites and reports: *"It is not clear if the techniques of [DS13] can be adapted to our setting."* So there is a candidate route, unresolved.
+
+**The impossibility that shapes the question.** Prior work showed everlasting UC commitments cannot be realised "not even in the common reference string (CRS) or the public-key infrastructure (PKI)" model — that is, without a physical assumption. That result is why the question is *"can the CRS go, given the PUF"* rather than *"can the physical assumption go"*. The two should not be confused: nobody is asking for everlasting UC commitment from nothing.
+
+## Discussion
+
+The interesting structure here is that two setup assumptions are in play and only one is negotiable. The physical assumption is provably necessary. The reference string is not known to be, and the source's own construction happens to need it for a reason internal to its proof technique rather than for anything the model demands.
+
+That is a good sign for the affirmative direction — a CRS introduced by a proof strategy is more often removable than one introduced by an impossibility — but the source's objection cuts the other way: the reason the CRS is hard to remove *here* is the same reason everlasting security is interesting at all, namely that the distinguisher eventually gets unbounded. Equivocation techniques that rely on computational indistinguishability are exactly what everlasting security invalidates.
+
+Worth noting how much the malicious-token model is doing. The tokens may be adversarially manufactured and may wrap other tokens, which is strictly harder than the honestly-manufactured setting earlier work assumed; the site's [*F-wrap*](/uc/layer-0-idealized-setup/f-wrap/index.qmd) entry is the idealisation of the honest case, and reading the two together shows how much of the usual token convenience this model gives up.
+
+## Open obligations
+
+- [ ] Construct a CRS-free protocol, or prove an impossibility for the fully malicious token model without setup.
+- [ ] Determine whether the techniques of the prior work the source names can in fact be adapted — the source says it is "not clear", which is an invitation.
+- [ ] Find an equivocation technique whose indistinguishability survives an eventually-unbounded environment, or show none exists.
+- [ ] Separate the question from the known impossibility: establish precisely which trusted setups remain impossible once a PUF is available.
+- [ ] Check whether the adaptive-unpredictability strengthening the source requires of its PUFs is needed for the CRS-free case too, or is an artefact of the CRS construction.
+- [ ] Formalize the statement in Lean. Everlasting UC, the fully malicious token model and PUF unpredictability all need writing down first, and none exists in Mathlib.
+
+## Sources
+
+- Magri, Malavolta, Schröder, and Unruh. [*Everlasting UC Commitments from Fully Malicious PUFs*](https://eprint.iacr.org/2021/248). Cryptology ePrint Archive, Report 2021/248; Journal of Cryptology, 2022. Read at the revision of 7 June 2022, the later of two postings, byte-identical to the harvested copy (SHA-256 prefix `ce85b7f0a94ce11e`, 37 pages). The construction claim is on p. 1 and Theorem 31; the reason the CRS is needed, the objection to trace-simulation techniques, and the open question are all on p. 8; the prior impossibility without a physical assumption is quoted on p. 14; the adaptive-unpredictability definition is on p. 19. All four authors read off the paper's own title page; the venue confirmed against DBLP, which records a *Journal of Cryptology* 2022 publication.
+
+:::

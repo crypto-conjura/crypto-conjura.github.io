@@ -1,13 +1,121 @@
 ---
-title: "F-bsig — Blind signature"
+title: "F-BlSig — Blind signature"
 status: "Canonical"
 layer: 7
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-bsig* (Blind signature) is part of *Privacy and Anonymity* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+*F-BlSig* (Blind signature) is part of *Privacy and Anonymity* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+
+A signature the signer issues without seeing what it signed. Two properties have to hold at once and they pull in opposite directions: **blindness**, that the signer learns nothing about the message, and **unforgeability**, that the user cannot obtain more signatures than it ran sessions for. This box gets both from the same pair of lines — line 8 computes the signature *inside* the functionality so the adversary is never shown the message, and line 13 tells the signer only that a request happened.
+
+Compare [*F-CERT*](/uc/layer-0-idealized-setup/f-cert/index.qmd), whose verification rule is the same four-case ladder as lines 15–26 here. The difference is where unforgeability is anchored: there, in the honesty of a named signer; here, in the count of messages the functionality has actually signed.
+
+## Functionality
+
+Reading the box: $\mathcal{A}(\cdot)$ is a call on the adversary slot whose answer is used at lines 4, 10 and 17 and discarded at line 13; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it; $\mathbf{C}$ is the set of corrupted parties; $\square$ marks a value never set; $B$ is the parameter naming the signer.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{BlSig}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := B\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{pk} \gets \square\); &nbsp;\(\mathtt{Sign} \gets \square\)<span class="cj-comment">// the key, and the signing algorithm behind it</span></li>
+<li>\(\mathtt{Ver}[*,*] \gets \square\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.KeyGen()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="3">
+<li>\(\textbf{require}\ \mathit{id}.P = B \ \wedge\ \mathtt{pk} = \square\)</li>
+<li>\((\mathtt{pk}, \mathtt{Sign}) \gets \mathcal{A}\bigl(\mathit{id}.\mathsf{KeyGen}\bigr)\)<span class="cj-comment">// the adversary supplies an algorithm, not just a key</span></li>
+<li>\(\textbf{return}\ \mathtt{pk}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Sign(<span class="cj-id">msg</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="6">
+<li>\(\textbf{require}\ \mathtt{pk} \neq \square \ \wedge\ \mathit{msg} \in \mathcal{M}\)</li>
+<li>\(\textbf{if}\ \mathit{id}.P \notin \mathbf{C}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\sigma \gets \mathtt{Sign}(\mathit{msg})\)</span><span class="cj-comment">// blindness: the adversary is not asked</span></li>
+<li>\(\textbf{if}\ \mathit{id}.P \in \mathbf{C}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\sigma \gets \mathcal{A}\bigl(\mathit{id}.\mathsf{Sign}, \mathit{msg}\bigr)\)</span></li>
+<li><span class="cj-ind">\(\textbf{require}\ \mathtt{Ver}[\mathit{msg}, \sigma] \neq 0\)</span><span class="cj-comment">// the source aborts here</span></li>
+<li>\(\mathtt{Ver}[\mathit{msg}, \sigma] \gets 1\)</li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Sign},\ B\bigr)\)<span class="cj-comment">// the bank is told a request happened, and no more</span></li>
+<li>\(\textbf{return}\ \sigma\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Verify(<span class="cj-id">msg</span>, <span class="cj-id">&sigma;</span>, <span class="cj-id">pk'</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="15">
+<li>\(\textbf{if}\ pk' = \mathtt{pk} \ \wedge\ \mathtt{Ver}[\mathit{msg}, \sigma] = 1\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ 1\)</span></li>
+<li>\(\varphi \gets \mathcal{A}\bigl(\mathit{id}.\mathsf{Verify}, \mathit{msg}, \sigma, pk'\bigr)\)</li>
+<li>\(\textbf{if}\ pk' = \mathtt{pk} \ \wedge\ B \notin \mathbf{C} \ \wedge\ \neg\exists\, \sigma' : \mathtt{Ver}[\mathit{msg},\sigma'] = 1\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{Ver}[\mathit{msg}, \sigma] \gets 0\)</span><span class="cj-comment">// one signature per issued message</span></li>
+<li><span class="cj-ind">\(\textbf{return}\ 0\)</span></li>
+<li>\(\textbf{if}\ \mathtt{Ver}[\mathit{msg}, \sigma] \neq \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \mathtt{Ver}[\mathit{msg}, \sigma]\)</span></li>
+<li>\(\textbf{if}\ \varphi \not\in \{0,1\}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\varphi \gets 0\)</span></li>
+<li>\(\mathtt{Ver}[\mathit{msg}, \sigma] \gets \varphi\)</li>
+<li>\(\textbf{return}\ \varphi\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="27">
+<li>\(\textbf{if}\ \mathit{id}.P = B\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ (\mathtt{pk}, \mathtt{Sign})\)</span><span class="cj-comment">// never the messages: the bank does not learn them</span></li>
+<li>\(\textbf{return}\ \mathtt{pk}\)</li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+The box is transcribed from Fischlin, *Round-optimal composable blind signatures in the common reference string model*, Figure 2, p. 11 of the CRYPTO 2006 proceedings version — "Blind Signature Functionality $\mathcal{F}_{\mathsf{BlSig}}$". Read from the IACR archive copy (SHA-256 prefix `661e1950018d7ab8`, in `_src/sources.json`), which carries no revision stamp; this paper has no ePrint posting. The rendered page is at `_src/fischlin2006-p11.png`.
+
+**Line 4 is the unusual clause and the reason blindness works.** The adversary supplies not just a verification key but an *algorithm* — the source's `(VerificationKey, sid, pk, BlSig)` — and the functionality then runs that algorithm itself at line 8 whenever an honest user signs. So the signature is produced by adversary-chosen code executed **out of the adversary's sight**. That is how the box gives the simulator enough power to produce realistic-looking signatures while learning nothing: it hands over the code once, not the messages.
+
+**Line 13 is blindness, and it carries no argument that matters.** The source informs the bank and the adversary "that a signature request takes place" — no message, no user identity beyond what the call reveals, nothing. That single notification is the entire signer-side view, which is why the property is stated as an absence rather than a bound.
+
+**Lines 9–11 are unforgeability's other half.** For a corrupt user the adversary supplies the signature, and the source *aborts* if the pair has previously been recorded invalid — line 11 refuses instead, since a long-lived box cannot abort. What this prevents is the adversary first getting a pair judged invalid at line 19 and then having it accepted as a genuine issuance.
+
+**Line 18 is unforgeability proper, and note what it counts.** A pair verifies $0$ when the key matches, the signer is honest, and *no signature at all* has been issued for that message. So the guarantee is per-message, not per-session: the box does not count sessions, and a user that legitimately obtained a signature on $m$ may present any number of pairs for $m$ that the adversary is willing to validate at line 25. The one-more-forgery property that blind-signature papers prove is a statement about the *protocol*, which the source's round-optimality result establishes; it is not readable off this box alone. That is the most important thing to know before citing this functionality.
+
+**Line 28 is where blindness is stated as leakage.** A corrupt signer's adversary gets the key and the algorithm — both of which it chose — and never the messages. There is no path from $\mathit{msg}$ to the signer in the box.
+
+## Known realizations
+
+**Round-optimal, over a common reference string — which is the paper's title and its point.** Two moves: the user sends one message, the signer replies, and the user derives the signature. The paper shows this is optimal for a composable notion, and it needs [*F-CRS*](/uc/layer-0-idealized-setup/f-crs/index.qmd) — as every composable commitment-like primitive does, for the same simulator-trapdoor reason recorded on [*F-COM*](/uc/layer-4-commitments-proofs/f-com/index.qmd).
+
+**A non-committing variant exists and is a different object.** Abe and Ohkubo's framework, the stub's other reference, treats *non-committing* blind signatures, where the signature is not determined by the transcript; the harvester found no printed functionality in it. Anyone comparing notions should read it as a sibling definition rather than a restatement of this one.
+
+## Properties
+
+- **Blindness, unconditionally against an honest user.** Line 8 runs the signing algorithm inside the box; line 13 notifies without the message. There is no line passing $\mathit{msg}$ to the adversary when the caller is honest.
+- **Completeness, with probability exactly $1$.** Line 12 records $1$ for every signature issued, and lines 15–16 answer from that record before the adversary slot is reached.
+- **Unforgeability for an unsigned message, with probability exactly $0$** (line 18) — while the signer is honest and *nothing* has been issued for that message.
+- **Consistency, with probability exactly $1$.** Every write (lines 12, 19, 25) is to a cell that was $\square$; lines 15, 21–22 answer from it.
+- **No session counting.** The box records messages, not sessions, so one-more-forgery is a property of a realizing protocol rather than of this functionality.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Fischlin. [*Round-optimal composable blind signatures in the common reference string model*](https://iacr.org/archive/crypto2006/41170058/41170058.pdf). In Advances in Cryptology – CRYPTO 2006, 2006.
-- Abe and Ohkubo. [*A framework for universally composable non-committing blind signatures*](https://eprint.iacr.org/2009/494). International Journal of Applied Cryptography, 2(3):229–249, 2012.
+- Fischlin. [*Round-optimal composable blind signatures in the common reference string model*](https://iacr.org/archive/crypto2006/41170058/41170058.pdf). In Advances in Cryptology – CRYPTO 2006, pages 60–77, 2006. Read from the IACR archive copy of the proceedings version, which carries no revision stamp, SHA-256 prefix `661e1950018d7ab8`. Figure 2, p. 11, the definition transcribed above, including the abort in its signature-generation clause and the four-case verification ladder. Sole author, venue and page range confirmed against DBLP.
+- Abe and Ohkubo. [*A framework for universally composable non-committing blind signatures*](https://eprint.iacr.org/2009/494). International Journal of Applied Cryptography, 2(3):229–249, 2012. Carried over from the stub's reference list, read at ePrint revision `20091014:190316`. The harvester found no printed functionality in it, and nothing on this page rests on it; it is kept because non-committing blind signatures are a genuinely different notion and a reader choosing between definitions should know it exists.

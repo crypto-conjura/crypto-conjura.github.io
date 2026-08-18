@@ -1,0 +1,79 @@
+%% The interface box of f-coin, the one source for both the book
+%% and uc/.../f-coin/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fcoin$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := \none$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{A} \gets \unset$; \ $\V{B} \gets \unset$
+  \Comment{the party that learns first, and the other}
+\State $\V{on}[*] \gets 0$; \ $\V{coin} \gets \unset$; \ $\V{rel} \gets \unset$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Start}(Q)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$\V{A} = \unset$}
+  \State $\V{A} \gets \id.P$; \ $\V{B} \gets Q$ \label{ln:coinroles}
+    \Comment{roles are fixed by who asks first}
+\EndIf
+\Req{$\id.P \in \{\V{A}, \V{B}\}$}
+\State $\V{on}[\id.P] \gets 1$
+\State $\Adv\bigl(\id.\op{Start},\ \id.P\bigr)$
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Release}(b)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P = \V{A} \ \wedge\ \V{coin} \neq \unset \ \wedge\ \V{rel} = \unset$} \label{ln:coinafter}
+  \Comment{only $\V{A}$, and only once it has seen the coin}
+\Req{$b \in \{\ok, \none\}$}
+\State $\V{rel} \gets b$ \label{ln:coinchoice}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Read}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{on}[\V{A}] = 1 \ \wedge\ \V{on}[\V{B}] = 1$} \label{ln:coinboth}
+\If{$\id.P = \V{A}$}
+  \If{$\V{coin} = \unset$}
+    \State $\V{coin} \gets_{\$} \{0,1\}$ \label{ln:coindraw}
+  \EndIf
+  \State \textbf{return} $\V{coin}$ \label{ln:coinafirst}
+    \Comment{$\V{A}$ learns it before deciding}
+\EndIf
+\Req{$\id.P = \V{B} \ \wedge\ \V{rel} \neq \unset$}
+\If{$\V{rel} = \none$}
+  \State \textbf{return} $\none$ \label{ln:coinfail}
+    \Comment{refused: $\V{B}$ gets nothing}
+\EndIf
+\State \textbf{return} $\V{coin}$ \label{ln:coinbsecond}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $(\V{coin}, \V{rel})$ \label{ln:coinleak}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

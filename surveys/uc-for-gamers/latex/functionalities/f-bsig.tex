@@ -1,0 +1,91 @@
+%% The interface box of f-bsig, the one source for both the book
+%% and uc/.../f-bsig/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fblsig$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := B$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{pk} \gets \unset$; \ $\V{Sign} \gets \unset$
+  \Comment{the key, and the signing algorithm behind it}
+\State $\V{Ver}[*,*] \gets \unset$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{KeyGen}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P = B \ \wedge\ \V{pk} = \unset$} \label{ln:blsbank}
+\State $(\V{pk}, \V{Sign}) \gets \Adv\bigl(\id.\op{KeyGen}\bigr)$ \label{ln:blsalg}
+  \Comment{the adversary supplies an algorithm, not just a key}
+\State \textbf{return} $\V{pk}$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Sign}(\msg)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{pk} \neq \unset \ \wedge\ \msg \in \Msgs$}
+\If{$\id.P \notin \Cs$} \label{ln:blshonest}
+  \State $\sigma \gets \V{Sign}(\msg)$ \label{ln:blsblind}
+    \Comment{blindness: the adversary is not asked}
+\EndIf
+\If{$\id.P \in \Cs$}
+  \State $\sigma \gets \Adv\bigl(\id.\op{Sign}, \msg\bigr)$
+  \Req{$\V{Ver}[\msg, \sigma] \neq 0$} \label{ln:blsabort}
+    \Comment{the source aborts here}
+\EndIf
+\State $\V{Ver}[\msg, \sigma] \gets 1$ \label{ln:blsrecord}
+\State $\Adv\bigl(\id.\op{Sign},\ B\bigr)$ \label{ln:blscount}
+  \Comment{the bank is told a request happened, and no more}
+\State \textbf{return} $\sigma$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Verify}(\msg, \sigma, pk')$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$pk' = \V{pk} \ \wedge\ \V{Ver}[\msg, \sigma] = 1$}
+  \State \textbf{return} $1$ \label{ln:blscomplete}
+\EndIf
+\State $\varphi \gets \Adv\bigl(\id.\op{Verify}, \msg, \sigma, pk'\bigr)$
+\If{$pk' = \V{pk} \ \wedge\ B \notin \Cs \ \wedge\ \neg\exists\, \sigma' : \V{Ver}[\msg,\sigma'] = 1$}
+  \State $\V{Ver}[\msg, \sigma] \gets 0$ \label{ln:blsunforge}
+    \Comment{one signature per issued message}
+  \State \textbf{return} $0$
+\EndIf
+\If{$\V{Ver}[\msg, \sigma] \neq \unset$}
+  \State \textbf{return} $\V{Ver}[\msg, \sigma]$ \label{ln:blsconsist}
+\EndIf
+\If{$\varphi \not\in \{0,1\}$}
+  \State $\varphi \gets 0$
+\EndIf
+\State $\V{Ver}[\msg, \sigma] \gets \varphi$
+\State \textbf{return} $\varphi$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$\id.P = B$}
+  \State \textbf{return} $(\V{pk}, \V{Sign})$ \label{ln:blsleakbank}
+    \Comment{never the messages: the bank does not learn them}
+\EndIf
+\State \textbf{return} $\V{pk}$
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

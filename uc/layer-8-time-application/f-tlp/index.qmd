@@ -1,15 +1,122 @@
 ---
-title: "F-TLP — Time-lock puzzle, verifiable delay function"
+title: "F-TLP — Time-lock puzzle"
 status: "Canonical"
 layer: 8
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-TLP* (Time-lock puzzle, verifiable delay function) is part of *Time and Application Composites* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+*F-TLP* (Time-lock puzzle) is part of *Time and Applications* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
 
-Verifiable delay functions are folded into this functionality, on the same logic as the generic-group merge above (see *G-GG*). The merge is slightly lossy: a verifiable delay function is publicly verifiable, whereas a time-lock puzzle need not be, so this entry understates that distinction.
+A message you cannot read until you have done a fixed amount of work. The difficulty of modelling this composably is that "amount of work" is not a cryptographic notion — a functionality cannot count an adversary's steps. The source's answer is to make the work *literal*: the puzzle is a chain of $\Gamma$ random states, each step of which is one call, and the message opens only to whoever holds the state at the end of the chain.
+
+So the security is combinatorial rather than computational. Line 9 lays down a chain nobody can shortcut because the states are random and unrelated; line 17 walks it one step per call; line 20 opens the message only for the true endpoint. Nothing in the box appeals to how fast anybody computes.
+
+## Functionality
+
+Reading the box: $\mathcal{A}(\cdot)$ is a call on the adversary slot whose answer is used at lines 8 and 23 and discarded at line 12; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it; $\mathbf{C}$ is the set of corrupted parties; $\square$ marks a value never set and $\bot$ an absence; $\mathcal{S}$ and $\mathcal{T}$ are the state and tag spaces; $O$ is the parameter naming the puzzle's owner.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{TLP}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := (O, \tau)\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{next}[*] \gets \square\)<span class="cj-comment">// the state chain: one step per entry</span></li>
+<li>\(\mathtt{msg}[*,*] \gets \square\); &nbsp;\(\mathtt{puz} \gets \square\)</li>
+<li>\(\mathtt{at}[*] \gets \square\)<span class="cj-comment">// how far each solver has walked</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.CreatePuzzle(<span class="cj-id">Gamma</span>, <span class="cj-id">msg</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="4">
+<li>\(\textbf{require}\ \mathit{id}.P = O \ \wedge\ \mathtt{puz} = \square \ \wedge\ \Gamma \in \mathbb{N}\)<span class="cj-comment">// one puzzle per instance, and the owner's alone</span></li>
+<li>\(\textbf{if}\ O \notin \mathbf{C}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathit{tag} \gets_{\$} \mathcal{T}\); &nbsp;\((\mathit{st}_{0}, \ldots, \mathit{st}_{\Gamma}) \gets_{\$} \mathcal{S}\)</span><span class="cj-comment">// distinct, and the chain is the box's own</span></li>
+<li>\(\textbf{if}\ O \in \mathbf{C}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\((\mathit{tag}, \mathit{st}_{0}, \ldots, \mathit{st}_{\Gamma}) \gets \mathcal{A}\bigl(\mathit{id}.\mathsf{CreatePuzzle}, \Gamma\bigr)\)</span></li>
+<li>\(\forall j < \Gamma : \mathtt{next}[\mathit{st}_{j}] \gets \mathit{st}_{j+1}\)</li>
+<li>\(\mathtt{msg}[\mathit{st}_{0}, \mathit{tag}] \gets (\mathit{st}_{\Gamma}, \mathit{msg})\)</li>
+<li>\(\mathtt{puz} \gets (\mathit{st}_{0}, \Gamma, \mathit{tag})\)</li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{CreatedPuzzle},\ \mathtt{puz}\bigr)\)</li>
+<li>\(\textbf{return}\ \mathtt{puz}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Solve(<span class="cj-id">mathit{st}</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="14">
+<li>\(\textbf{require}\ \mathtt{puz} \neq \square\)</li>
+<li>\(\textbf{if}\ \mathtt{next}[\mathit{st}] = \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{next}[\mathit{st}] \gets_{\$} \mathcal{S}\)</span><span class="cj-comment">// off the chain: a fresh step, going nowhere</span></li>
+<li>\(\mathtt{at}[\mathit{id}.P] \gets \mathtt{next}[\mathit{st}]\)<span class="cj-comment">// one step per call: the call is the clock</span></li>
+<li>\(\textbf{return}\ \mathtt{at}[\mathit{id}.P]\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.GetMsg(<span class="cj-id">mathit{puz}</span>, <span class="cj-id">mathit{st}</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="19">
+<li>parse \(\mathit{puz}\) as \((\mathit{st}_{0}, \Gamma, \mathit{tag})\)</li>
+<li>\(\textbf{if}\ \mathtt{msg}[\mathit{st}_{0}, \mathit{tag}] = (\mathit{st}, \mathit{msg})\) for some \(\mathit{msg}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \mathit{msg}\)</span><span class="cj-comment">// only the true end of the chain opens it</span></li>
+<li>\(\textbf{if}\ O \in \mathbf{C}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \mathcal{A}\bigl(\mathit{id}.\mathsf{GetMsg}, \mathit{puz}, \mathit{st}\bigr)\)</span></li>
+<li>\(\textbf{return}\ \bot\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="25">
+<li>\(\textbf{if}\ O \in \mathbf{C}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ (\mathtt{puz}, \mathtt{next}, \mathtt{msg})\)</span></li>
+<li>\(\textbf{return}\ (\mathtt{puz}, \mathtt{at}[\mathit{id}.P])\)<span class="cj-comment">// the message stays shut until the chain is walked</span></li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+The box is transcribed from Baum, David, Dowsley, Nielsen and Oechsner, *TARDIS: a foundation of time-lock puzzles in UC*, ePrint 2020/537, revision `20210808:072900`, Figure 3, p. 16 — "Functionality $\mathcal{F}_{\mathsf{tlp}}$ for time-lock puzzles". The rendered page is at `_src/baumetal2021-p16.png`.
+
+**The clock is the call, and that is the translation to understand.** The source is a *ticked* functionality: it keeps an inbox and an outbox, `Solve` appends to the inbox, and a `Tick` interface — driven by the paper's global ticker — moves the inbox to the outbox so a party's `Output` can collect it. One tick, one step. This framework has no ticker, so line 17 advances the chain on the `Solve` call itself, and the source's `Output` interface disappears with the inbox it drained. The reachable behaviour is the same and the accounting is the same — $\Gamma$ calls to walk a $\Gamma$-step chain — but *who* forces time to pass differs, and a reader comparing with the source should know that its steps are global ticks and these are the solver's own activations. [*F-beacon*](/uc/layer-6-secret-sharing-mpc/f-beacon/index.qmd), from the same group of authors, needed the identical translation.
+
+**Lines 5–8 are where honesty of the owner matters.** For an honest owner the box draws the chain and tag itself; for a corrupt owner the adversary supplies them. The source requires the states be distinct in both cases, which is what stops a corrupt owner from building a chain with a shortcut — a repeated state would let a solver skip ahead. That distinctness is a condition on the adversary's answer, and it is the one place a corrupt owner is constrained rather than trusted.
+
+**Line 16 is subtler than it looks.** A `Solve` on a state that is not on any chain gets a *fresh random successor*, which is then recorded. So off-chain solving is possible, terminates, and leads nowhere: the walker gets states forever and never reaches an endpoint that opens anything at line 20. That is how the box says "solving a wrong puzzle is not detectably different from solving a right one until you finish", which is a real property of time-lock puzzles and easy to omit.
+
+**Line 20 is the whole security property.** The message opens only when the presented state is the recorded endpoint for that puzzle's start and tag. There is no partial opening, no leak partway along the chain, and — for an honest owner — no adversary line that opens it early. Line 27 is the corresponding absence: another party's leak carries the puzzle and its own position, never the message.
+
+**One thing the source has that this box does not model.** In the source the message leaks to the adversary after $\epsilon\Gamma$ steps for a parameter $\epsilon < 1$ — the puzzle is *not* hiding all the way to the end, because a real adversary with more compute than the honest solver gets there sooner. That early-leak clause is the paper's way of admitting a compute gap, and it is deliberately omitted here: modelling it needs a step counter per party and a second parameter, and adding it silently would understate what the box promises. This entry's box is therefore **stronger than the source's**, and a protocol proved against the source is not proved against this one. That is the most important caveat on the page.
+
+## Known realizations
+
+**From a trapdoor verifiable delay function, in the paper's own construction.** The owner uses the trapdoor to compute the VDF on a random start state for $\Gamma$ steps, obtaining the endpoint and a proof, then masks the message with a random-oracle hash of the whole tuple and publishes $(\mathit{st}_0, \Gamma, \mathit{tag})$. A solver computes the $\Gamma$ steps without the trapdoor, recovers the hash input, and unmasks. The theorem is stated in a hybrid model with a global ticker, a restricted programmable observable random oracle, and the VDF.
+
+**Rivest, Shamir and Wagner's original construction** — the stub's other reference, and the origin of the primitive — is a technical report from 1996 and prints no functionality; it predates ideal-functionality notation. It is kept as the origin of the idea, not as a source for the box, the way [*F-OT*](/uc/layer-5-oblivious-transfer/f-ot/index.qmd) keeps its Rabin reference.
+
+**What is built on it.** [*F-beacon*](/uc/layer-6-secret-sharing-mpc/f-beacon/index.qmd) is realized from publicly verifiable time-lock puzzles by the same authors: everyone locks a random value, the values are opened after the delay, and the XOR is the beacon. That construction is the clearest argument for why a composable treatment of puzzles was worth having.
+
+## Properties
+
+- **Hiding until the endpoint, with probability exactly $1$ — in this box.** Line 20 is the only path from $\mathtt{msg}$ to a caller when the owner is honest, and it requires the recorded endpoint. **But see the caveat above**: the source additionally leaks the message after $\epsilon\Gamma$ steps, and that clause is not modelled here.
+- **$\Gamma$ calls to open, exactly.** Line 17 advances one step per call, and line 9's chain has $\Gamma$ links. No line skips.
+- **No shortcut for a corrupt owner.** Line 8's states must be distinct, so even an adversary-chosen chain has full length.
+- **Off-chain solving terminates and reveals nothing** (lines 15–16). The walker cannot tell it is off the chain until it fails to open anything.
+- **One puzzle per instance** (line 4). Many puzzles are many instances, which is what makes the per-instance owner parameter sound.
+- **No liveness.** Nothing forces anyone to solve, and nothing bounds when they do.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Baum et al. [*TARDIS: A foundation of time-lock puzzles in UC*](https://eprint.iacr.org/2020/537). In Advances in Cryptology – EUROCRYPT 2021, Part III, volume 12698 of LNCS, pages 429–459, 2021.
-- Rivest, Shamir, and Wagner. [*Time-lock puzzles and timed-release crypto*](https://people.csail.mit.edu/rivest/pubs/RSW96.pdf). Technical Report MIT/LCS/TR-684, MIT, 1996.
+- Baum, David, Dowsley, Nielsen, and Oechsner. [*TARDIS: a foundation of time-lock puzzles in UC*](https://eprint.iacr.org/2020/537). In Advances in Cryptology – EUROCRYPT 2021, Part III, volume 12698 of LNCS, pages 429–459, 2021. Read at ePrint revision `20210808:072900`. Figure 3, p. 16, the definition transcribed above, including its `Output` and `Tick` interfaces and the $\epsilon\Gamma$ early-leak clause this box does not model. All five authors confirmed against the paper's own title page; the venue and page range are as the stub recorded them.
+- Rivest, Shamir, and Wagner. [*Time-lock puzzles and timed-release crypto*](https://people.csail.mit.edu/rivest/pubs/RSW96.pdf). Technical Report MIT/LCS/TR-684, MIT, 1996. Carried over from the stub's reference list as the origin of the primitive. It prints no ideal functionality — at 1996 it predates the notation — and nothing on this page rests on it.

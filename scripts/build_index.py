@@ -52,6 +52,15 @@ AREA_SLUGS = [
     "quantum", "zk", "proof-systems", "homomorphic-encryption", "obfuscation",
     "mpc", "secret-sharing", "universal-composability", "privacy", "consensus",
 ]
+# Provenance tags, kept deliberately separate from AREA_SLUGS above. An area
+# says what a statement is *about*; a tag says where it came from. Mixing the
+# two would put an affiliation into the subject taxonomy and into the by-area
+# browse, where a reader looking for "consensus" would find "iog" beside it.
+#
+# Closed, like the areas, and for the same reason: a free-text tag field grows
+# typos and near-synonyms, and nothing would catch "IOG" against "iog".
+TAG_SLUGS = {"iog"}
+
 MODELS = {"rom", "prom", "icm", "ggm", "qrom", "standard", "other"}
 FORMS = {
     "separation", "lower-bound", "tight-bound", "equivalence", "impossibility",
@@ -153,6 +162,17 @@ def validate_leaf(fm, path, errors):
             if a not in AREA_SLUGS:
                 err(f"area {a!r} is not one of the 19 fixed area slugs")
 
+    # Optional: a statement with no provenance tag is the normal case, so an
+    # absent field is fine and an empty list is not an error either.
+    tags = fm.get("tags")
+    if tags is not None:
+        if not isinstance(tags, list):
+            err("tags must be a list when present")
+        else:
+            for tg in tags:
+                if tg not in TAG_SLUGS:
+                    err(f"tag {tg!r} is not one of {sorted(TAG_SLUGS)}")
+
     if "model" in fm and fm["model"] not in MODELS:
         err(f"model {fm['model']!r} not in {sorted(MODELS)}")
     if "form" in fm and fm["form"] not in FORMS:
@@ -244,6 +264,7 @@ def listing_item(leaf_id, fm):
         "difficulty": (fm.get("difficulty") or {}).get("reach", ""),
         "difficulty_by": (fm.get("difficulty") or {}).get("by", ""),
         "difficulty_note": (fm.get("difficulty") or {}).get("note", ""),
+        "tags": sorted(fm.get("tags") or []),
         "open_obligations": sum(1 for o in fm["_obligations"] if not o["done"]),
     }
 
@@ -253,7 +274,7 @@ def write_yaml(path, items):
 
 
 def emit(leaves):
-    for sub in ("areas", "model", "form", "assumption", "problems"):
+    for sub in ("areas", "model", "form", "assumption", "problems", "tags"):
         (GENERATED_DIR / sub).mkdir(parents=True, exist_ok=True)
 
     browsable = {lid: fm for lid, fm in leaves.items() if fm.get("category") != "withdrawn"}
@@ -273,6 +294,18 @@ def emit(leaves):
                 key=lambda x: x["id"],
             )
             write_yaml(GENERATED_DIR / facet_dir / f"{value}.yml", items)
+
+    # One file per tag actually in use. Unlike the areas, an unused tag gets no
+    # file: there is no browse page listing every tag, so an empty one would be
+    # a file nothing reads.
+    for tag in sorted(TAG_SLUGS):
+        items = sorted(
+            (listing_item(lid, fm) for lid, fm in browsable.items()
+             if tag in (fm.get("tags") or [])),
+            key=lambda x: x["id"],
+        )
+        if items:
+            write_yaml(GENERATED_DIR / "tags" / f"{tag}.yml", items)
 
     problems = sorted({fm["problem"] for fm in leaves.values() if "problem" in fm})
     for slug in problems:

@@ -1,0 +1,292 @@
+{
+  "pdf": {
+    "name": "2023-770.pdf",
+    "sha256": "e32e1eb4a186bb3743828e494076f6cc1a35fc913dc4eedceab9b9b57ff3fc4c",
+    "pages": 22
+  },
+  "run": {
+    "at": "2026-08-18T15:11:16Z",
+    "backend": "cli",
+    "effort": "high"
+  },
+  "document": {
+    "title": "Towards compressed permutation oracles",
+    "authors": [
+      "Dominique Unruh"
+    ],
+    "year": "2023",
+    "venue_or_archive": "IACR Cryptology ePrint Archive (preprint, University of Tartu)",
+    "identifier": "2023/770",
+    "citation_confidence": "inferred"
+  },
+  "candidate": {
+    "slug": "luby-rackoff-strong-qprp",
+    "title": "A Constant Number of Luby–Rackoff Rounds Is a Strong qPRP",
+    "subtitle": "random round functions, superposition queries in both directions",
+    "category": "Symmetric-Key Primitives",
+    "one_line": "Some constant number of Feistel rounds with independent uniformly random round functions is indistinguishable from a random invertible permutation for quantum adversaries making polynomially many superposition queries in both the forward and the inverse direction.",
+    "informal": "The classical Luby–Rackoff theorem says that four rounds of the Feistel construction, built from independent random round functions on n-bit strings, give a permutation on 2n-bit strings that no efficient adversary can distinguish from a uniformly random permutation, even when it may query in both directions. Against quantum adversaries with superposition access this is known to fail at four rounds: there is an attack. Nothing rules out that a few more rounds suffice, and this is the natural quantum analogue of the classical theorem, but no number of rounds has ever been proved to work. The obstruction is a missing proof technique rather than a missing idea: the target is indistinguishability from an invertible random permutation, and the quantum lazy-sampling method that would make such an argument routine has never been extended from random functions to permutations that can be inverted. The one published claim in this direction proves a weaker statement — forward queries only — and its proof has a flaw. The conjecture is that some constant number of rounds does work, with five being the first candidate not ruled out.",
+    "setting_latex": "The Luby--Rackoff theorem \\cite{LR88} is the textbook route from a pseudorandom function to a strong pseudorandom permutation: four Feistel rounds with independent random round functions are indistinguishable from a uniformly random invertible permutation, given classical access in both directions. Against quantum adversaries with superposition access the picture is different. Four rounds are broken: there is a quantum chosen-ciphertext attack on Feistel ciphers \\cite{IHMSI19}. A published claim that four-round Luby--Rackoff is a qPRP \\cite{HI19} concerns the weaker forward-only notion, and the paper reports that its proof contains a flaw with a fix in progress \\cite{HI21}. So even the non-strong case is not on firm ground, and for the strong case nothing at all is known.\n\nThe paper identifies why. To establish the strong version it suffices to show that Luby--Rackoff with uniformly random round functions is indistinguishable from a random permutation given queries in both directions --- an information-theoretic statement about superposition query complexity. The natural tool would be the quantum analogue of lazy sampling: Zhandry's compressed oracle \\cite{Zha19} makes exactly this kind of argument routine when the ideal object is a random \\emph{function}, by giving the proof an explicit record of all queries made so far and letting one argue by an invariant on that record. But the technique has resisted every attempt at being ported to invertible permutations, because a random permutation does not have independently distributed outputs; and the escape route available in the forward-only setting --- replacing the permutation by a random function \\cite{Zha15} --- is exactly what breaks when the adversary can invert. This is the paper's motivation for defining a compressed permutation oracle, and its main theorem yields a two-for-one: proving that Luby--Rackoff is indistinguishable from that oracle would give both the conjecture below and, for free, the soundness of the oracle methodology itself. Note also that random invertible permutations are known to be efficiently simulatable from quantum one-way functions \\cite{Zha16}, so the interest here is not existence of a strong qPRP but whether the Feistel construction in particular achieves it.",
+    "notation_latex": "Fix $n \\in \\mathbb{N}$. Write $\\oplus$ for bitwise XOR and $u \\| v$ for concatenation; every element of $\\{0,1\\}^{2n}$ is written uniquely as $x_L \\| x_R$ with $x_L, x_R \\in \\{0,1\\}^n$. Let $\\mathrm{Func}_n$ be the set of all functions $\\{0,1\\}^n \\to \\{0,1\\}^n$ and $\\mathrm{Perm}\\bigl(\\{0,1\\}^{2n}\\bigr)$ the set of bijections $\\{0,1\\}^{2n} \\to \\{0,1\\}^{2n}$.\n\nFor a permutation $G$ on $\\{0,1\\}^{2n}$, $U_G$ is the unitary with $U_G|u\\rangle|v\\rangle = |u\\rangle|v \\oplus G(u)\\rangle$ for $u,v \\in \\{0,1\\}^{2n}$; superposition access to $G$ means black-box access to $U_G$.\n\nAn oracle algorithm $A$ with two oracles alternates unitaries on its own registers with invocations of either oracle; its \\emph{query count} is the total number of invocations, and $\\Pr[A^{O_1,O_2} \\Rightarrow 1]$ is the probability that measuring its output register yields $1$.\n\nA function $\\mu : \\mathbb{N} \\to \\mathbb{R}_{\\ge 0}$ is \\emph{negligible} if for every $c>0$ there is $n_0$ with $\\mu(n) < n^{-c}$ for all $n \\ge n_0$.",
+    "definitions_latex": "\\begin{definition}[Luby--Rackoff construction]\nFor $f \\in \\mathrm{Func}_n$ let $\\Psi_f : \\{0,1\\}^{2n} \\to \\{0,1\\}^{2n}$ be the Feistel round\n\\[ \\Psi_f\\bigl(x_L \\| x_R\\bigr) := x_R \\,\\|\\, \\bigl(x_L \\oplus f(x_R)\\bigr), \\]\nwhich is a permutation with $\\Psi_f^{-1}(u \\| v) = \\bigl(v \\oplus f(u)\\bigr) \\| u$. For $r \\ge 1$ and $f_1, \\dots, f_r \\in \\mathrm{Func}_n$, the \\emph{$r$-round Luby--Rackoff construction} is\n\\[ \\mathrm{LR}_{f_1,\\dots,f_r} := \\Psi_{f_r} \\circ \\cdots \\circ \\Psi_{f_1} \\;\\in\\; \\mathrm{Perm}\\bigl(\\{0,1\\}^{2n}\\bigr). \\]\n\\end{definition}",
+    "formal_statement_latex": "There exists $r \\in \\mathbb{N}$ such that for every polynomial $p$ there is a negligible function $\\mu$ with the following property. For all $n \\in \\mathbb{N}$ and every oracle algorithm $A$ with query count at most $p(n)$,\n\\[ \\Bigl| \\Pr\\bigl[ A^{U_\\Psi,\\, U_{\\Psi^{-1}}} \\Rightarrow 1 \\;:\\; f_1, \\dots, f_r \\xleftarrow{\\$} \\mathrm{Func}_n,\\ \\Psi := \\mathrm{LR}_{f_1,\\dots,f_r} \\bigr] \\;-\\; \\Pr\\bigl[ A^{U_\\pi,\\, U_{\\pi^{-1}}} \\Rightarrow 1 \\;:\\; \\pi \\xleftarrow{\\$} \\mathrm{Perm}\\bigl(\\{0,1\\}^{2n}\\bigr) \\bigr] \\Bigr| \\;\\le\\; \\mu(n), \\]\nwhere the $f_i$ are drawn independently and uniformly.",
+    "parameters": [
+      {
+        "symbol": "r",
+        "meaning": "The number of Feistel rounds; $r = 4$ is ruled out by a known quantum attack, and the paper singles out $r=5$ as the first value not excluded."
+      },
+      {
+        "symbol": "n",
+        "meaning": "Bit length of each half; the round functions map $\\{0,1\\}^n$ to $\\{0,1\\}^n$ and the permutation acts on $\\{0,1\\}^{2n}$."
+      },
+      {
+        "symbol": "p",
+        "meaning": "Polynomial bounding the adversary's total number of forward and inverse superposition queries."
+      }
+    ],
+    "openness_kind": "paper-states-open",
+    "status_note": "Open for every $r$. Four rounds are refuted by a known quantum chosen-ciphertext attack on Feistel ciphers, and the paper reports that the one published proof of the weaker forward-only statement for four rounds contains a flaw. The paper proves nothing about Luby–Rackoff itself; it only shows that a proof via its compressed permutation oracle would additionally establish the oracle's soundness for free.",
+    "progress_note": "The paper contributes a route rather than a partial result: by its Theorem 1, showing that Luby--Rackoff (as a permutation-construction from random round functions) is indistinguishable from the compressed permutation oracle would yield both this statement and the soundness of the compressed permutation oracle methodology. It also records the negative data points: four rounds do not suffice in the quantum setting, three rounds fail already classically, and the claimed four-round forward-only proof is flawed with a fix reported as work in progress.",
+    "why_interesting": "This is the missing quantum half of one of the foundational theorems of symmetric cryptography, and the paper treats it as the motivating application for the whole compressed-permutation-oracle programme. A proof for any constant number of rounds would give the first information-theoretic strong-qPRP result for a natural construction and would validate a proof technique for invertible random permutations, which is precisely what is absent today. It also has direct consequences for how one may argue about block ciphers in post-quantum proofs, where the standard step of replacing a strong PRP by a random invertible permutation currently has no accompanying toolbox. A refutation for small $r$ would extend the existing quantum Feistel attacks and sharpen where the classical intuition breaks.",
+    "why_clean": "The construction is a two-line recursion over independent uniformly random round functions, the target is indistinguishability from a uniformly random permutation, and the statement is information-theoretic with no assumption and no idealized-model apparatus. Both experiments are standard XOR query unitaries. The classical answer is textbook, and the quantum status is pinned down at $r=4$ by a published attack, so an attacker of the problem knows exactly where the boundary currently lies.",
+    "risks": "(1) Strength and quantifier. The paper asks whether ``an analogous result holds in the quantum case'' and says in a footnote only that ``nothing excludes'' five rounds, so I formalized it as an existential over $r$ rather than committing to $r=5$; a reviewer who prefers a fixed round count should note that the paper does not commit to one, and that the fixed-$r$ version is formally stronger. (2) Resolution status. Since 2023 there has been considerable work on recording techniques for random permutations and unitaries, and on quantum security of Feistel; I am not confident this has not been settled for some $r$, and it should be checked against the follow-up literature. (3) The paper's three-round illustration on page 14 writes the Feistel iteration in a form that differs cosmetically from the standard round I use; the constructions coincide up to a final swap of halves, which does not affect indistinguishability from a random permutation, but a reviewer should confirm the convention. (4) The paper phrases the goal both as ``strong qPRP'' (keyed, computational) and as indistinguishability with random round functions (information-theoretic); I used the latter, which is the version the paper says is sufficient.",
+    "quotes": [
+      {
+        "page": 3,
+        "role": "statement",
+        "text": "For example, in the classical case, the four-round Luby-Rackoff construction [21] is known to be a strong PRP if the round function is a (noninvertible) pseudorandom function [21]; we do not know yet whether an analogous result holds in the quantum case."
+      },
+      {
+        "page": 3,
+        "role": "openness",
+        "text": "We know that four rounds are not sufficient [20], but nothing excludes that, e.g., five-round Luby-Rackoff could be a strong qPRP. [18] proves that four-round Luby-Rackoff is a qPRP (but not a strong one) but their result contains a flaw and the fix is work in progress [17]."
+      },
+      {
+        "page": 3,
+        "role": "definition",
+        "text": "To show this, it is sufficient to show that Luby-Rackoff, using a random function as the round function, is indistinguishable from a random permutation (given queries in both directions)."
+      },
+      {
+        "page": 1,
+        "role": "progress",
+        "text": "If we use the compressed permutation oracle methodology to show that some construction (e.g., Luby-Rackoff) implements a random permutation (or strong qPRP), then we get the fact that this methodology is actually sound for free."
+      },
+      {
+        "page": 14,
+        "role": "parameter",
+        "text": "We use three-round Luby-Rackoff for this example just to keep the formulas short and readable. We are aware that three-round Luby-Rackoff is not even indistinguishable from an invertible random permutation in the classical setting, let alone the quantum setting."
+      }
+    ],
+    "pages": [
+      1,
+      3,
+      14
+    ],
+    "bibliography": [
+      {
+        "key": "LR88",
+        "authors": "Michael Luby, Charles Rackoff",
+        "title": "How to Construct Pseudorandom Permutations from Pseudorandom Functions",
+        "venue": "SIAM Journal on Computing 17.2, pp. 373–386",
+        "year": "1988",
+        "verified": "printed-in-source-bibliography"
+      },
+      {
+        "key": "IHMSI19",
+        "authors": "Gembu Ito, Akinori Hosoyamada, Ryutaroh Matsumoto, Yu Sasaki, Tetsu Iwata",
+        "title": "Quantum Chosen-Ciphertext Attacks Against Feistel Ciphers",
+        "venue": "Topics in Cryptology – CT-RSA 2019, Springer, pp. 391–411",
+        "year": "2019",
+        "verified": "printed-in-source-bibliography"
+      },
+      {
+        "key": "HI19",
+        "authors": "Akinori Hosoyamada, Tetsu Iwata",
+        "title": "4-Round Luby-Rackoff Construction is a qPRP",
+        "venue": "Lecture Notes in Computer Science, Springer, pp. 145–174",
+        "year": "2019",
+        "verified": "printed-in-source-bibliography"
+      },
+      {
+        "key": "HI21",
+        "authors": "Akinori Hosoyamada, Tetsu Iwata",
+        "title": "Personal communication",
+        "venue": "Personal communication",
+        "year": "2021",
+        "verified": "printed-in-source-bibliography"
+      },
+      {
+        "key": "Zha19",
+        "authors": "Mark Zhandry",
+        "title": "How to Record Quantum Queries, and Applications to Quantum Indifferentiability",
+        "venue": "Crypto 2019, Vol. 11693, LNCS, Springer, pp. 239–268",
+        "year": "2019",
+        "verified": "printed-in-source-bibliography"
+      },
+      {
+        "key": "Zha15",
+        "authors": "Mark Zhandry",
+        "title": "A note on the quantum collision and set equality problems",
+        "venue": "Quantum Inf. Comput. 15.7&8, pp. 557–567",
+        "year": "2015",
+        "verified": "printed-in-source-bibliography"
+      },
+      {
+        "key": "Zha16",
+        "authors": "Mark Zhandry",
+        "title": "A Note on Quantum-Secure PRPs",
+        "venue": "Cryptology ePrint Archive, Report 2016/1076",
+        "year": "2016",
+        "verified": "printed-in-source-bibliography"
+      }
+    ]
+  },
+  "grounding": [
+    {
+      "quote": "For example, in the classical case, the four-round Luby-Rackoff construction [21] is known to be a strong PRP if the round function is a (noninvertible) pseudorandom function [21]; we do not know yet whether an analogous result holds in the quantum case.",
+      "claimed_page": 3,
+      "found_page": 3,
+      "coverage": 1.0,
+      "longest_run": 0.0,
+      "status": "exact",
+      "role": "statement"
+    },
+    {
+      "quote": "We know that four rounds are not sufficient [20], but nothing excludes that, e.g., five-round Luby-Rackoff could be a strong qPRP. [18] proves that four-round Luby-Rackoff is a qPRP (but not a strong one) but their result contains a flaw and the fix is work in progress [17].",
+      "claimed_page": 3,
+      "found_page": 3,
+      "coverage": 1.0,
+      "longest_run": 0.0,
+      "status": "exact",
+      "role": "openness"
+    },
+    {
+      "quote": "To show this, it is sufficient to show that Luby-Rackoff, using a random function as the round function, is indistinguishable from a random permutation (given queries in both directions).",
+      "claimed_page": 3,
+      "found_page": 3,
+      "coverage": 1.0,
+      "longest_run": 0.0,
+      "status": "exact",
+      "role": "definition"
+    },
+    {
+      "quote": "If we use the compressed permutation oracle methodology to show that some construction (e.g., Luby-Rackoff) implements a random permutation (or strong qPRP), then we get the fact that this methodology is actually sound for free.",
+      "claimed_page": 1,
+      "found_page": 1,
+      "coverage": 1.0,
+      "longest_run": 0.0,
+      "status": "exact",
+      "role": "progress"
+    },
+    {
+      "quote": "We use three-round Luby-Rackoff for this example just to keep the formulas short and readable. We are aware that three-round Luby-Rackoff is not even indistinguishable from an invertible random permutation in the classical setting, let alone the quantum setting.",
+      "claimed_page": 14,
+      "found_page": 14,
+      "coverage": 1.0,
+      "longest_run": 0.0,
+      "status": "exact",
+      "role": "parameter"
+    }
+  ],
+  "verify": {
+    "checks": [
+      {
+        "name": "existence",
+        "result": "pass",
+        "page": 3,
+        "finding": "The problem is in the paper, in its own voice: \"the four-round Luby-Rackoff construction [21] is known to be a strong PRP if the round function is a (noninvertible) pseudorandom function [21]; we do not know yet whether an analogous result holds in the quantum case\" (p. 3), with the reduction to the information-theoretic form two sentences later: \"it is sufficient to show that Luby-Rackoff, using a random function as the round function, is indistinguishable from a random permutation (given queries in both directions)\" (p. 3). Footnote 3 on the same page supplies the round-count status."
+      },
+      {
+        "name": "openness",
+        "result": "pass",
+        "page": 14,
+        "finding": "It stays open. I grepped the full text layer for every occurrence of Luby/Rackoff/Feistel/qPRP: the only later appearances are the three-round example used to illustrate Definition 2 (p. 14) and the conditional Theorem 1, whose conclusion is that CPO is indistinguishable from a random permutation *assuming* a construction indistinguishable from CPO exists. No section, appendix, footnote, or corollary (incl. Corollary 1, p. 18) proves anything unconditional about Luby-Rackoff. Section 5 is the last technical section; pp. 21-22 are only the symbol and keyword indices."
+      },
+      {
+        "name": "strength",
+        "result": "pass",
+        "page": 3,
+        "finding": "The drafted statement is the information-theoretic statement the paper explicitly poses as what suffices (p. 3): uniformly random round functions, indistinguishability from a random permutation, queries in both directions. It is not a strengthening beyond the paper (the paper asks for exactly this) nor a weakening. Caveat recorded as a correction: the draft's *title* labels this \"Is a Strong qPRP\", which is the computational keyed notion rather than the statement formalised; the paper commits the same conflation on p. 1 (\"implements a random permutation (or strong qPRP)\")."
+      },
+      {
+        "name": "quantifiers-and-parameters",
+        "result": "pass",
+        "page": 13,
+        "finding": "Checked symbol by symbol. $r$ is fixed outermost, before $n$ and before the query polynomial, so it really is a constant round count independent of the adversary - matching \"e.g., five-round Luby-Rackoff\" (p. 3, fn. 3). $\\mu$ is quantified before $A$, so the bound is uniform over all query-bounded $A$. The adversary is computationally unbounded with polynomially many queries, matching \"any polynomial-query algorithm $A$\" in Conjecture 2 (p. 13). Negligible in $n$ is equivalent to the paper's \"negligible in $\\log|D|$\" (p. 13) since $D=\\{0,1\\}^{2n}$ gives $\\log|D|=2n$. $\\pi\\xleftarrow{\\$}\\mathrm{Perm}(\\{0,1\\}^{2n})$ matches $\\pi\\xleftarrow{\\$}(D\\hookrightarrow D)$, total injections on a finite set being permutations (p. 4, p. 13)."
+      },
+      {
+        "name": "attribution",
+        "result": "pass",
+        "page": 3,
+        "finding": "The question is asked in the paper's own voice (\"we do not know yet\", p. 3) and is not attributed to another work; the cited references are used only for the negative data points ([20] for the four-round attack, [18]/[17] for the flawed forward-only claim). The draft does not misrepresent it as a numbered conjecture - the paper's numbered conjectures are Conjecture 1 (double-sided zero-search, p. 12) and Conjecture 2 (CPO soundness, p. 13), and the draft's openness_kind is \"paper-states-open\", which is the honest label."
+      },
+      {
+        "name": "definitions",
+        "result": "pass",
+        "page": 14,
+        "finding": "The paper gives no general $r$-round definition, only the three-round instance on p. 14: $t_1:=H_1(x_L)$, $t_2:=H_2(x_R\\oplus t_1)$, $t_3:=H_3(x_L\\oplus t_2)$, return $(x_R\\oplus t_1\\oplus t_3,\\,x_L\\oplus t_2)$. I composed the draft's $\\Psi_f(x_L\\|x_R)=x_R\\|(x_L\\oplus f(x_R))$ three times: it equals the paper's map after swapping the two input halves and the two output halves. That is conjugation by a fixed permutation, which cannot change indistinguishability from a uniformly random permutation - notation renamed, not redefined. \"Random functions\" as the round-function distribution is the paper's own instantiation of $\\mathcal{D}$ (p. 14)."
+      },
+      {
+        "name": "fabrication",
+        "result": "fail",
+        "page": 3,
+        "finding": "status_note asserts \"Open for every $r$\", which the paper refutes: four rounds \"are not sufficient\" (p. 3, fn. 3) and three rounds fail even classically (p. 14, fn. 22). The note then contradicts itself by stating the four-round refutation in its next clause. Two lesser unsupported items: the claim that the paper \"singles out $r=5$ as the first value not excluded\" (the paper writes \"e.g., five-round\", offering it as an example), and the setting's closing inference \"so the interest here is not existence of a strong qPRP but whether the Feistel construction in particular achieves it\", which is the drafter's gloss - the paper's point about [27] is that it \"does not give us any technique for analyzing schemes that use a qPRP\" (p. 4)."
+      },
+      {
+        "name": "self-containment",
+        "result": "pass",
+        "page": 0,
+        "finding": "A reader who has never opened the paper could work from the statement alone: $\\Psi_f$, the $r$-fold composition, $U_G$, the two-oracle query count, $\\mathrm{Func}_n$, $\\mathrm{Perm}(\\{0,1\\}^{2n})$, and negligibility are all defined in the draft, and the probability expressions name the sampling of every object they use. No undefined term (CPO, $\\mathsf{Flip}$, $\\mathsf{Decomp}$) leaks into the formal statement."
+      }
+    ],
+    "corrections": [
+      {
+        "field": "status_note",
+        "problem": "\"Open for every $r$\" is contradicted by the paper, and by the draft's own next clause. The paper rules out $r\\le4$: three rounds are \"not even indistinguishable from an invertible random permutation in the classical setting, let alone the quantum setting\" (p. 14, fn. 22), and \"four rounds are not sufficient\" quantumly (p. 3, fn. 3).",
+        "corrected": "Open for $r\\ge5$. Three rounds fail already classically (p. 14, fn. 22) and four rounds are ruled out in the quantum setting by a chosen-ciphertext attack on Feistel ciphers (p. 3, fn. 3); the paper names five rounds as a round count nothing excludes. The paper reports that the one published proof of the weaker forward-only statement for four rounds contains a flaw, with a fix work in progress. The paper proves nothing about Luby-Rackoff itself; Theorem 1 only shows that a proof via its compressed permutation oracle would additionally establish the oracle's soundness for free."
+      },
+      {
+        "field": "title",
+        "problem": "\"Is a Strong qPRP\" names the computational keyed notion, but formal_statement_latex is the information-theoretic statement (uniformly random round functions, computationally unbounded poly-query adversary). The paper conflates the two the same way on p. 1, and the draft's setting_latex is explicit about the distinction, so this is a labelling slip rather than a different problem - but the title should not name a notion the statement does not formalise.",
+        "corrected": "A Constant Number of Luby-Rackoff Rounds Is Indistinguishable from a Random Invertible Permutation (with, per p. 3, the strong-qPRP consequence noted as what this suffices for)"
+      },
+      {
+        "field": "parameters[r].meaning",
+        "problem": "\"the paper singles out $r=5$ as the first value not excluded\" overstates the source. Footnote 3 on p. 3 reads \"nothing excludes that, e.g., five-round Luby-Rackoff could be a strong qPRP\" - five is given as an example, and the paper expresses no view about it being distinguished.",
+        "corrected": "The number of Feistel rounds. $r\\le3$ fails already classically (p. 14, fn. 22) and $r=4$ is ruled out by a known quantum chosen-ciphertext attack (p. 3, fn. 3); the paper offers five rounds as an example of a count nothing excludes."
+      },
+      {
+        "field": "setting_latex",
+        "problem": "The closing clause \"so the interest here is not existence of a strong qPRP but whether the Feistel construction in particular achieves it\" is presented as if it followed from the paper. The paper's own remark about [27] (p. 4) is different: [27] \"does not give us any technique for analyzing schemes that use a qPRP\".",
+        "corrected": "Note also that random invertible permutations are known to be efficiently simulatable from quantum one-way functions \\cite{Zha16}; the paper's point is that this gives no technique for analysing schemes that use a qPRP (p. 4)."
+      }
+    ],
+    "fabrications": [
+      "status_note: \"Open for every $r$\" - the paper refutes $r\\le4$ (p. 3, fn. 3 for four rounds; p. 14, fn. 22 for three rounds), and the draft's own next clause says so.",
+      "parameters[r].meaning and informal: the paper \"singles out $r=5$ as the first value not excluded\" / \"five being the first candidate not ruled out\" - p. 3, fn. 3 offers five as an example (\"e.g., five-round\"), with no claim of it being a distinguished first candidate.",
+      "setting_latex: \"so the interest here is not existence of a strong qPRP but whether the Feistel construction in particular achieves it\" - the drafter's inference, not the paper's; p. 4 instead observes that [27] gives no technique for analysing schemes that use a qPRP."
+    ],
+    "verdict": "faithful-with-corrections",
+    "reason": "The problem is genuinely in the paper, in the paper's own voice, and genuinely unresolved: p. 3 states it (\\\"we do not know yet whether an analogous result holds in the quantum case\\\") and reduces it to exactly the information-theoretic statement the draft formalises, and a full-text sweep for Luby/Rackoff/Feistel confirms the only later appearance is the conditional Theorem 1 on p. 14, which proves nothing unconditional about the construction. The quantifiers survive symbol-by-symbol comparison - $r$ outermost so it is a true constant, $\\\\mu$ before $A$, poly-query rather than poly-time, negligible-in-$n$ equal to the paper's negligible-in-$\\\\log|D|$ - and the Feistel definition matches the paper's three-round instance up to a swap of halves, which is renaming rather than redefinition. The one substantive defect is status_note's \\\"Open for every $r$\\\": the paper refutes $r\\\\le4$ (three rounds classically, p. 14 fn. 22; four rounds quantumly, p. 3 fn. 3), so the correct status is open for $r\\\\ge5$ - a precise, repairable error, not a misrepresentation of the problem.",
+    "confidence": "high"
+  },
+  "build": {
+    "compiled": true,
+    "chktex": [
+      "Warning 8 in statement.tex line 9: Wrong length of dash may have been used.",
+      "Warning 8 in statement.tex line 23: Wrong length of dash may have been used.",
+      "Warning 8 in statement.tex line 36: Wrong length of dash may have been used.",
+      "Warning 8 in statement.tex line 44: Wrong length of dash may have been used.",
+      "Warning 8 in statement.tex line 66: Wrong length of dash may have been used.",
+      "Warning 8 in statement.tex line 74: Wrong length of dash may have been used.",
+      "Warning 8 in statement.tex line 80: Wrong length of dash may have been used.",
+      "Warning 8 in statement.tex line 96: Wrong length of dash may have been used.",
+      "Warning 8 in statement.tex line 104: Wrong length of dash may have been used.",
+      "Warning 8 in statement.tex line 173: Wrong length of dash may have been used.",
+      "Warning 8 in statement.tex line 182: Wrong length of dash may have been used.",
+      "Warning 8 in statement.tex line 190: Wrong length of dash may have been used."
+    ],
+    "lacheck": [],
+    "errors": []
+  }
+}

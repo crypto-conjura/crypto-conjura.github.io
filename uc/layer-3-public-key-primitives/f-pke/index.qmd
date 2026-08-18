@@ -1,14 +1,116 @@
 ---
-title: "F-PKE — Public-key encryption, KEM"
+title: "F-PKE — Public-key encryption"
 status: "Canonical"
 layer: 3
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-PKE* (Public-key encryption, KEM) is part of *Public-Key Primitives, Key Exchange, Messaging* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+*F-PKE* (Public-key encryption) is part of *Public-Key Primitives* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+
+Encryption as a *table*, not as an algorithm. The adversary hands over the key and hands over every ciphertext; the functionality's only job is to remember which ciphertext it gave for which plaintext, and to answer a decryption from that memory. Confidentiality is then not a computational claim but the plain observation that line 10 does not pass $m$ to the adversary — and the entire security of the notion is the difference between line 10 and line 9, which does.
+
+That shape is deliberate. The source says it is "written in a way that allows realizations consisting of three non-interactive algorithms without any communication", which is why an encryption *scheme* rather than a protocol can realize it.
+
+## Functionality
+
+Reading the box: $\mathcal{A}(\cdot)$ is a call on the adversary slot whose answer is used; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it; $\square$ marks a value never set; $D$ is the parameter, a message domain; $\mathtt{Rec}$ maps a ciphertext to the plaintext it was recorded for.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{PKE}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := D\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{e} \gets \square\); &nbsp;\(\mathtt{R} \gets \square\)<span class="cj-comment">// the recorded key and its owner</span></li>
+<li>\(\mathtt{Rec}[*] \gets \square\)<span class="cj-comment">// ciphertext to plaintext</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.KeyGen()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="3">
+<li>\(e \gets \mathcal{A}\bigl(\mathit{id}.\mathsf{KeyGen}\bigr)\)<span class="cj-comment">// the adversary supplies the key</span></li>
+<li>\(\textbf{if}\ \mathtt{e} = \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{e} \gets e\); &nbsp;\(\mathtt{R} \gets \mathit{id}.P\)</span><span class="cj-comment">// only the first activation is recorded</span></li>
+<li>\(\textbf{return}\ e\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Encrypt(<span class="cj-id">e'</span>, <span class="cj-id">m</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="7">
+<li>\(\textbf{require}\ m \in D\)</li>
+<li>\(\textbf{if}\ e' \neq \mathtt{e}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \mathcal{A}\bigl(\mathit{id}.\mathsf{Encrypt}, e', \mathit{id}.P, m\bigr)\)</span><span class="cj-comment">// wrong or absent key: \(m\) goes too, nothing is recorded</span></li>
+<li>\(c \gets \mathcal{A}\bigl(\mathit{id}.\mathsf{Encrypt}, e', \mathit{id}.P\bigr)\)<span class="cj-comment">// the plaintext is withheld</span></li>
+<li>\(\textbf{require}\ \mathtt{Rec}[c] = \square\)<span class="cj-comment">// a repeated tag is an error</span></li>
+<li>\(\mathtt{Rec}[c] \gets m\)</li>
+<li>\(\textbf{return}\ c\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Decrypt(<span class="cj-id">c</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="14">
+<li>\(\textbf{require}\ \mathit{id}.P = \mathtt{R}\)<span class="cj-comment">// the key's owner, and only it</span></li>
+<li>\(\textbf{if}\ \mathtt{Rec}[c] \neq \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \mathtt{Rec}[c]\)</span></li>
+<li>\(\textbf{return}\ \mathcal{A}\bigl(\mathit{id}.\mathsf{Decrypt}, c\bigr)\)<span class="cj-comment">// never encrypted here: the adversary answers</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="18">
+<li>\(\textbf{if}\ \mathit{id}.P = \mathtt{R}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ (\mathtt{e}, \mathtt{Rec})\)</span></li>
+<li>\(\textbf{return}\ \mathtt{e}\)<span class="cj-comment">// the key is public</span></li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+The box is transcribed from Canetti, Krawczyk and Nielsen, *Relaxing chosen-ciphertext security*, ePrint 2003/174, revision `20030819:195126`, Figure 2, p. 7 (PDF page 9) — "the public-key encryption functionality". Printed page numbers run two behind the PDF's paging; `_src/sources.json` records both. The rendered page is at `_src/canetti2003-p9.png`.
+
+**A provenance note, and it is the finding on this page.** This functionality is printed in at least two places that do not agree. Canetti, Halevi and Katz reproduce it in the appendix of *Adaptively-secure, non-interactive public-key encryption* and say it is "taken almost verbatim" from the paper above — but the two differ in two respects, and one of them is load-bearing:
+
+- The version above ends its encryption clause with "if the tag $c$ already appears in a previously recorded pair then return an error message" — **line 11**. The reproduction drops that clause. Without it a realization may reuse a ciphertext for two different plaintexts, and a later decryption is answered from whichever pair was recorded first.
+- The reproduction binds the decryptor into the session identifier, $\mathit{sid} = (\mathit{sid}_{0}, R^{*})$, and ignores a key generation from anybody else. The version above lets any party generate, records the first, and then lets only that party decrypt — which is line 5 and line 14 here.
+
+This page takes the earlier, stronger version, because it is the one the later paper attributes to and because the uniqueness clause is a real requirement rather than an editorial flourish. A protocol proved against the reproduction is not proved against this box.
+
+**Line 9 is where confidentiality is given up, on purpose.** If the key is not the recorded one, the plaintext goes to the adversary and nothing is recorded. That is the functionality saying: encryption under a key nobody registered protects nothing. It is also what makes the box realizable — a simulator that does not know the decryption key cannot produce a consistent ciphertext without seeing the message.
+
+**Line 11 is the uniqueness clause and it is a **require**, so a repeated tag refuses the call.** The source returns an error message to the encryptor, which is the same observable outcome in this framework.
+
+**Line 17 is the decryption oracle, and it is the whole reason RCCA exists.** A ciphertext the functionality never issued is decrypted by *asking the adversary*. That is maximally permissive — the adversary may answer anything — and it is exactly the clause the same paper's [*F-rPKE*](/uc/layer-3-public-key-primitives/f-rpke/index.qmd) refines. Read the two boxes side by side; they differ in one operation.
+
+**Leak splits by role, and the source's corruption clause is where it comes from** (lines 18–20). The key is public, so everybody's leak carries it; the recorded table is the decryptor's secret, so only the decryptor's leak carries that.
+
+## Known realizations
+
+**Non-adaptively, from CCA-secure encryption.** The source's framing is that a scheme $S$ becomes a protocol $\pi_{S}$ in the obvious way, and the notion "UC-CCA" is that $\pi_{S}$ realizes this functionality. The equivalence with the game-based definition is the paper's subject: standard CCA security corresponds to realizing this box, and the *relaxation* of both is what the paper introduces.
+
+**Adaptively, it needs more than encryption.** Adaptive corruption is what [*F-aPKE*](/uc/layer-3-public-key-primitives/f-apke/index.qmd) is about, and the reason it is a separate entry is that this box is unrealizable adaptively by a scheme with short ciphertexts — the standard non-committing-encryption obstruction, the same one that appears on [*F-SMT*](/uc/layer-1-channels-agreement-ledgers/f-smt/index.qmd).
+
+## Properties
+
+- **Correctness, with probability exactly $1$.** Line 12 records and line 16 reads the same cell. No adversary line can revise a recorded pair.
+- **Confidentiality, unconditionally, for the registered key.** Line 10 passes the caller's identity and not $m$. There is no path from $m$ to the adversary when $e' = \mathtt{e}$.
+- **Ciphertext uniqueness, with probability exactly $1$** (line 11) — in *this* printing of the functionality, and not in the reproduction discussed above.
+- **No integrity for unknown ciphertexts.** Line 17 hands the answer to the adversary, so a ciphertext the box never issued decrypts to whatever the adversary likes. This is not CCA security failing; it is where the model puts the adversary's power, and constraining it is the subject of the sibling entry.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Canetti. [*Universally composable security: A new paradigm for cryptographic protocols*](https://eprint.iacr.org/2000/067). In 42nd IEEE Symposium on Foundations of Computer Science (FOCS), pages 136–145, 2001.
-- Goldwasser and Micali. [*Probabilistic encryption*](https://mit6875.github.io/PAPERS/probabilistic_encryption.pdf). Journal of Computer and System Sciences, 28(2):270–299, 1984.
-- Küsters and Tuengerthal. [*Joint state theorems for public-key encryption and digital signature functionalities with local computation*](https://eprint.iacr.org/2008/006). In 21st IEEE Computer Security Foundations Symposium (CSF), pages 270–284, 2008.
+- Canetti, Krawczyk, and Nielsen. [*Relaxing chosen-ciphertext security*](https://eprint.iacr.org/2003/174). In Advances in Cryptology – CRYPTO 2003, pages 565–582, 2003. Read at ePrint revision `20030819:195126`. Figure 2, p. 7 (PDF page 9), the definition transcribed above, including the ciphertext-uniqueness clause; §3.1, p. 10, for the RCCA modification that [*F-rPKE*](/uc/layer-3-public-key-primitives/f-rpke/index.qmd) takes; the discussion above Figure 2 for the three-algorithm realizability remark. Authors, venue and page range confirmed against DBLP.
+- Canetti, Halevi, and Katz. [*Adaptively-secure, non-interactive public-key encryption*](https://eprint.iacr.org/2004/317). In 2nd Theory of Cryptography Conference (TCC), pages 150–168, 2005. Read at ePrint revision `20041124:031924`. Appendix B.1, p. 33 (PDF page 35), the reproduction described above, which drops the uniqueness clause and binds the decryptor through the session identifier. Its own functionality is the subject of [*F-aPKE*](/uc/layer-3-public-key-primitives/f-apke/index.qmd). Authors, venue and page range confirmed against DBLP.

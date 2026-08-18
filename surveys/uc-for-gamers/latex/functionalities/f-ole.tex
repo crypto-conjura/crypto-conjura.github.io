@@ -1,0 +1,80 @@
+%% The interface box of f-ole, the one source for both the book
+%% and uc/.../f-ole/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fole$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := (\Fld, t)$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{S} \gets \unset$; \ $\V{R} \gets \unset$
+\State $\V{a} \gets \unset$; \ $\V{b} \gets \unset$; \ $\V{x} \gets \unset$
+\State $\V{y} \gets \unset$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{InputS}(Q, a, b)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{a} = \unset \ \wedge\ a, b \in \Fld^{t}$} \label{ln:oleonces}
+  \Comment{a batch, once}
+\State $\V{S} \gets \id.P$; \ $\V{R} \gets Q$; \ $\V{a} \gets a$; \ $\V{b} \gets b$
+\State $\Adv\bigl(\id.\op{Input},\ \id.P\bigr)$ \label{ln:olenotifys}
+  \Comment{that an input arrived, not what it was}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{InputR}(x)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{x} = \unset \ \wedge\ x \in \Fld^{t}$} \label{ln:oleoncer}
+\State $\V{x} \gets x$
+\State $\Adv\bigl(\id.\op{Input},\ \id.P\bigr)$
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Read}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{a} \neq \unset \ \wedge\ \V{x} \neq \unset$} \label{ln:oleboth}
+  \Comment{neither side outputs before both have spoken}
+\State $d \gets \Adv\bigl(\id.\op{Read},\ \id.P\bigr)$ \label{ln:oledeliver}
+\Req{$d = \ok$}
+  \Comment{the adversary schedules each side separately}
+\If{$\id.P = \V{S}$}
+  \State \textbf{return} $\ok$ \label{ln:olesender}
+    \Comment{the sender learns only that it happened}
+\EndIf
+\Req{$\id.P = \V{R}$}
+\State $\V{y} \gets (\V{a}_{i} \cdot \V{x}_{i} + \V{b}_{i})_{i \in [t]}$ \label{ln:olecompute}
+\State \textbf{return} $\V{y}$ \label{ln:oleout}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$\id.P = \V{S}$}
+  \State \textbf{return} $(\V{a}, \V{b})$ \label{ln:oleleaks}
+\EndIf
+\If{$\id.P = \V{R}$}
+  \State \textbf{return} $(\V{x}, \V{y})$ \label{ln:oleleakr}
+\EndIf
+\State \textbf{return} $\none$
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

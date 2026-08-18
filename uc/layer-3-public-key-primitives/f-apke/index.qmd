@@ -1,13 +1,126 @@
 ---
-title: "F-aPKE — Adaptively secure non-interactive PKE"
+title: "F-aPKE — Adaptively secure forward-secure encryption"
 status: "Canonical"
 layer: 3
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-aPKE* (Adaptively secure non-interactive PKE) is part of *Public-Key Primitives, Key Exchange, Messaging* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+*F-aPKE* (Adaptively secure forward-secure encryption) is part of *Public-Key Primitives* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+
+The box that shows what adaptive security costs. [*F-PKE*](/uc/layer-3-public-key-primitives/f-pke/index.qmd) is not realizable by a non-interactive scheme against adaptive corruptions — a simulator that produced a ciphertext before knowing the plaintext is committed to it, and a later corruption reveals the lie. Non-committing encryption escapes that, at the price of ciphertexts longer than the message. This functionality escapes it a different way: **forget**. Time is divided into epochs; the receiver advances the epoch and the ciphertexts of past epochs stop being decryptable, so a corruption arriving later learns nothing about them.
+
+The price is written into the box as one counter. Within an epoch, exactly **one** message is protected (lines 7 and 12); a second is a "dummy" whose plaintext goes to the adversary. That is not a modelling convenience — it is the trade the paper makes to get a scheme with short ciphertexts.
+
+## Functionality
+
+Reading the box: $\mathcal{A}(\cdot)$ is a call on the adversary slot whose answer is used at lines 5, 8, 9 and 17 and discarded at line 19; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it; $\square$ marks a value never set; $D$ is the message domain; $\mathtt{t}$ is the current epoch and $\mathtt{outs}$ records whether a protected message is outstanding in it.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{AFSE}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := D\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{pk} \gets \square\); &nbsp;\(\mathtt{R} \gets \square\)</li>
+<li>\(\mathtt{t} \gets 0\); &nbsp;\(\mathtt{outs} \gets 0\)<span class="cj-comment">// the epoch, and whether one live message is held</span></li>
+<li>\(\mathtt{Rec} \gets \varnothing\)<span class="cj-comment">// tuples \((m, t, c, \mathit{flag})\)</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.KeyGen()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="4">
+<li>\(\textbf{require}\ \mathtt{pk} = \square\)</li>
+<li>\(\mathtt{pk} \gets \mathcal{A}\bigl(\mathit{id}.\mathsf{KeyGen}\bigr)\); &nbsp;\(\mathtt{R} \gets \mathit{id}.P\)</li>
+<li>\(\textbf{return}\ \mathtt{pk}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Encrypt(<span class="cj-id">pk</span>, <span class="cj-id">t</span>, <span class="cj-id">m</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="7">
+<li>\(\textbf{if}\ m \notin D \ \vee\ pk \neq \mathtt{pk} \ \vee\ (t \geq \mathtt{t} \ \wedge\ \mathtt{outs} = 1)\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \mathcal{A}\bigl(\mathit{id}.\mathsf{Encrypt}, pk, t, m, \mathit{id}.P\bigr)\)</span><span class="cj-comment">// a dummy: the plaintext goes to the adversary</span></li>
+<li>\(c \gets \mathcal{A}\bigl(\mathit{id}.\mathsf{Encrypt}, pk, t, \mathit{id}.P\bigr)\)</li>
+<li>\(\textbf{if}\ t \geq \mathtt{t}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{Rec} \gets \mathtt{Rec} \cup \{(m, t, c, \mathtt{outs})\}\)</span></li>
+<li><span class="cj-ind">\(\mathtt{outs} \gets 1\)</span><span class="cj-comment">// only one message per epoch is protected</span></li>
+<li>\(\textbf{return}\ c\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Decrypt(<span class="cj-id">c</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="14">
+<li>\(\textbf{require}\ \mathit{id}.P = \mathtt{R}\)</li>
+<li>\(\textbf{if}\ \exists\, (m, \mathtt{t}, c, *) \in \mathtt{Rec}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ m\)</span><span class="cj-comment">// only at the current epoch</span></li>
+<li>\(\textbf{return}\ \mathcal{A}\bigl(\mathit{id}.\mathsf{Decrypt}, \mathtt{t}, c\bigr)\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Update()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="18">
+<li>\(\textbf{require}\ \mathit{id}.P = \mathtt{R}\)</li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Update}\bigr)\)</li>
+<li>\(\textbf{if}\ \exists\, (m, \mathtt{t}, c, 0) \in \mathtt{Rec}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{outs} \gets 0\)</span></li>
+<li>\(\mathtt{Rec} \gets \mathtt{Rec} \setminus \{(m, \mathtt{t}, c, *)\}\)<span class="cj-comment">// the epoch's ciphertexts are forgotten</span></li>
+<li>\(\mathtt{t} \gets \mathtt{t} + 1\)</li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="25">
+<li>\(\textbf{require}\ \mathit{id}.P = \mathtt{R}\)</li>
+<li>\(\textbf{return}\ \{\, (m,t,c) \in \mathtt{Rec} : t \geq \mathtt{t} \,\}\)<span class="cj-comment">// past epochs are unrecoverable: forward security</span></li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+The box is transcribed from Canetti, Halevi and Katz, *Adaptively-secure, non-interactive public-key encryption*, ePrint 2004/317, revision `20041124:031924`, Figure 1, p. 5 (PDF page 7) — "the AFSE functionality". The rendered page is at `_src/canetti2005-p7.png`.
+
+**On the name.** The paper calls this $\mathcal{F}_{\mathsf{afse}}$, for *adaptively-secure forward-secure encryption*, and this page is retitled to match. The stub read "Adaptively secure non-interactive PKE", which is the paper's title rather than its functionality — and the difference matters, because the object is not public-key encryption with an adaptivity proof bolted on. It is a forward-secure primitive with an epoch interface, and the forward security is the mechanism by which adaptivity is achieved.
+
+**Line 22 is the whole design.** Advancing the epoch deletes that epoch's recorded ciphertexts. Nothing else in the box can recover them, and line 26 — the leakage interface — returns only tuples at $t \geq \mathtt{t}$. So a corruption of the receiver reveals the live epoch and the future, never the past. That is the source's Corruptions clause read as leakage, and it is the reason the functionality is realizable adaptively at all.
+
+**Lines 7 and 12 are the cost, and it is worth being precise about.** A message is protected only if it is in the domain, under the recorded key, and either at a past epoch or the first live one — otherwise line 8 hands the plaintext to the adversary and records nothing. The source calls the two cases `Encrypt` and `Dummy-Encrypt`, and the flag it stores distinguishes the one protected message from the rest. So this box guarantees confidentiality for **one message per epoch**, and a protocol that needs more must advance the epoch more often, which is a real constraint on how it may be used.
+
+**Line 15 is why forward security is not free for the honest receiver either.** Decryption succeeds only for a ciphertext recorded at the *current* epoch. A ciphertext that was legitimate two epochs ago decrypts through line 17 — that is, the adversary answers. The receiver's ability to read its own old mail is given up along with the adversary's, which is the correct reading of "forward secure" and is easy to miss when the notion is described only as a security property.
+
+**Two translations recorded.** The source's `messages-outstanding` and per-tuple flag are one counter and one field here, and line 20's test for the flag on the outgoing epoch is the source's "if any of these tuples has flag = outstanding, then reset". And the source's key generation verifies that the receiver's identity is encoded in the session identifier; here that identity is recorded at line 5 and enforced at lines 14, 18 and 25, since session identifiers live in the process id in this framework.
+
+## Known realizations
+
+**A scheme with short ciphertexts, which is the paper's point.** The reason to define this functionality rather than use non-committing encryption is that non-committing encryption forces ciphertexts longer than the plaintext. The paper constructs an AFSE scheme realizing this box whose ciphertexts do not grow that way — the forward-security interface buys what ciphertext expansion otherwise has to.
+
+**Where it sits relative to its siblings.** [*F-PKE*](/uc/layer-3-public-key-primitives/f-pke/index.qmd) is the non-adaptive object and this paper reproduces it in an appendix for comparison — with two differences from its own source, which the `F-PKE` entry records. [*F-rPKE*](/uc/layer-3-public-key-primitives/f-rpke/index.qmd) relaxes `F-PKE` in a different direction, weakening what the adversary may do to ciphertexts rather than what the receiver may still read; the two relaxations are independent.
+
+**The obstruction being avoided** is the same one that shapes [*F-SMT*](/uc/layer-1-channels-agreement-ledgers/f-smt/index.qmd), whose entry cites Canetti–Feige–Goldreich–Naor for non-committing encryption. Reading the two entries together is the clearest way to see that adaptive security in this framework is a question about what the simulator can still change its mind about.
+
+## Properties
+
+- **Confidentiality for one message per epoch, unconditionally.** Line 9 withholds the plaintext exactly when line 7's test fails to fire. Everything else is a dummy by construction.
+- **Forward security, with probability exactly $1$.** Line 22 deletes and line 26 filters on $t \geq \mathtt{t}$. There is no operation returning a past epoch's plaintext to anybody, including the receiver.
+- **Correctness within the current epoch.** Lines 15–16: a ciphertext recorded at $\mathtt{t}$ decrypts to its plaintext, and no adversary line intervenes.
+- **The epoch advances only at the receiver's request** (line 18). The adversary is notified (line 19) and cannot advance it; nothing forces the receiver to advance either, so a receiver that never updates has no forward security at all.
+- **No integrity.** Line 17 hands unknown ciphertexts to the adversary, as in `F-PKE`.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Camenisch, Lehmann, Neven, and Samelin. [*UC-secure non-interactive public-key encryption*](https://doi.org/10.1109/CSF.2017.23). In 30th IEEE Computer Security Foundations Symposium (CSF), pages 217–233, 2017.
-- Canetti, Halevi, and Katz. [*Adaptively secure non-interactive public-key encryption*](https://eprint.iacr.org/2004/317). In 2nd Theory of Cryptography Conference (TCC), 2005.
+- Canetti, Halevi, and Katz. [*Adaptively-secure, non-interactive public-key encryption*](https://eprint.iacr.org/2004/317). In 2nd Theory of Cryptography Conference (TCC), pages 150–168, 2005. Read at ePrint revision `20041124:031924`. Figure 1, p. 5 (PDF page 7), the definition transcribed above, including its Update and Corruptions clauses; Appendix B.1, p. 33, for its reproduction of $\mathcal{F}_{\textsc{pke}}$, which [*F-PKE*](/uc/layer-3-public-key-primitives/f-pke/index.qmd) discusses. Authors, venue and page range confirmed against DBLP.
+- Camenisch, Lehmann, Neven, and Samelin. [*UC-secure non-interactive public-key encryption*](https://doi.org/10.1109/CSF.2017.23). In 30th IEEE Computer Security Foundations Symposium (CSF), pages 217–233, 2017. Carried over from the stub's reference list. Authors, venue and page range confirmed against DBLP, but the harvester could not fetch the paper itself — the URL is a DOI landing page rather than a PDF — so its functionality has not been read and nothing on this page rests on it.

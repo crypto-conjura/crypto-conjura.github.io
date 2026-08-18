@@ -1,12 +1,114 @@
 ---
-title: "F-rPKE — Replayable CCA relaxation"
+title: "F-rPKE — Replayable CCA encryption"
 status: "Canonical"
 layer: 3
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-rPKE* (Replayable CCA relaxation) is part of *Public-Key Primitives, Key Exchange, Messaging* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+*F-rPKE* (Replayable CCA encryption) is part of *Public-Key Primitives* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+
+[*F-PKE*](/uc/layer-3-public-key-primitives/f-pke/index.qmd) with one clause changed, and the change is the whole idea of RCCA: an adversary is *allowed* to produce a different ciphertext that decrypts to the same plaintext. Full CCA security forbids that, and forbidding it turns out to be more than applications need — mauling a ciphertext into another encryption of the same message gains an attacker nothing, so a definition that rules it out is stronger than necessary and rules out otherwise-good schemes.
+
+The relaxation is line 20. Where `F-PKE` lets the adversary answer an unknown decryption with any plaintext, this box lets it answer *either* with a plaintext or with a pointer to a ciphertext the functionality already issued — and in the second case the functionality looks the plaintext up itself, so **the adversary causes a replay without learning what was replayed**.
+
+## Functionality
+
+Reading the box: $\mathcal{A}(\cdot)$ is a call on the adversary slot whose answer is used; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it; $\square$ marks a value never set; $D$ is the message domain; $\mathtt{Rec}$ maps a ciphertext to its plaintext; $\alpha$ is the adversary's tag, either $\textsf{plaintext}$ or $\textsf{ciphertext}$.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{rPKE}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := D\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{e} \gets \square\); &nbsp;\(\mathtt{R} \gets \square\)<span class="cj-comment">// the recorded key and its owner</span></li>
+<li>\(\mathtt{Rec}[*] \gets \square\)<span class="cj-comment">// ciphertext to plaintext</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.KeyGen()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="3">
+<li>\(e \gets \mathcal{A}\bigl(\mathit{id}.\mathsf{KeyGen}\bigr)\)<span class="cj-comment">// the adversary supplies the key</span></li>
+<li>\(\textbf{if}\ \mathtt{e} = \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{e} \gets e\); &nbsp;\(\mathtt{R} \gets \mathit{id}.P\)</span><span class="cj-comment">// only the first activation is recorded</span></li>
+<li>\(\textbf{return}\ e\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Encrypt(<span class="cj-id">e'</span>, <span class="cj-id">m</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="7">
+<li>\(\textbf{require}\ m \in D\)</li>
+<li>\(\textbf{if}\ e' \neq \mathtt{e}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \mathcal{A}\bigl(\mathit{id}.\mathsf{Encrypt}, e', \mathit{id}.P, m\bigr)\)</span><span class="cj-comment">// wrong or absent key: \(m\) goes too, nothing is recorded</span></li>
+<li>\(c \gets \mathcal{A}\bigl(\mathit{id}.\mathsf{Encrypt}, e', \mathit{id}.P\bigr)\)<span class="cj-comment">// the plaintext is withheld</span></li>
+<li>\(\textbf{require}\ \mathtt{Rec}[c] = \square\)<span class="cj-comment">// a repeated tag is an error</span></li>
+<li>\(\mathtt{Rec}[c] \gets m\)</li>
+<li>\(\textbf{return}\ c\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Decrypt(<span class="cj-id">c</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="14">
+<li>\(\textbf{require}\ \mathit{id}.P = \mathtt{R}\)<span class="cj-comment">// the key's owner, and only it</span></li>
+<li>\(\textbf{if}\ \mathtt{Rec}[c] \neq \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \mathtt{Rec}[c]\)</span></li>
+<li>\((\alpha, v) \gets \mathcal{A}\bigl(\mathit{id}.\mathsf{Decrypt}, c\bigr)\)</li>
+<li>\(\textbf{if}\ \alpha = \mathsf{plaintext}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ v\)</span></li>
+<li>\(\textbf{require}\ \alpha = \mathsf{ciphertext} \ \wedge\ \mathtt{Rec}[v] \neq \square\)<span class="cj-comment">// no such ciphertext: the source halts</span></li>
+<li>\(\textbf{return}\ \mathtt{Rec}[v]\)<span class="cj-comment">// a replay decrypts, and the adversary never learns to what</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="22">
+<li>\(\textbf{if}\ \mathit{id}.P = \mathtt{R}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ (\mathtt{e}, \mathtt{Rec})\)</span></li>
+<li>\(\textbf{return}\ \mathtt{e}\)<span class="cj-comment">// the key is public</span></li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+The box is transcribed from Canetti, Krawczyk and Nielsen, *Relaxing chosen-ciphertext security*, ePrint 2003/174, revision `20030819:195126`, §3.1, p. 10 (PDF page 12). The source defines this functionality as a *delta*: "identically to $\mathcal{F}_{\textsc{pke}}$ from Figure 2 except that step 2 of the Decryption stage is re-defined as follows". Everything above line 17 is therefore Figure 2, p. 7, transcribed exactly as on [*F-PKE*](/uc/layer-3-public-key-primitives/f-pke/index.qmd); lines 17 to 21 are §3.1. The rendered pages are at `_src/canetti2003-p9.png` and `_src/canetti2003-p12.png`.
+
+**A note on presenting a delta as a whole box.** The source prints only the changed clause. A page that printed only the clause would not be a functionality, so the box above is the composition — and the honest way to read it is that lines 1–16 and 22–24 carry no independent authority beyond `F-PKE`'s. If the two pages ever disagree outside `Decrypt`, this page is wrong.
+
+**Line 21 is the relaxation, and the parenthesis in the source is the point.** The adversary names a ciphertext $v$; the functionality finds the recorded pair and returns *its* plaintext — "without letting the adversary know what this value is", as the source puts it. So the adversary gains the ability to make an unknown ciphertext decrypt to the same thing as a known one, and gains no information in doing so. That asymmetry is what makes the relaxation safe for applications: the attacker can replay, and replaying tells it nothing.
+
+**Line 20 refuses where the source halts.** The printed clause says "if no such $c_{0}$ is found then halt" — the functionality stops, which in the older framework means the whole execution ends. A long-lived box cannot halt, so the condition becomes a **require** and the call is refused. The observable difference is confined to the adversary: it learns that its pointer was invalid, where the source would have ended the run. Since the adversary chose the pointer, this hands it nothing it did not already know.
+
+**Line 19 is `F-PKE`'s line 17, unchanged.** The adversary may still answer with an outright plaintext. RCCA does not remove that power; it *adds* the pointer form beside it. A reader expecting the relaxation to constrain the adversary has it backwards — the functionality is weaker than `F-PKE`, which is why more schemes realize it.
+
+## Known realizations
+
+**The equivalences are the paper's subject.** It defines three notions — UC-RCCA (realizing this box), IND-RCCA and NM-RCCA, the latter two as relaxed CCA games — and proves them equivalent for encryption schemes with super-polynomial message domains. So this functionality is not an isolated UC artefact: it has a game-based characterisation, which is what makes it usable by anyone not working in this framework.
+
+**Definition 3 in the source** is the statement to cite: a scheme $S$ is UC-RCCA secure if $\pi_{S}$ securely realizes this functionality with respect to **non-adaptive** adversaries. The restriction is not incidental — adaptive corruption raises the same non-committing-encryption obstruction that [*F-aPKE*](/uc/layer-3-public-key-primitives/f-apke/index.qmd) exists to address.
+
+**Why it matters practically.** The paper's motivation is that CCA security is stronger than applications need, and RCCA is the weakest relaxation that still supports them. On this site the clearest downstream use is [*F-SMT*](/uc/layer-1-channels-agreement-ledgers/f-smt/index.qmd), whose entry already cites this paper for exactly that: secure channels can be built from RCCA-secure encryption.
+
+## Properties
+
+- **Correctness, with probability exactly $1$.** Lines 15–16, unchanged from `F-PKE`.
+- **Confidentiality, unconditionally, for the registered key.** Line 10 withholds the plaintext, and line 21 returns a recorded plaintext to the *decryptor* — never to the adversary.
+- **Replay is permitted and is the only added power.** Line 21 is reachable exactly when the adversary can name a previously issued ciphertext. It cannot invent a pairing: the plaintext returned is one the functionality itself recorded.
+- **Strictly weaker than `F-PKE`.** Every environment distinguishing a realization of this box from the ideal one also distinguishes for `F-PKE`, since `F-PKE`'s decryption behaviour is the $\alpha = \textsf{plaintext}$ branch. The converse fails, which is the entire content of the relaxation.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Canetti, Krawczyk, and Nielsen. [*Relaxing chosen-ciphertext security*](https://eprint.iacr.org/2003/174). In Advances in Cryptology – CRYPTO 2003, 2003.
+- Canetti, Krawczyk, and Nielsen. [*Relaxing chosen-ciphertext security*](https://eprint.iacr.org/2003/174). In Advances in Cryptology – CRYPTO 2003, pages 565–582, 2003. Read at ePrint revision `20030819:195126`. §3.1, p. 10 (PDF page 12), the redefined decryption clause transcribed above, and its parenthesis on what the adversary does not learn; Figure 2, p. 7, for the remaining sixteen lines; Definition 3 for the non-adaptive restriction; §3.2 for IND-RCCA and NM-RCCA and the equivalence. Authors, venue and page range confirmed against DBLP.

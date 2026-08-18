@@ -1,13 +1,120 @@
 ---
-title: "F-OLE — Oblivious linear evaluation"
-status: "Emerging"
+title: "F-OLE — Oblivious linear evaluation, batch"
+status: "Canonical"
 layer: 5
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-OLE* (Oblivious linear evaluation) is part of *Oblivious Transfer and Correlated Randomness* in the UC functionality encyclopedia. Status: an emerging formulation, still an active area of research.
+*F-OLE* (Oblivious linear evaluation, batch) is part of *Oblivious Transfer* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+
+The arithmetic generalization of oblivious transfer. The sender holds two vectors $a, b$; the receiver holds $x$; the receiver learns $a_{i}x_{i} + b_{i}$ for each coordinate and nothing else, and the sender learns nothing at all. Take the field to be $\mathbb{F}_{2}$ and one coordinate and it is [oblivious transfer](/uc/layer-5-oblivious-transfer/f-ot/index.qmd); keep it arithmetic and it is the primitive that multiplication triples in MPC preprocessing are made from.
+
+It is worth being clear how this differs from [*F-COT*](/uc/layer-5-oblivious-transfer/f-cot-f-rot/index.qmd), which is the other correlation on this site. There, one *global* key $\Delta$ is fixed once and reused across every batch, and a corrupt party may choose its own output. Here every coordinate has its own multiplier, the batch is a single shot, and no party chooses anything — the correlation is computed by the functionality (line 18) and the adversary's only power is scheduling.
+
+## Functionality
+
+Reading the box: $\mathcal{A}(\cdot)$ is a call on the adversary slot whose answer is discarded at lines 6 and 10 and used at line 13; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it; $\square$ marks a value never set and $\bot$ an absence; $\mathbb{F}$ and $t$ are the parameters, a field and a batch length.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{OLE}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := (\mathbb{F}, t)\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{S} \gets \square\); &nbsp;\(\mathtt{R} \gets \square\)</li>
+<li>\(\mathtt{a} \gets \square\); &nbsp;\(\mathtt{b} \gets \square\); &nbsp;\(\mathtt{x} \gets \square\)</li>
+<li>\(\mathtt{y} \gets \square\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.InputS(<span class="cj-id">Q</span>, <span class="cj-id">a</span>, <span class="cj-id">b</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="4">
+<li>\(\textbf{require}\ \mathtt{a} = \square \ \wedge\ a, b \in \mathbb{F}^{t}\)<span class="cj-comment">// a batch, once</span></li>
+<li>\(\mathtt{S} \gets \mathit{id}.P\); &nbsp;\(\mathtt{R} \gets Q\); &nbsp;\(\mathtt{a} \gets a\); &nbsp;\(\mathtt{b} \gets b\)</li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Input},\ \mathit{id}.P\bigr)\)<span class="cj-comment">// that an input arrived, not what it was</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.InputR(<span class="cj-id">x</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="8">
+<li>\(\textbf{require}\ \mathtt{x} = \square \ \wedge\ x \in \mathbb{F}^{t}\)</li>
+<li>\(\mathtt{x} \gets x\)</li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Input},\ \mathit{id}.P\bigr)\)</li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Read()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="12">
+<li>\(\textbf{require}\ \mathtt{a} \neq \square \ \wedge\ \mathtt{x} \neq \square\)<span class="cj-comment">// neither side outputs before both have spoken</span></li>
+<li>\(d \gets \mathcal{A}\bigl(\mathit{id}.\mathsf{Read},\ \mathit{id}.P\bigr)\)</li>
+<li>\(\textbf{require}\ d = \mathsf{ok}\)<span class="cj-comment">// the adversary schedules each side separately</span></li>
+<li>\(\textbf{if}\ \mathit{id}.P = \mathtt{S}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\) <span class="cj-atom">ok</span></span><span class="cj-comment">// the sender learns only that it happened</span></li>
+<li>\(\textbf{require}\ \mathit{id}.P = \mathtt{R}\)</li>
+<li>\(\mathtt{y} \gets (\mathtt{a}_{i} \cdot \mathtt{x}_{i} + \mathtt{b}_{i})_{i \in [t]}\)</li>
+<li>\(\textbf{return}\ \mathtt{y}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="20">
+<li>\(\textbf{if}\ \mathit{id}.P = \mathtt{S}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ (\mathtt{a}, \mathtt{b})\)</span></li>
+<li>\(\textbf{if}\ \mathit{id}.P = \mathtt{R}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ (\mathtt{x}, \mathtt{y})\)</span></li>
+<li>\(\textbf{return}\ \bot\)</li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+The box is transcribed from Ghosh, Nielsen and Nilges, *Maliciously secure oblivious linear function evaluation with constant overhead*, ePrint 2017/409, revision `20210719:112350`, Figure 3, p. 14 — "ideal functionality for an oblivious linear function evaluation". The rendered page is at `_src/ghosh2017-p14.png`; the same functionality is printed again at PDF page 23 and both captures are kept.
+
+**Line 12 is the guarantee and line 13 is the concession.** Nothing is delivered until both sides have input — that is the **require** — and once both have, *when* each side is served is the adversary's to decide. The source writes this as two separate `deliver` messages from the adversary, one naming the sender and one the receiver, which is why the two sides can be served at different times and why the sender's delivery carries no data (line 16): it exists only so the sender learns the protocol finished.
+
+**Line 18 is where the primitive actually is, and there is no adversary in it.** The output is computed by the functionality from values it already holds. That is the sharpest contrast with `F-COT`, whose corrupt parties supply their own outputs and whose correlation is then *restored* rather than computed. A reader comparing the two boxes should read that difference as a statement about what the two primitives are for: OLE here is an idealized correlation, COT is a weakened one chosen to be provable for real protocols.
+
+**One batch, and both inputs are one-shot** (lines 4 and 8). The source's clauses each "verify that there is no stored tuple, else ignore that message", so a second input is dropped. The batch length $t$ is a parameter rather than an argument, which is the source's framing too — the whole point of the paper is that a batch of $t$ multiplications costs constant overhead per multiplication, so $t$ is fixed by the instance rather than chosen per call.
+
+**Where the source ignores, this box refuses.** A second `InputS` is silently dropped there and answered $\textsf{rej}$ here. The distinction is confined to the caller, which is the same reading recorded on [*F-CP*](/uc/layer-4-commitments-proofs/f-cp/index.qmd): the party learns its call failed, and no other party's view changes.
+
+**The notification at lines 6 and 10 carries nothing.** The source sends a bare `(input)` to the adversary — not the vectors, not their contents, not which side sent it beyond the fact of it. This box passes the caller's identity, which the adversary can see anyway from the call itself, and no data. Both are needed: without them the adversary could not know when to schedule line 13.
+
+**Leak splits by role** (lines 20–24). The source has no leakage interface. A corrupt sender's adversary holds $a$ and $b$; a corrupt receiver's holds $x$ and, once computed, $y$. Neither learns the other's, which is the security of the primitive stated as an absence.
+
+## Known realizations
+
+**With constant overhead, which is the paper's contribution.** The construction is built on noisy encodings, following Ishai, Prabhakaran and Sahai's passively secure batch multiplication and making it actively secure. The claim to cite is asymptotic: a batch of $t$ multiplications at constant overhead per multiplication, against a malicious adversary.
+
+**Why the batch is not a convenience.** The paper is explicit that the efficiency "follows in part from the fact that we can directly perform a batch of multiplications", which is why the functionality takes vectors rather than scalars. A page defining scalar OLE and claiming this realization would be misattributing the result.
+
+**Where it is consumed.** OLE is the arithmetic building block for multiplication triples and hence for arithmetic MPC. On this site the nearest neighbour is `F-COT`, which occupies the same slot in the binary-field setting and is realized by a different technique (pseudorandom correlation generators) at a different cost profile.
+
+## Properties
+
+- **Correctness, with probability exactly $1$.** Line 18 computes the correlation from stored inputs; no line permits substitution.
+- **Sender privacy, unconditionally.** $a$ and $b$ reach the receiver only through $y$ at line 19. With $t$ coordinates and one output vector, the receiver learns one linear evaluation per coordinate — which is exactly the intended leakage and no more.
+- **Receiver privacy, unconditionally.** $x$ appears only at line 18 and in the receiver's own leak. The sender's read (line 16) carries no data at all.
+- **Both-or-neither, with probability exactly $1$** (line 12). Neither side is served before both have input. Note the asymmetry this leaves: after both inputs, the adversary may serve the receiver and never the sender.
+- **No liveness.** Line 13 is the adversary's to answer, with no bound. Fairness of delivery is not part of this functionality.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Ghosh, Nielsen, and Nilges. [*Maliciously secure oblivious linear function evaluation with constant overhead*](https://eprint.iacr.org/2017/409). In Advances in Cryptology – ASIACRYPT 2017, 2017.
-- Boyle et al. [*Compressing vector OLE*](https://eprint.iacr.org/2019/273). In ACM Conference on Computer and Communications Security (CCS), 2018.
+- Ghosh, Nielsen, and Nilges. [*Maliciously secure oblivious linear function evaluation with constant overhead*](https://eprint.iacr.org/2017/409). In Advances in Cryptology – ASIACRYPT 2017, pages 629–659, 2017. Read at ePrint revision `20210719:112350`. Figure 3, p. 14, the definition transcribed above, and §5.1 for the batch rationale; §5.2 for the construction and its debt to Ishai, Prabhakaran and Sahai. Authors, venue and page range confirmed against DBLP.
+- Boyle, Couteau, Gilboa, and Ishai. [*Compressing vector OLE*](https://eprint.iacr.org/2019/273). In 25th ACM Conference on Computer and Communications Security (CCS), pages 896–912, 2018. Read at ePrint revision `20190312:115949`. Carried over from the stub's reference list; it prints no functionality the harvester could find, and nothing on this page rests on it, but vector-OLE compression is the line of work that made batches of this correlation cheap, which is the motivation the entry's own source gives. Authors, venue and page range confirmed against DBLP — note the apparent mismatch between the 2019 ePrint number and the CCS 2018 venue is not an error: the paper appeared at CCS 2018 and its ePrint posting is later.

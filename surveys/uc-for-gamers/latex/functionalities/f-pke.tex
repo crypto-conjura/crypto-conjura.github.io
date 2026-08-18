@@ -1,0 +1,82 @@
+%% The interface box of f-pke, the one source for both the book
+%% and uc/.../f-pke/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fpke$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := D$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{e} \gets \unset$; \ $\V{R} \gets \unset$
+  \Comment{the recorded key and its owner}
+\State $\V{Rec}[*] \gets \unset$
+  \Comment{ciphertext to plaintext}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{KeyGen}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $e \gets \Adv\bigl(\id.\op{KeyGen}\bigr)$ \label{ln:pkeadvkey}
+  \Comment{the adversary supplies the key}
+\If{$\V{e} = \unset$}
+  \State $\V{e} \gets e$; \ $\V{R} \gets \id.P$ \label{ln:pkefirst}
+    \Comment{only the first activation is recorded}
+\EndIf
+\State \textbf{return} $e$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Encrypt}(e', m)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$m \in D$} \label{ln:pkedomain}
+\If{$e' \neq \V{e}$} \label{ln:pkewrongkey}
+  \State \textbf{return} $\Adv\bigl(\id.\op{Encrypt}, e', \id.P, m\bigr)$ \label{ln:pkegiveup}
+    \Comment{wrong or absent key: $m$ goes too, nothing is recorded}
+\EndIf
+\State $c \gets \Adv\bigl(\id.\op{Encrypt}, e', \id.P\bigr)$ \label{ln:pkehide}
+  \Comment{the plaintext is withheld}
+\Req{$\V{Rec}[c] = \unset$} \label{ln:pkeunique}
+  \Comment{a repeated tag is an error}
+\State $\V{Rec}[c] \gets m$
+\State \textbf{return} $c$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Decrypt}(c)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P = \V{R}$} \label{ln:pkeowner}
+  \Comment{the key's owner, and only it}
+\If{$\V{Rec}[c] \neq \unset$}
+  \State \textbf{return} $\V{Rec}[c]$ \label{ln:pkecorrect}
+\EndIf
+\State \textbf{return} $\Adv\bigl(\id.\op{Decrypt}, c\bigr)$ \label{ln:pkeunknown}
+  \Comment{never encrypted here: the adversary answers}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$\id.P = \V{R}$}
+  \State \textbf{return} $(\V{e}, \V{Rec})$ \label{ln:pkeleakowner}
+\EndIf
+\State \textbf{return} $\V{e}$ \label{ln:pkeleakother}
+  \Comment{the key is public}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

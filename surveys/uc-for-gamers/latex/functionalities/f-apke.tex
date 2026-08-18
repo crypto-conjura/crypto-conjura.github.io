@@ -1,0 +1,92 @@
+%% The interface box of f-apke, the one source for both the book
+%% and uc/.../f-apke/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fafse$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := D$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{pk} \gets \unset$; \ $\V{R} \gets \unset$
+\State $\V{t} \gets 0$; \ $\V{outs} \gets 0$
+  \Comment{the epoch, and whether one live message is held}
+\State $\V{Rec} \gets \emptyset$
+  \Comment{tuples $(m, t, c, \mathit{flag})$}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{KeyGen}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{pk} = \unset$} \label{ln:afseonce}
+\State $\V{pk} \gets \Adv\bigl(\id.\op{KeyGen}\bigr)$; \ $\V{R} \gets \id.P$
+\State \textbf{return} $\V{pk}$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Encrypt}(pk, t, m)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$m \notin D \ \vee\ pk \neq \V{pk} \ \vee\ (t \geq \V{t} \ \wedge\ \V{outs} = 1)$} \label{ln:afsegiveup}
+  \State \textbf{return} $\Adv\bigl(\id.\op{Encrypt}, pk, t, m, \id.P\bigr)$ \label{ln:afsedummy}
+    \Comment{a dummy: the plaintext goes to the adversary}
+\EndIf
+\State $c \gets \Adv\bigl(\id.\op{Encrypt}, pk, t, \id.P\bigr)$ \label{ln:afsehide}
+\If{$t \geq \V{t}$}
+  \State $\V{Rec} \gets \V{Rec} \cup \{(m, t, c, \V{outs})\}$ \label{ln:afserecord}
+  \State $\V{outs} \gets 1$ \label{ln:afseoutstanding}
+    \Comment{only one message per epoch is protected}
+\EndIf
+\State \textbf{return} $c$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Decrypt}(c)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P = \V{R}$}
+\If{$\exists\, (m, \V{t}, c, *) \in \V{Rec}$} \label{ln:afsecurrent}
+  \State \textbf{return} $m$ \label{ln:afsecorrect}
+    \Comment{only at the current epoch}
+\EndIf
+\State \textbf{return} $\Adv\bigl(\id.\op{Decrypt}, \V{t}, c\bigr)$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Update}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P = \V{R}$}
+\State $\Adv\bigl(\id.\op{Update}\bigr)$
+\If{$\exists\, (m, \V{t}, c, 0) \in \V{Rec}$}
+  \State $\V{outs} \gets 0$
+\EndIf
+\State $\V{Rec} \gets \V{Rec} \setminus \{(m, \V{t}, c, *)\}$ \label{ln:afseforget}
+  \Comment{the epoch's ciphertexts are forgotten}
+\State $\V{t} \gets \V{t} + 1$ \label{ln:afsetick}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P = \V{R}$}
+\State \textbf{return} $\{\, (m,t,c) \in \V{Rec} : t \geq \V{t} \,\}$ \label{ln:afseforward}
+  \Comment{past epochs are unrecoverable: forward security}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

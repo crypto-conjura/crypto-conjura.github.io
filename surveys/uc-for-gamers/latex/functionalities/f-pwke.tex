@@ -1,0 +1,94 @@
+%% The interface box of f-pwke, the one source for both the book
+%% and uc/.../f-pwke/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fpwke$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := \ell$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{pw}[*] \gets \unset$; \ $\V{peer}[*] \gets \unset$
+\State $\V{mark}[*] \gets \unset$
+  \Comment{$\atom{fresh}$, $\atom{interrupted}$, $\atom{compromised}$, $\atom{done}$}
+\State $\V{sk}[*] \gets \unset$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{NewSession}(Q, pw)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{mark}[\id.P] = \unset$} \label{ln:pwonce}
+\State $\Adv\bigl(\id.\op{NewSession},\ \id.P,\ Q\bigr)$ \label{ln:pwleak}
+  \Comment{who talks to whom, never the password}
+\State $\V{pw}[\id.P] \gets pw$; \ $\V{peer}[\id.P] \gets Q$
+\State $\V{mark}[\id.P] \gets \atom{fresh}$
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{TestPwd}(P, pw')$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F = A \ \wedge\ \V{mark}[P] = \atom{fresh}$} \label{ln:pwoneguess}
+  \Comment{one guess per session, and only while fresh}
+\If{$pw' = \V{pw}[P]$}
+  \State $\V{mark}[P] \gets \atom{compromised}$ \label{ln:pwright}
+  \State \textbf{return} $\true$
+\EndIf
+\State $\V{mark}[P] \gets \atom{interrupted}$ \label{ln:pwwrong}
+  \Comment{a wrong guess costs the session, not the password}
+\State \textbf{return} $\false$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{NewKey}(P, sk^{*})$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F = A \ \wedge\ \V{mark}[P] \notin \{\unset, \atom{done}\} \ \wedge\ |sk^{*}| = \ell$}
+\State $Q \gets \V{peer}[P]$
+\If{$\V{mark}[P] = \atom{compromised} \ \vee\ P \in \Cs \ \vee\ Q \in \Cs$}
+  \State $\V{sk}[P] \gets sk^{*}$ \label{ln:pwadvkey}
+    \Comment{the adversary's key, only once it has earned it}
+\EndIf
+\If{$\V{mark}[P] = \atom{fresh} \ \wedge\ \V{sk}[Q] \neq \unset$}
+\Statex \quad\ $\wedge\ \V{pw}[Q] = \V{pw}[P] \ \wedge\ \V{peer}[Q] = P$
+  \State $\V{sk}[P] \gets \V{sk}[Q]$ \label{ln:pwmatch}
+    \Comment{matching passwords, matching key}
+\EndIf
+\If{$\V{sk}[P] = \unset$}
+  \State $\V{sk}[P] \gets_{\$} \{0,1\}^{\ell}$ \label{ln:pwrandom}
+    \Comment{everything else: independent and random}
+\EndIf
+\State $\V{mark}[P] \gets \atom{done}$
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Read}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{mark}[\id.P] = \atom{done}$}
+\State \textbf{return} $\V{sk}[\id.P]$ \label{ln:pwout}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $(\V{pw}[\id.P], \V{sk}[\id.P])$ \label{ln:pwleakall}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

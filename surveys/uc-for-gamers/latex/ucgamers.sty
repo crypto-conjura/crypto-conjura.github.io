@@ -4,24 +4,35 @@
 %% itself (via \input from main.tex) and scripts/gen_interface.py, which
 %% renders the same file to the HTML on its encyclopedia page.
 %%
+%% Its companion is functionalities/encyclopedia.sty, which carries the names
+%% of the functionalities the book does not typeset. Everything a box needs in
+%% order to *set* -- the environments, the palette, the shared notation -- is
+%% here; that file holds nothing but \newcommands and is loaded after this one.
+%%
 %% Load it where the notation block used to sit -- after xcolor, tcolorbox,
 %% algpseudocode, multicol and the palette, all of which it needs and none
 %% of which it reorders. The \RequirePackage lines below are for the
 %% standalone case (functionalities/preview.tex); inside main.tex they are
 %% no-ops, since every one of them is already loaded by then.
 %%
-%% What is here is exactly what an \begin{interface} block depends on. Two
+%% What is here is exactly what an \begin{interface} block depends on. Three
 %% rules keep it that way, and they are not cosmetic -- the generator reads
 %% this file to learn what the notation macros mean:
-%%   1. A notation macro belongs here, not in main.tex, if a code box can
-%%      mention it. The generator expands \newcommand definitions found in
-%%      this file and knows nothing of any defined elsewhere.
-%%   2. If a macro's expansion is not valid MathJax (\op is \textsc, which
+%%   1. A notation macro belongs here, not in main.tex, if a code box the book
+%%      typesets can mention it. The generator expands \newcommand definitions
+%%      found here and in functionalities/encyclopedia.sty, and knows nothing
+%%      of any defined elsewhere.
+%%   2. If the only boxes that can mention it are ones main.tex does not
+%%      \input, it belongs in functionalities/encyclopedia.sty instead. That
+%%      file is not a book input, so writing an encyclopedia entry does not
+%%      mark the PDF and the HTML edition stale; putting its name here would.
+%%      That file's header carries the whole of the reasoning.
+%%   3. If a macro's expansion is not valid MathJax (\op is \textsc, which
 %%      MathJax has no font for), the generator needs an override for it in
-%%      MACRO_OVERRIDES. Adding such a macro here without the override is
-%%      how a box silently stops rendering on the web.
+%%      MACRO_OVERRIDES. Adding such a macro to either file without the
+%%      override is how a box silently stops rendering on the web.
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{ucgamers}[2026/08/16 UC for Gamers notation and code boxes]
+\ProvidesPackage{ucgamers}[2026/08/18 UC for Gamers notation and code boxes]
 
 \RequirePackage{amsmath}
 \RequirePackage{amssymb}
@@ -107,26 +118,13 @@
 \newcommand{\Fsig}{\mathcal{F}_{\mathsf{Sig}}}
 \newcommand{\Gclock}{\mathcal{G}_{\mathsf{Clock}}}
 \newcommand{\Gpki}{\mathcal{G}_{\mathsf{PKI}}}
-\newcommand{\Gro}{\mathcal{G}_{\mathsf{RO}}}
 \newcommand{\Fnet}{\mathcal{F}_{\mathsf{Net}}}
 \newcommand{\Fac}{\mathcal{F}_{\mathsf{AC}}}
 \newcommand{\Facz}{\mathcal{F}^{\circ}_{\mathsf{AC}}}
 \newcommand{\Fpki}{\mathcal{F}_{\mathsf{PKI}}}
-%% Functionalities of the encyclopedia that the book does not itself typeset.
-%% Their fragments live under functionalities/ like any other and are rendered
-%% to uc/.../<id>/index.qmd by scripts/gen_interface.py; main.tex simply does
-%% not \input them. Names kept in the book's own casing so that a box lifted
-%% into a later chapter needs no renaming.
-\newcommand{\Fcrs}{\mathcal{F}_{\mathsf{CRS}}}
-\newcommand{\Fcom}{\mathcal{F}_{\mathsf{Com}}}
-\newcommand{\Fzk}{\mathcal{F}_{\mathsf{ZK}}}
-\newcommand{\Fauth}{\mathcal{F}_{\mathsf{Auth}}}
-\newcommand{\Fot}{\mathcal{F}_{\mathsf{OT}}}
-\newcommand{\Fsmt}{\mathcal{F}_{\mathsf{SMT}}}
-\newcommand{\Fbc}{\mathcal{F}_{\mathsf{BC}}}
-\newcommand{\Fmcom}{\mathcal{F}_{\mathsf{MCom}}}
-\newcommand{\Fcert}{\mathcal{F}_{\mathsf{Cert}}}
-\newcommand{\Gacrs}{\mathcal{G}_{\mathsf{ACRS}}}
+%% Functionalities the book does not itself typeset are *not* here: their names
+%% live in functionalities/encyclopedia.sty, so that adding an encyclopedia
+%% entry leaves this file -- and therefore the book's artifacts -- untouched.
 \newcommand{\DS}{\mathsf{DS}}
 \newcommand{\psig}{\pi_{\mathsf{Sig}}}
 \newcommand{\vk}{\mathit{vk}}

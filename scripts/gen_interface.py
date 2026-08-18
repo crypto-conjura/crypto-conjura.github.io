@@ -40,10 +40,13 @@ does the same for a fragment the book does not typeset -- which is every
 encyclopedia box beyond the seven the book carries -- by compiling it on its
 own through functionalities/preview.tex.
 
-Macro meanings are read from ucgamers.sty rather than duplicated here, so a
-new `\\newcommand` in the book is understood without touching this file.
-The exceptions are in MACRO_OVERRIDES below: macros whose LaTeX expansion is
-not something MathJax can render.
+Macro meanings are read from the two shared style files rather than
+duplicated here, so a new `\\newcommand` is understood without touching this
+file: ucgamers.sty for the book's own notation, and
+functionalities/encyclopedia.sty for the names of the functionalities the
+book does not typeset -- kept apart so that writing an encyclopedia entry
+does not mark the book's PDF stale. The exceptions are in MACRO_OVERRIDES
+below: macros whose LaTeX expansion is not something MathJax can render.
 """
 
 import argparse
@@ -55,11 +58,14 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
 LATEX = REPO / "surveys" / "uc-for-gamers" / "latex"
-STY = LATEX / "ucgamers.sty"
 FRAGMENTS = LATEX / "functionalities"
+# Both are read for macros; only the first is an input of the book. See
+# encyclopedia.sty's header for why the split exists.
+STY = LATEX / "ucgamers.sty"
+ENCYCLOPEDIA_STY = FRAGMENTS / "encyclopedia.sty"
 UC = REPO / "uc"
 
-# Macros whose ucgamers.sty definition cannot be handed to MathJax as-is.
+# Macros whose style-file definition cannot be handed to MathJax as-is.
 # \op is \textnormal{\textsc{...}}, and MathJax has no small-caps math font;
 # \id expands to a bare `id`, which sets as two italic variables rather than
 # one name. Each entry is (number of arguments, replacement body).
@@ -88,15 +94,22 @@ SIG_IDENTS = {
 
 # --------------------------------------------------------------- macros
 
-def load_macros(sty=STY):
-    """Read \\newcommand/\\renewcommand definitions out of the style file."""
-    text = sty.read_text()
+def load_macros(*styles):
+    """Read \\newcommand/\\renewcommand definitions out of the style files.
+
+    Defaults to both of them, in load order, so a name defined in the
+    encyclopedia file wins over the book's -- the same way LaTeX resolves it.
+    """
     macros = {}
-    for m in re.finditer(r"\\(?:re)?newcommand\{\\([A-Za-z]+)\}(\[(\d)\])?\{", text):
-        name, nargs = m.group(1), int(m.group(3) or 0)
-        body, ok = _brace_arg(text, m.end() - 1)
-        if ok:
-            macros[name] = (nargs, body)
+    for sty in styles or (STY, ENCYCLOPEDIA_STY):
+        if not sty.exists():
+            continue
+        text = sty.read_text()
+        for m in re.finditer(r"\\(?:re)?newcommand\{\\([A-Za-z]+)\}(\[(\d)\])?\{", text):
+            name, nargs = m.group(1), int(m.group(3) or 0)
+            body, ok = _brace_arg(text, m.end() - 1)
+            if ok:
+                macros[name] = (nargs, body)
     macros.update(MACRO_OVERRIDES)
     return macros
 

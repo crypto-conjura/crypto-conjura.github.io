@@ -53,10 +53,18 @@ python3 scripts/artifact_manifest.py --update     # then record the new hashes
 
 The check never builds anything. CI has no TeX, and `build_uc_html.sh` needs
 TeX Live, `make4ht` and TeX Live's own `dvisvgm`, so it only ever reports that
-a rebuild is owed. The inputs it watches are the whole set, not just
-`main.tex`: the `.cls` and `.sty` files count, and so do the 14
-`functionalities/*.tex` fragments, because a change confined to those is
-invisible to anything watching the main file alone.
+a rebuild is owed.
+
+For the UC book it watches what the book is actually built from, which is
+narrower than the folder: `main.tex`, the `.cls` and `.sty` files beside it,
+and only those `functionalities/*.tex` fragments `main.tex` `\input`s. The
+other ninety-odd fragments are the encyclopedia's source, gated by
+`gen_interface.py --check` instead, and counting them here would ask for a
+rebuild every time an entry is filled in -- one that cannot change a page of
+the book. The same reasoning keeps `functionalities/encyclopedia.sty` out:
+it holds the names of the functionalities the book does not typeset, so it
+is not a book input, whereas `ucgamers.sty` is and an edit to it still owes
+a rebuild.
 
 ## Adding a new problem
 
@@ -279,13 +287,17 @@ committed PDF that is only as current as its last rebuild, so a red result
 there can mean the PDF is stale rather than the boxes wrong. Run it after
 changing a fragment, and rebuild the book before believing a failure.
 
-Notation macros are read from `surveys/uc-for-gamers/latex/ucgamers.sty`, so a
-new `\newcommand` there is understood without touching the script -- unless its
-expansion is not valid MathJax (`\op` is `\textsc`, which MathJax cannot set),
-in which case it also needs an entry in the script's `MACRO_OVERRIDES`. Adding
-one without the other is how a box silently stops rendering on the web.
+Notation macros are read from two files -- `ucgamers.sty` for the book's own
+notation and `functionalities/encyclopedia.sty` for the names of the
+functionalities the book does not typeset -- so a new `\newcommand` in either
+is understood without touching the script, unless its expansion is not valid
+MathJax (`\op` is `\textsc`, which MathJax cannot set), in which case it also
+needs an entry in the script's `MACRO_OVERRIDES`. Adding one without the other
+is how a box silently stops rendering on the web. A new functionality's name
+belongs in the second file: the first is a watched book input, so putting it
+there owes a rebuild the book cannot be changed by.
 `functionalities/preview.tex` compiles a single fragment on its own, which is
-the check that a fragment depends on nothing outside the shared style file:
+the check that a fragment depends on nothing outside those two files:
 
 ```
 cd surveys/uc-for-gamers/latex

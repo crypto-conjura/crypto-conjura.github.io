@@ -13,6 +13,9 @@ Paste the block below as the system/instruction prompt, with the header filled i
 ```
 BOOK        surveys/uc-for-gamers/latex/main.tex
 STYLE       surveys/uc-for-gamers/latex/ucgamers.sty
+NAMES       surveys/uc-for-gamers/latex/functionalities/encyclopedia.sty
+                                                     (macros for the encyclopedia only; the book does
+                                                      not load it, the generator does)
 FRAGMENTS   surveys/uc-for-gamers/latex/functionalities/
 REFERENCE   surveys/uc-for-gamers/pdf/main.pdf        (211 pages, the ground truth)
 GENERATOR   scripts/gen_interface.py                  (already renders interface boxes)

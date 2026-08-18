@@ -19,7 +19,7 @@
       alone is only what this site's CSS styles, so the column headings
       looked clickable and were not. */ %>
 <% if (items.length === 0) { %>
-<p class="cj-listing-empty">Nobody has stated one yet. An empty facet is a research prompt, not an error: see <a href="/open-problems/all/index.qmd">all statements</a> for what is on the site so far.</p>
+<p class="cj-listing-empty">Nobody has stated one yet. An empty facet is a research prompt, not an error: see <a href="/problems/all/index.qmd">all statements</a> for what is on the site so far.</p>
 <% } else { %>
 <table class="table cj-statement-table">
 <thead>
@@ -38,7 +38,7 @@
 <span class="cj-status-summary"><%= item.status_summary %><% if (item.open_obligations > 0) { %> <span class="cj-open-count"><%= item.open_obligations %> open</span><% } %></span>
 </td>
 <td class="cj-tags">
-<span class="cj-tag"><%= item.model %></span><span class="cj-tag"><%= item.form %></span><span class="cj-tag listing-category"><%= item.category %></span><% if (item.difficulty) { %><span class="cj-tag cj-tag-difficulty" title="<%= item.difficulty_note %>"><%= item.difficulty %><% if (item.difficulty_by === "ai") { %> (ai)<% } %></span><% } %><% for (const tg of (item.tags || [])) { %><a class="cj-tag cj-tag-org" href="/open-problems/tags/<%= tg %>/" title="Provenance tag: an author of a cited source is affiliated with this organisation"><%= tg.toUpperCase() %></a><% } %>
+<span class="cj-tag"><%= item.model %></span><span class="cj-tag"><%= item.form %></span><span class="cj-tag listing-category"><%= item.category %></span><% if (item.difficulty) { %><span class="cj-tag cj-tag-difficulty" title="<%= item.difficulty_note %>"><%= item.difficulty %><% if (item.difficulty_by === "ai") { %> (ai)<% } %></span><% } %><% for (const tg of (item.tags || [])) { %><a class="cj-tag cj-tag-org" href="/problems/tags/<%= tg %>/" title="Provenance tag: an author of a cited source is affiliated with this organisation"><%= tg.toUpperCase() %></a><% } %>
 </td>
 </tr>
 <% } %>

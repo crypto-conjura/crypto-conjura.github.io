@@ -1,12 +1,112 @@
 ---
-title: "F-clocksync — Dynamic ad hoc clock synchronization"
-status: "Canonical"
+title: "F-clocksync — Imperfect local clock"
+status: "Idealized Setup"
 layer: 0
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-clocksync* (Dynamic ad hoc clock synchronization) is part of *Idealized Setup and Resources* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+*F-clocksync* (Imperfect local clock) is part of *Idealized Setup and Resources* in the UC functionality encyclopedia. Status: an idealized setup assumption or shared resource.
+
+A round-based clock that can be **lied to**, within a bound. The standard UC clock tells every party the same thing: the round turns when all honest parties have finished, and everyone learns it turned. This one keeps that true internally — line 14 is unchanged — but adds a second bit per party, the one the party is actually *told* (line 13), and lets the adversary advance a party's perceived round ahead of the real one (line 10) up to a drift of $\Delta$.
+
+That is what clock synchronization looks like when it has to be *earned* rather than assumed. The site's [*G-Clock*](/uc/layer-0-idealized-setup/g-clock/index.qmd) is the assumed kind; this is the achievable kind, and the difference between them is the parameter $\Delta$.
+
+## Functionality
+
+Reading the box: $\mathcal{A}(\cdot)$ is a call on the adversary slot whose answer is not used; $A$ is the adversary's name component, so a test on $\mathit{id}'.F$ asks who is really calling; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it; $\mathbf{C}$ is the set of corrupted parties; $\mathtt{d}$ is the true per-party round bit, $\mathtt{dImp}$ the one the party is told, and $\mathtt{drift}$ how far the two have been pushed apart. The pinned process id and $\mathbf{N}$ make the clock global.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{G}_{\mathsf{ImpClock}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid} := (\mathsf{GImpClock},0,0)\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N} := \mathbf{Std} \cup \mathbf{A} \cup \mathbf{Z}\), &nbsp; \(\mathbf{U} := \varnothing\), &nbsp; \(\mathit{par} := \Delta\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{d}[*] \gets 0\)<span class="cj-comment">// has this party finished its round</span></li>
+<li>\(\mathtt{dImp}[*] \gets 0\)<span class="cj-comment">// what the party is told instead</span></li>
+<li>\(\mathtt{drift}[*] \gets 0\)<span class="cj-comment">// how far ahead it has been pushed</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Update()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="4">
+<li>\(\mathtt{d}[\mathit{id}.P] \gets 1\); &nbsp;\(\mathtt{dImp}[\mathit{id}.P] \gets 1\)</li>
+<li>\(\mathsf{RoundUpdate}()\)</li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Update},\ \mathit{id}.P\bigr)\)</li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Push(<span class="cj-id">P</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="8">
+<li>\(\textbf{require}\ \mathit{id}'.F = A\)<span class="cj-comment">// the adversary's line, and the whole weakening</span></li>
+<li>\(\textbf{require}\ \mathtt{dImp}[P] = 1 \ \wedge\ \mathtt{drift}[P] < \Delta\)<span class="cj-comment">// drift is capped, which is the guarantee</span></li>
+<li>\(\mathtt{dImp}[P] \gets 0\); &nbsp;\(\mathtt{drift}[P] \gets \mathtt{drift}[P] + 1\)<span class="cj-comment">// \(P\) is told the round turned when it did not</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Get()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="12">
+<li>\(\mathsf{RoundUpdate}()\)</li>
+<li>\(\textbf{return}\ \mathtt{dImp}[\mathit{id}.P]\)<span class="cj-comment">// the perceived bit, never \(\mathtt{d}\)</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig">RoundUpdate():</div>
+<ol class="cj-code" start="14">
+<li>\(\textbf{require}\ \forall P \in \mathbf{P} \setminus \mathbf{C} : \mathtt{d}[P] = 1\)<span class="cj-comment">// the round turns on the honest parties alone</span></li>
+<li>\(\forall P \in \mathbf{P} : \mathtt{d}[P] \gets 0\)</li>
+<li>\(\forall P \in \mathbf{P} : \mathtt{drift}[P] \gets \mathtt{drift}[P] - 1\)</li>
+<li>\(\forall P : \mathtt{drift}[P] < 0 : \mathtt{dImp}[P] \gets 0\); &nbsp;\(\mathtt{drift}[P] \gets 0\)<span class="cj-comment">// a pushed party has already spent this round</span></li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+The box is transcribed from Badertscher, Gaži, Kiayias, Russell and Zikas, the functionality $\bar{\mathcal{G}}^{\mathsf{ImperfLClock}}_{\mathsf{clock}}$ on p. 25 of ePrint 2019/838, revision `20200601:112621`. The rendered page is at `_src/badertscheretal2021-p25.png`.
+
+**A citation warning, and it is the second of its kind today.** The stub cites this as *"Dynamic ad hoc clock synchronization"*, EUROCRYPT 2021. **The current ePrint posting's title page reads "Ouroboros Chronos: Permissionless Clock Synchronization via Proof-of-Stake"** — read directly off the PDF. The authors match. This is a retitling between revisions, and a citation needs to name which version it means; `_src/sources.json` records the revision so the reader can tell.
+
+**Lines 9–10 are the entire weakening, and the source marks them in blue.** The paper prints this functionality specifically to contrast it with the standard clock, colouring the differences so a reader can see what was given up. What was given up is exactly this: the adversary may set a party's *perceived* bit to $0$ — telling it the round has turned — while the real bit stays $1$, and it may do so as long as that party's drift is under $\Delta$. So a party can be run ahead of the network, but only so far.
+
+**Line 14 is what is *not* given up.** The round still turns on the honest parties alone; corrupted parties are excluded from the quorum, exactly as in the standard clock. A corruption cannot freeze the network, only desynchronise individual honest parties within the bound.
+
+**Lines 16–17 are the repayment, and they are the subtlest part of the source.** When the round genuinely turns, every party's drift decreases by one — a party that was pushed ahead has, in effect, already spent that round. Line 17 then catches up anyone whose drift went negative, resetting both the perceived bit and the drift. The effect is that pushing is a loan against future rounds rather than a permanent offset, which is what keeps the bound meaningful over a long execution.
+
+**Line 13 is the only read, and it returns the lie.** No operation returns $\mathtt{d}$. A party has no way to discover it has been pushed, which is the honest content of "imperfect": not that the clock is noisy, but that a party cannot tell.
+
+**The perfect variant is in the same paper**, printed on the following page as $\bar{\mathcal{G}}^{\mathsf{PerfLClock}}_{\mathsf{clock}}$, and it is this box with $\mathtt{dImp}$, $\mathtt{drift}$ and the whole of $\mathsf{Push}$ deleted — one bit per party, and no way to lie. That is the clock the earlier literature assumes, and reading the two side by side is the quickest way to see what a proof-of-stake protocol has to establish before it may assume synchrony.
+
+**Two translations recorded.** The source's registration sets $\mathcal{P}$ and $\mathcal{F}$ — parties and *functionalities* that participate in the round — become the served-party set here; a functionality that needs to signal round completion would in this framework be a caller like any other. And the source's `Round-Update` is an internal procedure invoked by two clauses; it is written as an operation here because the generator's subset has no procedures, which means it appears in the box as though it were callable. It is not meant to be: nothing outside the box should call it.
+
+## Known realizations
+
+**From proof-of-stake, which is the paper's subject.** The point of writing the imperfect clock down is that it is *realizable* in a permissionless setting where the standard clock is not: parties join and leave, nobody is authenticated, and there is no trusted time source. The construction bootstraps a shared notion of time from the blockchain itself, and the $\Delta$ in this box is what the analysis has to bound.
+
+**Why the weakening is necessary rather than convenient.** A clock that told every party the truth would let a newly joining party learn the current round for free, which in a permissionless network is precisely what cannot be provided — a joiner has no way to distinguish the real chain from a simulated one without doing work. The drift bound is the price, and it propagates into every protocol built on top: an application must tolerate honest parties being up to $\Delta$ rounds apart.
+
+## Properties
+
+- **The round turns on honest progress alone, with probability exactly $1$** (line 14). Corruption cannot stall the clock.
+- **Drift is bounded by $\Delta$, with probability exactly $1$** (line 9). The adversary cannot push a party arbitrarily far ahead.
+- **Drift is repaid** (lines 16–17). A push is borrowed against a future round, not a permanent offset.
+- **A party cannot detect that it was pushed.** Line 13 returns $\mathtt{dImp}$ and no line returns $\mathtt{d}$.
+- **Only the adversary may push** (line 8). An honest party cannot desynchronise another, and the environment cannot either.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Badertscher et al. [*Dynamic ad hoc clock synchronization*](https://eprint.iacr.org/2019/838). In Advances in Cryptology – EUROCRYPT 2021, volume 12698 of LNCS, pages 399–428, 2021.
+- Badertscher, Gaži, Kiayias, Russell, and Zikas. [*Dynamic ad hoc clock synchronization*](https://eprint.iacr.org/2019/838). In Advances in Cryptology – EUROCRYPT 2021, volume 12698 of LNCS, pages 399–428, 2021. Read at ePrint revision `20200601:112621`, **whose title page reads "Ouroboros Chronos: Permissionless Clock Synchronization via Proof-of-Stake"** — the posting and the published version differ in title, as noted above. The functionality on p. 25, the definition transcribed above, with the source's own colouring of what it weakens; the perfect-clock variant on p. 26; the paper's other printed functionalities — $\mathcal{F}_{\textsc{n-mc}}$, $\mathcal{F}_{\textsc{init}}$, $\mathcal{F}_{\textsc{vrf}}$, $\mathcal{F}_{\textsc{kes}}$ and a ledger with an export-clock interface — recorded in `_src/sources.json`. All five authors confirmed against the paper's own title page; the venue and page range are as the stub recorded them.

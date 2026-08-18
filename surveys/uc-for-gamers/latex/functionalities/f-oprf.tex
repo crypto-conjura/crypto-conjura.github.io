@@ -1,0 +1,109 @@
+%% The interface box of f-oprf, the one source for both the book
+%% and uc/.../f-oprf/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Foprf$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := \ell$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{S} \gets \unset$; \ $\V{cmp} \gets 0$
+  \Comment{the server, and whether its key is stolen}
+\State $\V{F}[*,*] \gets \unset$
+  \Comment{one random function per index, drawn lazily}
+\State $\V{tx} \gets 0$; \ $\V{q}[*] \gets \unset$
+  \Comment{unspent server tickets, and open queries}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Init}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{S} = \unset$}
+\State $\V{S} \gets \id.P$
+\State $\Adv\bigl(\id.\op{Init},\ \V{S}\bigr)$
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Compromise}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F = A \ \wedge\ \id'.Z \neq \unset$} \label{ln:oprfperm}
+  \Comment{the source requires the environment's permission}
+\State $\V{cmp} \gets 1$ \label{ln:oprfstolen}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{OfflineEval}(i, x)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$(\id.P = \V{S} \wedge i = \V{S}) \ \vee\ (\id'.F = A \wedge (i \neq \V{S} \vee \V{cmp} = 1 \vee \V{S} \in \Cs))$} \label{ln:oprfoffline}
+  \Comment{the server's own index, or a stolen key, or another's}
+\If{$\V{F}[i, x] = \unset$}
+  \State $\V{F}[i, x] \gets_{\$} \{0,1\}^{\ell}$ \label{ln:oprfdraw}
+\EndIf
+\State \textbf{return} $\V{F}[i, x]$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Eval}(x)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{S} \neq \unset \ \wedge\ \V{q}[\id.P] = \unset$}
+\State $\V{q}[\id.P] \gets (x, 0)$ \label{ln:oprfopen}
+\State $\Adv\bigl(\id.\op{Eval},\ \id.P\bigr)$ \label{ln:oprfblind}
+  \Comment{the input is never passed on}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Complete}(P)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P = \V{S}$}
+\If{$\V{q}[P] = (x, 0)$ for some $x$} \label{ln:oprfmatch}
+  \State $\V{q}[P] \gets (x, 1)$ \label{ln:oprfpaid}
+    \Comment{this query is paid for}
+\EndIf
+\If{$\V{q}[P] = \unset$}
+  \State $\V{tx} \gets \V{tx} + 1$ \label{ln:oprfticket}
+    \Comment{a session the adversary may spend later}
+\EndIf
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Read}(i)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{q}[\id.P] \neq \unset$}
+\State parse $\V{q}[\id.P]$ as $(x, \mathit{paid})$
+\If{$i = \V{S} \ \wedge\ \mathit{paid} = 0$} \label{ln:oprfunpaid}
+  \Req{$\V{tx} > 0$} \label{ln:oprfspend}
+    \Comment{one evaluation per server session, and no more}
+  \State $\V{tx} \gets \V{tx} - 1$
+\EndIf
+\If{$\V{F}[i, x] = \unset$}
+  \State $\V{F}[i, x] \gets_{\$} \{0,1\}^{\ell}$
+\EndIf
+\State $\V{q}[\id.P] \gets \unset$
+\State \textbf{return} $\V{F}[i, x]$ \label{ln:oprfout}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

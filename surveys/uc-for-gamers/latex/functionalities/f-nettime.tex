@@ -1,0 +1,72 @@
+%% The interface box of f-nettime, the one source for both the book
+%% and uc/.../f-nettime/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Ftimer$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Gclock,\serves)\}$, \quad $\pars := (C, \Delta)$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{M} \gets \unset$
+  \Comment{the skew, as a machine the environment supplies}
+\State $\V{start} \gets \unset$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{SetShift}(M)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F = Z$} \label{ln:tmrenvonly}
+  \Comment{the environment's line, not the adversary's}
+\State $\V{M} \gets M$ \label{ln:tmrskew}
+  \Comment{replaces any previous code}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Start}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P = C \ \wedge\ \V{start} = \unset$} \label{ln:tmronce}
+  \Comment{the owner, once}
+\State $\V{start} \gets \Gclock.\op{Get}()$ \label{ln:tmrref}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Elapsed}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P = C \ \wedge\ \V{start} \neq \unset$}
+\State $g \gets \Gclock.\op{Get}()$
+\State $\sigma \gets \V{M}(\V{start}, g)$ \label{ln:tmrrun}
+  \Comment{$\V{M}$ keeps state across calls}
+\State $\delta \gets g - \V{start} + \sigma$ \label{ln:tmrskewed}
+\If{$\delta > \Delta$} \label{ln:tmrcap}
+  \State \textbf{return} $\none$
+    \Comment{too far off: no answer rather than a wrong one}
+\EndIf
+\State \textbf{return} $\delta$ \label{ln:tmrout}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $\none$ \label{ln:tmrnoleak}
+  \Comment{the adversary does not interact with this box}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

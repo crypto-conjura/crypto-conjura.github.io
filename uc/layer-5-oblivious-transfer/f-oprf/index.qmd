@@ -1,12 +1,141 @@
 ---
-title: "F-OPRF — Oblivious PRF"
+title: "F-OPRF — Oblivious PRF, adaptive compromise"
 status: "Canonical"
 layer: 5
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-OPRF* (Oblivious PRF) is part of *Oblivious Transfer and Correlated Randomness* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+*F-OPRF* (Oblivious PRF, adaptive compromise) is part of *Oblivious Transfer* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+
+A pseudorandom function one party holds and another party evaluates, where the holder learns nothing about the input and the evaluator learns nothing but the output. The reason the box below is longer than that sentence is **accounting**: the security that matters for an OPRF is *how many* evaluations a client can extract, and the functionality has to count.
+
+The mechanism is a ticket. Every server session the adversary completes without a matching client query mints a ticket (line 23); a client evaluation that the server never participated in must spend one (lines 27–29). So the guarantee is not "the client learns one value per query" — it is that the *total* number of values obtainable under the server's key never exceeds the number of sessions the server actually ran.
+
+## Functionality
+
+Reading the box: $\mathcal{A}(\cdot)$ is a call on the adversary slot whose answer is not used; $A$ and $Z$ are the adversary's and environment's name components; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it; $\mathbf{C}$ is the set of corrupted parties; $\square$ marks a value never set; $\mathtt{F}[i,x]$ is the random function for index $i$, drawn lazily; $\mathtt{tx}$ is the unspent ticket count; $\ell$ is the output length.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{OPRF}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := \ell\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{S} \gets \square\); &nbsp;\(\mathtt{cmp} \gets 0\)<span class="cj-comment">// the server, and whether its key is stolen</span></li>
+<li>\(\mathtt{F}[*,*] \gets \square\)<span class="cj-comment">// one random function per index, drawn lazily</span></li>
+<li>\(\mathtt{tx} \gets 0\); &nbsp;\(\mathtt{q}[*] \gets \square\)<span class="cj-comment">// unspent server tickets, and open queries</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Init()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="4">
+<li>\(\textbf{require}\ \mathtt{S} = \square\)</li>
+<li>\(\mathtt{S} \gets \mathit{id}.P\)</li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Init},\ \mathtt{S}\bigr)\)</li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Compromise()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="8">
+<li>\(\textbf{require}\ \mathit{id}'.F = A \ \wedge\ \mathit{id}'.Z \neq \square\)<span class="cj-comment">// the source requires the environment's permission</span></li>
+<li>\(\mathtt{cmp} \gets 1\)</li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.OfflineEval(<span class="cj-id">i</span>, <span class="cj-id">x</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="11">
+<li>\(\textbf{require}\ (\mathit{id}.P = \mathtt{S} \wedge i = \mathtt{S}) \ \vee\ (\mathit{id}'.F = A \wedge (i \neq \mathtt{S} \vee \mathtt{cmp} = 1 \vee \mathtt{S} \in \mathbf{C}))\)<span class="cj-comment">// the server's own index, or a stolen key, or another's</span></li>
+<li>\(\textbf{if}\ \mathtt{F}[i, x] = \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{F}[i, x] \gets_{\$} \{0,1\}^{\ell}\)</span></li>
+<li>\(\textbf{return}\ \mathtt{F}[i, x]\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Eval(<span class="cj-id">x</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="15">
+<li>\(\textbf{require}\ \mathtt{S} \neq \square \ \wedge\ \mathtt{q}[\mathit{id}.P] = \square\)</li>
+<li>\(\mathtt{q}[\mathit{id}.P] \gets (x, 0)\)</li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Eval},\ \mathit{id}.P\bigr)\)<span class="cj-comment">// the input is never passed on</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Complete(<span class="cj-id">P</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="19">
+<li>\(\textbf{require}\ \mathit{id}.P = \mathtt{S}\)</li>
+<li>\(\textbf{if}\ \mathtt{q}[P] = (x, 0)\) for some \(x\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{q}[P] \gets (x, 1)\)</span><span class="cj-comment">// this query is paid for</span></li>
+<li>\(\textbf{if}\ \mathtt{q}[P] = \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{tx} \gets \mathtt{tx} + 1\)</span><span class="cj-comment">// a session the adversary may spend later</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Read(<span class="cj-id">i</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="25">
+<li>\(\textbf{require}\ \mathtt{q}[\mathit{id}.P] \neq \square\)</li>
+<li>parse \(\mathtt{q}[\mathit{id}.P]\) as \((x, \mathit{paid})\)</li>
+<li>\(\textbf{if}\ i = \mathtt{S} \ \wedge\ \mathit{paid} = 0\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{require}\ \mathtt{tx} > 0\)</span><span class="cj-comment">// one evaluation per server session, and no more</span></li>
+<li><span class="cj-ind">\(\mathtt{tx} \gets \mathtt{tx} - 1\)</span></li>
+<li>\(\textbf{if}\ \mathtt{F}[i, x] = \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{F}[i, x] \gets_{\$} \{0,1\}^{\ell}\)</span></li>
+<li>\(\mathtt{q}[\mathit{id}.P] \gets \square\)</li>
+<li>\(\textbf{return}\ \mathtt{F}[i, x]\)</li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+The box is transcribed from Jarecki, Krawczyk and Xu, *OPAQUE: an asymmetric PAKE protocol secure against pre-computation attacks*, Figure 3, p. 14 of ePrint 2018/163, revision `20191022:184539` — "Functionality $\mathcal{F}_{\textsc{oprf}}$ with Adaptive Compromise". The rendered page is at `_src/jarecki2018-p14.png`.
+
+**This source is not on the stub's reference list, and finding it was the point.** The page cited Jarecki, Kiayias and Krawczyk's round-optimal password-protected secret sharing, which prints $\mathcal{F}_{\textsc{voprf}}$ — the *verifiable* variant, a different object. A harvest of the stub's own references therefore reported no matching box. The general lesson, now recorded in `TASKS.md` from an earlier batch, is that "no box found" is a statement about the page's reference list and never about the literature: the object is printed, in a paper the page did not name. Both are now referenced, with the verifiable one described as the sibling it is.
+
+**Lines 22–23 and 27–29 are the accounting, and they are the whole security notion.** A server session that completes with no client query waiting mints a ticket. A client that reads a value under the server's own index, having never been matched by a server session, must spend one. What this rules out is the attack the primitive exists to prevent: a client cannot obtain more evaluations of the server's key than the server agreed to perform, even by interleaving sessions. Everything else in the box is bookkeeping in service of those four lines.
+
+**Line 17 is blindness and carries no input.** The server is told a session began and never what was asked. There is no path from $x$ to the adversary anywhere in the box — which is what makes it *oblivious*, and is why the input appears only in $\mathtt{q}$ and as an index into $\mathtt{F}$.
+
+**Line 11 is the pre-computation clause, and it is why "adaptive compromise" is in the name.** Offline evaluation is available to the server for its own index, to the adversary for anybody *else's* index, and to the adversary for the server's index **once the key is compromised**. That last case is what a real pre-computation attack is: steal the key, then evaluate the function on a dictionary at leisure. The functionality permits it explicitly rather than pretending it cannot happen, and the security claim of a protocol built on this box is about what an attacker gains *before* compromise.
+
+**Line 8 records a permission this framework has no way to enforce.** The source's compromise clause carries the note that it "requires permission from the environment" — a convention in that line of work for marking which adversarial actions the environment must sanction. There is no such gate here, so the **require** tests that the caller is the adversary and that an environment component is present, which is a weaker check. That gap is recorded rather than papered over: a reader should treat compromise in this box as available to the adversary whenever it likes.
+
+**The largest simplification, declared.** The source threads a *prefix* value through its online evaluation: the adversary supplies a fresh `prfx` per query, the server's completion supplies another, and a match converts the record to `OK`. The prefix is how the source ties a particular client session to a particular server session across an asynchronous network. This box replaces it with a boolean — matched or not (lines 20–21) — because the identity of the tying value carries no security content once the matching relation is expressed directly. What is lost is the source's ability to model two sessions whose prefixes collide; nothing in its security argument depends on that being possible, but a reader comparing the two should know the prefix is gone.
+
+## Known realizations
+
+**The paper's construction is OPAQUE**, whose OPRF is the Diffie–Hellman one: the client blinds its input, the server exponentiates with its key, the client unblinds. The reason that protocol needed this functionality — rather than an existing OPRF definition — is the pre-computation resistance: an aPAKE built on a weaker OPRF lets an attacker who steals the password file precompute a dictionary *before* the theft is noticed, and the ticket accounting plus the compromise clause is what rules that out.
+
+**The verifiable sibling.** $\mathcal{F}_{\textsc{voprf}}$, in the stub's original reference, adds a public parameter against which a client can *check* the server computed correctly. That is a genuinely different object — it constrains a malicious server, where this box constrains a malicious client — and it belongs on its own page rather than as a variant here.
+
+**Where it is consumed.** OPAQUE uses it to build a strong asymmetric PAKE; the functionality for that is printed in the same paper as $\mathcal{F}_{\textsc{sapake}}$, which the site's `f-sapake` stub is for and which is recorded in `_src/sources.json`.
+
+## Properties
+
+- **Obliviousness, unconditionally.** Line 17 notifies without $x$; no other line passes it outward. The server never learns the input.
+- **Pseudorandomness, unconditionally.** Lines 13 and 31 draw uniformly and lazily, per index and input. Values are independent across indices, which is what makes one party's key useless against another's.
+- **Bounded extraction, with probability exactly $1$.** Lines 28–29: without a matching server session, a value under the server's index costs a ticket, and tickets are minted only by real server sessions (line 23).
+- **Pre-computation is possible only after compromise** (line 11). Before it, the adversary may evaluate other indices freely and the server's not at all.
+- **No liveness.** Nothing forces a server to complete a session, so a client query may never become readable.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Jarecki, Kiayias, and Krawczyk. [*Round-optimal password-protected secret sharing and T-PAKE in the password-only model*](https://eprint.iacr.org/2014/650). In Advances in Cryptology – ASIACRYPT 2014, 2014.
+- Jarecki, Krawczyk, and Xu. [*OPAQUE: an asymmetric PAKE protocol secure against pre-computation attacks*](https://eprint.iacr.org/2018/163). In Advances in Cryptology – EUROCRYPT 2018, 2018. Read at ePrint revision `20191022:184539`. Figure 3, p. 14, the definition transcribed above, including its prefix bookkeeping and its environment-permission note; Figure 2, p. 9, $\mathcal{F}_{\textsc{sapake}}$, for the strong asymmetric PAKE this OPRF is built for. **Added to this page's references: it was not cited by the stub, and it is where the functionality is printed.** All three authors confirmed against the paper's own title page; the venue is as `_src/sources.json` recorded it.
+- Jarecki, Kiayias, and Krawczyk. [*Round-optimal password-protected secret sharing and T-PAKE in the password-only model*](https://eprint.iacr.org/2014/650). In Advances in Cryptology – ASIACRYPT 2014, 2014. The stub's original reference. It prints $\mathcal{F}_{\textsc{voprf}}$, the *verifiable* oblivious PRF, at PDF page 7 — a different object, constraining a malicious server rather than a malicious client, and left for its own entry. Kept for that relationship rather than as the source of the box above.

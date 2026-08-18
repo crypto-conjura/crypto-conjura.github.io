@@ -1,0 +1,88 @@
+%% The interface box of f-leak, the one source for both the book
+%% and uc/.../f-leak/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Flsc$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := (S, R, B)$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{m}[*] \gets \unset$; \ $\V{i} \gets 0$
+  \Comment{the messages sent so far}
+\State $\V{leak} \gets 0$; \ $\V{gone} \gets 0$
+  \Comment{bits leaked since the last send, and give-up}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Send}(\msg)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P = S \ \wedge\ \msg \in \Msgs$}
+\State $\V{i} \gets \V{i} + 1$; \ $\V{m}[\V{i}] \gets \msg$
+\State $\Adv\bigl(\id.\op{Send},\ |\msg|\bigr)$ \label{ln:lscsecrecy}
+  \Comment{the length only, which is what secrecy means here}
+\State $\V{leak} \gets 0$ \label{ln:lscreset}
+  \Comment{a fresh send restores the budget}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leaked}(\ell)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F = A \ \wedge\ \ell \geq 0$}
+\State $\V{leak} \gets \V{leak} + \ell$ \label{ln:lsccount}
+\If{$\V{leak} > B$} \label{ln:lsccross}
+  \State $\V{gone} \gets 1$ \label{ln:lscgiveup}
+    \Comment{past the bound the box stops promising anything}
+\EndIf
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Fetch}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P = R \ \wedge\ \V{m}[\V{i}] \neq \unset$}
+\State $d \gets \Adv\bigl(\id.\op{Fetch}\bigr)$ \label{ln:lscdeliver}
+\Req{$d = \ok$}
+  \Comment{the adversary schedules delivery}
+\If{$\V{gone} = 1 \ \vee\ S \in \Cs$} \label{ln:lscsub}
+  \State \textbf{return} $\San[\Clean_{\msg}]\bigl(\Adv(\id.\op{Fetch}, \V{i})\bigr)$ \label{ln:lscforge}
+    \Comment{authenticity is gone too, not only secrecy}
+\EndIf
+\State \textbf{return} $\V{m}[\V{i}]$ \label{ln:lscout}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$\V{gone} = 1 \ \vee\ \id.P \in \Cs$} \label{ln:lscall}
+  \State \textbf{return} $\V{m}$ \label{ln:lscdisclose}
+    \Comment{every message, past and future}
+\EndIf
+\State \textbf{return} $|\V{m}[\V{i}]|$ \label{ln:lsclen}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\Clean_{\msg}(\msg)$}:
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $\msg \in \Msgs$
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

@@ -10,18 +10,26 @@
       JavaScript `#`); write a JavaScript block comment inside a code tag,
       like this one. And a comment may not itself contain a closing tag
       delimiter: the scanner stops at the first one it sees. */ %>
+<% /* Two fixes made 18 August 2026, after a headless-browser check on the
+      sibling functionality table showed the same markup here was inert.
+      `list` belongs on the tbody: List.js sorts and filters the *children*
+      of the element carrying it, so on the table it saw two items, thead and
+      tbody, and every click did nothing. And the headers need List.js's own
+      `sort` class to get a click handler at construction time; `sortable`
+      alone is only what this site's CSS styles, so the column headings
+      looked clickable and were not. */ %>
 <% if (items.length === 0) { %>
 <p class="cj-listing-empty">Nobody has stated one yet. An empty facet is a research prompt, not an error: see <a href="/open-problems/all/index.qmd">all statements</a> for what is on the site so far.</p>
 <% } else { %>
-<table class="table cj-statement-table list">
+<table class="table cj-statement-table">
 <thead>
 <tr>
-<th class="sortable" data-sort="listing-badge_sigma">Status</th>
-<th class="sortable" data-sort="listing-title">Statement</th>
-<th class="sortable" data-sort="listing-category">Tags</th>
+<th class="sortable sort" data-sort="listing-badge_sigma">Status</th>
+<th class="sortable sort" data-sort="listing-title">Statement</th>
+<th class="sortable sort" data-sort="listing-category">Tags</th>
 </tr>
 </thead>
-<tbody>
+<tbody class="list">
 <% for (const item of items) { %>
 <tr <%= metadataAttrs(item) %>>
 <td class="listing-badge_sigma"><a href="<%= item.badge_legend_url %>" class="cj-status-link" aria-label="<%= item.badge_caption %> Click for the status badge legend."><svg class="cj-status-badge<% if (item.badge_refuted) { %> cj-refuted<% } %>" viewBox="0 0 32 32" width="28" height="28" xmlns="http://www.w3.org/2000/svg" role="img"><% if (item.badge_sealed) { %><circle cx="16" cy="16" r="15" fill="none" stroke-width="1.5" class="cj-seal"/><% } %><circle cx="16" cy="16" r="13" fill="none" stroke-width="4" class="cj-ring-<%= item.badge_sigma %>"<% if (item.badge_dash) { %> stroke-dasharray="<%= item.badge_dash %>"<% } %>/><circle cx="16" cy="16" r="8" class="cj-disc-<%= item.badge_pi %>"/><text x="16" y="17" text-anchor="middle" dominant-baseline="central" class="cj-glyph" font-size="9"><%= item.badge_glyph %></text></svg></a></td>

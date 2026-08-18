@@ -8,10 +8,15 @@ and left Open obligations and Sources loose, and the newest tabbed all five.
 A reader moving between two statements found the same material in different
 places, or absent, with nothing saying which.
 
-So the tab set is fixed here, in one list, and checked. `c/0020` is the page
-it was taken from:
+So the tab set is fixed here, in one list, and checked. It was taken from
+`c/0020`, and on 2026-08-18 `Sources` was removed from it: sources now sit at
+the end of the `Statement` tab as a `### Sources` subsection, which keeps them
+beside the statement they support instead of a tab away, and stops a reader
+having to leave the statement to see where it came from. `###` matters -- a
+`##` there would create the sixth tab this list exists to forbid. The set is
+now:
 
-    Statement | Proof | Discussion | Open obligations | Sources
+    Statement | Proof | Discussion | Open obligations
 
 The rules are deliberately few, because a layout gate that also has opinions
 about content stops being checkable:
@@ -42,7 +47,7 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 PAGES = sorted(ROOT.glob("c/0*/index.qmd"))
-CANON = ["Statement", "Proof", "Discussion", "Open obligations", "Sources"]
+CANON = ["Statement", "Proof", "Discussion", "Open obligations"]
 
 FENCE = re.compile(r"^(:{3,})\s*(\{[^}]*\})?\s*$")
 FRONT = re.compile(r"\A---\n.*?\n---\n", re.S)

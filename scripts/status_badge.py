@@ -436,11 +436,30 @@ def normalize_statement_text(text):
     return "\n".join(normalized_lines).strip("\n")
 
 
+# The artifact row at the top of the tab and the `### Sources` list at the
+# bottom are furniture, not the statement. They are stripped before hashing so
+# that adding an artifact link, or re-siting the source list, cannot reset
+# `statement_match` and bump `revision` -- which would read as "somebody
+# reworded the conjecture" when nobody did. A wording edit inside the statement
+# itself still changes the hash, which is the whole point of the mechanism.
+_ARTIFACT_ROW_RE = re.compile(
+    r"^(?:\[View PDF\]\(|View PDF — )[^\n]*$", re.MULTILINE
+)
+_TRAILING_SOURCES_RE = re.compile(r"\n###\s+Sources\s*\n.*\Z", re.DOTALL)
+
+
+def statement_text_for_hash(block):
+    """The statement prose alone, with the artifact row and Sources removed."""
+    block = _TRAILING_SOURCES_RE.sub("", block)
+    block = _ARTIFACT_ROW_RE.sub("", block)
+    return normalize_statement_text(block)
+
+
 def compute_statement_sha(body):
     m = STATEMENT_BLOCK_RE.search(body)
     if not m:
         return None
-    normalized = normalize_statement_text(m.group(1))
+    normalized = statement_text_for_hash(m.group(1))
     return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
 
 

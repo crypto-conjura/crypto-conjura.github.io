@@ -1,0 +1,91 @@
+%% The interface box of f-vrf, the one source for both the book
+%% and uc/.../f-vrf/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fvrf$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := \ell$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{VK}[*] \gets \unset$
+  \Comment{one verification key per party}
+\State $\V{Y}[*,*] \gets \unset$; \ $\V{Pf}[*,*] \gets \emptyset$
+  \Comment{the value drawn for $(v,m)$, and the proofs seen for it}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{KeyGen}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{VK}[\id.P] = \unset$}
+\State $v \gets \Adv\bigl(\id.\op{KeyGen},\ \id.P\bigr)$
+\If{$\id.P \notin \Cs$}
+  \Req{$\neg\exists\, P : \V{VK}[P] = v$} \label{ln:vrfunique}
+    \Comment{an honest party's key is unique}
+\EndIf
+\State $\V{VK}[\id.P] \gets v$
+\State \textbf{return} $v$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Eval}(\msg)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{VK}[\id.P] \neq \unset$}
+\State $v \gets \V{VK}[\id.P]$
+\If{$\V{Y}[v, \msg] = \unset$}
+  \State $\V{Y}[v, \msg] \gets_{\$} \{0,1\}^{\ell}$ \label{ln:vrfdraw}
+    \Comment{a random function, drawn lazily, per key}
+\EndIf
+\State \textbf{return} $\V{Y}[v, \msg]$ \label{ln:vrfvalue}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{EvalProve}(\msg)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{VK}[\id.P] \neq \unset$}
+\State $v \gets \V{VK}[\id.P]$
+\State $\pi \gets \Adv\bigl(\id.\op{EvalProve},\ \id.P,\ \msg\bigr)$ \label{ln:vrfadvproof}
+  \Comment{the proof is the adversary's, the value is not}
+\If{$\V{Y}[v, \msg] = \unset$}
+  \State $\V{Y}[v, \msg] \gets_{\$} \{0,1\}^{\ell}$
+\EndIf
+\State $\V{Pf}[v, \msg] \gets \V{Pf}[v, \msg] \cup \{\pi\}$ \label{ln:vrfaccept}
+\State \textbf{return} $(\V{Y}[v, \msg], \pi)$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Verify}(\msg, y, \pi, v)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $\Adv\bigl(\id.\op{Verify}, \msg, y, \pi, v\bigr)$
+\If{$\exists\, P : \V{VK}[P] = v$} \label{ln:vrfknown}
+  \State \textbf{return} $\V{Y}[v, \msg] = y \ \wedge\ \pi \in \V{Pf}[v, \msg]$ \label{ln:vrfsound}
+\EndIf
+\State \textbf{return} $0$ \label{ln:vrfunknown}
+  \Comment{an unregistered key verifies nothing}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $\V{VK}[\id.P]$ \label{ln:vrfleak}
+  \Comment{never the table: the values stay unpredictable}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

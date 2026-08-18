@@ -1,0 +1,89 @@
+%% The interface box of f-tlp, the one source for both the book
+%% and uc/.../f-tlp/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Ftlp$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := (O, \tau)$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{next}[*] \gets \unset$
+  \Comment{the state chain: one step per entry}
+\State $\V{msg}[*,*] \gets \unset$; \ $\V{puz} \gets \unset$
+\State $\V{at}[*] \gets \unset$
+  \Comment{how far each solver has walked}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{CreatePuzzle}(\Gamma, \msg)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P = O \ \wedge\ \V{puz} = \unset \ \wedge\ \Gamma \in \mathbb{N}$} \label{ln:tlponce}
+  \Comment{one puzzle per instance, and the owner's alone}
+\If{$O \notin \Cs$}
+  \State $\mathit{tag} \gets_{\$} \Tags$; \ $(\mathit{st}_{0}, \ldots, \mathit{st}_{\Gamma}) \gets_{\$} \States$ \label{ln:tlphonest}
+    \Comment{distinct, and the chain is the box's own}
+\EndIf
+\If{$O \in \Cs$}
+  \State $(\mathit{tag}, \mathit{st}_{0}, \ldots, \mathit{st}_{\Gamma}) \gets \Adv\bigl(\id.\op{CreatePuzzle}, \Gamma\bigr)$ \label{ln:tlpcorrupt}
+\EndIf
+\State $\forall j < \Gamma : \V{next}[\mathit{st}_{j}] \gets \mathit{st}_{j+1}$ \label{ln:tlpchain}
+\State $\V{msg}[\mathit{st}_{0}, \mathit{tag}] \gets (\mathit{st}_{\Gamma}, \msg)$
+\State $\V{puz} \gets (\mathit{st}_{0}, \Gamma, \mathit{tag})$
+\State $\Adv\bigl(\id.\op{CreatedPuzzle},\ \V{puz}\bigr)$ \label{ln:tlpleakpuz}
+\State \textbf{return} $\V{puz}$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Solve}(\mathit{st})$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{puz} \neq \unset$}
+\If{$\V{next}[\mathit{st}] = \unset$} \label{ln:tlpoffchain}
+  \State $\V{next}[\mathit{st}] \gets_{\$} \States$ \label{ln:tlpstray}
+    \Comment{off the chain: a fresh step, going nowhere}
+\EndIf
+\State $\V{at}[\id.P] \gets \V{next}[\mathit{st}]$ \label{ln:tlpstep}
+  \Comment{one step per call: the call is the clock}
+\State \textbf{return} $\V{at}[\id.P]$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{GetMsg}(\mathit{puz}, \mathit{st})$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State parse $\mathit{puz}$ as $(\mathit{st}_{0}, \Gamma, \mathit{tag})$
+\If{$\V{msg}[\mathit{st}_{0}, \mathit{tag}] = (\mathit{st}, \msg)$ for some $\msg$} \label{ln:tlpsolved}
+  \State \textbf{return} $\msg$ \label{ln:tlpopen}
+    \Comment{only the true end of the chain opens it}
+\EndIf
+\If{$O \in \Cs$}
+  \State \textbf{return} $\Adv\bigl(\id.\op{GetMsg}, \mathit{puz}, \mathit{st}\bigr)$ \label{ln:tlpcorruptopen}
+\EndIf
+\State \textbf{return} $\none$ \label{ln:tlpnothing}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$O \in \Cs$}
+  \State \textbf{return} $(\V{puz}, \V{next}, \V{msg})$ \label{ln:tlpleakowner}
+\EndIf
+\State \textbf{return} $(\V{puz}, \V{at}[\id.P])$ \label{ln:tlpleakother}
+  \Comment{the message stays shut until the chain is walked}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

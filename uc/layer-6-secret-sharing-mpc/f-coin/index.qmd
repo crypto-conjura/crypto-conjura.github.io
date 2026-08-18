@@ -1,15 +1,117 @@
 ---
-title: "F-coin — Coin tossing"
+title: "F-coin — Coin tossing with abort"
 status: "Canonical"
 layer: 6
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-coin* (Coin tossing) is part of *Secret Sharing, Threshold Cryptography, MPC* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+*F-coin* (Coin tossing with abort) is part of *Secret Sharing and MPC* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
 
-With guaranteed output delivery, coin tossing is unrealizable for two parties — the abort variant is the one actually realized.
+Two parties, one random bit, and **one of them sees it first**. That asymmetry is not a flaw in the definition — it is the definition. Fair two-party coin tossing, where neither party learns the outcome before the other is guaranteed to get it, is impossible: whoever speaks last can always abort on seeing an outcome it dislikes. So the achievable notion gives one party the coin, lets it choose whether to pass the coin along or a failure, and asks only that its choice be made *without any influence on the value*.
+
+Read lines 17 and 11 in that order and the whole primitive is there: $\mathtt{A}$ reads the coin, then decides. What the box forbids is not the abort but the substitution — there is no line by which $\mathtt{A}$, having seen the coin, gives $\mathtt{B}$ a different one.
+
+## Functionality
+
+Reading the box: $\mathcal{A}(\cdot)$ is a call on the adversary slot whose answer is not used; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it; $\square$ marks a value never set and $\bot$ is both a refusal and the failure output; $\mathtt{A}$ is the party that reads first and $\mathtt{B}$ the other.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{Coin}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := \bot\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{A} \gets \square\); &nbsp;\(\mathtt{B} \gets \square\)<span class="cj-comment">// the party that learns first, and the other</span></li>
+<li>\(\mathtt{on}[*] \gets 0\); &nbsp;\(\mathtt{coin} \gets \square\); &nbsp;\(\mathtt{rel} \gets \square\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Start(<span class="cj-id">Q</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="3">
+<li>\(\textbf{if}\ \mathtt{A} = \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{A} \gets \mathit{id}.P\); &nbsp;\(\mathtt{B} \gets Q\)</span><span class="cj-comment">// roles are fixed by who asks first</span></li>
+<li>\(\textbf{require}\ \mathit{id}.P \in \{\mathtt{A}, \mathtt{B}\}\)</li>
+<li>\(\mathtt{on}[\mathit{id}.P] \gets 1\)</li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Start},\ \mathit{id}.P\bigr)\)</li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Release(<span class="cj-id">b</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="9">
+<li>\(\textbf{require}\ \mathit{id}.P = \mathtt{A} \ \wedge\ \mathtt{coin} \neq \square \ \wedge\ \mathtt{rel} = \square\)<span class="cj-comment">// only \(\mathtt{A}\), and only once it has seen the coin</span></li>
+<li>\(\textbf{require}\ b \in \{\mathsf{ok}, \bot\}\)</li>
+<li>\(\mathtt{rel} \gets b\)</li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Read()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="13">
+<li>\(\textbf{require}\ \mathtt{on}[\mathtt{A}] = 1 \ \wedge\ \mathtt{on}[\mathtt{B}] = 1\)</li>
+<li>\(\textbf{if}\ \mathit{id}.P = \mathtt{A}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{if}\ \mathtt{coin} = \square\ \textbf{then}\)</span></li>
+<li><span class="cj-ind">\(\mathtt{coin} \gets_{\$} \{0,1\}\)</span></li>
+<li><span class="cj-ind">\(\textbf{return}\ \mathtt{coin}\)</span><span class="cj-comment">// \(\mathtt{A}\) learns it before deciding</span></li>
+<li>\(\textbf{require}\ \mathit{id}.P = \mathtt{B} \ \wedge\ \mathtt{rel} \neq \square\)</li>
+<li>\(\textbf{if}\ \mathtt{rel} = \bot\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \bot\)</span><span class="cj-comment">// refused: \(\mathtt{B}\) gets nothing</span></li>
+<li>\(\textbf{return}\ \mathtt{coin}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="22">
+<li>\(\textbf{return}\ (\mathtt{coin}, \mathtt{rel})\)</li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+The box is transcribed from Damgård and Lunemann, *Quantum-secure coin-flipping and applications*, Figure 2, p. 5 — "the Ideal Coin-Flip Functionality". Read from the IACR archive copy of the ASIACRYPT 2009 proceedings version (SHA-256 prefix `fa9af4eb49f1c9c0`, in `_src/sources.json`); this paper has no ePrint posting, so there is no revision stamp to pin. The rendered page is at `_src/damgrd2009-p5.png`.
+
+**The printed definition is two sentences**, and quoting it is shorter than describing it: "Upon receiving requests START from Alice and Bob, $\mathcal{F}_{\textsc{coin}}$ outputs a uniformly random *coin* to Alice. It then waits to receive Alice's second input OK or REFUSE and outputs *coin* or FAIL to Bob, respectively." Everything in the box above is that, plus the bookkeeping this framework requires to say who Alice is and when each party may read.
+
+**Line 16 draws the coin and nothing before it can influence the draw.** The adversary is notified of each start (line 7) and never consulted about the value. This is the property that makes the notion useful despite the abort: the coin is unbiased even when $\mathtt{A}$ is corrupt, because a corrupt $\mathtt{A}$'s only lever is line 11, and line 11 chooses between *this* coin and failure.
+
+**Line 9 is the unfairness, stated as a precondition.** $\mathtt{A}$ may release only after the coin exists — that is, only after it has been in a position to read it. The source expresses this as an ordering of activations ("it *then* waits to receive Alice's second input"); here it is a **require** on $\mathtt{coin} \neq \square$, which is the same constraint written as state.
+
+**Roles are fixed by who asks first** (lines 3–4). The source names Alice and Bob, which is a fixed role assignment; this framework has no such thing, so the first caller becomes $\mathtt{A}$. That is a decision, and it is the one place this box could be read as saying something the source does not: in the source, *which* party holds the advantage is given, and here it is whoever starts first. A protocol in which the roles are supposed to be determined some other way needs to say so.
+
+**Two things deliberately absent.** There is no line by which the adversary substitutes a coin — compare [*F-RBC*](/uc/layer-1-channels-agreement-ledgers/f-rbc/index.qmd), where exactly that substitution is permitted, and the difference between the two boxes is what "the adversary may abort but not bias" means precisely. And there is no bound on when $\mathtt{A}$ releases: nothing forces line 11 ever to be called, so $\mathtt{B}$ may wait forever, which is the honest reading of an abort.
+
+## Known realizations
+
+**From a statistically binding commitment, and the paper's point is that it survives a quantum adversary.** The protocol is the classical one — $\mathtt{A}$ commits to a bit $a$, $\mathtt{B}$ sends $b$, the coin is $a \oplus b$ — and the paper's contribution is the simulation argument in the quantum setting. Two facts from that argument are worth carrying:
+
+- **Against a dishonest committer**, the simulator extracts $a$ from the commitment and computes $b = \mathit{coin} \oplus a$ from the ideal coin. The paper notes this simulator is "correct but not necessarily efficient", and that this is acceptable for unconditional security; §5 of the paper extends the commitment so extraction becomes efficient.
+- **Against a dishonest receiver**, the classical simulator rewinds. That is what breaks in the quantum setting, and the paper's answer is Watrous's quantum rewinding lemma applied as a black box — the reason the protocol is a $\Sigma$-protocol-shaped three-move exchange in the first place.
+
+**Where the impossibility sits.** Blum's original telephone coin-flipping, the stub's other reference, is the problem statement rather than a functionality — it predates ideal-functionality notation by two decades. The reason this box has an abort at all traces to the standard impossibility of fair two-party coin tossing, which is why every UC treatment of coin flipping either takes this shape or assumes an honest majority.
+
+## Properties
+
+- **Unbiasedness, unconditionally.** Line 16 draws uniformly and no operation writes $\mathtt{coin}$ again. A corrupt $\mathtt{A}$ cannot change the value, only withhold it.
+- **Agreement when it completes, with probability exactly $1$.** Lines 17 and 21 return the same cell, so if $\mathtt{B}$ gets a coin it is $\mathtt{A}$'s coin.
+- **No fairness, by construction.** Line 17 precedes line 11 in any execution where $\mathtt{A}$ is served, and line 19 is reachable. This is the notion's defining weakness and it is not a parameter that can be tightened.
+- **No liveness.** Nothing forces line 11. $\mathtt{B}$'s read refuses until $\mathtt{A}$ releases, indefinitely.
+- **Both must start** (line 13). A single party cannot extract a coin on its own, which is what makes this a two-party primitive rather than [*F-Rand*](/uc/layer-0-idealized-setup/f-rand/index.qmd).
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Damgård and Lunemann. [*Quantum-secure coin-flipping and applications*](https://www.iacr.org/archive/asiacrypt2009/59120050/59120050.pdf). In Advances in Cryptology – ASIACRYPT 2009, 2009.
-- Blum. [*Coin flipping by telephone*](https://www.cs.cmu.edu/~mblum/research/pdf/coin/). In IEEE Spring COMPCON, pages 133–137, 1982.
+- Damgård and Lunemann. [*Quantum-secure coin-flipping and applications*](https://www.iacr.org/archive/asiacrypt2009/59120050/59120050.pdf). In Advances in Cryptology – ASIACRYPT 2009, 2009. Read from the IACR archive copy of the proceedings version, which carries no revision stamp, SHA-256 prefix `fa9af4eb49f1c9c0`. Figure 2, p. 5, the definition transcribed above; Figure 3, p. 5, the ideal-world simulation and the note on its efficiency; the same page for the quantum-rewinding argument and the pointer to Watrous. Both authors confirmed against the paper's own title page; the venue is as the stub recorded it.
+- Blum. [*Coin flipping by telephone*](https://www.cs.cmu.edu/~mblum/research/pdf/coin/). In IEEE Spring COMPCON, pages 133–137, 1982. Carried over from the stub's reference list as the origin of the problem, not of the functionality: the harvester could not fetch it — the URL is a directory listing rather than a PDF — and at 1982 it predates ideal-functionality notation entirely, as [*F-OT*](/uc/layer-5-oblivious-transfer/f-ot/index.qmd)'s Rabin reference does.

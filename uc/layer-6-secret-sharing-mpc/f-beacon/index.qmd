@@ -2,11 +2,109 @@
 title: "F-beacon — Randomness beacon"
 status: "Canonical"
 layer: 6
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-beacon* (Randomness beacon) is part of *Secret Sharing, Threshold Cryptography, MPC* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+*F-beacon* (Randomness beacon) is part of *Secret Sharing and MPC* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+
+Coin tossing without the abort — and the reason it is achievable where [*F-coin*](/uc/layer-6-secret-sharing-mpc/f-coin/index.qmd) is not is that the value becomes public *before* anybody can act on it. Once line 7 has drawn $\mathtt{x}$, there is no operation that suppresses it: line 15 will confirm it to any verifier, and the only thing the adversary controls is how long each party waits.
+
+That is what "output-independent abort" means in the source's title, read from the beacon's side: an adversary may still stop a protocol, but it must decide to do so without knowing the output, because by the time the output exists it is already committed.
+
+## Functionality
+
+Reading the box: $\mathcal{A}(\cdot)$ is a call on the adversary slot whose answer is not used; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it; $\mathbf{C}$ is the set of corrupted parties; $\square$ marks a value never set and $\bot$ "not yet"; $\Delta$ is the parameter bounding delivery delay; $\tau$ is the output length.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{RB}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := \Delta\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{ask}[*] \gets 0\); &nbsp;\(\mathtt{x} \gets \square\)</li>
+<li>\(\mathtt{D}[*] \gets \square\)<span class="cj-comment">// rounds left before each party may read</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Toss()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="3">
+<li>\(\mathtt{ask}[\mathit{id}.P] \gets 1\)</li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Toss},\ \mathit{id}.P\bigr)\)</li>
+<li>\(\textbf{if}\ \forall P \in \mathbf{P} \setminus \mathbf{C} : \mathtt{ask}[P] = 1\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{if}\ \mathtt{x} = \square\ \textbf{then}\)</span></li>
+<li><span class="cj-ind">\(\mathtt{x} \gets_{\$} \{0,1\}^{\tau}\)</span><span class="cj-comment">// drawn by the box, not by anybody in it</span></li>
+<li><span class="cj-ind">\(\forall P \in \mathbf{P} : \mathtt{D}[P] \gets \Delta\)</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Fetch()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="10">
+<li>\(\textbf{require}\ \mathtt{D}[\mathit{id}.P] \neq \square\)<span class="cj-comment">// nothing before every honest party has asked</span></li>
+<li>\(\textbf{if}\ \mathtt{D}[\mathit{id}.P] > 0\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{D}[\mathit{id}.P] \gets \mathtt{D}[\mathit{id}.P] - 1\)</span></li>
+<li><span class="cj-ind">\(\textbf{return}\ \bot\)</span></li>
+<li>\(\textbf{return}\ \mathtt{x}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Verify(<span class="cj-id">x</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="15">
+<li>\(\textbf{return}\ \mathtt{x} \neq \square \ \wedge\ x = \mathtt{x}\)<span class="cj-comment">// public, and available before delivery</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="16">
+<li>\(\textbf{return}\ (\mathtt{x}, \mathtt{D})\)<span class="cj-comment">// the adversary sees the value at line 6</span></li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+The box is transcribed from Baum, David, Dowsley, Kishore, Nielsen and Oechsner, *CRAFT: composable randomness beacons and output-independent abort MPC from time*, ePrint 2020/784, revision `20230213:202950`, Figure 9, p. 23 — "Ticked Functionality $\mathcal{F}_{\textsc{rb}}$ for Randomness Beacons". The rendered page is at `_src/baumetal2023-p23.png`.
+
+**A note on "ticked", because it is the one structural difference from every other box on this site.** The source's functionality has a third interface, `Tick`, which the paper's global ticker calls: it moves each queued message one step closer to delivery. Time in that framework is a global object and delivery is a push. This framework has no ticker, and delivery is a pull — so the countdown is decremented by the recipient's own `Fetch` (line 12), the same translation [*F-diffuse*](/uc/layer-1-channels-agreement-ledgers/f-diffuse/index.qmd) makes. The guarantee is preserved: a party that fetches $\Delta$ times has the value. What changes is who drives the clock, and a reader comparing this box with the source's should know that the source's $\Delta$ is measured in global ticks and this one's in the recipient's activations.
+
+**Line 5 is the honest-majority-free quorum, and it is unusual.** The source's `Toss` fires "upon receiving (Toss, sid) from **all honest parties**" — every one, not a threshold. So the beacon does not produce output until every uncorrupted party has asked, which means a protocol using it cannot proceed while any honest participant is silent. That is a strong precondition and it is the source's, not a translation artefact.
+
+**Line 7 draws once and line 15 makes it public immediately.** Verification does not wait for delivery: a verifier can confirm a value at line 15 while parties are still counting down at line 12. That is deliberate in the source — the `Verify` interface has no delay attached — and it is what makes the beacon *publicly* verifiable rather than merely agreed.
+
+**Line 16 is where the "output-independent" claim can be checked.** The adversary learns $\mathtt{x}$ at the moment it is drawn. So the beacon is *not* hiding the value from the adversary during the delay; what it withholds is the ability to change or suppress it. Reading this line is the quickest way to see that the primitive's guarantee is about commitment rather than secrecy.
+
+**Two translations recorded.** The source keeps a queue of in-flight messages with per-message counters and a message-id; with a single value delivered to every party once, that reduces to one counter per party (line 8), and nothing is lost. And the source distinguishes parties $\mathbf{P}$ from verifiers $\mathbf{V}$; here both are served parties, with `Verify` open to any caller, since this framework's $\mathbf{N}$ already decides who may call.
+
+## Known realizations
+
+**From time-lock puzzles, which is the paper's contribution.** Every party locks a random value in a puzzle; the puzzles are opened after a delay; the beacon output is the XOR of the values that opened. An adversary that refuses to reveal its own opening cannot bias the result, because the honest parties can solve its puzzle anyway — the delay is what removes the abort. The paper's own summary of the construction is that the output is $r = r_{j_1} \oplus \cdots \oplus r_{j_{1+n/2}}$ over valid openings.
+
+**What it costs.** The realization is stated in a hybrid model with a global ticker, a restricted programmable observable random oracle, and a publicly verifiable time-lock puzzle. On this site the last of those is [*F-TLP*](/uc/layer-8-time-application/f-tlp/index.qmd), filled in the same batch as this entry — the two boxes are worth reading together, since one is realized from the other.
+
+**Why not just use `F-coin`.** Coin tossing with abort gives a value that one party may withhold; a beacon must produce output regardless. The difference is exactly the difference between an adversary that acts *after* seeing the value and one that must act before, which is the property the delay buys.
+
+## Properties
+
+- **Unbiasedness, unconditionally.** Line 7 draws uniformly, once. No operation overwrites $\mathtt{x}$ and no adversary line contributes to it.
+- **Unsuppressibility.** Once drawn, $\mathtt{x}$ is returned by line 14 to every party that fetches enough times, and confirmed by line 15 to anyone. There is no abort interface.
+- **Delivery within $\Delta$ fetches, with probability exactly $1$.** Line 8 sets the counter and line 12 decrements it; nothing can raise it.
+- **Public verifiability, immediately.** Line 15 answers before delivery completes, and for any caller.
+- **No secrecy during the delay.** Line 16 gives the adversary the value as soon as it exists.
+- **Every honest party must ask** (line 5). The beacon is not a service one party can invoke alone.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Baum et al. [*CRAFT: Composable randomness beacons and output-independent abort MPC from time*](https://eprint.iacr.org/2020/784). In Public-Key Cryptography (PKC), 2023.
+- Baum, David, Dowsley, Kishore, Nielsen, and Oechsner. [*CRAFT: composable randomness beacons and output-independent abort MPC from time*](https://eprint.iacr.org/2020/784). In Public-Key Cryptography (PKC), 2023. Read at ePrint revision `20230213:202950`. Figure 9, p. 23, the definition transcribed above, including its `Tick` interface; the construction sketch and the XOR-of-openings output rule on the same page; the paper's other printed functionalities — $\mathcal{F}_{\textsc{tlp}}$, $\mathcal{F}_{\textsc{vdf}}$, $\mathcal{F}_{\textsc{bc}}$, $\mathcal{F}_{\mathsf{Ledger}}$, $\mathcal{F}_{\textsc{sc}}$ — recorded in `_src/sources.json` for whoever writes those entries. All six authors confirmed against the paper's own title page; the venue is as the stub recorded it.

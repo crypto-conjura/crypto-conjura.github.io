@@ -1,0 +1,72 @@
+%% The interface box of f-beacon, the one source for both the book
+%% and uc/.../f-beacon/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Frb$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := \Delta$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{ask}[*] \gets 0$; \ $\V{x} \gets \unset$
+\State $\V{D}[*] \gets \unset$
+  \Comment{rounds left before each party may read}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Toss}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $\V{ask}[\id.P] \gets 1$
+\State $\Adv\bigl(\id.\op{Toss},\ \id.P\bigr)$
+\If{$\forall P \in \Ps \setminus \Cs : \V{ask}[P] = 1$} \label{ln:rbquorum}
+  \If{$\V{x} = \unset$}
+    \State $\V{x} \gets_{\$} \{0,1\}^{\tau}$ \label{ln:rbdraw}
+      \Comment{drawn by the box, not by anybody in it}
+    \State $\forall P \in \Ps : \V{D}[P] \gets \Delta$ \label{ln:rbdelay}
+  \EndIf
+\EndIf
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Fetch}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{D}[\id.P] \neq \unset$} \label{ln:rbnotyet}
+  \Comment{nothing before every honest party has asked}
+\If{$\V{D}[\id.P] > 0$}
+  \State $\V{D}[\id.P] \gets \V{D}[\id.P] - 1$ \label{ln:rbtick}
+  \State \textbf{return} $\none$
+\EndIf
+\State \textbf{return} $\V{x}$ \label{ln:rbout}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Verify}(x)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $\V{x} \neq \unset \ \wedge\ x = \V{x}$ \label{ln:rbverify}
+  \Comment{public, and available before delivery}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $(\V{x}, \V{D})$ \label{ln:rbleak}
+  \Comment{the adversary sees the value at line 6}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

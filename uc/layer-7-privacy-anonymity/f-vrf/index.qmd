@@ -2,12 +2,124 @@
 title: "F-VRF — Verifiable random function"
 status: "Canonical"
 layer: 7
-definition: "Not yet written"
+definition: "Defined"
 ---
 
 *F-VRF* (Verifiable random function) is part of *Privacy and Anonymity* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
 
+A random function nobody can lie about. Each key owner gets its own independent random function — drawn lazily, one cell at a time, by the box (line 12) — and can produce a proof that a given value is the right one. The two properties are that the values are *unpredictable* until evaluated and *unique* once proved: no key, message and value can be accepted twice with different values.
+
+The structure worth noticing is which parts the adversary supplies and which it does not. It supplies the verification key (line 4) and every proof (line 16); it never supplies a value. So proofs are treated as syntax the simulator may choose freely, while the function itself belongs to the functionality — which is exactly what a VRF is for, and is why this box is the one proof-of-stake protocols are analysed against.
+
+## Functionality
+
+Reading the box: $\mathcal{A}(\cdot)$ is a call on the adversary slot whose answer is used at lines 4 and 16 and discarded at line 21; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it; $\mathbf{C}$ is the set of corrupted parties; $\square$ marks a value never set; $\mathtt{Y}[v,\mathit{msg}]$ is the value drawn for a key and message, and $\mathtt{Pf}[v,\mathit{msg}]$ the set of proofs accepted for it; $\ell$ is the output length.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{VRF}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := \ell\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{VK}[*] \gets \square\)<span class="cj-comment">// one verification key per party</span></li>
+<li>\(\mathtt{Y}[*,*] \gets \square\); &nbsp;\(\mathtt{Pf}[*,*] \gets \varnothing\)<span class="cj-comment">// the value drawn for \((v,m)\), and the proofs seen for it</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.KeyGen()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="3">
+<li>\(\textbf{require}\ \mathtt{VK}[\mathit{id}.P] = \square\)</li>
+<li>\(v \gets \mathcal{A}\bigl(\mathit{id}.\mathsf{KeyGen},\ \mathit{id}.P\bigr)\)</li>
+<li>\(\textbf{if}\ \mathit{id}.P \notin \mathbf{C}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{require}\ \neg\exists\, P : \mathtt{VK}[P] = v\)</span><span class="cj-comment">// an honest party's key is unique</span></li>
+<li>\(\mathtt{VK}[\mathit{id}.P] \gets v\)</li>
+<li>\(\textbf{return}\ v\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Eval(<span class="cj-id">msg</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="9">
+<li>\(\textbf{require}\ \mathtt{VK}[\mathit{id}.P] \neq \square\)</li>
+<li>\(v \gets \mathtt{VK}[\mathit{id}.P]\)</li>
+<li>\(\textbf{if}\ \mathtt{Y}[v, \mathit{msg}] = \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{Y}[v, \mathit{msg}] \gets_{\$} \{0,1\}^{\ell}\)</span><span class="cj-comment">// a random function, drawn lazily, per key</span></li>
+<li>\(\textbf{return}\ \mathtt{Y}[v, \mathit{msg}]\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.EvalProve(<span class="cj-id">msg</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="14">
+<li>\(\textbf{require}\ \mathtt{VK}[\mathit{id}.P] \neq \square\)</li>
+<li>\(v \gets \mathtt{VK}[\mathit{id}.P]\)</li>
+<li>\(\pi \gets \mathcal{A}\bigl(\mathit{id}.\mathsf{EvalProve},\ \mathit{id}.P,\ \mathit{msg}\bigr)\)<span class="cj-comment">// the proof is the adversary's, the value is not</span></li>
+<li>\(\textbf{if}\ \mathtt{Y}[v, \mathit{msg}] = \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{Y}[v, \mathit{msg}] \gets_{\$} \{0,1\}^{\ell}\)</span></li>
+<li>\(\mathtt{Pf}[v, \mathit{msg}] \gets \mathtt{Pf}[v, \mathit{msg}] \cup \{\pi\}\)</li>
+<li>\(\textbf{return}\ (\mathtt{Y}[v, \mathit{msg}], \pi)\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Verify(<span class="cj-id">msg</span>, <span class="cj-id">y</span>, <span class="cj-id">pi</span>, <span class="cj-id">v</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="21">
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Verify}, \mathit{msg}, y, \pi, v\bigr)\)</li>
+<li>\(\textbf{if}\ \exists\, P : \mathtt{VK}[P] = v\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \mathtt{Y}[v, \mathit{msg}] = y \ \wedge\ \pi \in \mathtt{Pf}[v, \mathit{msg}]\)</span></li>
+<li>\(\textbf{return}\ 0\)<span class="cj-comment">// an unregistered key verifies nothing</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="25">
+<li>\(\textbf{return}\ \mathtt{VK}[\mathit{id}.P]\)<span class="cj-comment">// never the table: the values stay unpredictable</span></li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+The box is transcribed from David, Gaži, Kiayias and Russell, *Ouroboros Praos: an adaptively-secure, semi-synchronous proof-of-stake blockchain*, ePrint 2017/573, revision `20230427:145534`, Figure 2, p. 10 — "Functionality $\mathcal{F}_{\textsc{vrf}}$". The rendered page is at `_src/davidetal2018-p10.png`.
+
+**Which of two printings this takes, and why.** The page also cites Badertscher, Gaži, Querejeta-Azurmendi and Russell, whose ePrint 2022/1045 prints $\mathcal{F}_{\textsc{vrf}}$ three times (pp. 5, 6 and 34 of the PDF) in the course of treating ECVRF specifically — range extension, batch verification, and the gap between the idealization and the deployed standard. That is the more *specialized* treatment, not a correction of the one above: it refines the functionality to say things about a particular curve-based construction. The rule here is that a paper bending a functionality to fit its own object does not supersede the general form, so this entry takes Ouroboros Praos's and records the other as the place to look for ECVRF's specifics.
+
+One thing to flag about that second reference: **the ePrint posting and the published paper carry different titles.** `_src/sources.json` records the current posting as *"On UC-Secure Range Extension and Batch Verification for ECVRF"*, read off its own title page, while the stub cites it as *"A Composable Security Treatment of ECVRF and Batch Verifications"* with an ESORICS 2022 venue. Both are presumably real — a retitling between revisions — but a citation should name which.
+
+**Lines 5–6 are unpredictability's precondition, and they apply only to honest parties.** An honest party's key must be unique; a corrupt party's need not be, and the source says so by handling honest and malicious key generation in separate clauses. What that buys is that two honest parties never share a random function, while a corrupt party may register a key colliding with nothing in particular — and since line 22 keys verification on *some* recorded party, a corrupt duplicate cannot steal an honest party's table.
+
+**Line 16 is the concession, and it is confined to proofs.** The adversary chooses $\pi$; the functionality then accepts it *for that value* (line 19). So proofs are not unique — the set $\mathtt{Pf}$ can grow — and the source is explicit about this, unioning each new proof into the existing set. What is unique is the value: line 12 draws it once and no line rewrites it. A reader expecting proof uniqueness from a VRF should read line 19 carefully; the property is *value* uniqueness.
+
+**Line 23 is soundness in one expression.** A verification succeeds only when the value matches the drawn cell *and* the proof is one the box has seen. Combined with line 12 drawing lazily and line 25 never leaking the table, that is the whole security statement: you cannot predict the value, and you cannot prove a wrong one.
+
+**Two translations recorded.** The source has separate "Malicious Key Generation" and "Malicious VRF Evaluation" clauses for adversary-initiated activations; this framework reaches the same states through the ordinary operations plus the corruption register, so line 5's test does the work of the first, and a corrupt party calling `Eval` does the work of the second. And the source's `Eval` returns only the value while `EvalProve` returns value and proof — kept as two operations here, because the difference is real: line 13 is the unprovable evaluation a party does for itself, and line 20 is the one it can show somebody.
+
+## Known realizations
+
+**It is what proof-of-stake leader election is proved against.** In Ouroboros Praos each stakeholder evaluates its VRF on the slot number; the value decides whether it is a slot leader, and the proof lets everyone else check the claim without being able to predict future leaders. The functionality is used alonga global clock, a key-evolving signature, and the network and initialization functionalities the same paper prints — $\mathcal{F}_{\textsc{init}}$ is on the following page and is recorded in `_src/sources.json`.
+
+**The gap to deployed VRFs is the second reference's subject.** ECVRF as standardized is not literally this box: the batch-verification and range-extension questions that paper addresses exist because the idealization above assumes things a concrete curve-based construction has to earn. Anyone reasoning about an implementation rather than a protocol should start there.
+
+## Properties
+
+- **Unpredictability, unconditionally.** Line 12 draws on first use and line 25 returns only the key. There is no path from $\mathtt{Y}$ to the adversary except through a party's own evaluation.
+- **Value uniqueness, with probability exactly $1$.** $\mathtt{Y}[v,\mathit{msg}]$ is written once (lines 12 and 18) and never rewritten, so no two verifications can accept different values for the same key and message.
+- **Proof non-uniqueness, deliberately.** Line 19 accumulates. Several proofs may verify the same value, which is a property of the idealization and not an oversight.
+- **Honest keys are distinct, with probability exactly $1$** (line 6). Corrupt keys need not be.
+- **An unregistered key verifies nothing** (line 24). This differs from the source, which initializes an empty table for an unknown key and then returns $0$ — the same answer, without the state change.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
+
 *References:*
 
-- Badertscher, Gaži, Querejeta-Azurmendi, and Russell. [*A Composable Security Treatment of ECVRF and Batch Verifications*](https://eprint.iacr.org/2022/1045). In European Symposium on Research in Computer Security (ESORICS), volume 13556 of LNCS, pages 22–41, 2022.
-- David et al. [*Ouroboros praos: An adaptively-secure, semi-synchronous proof-of-stake blockchain*](https://eprint.iacr.org/2017/573). In Advances in Cryptology – EUROCRYPT 2018, 2018.
+- David, Gaži, Kiayias, and Russell. [*Ouroboros Praos: an adaptively-secure, semi-synchronous proof-of-stake blockchain*](https://eprint.iacr.org/2017/573). In Advances in Cryptology – EUROCRYPT 2018, pages 66–98, 2018. Read at ePrint revision `20230427:145534`. Figure 2, p. 10, the definition transcribed above, including its malicious-activation clauses and its three-case verification rule; Figure 3, p. 11, $\mathcal{F}_{\textsc{init}}$, for the surrounding hybrid model. Authors, venue and page range confirmed against DBLP.
+- Badertscher, Gaži, Querejeta-Azurmendi, and Russell. [*A composable security treatment of ECVRF and batch verifications*](https://eprint.iacr.org/2022/1045). In European Symposium on Research in Computer Security (ESORICS), volume 13556 of LNCS, pages 22–41, 2022. Read at ePrint revision `20220922:132642` — whose title page reads *"On UC-Secure Range Extension and Batch Verification for ECVRF"*, so the posting and the published version differ in title, as noted above. It prints $\mathcal{F}_{\textsc{vrf}}$ at PDF pages 5, 6 and 34; those printings specialize the functionality to ECVRF rather than correcting the general form, which is why this entry does not take them. All four authors confirmed against the paper's own title page; the venue and page range are as the stub recorded them.

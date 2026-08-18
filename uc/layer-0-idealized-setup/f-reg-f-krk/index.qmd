@@ -1,12 +1,114 @@
 ---
-title: "F-REG, F-KRK — Key registration, with knowledge"
+title: "F-KR — Key registration, with knowledge"
 status: "Idealized Setup"
 layer: 0
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-REG, F-KRK* (Key registration, with knowledge) is part of *Idealized Setup and Resources* in the UC functionality encyclopedia. Status: an idealized setup assumption or shared resource.
+*F-KR* (Key registration, with knowledge) is part of *Idealized Setup and Resources* in the UC functionality encyclopedia. Status: an idealized setup assumption or shared resource.
+
+A registration service that draws each honest party's key itself, and lets a corrupt party bring its own — provided it hands over the secret. Those two clauses are the whole assumption, and the source states what they buy: the public keys of honest parties are *safe*, meaning their secrets were drawn at random and never revealed, and the public keys of corrupt parties are *well-formed*, meaning the functionality has seen a secret for them. Nothing else is promised, and the paper is unusually explicit that a good deal is not: the adversary may set a corrupt party's key to any value it can produce a secret for, may make it equal to an honest party's key, and may stop any retrieval from succeeding.
+
+The point of asking for so little is that it can be realized several different ways. This is the "relaxed set-up assumption" of the title, offered as an alternative to a common reference string, and the paper shows it is enough for general secure computation.
+
+## Functionality
+
+Reading the box: $\mathcal{A}(\cdot)$ is a query on the adversary slot whose answer *is* used; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it; $\mathbf{C}$ is the set of corrupted parties; $\square$ marks a value never set and $\bot$ an absence; $\mathtt{Good}$ is the set of keys this box drew itself; $f$ and $k$ are the parameters, a deterministic key-generation function and a security parameter.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{KR}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := (f, k)\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{PK} : \mathcal{F}_{\mathsf{KR}}.\mathbf{P} \to \mathcal{K} \cup \{\square\}\)</li>
+<li>\(\mathtt{PK}[*] \gets \square\)</li>
+<li>\(\mathtt{Good} \gets \varnothing\)<span class="cj-comment">// keys this box drew itself</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Register()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="4">
+<li>\(\textbf{require}\ \mathtt{PK}[\mathit{id}.P] = \square\)</li>
+<li>\(p \gets \mathcal{A}\bigl(\mathit{id}.\mathsf{Register},\ \mathit{id}.P\bigr)\)</li>
+<li>\(\textbf{if}\ p \notin \mathtt{Good}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(r \gets_{\$} \{0,1\}^{k}\); &nbsp;\(p \gets f(r)\)</span><span class="cj-comment">// \(r\) is used here and never stored</span></li>
+<li><span class="cj-ind">\(\mathtt{Good} \gets \mathtt{Good} \cup \{p\}\)</span></li>
+<li>\(\mathtt{PK}[\mathit{id}.P] \gets p\)</li>
+<li>\(\textbf{return}\ p\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.RegisterKnown(<span class="cj-id">r</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="11">
+<li>\(\textbf{require}\ \mathit{id}.P \in \mathbf{C} \ \wedge\ \mathtt{PK}[\mathit{id}.P] = \square\)<span class="cj-comment">// only a corrupt party may bring its own \(r\)</span></li>
+<li>\(\mathtt{PK}[\mathit{id}.P] \gets f(r)\)<span class="cj-comment">// well-formed, but not added to \(\mathtt{Good}\)</span></li>
+<li>\(\textbf{return}\ \mathtt{PK}[\mathit{id}.P]\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Retrieve(<span class="cj-id">P</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="14">
+<li>\(p \gets \mathcal{A}\bigl(\mathit{id}.\mathsf{Retrieve},\ P,\ \mathit{id}.P\bigr)\)</li>
+<li>\(\textbf{if}\ p \neq \mathtt{PK}[P]\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \bot\)</span><span class="cj-comment">// withholding is the only power here</span></li>
+<li>\(\textbf{return}\ p\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="18">
+<li>\(\textbf{return}\ \mathtt{PK}\)<span class="cj-comment">// no secret is held to leak</span></li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+The box is transcribed from Barak, Canetti, Nielsen and Pass, *Universally composable protocols with relaxed set-up assumptions*, Figure 2 on p. 5 of the FOCS proceedings version — printed there as $\mathcal{F}^{f}_{kr}$, "the Key Registration functionality". The rendered page is at `_src/baraketal2004-p5.png`.
+
+**A note on how this one had to be read.** The harvester reported that this paper "prints no boxes at all", which was a false negative of a kind worth recording: the paper's mathematical glyphs do not survive the PDF's text layer, so its own prose extracts as "The key registration functionality, , is presented in Figure 2". The definition is perfectly legible in the rendered page, and it was transcribed from the image rather than from the text. A scan that finds nothing in a paper whose prose is full of gaps is reporting an extraction failure, not an absent definition.
+
+**Line 6 is the assumption, and it is a one-shot filter rather than a resampling.** The printed clause offers the adversary the chance to name the key, and accepts its answer *only if that answer is already in $R$* — a key the functionality itself drew earlier, for some party. Otherwise it draws afresh. So the adversary's power over an honest registration is exactly "reassign an existing good key", and nothing more. This is deliberately **not** the house's $\mathsf{San}[\mathsf{Clean}]$, which re-asks until the answer is acceptable: here a bad answer is discarded and the box proceeds on its own draw, which is a different and weaker interface for the simulator. Where the encyclopedia's other boxes resample, this one overrides.
+
+**Line 7 is why there is nothing to leak.** The secret $r$ is drawn, used once to compute $f(r)$, and never stored — so the functionality holds no secret for any honest party, and line 18 can return the whole table without qualification. The source says the same thing from the other side: "the uncorrupted parties do not obtain any secret keys associated with their public keys, whereas the corrupted parties may know the secret keys of their public keys". They know them because they chose them, at line 12, not because this box told them.
+
+**Lines 11–12 are the "with knowledge" half of the name.** A corrupt party registers by supplying $r$, and what gets recorded is $f(r)$ — so the functionality has witnessed a secret for every corrupt key. That is the *well-formedness* guarantee, and it is the property a simulator extracts from. Line 12's key is pointedly **not** added to $\mathtt{Good}$, which is what stops a corrupt registration from becoming a key the adversary may later reassign to an honest party at line 6.
+
+**Line 15 is the adversary's only real power, and it is a veto.** The printed retrieval clause asks the adversary for a value $p$ and returns it if $(P_i, p)$ is recorded, else $\bot$. Since the only recorded value for $P$ is $\mathtt{PK}[P]$, the adversary's choice collapses to two outcomes: the true key, or nothing. The source states the consequence plainly — "the adversary can prevent a party from retrieving any of the registered keys of another party" — and this box says it in one comparison rather than in a quantifier over records.
+
+**One thing the box does not model.** The source's registration clause is available to a party "which is either corrupted or uncorrupted", so a corrupt party may also register through line 4 and get a functionality-drawn key. That remains true here: line 11 is an *additional* route, not a replacement, and nothing prevents a corrupt caller from using line 4 instead.
+
+## Known realizations
+
+**Several, which is the paper's whole argument.** The relaxation is designed so that no single trusted mechanism is required:
+
+- **From a common reference string.** With $D = D_k$ the distribution of $f(r)$ for uniform $r$, the protocol in which a party simply forwards the string obtained from $\mathcal{F}^{D}_{\textsc{crs}}$ securely realizes this functionality — the paper's **Proposition 1**. The direction is worth noticing: the relaxed assumption is *implied by* the stronger one, so anything built on this box also runs over a CRS.
+- **From a randomized registration service**, where parties register and receive keys drawn by the authority according to a given distribution, and the registering party does not obtain the secret. The paper calls that service $\mathcal{F}_{rkr}$ and describes it in prose rather than boxing it — closer to a deployed PKI than [*F-PKI*](/uc/layer-0-idealized-setup/f-pki/index.qmd) is, since the authority chooses the keys.
+
+**What it is for.** The paper's point is that this suffices for general secure computation, which is the reason to prefer it over a CRS: not that it is weaker on paper, but that more real mechanisms plausibly implement it.
+
+## Properties
+
+- **Honest keys are safe, with probability exactly $1$.** Lines 6–7 guarantee an honest party's key is either a fresh $f(r)$ for uniform $r$, or an earlier key drawn the same way. The secret is never stored (line 7) and never returned (line 18).
+- **Corrupt keys are well-formed, with probability exactly $1$.** Every key recorded at line 12 is $f(r)$ for an $r$ the functionality has seen. There is no path by which a key enters the table without a preimage having passed through the box.
+- **Uniqueness is not guaranteed.** Line 6 may assign a key already in $\mathtt{Good}$ — that is, a key belonging to another party. Two parties may therefore share a public key, which the source calls out as intentional. Compare [*G-PKI*](/uc/layer-0-idealized-setup/g-pki/index.qmd), whose sanitizer forbids exactly this.
+- **Retrieval is not guaranteed.** Lines 14–16: the adversary can force $\bot$ on any retrieval, indefinitely. Availability is not part of this assumption.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Barak et al. [*Universally composable protocols with relaxed set-up assumptions*](https://www.cs.cornell.edu/~rafael/papers/focs04.pdf). In 45th IEEE Symposium on Foundations of Computer Science (FOCS), pages 186–195, 2004.
+- Barak, Canetti, Nielsen, and Pass. [*Universally composable protocols with relaxed set-up assumptions*](https://www.cs.cornell.edu/~rafael/papers/focs04.pdf). In 45th IEEE Symposium on Foundations of Computer Science (FOCS), pages 186–195, 2004. **This paper has no ePrint posting**, so there is no revision stamp to pin: read from the 10-page author's copy at `www.cs.cornell.edu/~rafael/papers/focs04.pdf`, SHA-256 prefix `e664191858243888`, recorded in `_src/sources.json`. Figure 2, p. 5, the definition transcribed above, read from the rendered page because the paper's glyphs do not extract; Section 3 for the safety and well-formedness guarantees and for the adversary's latitude; Proposition 1 for the realization over $\mathcal{F}^{D}_{\textsc{crs}}$; the same section for the randomized registration service $\mathcal{F}_{rkr}$. Authors, venue and page range confirmed against DBLP.
+- Canetti, Dodis, Pass, and Walfish. [*Universally composable security with global setup*](https://eprint.iacr.org/2006/432). In 4th Theory of Cryptography Conference (TCC), volume 4392 of LNCS, pages 61–85, 2007. Read at ePrint revision `20071002:061601`. Figure 5, printed p. 27, prints the same object as $\mathcal{G}_{krk}$, "the Knowledge-based Key Registration Functionality (similar to that of [6])" — where [6] is the paper above — and its caption states the two changes that make it a *global* setup: convert it to a shared functionality, and restrict private-key retrieval to corrupt parties only. That global form is the sibling of [*F-ACRS*](/uc/layer-0-idealized-setup/f-acrs/index.qmd), which the same paper introduces as a further simplification of it, replacing one public value per party with a single master key.

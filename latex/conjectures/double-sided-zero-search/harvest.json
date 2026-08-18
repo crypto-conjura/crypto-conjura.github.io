@@ -1,0 +1,261 @@
+{
+  "pdf": {
+    "name": "2023-770.pdf",
+    "sha256": "e32e1eb4a186bb3743828e494076f6cc1a35fc913dc4eedceab9b9b57ff3fc4c",
+    "pages": 22
+  },
+  "run": {
+    "at": "2026-08-18T15:11:16Z",
+    "backend": "cli",
+    "effort": "high"
+  },
+  "document": {
+    "title": "Towards compressed permutation oracles",
+    "authors": [
+      "Dominique Unruh"
+    ],
+    "year": "2023",
+    "venue_or_archive": "IACR Cryptology ePrint Archive (preprint, University of Tartu)",
+    "identifier": "2023/770",
+    "citation_confidence": "inferred"
+  },
+  "candidate": {
+    "slug": "double-sided-zero-search",
+    "title": "Hardness of Double-Sided Zero Search",
+    "subtitle": "random invertible permutation, superposition queries in both directions",
+    "category": "Idealized Models & Non-Uniformity",
+    "one_line": "Given superposition access to a uniformly random permutation on 2n-bit strings and to its inverse, no adversary making polynomially many queries can find an input whose last n bits are zero and whose image also has its last n bits zero.",
+    "informal": "Take a uniformly random permutation on strings of length two n, and give a quantum adversary superposition access both to the permutation and to its inverse. Ask it to find an n-bit string x such that feeding x followed by n zeros into the permutation produces an output that also ends in n zeros. Classically this is a straightforward birthday-type question and the answer is that you need about two to the n over two queries. Quantumly, nobody can prove any lower bound at all. The reason is not that the problem looks easy — no attack is known either — but that the available tools do not apply: the standard trick of replacing a random permutation by a random function is only valid when the adversary cannot query the inverse, and the lazy-sampling technique that handles quantum random oracles has never been made to work for permutations. This problem is the paper's chosen example of how thin the ground is: it is about the simplest search question one can ask about an invertible random permutation, and it is open. The paper does give a proof sketch, but only assuming that its candidate lazy-sampling simulator for permutations is sound, which is itself unproven.",
+    "setting_latex": "For quantum random oracles there is a rich toolbox of hardness results, and since Zhandry's compressed oracle \\cite{Zha19} a general lazy-sampling method as well. For random permutations the situation splits sharply according to whether the adversary can invert. If it cannot, a random permutation is quantum-indistinguishable from a random function \\cite{Zha15}, so any question about a non-invertible random permutation reduces to the random-function case and the whole toolbox applies. If it can --- the case that actually models block ciphers and permutation-based hash functions --- the paper reports that no hardness results whatsoever are known, not even elementary query-complexity statements such as the hardness of finding an input with a prescribed property. The semi-classical one-way-to-hiding theorem \\cite{AHU19} does formally cover arbitrarily distributed functions, hence invertible permutations, but the paper notes it is not aware of any work exploiting this.\n\nThe problem below is the paper's chosen witness for that gap: find $x$ with both $x$ and its image ending in $n$ zeros, given forward and inverse superposition access. Classically it is a lazy-sampling exercise, and the expected answer is $\\Theta(2^{n/2})$ queries. The paper sketches exactly that bound in the compressed-permutation-oracle framework: the invariant is that the recorded partial function contains no double-sided zero, a forward query moves the state $O(2^{-n/2})$ away from the invariant subspace, and the crucial new observation is that the inversion operator used to answer backward queries \\emph{preserves} the invariant, because $h$ has a double-sided zero exactly when $h^{-1}$ does. That sketch, however, is only as good as the soundness of the simulator, which the paper conjectures but does not prove. Unconditionally, the problem is untouched.",
+    "notation_latex": "For $n \\in \\mathbb{N}$ and strings $u, v$, $u \\| v$ denotes concatenation, and $0^n$ the all-zero string of length $n$. For a finite set $S$, $\\mathrm{Perm}(S)$ is the set of bijections $S \\to S$.\n\nFor a permutation $G \\in \\mathrm{Perm}(\\{0,1\\}^{m})$, $U_G$ denotes the unitary on $\\mathbb{C}^{\\{0,1\\}^m} \\otimes \\mathbb{C}^{\\{0,1\\}^m}$ with $U_G |u\\rangle |v\\rangle = |u\\rangle |v \\oplus G(u)\\rangle$, where $\\oplus$ is bitwise XOR. Superposition (``quantum'') access to $G$ means access to $U_G$ as a black box.\n\nAn oracle algorithm $A$ with access to two oracles is a quantum algorithm that alternates unitaries on its own registers with invocations of either oracle on designated registers; its \\emph{query count} is the total number of such invocations, and $x \\leftarrow A^{O_1,O_2}()$ denotes the string obtained by measuring its output register at the end.\n\nA function $\\mu : \\mathbb{N} \\to \\mathbb{R}_{\\ge 0}$ is \\emph{negligible} if for every $c > 0$ there is $n_0$ with $\\mu(n) < n^{-c}$ for all $n \\ge n_0$.",
+    "definitions_latex": "",
+    "formal_statement_latex": "For every polynomial $p$ there is a negligible function $\\mu$ such that for all $n \\in \\mathbb{N}$ and every oracle algorithm $A$ with query count at most $p(n)$,\n\\[ \\Pr\\Bigl[\\; \\exists\\, y \\in \\{0,1\\}^n :\\; H\\bigl(x \\| 0^n\\bigr) = y \\| 0^n \\;\\Bigm|\\; H \\xleftarrow{\\$} \\mathrm{Perm}\\bigl(\\{0,1\\}^{2n}\\bigr),\\; x \\leftarrow A^{U_H,\\, U_{H^{-1}}}() \\Bigr] \\;\\le\\; \\mu(n), \\]\nwhere $A$'s output is read as an element $x \\in \\{0,1\\}^n$.",
+    "parameters": [
+      {
+        "symbol": "n",
+        "meaning": "Half the bit length of the permutation's domain; the permutation acts on $\\{0,1\\}^{2n}$ and the zero-suffix has length $n$."
+      },
+      {
+        "symbol": "p",
+        "meaning": "Polynomial bounding the adversary's total number of forward and inverse queries as a function of $n$."
+      },
+      {
+        "symbol": "H",
+        "meaning": "The uniformly random permutation on $\\{0,1\\}^{2n}$; the adversary gets superposition access to $H$ and to $H^{-1}$."
+      }
+    ],
+    "openness_kind": "paper-conjectures",
+    "status_note": "Open unconditionally. The paper proves it only under its own Conjecture 2 (soundness of the compressed permutation oracle), and says so explicitly when presenting the argument; that conditional argument is the paper's usage example, not a proof.",
+    "progress_note": "Conditional on the soundness of the compressed permutation oracle, the paper sketches a full proof and in fact a quantitative bound: with the invariant ``the recorded partial function contains no $x, y$ with $h(x\\|0^n) = y\\|0^n$'', a forward query moves the state $O(2^{-n/2})$ from the invariant subspace, the inversion operator answering backward queries preserves the invariant exactly, and hence after $q$ queries the state is $O(q 2^{-n/2})$-close to it, so $\\Theta(2^{n/2})$ queries are needed. The paper also explains why the standard reduction is unavailable: replacing the permutation by a random function is sound only for forward-only access.",
+    "why_interesting": "It would be the first hardness result of any kind for an invertible random permutation under superposition access, in a model where the paper reports that literally none are known. The problem is deliberately minimal — a search problem with a syntactic condition on input and output — so a proof would almost certainly come with a reusable technique rather than a one-off argument, and that technique is what the whole area is missing. It is also a sharp test case in the other direction: because the classical answer is a routine birthday bound and no quantum attack is known either, a surprising quantum algorithm here would say something genuinely new about superposition access to permutation inverses. Finally, it is the smallest concrete consequence of the paper's soundness conjecture, so it is the natural first target for anyone who wants to attack that conjecture from below.",
+    "why_clean": "The statement needs no idealized-model machinery, no simulator, and no definitions beyond concatenation and a standard XOR query unitary: a random permutation on $2n$ bits, two oracles, one output string, one success predicate. It is information-theoretic, so there is no assumption to argue about, and both the conjectured answer and the classical baseline are unambiguous. Anyone who can prove quantum query lower bounds can start on it immediately.",
+    "risks": "(1) Resolution status. This is the paper's flagship example and an obvious target, and there has been significant activity since 2023 on recording techniques for random permutations and random unitaries; I am not confident it has not been settled, and a reviewer should check the follow-up literature before publishing. (2) Strength. The paper's Conjecture 1 says only that the problem is ``hard'' for polynomially many queries; the $\\Theta(2^{n/2})$ figure appears only in the conditional usage example, so I deliberately kept it out of the formal statement and put it in the progress note. (3) The paper does not fix the query model for the inverse oracle beyond calling it a ``backward query''; I used the standard XOR unitary for $H^{-1}$, which is the natural reading and matches the paper's $A^{\\pi,\\pi^{-1}}$ notation elsewhere. (4) The paper's phrasing ``Find $x \\in \\{0,1\\}^n$'' leaves implicit that the adversary must output $x$ rather than merely a witness pair; I made the output convention explicit.",
+    "quotes": [
+      {
+        "page": 12,
+        "role": "statement",
+        "text": "Let H be a uniformly random permutation on {0, 1}2n . The following problem is hard for any adversary making polynomially many superposition queries to H and H −1 :"
+      },
+      {
+        "page": 12,
+        "role": "openness",
+        "text": "Because of this, even simple questions relating to (superposition access to) random permutations are to the best of our knowledge not in the scope of existing techniques, such as the following conjecture:"
+      },
+      {
+        "page": 2,
+        "role": "openness",
+        "text": "To the best of our knowledge, no hardness results are known about invertible random permutations, not even simple query complexity results such as the hardness of searching an input with certain properties."
+      },
+      {
+        "page": 13,
+        "role": "progress",
+        "text": "We now illustrate how the CPO can be used by showing Conjecture 1 (double-sided zero-search) using the CPO. Of course, the validity of this example rests on Conjecture 2."
+      },
+      {
+        "page": 12,
+        "role": "parameter",
+        "text": "What we are interested in are, therefore, invertible random permutations (forward and backward queries)."
+      },
+      {
+        "page": 12,
+        "role": "progress",
+        "text": "Namely, we know that a random permutation is indistinguishable from a random function, even in the quantum setting [28]. So when analyzing a situation where the adversary has quantum access to a non-invertible function, we can simply replace it by a random function as the first step, and analyze from there using established techniques for random oracles (such as, for example, the CFO)."
+      }
+    ],
+    "pages": [
+      2,
+      12,
+      13
+    ],
+    "bibliography": [
+      {
+        "key": "Zha19",
+        "authors": "Mark Zhandry",
+        "title": "How to Record Quantum Queries, and Applications to Quantum Indifferentiability",
+        "venue": "Crypto 2019, Vol. 11693, LNCS, Springer, pp. 239–268",
+        "year": "2019",
+        "verified": "printed-in-source-bibliography"
+      },
+      {
+        "key": "Zha15",
+        "authors": "Mark Zhandry",
+        "title": "A note on the quantum collision and set equality problems",
+        "venue": "Quantum Inf. Comput. 15.7&8, pp. 557–567",
+        "year": "2015",
+        "verified": "printed-in-source-bibliography"
+      },
+      {
+        "key": "AHU19",
+        "authors": "Andris Ambainis, Mike Hamburg, Dominique Unruh",
+        "title": "Quantum Security Proofs Using Semi-classical Oracles",
+        "venue": "Crypto 2019, Springer, pp. 269–295",
+        "year": "2019",
+        "verified": "printed-in-source-bibliography"
+      }
+    ]
+  },
+  "grounding": [
+    {
+      "quote": "Let H be a uniformly random permutation on {0, 1}2n . The following problem is hard for any adversary making polynomially many superposition queries to H and H −1 :",
+      "claimed_page": 12,
+      "found_page": 12,
+      "coverage": 1.0,
+      "longest_run": 0.0,
+      "status": "exact",
+      "role": "statement"
+    },
+    {
+      "quote": "Because of this, even simple questions relating to (superposition access to) random permutations are to the best of our knowledge not in the scope of existing techniques, such as the following conjecture:",
+      "claimed_page": 12,
+      "found_page": 12,
+      "coverage": 1.0,
+      "longest_run": 0.0,
+      "status": "exact",
+      "role": "openness"
+    },
+    {
+      "quote": "To the best of our knowledge, no hardness results are known about invertible random permutations, not even simple query complexity results such as the hardness of searching an input with certain properties.",
+      "claimed_page": 2,
+      "found_page": 2,
+      "coverage": 1.0,
+      "longest_run": 0.0,
+      "status": "exact",
+      "role": "openness"
+    },
+    {
+      "quote": "We now illustrate how the CPO can be used by showing Conjecture 1 (double-sided zero-search) using the CPO. Of course, the validity of this example rests on Conjecture 2.",
+      "claimed_page": 13,
+      "found_page": 13,
+      "coverage": 1.0,
+      "longest_run": 0.0,
+      "status": "exact",
+      "role": "progress"
+    },
+    {
+      "quote": "What we are interested in are, therefore, invertible random permutations (forward and backward queries).",
+      "claimed_page": 12,
+      "found_page": 12,
+      "coverage": 1.0,
+      "longest_run": 0.0,
+      "status": "exact",
+      "role": "parameter"
+    },
+    {
+      "quote": "Namely, we know that a random permutation is indistinguishable from a random function, even in the quantum setting [28]. So when analyzing a situation where the adversary has quantum access to a non-invertible function, we can simply replace it by a random function as the first step, and analyze from there using established techniques for random oracles (such as, for example, the CFO).",
+      "claimed_page": 12,
+      "found_page": 12,
+      "coverage": 1.0,
+      "longest_run": 0.0,
+      "status": "exact",
+      "role": "progress"
+    }
+  ],
+  "verify": {
+    "checks": [
+      {
+        "name": "Existence",
+        "result": "pass",
+        "page": 12,
+        "finding": "Conjecture 1 (Double-sided zero-search) is stated verbatim on p. 12: \"Let H be a uniformly random permutation on {0,1}^{2n}. The following problem is hard for any adversary making polynomially many superposition queries to H and H^{-1}: Find x in {0,1}^n such that H(x‖0^n) = y‖0^n for some y.\" The draft's problem is this problem."
+      },
+      {
+        "name": "Openness",
+        "result": "pass",
+        "page": 13,
+        "finding": "It is posed as a conjecture (p. 12), and the only argument for it (p. 13, \"Usage example\") is explicitly conditional: \"Of course, the validity of this example rests on Conjecture 2.\" I read every remaining page (14-22): Theorem 1 (p. 14) and Corollary 1 (pp. 18-19) establish Conjecture 2 only under the hypothesis that some construction is indistinguishable from the CPO, a hypothesis the paper never discharges. Nothing resolves Conjecture 1 unconditionally."
+      },
+      {
+        "name": "Strength",
+        "result": "pass",
+        "page": 12,
+        "finding": "Clause by clause: same permutation domain {0,1}^{2n}, same input shape x‖0^n with x in {0,1}^n, same output condition (exists y with image = y‖0^n), same two oracles H and H^{-1}, same polynomial query bound. Neither strengthened nor weakened; the draft does not generalize the zero suffix, the domain split, or the oracle access."
+      },
+      {
+        "name": "Quantifiers and parameters",
+        "result": "pass",
+        "page": 12,
+        "finding": "The paper's \"hard for any adversary making polynomially many superposition queries\" is a query bound with no runtime bound; the draft's \"every oracle algorithm A with query count at most p(n)\" matches and correctly omits efficiency. The for-all-p / exists-negligible-mu order is the standard reading of \"hard\" and is not contradicted. The paper measures negligibility in log|D| (Conjecture 2, p. 13); with |D| = 2^{2n} the draft's negligible-in-n is equivalent. The parameter table (n, p, H) is consistent with p. 12."
+      },
+      {
+        "name": "Attribution",
+        "result": "pass",
+        "page": 12,
+        "finding": "This is the harvested paper's own numbered Conjecture 1, authored by Unruh, not a problem attributed to another work. The supporting claims the draft borrows (random permutation ~ random function) are correctly attributed to [28] = Zhandry 2015, as the paper does on p. 12."
+      },
+      {
+        "name": "Definitions",
+        "result": "pass",
+        "page": 5,
+        "finding": "U_G|u>|v> = |u>|v XOR G(u)> matches the paper's U_f : |x>|y> -> |x>|y XOR f(x)> (p. 5). Perm(S) is a rename of the paper's D <-> D (\"injective functions from D to D\", symbol index p. 21) - renamed, not redefined. Superposition access, query count, and negligible all carry the paper's meanings. No silent substitution found."
+      },
+      {
+        "name": "Fabrication",
+        "result": "fail",
+        "page": 13,
+        "finding": "setting_latex: \"Classically it is a lazy-sampling exercise, and the expected answer is Theta(2^{n/2}) queries. The paper sketches exactly that bound...\" The Theta(2^{n/2}) on p. 13 is the QUANTUM bound from the CPO invariant argument, not a classical bound; the paper states no classical query complexity for this problem (its p. 12 classical discussion is generic lazy sampling of permutations, with no count). The correct classical figure is Theta(2^n). informal repeats this as \"a straightforward birthday-type question\" - there is no birthday structure here. informal also asserts \"no attack is known either\", which appears nowhere in the paper and is in tension with the paper's own Theta(2^{n/2}) (a Grover-type search matches it)."
+      },
+      {
+        "name": "Self-containment",
+        "result": "pass",
+        "page": 0,
+        "finding": "The formal statement plus notation block fixes the permutation domain, both oracles, the query bound, the success event, and the output type; a reader who has never seen the paper knows exactly what must be proved. No evidence needed from the paper for this check."
+      }
+    ],
+    "confidence": "high",
+    "corrections": [
+      {
+        "field": "setting_latex",
+        "problem": "Claims the classical query complexity of double-sided zero-search is Theta(2^{n/2}) and that the paper's CPO sketch establishes \"exactly that bound\". The paper gives no classical bound for this problem, and its Theta(2^{n/2}) (p. 13) is the conditional quantum bound.",
+        "corrected": "Classically the problem is an easy lazy-sampling exercise and takes Theta(2^n) queries: there are about 2^n candidate inputs x‖0^n, and each forward (or backward) query hits the 2^n-element zero-suffix set with probability about 2^{-n}. The paper itself states no classical bound. What the paper sketches in the compressed-permutation-oracle framework is the quantum bound Theta(2^{n/2}) (p. 13), and only under Conjecture 2."
+      },
+      {
+        "field": "informal",
+        "problem": "\"Classically this is a straightforward birthday-type question and the answer is that you need about two to the n over two queries\" - wrong count and wrong reason; there is no collision structure, and this sentence silently reuses the paper's quantum figure. It also contradicts the next sentence's claim that no quantum bound is provable.",
+        "corrected": "Classically this is a plain search question - not a birthday question - and about two to the n queries are needed. Quantumly, no lower bound can currently be proved at all; the two-to-the-n-over-two figure appearing in the paper is the quantum bound its conditional CPO argument yields."
+      },
+      {
+        "field": "informal",
+        "problem": "\"The reason is not that the problem looks easy - no attack is known either\" is not supported anywhere in the paper, and the paper's own Theta(2^{n/2}) claim indicates a matching quantum search attack.",
+        "corrected": "Delete. The paper's position is only that no hardness results are known for invertible random permutations (p. 2); it makes no claim about the absence of attacks."
+      }
+    ],
+    "fabrications": [
+      "Classical query complexity of double-sided zero-search given as Theta(2^{n/2}) (setting_latex) / \"about two to the n over two queries\" (informal). The paper states no classical bound for this problem anywhere; the correct classical figure is Theta(2^n).",
+      "\"The paper sketches exactly that bound\" applied to the alleged classical bound (setting_latex). The paper's Theta(2^{n/2}) on p. 13 is the conditional quantum bound, not a classical one.",
+      "Characterizing the problem as \"birthday-type\" (informal). No birthday or collision structure is present in the problem or claimed by the paper.",
+      "\"no attack is known either\" (informal). Absent from the paper, and in tension with the paper's own Theta(2^{n/2}) tightness claim on p. 13."
+    ],
+    "reason": "Conjecture 1 is genuinely the paper's own (p. 12), genuinely open — the only proof offered rests explicitly on the unproven Conjecture 2 (p. 13), and Theorem 1 and Corollary 1 leave that unchanged through p. 19 — and the formal statement, quantifiers, and definitions all check out symbol by symbol. The one real failure is the draft's classical-complexity claim: it relabels the paper's conditional quantum bound Theta(2^{n/2}) as the classical answer and asserts the paper sketches that classical bound, when the paper gives no classical count and the true classical figure is Theta(2^n). That error is confined to the narrative fields and is precisely repairable, so the conjecture survives with corrections rather than being unfaithful.",
+    "verdict": "faithful-with-corrections"
+  },
+  "build": {
+    "compiled": true,
+    "chktex": [
+      "Warning 13 in statement.tex line 136: Intersentence spacing (`\\@') should perhaps be used."
+    ],
+    "lacheck": [
+      "\"statement.tex\", line 136: missing `\\@' before `.' in \"XOR.\""
+    ],
+    "errors": []
+  }
+}

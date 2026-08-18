@@ -221,7 +221,8 @@ rule standing in for IO's separator. Do not substitute their SVG or brand
 assets; attribution does not need them, and reproducing them would imply a
 relationship that does not exist.
 
-Currently applied to: `c/0039` (Cojocaru, Kiayias, Shen, Wallden), whose
+Currently applied to: `c/0039` (Cojocaru, Kiayias, Shen, Wallden) and
+`c/0040`/`c/0041` (Abram, Ball, Garay, Kiayias), all citing papers whose
 author Aggelos Kiayias is Chief Scientist at Input Output. Nothing enforces
 this -- it is a hand-applied convention, so a new statement citing an
 IO-affiliated author needs the mark added by hand.

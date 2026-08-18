@@ -1,0 +1,33 @@
+---
+title: "Can permissionless consensus reach one-half resilience without a beacon?"
+subtitle: "One quarter is tight for protocols that sign everything and verify everything; one half is the classical ceiling"
+---
+
+## Motivation
+
+Bootstrapping a public-key directory from computational effort alone, with no trusted setup, gives every honest party a slightly different view of who else is honest: a *partial PKI*. The source paper builds one in the plain common-random-string model from a new primitive, a multi-verifier signature of work, and reaches Byzantine agreement tolerating any adversarial share below one quarter of the recognized identities. It also proves that one quarter is exactly the ceiling for the natural class of protocols that sign everything they send and discard anything they cannot fully verify.
+
+The classical resilience limit for consensus of this kind is one half, and nothing in the paper — or, as far as this page tracks, anywhere else — rules it out in the partial-PKI setting. The paper names the obstruction its own techniques cannot get past: multi-verifier signatures of work are not *transferable*, so one honest party can accept a proof another honest party rejects.
+
+## Provenance and history
+
+From Abram, Ball, Garay and Kiayias, [*Permissionless Consensus from a Common Random String*](https://eprint.iacr.org/2026/1179), Cryptology ePrint Archive, Report 2026/1179; abridged version to appear at CRYPTO 2026. Section 5:
+
+> "The theoretical limit for resiliency (according to the known lower bound for consensus [Fit02]) would be (less than) 1/2; so achieving it in our setting constitutes an interesting question for future work. We surmise that new techniques would be needed for this that go beyond multi-verifier signatures of work."
+
+The paper points at a specific route rather than leaving the question purely open-ended: with *transferable* proofs, one could build a *ranked* partial PKI, from which one-half-resilient consensus already follows via an adaptation of Dolev–Strong, by a result of Andrychowicz and Dziembowski.
+
+## What is settled and what is not
+
+| | status |
+|---|---|
+| consensus at resilience $\gamma < \tfrac14(1-3\epsilon)$, $\epsilon \in (0,\tfrac13)$ | **proved** — the source's Theorem 5 (PartialPhaseKing) |
+| no "simple" protocol (sign everything, verify everything) reaches $\gamma = \tfrac14$, $\epsilon = 0$ | **proved for deterministic protocols** — the source's Theorem 6 |
+| consensus at every $\gamma < \tfrac12$, by any protocol | **open** — tracked as [c/0041](/c/0041/) |
+| one-half resilience via transferable proofs of work $\to$ a ranked partial PKI $\to$ Dolev–Strong | **named as the likely route, not built** — the paper cites Andrychowicz–Dziembowski for the last step only |
+
+The gap between $\tfrac14$ and $\tfrac12$ is open for *arbitrary* protocols, not just simple ones — Theorem 6 says nothing once a protocol is allowed to leave the sign-everything/verify-everything discipline, and the paper's own proposed route does exactly that by strengthening the setup to a ranked partial PKI instead. [c/0041](/c/0041/) states the paper's question at this generality, and separately records — labelled as the harvester's own strengthening, not the paper's — the narrower question of what is achievable if the $(\gamma,\epsilon)$-partial PKI setup is held fixed.
+
+## Statements in this hub
+
+- [Consensus in the Partial PKI Setting Beyond One-Quarter Resilience](/c/0041/) — open; whether every constant resilience $\gamma < 1/2$ is achievable in the paper's permissionless CRS setting, by some protocol and some means of bootstrapping identities.

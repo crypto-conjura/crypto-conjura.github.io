@@ -32,6 +32,14 @@ website:
   # description. It has to be the deployed origin, not a relative path.
   site-url: "https://conjura.org"
   repo-url: "https://github.com/crypto-conjura/crypto-conjura.github.io"
+  # The tab mark: a ring with a disc inside it, the same shape as the status
+  # badge on every statement page, fixed at the accent colour so it reads as
+  # the site rather than as a grade. SVG so it stays crisp at every size and
+  # can answer prefers-color-scheme; assets/favicon-32.png and
+  # assets/apple-touch-icon.png are rendered from that one file for the
+  # browsers and home screens that will not take an SVG, and are linked
+  # below under format.html.include-in-header.
+  favicon: assets/favicon.svg
   open-graph: true
   twitter-card: true
   bread-crumbs: false
@@ -68,69 +76,90 @@ website:
       This site is AI-generated and has not been independently reviewed.
       [What that means](/about/index.qmd#this-site-has-not-been-reviewed-either)
 
-  # The top-level entries here (Problems, Papers, Surveys, Resources,
-  # Philosophy, Steering) are mirrored in the navbar's LEFT list above, in the
-  # same order. Keep the two in sync -- see the comment there. Entries, not
-  # sections: two of them are plain `text:` links because they have no
-  # children, so a check that looks only for `section:` keys would miss them.
-  # navbar.right holds
-  # only the GitHub icon: an entry parked there still looks mirrored on a
-  # rendered page, because the two lists concatenate, while breaking this
-  # rule.
+  # NAVIGATION, in two halves, and the split is the design.
   #
-  # ONE level of nesting only. A section holds links, never another section.
+  # The navbar above carries the main sections and nothing else. The sidebar
+  # carries only what is *inside* the section you are in -- it never repeats
+  # the section names, because they are already at the top of every page and
+  # a reader does not need the same six words twice.
+  #
+  # That contextual behaviour is why this is a LIST of sidebars rather than
+  # one. Quarto matches a page to the sidebar whose contents contain it, so
+  # each section gets its own, and a page in no sidebar simply gets none --
+  # which is the right answer for a statement or a functionality page, where
+  # the page's own content is the navigation.
+  #
+  # Each sidebar's `id` is its section. Keep the set in step with the
+  # navbar's left list above: a section added there wants a sidebar here if
+  # it has children, and Philosophy and Support deliberately have none.
+  #
+  # ONE level of nesting only. A sidebar holds links, never sections.
   # Anything with children of its own is a link to a page that lists them:
   # the 19 areas are on open-problems/, the 9 UC layers are on uc/, the
   # papers are on papers/archive/. A sidebar that unfolds two levels deep is
   # a navigation tree competing with the pages, and the pages win.
-  # The UC Encyclopedia is still filed under Surveys; only its nesting went,
-  # and its URLs stay at /uc/... regardless.
+  #
+  # Blog stays out of both lists for now, by request. The pages are still
+  # built and still resolve, so nothing pointing at /blog/ breaks; they are
+  # simply not advertised. Restoring it means a navbar entry above and, if it
+  # gains children, a sidebar here -- and note that `auto:` is what expands a
+  # glob in contents, since a bare "blog/posts/*.qmd" is taken as a literal
+  # entry and renders as dead text.
   sidebar:
-    style: floating
-    collapse-level: 1
-    contents:
-      - section: "Problems"
-        href: open-problems/index.qmd
-        contents:
-          - open-problems/all/index.qmd
-          - open-problems/status-legend/index.qmd
-      - section: "Papers"
-        href: papers/index.qmd
-        contents:
-          # Archive is a page listing the papers, deliberately not an
-          # expandable section: clicking it should go somewhere, not unfold a
-          # list in place. New papers are added to that page rather than here.
-          # Example Paper is absent on purpose; it is the frontmatter contract
-          # a new paper is copied from, and stays reachable from papers/,
-          # README.md and the Reviews page.
-          - papers/archive/index.qmd
-          - papers/reviews/index.qmd
-          - papers/proposals/index.qmd
-      - section: "Surveys"
-        href: surveys/index.qmd
-        contents:
-          - surveys/uc-for-gamers/index.qmd
-          - uc/index.qmd
-      - section: "Resources"
-        href: resources/index.qmd
-        contents:
-          - open-problems/latex-templates/index.qmd
-          - prompts/index.qmd
-      # Blog is hidden from the navbar and the sidebar for now, by request.
-      # The pages are still built and still resolve, so nothing already
-      # pointing at /blog/ breaks; they are simply not advertised. To restore
-      # it, put "Blog" back in both lists, above Philosophy in each, and note
-      # that `auto:` is what expands a glob in contents: a bare
-      # "blog/posts/*.qmd" is taken as a literal entry and renders as dead
-      # text.
-      # Plain entries, not sections. Quarto renders a `section:` that has no
-      # `contents:` as a bare <span> and silently drops its href, so Philosophy
-      # sat in the sidebar looking like the others and could not be clicked.
-      # Support has no children either, so it takes the same form.
-      - text: "Philosophy"
-        href: about/index.qmd
-      - text: "Support"
-        href: support/index.qmd
+    - id: problems
+      style: floating
+      collapse-level: 1
+      contents:
+        # The section's own landing page, named "Overview" rather than
+        # repeating the section name the navbar already shows. It has to be
+        # listed for Quarto to match that page to this sidebar at all.
+        - text: "Overview"
+          href: open-problems/index.qmd
+        - open-problems/all/index.qmd
+        - open-problems/status-legend/index.qmd
+    - id: papers
+      style: floating
+      collapse-level: 1
+      contents:
+        # Archive is a page listing the papers, deliberately not an
+        # expandable section: clicking it should go somewhere, not unfold a
+        # list in place. New papers are added to that page rather than here.
+        # Example Paper is absent on purpose; it is the frontmatter contract
+        # a new paper is copied from, and stays reachable from papers/,
+        # README.md and the Reviews page.
+        # The section's own landing page, named "Overview" rather than
+        # repeating the section name the navbar already shows. It has to be
+        # listed for Quarto to match that page to this sidebar at all.
+        - text: "Overview"
+          href: papers/index.qmd
+        - papers/archive/index.qmd
+        - papers/reviews/index.qmd
+        - papers/proposals/index.qmd
+    - id: surveys
+      style: floating
+      collapse-level: 1
+      contents:
+        # The UC Encyclopedia is still filed under Surveys; its URLs stay at
+        # /uc/... regardless.
+        # The section's own landing page, named "Overview" rather than
+        # repeating the section name the navbar already shows. It has to be
+        # listed for Quarto to match that page to this sidebar at all.
+        - text: "Overview"
+          href: surveys/index.qmd
+        - surveys/uc-for-gamers/index.qmd
+        - uc/index.qmd
+        - uc/all/index.qmd
+    - id: resources
+      style: floating
+      collapse-level: 1
+      contents:
+        # The section's own landing page, named "Overview" rather than
+        # repeating the section name the navbar already shows. It has to be
+        # listed for Quarto to match that page to this sidebar at all.
+        - text: "Overview"
+          href: resources/index.qmd
+        - open-problems/latex-templates/index.qmd
+        - prompts/index.qmd
 
 format:
   html:
@@ -141,6 +170,14 @@ format:
     # og:url. This is a format option rather than a `website:` one, but it
     # only does anything once `website: site-url:` is set above.
     canonical-url: true
+    # Quarto emits one <link rel="icon"> from `favicon` above. These are the
+    # two it does not: a PNG for anything that cannot render an SVG icon, and
+    # the touch icon iOS uses when a reader adds the site to a home screen.
+    # Both are generated from assets/favicon.svg, so the mark has one source.
+    include-in-header:
+      - text: |
+          <link rel="alternate icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
+          <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png">
     # Self-hosted MathJax. Quarto's default is
     # cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js, which made every page on
     # the site depend on a third party to render any mathematics, and ran a

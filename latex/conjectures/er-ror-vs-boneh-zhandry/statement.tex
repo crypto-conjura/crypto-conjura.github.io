@@ -1,0 +1,338 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  Erasing real-or-random quantum IND-CPA does not imply Boneh-Zhandry.
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{ERASING REAL-OR-RANDOM VS.\ BONEH--ZHANDRY}
+
+% Euler Fraktur for the two placeholder query-type names; declared here
+% rather than pulled in with a package, matching the other statements in
+% this collection.
+\DeclareMathAlphabet{\mathfrak}{U}{euf}{m}{n}
+
+\newcommand{\KGen}{\mathsf{KGen}}
+\newcommand{\Enc}{\mathsf{Enc}}
+\newcommand{\Dec}{\mathsf{Dec}}
+\newcommand{\ror}{\mathrm{ror}}
+\newcommand{\onect}{1\mathrm{ct}}
+\newcommand{\learn}{\mathrm{learn}}
+\newcommand{\chall}{\mathrm{chall}}
+\newcommand{\ket}[1]{|#1\rangle}
+% the two notions this statement compares, written so that TeX may break
+% the line at the internal hyphen
+\newcommand{\NERror}{\ensuremath{\learn(*,ER)}-\ensuremath{\chall(*,ER,\ror)}}
+\newcommand{\NBZ}{\ensuremath{\learn(*,ST)}-\ensuremath{\chall(*,CL,\onect)}}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{Erasing Real-or-Random Quantum IND-CPA Does Not Imply
+  Boneh--Zhandry Security}
+\cjsubtitle{Symmetric encryption under superposition chosen-plaintext
+  queries, polynomially many queries on both sides}
+\cjstatus{Statement: AI-written from Tore Vincent Carstens, Ehsan
+  Ebrahimi, Gelo Tabia and Dominique Unruh, \emph{Relationships between
+  quantum IND-CPA notions}, IACR Cryptology ePrint Archive 2020
+  (preprint, 47 pages), not yet checked by a human. Settled in that
+  paper: $P1\Rightarrow P6$ and $P1\Rightarrow P4$, that
+  $P4\not\Rightarrow P1$, and --- in the quantum random oracle model
+  only --- that $P6\not\Rightarrow P4$; open, and conjectured below, is
+  whether $P4\Rightarrow P6$, one of the $41$ cells the paper's
+  implication table leaves open and one of the six non-implications the
+  paper explicitly conjectures.}
+\cjcategory{\emph{Quantum \& Post-Quantum Cryptography}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+Classically, all the usual ways of writing down chosen-plaintext
+indistinguishability for symmetric encryption are equivalent to each
+other. As soon as the attacker may query the encryption oracle on a
+superposition of messages this stops being true, because it now matters
+how the oracle hands its answer back and how the challenge is phrased.
+Two of the definitions that appear in the literature are: (a) an
+attacker whose superposition queries are answered by an erasing oracle,
+which consumes the message register and returns only a ciphertext
+register, and whose challenge is real-or-random, meaning the challenger
+either encrypts the submitted message or encrypts a secretly permuted
+version of it; and (b) the Boneh--Zhandry definition, in which
+superposition learning queries are answered by the usual oracle that
+XORs the ciphertext into an adversary-supplied output register, while
+the challenge consists of two classical messages of which one is
+encrypted. Neither definition is known to imply the other, and it is
+already proved, in the quantum random oracle model, that (b) does not
+imply (a). The conjecture is that (a) does not imply (b) either: there
+should be a scheme that is provably secure in sense (a) and yet
+completely broken in sense (b), so that the two definitions are
+incomparable. The reason this is hard is that the obvious reduction ---
+take an attacker against (b) and run it inside the game (a) --- has to
+answer that attacker's standard-model learning queries using only
+erasing queries, and an erasing query does not give the message register
+back, while no-cloning prevents the reduction from keeping a copy of it.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+Classically, the one-ciphertext, two-ciphertext and real-or-random forms
+of IND-CPA for symmetric encryption are all equivalent up to polynomial
+loss~\cite{BDJR97}. In the quantum setting one must also decide how a
+superposition query to the encryption oracle is answered. Three query
+models are used: the \emph{standard} model $ST$, where the unitary $U_f$
+XORs the answer into an adversary-supplied output register; the
+\emph{embedding} model $EM$, where the challenger supplies the output
+register in state $\ket{0}$; and the \emph{erasing} model $ER$, where
+the isometry $\hat U^{f}$ consumes the input register and returns only
+$\ket{f(x)}$~\cite{KKVB02}. Boneh and Zhandry~\cite{BZ13b} showed that a
+superposition challenge query returning one or two ciphertexts in the
+standard model is unachievable, and therefore proposed the definition
+with superposition learning queries in the standard model and classical
+challenge queries. Gagliardoni, H\"ulsing and Schaffner~\cite{GHS16}
+moved to erasing challenge queries, and Mossayebi and
+Schack~\cite{MS16} to real-or-random challenges with standard queries.
+
+The source paper systematizes this: of $120$ combinations of (number of
+learning queries, number of challenge queries, query model, challenge
+return type) it discards the exotic and impossible ones, leaving $57$
+achievable notions, which it groups into $14$ equivalence classes called
+panels $P1,\dots,P14$ and orders by implication. Panel $P6$ is the
+Boneh--Zhandry family $\learn(*,ST)$-$\chall(\cdot,CL,\cdot)$; panel
+$P4$ is the erasing real-or-random family, which contains \NERror;
+panel $P1$ is the erasing one- and two-ciphertext family, which contains
+the notion of~\cite{GHS16}. The paper proves $P1\Rightarrow P6$ (its
+Theorem 24, via~\cite{GHS16}) and $P1\Rightarrow P4$, and separates $P4$
+from $P1$ and $P6$ from $P4$. It does not resolve whether
+$P4\Rightarrow P6$, and conjectures that it does not, on the ground that
+a reduction would have to answer the Boneh--Zhandry adversary's $ST$
+learning queries using $ER$ queries, which do not return the input
+register and cannot be undone by copying it. Separations of this kind in
+the paper are all conditional on quantum-secure one-way functions, from
+which quantum-secure pseudorandom permutations are
+available~\cite{Zha16}, and the separating schemes are built by planting
+a structure that only a superposition adversary can exploit, using
+Simon's algorithm~\cite{Sim97}. All non-implications in the paper assume
+quantum-secure one-way functions, and all hold in the standard model
+except Theorem 39, which holds in the quantum random oracle model and is
+what yields $P6\not\Rightarrow P4$.
+
+Progress to date. Established around this cell: the erasing
+one-ciphertext family implies the Boneh--Zhandry family (the paper's
+Theorem 24, quoting a chain of implications from
+Gagliardoni--H\"ulsing--Schaffner); the erasing one-ciphertext family
+implies the erasing real-or-random family (the paper's Theorem 22); the
+erasing real-or-random family does not imply the erasing one-ciphertext
+family --- Corollary 29 (p.~37) states $P2, P4\not\Rightarrow P8$, where
+$P8$ is $\learn(*,CL)$-$\chall(1,ER,\onect)$, and the paper then deduces
+$P4\not\Rightarrow P1, P3$ on p.~36 because $P1, P3\Rightarrow P8$; the
+bare claim that Panel 1 is strictly stronger than Panel 4 is also stated
+outright on p.~6. The mechanism is quasi-length-preserving schemes: any
+quasi-length-preserving scheme is insecure for a single erasing
+one-ciphertext challenge query, while a quasi-length-preserving scheme
+secure for erasing real-or-random exists under quantum-secure one-way
+functions. Finally, the paper establishes the reverse direction of the
+conjecture below ($P6$ does not imply $P4$) in the quantum random oracle
+model: Theorem 39 shows $P2\not\Rightarrow P10$ in the QROM, and
+$P6\not\Rightarrow P4$ follows since $P2\Rightarrow P6$ and
+$P4\Rightarrow P10$. This is the paper's only separation that is not in
+the standard model (p.~6). Settling the conjectured direction would
+also give, by transitivity, that six further panels fail to imply the
+Boneh--Zhandry family. The paper's separation toolkit for problems of
+this shape consists of Simon's algorithm~\cite{Sim97}, Shi's
+SetEquality problem, quasi-length-preserving schemes, and the paper's
+own decoherence lemmas.
+
+\section{Notation and parameters}\label{sec:notation}
+
+\begin{itemize}
+  \item $\eta$ is the security parameter. All of $h,n,n',t,t'$ are
+    polynomially bounded functions of $\eta$; \emph{QPT} means quantum
+    polynomial time in $\eta$; a function $\varepsilon$ is
+    \emph{negligible} if $\varepsilon(\eta)<1/p(\eta)$ for every
+    polynomial $p$ and all sufficiently large $\eta$. A
+    \emph{quantum-secure one-way function} is an efficiently computable
+    family of functions that no QPT algorithm inverts with
+    non-negligible probability.
+  \item An \emph{$(h,n,n',t,t')$-encryption scheme} is a triple
+    $\Pi=(\KGen,\Enc,\Dec)$ of efficient classical algorithms with
+    \begin{align*}
+      \KGen&\colon\{0,1\}^{t'}\to\{0,1\}^{h},\\
+      \Enc&\colon\{0,1\}^{h}\times\{0,1\}^{n}\times\{0,1\}^{t}
+        \to\{0,1\}^{n'},\\
+      \Dec&\colon\{0,1\}^{h}\times\{0,1\}^{n'}
+        \to\{0,1\}^{n}\cup\{\bot\}
+    \end{align*}
+    such that $\Dec_k(\Enc_k(m;r))=m$ for all $k\in\{0,1\}^h$,
+    $m\in\{0,1\}^n$, $r\in\{0,1\}^t$. Here $\Enc_k(m;r):=\Enc(k,m,r)$,
+    and $\Enc_k(\cdot\,;r)$ denotes the function
+    $m\mapsto\Enc_k(m;r)$, which is injective for each fixed $k,r$ by
+    correctness. $\KGen()$ means running $\KGen$ on uniform randomness.
+  \item For $f:\{0,1\}^{a}\to\{0,1\}^{c}$, $U_f$ is the unitary
+    $\ket{x}\ket{y}\mapsto\ket{x}\ket{y\oplus f(x)}$ on $a+c$ qubits
+    (\emph{standard} oracle, query model $ST$).
+  \item For injective $g:\{0,1\}^{a}\to\{0,1\}^{c}$, $\hat U^{g}$ is
+    the isometry $\ket{x}\mapsto\ket{g(x)}$ from $a$ qubits to $c$
+    qubits (\emph{erasing} oracle, query model $ER$); it is realizable
+    by an efficient quantum circuit whenever $g$ and a left inverse of
+    $g$ are efficiently computable.
+  \item $\Sigma_n$ is the set of all permutations of $\{0,1\}^{n}$; for
+    $\pi\in\Sigma_n$ and $b\in\{0,1\}$ we write $\pi^{0}=\mathrm{id}$
+    and $\pi^{1}=\pi$.
+  \item $Q_{in},Q_{out}$ denote quantum registers supplied by the
+    adversary or by the challenger, of $n$ and $n'$ qubits
+    respectively.
+\end{itemize}
+
+The parameters, at a glance:
+
+\begin{itemize}
+  \item $\eta$ --- security parameter; all other parameters are
+    polynomially bounded functions of it.
+  \item $n$ --- plaintext length in bits (message space $\{0,1\}^n$).
+  \item $n'$ --- ciphertext length in bits.
+  \item $h$ --- key length in bits.
+  \item $t$ --- length of the per-encryption randomness.
+  \item $t'$ --- length of the key-generation randomness.
+  \item $b$ --- challenge bit, fixed once for the whole game.
+  \item $\pi$ --- permutation of the message space, resampled per
+    real-or-random challenge query.
+\end{itemize}
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{definition}[Query types]\label{def:queries}
+Fix an $(h,n,n',t,t')$-encryption scheme $\Pi$, a key
+$k\in\{0,1\}^{h}$ and a bit $b\in\{0,1\}$. In each query below, $r$ is
+sampled freshly and uniformly from $\{0,1\}^{t}$ and $\pi$ freshly and
+uniformly from $\Sigma_n$; a single superposition query uses one value
+of $r$ for all messages in the superposition.
+\begin{itemize}
+  \item An \emph{$ST$-learning query}: the adversary hands over
+    registers $Q_{in}$ ($n$ qubits) and $Q_{out}$ ($n'$ qubits); the
+    oracle applies $U_{\Enc_k(\cdot\,;r)}$ to $(Q_{in},Q_{out})$ and
+    returns both registers.
+  \item An \emph{$ER$-learning query}: the adversary hands over
+    $Q_{in}$ ($n$ qubits); the oracle applies
+    $\hat U^{\Enc_k(\cdot\,;r)}$ to it and returns the resulting
+    $n'$-qubit register.
+  \item A \emph{$(CL,\onect)$-challenge query}: the adversary sends
+    classical $m_0,m_1\in\{0,1\}^{n}$; the oracle returns the classical
+    ciphertext $\Enc_k(m_b;r)$.
+  \item An \emph{$(ER,\ror)$-challenge query}: the adversary hands over
+    $Q_{in}$ ($n$ qubits); the oracle applies the isometry
+    $\ket{m}\mapsto\ket{\Enc_k(\pi^{b}(m);r)}$ to it and returns the
+    resulting $n'$-qubit register.
+\end{itemize}
+\end{definition}
+
+\begin{definition}[$\mathfrak{l}$-$\mathfrak{c}$-IND-CPA]\label{def:indcpa}
+Let $\mathfrak{l}$ name a learning-query type and $\mathfrak{c}$ a
+challenge-query type. In the $\mathfrak{l}$-$\mathfrak{c}$-IND-CPA game
+the challenger samples $k\sample\KGen()$ and a uniform $b\in\{0,1\}$; a
+QPT adversary $\mathcal{A}$ may then make polynomially many learning
+queries of type $\mathfrak{l}$ and polynomially many challenge queries
+of type $\mathfrak{c}$, in any interleaved order, all answered with this
+same $k$ and this same $b$; finally $\mathcal{A}$ outputs a bit $b'$ and
+wins iff $b'=b$. We write $\learn(*,X)$-$\chall(*,Y,\mathrm{rt})$ for
+this game with $X$-learning queries and $(Y,\mathrm{rt})$-challenge
+queries, and call $\Pi$ secure for it iff every QPT adversary wins with
+probability at most $\tfrac12+\varepsilon(\eta)$ for some negligible
+$\varepsilon$.
+\end{definition}
+
+\begin{conjecture}[$P4$ does not imply $P6$]\label{conj:main}
+Assume that quantum-secure one-way functions exist. Then there exist
+polynomially bounded parameters $h,n,n',t,t'$ (functions of $\eta$) and
+an $(h,n,n',t,t')$-encryption scheme $\Pi=(\KGen,\Enc,\Dec)$ such that
+both of the following hold.
+\begin{enumerate}
+  \item $\Pi$ is \NERror-IND-CPA-secure, i.e.\ every QPT adversary that
+    makes polynomially many $ER$-learning queries and polynomially many
+    $(ER,\ror)$-challenge queries wins the
+    $\mathfrak{l}$-$\mathfrak{c}$-IND-CPA game with probability at most
+    $\tfrac12+\varepsilon(\eta)$ for some negligible $\varepsilon$.
+  \item $\Pi$ is \emph{not} \NBZ-IND-CPA-secure: there exist a QPT
+    adversary $\mathcal{A}$ making polynomially many $ST$-learning
+    queries and polynomially many $(CL,\onect)$-challenge queries, and a
+    polynomial $p$, such that $\mathcal{A}$ wins that game with
+    probability at least $\tfrac12+1/p(\eta)$ for infinitely many
+    $\eta$.
+\end{enumerate}
+\end{conjecture}
+
+\begin{remark}[on the one-way-function hypothesis]\label{rem:owf}
+The hypothesis ``assuming quantum-secure one-way functions exist'' is
+supplied here rather than quoted. The source paper states this
+hypothesis for all of its proved separations (p.~6) but does not restate
+it for the six conjectured ones. Some assumption is in fact necessary:
+if no quantum-secure one-way function exists then no scheme is secure in
+either notion and the implication $P4\Rightarrow P6$ holds vacuously. A
+reviewer should check that this is the intended reading and not a change
+of strength.
+\end{remark}
+
+\begin{remark}[representatives and panel bookkeeping]\label{rem:panels}
+Conjecture~\ref{conj:main} fixes one representative notion from each
+panel: \NERror{} for $P4$ and \NBZ{} for $P6$. This is faithful only
+because the paper proves all notions inside a panel equivalent, so a
+reviewer should confirm the two memberships. Panel membership must be
+read off the paper's Figure 1 and Section 6, not off the boxed lists on
+pp.~4--5: the Panel 11 box on p.~5 duplicates the contents of the Panel
+10 box, which is plainly a typo. That typo does not affect the two
+notions used here, but it affects panel bookkeeping generally.
+\end{remark}
+
+\begin{remark}[currency of the source]\label{rem:currency}
+The source is a 2020 ePrint. A later revision, the peer-reviewed
+version, or follow-up work may have closed some of these cells; no
+resolution is known to the writer of this record, but this should be
+checked against the newest version.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem[BDJR97]{BDJR97}
+M. Bellare, A. Desai, E. Jokipii, P. Rogaway.
+\emph{A concrete security treatment of symmetric encryption}.
+38th Annual Symposium on Foundations of Computer Science, FOCS '97,
+pages 394--403, IEEE Computer Society, 1997.
+
+\bibitem[BZ13b]{BZ13b}
+D. Boneh, M. Zhandry.
+\emph{Secure signatures and chosen ciphertext security in a quantum
+computing world}.
+Advances in Cryptology --- CRYPTO 2013, Part II, volume 8043 of Lecture
+Notes in Computer Science, pages 361--379, Springer, 2013.
+
+\bibitem[GHS16]{GHS16}
+T. Gagliardoni, A. H\"ulsing, C. Schaffner.
+\emph{Semantic security and indistinguishability in the quantum world}.
+Advances in Cryptology --- CRYPTO 2016, volume 9816 of Lecture Notes in
+Computer Science, pages 60--89, Springer, 2016.
+
+\bibitem[KKVB02]{KKVB02}
+E. Kashefi, A. Kent, V. Vedral, K. Banaszek.
+\emph{Comparison of quantum oracles}.
+Phys. Rev. A, 65:050304, 2002.
+
+\bibitem[MS16]{MS16}
+S. Mossayebi, R. Schack.
+\emph{Concrete security against adversaries with quantum superposition
+access to encryption and decryption oracles}.
+CoRR, abs/1609.03780, 2016.
+
+\bibitem[Sim97]{Sim97}
+D. R. Simon.
+\emph{On the power of quantum computation}.
+SIAM J. Comput., 26(5):1474--1483, 1997.
+
+\bibitem[Zha16]{Zha16}
+M. Zhandry.
+\emph{A note on quantum-secure PRPs}.
+IACR Cryptology ePrint Archive, 2016:1076, 2016.
+
+\end{conjurabibliography}
+
+\end{document}

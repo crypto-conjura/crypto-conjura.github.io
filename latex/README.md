@@ -81,6 +81,33 @@ never the `problem:` slug, `problem:` is shared by sibling statements, and
 belong to different pages. Without it, `scripts/draft_status.py` reports the
 draft as unpromoted forever.
 
+**Two steps that are not optional and that nothing tells you about until the
+pre-commit hook refuses the commit.** Both were tripped twice while promoting
+the 2026-08-18 harvest, so they are written down here rather than rediscovered:
+
+- **The page body needs an empty status-marker block** before
+  `scripts/status_badge.py` will touch it:
+
+  ```
+  <!-- status:start -->
+  <!-- status:end -->
+  ```
+
+  Put it directly after the closing `---` of the frontmatter. Without it the
+  script reports "no `<!-- status:start -->` ... markers found in body", writes
+  nothing, and `build_index.py` then fails the page for having no valid
+  `statement_sha` — which reads as a schema problem rather than a missing
+  marker.
+
+- **A new `c/<id>/` is a new artifact**, so after the PDF is in place run
+  `python3 scripts/artifact_manifest.py --update`. Until then
+  `artifact_manifest.py --check` reports it as "new artifact, not yet in the
+  manifest" and the pre-commit hook blocks. Build the PDF from the `main.tex`
+  now sitting in `c/<id>/latex/` rather than copying the draft's
+  `statement.pdf`, so the registered output is provably the output of the
+  source beside it — `cd c/<id>/latex && pdflatex main.tex`, twice, then move
+  it to `c/<id>/pdf/main.pdf` and delete the `.aux`/`.log`.
+
 One draft may be named by several pages — `lhl-public-seed/` is subtitled
 "Two Leftover-Hash-Lemma Conjectures" and is claimed by both `c/0004` and
 `c/0005` — so the field lives on the page, never on the draft. The check

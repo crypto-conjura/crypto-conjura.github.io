@@ -1,0 +1,88 @@
+---
+id: "0034"
+problem: ring-lwe-error-parity
+draft: rlwe-error-mod-two
+title: "Recovering the Ring-LWE Error Modulo Two Is as Hard as Recovering It"
+short_title: "Ring-LWE error parity"
+areas: [lattices, public-key, foundations]
+model: standard
+form: equivalence
+assumption_class: unconditional
+category: research-open
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: new-idea
+  note: "The source does not merely leave this open, it substitutes two heuristics for the missing reduction -- and says so. One heuristic drifts off the prescribed error distribution; the other reduces from a nonstandard first-is-errorless decision problem rather than from Ring-LWE itself. So a proof cannot be assembled from what is already written down: it has to produce the reduction the paper says it does not have, and the parity target means the reduction learns one bit per coefficient rather than the coefficient."
+  by: ai
+status_summary: "Open: whether recovering the Ring-LWE error modulo two is as hard as recovering the error itself. The easy direction is trivial; the source states it has no formal reduction for this one and relies on two heuristics instead, one of which changes the error distribution."
+status_updated: 2026-08-18
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Duman, Hovelmanns, Kiltz, Lyubashevsky, Seiler, Unruh, A Thorough Treatment of Highly-Efficient NTRU Instantiations, Cryptology ePrint Archive, Report 2021/1352; PKC 2023, pp. 65-94", url: "https://eprint.iacr.org/2021/1352"}
+revision: 1
+statement_sha: "e731c15c3f168b2379238b47ee977763ae3812f967f5a31230b8568fe7430ae3"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [Download LaTeX source](latex/main.tex)
+
+Write $\mathcal{R}$-LWE for the search Ring-LWE problem over an NTT-friendly ring with centred binomial noise: given $(h, hs + e)$, recover the error vector $e$. Write $\mathcal{R}$-LWE$_2$ for the variant in which the adversary is asked only for $e \bmod 2$ — the parities of the error coefficients, not the coefficients.
+
+One direction is immediate: an algorithm that recovers $e$ also gives $e \bmod 2$, so $\mathcal{R}$-LWE$_2 \le \mathcal{R}$-LWE. The conjecture is the converse.
+
+**Conjecture (parity-only Ring-LWE is as hard as Ring-LWE).** There are an oracle algorithm $\mathcal{B}$ and a polynomial $P$ such that for every $d = 2^{i}3^{j}$ with $i, j \ge 1$, every prime $q > 4$, every $\varepsilon \in (0,1]$ and every algorithm $\mathcal{A}$ with advantage at least $\varepsilon$ against $\mathcal{R}$-LWE$_2$, the algorithm $\mathcal{B}$ — given $(d, q, \varepsilon)$, its own $\mathcal{R}$-LWE instance and oracle access to $\mathcal{A}$ — solves $\mathcal{R}$-LWE with advantage at least $1/P(d, \log q, 1/\varepsilon)$.
+
+That is: a polynomial-time reduction turning a parity-recovery adversary into a full-recovery adversary, with polynomial loss.
+
+## Proof
+
+Open, and the source is unusually explicit that it is open.
+
+**What the paper says.** *"While we do not have a formal reduction from R-LWE to R-LWE$_2$, based on the state of the art of how Ring-LWE problems are solved, the two are essentially equivalent."* The equivalence is asserted on the strength of how current algorithms behave, not proved.
+
+**The two heuristics it substitutes, and why neither closes the gap.** The paper offers two arguments in place of the reduction. One drifts off the prescribed error distribution — so what it reduces from is not the problem as specified. The other reduces from a *first-is-errorless* decision problem, a nonstandard variant in which one integer coefficient carries no error, rather than from $\mathcal{R}$-LWE itself; the paper notes that the best-known algorithms do not distinguish that variant, which is again a statement about current algorithms.
+
+**Why the parity target is the difficulty.** A reduction has to manufacture full error recovery from an oracle that returns one bit per coefficient. Rerandomising the instance to extract more bits is the obvious route, and it is exactly where the error distribution is easy to disturb — which is the failure mode of the first heuristic.
+
+## Discussion
+
+This matters more than a typical open reduction, because the paper is a treatment of *deployed-style* NTRU instantiations and the parity problem is load-bearing in its security argument. A scheme whose analysis rests on $\mathcal{R}$-LWE$_2$ inherits exactly the confidence one has in the equivalence — and the paper is candid that the confidence comes from cryptanalytic experience rather than a proof.
+
+Two things worth separating. The claim is *not* that anyone believes parity recovery is easier: the whole point is that no known attack does better against parities than against the full error. The claim that is missing is the reduction that would make that belief unnecessary. Assumptions justified by "the best-known algorithms do not distinguish these" are the normal state of affairs in lattice cryptography, but they are worth marking as such when a concrete scheme rests on them.
+
+The statement is unconditional in form — it asserts a reduction exists, with no computational assumption of its own — which also means a refutation would be a genuine separation between two Ring-LWE variants, and that would be at least as interesting as a proof.
+
+## Open obligations
+
+- [ ] Give the reduction, or show there is an obstruction to one.
+- [ ] Repair the first heuristic: find a rerandomisation that extracts more than one bit per coefficient without moving off the centred binomial error distribution.
+- [ ] Settle whether the first-is-errorless decision variant is equivalent to $\mathcal{R}$-LWE, which would let the paper's second heuristic become an actual proof.
+- [ ] Check whether the conjectured reduction's polynomial loss is necessary, or whether a tight reduction is possible.
+- [ ] Determine which of the paper's concrete parameter sets actually depend on this equivalence, so the practical exposure is known rather than assumed.
+- [ ] Formalize the statement in Lean. Ring-LWE over NTT-friendly rings with centred binomial noise needs writing down first.
+
+## Sources
+
+- Duman, Hövelmanns, Kiltz, Lyubashevsky, Seiler, and Unruh. [*A Thorough Treatment of Highly-Efficient NTRU Instantiations*](https://eprint.iacr.org/2021/1352). Cryptology ePrint Archive, Report 2021/1352; Public Key Cryptography (PKC) 2023, pp. 65–94. The definition of the parity variant is on p. 19, together with the sentence quoted above declining a formal reduction; the remark that the value of $p$ does not affect hardness is on p. 5, and the first-is-errorless discussion on p. 20. All six authors read off the paper's own title page; the venue and page range confirmed against DBLP.
+
+  **A caveat on which version this is.** The ePrint posting has a single revision, received 7 October 2021, and the harvested copy is byte-identical to it (SHA-256 prefix `0eeb5d7df3b2458c`, 37 pages). That posting therefore *predates* the PKC 2023 publication, and this site has not seen the published version. If the reduction was supplied or the claim reworded for PKC, that would not be visible here — worth checking before relying on this page.
+
+:::

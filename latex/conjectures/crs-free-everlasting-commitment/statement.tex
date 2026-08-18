@@ -1,0 +1,411 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  Everlasting UC commitment from malicious PUFs without a CRS.
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{EVERLASTING UC COMMITMENT WITHOUT A CRS}
+
+\newcommand{\Mhon}{\mathsf{M}_{\mathsf{honest}}}
+\newcommand{\PUF}{\mathsf{PUF}}
+\newcommand{\PUFSamp}{\mathsf{PUFSamp}}
+\newcommand{\PUFEval}{\mathsf{PUFEval}}
+\newcommand{\HTSamp}{\mathsf{HTSamp}}
+\newcommand{\Fht}{\mathcal{F}^{\PUFSamp,\PUFEval}_{\mathsf{HToken}}}
+\newcommand{\Fhtgen}{\mathcal{F}^{\HTSamp,\Mhon}_{\mathsf{HToken}}}
+\newcommand{\Fmcom}{\mathcal{F}^{S\to R,\ell}_{\mathsf{MCOM}}}
+\newcommand{\hdist}{\mathsf{hd}}
+\newcommand{\negl}{\mathsf{negl}}
+\newcommand{\rge}{\mathsf{rg}}
+\newcommand{\tok}{\mathsf{tok}}
+\newcommand{\tst}{\mathsf{st}}
+\newcommand{\tid}{\mathsf{id}}
+\newcommand{\EXC}{\mathrm{EXC}'}
+\newcommand{\usample}{\leftarrow_{\$}}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{Everlasting UC Commitment from Malicious PUFs Without a
+  Common Reference String}
+\cjsubtitle{Fully malicious token model, no trusted setup}
+\cjstatus{Statement: AI-written from Bernardo Magri, Giulio Malavolta,
+  Dominique Schr\"oder, Dominique Unruh, \emph{Everlasting UC
+  Commitments from Fully Malicious PUFs}, IACR Cryptology ePrint
+  Archive 2022 (paper dated June 7, 2022 on the title page), not yet
+  checked by a human. The CRS case is settled --- the paper's
+  Theorem~31 everlastingly UC-realizes the multiple-commitment
+  functionality in the fully malicious token model with a PUF as the
+  honest token, given a common reference string --- and what is open is
+  whether any protocol does so with no trusted setup at all; the paper
+  poses this as a question and predicts no answer, so the affirmative
+  form below is a framing choice and a refutation would be an
+  impossibility theorem. Conjecture~\ref{conj:main} also forbids every
+  ideal functionality other than the token functionality, which
+  strengthens the paper's wording --- it asks only about removing the
+  CRS --- so as to exclude a PKI, signature cards or any other trusted
+  setup as well.}
+\cjcategory{\emph{Secure Computation \& Universal Composability}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+Everlasting security asks that a protocol stay secure even after the
+computational assumptions it used are broken: the attacker is efficient
+while the protocol runs, and unbounded afterwards. Composable
+commitments with this guarantee are known to be impossible from a
+common reference string or a public-key infrastructure alone, so all
+constructions rely on a physical assumption, and until recently they
+all required the physical device to be honestly manufactured. This
+paper gives the first everlastingly composable commitment in a model
+where the attacker may build arbitrarily malicious hardware tokens,
+including tokens that swallow and wrap other tokens, and where the
+honest device is only a physically uncloneable function. But the
+construction still needs a trusted common reference string, used by the
+simulator to equivocate commitments, to simulate the oblivious
+transfers, and to extract. The authors point out that the usual trick
+for removing setup by leaning on a computationally hard problem does
+not survive here, because the environment eventually becomes unbounded
+and can tell a simulated transcript from a real one; and that the one
+known setup-free unconditional commitment from these devices breaks in
+their model as soon as the attacker may nest one device inside another.
+Whether a commitment scheme with this guarantee exists from such
+devices with no trusted setup at all is what they leave open.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+Everlasting (also called long-term) UC security, introduced by
+M\"uller-Quade and Unruh~\cite{MQU10}, bounds the attacker to be
+efficient during the execution of a protocol and lets the distinguisher
+become unbounded afterwards. It is strictly stronger than computational
+UC security~\cite{Can01} and strictly weaker than statistical UC
+security. M\"uller-Quade and Unruh proved that everlasting UC
+commitments cannot be realized from a common reference string or a
+public-key infrastructure alone~\cite{MQU10}, which is what forced this
+line of work onto physical assumptions: their own positive results
+assume \emph{honestly generated} hardware tokens, and they left open
+whether malicious tokens suffice.
+
+On the malicious-token side, Goyal, Ishai, Mahmoody and
+Sahai~\cite{GIMS10} obtain unconditional UC commitments and secure
+computation from malicious tokens, but their honest tokens must
+encapsulate other tokens, which rules out physically uncloneable
+functions, since a PUF is a physical object and cannot swallow another
+one. Ostrovsky, Scafuro, Visconti and Wadia~\cite{OSVW13} introduced
+the malicious-PUF model; Damg\aa{}rd and Scafuro~\cite{DS13} built
+unconditionally secure UC commitments from PUFs \emph{without} a CRS;
+and Badrinarayanan, Khurana, Ostrovsky and Visconti~\cite{BKOV17}
+exhibited an attack showing that the~\cite{DS13} construction breaks
+once the adversary may generate PUFs encapsulated inside other PUFs.
+The token-encapsulation model itself goes back to Chandran, Goyal and
+Sahai~\cite{CGS08}, and the UC treatment of PUFs to Brzuska, Fischlin,
+Schr\"oder and Katzenbeisser~\cite{BFSK11}.
+
+The present paper unifies malicious tokens and PUFs in a single
+functionality that allows fully malicious, stateful, arbitrarily
+nesting tokens, and gives the first everlastingly UC-secure commitment
+scheme in that model with no honest-token encapsulation. The
+construction runs in the CRS model: the simulator uses the trapdoor
+behind the CRS to equivocate commitments, to simulate the oblivious
+transfers and to extract, and it must do all of this straight-line
+because rewinding is unavailable in UC. Two escape routes from the CRS
+are named and closed off. The technique of Orlandi, Ostrovsky, Rao,
+Sahai and Visconti~\cite{OOR+14}, which replaces setup by a
+computationally hard problem, fails here because the environment
+eventually becomes unbounded and can separate a simulated trace from a
+real one --- exactly the pressure everlasting security applies. And the
+setup-free construction of~\cite{DS13} is unavailable because of
+the~\cite{BKOV17} attack in the encapsulating-token model. The paper's
+other main result, an impossibility theorem for everlasting UC
+oblivious transfer (and hence secure computation) from non-erasable
+honest tokens, holds even in the presence of a trusted setup, so it
+does not bear on this question: it says nothing about commitment, which
+is strictly weaker than OT in this landscape.
+
+Progress to date. On the positive side, the paper's own Theorem~31
+achieves everlasting UC commitment in the fully malicious token model
+from PUFs, given a CRS, with building blocks --- statistically hiding
+UC commitment, two-round statistically receiver-private UC oblivious
+transfer, statistical witness-indistinguishable argument of knowledge,
+strong randomness extractor, one-way permutation --- instantiable from
+standard assumptions such as LWE. On the negative side, everlasting UC
+commitment is impossible from a CRS or a PKI with no hardware at all,
+so any resolution must genuinely exploit the tokens. Two natural
+attacks on the problem are reported as failing: the technique of
+replacing setup by a computationally hard problem does not survive an
+unbounded environment, and the known setup-free unconditional PUF
+commitment breaks under encapsulated malicious PUFs.
+
+\section{Notation and parameters}\label{sec:notation}
+
+$\lambda\in\mathbb{N}$ is the security parameter and $\negl$ denotes an
+unspecified negligible function, i.e.\ one that is eventually below
+$1/p$ for every positive polynomial $p$. \emph{PPT} means probabilistic
+polynomial time in $\lambda$. For $x,x'\in\{0,1\}^n$, $\hdist(x,x')$ is
+their Hamming distance. For two ensembles
+$X=\{X_\lambda\}_{\lambda\in\mathbb{N}}$ and
+$Y=\{Y_\lambda\}_{\lambda\in\mathbb{N}}$ we write $X\approx Y$ to say
+that they are statistically indistinguishable, i.e.\ their statistical
+distance is negligible in $\lambda$. We write $x\usample\mathcal{X}$
+for a uniform draw from a finite set $\mathcal{X}$ and
+$y\leftarrow A(\cdot)$ for the output of a randomized algorithm. The
+symbols $\gamma$ and $\delta$ are the PUF noise and distance parameters
+of Definition~\ref{def:puf}, $\ell$ is the length of a committed
+message, $\Fht$ is the hardware-token functionality of
+Definition~\ref{def:htoken}, $\Fmcom$ is the commitment functionality
+of Definition~\ref{def:mcom}, and $\EXC$ is the execution random
+variable of Definition~\ref{def:everlasting-uc}. Saying that a protocol
+runs \emph{in the $\mathcal{F}$-hybrid model} means its parties may
+invoke $\mathcal{F}$ and no other ideal functionality.
+
+\begin{itemize}
+\item $\lambda$: security parameter.
+\item $\ell$: polynomial bounding the length of the committed message.
+\item $\delta$: PUF noise bound; two evaluations of the same PUF on the
+  same challenge agree up to Hamming distance $\delta$, a distance
+  between $\rge(\lambda)$-bit responses.
+\item $\gamma$: PUF distance parameter; the adversary is required to
+  keep all its PUF queries at Hamming distance at least $\gamma$ from
+  the challenge it tries to predict, a distance between
+  $\lambda$-bit challenges.
+\item $\rge$: polynomial giving the bit length of a PUF response.
+\end{itemize}
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{definition}[PUF family]\label{def:puf}
+Let $\rge$ be a polynomial. A \emph{PUF family} is a pair
+$\PUF=(\PUFSamp,\PUFEval)$ of randomized algorithms, neither required
+to be efficient. On input $1^\lambda$, $\PUFSamp$ outputs an index
+$\sigma\in\mathcal{I}_\lambda$; each $\sigma$ determines, for every
+challenge $x\in\{0,1\}^\lambda$, a distribution $\mathcal{D}_\sigma(x)$
+over $\{0,1\}^{\rge(\lambda)}$, and $\PUFEval(1^\lambda,\sigma,x)$
+returns a sample drawn from $\mathcal{D}_\sigma(x)$. We require three
+properties.
+\begin{enumerate}
+\item ($\delta$-reproducibility) For
+$\sigma\leftarrow\PUFSamp(1^\lambda)$, $x\usample\{0,1\}^\lambda$,
+$y\leftarrow\PUFEval(1^\lambda,\sigma,x)$ and an independent
+$y'\leftarrow\PUFEval(1^\lambda,\sigma,x)$,
+$\Pr[\hdist(y,y')\le\delta(\lambda)]\ge 1-\negl(\lambda)$.
+\item ($(\gamma,\delta)$-unpredictability) For every adversary
+$\mathcal{A}$,
+\[
+\begin{aligned}
+&\Pr\big[\,\hdist(y,y')\le\delta(\lambda)\ \wedge\\
+&\qquad\forall q\in\mathcal{Q}:\ \hdist(q,x)\ge\gamma(\lambda)\,\big]
+  \le\negl(\lambda),
+\end{aligned}
+\]
+where $\sigma\leftarrow\PUFSamp(1^\lambda)$,
+$x\usample\{0,1\}^\lambda$,
+$y\leftarrow\mathcal{A}^{\PUFEval(1^\lambda,\sigma,\cdot)}(x)$,
+$y'\leftarrow\PUFEval(1^\lambda,\sigma,x)$, and $\mathcal{Q}$ is the
+list of all oracle queries made by $\mathcal{A}$.
+\item (lazy sampler) There is a polynomial-time stateful interactive
+Turing machine pair $(\mathsf{MSamp},\mathsf{MEval})$ such that for
+every $n=\poly(\lambda)$ and every sequence $(x_1,\dots,x_n)$ of
+challenges, the tuples $(Y_1,\dots,Y_n)$ and $(Y'_1,\dots,Y'_n)$ are
+identically distributed, where
+$\tst\leftarrow\mathsf{MSamp}(1^\lambda)$ and
+$Y_i\leftarrow\mathsf{MEval}(x_i)$ (with $\mathsf{MEval}$ carrying
+state across calls), and $\sigma\leftarrow\PUFSamp(1^\lambda)$,
+$Y'_i\leftarrow\PUFEval(1^\lambda,\sigma,x_i)$.
+\end{enumerate}
+\end{definition}
+
+\begin{definition}[Fully malicious hardware-token functionality
+  $\Fhtgen$]\label{def:htoken}
+The functionality is parameterized by an algorithm $\HTSamp$, a PPT
+Turing machine $\Mhon$ and a polynomial $p(\lambda)$ bounding the
+running time of $\Mhon$ (the functionality itself is not required to be
+efficient, since it places no bound on malicious token code). It runs
+with parties $\mathcal{P}=\{P_1,\dots,P_n\}$ and adversary
+$\mathcal{A}$, and maintains a list $\mathcal{L}$ of tokens; each token
+$\tok$ has a unique identifier $\tok.\tid\in\{0,1\}^\lambda$, an
+internal state $\tok.\tst$, code $\tok.\mathsf{M}$, a list
+$\tok.\mathsf{children}$ of tokens embedded inside it, an owner
+$\tok.\mathsf{owner}$, and a boolean $\tok.\mathsf{honest}$. It
+answers:
+\begin{itemize}
+\item $(\texttt{create})$ from $P\in\mathcal{P}$: create $\tok$ with
+fresh $\tok.\tid$, $\tok.\mathsf{honest}:=\mathsf{true}$,
+$\tok.\mathsf{owner}:=P$, $\tok.\mathsf{children}:=\emptyset$,
+$\tok.\mathsf{M}:=\Mhon$ and
+$(\tok.\tst,\mathsf{pubinfo})\leftarrow\HTSamp(1^\lambda)$; add it to
+$\mathcal{L}$ and return $(\tok.\tid,\mathsf{pubinfo})$ to $P$.
+\item $(\texttt{createmal},\mathsf{M},\tst,\mathsf{children})$ from
+$\mathcal{A}$, provided $\mathcal{A}$ owns every token in
+$\mathsf{children}$: create $\tok$ with fresh identifier, arbitrary
+code $\mathsf{M}$, arbitrary initial state $\tst$, the given children
+(whose owner becomes \emph{embedded}),
+$\tok.\mathsf{honest}:=\mathsf{false}$ and
+$\tok.\mathsf{owner}:=\mathcal{A}$; return $\tok.\tid$ to
+$\mathcal{A}$.
+\item $(\texttt{handover},\tid,P_j)$ from the current owner $P_i$: set
+$\tok.\mathsf{owner}:=P_j$ and notify $P_j$.
+\item $(\texttt{query},\tid,q)$ from the current owner $P$: run
+$(a,\tst')\leftarrow\tok.\mathsf{M}(\tok.\tst,q)$, where
+$\tok.\mathsf{M}$ is an oracle machine with one oracle per child, each
+oracle query being answered by evaluating that child recursively in the
+same way; set $\tok.\tst:=\tst'$ and return $a$ to $P$.
+\item $(\texttt{readout},\tid)$ from $\mathcal{A}$, for a token with
+$\tok.\mathsf{honest}=\mathsf{false}$ owned by $\mathcal{A}$: return
+$\tok.\tst$ to $\mathcal{A}$.
+\item $(\texttt{openup},\tid)$ from $\mathcal{A}$, for a token with
+$\tok.\mathsf{honest}=\mathsf{false}$ owned by $\mathcal{A}$: remove
+$\tok$ from $\mathcal{L}$ and reassign each child's owner to a party of
+$\mathcal{A}$'s choice.
+\end{itemize}
+At the end of the execution the long-term output tape of the
+functionality records all information held by every token that is owned
+by $\mathcal{A}$, or owned by a token owned by $\mathcal{A}$ through
+any number of layers. Writing $\Fht$ means the instantiation in which
+honest tokens are PUFs: $\HTSamp=\PUFSamp$ and $\Mhon$ is the
+(stateful, lazily sampled) machine computing
+$\PUFEval(1^\lambda,\sigma,\cdot)$.
+\end{definition}
+
+\begin{definition}[Multiple commitment functionality]\label{def:mcom}
+Let $S$ (sender) and $R$ (receiver) be two parties and $\ell$ a
+polynomial. Upon a command $(\texttt{commit},\mathsf{sid},x)$ from $S$
+with $x\in\{0,1\}^{\ell(\lambda)}$, the functionality $\Fmcom$ sends
+$(\texttt{committed},\mathsf{sid})$ to $R$. Upon a command
+$(\texttt{unveil},\mathsf{sid})$ from $S$, it sends
+$(\texttt{unveiled},\mathsf{sid},x)$ to $R$ with the matching
+$\mathsf{sid}$. Further commands $(\texttt{commit})$ or
+$(\texttt{unveil})$ with the same $\mathsf{sid}$ are ignored.
+\end{definition}
+
+\begin{definition}[Everlasting UC realization with long-term
+  tapes]\label{def:everlasting-uc}
+Work in the UC framework, in which a protocol, an adversary
+$\mathcal{A}$ and an environment $\mathcal{Z}$ are interactive Turing
+machines and $\mathcal{Z}$ outputs an arbitrary string at the end.
+Every instance of a machine in the protocol, other than $\mathcal{Z}$
+and $\mathcal{A}$, is given an additional output tape called its
+\emph{long-term output tape}. When $\mathcal{Z}$ produces its output
+$m$, the adversary $\mathcal{A}$ is invoked once more, this time with
+all long-term tapes, and produces an output $a$; set
+$\EXC_{\pi,\mathcal{A},\mathcal{Z}}(\lambda,z):=(m,a)$. A protocol
+$\pi$ \emph{everlastingly UC-realizes} an ideal protocol $\rho$ if for
+every PPT adversary $\mathcal{A}$ there is a PPT simulator $\mathcal{S}$
+such that for every PPT environment $\mathcal{Z}$,
+\[
+\begin{aligned}
+&\{\EXC_{\pi,\mathcal{A},\mathcal{Z}}(\lambda,z)\}
+  _{\lambda\in\mathbb{N},\,z\in\{0,1\}^{\poly(\lambda)}}\\
+&\qquad\approx\
+  \{\EXC_{\rho,\mathcal{S},\mathcal{Z}}(\lambda,z)\}
+  _{\lambda\in\mathbb{N},\,z\in\{0,1\}^{\poly(\lambda)}}.
+\end{aligned}
+\]
+Corruption is \emph{static}: $\mathcal{Z}$ may issue corruption
+requests only before the protocol begins.
+\end{definition}
+
+\begin{conjecture}[everlasting UC commitment from fully malicious PUFs
+  with no trusted setup]\label{conj:main}
+There exist a polynomial $\ell$, functions
+$\gamma,\delta:\mathbb{N}\to\mathbb{N}$, a PUF family
+$\PUF=(\PUFSamp,\PUFEval)$ that is $\delta$-reproducible,
+$(\gamma,\delta)$-unpredictable and admits a lazy sampler, and a
+two-party protocol $\Pi$ between a sender $S$ and a receiver $R$ whose
+honest parties are PPT, such that
+\[
+\begin{aligned}
+\Pi\ &\text{everlastingly UC-realizes}\ \Fmcom\\
+     &\text{in the}\ \Fht\text{-hybrid model}
+\end{aligned}
+\]
+in the sense of Definition~\ref{def:everlasting-uc}, against static
+corruption of either party, where $\Pi$ invokes no ideal functionality
+other than $\Fht$; in particular the parties are given no common
+reference string and no other trusted setup, and every string they use
+is either sampled by a party during the execution or obtained from
+$\Fht$.
+\end{conjecture}
+
+\begin{remark}[what a resolution would look like]\label{rem:framing}
+The source poses this as a question rather than as a conjecture with a
+direction, and Conjecture~\ref{conj:main} records the affirmative
+direction so that the statement is provable or refutable; a refutation
+is an impossibility theorem ruling out every such $\Pi$. An affirmative
+resolution would in practice be conditional on computational
+assumptions --- the paper's own building blocks come from LWE --- which
+is legitimate for everlasting security but means the existence claim
+would be proved conditionally rather than absolutely. Any proposed
+construction has to answer the obstruction the paper names: how a
+straight-line simulator equivocates without a trapdoor, against an
+environment that becomes unbounded once the run is over.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem[BFSK11]{BFSK11}
+C. Brzuska, M. Fischlin, H. Schr\"oder, S. Katzenbeisser.
+\emph{Physically uncloneable functions in the universal composition
+framework}.
+Advances in Cryptology --- CRYPTO 2011, LNCS 6841, pages 51--70,
+Springer, 2011.
+
+\bibitem[BKOV17]{BKOV17}
+S. Badrinarayanan, D. Khurana, R. Ostrovsky, I. Visconti.
+\emph{Unconditional UC-secure computation with (stronger-malicious)
+PUFs}.
+Advances in Cryptology --- EUROCRYPT 2017, Part I, LNCS 10210, pages
+382--411, Springer, 2017.
+
+\bibitem[Can01]{Can01}
+R. Canetti.
+\emph{Universally composable security: A new paradigm for cryptographic
+protocols}.
+42nd Annual Symposium on Foundations of Computer Science, pages
+136--145, IEEE Computer Society Press, 2001.
+
+\bibitem[CGS08]{CGS08}
+N. Chandran, V. Goyal, A. Sahai.
+\emph{New constructions for UC secure computation using tamper-proof
+hardware}.
+Advances in Cryptology --- EUROCRYPT 2008, LNCS 4965, pages 545--562,
+Springer, 2008.
+
+\bibitem[DS13]{DS13}
+I. Damg\aa{}rd, A. Scafuro.
+\emph{Unconditionally secure and universally composable commitments
+from physical assumptions}.
+Advances in Cryptology --- ASIACRYPT 2013, Part II, LNCS 8270, pages
+100--119, Springer, 2013.
+
+\bibitem[GIMS10]{GIMS10}
+V. Goyal, Y. Ishai, M. Mahmoody, A. Sahai.
+\emph{Interactive locking, zero-knowledge PCPs, and unconditional
+cryptography}.
+Advances in Cryptology --- CRYPTO 2010, LNCS 6223, pages 173--190,
+Springer, 2010.
+
+\bibitem[MQU10]{MQU10}
+J. M\"uller-Quade, D. Unruh.
+\emph{Long-term security and universal composability}.
+Journal of Cryptology, 23(4):594--671, 2010.
+
+\bibitem[OOR+14]{OOR+14}
+C. Orlandi, R. Ostrovsky, V. Rao, A. Sahai, I. Visconti.
+\emph{Statistical concurrent non-malleable zero knowledge}.
+TCC 2014: 11th Theory of Cryptography Conference, LNCS 8349, pages
+167--191, Springer, 2014.
+
+\bibitem[OSVW13]{OSVW13}
+R. Ostrovsky, A. Scafuro, I. Visconti, A. Wadia.
+\emph{Universally composable secure computation with (malicious)
+physically uncloneable functions}.
+Advances in Cryptology --- EUROCRYPT 2013, LNCS 7881, pages 702--718,
+Springer, 2013.
+
+\end{conjurabibliography}
+
+\end{document}

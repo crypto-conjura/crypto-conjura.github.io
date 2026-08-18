@@ -1,0 +1,89 @@
+---
+id: "0031"
+problem: quantum-ind-cpa-implications
+draft: er-ror-vs-boneh-zhandry
+title: "Erasing Real-or-Random Quantum IND-CPA Does Not Imply Boneh–Zhandry Security"
+short_title: "Erasing real-or-random vs Boneh–Zhandry"
+areas: [quantum, symmetric-key, impossibility-results]
+model: standard
+form: separation
+assumption_class: falsifiable
+category: research-open
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: new-idea
+  note: "The obstruction is named in the source and is structural rather than a missing calculation: a reduction from a Boneh-Zhandry adversary into the erasing real-or-random game must answer standard-model learning queries using only erasing queries, and an erasing query consumes its input register while no-cloning forbids keeping a copy. Both directions of the pair are unresolved in the standard model, so a separating scheme has to be built rather than borrowed."
+  by: ai
+status_summary: "Open: whether erasing real-or-random security implies Boneh-Zhandry security. The reverse non-implication is proved only in the quantum random oracle model, and this direction is one of six non-implications the source paper conjectures and does not prove."
+status_updated: 2026-08-18
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Carstens, Ebrahimi, Tabia, Unruh, Relationships between quantum IND-CPA notions, Cryptology ePrint Archive, Report 2020/596, revision of 2021-10-13", url: "https://eprint.iacr.org/2020/596"}
+revision: 1
+statement_sha: "c4d4183b417774ac7be43d74127055b99c661641df1d21e3e119310cb95aa31e"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [Download LaTeX source](latex/main.tex)
+
+The source classifies quantum IND-CPA notions for symmetric encryption by three choices: whether learning and challenge queries are classical ($CL$) or superposition, how a superposition query is answered — *standard* $ST$ (the oracle XORs into an adversary-supplied register), *embedding* $EM$ (the challenger supplies $|0\rangle$), or *erasing* $ER$ (the isometry consumes the input and returns only the image) — and how the challenge is phrased (one-ciphertext, two-ciphertext, or real-or-random). Each combination is a panel $P_i$.
+
+Two panels are at issue:
+
+$$P_4 \;=\; \mathrm{learn}(*,ER)\text{-}\mathrm{chall}(*,ER,\mathrm{ror}), \qquad P_6 \;=\; \mathrm{learn}(*,ST)\text{-}\mathrm{chall}(*,CL,1\mathrm{ct}).$$
+
+$P_6$ is the Boneh–Zhandry notion: superposition learning queries in the standard model, and a classical one-ciphertext challenge. $P_4$ answers both learning and challenge queries with an erasing oracle and phrases the challenge as real-or-random.
+
+**Conjecture ($P_4 \not\Rightarrow P_6$).** Assume quantum-secure one-way functions exist. Then there is a symmetric encryption scheme that is $P_4$-IND-CPA-secure and yet completely insecure in the sense of $P_6$ — so the two notions are incomparable.
+
+The assumption is the source's own: it states that *all* of its non-implications hold "on the assumption of the existence of a quantum secure one-way function". A non-implication here means exactly what the paper says it means — a scheme secure under one notion and insecure under the other.
+
+## Proof
+
+Open, and open in a specific place.
+
+**What the source settles around it.** $P_1 \Rightarrow P_6$ and $P_1 \Rightarrow P_4$; $P_4 \not\Rightarrow P_1$; and, **in the quantum random oracle model only**, $P_6 \not\Rightarrow P_4$. So one direction of this pair is known, under an idealised assumption, and the other is not known at all.
+
+**Why the obvious reduction fails.** To show $P_4 \Rightarrow P_6$ one would take an adversary against $P_6$ and run it inside the $P_4$ game — which requires simulating standard-model learning queries with erasing ones. The source names the obstruction directly: *"To show the implication, we need to simulate ST queries with ER queries that is non-trivial due to no-cloning theorem."* An erasing query does not return the message register, and no-cloning forbids retaining a copy of it beforehand.
+
+**Why it matters beyond the one cell.** The source's implication table leaves 41 cells open, and it marks six non-implications whose resolution would close all of them by transitivity: *"In Figure 1, we indicate six non-implications (with red dashed arrows) that if they hold, all the open questions will be resolved by the transitivity."* This is one of the six.
+
+## Discussion
+
+Classically the one-ciphertext, two-ciphertext and real-or-random forms of IND-CPA are equivalent up to polynomial loss, so there is nothing to classify. The quantum setting breaks that equivalence twice over — once because the challenge phrasing stops being interchangeable, and once because *how* the oracle returns its answer becomes part of the definition. Boneh and Zhandry showed a superposition challenge returning ciphertexts in the standard model is unachievable, which is why their definition keeps the challenge classical; the erasing model is the alternative route to a superposition challenge that is not immediately broken.
+
+What makes the pair interesting rather than bookkeeping is that neither notion is obviously stronger. $P_4$ gives the adversary superposition access at both stages but through the weakest oracle; $P_6$ gives it the strongest oracle at the learning stage and nothing at the challenge. A separation in this direction would say the two are genuinely different security requirements rather than two spellings of one.
+
+## Open obligations
+
+- [ ] Construct a scheme that is $P_4$-secure and $P_6$-insecure, or prove $P_4 \Rightarrow P_6$ and close the cell the other way.
+- [ ] Determine whether the known $P_6 \not\Rightarrow P_4$ separation can be moved out of the quantum random oracle model into the standard model.
+- [ ] Check what this cell closing would resolve by transitivity, given the source's claim that the six marked non-implications settle all 41 open cells together.
+- [ ] Decide whether the quantum-secure one-way function assumption is necessary here or an artefact of the source's uniform framing.
+- [ ] Formalize the statement in Lean. The three query models and the panel notation need writing down first, and no formalization of superposition-query security games exists in Mathlib.
+
+## Sources
+
+- Carstens, Ebrahimi, Tabia, and Unruh. [*Relationships between quantum IND-CPA notions*](https://eprint.iacr.org/2020/596). Cryptology ePrint Archive, Report 2020/596. Read at the revision of 13 October 2021, the later of two postings, which is byte-identical to the copy harvested (SHA-256 prefix `6bf24750709898e7`, 47 pages). The openness statement is on p. 36 (*"The relation between P 4 and P 6 remains open question"*), the transitivity remark and the list of six conjectured non-implications on p. 44, the no-cloning obstruction on p. 45, and the quantum-one-way-function assumption on p. 6.
+- Boneh and Zhandry. *Secure signatures and chosen ciphertext security in a quantum computing world*. CRYPTO 2013. The source of the $P_6$ notion and of the impossibility that motivates keeping its challenge classical. `[UNVERIFIED: cited as the source paper cites it; not independently checked]`
+- Bellare, Desai, Jokipii, and Rogaway. *A concrete security treatment of symmetric encryption*. FOCS 1997. The classical equivalence of the one-ciphertext, two-ciphertext and real-or-random forms that fails quantumly. `[UNVERIFIED: cited as the source paper cites it; not independently checked]`
+
+:::

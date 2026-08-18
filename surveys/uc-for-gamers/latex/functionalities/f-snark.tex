@@ -1,0 +1,72 @@
+%% The interface box of f-snark, the one source for both the book
+%% and uc/.../f-snark/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fwnizk$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := R$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{Prf} \gets \emptyset$
+  \Comment{accepted statement--argument pairs}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Prove}(x, w)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$(x, w) \in R$} \label{ln:wnizkrel}
+\State $\pi \gets \Adv^{!}\bigl(\id.\op{Prove}, x\bigr)$ \label{ln:wnizkzk}
+  \Comment{$w$ is never sent: this line is zero knowledge}
+\State $\V{Prf} \gets \V{Prf} \cup \{(x, \pi)\}$
+\State \textbf{return} $\pi$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Maul}(x, \pi)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F = \Apid$} \label{ln:wnizkadv}
+\Req{$\exists\, \pi' : (x, \pi') \in \V{Prf}$} \label{ln:wnizksame}
+  \Comment{same statement only: a fresh $x$ is not maulable}
+\State $\V{Prf} \gets \V{Prf} \cup \{(x, \pi)\}$ \label{ln:wnizkmaul}
+  \Comment{this line is the whole weakening}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Verify}(x, \pi)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$(x, \pi) \in \V{Prf}$}
+\State \textbf{return} $1$ \label{ln:wnizktrans}
+\EndIf
+\State $w \gets \Adv^{!}\bigl(\id.\op{Verify}, x, \pi\bigr)$
+\If{$(x, w) \in R$}
+\State $\V{Prf} \gets \V{Prf} \cup \{(x, \pi)\}$ \label{ln:wnizksound}
+  \Comment{soundness: a new $x$ still costs a witness}
+\State \textbf{return} $1$
+\EndIf
+\State \textbf{return} $0$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $\V{Prf}$ \label{ln:wnizkleak}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

@@ -2,11 +2,96 @@
 title: "F-DKG — Distributed key generation"
 status: "Canonical"
 layer: 6
-definition: "Not yet written"
+definition: "Defined"
 ---
 
 *F-DKG* (Distributed key generation) is part of *Secret Sharing, Threshold Cryptography, MPC* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
 
+Distributed key generation produces a discrete-log public key $y = g^{a_0}$ together with a Shamir sharing of its exponent, so that no party ever holds the secret and any $t+1$ of them could recover it. The ideal version is short, because almost everything that makes DKG hard — complaint rounds, disqualification, the Gennaro–Jarecki–Krawczyk–Rabin observation that naively composing Feldman VSS skews the key's distribution — lives entirely in the protocol. The functionality simply samples the polynomial correctly and hands out the shares.
+
+One thing it does concede, and it is the only interesting line in the box: the adversary chooses the shares given to corrupted parties. Wikström's note on this is worth quoting, because it explains a design that otherwise looks like a gift — "the adversary may choose the shares handed to corrupted parties. This obviously gives no additional information on the shared secret, but it is convenient for technical reasons."
+
+## Functionality
+
+Reading the box: $\mathit{id}'.F = \mathbf{A}$ tests that the adversary is the caller; **require** refuses the call, and the framework answers $\textsf{rej}$; $\mathbf{C}$ is the set of corrupted parties; $\square$ marks a value never set; $G_q$ is the group and $g$ its generator, $k$ the number of key generators $M_1, \dots, M_k$, and $t := \lceil k/2 - 1 \rceil$ the sharing degree, all parameters.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{KG}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := (G_q, g, k, t := \lceil k/2 - 1 \rceil)\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{Pk} \gets \square\)</li>
+<li>\(\mathtt{Sh} : \{1..k\} \to \mathbb{Z}_q \cup \{\square\}\); &nbsp;&nbsp; \(\mathtt{Sh}[*] \gets \square\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Generate(<span class="cj-id">{s_j\}_{j \in I}</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="3">
+<li>\(\textbf{require}\ \mathit{id}'.F = \mathbf{A} \ \wedge\ \mathtt{Pk} = \square\)</li>
+<li>\(\textbf{require}\ I = \{\, j : M_j \in \mathbf{C} \,\} \ \wedge\ \forall j \in I : s_j \in \mathbb{Z}_q\)<span class="cj-comment">// the adversary fixes the corrupt parties' shares</span></li>
+<li>\(a_0, \dots, a_t \gets \$\, \mathbb{Z}_q\ \textbf{ s.t. }\ \forall j \in I : a(j) = s_j\)<span class="cj-comment">// \(a(z) := \sum_{\iota=0}^{t} a_{\iota} z^{\iota}\), of degree \(t\)</span></li>
+<li>\(\mathtt{Sh}[j] \gets a(j)\) &nbsp;for every \(j \in \{1..k\}\)</li>
+<li>\(\mathtt{Pk} \gets g^{a_0}\)</li>
+<li>\(\textbf{return}\ (\mathtt{Pk}, \mathtt{Sh}[j])\) &nbsp;to each \(M_j\), and \(\mathtt{Pk}\) to \(\mathcal{A}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="9">
+<li>\(\textbf{return}\ (\mathtt{Pk}, \{\, \mathtt{Sh}[j] : M_j \in \mathbf{C} \,\})\)<span class="cj-comment">// an honest party's share never leaves</span></li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+*Source: Functionality 4 (Distributed Key Generation), p. 4 of Wikström, "Universally Composable DKG with Linear Number of Exponentiations", ePrint 2004/124, revision `20040526:212327`, the only posting. The PDF's pages and its printed folios agree.*
+
+**A note on how this one was found, because it explains why it sat unwritten.** The definition is not in a figure. It is a numbered `Functionality 4 (…)` environment in the body text, so every scan this encyclopedia has run — the harvester's box scan and the figure-caption sweep that found the last ten entries — looked straight past it. That is a distinct false-negative mode from the four already recorded, and it is now written down in the task list.
+
+- **Line 4 is the concession, and line 5 is what keeps it harmless.** The adversary supplies $\{s_j\}$ for exactly the corrupted indices, and the functionality then samples a degree-$t$ polynomial *conditioned* on interpolating those values. Since $t \ge |\mathbf{C}|$ in the intended regime, the conditioning leaves $a_0$ uniform: the corrupt shares are $|\mathbf{C}|$ constraints on a polynomial with $t+1$ free coefficients, and the constant term is still free. So the adversary learns nothing about the secret by choosing them, exactly as the source says.
+- **Line 5 is where the whole security property lives, and it is one sampling step.** The point of DKG — the thing Feldman-composed-naively gets wrong — is that $a_0$ must be *uniform* and not biased by the adversary. Here it is uniform by construction. A protocol claiming to realize this box is claiming precisely that it does not let the adversary skew the key.
+- **Line 3 makes the instance one-shot.** A second key means a second instance. The source's functionality runs once and hands over its output; there is no re-keying interface, and adding one would change the object.
+- **Line 8 sends the public key to everyone and each share to its owner only.** The source writes this as handing $((\mathcal{S}, \mathsf{PublicKey}, y), \{(\mathsf{PublicKey}, y, s_j)\}_{j=1}^{k})$ to $\mathcal{C}_{\mathcal{I}}$ — one message carrying the adversary's copy and each generator's copy together.
+- **Line 9 leaks only the corrupt parties' shares, which the adversary chose at line 4.** An honest generator's share never leaves the box. There is no interface that returns $a(z)$, the coefficients, or any share other than the caller's.
+
+**Mismatch register.**
+
+| The source | This box | Why |
+|---|---|---|
+| Steps 1–3 of a single run, with the functionality "proceeding as follows" | One operation, $\mathsf{Generate}$, called by the adversary | The source's step 1 *is* the adversary's message, so the run is adversary-initiated; making that the call rather than a separate wait is the faithful translation into a long-lived box. |
+| $\mathcal{C}_{\mathcal{I}}$, the communication ideal functionality | Direct returns at line 8 | $\mathcal{C}_{\mathcal{I}}$ is the paper's plumbing for addressing parties; this framework addresses them directly. Nothing about the DKG depends on it. |
+| $I_{\mathcal{M}}$, "the set of indices of corrupted parties" | `require` at line 4 tying $I$ to $\mathbf{C}$ | The source takes $I_{\mathcal{M}}$ as given; here it must be checked, or a corrupt adversary could claim shares for honest parties. |
+| No leakage interface | $\mathsf{Leak}$ at line 9 | Required here. |
+| $t = \lceil k/2 - 1 \rceil$ fixed in the definition | A parameter, defaulted to that value | Keeps the box usable at other thresholds; the source's choice is the one its protocol needs. |
+
+## Known realizations
+
+**Wikström's protocol, in a linear number of exponentiations** — the paper's title and its contribution. The classical route is Feldman VSS run by every party in parallel, and the paper recalls both the scheme and the trap: "It may appear that one could let each party run a copy of Feldman's protocol and then multiply all public keys to construct a joint public key, but Gennaro et al." showed this biases the resulting key. The functionality above is what rules that out, since line 5 samples $a_0$ uniformly and no adversarial input reaches it.
+
+**The building blocks are on this site.** The paper's own hybrids are a bulletin board, multiple message transmission, and a common reference string — its Functionalities 1, 2 and 3 — and the Feldman VSS it builds on is the subject of [*F-VSS*](/uc/layer-6-secret-sharing-mpc/f-vss/index.qmd), whose adaptively secure form comes from Abe and Fehr.
+
+## Properties
+
+- **Uniformity of the public key, with probability exactly $1$.** Line 5: $a_0$ is uniform in $\mathbb{Z}_q$ conditioned on $|\mathbf{C}| \le t$ adversarial constraints on a degree-$t$ polynomial, so its marginal is uniform. This is the property the primitive exists for.
+- **Secrecy of the secret key, with advantage exactly $0$.** The adversary sees $y = g^{a_0}$ and the $|\mathbf{C}|$ shares it chose itself. Recovering $a_0$ from those requires $t+1$ points, and it has at most $t$.
+- **Correctness of the sharing, with probability exactly $1$.** Line 6 evaluates the same polynomial for every index, so any $t+1$ shares interpolate to $a_0$ by construction.
+- **Agreement on the public key, with probability exactly $1$.** Line 8 is a single step.
+- **No robustness and no disqualification.** The functionality has no complaint interface and no way for a generator to be excluded — those are protocol mechanisms, and the ideal box simply succeeds.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
+
 *References:*
 
-- Wikström. [*Universally composable DKG with linear number of exponentiations*](https://eprint.iacr.org/2004/124). In Security in Communication Networks (SCN), volume 3352 of LNCS, pages 263–277, 2005.
+- Wikström. [*Universally composable DKG with linear number of exponentiations*](https://eprint.iacr.org/2004/124). In Security in Communication Networks (SCN), volume 3352 of LNCS, pages 263–277, 2005. The definition transcribed above is Functionality 4, p. 4 of ePrint 2004/124, revision `20040526:212327`, the only posting; the hybrids it runs against are Functionalities 1 (bulletin board), 2 (multiple message transmission) and 3 (common random string) on the same pages, and the recollection of Feldman VSS with the Gennaro et al. caveat follows immediately after.

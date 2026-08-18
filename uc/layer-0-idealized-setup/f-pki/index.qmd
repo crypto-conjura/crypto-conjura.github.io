@@ -1,12 +1,95 @@
 ---
-title: "F-PKI — Public-key infrastructure"
+title: "F-PKI — Public-key infrastructure, one registrant"
 status: "Idealized Setup"
 layer: 0
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-PKI* (Public-key infrastructure) is part of *Idealized Setup and Resources* in the UC functionality encyclopedia. Status: an idealized setup assumption or shared resource.
+*F-PKI* (Public-key infrastructure, one registrant) is part of *Idealized Setup and Resources* in the UC functionality encyclopedia. Status: an idealized setup assumption or shared resource.
+
+A bulletin board that will record one value for one party, hand it to anyone who asks, and check nothing at all. It is the local, single-registrant ancestor of [*G-PKI*](/uc/layer-0-idealized-setup/g-pki/index.qmd), and the difference between the two is not their shape but their *absence of a test*: `G-PKI` refuses a key another party has already registered, and this box does not refuse anything.
+
+That is deliberate in the source, which is explicit that no proof of possession of a secret key is required and that a party may register the value some other party registered with a different copy. The point of the functionality is to be the weakest setup that still suffices — it is what [*F-CERT*](/uc/layer-0-idealized-setup/f-cert/index.qmd) is realized from, together with a bare signature scheme.
+
+## Functionality
+
+Reading the box: $\mathcal{A}(\cdot)$ is a call on the adversary slot whose answer is not used, so it is a notification rather than a query; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it; $\mathbf{C}$ is the set of corrupted parties; $A$ and $Z$ are the adversary's and environment's name components, so a test on $\mathit{id}'.F$ asks who is really placing the call; $\square$ marks a value never set and $\bot$ a refusal or an absence; $O$ is the one party this instance registers for, and it is a parameter rather than an argument.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{PKI}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := O\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{val} \gets \square\)<span class="cj-comment">// one registrant, one value</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Register(<span class="cj-id">v</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="2">
+<li>\(\textbf{if}\ \mathit{id}'.F \in \{A,Z\} \ \wedge\ \mathit{id}.P \notin \mathbf{C}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \mathtt{val}\)</span><span class="cj-comment">// a peek, not a write</span></li>
+<li>\(\textbf{require}\ \mathit{id}.P = O \ \wedge\ \mathtt{val} = \square \ \wedge\ v \in \mathcal{K}\)<span class="cj-comment">// the first request only, and only \(O\)'s</span></li>
+<li>\(\mathtt{val} \gets v\)<span class="cj-comment">// no check on \(v\) whatever</span></li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Register},\ v\bigr)\)</li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Retrieve()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="8">
+<li>\(\textbf{if}\ \mathtt{val} = \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \bot\)</span><span class="cj-comment">// nothing registered yet</span></li>
+<li>\(\textbf{return}\ \mathtt{val}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="11">
+<li>\(\textbf{return}\ \mathtt{val}\)<span class="cj-comment">// public by construction</span></li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+The box is transcribed from Canetti, *Universally composable signature, certification, and authentication*, ePrint 2003/239, revision `20040815:140230`, Figure 3, p. 16 — "the ideal certification authority functionality, $\mathcal{F}_{\textsc{ca}}$". The rendered page is kept as reviewer evidence at `_src/canetti2004-p16.png`.
+
+**Line 5 is the entire content of the functionality, and it is a non-check.** The printed clause records the pair and stops; there is no test on $v$, no uniqueness requirement, and no relationship between $v$ and any secret. Compare `G-PKI`, whose $\mathsf{Clean}_{\mathsf{reg}}$ rules out a key already in the table. Registering a value that is not yours is therefore *possible* here and *impossible* there, and the paper says so in as many words: running in this hybrid model, "a party can register with some copy of $\mathcal{F}_{\textsc{ca}}$ using, e.g., the same public value as that of some other party, in another copy". A reader who assumes a PKI authenticates its registrants has the wrong box.
+
+**One registrant per instance** (line 4). The source writes this as `sid = P`, making the session identifier *identical* to the party identity — "for ease of presentation", it says. Here the session identifier lives in the process id, so the registrant becomes the parameter $O$ and the test is a **require**. A directory of many parties is many instances, which is exactly the difference from `G-PKI`, where one instance serves everybody.
+
+**Where the source waits, this box does not** (line 6). Both printed clauses send a message to the adversary and then "wait for an `ok`" before proceeding. That is the older framework's delayed-output idiom, and it gives the adversary an unbounded stall on both registration and retrieval. This box notifies and continues, which is how [*F-COM*](/uc/layer-4-commitments-proofs/f-com/index.qmd) and `G-PKI` already translate the same idiom: delivery control lives in the clock-parameterized functionalities, not in a setup assumption. The translation *strengthens* the box, and a protocol proved against the printed version is proved against something weaker.
+
+**$\square$ against $\bot$** (lines 8–9). The source returns $\bot$ for "nothing registered". The state cell is $\square$, never-set; the *answer* to a retrieval is $\bot$, an absence. Keeping the two apart is a house convention, and the source does not distinguish them.
+
+**The peek at lines 2–3** is not in the source at all. It is the framework's rule for an outsider acting for an honest party: the adversary or environment may read what is there but may not write it. `G-PKI` carries the identical guard, and it is the one line on this page that comes from the conventions rather than the paper.
+
+## Known realizations
+
+**Nothing realizes it, and that is the point.** This is a setup assumption: the paper introduces it precisely because $\mathcal{F}_{\textsc{cert}}$ is not realizable in the bare unauthenticated model, and something must be assumed. What the paper does show is what it *buys*: protocol `cas` realizes [*F-CERT*](/uc/layer-0-idealized-setup/f-cert/index.qmd) in the $(\mathcal{F}_{\textsc{sig}}, \mathcal{F}_{\textsc{ca}})$-hybrid model (**Claim 3**, p. 16), and `sba` then realizes [*F-auth*](/uc/layer-1-channels-agreement-ledgers/f-auth/index.qmd) in the $\mathcal{F}_{\textsc{cert}}$-hybrid model (**Claim 4**, p. 19). So the chain this box sits at the bottom of is: a bulletin board and a signature scheme give certification, and certification gives authenticated channels.
+
+**In practice it is a registration authority**, and the source notes the minimal formulation suffices without any of the features a real one has — no modification, no revocation. Those are named as useful and deliberately out of scope, which is worth knowing before treating this box as a model of a deployed PKI.
+
+## Properties
+
+- **Write-once, with probability exactly $1$.** Line 4 refuses a second registration, so the recorded value never changes once set.
+- **Everyone reads the same value.** Lines 8–10 answer every caller from the single cell, and no line takes a substitute from the adversary slot — unlike the printed version, where the adversary's `ok` gates the answer.
+- **No authenticity of the registrant's claim.** Line 5 accepts any $v \in \mathcal{K}$. The box guarantees *who registered*, never *that they hold a corresponding secret*.
+- **No secrecy, by construction.** Line 11 returns the value; it is public in any case.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Canetti. [*Universally composable signature, certification, and authentication*](https://eprint.iacr.org/2003/239). In 17th IEEE Computer Security Foundations Workshop (CSFW), pages 219–233, 2004.
+- Canetti. [*Universally composable signature, certification, and authentication*](https://eprint.iacr.org/2003/239). In 17th IEEE Computer Security Foundations Workshop (CSFW), pages 219–233, 2004. Read at ePrint revision `20040815:140230`, the newest of eleven postings, title page dated 15 August 2004. Figure 3, p. 16, the definition transcribed above; Figure 2, p. 15, $\mathcal{F}_{\textsc{cert}}$; the "public bulletin board" discussion and the no-proof-of-possession remark, p. 15; Claim 3, p. 16; Claim 4, p. 19. Author and venue confirmed against DBLP, which records CSFW 2004 with start page 219.

@@ -22,7 +22,7 @@ supplied numbers and several had drifted or were slightly off:
 
 - *Confirmed.* 0 stars, 0 watchers, 0 forks, 0 open issues. Exactly one of the
   statements carries a non-open badge (`c/0004`), and `proof_review: ai` on
-  **all** of them — no statement has been read by a human. `papers/reviews/` is
+  **all** of them — no statement has been read by a human. `reviews/` is
   still a placeholder saying no committee has formed. GitHub Discussions is
   **disabled** on the repository. The Philosophy page does call session logs
   "the one promise still unkept" while `schema/index.qmd` records them as

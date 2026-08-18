@@ -1,13 +1,133 @@
 ---
-title: "F-pwKE — Password-authenticated KE"
+title: "F-pwKE — Password-authenticated key exchange"
 status: "Canonical"
 layer: 3
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-pwKE* (Password-authenticated KE) is part of *Public-Key Primitives, Key Exchange, Messaging* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+*F-pwKE* (Password-authenticated key exchange) is part of *Public-Key Primitives* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+
+Key exchange from a secret that is small enough to guess. The whole difficulty of PAKE is that an online guess cannot be prevented — an attacker can always run the protocol and try a password — so the definition's job is to say that guessing is the *only* attack, and that each attempt costs one session. This box does that with a three-valued mark and one adversary operation.
+
+Read it as a state machine on the mark. A session starts $\textsf{fresh}$; the adversary may spend it on a single guess (line 9); a right guess makes it $\textsf{compromised}$ and the adversary chooses the key (line 18); a wrong guess makes it $\textsf{interrupted}$ and the key becomes independent and random (line 22), which is as good as an honest session even though the session will fail to match. Everything else about PAKE — dictionary size, password distribution, how many guesses an attacker can afford — lives outside the functionality, which is why it is a clean notion rather than a parameterized one.
+
+## Functionality
+
+Reading the box: $\mathcal{A}(\cdot)$ is a call on the adversary slot whose answer is not used; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it; $A$ is the adversary's name component, so a test on $\mathit{id}'.F$ asks who is really calling; $\mathbf{C}$ is the set of corrupted parties; $\square$ marks a value never set; $\ell$ is the parameter, the key length.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{pwKE}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := \ell\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{pw}[*] \gets \square\); &nbsp;\(\mathtt{peer}[*] \gets \square\)</li>
+<li>\(\mathtt{mark}[*] \gets \square\)<span class="cj-comment">// \(\mathsf{fresh}\), \(\mathsf{interrupted}\), \(\mathsf{compromised}\), \(\mathsf{done}\)</span></li>
+<li>\(\mathtt{sk}[*] \gets \square\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.NewSession(<span class="cj-id">Q</span>, <span class="cj-id">pw</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="4">
+<li>\(\textbf{require}\ \mathtt{mark}[\mathit{id}.P] = \square\)</li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{NewSession},\ \mathit{id}.P,\ Q\bigr)\)<span class="cj-comment">// who talks to whom, never the password</span></li>
+<li>\(\mathtt{pw}[\mathit{id}.P] \gets pw\); &nbsp;\(\mathtt{peer}[\mathit{id}.P] \gets Q\)</li>
+<li>\(\mathtt{mark}[\mathit{id}.P] \gets \mathsf{fresh}\)</li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.TestPwd(<span class="cj-id">P</span>, <span class="cj-id">pw'</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="9">
+<li>\(\textbf{require}\ \mathit{id}'.F = A \ \wedge\ \mathtt{mark}[P] = \mathsf{fresh}\)<span class="cj-comment">// one guess per session, and only while fresh</span></li>
+<li>\(\textbf{if}\ pw' = \mathtt{pw}[P]\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{mark}[P] \gets \mathsf{compromised}\)</span></li>
+<li><span class="cj-ind">\(\textbf{return}\) <span class="cj-atom">true</span></span></li>
+<li>\(\mathtt{mark}[P] \gets \mathsf{interrupted}\)<span class="cj-comment">// a wrong guess costs the session, not the password</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">false</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.NewKey(<span class="cj-id">P</span>, <span class="cj-id">sk^{*}</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="15">
+<li>\(\textbf{require}\ \mathit{id}'.F = A \ \wedge\ \mathtt{mark}[P] \notin \{\square, \mathsf{done}\} \ \wedge\ |sk^{*}| = \ell\)</li>
+<li>\(Q \gets \mathtt{peer}[P]\)</li>
+<li>\(\textbf{if}\ \mathtt{mark}[P] = \mathsf{compromised} \ \vee\ P \in \mathbf{C} \ \vee\ Q \in \mathbf{C}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{sk}[P] \gets sk^{*}\)</span><span class="cj-comment">// the adversary's key, only once it has earned it</span></li>
+<li>\(\textbf{if}\ \mathtt{mark}[P] = \mathsf{fresh} \ \wedge\ \mathtt{sk}[Q] \neq \square\ \textbf{then} \wedge\ \mathtt{pw}[Q] = \mathtt{pw}[P] \ \wedge\ \mathtt{peer}[Q] = P\)</li>
+<li><span class="cj-ind">\(\mathtt{sk}[P] \gets \mathtt{sk}[Q]\)</span><span class="cj-comment">// matching passwords, matching key</span></li>
+<li>\(\textbf{if}\ \mathtt{sk}[P] = \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{sk}[P] \gets_{\$} \{0,1\}^{\ell}\)</span><span class="cj-comment">// everything else: independent and random</span></li>
+<li>\(\mathtt{mark}[P] \gets \mathsf{done}\)</li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Read()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="25">
+<li>\(\textbf{require}\ \mathtt{mark}[\mathit{id}.P] = \mathsf{done}\)</li>
+<li>\(\textbf{return}\ \mathtt{sk}[\mathit{id}.P]\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="27">
+<li>\(\textbf{return}\ (\mathtt{pw}[\mathit{id}.P], \mathtt{sk}[\mathit{id}.P])\)</li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+The box is transcribed from Canetti, Halevi, Katz, Lindell and MacKenzie, *Universally composable password-based key exchange*, ePrint 2005/196, revision `20050624:183557`, Figure 2, p. 5 (PDF page 7) — "the password-based key-exchange functionality". The rendered page is at `_src/canettietal2005-p7.png`.
+
+**Line 5 is the modelling decision the whole notion rests on.** The adversary is told *who is talking to whom* and never the password — not its length, not its distribution, nothing. That is what makes the definition indifferent to the dictionary: the functionality does not know how hard the password is to guess, and the security statement a protocol gets from realizing this box is therefore "no better than online guessing", with the cost of guessing left to the application.
+
+**Line 9's **require** is the one-guess-per-session rule**, and it is worth reading carefully because the source expresses it differently. There, `TestPwd` acts only "if there is a record which is fresh" — and both branches leave the record non-fresh, so a second guess against the same session does nothing. Here the freshness test is the guard and both branches write, which is the same behaviour with the invariant made explicit. What it means in practice: an attacker gets one guess per protocol run, and there is no way to buy a second cheaply. That is precisely the guarantee a password protocol is supposed to provide.
+
+**Line 22 is the interesting case, not line 18.** A *wrong* guess does not weaken the key — the session gets an independent random key, indistinguishable from an honest one. What it loses is the *match*: the peer will get a different key, so the session fails, and failure is how the honest parties detect the attack. A definition in which a wrong guess leaked anything about the key would be much weaker, and this line is where PAKE differs from ordinary key exchange with a low-entropy secret.
+
+**Line 20 is the matching rule, and it is conditional on more than the passwords being equal.** The source requires that a key was already sent to the peer, that the peer's record named this party, and that it was fresh *at the time*. This box tests the first three; the "at the time" clause is the one thing not modelled, because the mark is overwritten rather than journalled. The consequence is narrow but real: a session compromised after its peer completed could, in this box, still inherit the peer's key at line 20, where the source would fall through to a fresh random one. The invariant that makes the difference unreachable is that line 9 requires freshness and line 15 requires the session not be $\textsf{done}$ — but that is an argument, not a line, and it is recorded here rather than asserted.
+
+**The adversary drives key delivery** (line 15). `NewKey` is the adversary's operation, and no key exists until it calls — which is the delayed-output idiom of the source, and it means this box makes no liveness promise at all. Line 25 refuses a read until then.
+
+**Two translations.** The source's `role` argument, distinguishing initiator from responder, carries no behaviour in the functionality and is dropped. And Leak (line 27) is added, since the source has no leakage interface: a corrupt party's adversary learns that party's own password and key, which it would hold in reality.
+
+## Known realizations
+
+**The paper's own construction** realizes this functionality in the [common-reference-string](/uc/layer-0-idealized-setup/f-crs/index.qmd) model, under standard assumptions, and that setup is necessary rather than convenient — the same obstruction that makes [*F-COM*](/uc/layer-4-commitments-proofs/f-com/index.qmd) unrealizable in the plain model applies here.
+
+**Two justifications the paper gives for the definition**, both worth knowing if you are choosing between notions:
+
+- It suffices to build password-based **secure channels**, which the paper calls arguably the most common application, so the notion is not stronger than needed for its main use.
+- A protocol realizing this functionality is also secure under the earlier game-based definition of Bellare, Pointcheval and Rogaway, modulo differences the paper describes as unimportant. So the UC notion is at least as strong as the standard one, and the two are not competing formalisms.
+
+**Where its siblings sit.** The site's [*F-aPAKE*](/uc/layer-3-public-key-primitives/f-apake/index.qmd) and [*F-saPAKE*](/uc/layer-3-public-key-primitives/f-sapake/index.qmd) stubs are the asymmetric and strong-asymmetric variants, in which the server stores a password *file* rather than the password and the definition has to account for stealing it and for offline guessing afterwards. Those add clauses to the box above rather than changing it; neither is written yet, and the strong variant is printed in a form spanning six labelled sections, so it wants its own sitting.
+
+## Properties
+
+- **Online guessing only, with one guess per session.** Line 9's freshness guard, and the fact that lines 11 and 13 both leave the mark non-fresh.
+- **A wrong guess costs the session, not the key.** Lines 13 and 22: an $\textsf{interrupted}$ session takes an independent random key.
+- **Matching sessions agree, with probability exactly $1$.** Line 20, when the passwords agree and both sides were fresh.
+- **Non-matching sessions get independent keys.** Line 22 is the fallback, and it is reached whenever neither the compromise nor the match condition holds.
+- **The password never reaches the adversary through this box.** Line 5 carries identities only; line 27 carries a party's own password to its own adversary, which is corruption, not leakage.
+- **No liveness.** Line 15 is the adversary's to call, and it need never call it.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Canetti et al. [*Universally composable password-based key exchange*](https://eprint.iacr.org/2005/196). In Advances in Cryptology – EUROCRYPT 2005, volume 3494 of LNCS, pages 404–421, 2005.
-- Goldreich and Lindell. [*Session-key generation using human passwords only*](https://eprint.iacr.org/2000/057). In Advances in Cryptology – CRYPTO 2001, 2001.
+- Canetti, Halevi, Katz, Lindell, and MacKenzie. [*Universally composable password-based key exchange*](https://eprint.iacr.org/2005/196). In Advances in Cryptology – EUROCRYPT 2005, volume 3494 of LNCS, pages 404–421, 2005. Read at ePrint revision `20050624:183557`. Figure 2, p. 5 (PDF page 7), the definition transcribed above; §6 for the secure-channels application and Appendix A for the comparison with the Bellare–Pointcheval–Rogaway definition. Authors, venue and page range confirmed against DBLP, which records five authors.
+- Goldreich and Lindell. [*Session-key generation using human passwords only*](https://eprint.iacr.org/2000/057). In Advances in Cryptology – CRYPTO 2001, 2001. Carried over from the stub's reference list, read at ePrint revision `20050125:120104`. It prints no ideal functionality — it predates this line of UC formulations and works in a game-based setting — so it is kept for the problem it opened rather than as a source for the box.

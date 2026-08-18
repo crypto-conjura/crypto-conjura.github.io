@@ -1,0 +1,565 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  One-shot decryption without extractability.
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{ONE-SHOT DECRYPTION WITHOUT EXTRACTABILITY}
+
+\newcommand{\ket}[1]{\lvert #1 \rangle}
+\newcommand{\negl}{\mathsf{negl}}
+\newcommand{\NP}{\mathsf{NP}}
+\newcommand{\Rel}{\mathsf{R}}
+\newcommand{\Msp}{\mathcal{M}}
+\newcommand{\Lang}{\mathcal{L}}
+\newcommand{\Setup}{\mathsf{Setup}}
+\newcommand{\KeyGen}{\mathsf{KeyGen}}
+\newcommand{\Sign}{\mathsf{Sign}}
+\newcommand{\Verify}{\mathsf{Verify}}
+\newcommand{\Enc}{\mathsf{Enc}}
+\newcommand{\Dec}{\mathsf{Dec}}
+\newcommand{\PartialDec}{\mathsf{PartialDec}}
+\newcommand{\CRS}{\mathsf{CRS}}
+\newcommand{\pk}{\mathsf{pk}}
+\newcommand{\sk}{\mathsf{sk}}
+\newcommand{\ct}{\mathsf{ct}}
+\newcommand{\stmt}{\mathsf{stmt}}
+\newcommand{\wit}{\mathsf{w}}
+\newcommand{\aux}{\mathsf{aux}}
+\newcommand{\OSS}{\mathsf{OSS}}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{One-Shot Decryption Without Extractability}
+\cjsubtitle{Threshold public-key encryption with one-shot decryption
+from one-shot signatures and plain witness encryption}
+\cjstatus{Statement: AI-written from Alexandru Cojocaru, Aggelos
+  Kiayias, Yu Shen, Petros Wallden, \emph{Proactive Secret Sharing
+  without Erasures}, IACR Cryptology ePrint Archive 2026, not yet
+  checked by a human. Open. Under \emph{extractable} witness
+  encryption the primitive is constructed for every $f < 1/2$ (the
+  paper's Theorem~2, p.~20); the paper reports no progress toward
+  removing extractability and records that post-quantum extractable
+  witness encryption ``is only understood from strong knowledge-type
+  assumptions, and obtaining satisfactory instantiations remains an
+  important open problem'' (p.~7). The single-receiver (non-threshold)
+  variant is separately argued to be unachievable by a
+  gentle-measurement rewinding attack, so the threshold structure is
+  not negotiable.}
+\cjcategory{\emph{Quantum Cryptography \& Unclonability}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+A one-shot signature is a quantum primitive whose signing key
+self-destructs: from one key you can produce a signature on one
+message and never on a second one. Building on this, the paper defines
+a threshold public-key encryption scheme with ``one-shot
+decryption'': a committee of quantum key-holders can jointly decrypt
+one ciphertext of their choosing, but no matter what the committee
+does afterwards --- even if every single key-holder is subsequently
+compromised and hands over its entire remaining state --- a second
+ciphertext under the same public keys can never be decrypted. This is
+the engine that makes proactive secret sharing possible without ever
+asking anyone to erase anything: the act of decrypting consumes the
+shares in a physically irreversible way. The paper constructs the
+primitive, but only by assuming witness encryption with an
+extractability guarantee, meaning that any adversary who can
+distinguish two ciphertexts must be accompanied by an efficient
+algorithm that literally reads a witness out of it. That is a
+knowledge-type assumption of a kind that is poorly understood
+post-quantum. The conjecture is that the extractability crutch is
+unnecessary: one-shot decryption should be achievable with no
+knowledge assumption at all and, in the reading formalised below, from
+one-shot signatures together with witness encryption in its ordinary,
+non-extractable form. Settling it would tell us whether proactive
+security without erasures rests on standard-model tools or on a
+knowledge assumption.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+Proactive secret sharing~\cite{OY91,HJKY95} keeps a secret alive
+against a \emph{mobile} adversary that may, over time, corrupt every
+share-holder, by refreshing shares each epoch. Every scheme in this
+line, and every application of it --- notably evolving-committee
+secret sharing~\cite{BGG+20} and YOSO-style MPC~\cite{GHK+21} ---
+assumes that share-holders can \emph{securely erase} their old state.
+Secure erasure is a strong physical assumption, and the source paper
+proves that without it proactive secret sharing is impossible for any
+corruption threshold $f > 0$ in a purely classical model.
+
+The paper's way out is quantum: measurement is irreversible, so a
+quantum share can be consumed rather than erased. The engine is a new
+primitive, \emph{threshold public-key encryption with one-shot
+decryption} (Definition~\ref{def:tosd}). A single-receiver version of
+the same idea is shown to be hopeless: because decryption is
+essentially deterministic, a receiver can run it in superposition,
+measure the plaintext register and rewind, recovering an undisturbed
+key --- exactly the trick behind single-decryptor
+encryption~\cite{GZ20}. Thresholding defeats the rewinding attack,
+because a majority of \emph{distinct} one-shot signing
+keys~\cite{AGKZ20,SZ25,HV25} must be genuinely consumed to decrypt,
+and $2(1-f)n > n$ for $f < 1/2$.
+
+The construction is short: the sender picks a random tag and
+witness-encrypts~\cite{GGSW13} the message under the statement ``at
+least $(1-f)n$ of the committee's one-shot public keys carry a valid
+signature on this tag''; partial decryption is just signing the tag.
+Its security proof, however, runs the witness-encryption
+\emph{extractor} on a successful distinguisher to pull out $(1-f)n$
+one-shot signatures, one of which must live under an honest public
+key, and then forges a second signature under that key to break
+one-shot-ness. Plain indistinguishability security is useless here,
+since the statement being encrypted to is \emph{true}: honest parties
+can sign. So extractability is not a convenience in the proof, it is
+the entire reduction. The same is true of the proactive secret sharing
+protocols built on top and of the functional-witness-encryption
+variant~\cite{BCP14} used for evaluating a function on the shared
+secret without reconstructing it.
+
+This leaves the whole edifice standing on a knowledge-type assumption.
+Post-quantum extractable witness encryption has no satisfying
+instantiation; \cite{FHAS24} obtains extractable witness encryption in
+the algebraic group model but not post-quantum, and~\cite{ACL+22} is
+cited only as possible lattice-based inspiration. (External context,
+not a claim of the source paper: extractable witness encryption for
+all of $\NP$ with \emph{arbitrary} auxiliary input --- which is what
+Definition~\ref{def:we}(ii) demands, with $\aux$ an arbitrary mixed
+state --- has been argued to be implausible~\cite{GGHW14}, a work the
+source paper does not cite.) The conjecture asks whether the
+extractability can simply be dropped: is threshold one-shot decryption
+achievable without any knowledge assumption --- concretely, from
+one-shot signatures plus ordinary witness encryption? A positive
+answer would put proactive security without erasures on standard-model
+footing.
+
+\textbf{Progress to date.} The paper proves the positive result under
+extractable witness encryption (Theorem~2, p.~20) and builds three
+proactive secret sharing protocols (Protocols~1--3, Theorems~3--5,
+pp.~23/26/29), the third of which adds secret usability via functional
+witness encryption; Theorem~3 tolerates any $f < 1$ against a passive
+mobile adversary, Theorems~4 and~5 require $f < 1/2$ against an active
+one. Functional witness encryption is equivalent to extractability
+obfuscation~\cite{BCP14}. The paper identifies where extractability is
+used --- the extractor must output at least $(1-f)n$ one-shot
+signatures for the reduction to one-shot-signature security to go
+through --- and it points to extractable witness encryption from the
+algebraic group model, and to lattice-based knowledge assumptions, as
+the kind of more structured assumption that would already count as
+progress. It reports no progress toward removing extractability
+altogether.
+
+\textbf{Why it matters.} It decides whether the first (and so far
+only) route to proactive security without erasures depends on a
+knowledge assumption that is unavailable post-quantum, or whether it
+can be based on standard tools. Stripped of the application, it is a
+clean question about quantum unclonability: does one-shot decryption
+--- irreversible consumption of a decryption capability, verifiable by
+nobody and surviving total posterior corruption --- follow from
+one-shot signatures, or is it strictly stronger? Either answer moves a
+real line: a construction removes a knowledge assumption from a
+headline feasibility result, and a separation would be the first
+evidence that thresholded one-shot-ness needs extraction.
+
+\textbf{Why it is clean.} It is a single implication between two
+primitives, both fully definable in a page, with no reference to the
+paper's proactive secret sharing protocols, its epoch machinery, or
+its mobile-adversary model. The hypotheses are the paper's own
+ingredients minus one adjective. Nothing is sketched or unpublished:
+one-shot signatures and witness encryption are standard and
+constructed elsewhere, and the target definition is a self-contained
+three-property game.
+
+\section{Notation and parameters}\label{sec:notation}
+
+Throughout, $\lambda \in \mathbb{N}$ is the security parameter,
+$\negl(\cdot)$ denotes an unspecified negligible function, and QPT
+abbreviates ``quantum polynomial time''. For $n \in \mathbb{N}$ we
+write $[n] = \{1, \dots, n\}$. All parties and adversaries are QPT and
+all communication is classical: every algorithm below outputs
+classical strings except where a state is written in ket notation, so
+$\pk$ denotes a classical public key and $\ket{\sk}$ a quantum secret
+key. $\Msp$ denotes a message space and $\lvert m \rvert$ the length
+of a message $m \in \Msp$. For an $\NP$ relation $\Rel$ we write
+$\Lang_{\Rel} = \{\stmt : \exists\, \wit,\ (\stmt, \wit) \in \Rel\}$
+for the associated language. The symbol $\aux$ denotes an arbitrary
+mixed quantum state given to an adversary as auxiliary input, possibly
+entangled with an external register.
+
+\textbf{Parameters.}
+\begin{itemize}[leftmargin=1.2em]
+\item $\lambda$ --- security parameter; all algorithms run in quantum
+  polynomial time in $\lambda$ and all guarantees are asymptotic in
+  $\lambda$.
+\item $n$ --- committee size, i.e.\ the number of quantum secret-key
+  holders; any polynomial $n = n(\lambda)$.
+\item $f$ --- corruption threshold: the adversary holds at most $fn$
+  of the $n$ quantum secret keys before decryption, and at least
+  $(1-f)n$ partial decryptions are needed to decrypt; the conjecture
+  is for every constant $0 < f < 1/2$, while
+  Definition~\ref{def:tosd} is stated for $f \in [0, 1/2)$.
+\item $\Rel$ --- the $\NP$ relation the witness encryption scheme is
+  for; the hypothesis quantifies over all $\NP$ relations.
+\end{itemize}
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{definition}[One-shot signatures]\label{def:oss}
+A \emph{one-shot signature} (OSS) scheme with message space $\Msp
+\supseteq \{0,1\}^{\lambda}$ is a tuple of QPT algorithms $(\Setup,
+\KeyGen, \Sign, \Verify)$:
+\begin{itemize}[leftmargin=1.2em]
+  \item $\Setup(1^{\lambda}) \to \CRS$: outputs a classical common
+    reference string.
+  \item $\KeyGen(\CRS) \to (\pk, \ket{\sk})$: outputs a classical
+    public key and a quantum signing key.
+  \item $\Sign(\CRS, \ket{\sk}, m) \to \sigma$: outputs a classical
+    signature, consuming the signing key.
+  \item $\Verify(\CRS, \pk, m, \sigma) \to 0/1$.
+\end{itemize}
+\emph{Correctness:} for every $m \in \Msp$,
+\[
+  \Pr[\Verify(\CRS, \pk, m, \sigma) = 1] \ge 1 - \negl(\lambda),
+\]
+where $\CRS \gets \Setup(1^{\lambda})$, $(\pk, \ket{\sk}) \gets
+\KeyGen(\CRS)$ and $\sigma \gets \Sign(\CRS, \ket{\sk}, m)$.
+
+\emph{Security (one-shot-ness):} for every QPT $\mathcal{A}$, sampling
+$\CRS \gets \Setup(1^{\lambda})$ and $(\pk, m_{0}, m_{1}, \sigma_{0},
+\sigma_{1}) \gets \mathcal{A}(\CRS)$,
+\begin{multline*}
+  \Pr\bigl[\, m_{0} \neq m_{1}
+    \ \wedge\ \Verify(\CRS, \pk, m_{0}, \sigma_{0}) = 1 \\
+    {}\wedge\ \Verify(\CRS, \pk, m_{1}, \sigma_{1}) = 1 \,\bigr]
+    \;\le\; \negl(\lambda).
+\end{multline*}
+Note that $\pk$ may be adversarially generated.
+\end{definition}
+
+\begin{remark}[two harvester-side repairs to
+Definition~\ref{def:oss}]\label{rem:oss}
+The clause $m_{0} \neq m_{1}$ is not printed in the source paper's
+Definition~5 (p.~12); without it the requirement is unsatisfiable,
+since honest $\KeyGen$ followed by $\Sign$ already yields two
+verifying pairs, so it is added here as clearly intended, matching the
+definition of~\cite{AGKZ20}. The source paper's Definition~5 leaves
+the message space an abstract $\Msp$, and its Algorithm~1 (p.~20)
+signs only tags in $\{0,1\}^{\lambda}$; the abstract $\Msp \supseteq
+\{0,1\}^{\lambda}$ above follows the paper rather than fixing $\Msp =
+\{0,1\}^{*}$.
+\end{remark}
+
+\begin{definition}[Witness encryption; indistinguishability vs.\
+extractable security]\label{def:we}
+A \emph{witness encryption} scheme for an $\NP$ relation $\Rel$ and
+message space $\Msp$ is a pair of QPT algorithms $(\Enc, \Dec)$ with
+$\Enc(1^{\lambda}, \stmt, m) \to \ct$ and $\Dec(\ct, \wit) \to
+m/\bot$, such that
+
+\emph{Correctness:} for every $m \in \Msp$ and every $(\stmt, \wit)
+\in \Rel$, $\Pr[\Dec(\Enc(1^{\lambda}, \stmt, m), \wit) = m] = 1$.
+
+We distinguish two security notions.
+\begin{itemize}[leftmargin=1.6em]
+  \item[(i)] \emph{Indistinguishability security} (the standard
+    notion of~\cite{GGSW13}, supplied here by the harvester; the
+    source paper defines only the extractable variant, its
+    Definition~6, p.~12): for every QPT $\mathcal{A}$, every $\stmt
+    \notin \Lang_{\Rel}$, every mixed state $\aux$ and all $m_{0},
+    m_{1} \in \Msp$ with $\lvert m_{0} \rvert = \lvert m_{1} \rvert$,
+  \begin{multline*}
+    \bigl| \Pr[\mathcal{A}(\aux, \Enc(1^{\lambda}, \stmt, m_{0}))
+      = 1] \\
+    {}- \Pr[\mathcal{A}(\aux, \Enc(1^{\lambda}, \stmt, m_{1}))
+      = 1] \bigr| \le \negl(\lambda).
+  \end{multline*}
+  No guarantee whatsoever is required when $\stmt \in \Lang_{\Rel}$.
+  \item[(ii)] \emph{Extractable security:} for every QPT
+    $\mathcal{A}$, every polynomial $p$ and all $m_{0}, m_{1} \in
+    \Msp$, there exist a QPT extractor $\mathcal{E}$ and a polynomial
+    $q$ such that for every statement $\stmt$ and every mixed state
+    $\aux$,
+  \begin{multline*}
+    \bigl| \Pr[\mathcal{A}(\aux, \Enc(1^{\lambda}, \stmt, m_{0}))
+      = 1] \\
+    {}- \Pr[\mathcal{A}(\aux, \Enc(1^{\lambda}, \stmt, m_{1}))
+      = 1] \bigr| \ge \tfrac{1}{p(\lambda)}
+  \end{multline*}
+  implies
+  \[
+    \Pr[\mathcal{E}(1^{\lambda}, \stmt, \aux) = \wit
+      \text{ with } (\stmt, \wit) \in \Rel] \ge \tfrac{1}{q(\lambda)}.
+  \]
+\end{itemize}
+Item~(ii) implies item~(i), since a false statement has no witness.
+\end{definition}
+
+\begin{definition}[Threshold PKE with one-shot
+decryption]\label{def:tosd}
+Fix $n \in \mathbb{N}$ and $f \in [0, 1/2)$. A \emph{threshold
+public-key encryption scheme with one-shot decryption} for $(n, f)$ is
+a tuple of QPT algorithms $(\Setup, \KeyGen, \Enc, \PartialDec,
+\Dec)$:
+\begin{itemize}[leftmargin=1.2em]
+  \item $\Setup(1^{\lambda}) \to \CRS$;
+  \item $\KeyGen(\CRS) \to (\pk, \ket{\sk})$, a classical public key
+    and a quantum secret key;
+  \item $\Enc(\CRS, \{\pk_{i}\}_{i \in [n]}, m) \to \ct$, encryption
+    to a committee of $n$ public keys;
+  \item $\PartialDec(\CRS, \ket{\sk}, \ct) \to \sigma / \bot$,
+    producing a \emph{classical} partial decryption;
+  \item $\Dec(\{\sigma_{j}\}_{j \in J}, \ct) \to m / \bot$ for $J
+    \subseteq [n]$ with $\lvert J \rvert > f n$.
+\end{itemize}
+
+\emph{Correctness:} for every $m \in \Msp$ and every $J \subseteq [n]$
+with $\lvert J \rvert \ge (1-f)n$,
+\[
+  \Pr\bigl[\Dec(\{\sigma_{j}\}_{j \in J}, \ct) \neq m\bigr]
+    \le \negl(\lambda),
+\]
+where $\CRS \gets \Setup(1^{\lambda})$, $(\pk_{i}, \ket{\sk_{i}})
+\gets \KeyGen(\CRS)$ for $i \in [n]$, $\ct \gets \Enc(\CRS,
+\{\pk_{i}\}_{i \in [n]}, m)$ and $\sigma_{j} \gets \PartialDec(\CRS,
+\ket{\sk_{j}}, \ct)$ for $j \in J$.
+
+\emph{Corruption phases.} Both remaining properties refer to a
+\emph{corruption phase}, in which the adversary $\mathcal{A}$ outputs
+a set $J' \subseteq [n] \setminus J$ of honest indices to corrupt,
+where $J$ is the current set of indices already controlled by
+$\mathcal{A}$. The two experiments use different corruption phases,
+following the source paper's Experiment~1 and Experiment~2
+respectively.
+\begin{itemize}[leftmargin=1.2em]
+  \item \emph{Security phase} (Experiment~1, p.~18): the experiment
+    aborts if $\lvert J' \rvert + \lvert J \rvert > f n$; otherwise
+    $\mathcal{A}$ receives the current internal state of party $j$ for
+    each $j \in J'$, and $J \gets J \cup J'$. There is no exemption
+    for parties that have already partially decrypted.
+  \item \emph{One-shot-decryption phase} (Experiment~2, p.~19, as
+    printed): the experiment aborts if $\lvert J' \rvert + 1 > f n$;
+    parties whose secret key has already been used to answer a
+    partial-decryption query are exempt; $\mathcal{A}$ receives the
+    current internal state of party $j$ for each non-exempt $j \in
+    J'$; and $J \gets J \cup J'$.
+\end{itemize}
+
+\emph{Security:} consider $\mathbf{Exp}^{f,n}_{\mathsf{SEC},
+\mathcal{A}}(\lambda)$:
+\begin{enumerate}[leftmargin=1.6em]
+  \item $\CRS \gets \Setup(1^{\lambda})$; $\mathcal{A}(\CRS)$ outputs
+    maliciously generated public keys $\{\pk_{j}\}_{j \in J}$ for some
+    $J \subseteq [n]$; abort if $\lvert J \rvert > f n$.
+  \item $(\pk_{i}, \ket{\sk_{i}}) \gets \KeyGen(\CRS)$ for $i \in [n]
+    \setminus J$; run a security corruption phase.
+  \item $\mathcal{A}(\CRS, \{\pk_{i}\}_{i \in [n]})$ outputs $m_{0},
+    m_{1}$ with $\lvert m_{0} \rvert = \lvert m_{1} \rvert$.
+  \item $b \gets \{0,1\}$, $\ct \gets \Enc(\CRS, \{\pk_{i}\}_{i \in
+    [n]}, m_{b})$; run a security corruption phase.
+  \item $b' \gets \mathcal{A}(\CRS, \ct)$; output $1$ if $b = b'$ and
+    $0$ otherwise.
+\end{enumerate}
+The scheme is \emph{secure} if
+$\Pr[\mathbf{Exp}^{f,n}_{\mathsf{SEC}, \mathcal{A}}(\lambda) = 1] \le
+\tfrac{1}{2} + \negl(\lambda)$ for every QPT $\mathcal{A}$.
+
+\emph{One-shot decryption:} consider
+$\mathbf{Exp}^{f,n}_{\mathsf{OSD}, \mathcal{A}}(\lambda)$:
+\begin{enumerate}[leftmargin=1.6em]
+  \item $\CRS \gets \Setup(1^{\lambda})$; $\mathcal{A}(\CRS)$ outputs
+    $\{\pk_{j}\}_{j \in J}$, $J \subseteq [n]$; abort if $\lvert J
+    \rvert > f n$.
+  \item $(\pk_{i}, \ket{\sk_{i}}) \gets \KeyGen(\CRS)$ for $i \in [n]
+    \setminus J$. Initialise a partial-decryption oracle
+    $\mathcal{O}^{\Dec}$ holding the honest keys, together with a
+    variable $\ct^{*} := \varepsilon$. On a query $(\pk_{i}, \ct)$
+    with $i \in [n] \setminus J$: abort if $\pk_{i}$ has been queried
+    before; if $\ct^{*} = \varepsilon$ set $\ct^{*} := \ct$; abort if
+    $\ct \neq \ct^{*}$; otherwise return $\PartialDec(\CRS,
+    \ket{\sk_{i}}, \ct)$. (So each honest key partially decrypts at
+    most once, and all honest keys that decrypt do so on the same
+    ciphertext.)
+  \item $\mathcal{A}^{\mathcal{O}^{\Dec}}(\CRS, \{\pk_{i}\}_{i \in
+    [n]})$, interleaved with one-shot-decryption corruption phases,
+    outputs $m_{0,0}, m_{0,1}, m_{1,0}, m_{1,1}$ with $\lvert m_{0,0}
+    \rvert = \lvert m_{0,1} \rvert$ and $\lvert m_{1,0} \rvert =
+    \lvert m_{1,1} \rvert$.
+  \item $b_{0}, b_{1} \gets \{0,1\}$; $\ct_{0} \gets \Enc(\CRS,
+    \{\pk_{i}\}_{i \in [n]}, m_{0,b_{0}})$ and $\ct_{1} \gets
+    \Enc(\CRS, \{\pk_{i}\}_{i \in [n]}, m_{1,b_{1}})$.
+  \item $\mathcal{A}^{\mathcal{O}^{\Dec}}(\CRS, \ct_{0}, \ct_{1})$,
+    again interleaved with one-shot-decryption corruption phases,
+    outputs $(b_{0}', b_{1}')$; output $1$ if $(b_{0}, b_{1}) =
+    (b_{0}', b_{1}')$ and $0$ otherwise.
+\end{enumerate}
+The scheme has \emph{one-shot decryption} if
+$\Pr[\mathbf{Exp}^{f,n}_{\mathsf{OSD}, \mathcal{A}}(\lambda) = 1] \le
+\tfrac{1}{2} + \negl(\lambda)$ for every QPT $\mathcal{A}$.
+\end{definition}
+
+\begin{remark}[on the one-shot-decryption corruption phase and the
+bound $1/2$]\label{rem:tosd}
+Two harvester-side observations on Definition~\ref{def:tosd}. First,
+Experiment~2 as printed in the source paper (p.~19) hands an exempt
+party's state over to $\mathcal{A}$ nowhere at all, whereas the
+paper's prose (p.~17) says the adversary ``can corrupt all parties
+after decryption''; on the prose reading, corrupting a party
+\emph{after} it has partially decrypted is free of charge and delivers
+its post-decryption residual state, so $\mathcal{A}$ may end up
+holding the state of all $n$ parties --- which is the notion the
+paper's proactive secret sharing application needs. The printed abort
+test $\lvert J' \rvert + 1 > f n$ also does not accumulate $\lvert J
+\rvert$ across successive corruption phases, unlike Experiment~1's.
+Both are typeset above as printed. Second, the threshold $1/2$ rather
+than $1/4$ in the one-shot-decryption bound is stated by the paper
+(Definition~10, p.~18; also Definition~9, p.~16) without
+justification; the reason it is the right bound is that the honest
+committee does decrypt one of the two ciphertexts, so one bit is
+always learnable.
+\end{remark}
+
+\begin{conjecture}[one-shot decryption without
+extractability]\label{conj:main}
+Let $f$ be an arbitrary constant with $0 < f < 1/2$. Then for every
+polynomial $n = n(\lambda)$ there exists a threshold public-key
+encryption scheme with one-shot decryption for the parameters $(n, f)$
+(Definition~\ref{def:tosd}) --- a tuple of QPT algorithms $(\Setup,
+\KeyGen, \Enc, \PartialDec, \Dec)$ satisfying correctness, security
+and one-shot decryption as in Definition~\ref{def:tosd} --- whose
+security rests on no extractability or other knowledge-type
+assumption.
+
+Concretely, in the formalisation adopted here, suppose that
+\begin{enumerate}[leftmargin=1.6em]
+  \item[(i)] there exists a one-shot signature scheme $\OSS$
+    (Definition~\ref{def:oss}) with message space $\Msp \supseteq
+    \{0,1\}^{\lambda}$, secure against QPT adversaries; and
+  \item[(ii)] for every $\NP$ relation $\Rel$ and every message space
+    $\Msp$ there exists a witness encryption scheme for $\Rel$ and
+    $\Msp$ (Definition~\ref{def:we}) satisfying correctness and
+    \emph{indistinguishability security} against QPT adversaries
+    (Definition~\ref{def:we}, item~(i)).
+\end{enumerate}
+Then such a scheme exists for every polynomial $n = n(\lambda)$ and
+every constant $0 < f < 1/2$. In other words, the implication
+``one-shot signatures $+$ \emph{extractable} witness encryption
+$\Rightarrow$ threshold one-shot decryption for every $f < 1/2$'',
+which is Theorem~2 of the source paper, remains true when extractable
+security (Definition~\ref{def:we}, item~(ii)) is weakened to
+indistinguishability security (Definition~\ref{def:we}, item~(i)); in
+particular no extractability or other knowledge-type assumption is
+used.
+\end{conjecture}
+
+\begin{remark}[scope of the conjecture]\label{rem:scope}
+The source paper's open question (p.~7) is existential and
+disjunctive: whether the extractability requirements ``can be weakened
+or eliminated altogether, for example by relying on more structured or
+restricted knowledge assumptions, or by developing alternative
+realizations of one-shot decryption without extractability''. The
+displayed hypotheses (i) and (ii) are the harvester's formalisation of
+the strongest reading, elimination; plain witness encryption is never
+named by the paper as the replacement. The paper equally counts
+weakening extractability to more structured or restricted knowledge
+assumptions --- its examples are the algebraic-group-model
+construction of~\cite{FHAS24} and the lattice-based knowledge
+assumptions of~\cite{ACL+22} --- as progress on the same question:
+``Even weakening extractability to more structured assumptions would
+already constitute meaningful progress'' (p.~7).
+
+Also the harvester's framing rather than the paper's: a negative
+resolution would exhibit some $f < 1/2$ for which no such scheme
+exists under these assumptions --- in particular, a black-box
+separation would suffice. The paper contains no oracle or
+black-box-separation discussion.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem[ACL+22]{ACL+22}
+M. R. Albrecht, V. Cini, R. W. F. Lai, G. Malavolta,
+S. A. K. Thyagarajan.
+\emph{Lattice-based SNARKs: Publicly verifiable, preprocessing, and
+recursively composable (extended abstract)}.
+CRYPTO 2022, Part II, LNCS 13508, pages 102--132, 2022.
+
+\bibitem[AGKZ20]{AGKZ20}
+R. Amos, M. Georgiou, A. Kiayias, M. Zhandry.
+\emph{One-shot signatures and applications to hybrid
+quantum/classical authentication}.
+52nd Annual ACM Symposium on Theory of Computing, pages 255--268,
+2020.
+
+\bibitem[BCP14]{BCP14}
+E. Boyle, K.-M. Chung, R. Pass.
+\emph{On extractability obfuscation}.
+TCC 2014, LNCS 8349, pages 52--73, 2014.
+
+\bibitem[BGG+20]{BGG+20}
+F. Benhamouda, C. Gentry, S. Gorbunov, S. Halevi, H. Krawczyk,
+C. Lin, T. Rabin, L. Reyzin.
+\emph{Can a public blockchain keep a secret?}
+TCC 2020, Part I, LNCS 12550, pages 260--290, 2020.
+
+\bibitem[FHAS24]{FHAS24}
+N. Fleischhacker, M. Hall-Andersen, M. Simkin.
+\emph{Extractable witness encryption for KZG commitments and efficient
+laconic OT}.
+ASIACRYPT 2024, Part II, LNCS 15485, pages 423--453, 2024.
+
+\bibitem[GGHW14]{GGHW14}
+S. Garg, C. Gentry, S. Halevi, D. Wichs.
+\emph{On the implausibility of differing-inputs obfuscation and
+extractable witness encryption with auxiliary input}.
+CRYPTO 2014 (recalled from memory; not cited by the source paper ---
+verify before use). [UNVERIFIED]
+
+\bibitem[GGSW13]{GGSW13}
+S. Garg, C. Gentry, A. Sahai, B. Waters.
+\emph{Witness encryption and its applications}.
+45th Annual ACM Symposium on Theory of Computing, pages 467--476,
+2013.
+
+\bibitem[GHK+21]{GHK+21}
+C. Gentry, S. Halevi, H. Krawczyk, B. Magri, J. B. Nielsen, T. Rabin,
+S. Yakoubov.
+\emph{YOSO: You only speak once --- secure MPC with stateless
+ephemeral roles}.
+CRYPTO 2021, Part II, LNCS 12826, pages 64--93, 2021.
+
+\bibitem[GZ20]{GZ20}
+M. Georgiou, M. Zhandry.
+\emph{Unclonable decryption keys}.
+Cryptology ePrint Archive, Report 2020/877, 2020.
+
+\bibitem[HJKY95]{HJKY95}
+A. Herzberg, S. Jarecki, H. Krawczyk, M. Yung.
+\emph{Proactive secret sharing or: How to cope with perpetual
+leakage}.
+CRYPTO'95, LNCS 963, pages 339--352, 1995.
+
+\bibitem[HV25]{HV25}
+A. Huang, V. Vaikuntanathan.
+\emph{A simple and efficient one-shot signature scheme}.
+Cryptology ePrint Archive, Report 2025/1906, 2025.
+
+\bibitem[OY91]{OY91}
+R. Ostrovsky, M. Yung.
+\emph{How to withstand mobile virus attacks (extended abstract)}.
+10th ACM Symposium Annual on Principles of Distributed Computing,
+pages 51--59, 1991.
+
+\bibitem[SZ25]{SZ25}
+O. Shmueli, M. Zhandry.
+\emph{On one-shot signatures, quantum vs.\ classical binding, and
+obfuscating permutations}.
+CRYPTO 2025, Part II, LNCS 16001, pages 350--383, 2025.
+
+\end{conjurabibliography}
+
+\end{document}

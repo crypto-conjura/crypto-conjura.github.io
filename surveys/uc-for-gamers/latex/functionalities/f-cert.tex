@@ -1,0 +1,76 @@
+%% The interface box of f-cert, the one source for both the book
+%% and uc/.../f-cert/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fcert$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := S$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{Sig} : \Msgs \times \Sigs \to \{0,1\} \cup \{\unset\}$
+\State $\V{Sig}[*,*] \gets \unset$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Sign}(\msg)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P = S \ \wedge\ \msg \in \Msgs$} \label{ln:certbind}
+  \Comment{one signer per instance}
+\State $\sigma \gets \Adv\bigl(\id.\op{Sign}, \msg\bigr)$
+\State $\sigma \gets \San[\Clean_{\sigma}](\sigma; \msg, \V{Sig})$ \label{ln:certsan}
+\State $\V{Sig}[\msg, \sigma] \gets 1$ \label{ln:certrec}
+\State \textbf{return} $\sigma$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $\{\, (\msg,\sigma) : \V{Sig}[\msg,\sigma] = 1 \,\}$ \label{ln:certleak}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Verify}(\msg, \sigma)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$\V{Sig}[\msg, \sigma] = 1$}
+  \State \textbf{return} $1$ \label{ln:certcomplete}
+\EndIf
+\State $\varphi \gets \Adv\bigl(\id.\op{Verify}, \msg, \sigma\bigr)$
+\If{$\V{Sig}[\msg, \sigma] \neq \unset$}
+  \State \textbf{return} $\V{Sig}[\msg, \sigma]$
+    \Comment{recorded while suspended}
+\EndIf
+\If{$S \not\in \Cs \ \wedge\ \neg\exists\, \sigma' : \V{Sig}[\msg,\sigma'] = 1$}
+  \State $\V{Sig}[\msg, \sigma] \gets 0$ \label{ln:certunforge}
+    \Comment{no forgery under an honest signer}
+  \State \textbf{return} $0$
+\EndIf
+\If{$\varphi \not\in \{0,1\}$}
+  \State $\varphi \gets 0$
+\EndIf
+\State $\V{Sig}[\msg, \sigma] \gets \varphi$ \label{ln:certconsist}
+\State \textbf{return} $\varphi$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\Clean_{\sigma}(\sigma; \msg, \V{Sig})$}:
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $\sigma \in \Sigs \ \wedge\ \V{Sig}[\msg,\sigma] \neq 0$ \label{ln:certclean}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

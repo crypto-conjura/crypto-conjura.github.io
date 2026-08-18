@@ -1,12 +1,116 @@
 ---
-title: "F-CERT — Certification authority"
+title: "F-CERT — Certification"
 status: "Idealized Setup"
 layer: 0
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-CERT* (Certification authority) is part of *Idealized Setup and Resources* in the UC functionality encyclopedia. Status: an idealized setup assumption or shared resource.
+*F-CERT* (Certification) is part of *Idealized Setup and Resources* in the UC functionality encyclopedia. Status: an idealized setup assumption or shared resource.
+
+[Signature](/uc/layer-3-public-key-primitives/f-sig/index.qmd) with the verification key taken out. *F-Sig*'s $\mathsf{Verify}$ accepts a key as an argument and says nothing about whose key it is — deliberately, because a bare signature scheme authenticates nobody. Here the instance is bound to a single signer $S$ and $\mathsf{Verify}$ takes only a message and a signature, so the question it answers is "did $S$ sign this", which is the question a certificate exists to answer. The price is a setup assumption: the same paper argues no useful protocol realizes this box in the bare unauthenticated model.
+
+One caution the page's own title used to carry. This is Canetti's *certification* functionality $\mathcal{F}_{\mathsf{CERT}}$. The *certificate authority* of that paper is a different box, $\mathcal{F}_{\mathsf{CA}}$ (Figure 3, p. 16), a write-once public bulletin board that performs no check whatever on the value registered — not even possession of the corresponding secret key; its global descendant on this site is [*G-PKI*](/uc/layer-0-idealized-setup/g-pki/index.qmd). The two are not variants of each other: one is used to realize the other.
+
+## Functionality
+
+Reading the box: $\mathcal{A}(\cdot)$ is a call on the adversary slot; $\mathsf{San}[\mathsf{Clean}_{\sigma}]$ re-asks that slot until the named predicate holds, with the predicate written out at the end of the box; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it; $\mathbf{C}$ is the set of corrupted parties; $\square$ marks a value never set; $\mathcal{M}$ and $\Sigma$ are the message and signature spaces; $S$ is the one signer this instance is bound to, and it is a parameter rather than an argument.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{Cert}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := S\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{Sig} : \mathcal{M} \times \Sigma \to \{0,1\} \cup \{\square\}\)</li>
+<li>\(\mathtt{Sig}[*,*] \gets \square\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Sign(<span class="cj-id">msg</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="3">
+<li>\(\textbf{require}\ \mathit{id}.P = S \ \wedge\ \mathit{msg} \in \mathcal{M}\)<span class="cj-comment">// one signer per instance</span></li>
+<li>\(\sigma \gets \mathcal{A}\bigl(\mathit{id}.\mathsf{Sign}, \mathit{msg}\bigr)\)</li>
+<li>\(\sigma \gets \mathsf{San}[\mathsf{Clean}_{\sigma}](\sigma; \mathit{msg}, \mathtt{Sig})\)</li>
+<li>\(\mathtt{Sig}[\mathit{msg}, \sigma] \gets 1\)</li>
+<li>\(\textbf{return}\ \sigma\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="8">
+<li>\(\textbf{return}\ \{\, (\mathit{msg},\sigma) : \mathtt{Sig}[\mathit{msg},\sigma] = 1 \,\}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Verify(<span class="cj-id">msg</span>, <span class="cj-id">&sigma;</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="9">
+<li>\(\textbf{if}\ \mathtt{Sig}[\mathit{msg}, \sigma] = 1\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ 1\)</span></li>
+<li>\(\varphi \gets \mathcal{A}\bigl(\mathit{id}.\mathsf{Verify}, \mathit{msg}, \sigma\bigr)\)</li>
+<li>\(\textbf{if}\ \mathtt{Sig}[\mathit{msg}, \sigma] \neq \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \mathtt{Sig}[\mathit{msg}, \sigma]\)</span><span class="cj-comment">// recorded while suspended</span></li>
+<li>\(\textbf{if}\ S \not\in \mathbf{C} \ \wedge\ \neg\exists\, \sigma' : \mathtt{Sig}[\mathit{msg},\sigma'] = 1\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{Sig}[\mathit{msg}, \sigma] \gets 0\)</span><span class="cj-comment">// no forgery under an honest signer</span></li>
+<li><span class="cj-ind">\(\textbf{return}\ 0\)</span></li>
+<li>\(\textbf{if}\ \varphi \not\in \{0,1\}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\varphi \gets 0\)</span></li>
+<li>\(\mathtt{Sig}[\mathit{msg}, \sigma] \gets \varphi\)</li>
+<li>\(\textbf{return}\ \varphi\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig">Clean<sub><span class="cj-id">&sigma;</span></sub>(<span class="cj-id">&sigma;</span>; <span class="cj-id">msg</span>, <span class="cj-rm">Sig</span>):</div>
+<ol class="cj-code" start="21">
+<li>\(\textbf{return}\ \sigma \in \Sigma \ \wedge\ \mathtt{Sig}[\mathit{msg},\sigma] \neq 0\)</li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+The box is transcribed from Canetti, *Universally composable signature, certification, and authentication*, ePrint 2003/239, revision `20040815:140230`, Figure 2, p. 15 — "the certification functionality". The printed definition has two clauses, Signature Generation and Signature Verification; the rendered page is kept as reviewer evidence at `_src/canetti2004-p15.png`, reproducible from `_src/sources.json`.
+
+**Line 3 is the certificate.** The source writes the binding as a test on the session identifier — on $(\texttt{Sign}, \mathit{sid}, m)$ from $S$, "verify that $\mathit{sid} = (S, \mathit{sid}')$ for some $\mathit{sid}'$; if not, then ignore the request". In this framework the session identifier lives in the process id, so the signer becomes a parameter and the test becomes a **require**. The consequence is worth stating in the plain form the translation makes available: an instance signs for exactly one party, and no caller can influence which.
+
+**Line 14 is unforgeability, and it names $S$ rather than the caller.** This is where the missing key shows up as a simplification rather than an omission. *F-Sig* must ask whether the key it was handed happens to belong to some honest party, $\exists P' \notin \mathbf{C} : \mathit{vk} = \mathtt{VK}[P']$, because its $\mathsf{Verify}$ has no idea whose key it is. With no key in the interface there is nothing to look up: the signer is fixed by the parameter and the test is a single membership. Everything else in the two boxes is the same shape.
+
+**Where the source halts, this box resamples** (line 5). Signature Generation ends: if the adversary returns a $\sigma$ for which an entry $(m, \sigma, 0)$ is already recorded, "output an error message to $S$ and halt". A functionality that halts is not available here — these boxes are long-lived — so the condition moves into $\mathsf{Clean}_{\sigma}$ at line 21 and the slot is re-asked until it answers something that contradicts no recorded rejection. The guarantee is the source's; only the failure handling differs, and it differs the way [*F-Sig*](/uc/layer-3-public-key-primitives/f-sig/index.qmd) already handles the identical clause.
+
+**Two reorderings in $\mathsf{Verify}$, neither of which changes an answer.** The source hands every $\texttt{Verify}$ to the adversary before doing anything else; line 9 answers a pair already recorded as valid without consulting the slot at all, which is what [*F-Sig*](/uc/layer-3-public-key-primitives/f-sig/index.qmd) does and is the one place this box tells the simulator less than the printed one does. And the source tests its unforgeability case *before* its "already recorded" case, where lines 12–14 test them the other way round; the two agree on every input, because the only state in which the order could matter is a recorded $(m,\sigma,0)$ under an honest signer, and both readings answer $0$.
+
+**One printed typo, read through.** Case 4 of Signature Verification says "set $f = \phi$, and record the entry $(m, \sigma', \phi)$", with a primed $\sigma'$ that occurs nowhere else in the clause; every neighbouring case records against the $\sigma$ that was passed in. Line 19 records $(m, \sigma, \varphi)$. Reading it the printed way would make case 3 — "if there is an entry $(m, \sigma, f')$ recorded, then set $f = f'$" — unreachable for anything the adversary ever answered, which cannot be the intent.
+
+**Leak is added** (line 8). The source has no leakage interface; corruption is handled by the surrounding framework. What a corrupt signer's adversary reads off here is the set of message–signature pairs this functionality has certified, which is what the real signer would hold. There is no secret key in the box to leak, which is the point of it.
+
+## Known realizations
+
+**From a signature scheme and a bulletin board: Claim 3, p. 16.** Protocol `cas` — certificate-authority-assisted signatures — securely realizes $\mathcal{F}_{\mathsf{CERT}}$ in the $(\mathcal{F}_{\mathsf{SIG}}, \mathcal{F}_{\mathsf{CA}})$-hybrid model. The signer generates a key through $\mathcal{F}_{\mathsf{SIG}}$ and registers it with its own copy of $\mathcal{F}_{\mathsf{CA}}$; a verifier reads the key off $\mathcal{F}_{\mathsf{CA}}$ and checks against it. $\mathcal{F}_{\mathsf{CA}}$ does no checking of its own, and the paper is explicit that it need not: a party may register the same public value another party registered with a different copy, and the minimal formulation still suffices here.
+
+**Not in the bare model, and the citation needs care.** Section 4.2 proves **Claim 5** (p. 20): no *useful* protocol realizes $\mathcal{F}_{\mathsf{AUTH}}$ in the bare unauthenticated model in a network with at least two parties, where a protocol is *useful* if, with no party corrupted and every message delivered unmodified and undelayed, at least one party produces output with non-negligible probability. The statement for **this** functionality is made in the prose immediately before it — "a corollary from this fact is that there exist no useful protocols that realize $\mathcal{F}_{\mathsf{CERT}}$ in the plain model" — and is not itself a numbered claim. Worth knowing before citing "Claim 5" for $\mathcal{F}_{\mathsf{CERT}}$.
+
+**What it realizes in turn: Claim 4, p. 19.** Protocol `sba` realizes $\mathcal{F}_{\mathsf{AUTH}}$ (Figure 5, p. 18) in the $\mathcal{F}_{\mathsf{CERT}}$-hybrid model, by signing $(m, B)$ and sending the signed message. That is why this box sits in layer 0 with the setup assumptions rather than next to *F-Sig*: it is what [*F-auth*](/uc/layer-1-channels-agreement-ledgers/f-auth/index.qmd) is built from.
+
+## Properties
+
+- **Completeness, with probability exactly $1$.** Line 6 records $1$ for every signature the functionality hands out, and lines 9–10 answer from that record before the adversary slot is reached at all. No later line can revise it.
+- **Unforgeability, with probability exactly $0$ for the forger.** Line 14: while $S \notin \mathbf{C}$, any pair carrying no recorded signature verifies to $0$. The quantifier is worth reading carefully — the test is on $S$'s corruption *at the moment of the call*, not at the start of the execution, so a later corruption cannot retroactively make an old forgery verify: line 15 has already written the $0$, and lines 12–13 answer from it.
+- **Consistency, with probability exactly $1$.** Every write (lines 6, 15, 19) is to a cell that was $\square$, and every read (lines 9, 12–13) short-circuits on a cell that is not. Two verifiers asking about the same pair cannot be given different answers, which is the property the adversary's $\varphi$ at line 11 might otherwise buy it.
+- **No secrecy, deliberately.** Line 8 hands a corrupt signer's entire certified set to the adversary, and the source assumes as much.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Canetti. [*Universally composable signature, certification, and authentication*](https://eprint.iacr.org/2003/239). In 17th IEEE Computer Security Foundations Workshop (CSFW), pages 219–233, 2004.
+- Canetti. [*Universally composable signature, certification, and authentication*](https://eprint.iacr.org/2003/239). In 17th IEEE Computer Security Foundations Workshop (CSFW), pages 219–233, 2004. Read at ePrint revision `20040815:140230`, the newest of eleven postings, whose title page is dated 15 August 2004 and so matches the stamp. Figure 2, p. 15, the definition transcribed above; Figure 3, p. 16, the certificate authority $\mathcal{F}_{\mathsf{CA}}$; Claim 3, p. 16; Claim 4, p. 19; Claim 5 and its surrounding prose, §4.2, p. 20.
+- Canetti, Shahaf, and Vald. [*Universally composable authentication and key-exchange with global PKI*](https://eprint.iacr.org/2014/432). In Public-Key Cryptography (PKC), Part II, volume 9615 of LNCS, pages 265–296, 2016. The global restatement, $\bar{\mathcal{G}}_{\mathsf{cert}}$, p. 16 of the current posting (revised 9 October 2014, the later of two): the same object lifted to a shared functionality parameterized by a party identity, willing to certify for every session of that identity, and realized there from EU-CMA signatures. Not the definition taken above — this site's $\mathcal{F}$/$\mathcal{G}$ split makes a global certification functionality a different entry, not a revision of this one — but it is the form the later literature builds on, including the timed extension of Canetti, Hogan, Malhotra and Varia's treatment of network time.

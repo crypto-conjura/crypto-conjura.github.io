@@ -1,0 +1,300 @@
+{
+  "pdf": {
+    "name": "2023-770.pdf",
+    "sha256": "e32e1eb4a186bb3743828e494076f6cc1a35fc913dc4eedceab9b9b57ff3fc4c",
+    "pages": 22
+  },
+  "run": {
+    "at": "2026-08-18T15:11:16Z",
+    "backend": "cli",
+    "effort": "high"
+  },
+  "document": {
+    "title": "Towards compressed permutation oracles",
+    "authors": [
+      "Dominique Unruh"
+    ],
+    "year": "2023",
+    "venue_or_archive": "IACR Cryptology ePrint Archive (preprint, University of Tartu)",
+    "identifier": "2023/770",
+    "citation_confidence": "inferred"
+  },
+  "candidate": {
+    "slug": "compressed-permutation-oracle-soundness",
+    "title": "Soundness of the Compressed Permutation Oracle",
+    "subtitle": "polynomially many superposition queries, forward and inverse",
+    "category": "Idealized Models & Non-Uniformity",
+    "one_line": "The compressed permutation oracle, a lazy-sampling simulator for an invertible random permutation, cannot be distinguished from a genuine uniformly random permutation by any adversary making polynomially many quantum queries in both directions.",
+    "informal": "Zhandry's compressed oracle lets a security proof treat a quantum random oracle as though its answers were sampled lazily, one query at a time, even though the adversary may query on a superposition of all inputs at once. The key to it is that the simulator keeps a superposition of small partial functions recording what has been asked so far, and that the record grows by at most one entry per query. Nobody knows how to do the same for a random permutation that the adversary can also query in the inverse direction, which is why essentially nothing is proved about quantum adversaries attacking permutation-based designs. This paper writes down a concrete candidate simulator for that setting: forward queries are handled by the sanitized compressed function oracle, and a backward query is handled by inverting the recorded partial function in place, doing a forward query, and inverting back. The conjecture is that this simulator is sound: no algorithm making polynomially many superposition queries to the two directions can tell it apart from being given a uniformly random permutation and its inverse. Everything the technique would buy — hardness results for invertible random permutations, and ultimately post-quantum analyses of permutation-based hash functions — is downstream of this one indistinguishability claim.",
+    "setting_latex": "Zhandry's compressed oracle \\cite{Zha19} is the quantum analogue of lazy sampling. It replaces the quantum random oracle by a simulator that holds, in a register inaccessible to the adversary, a superposition of \\emph{partial} functions recording which inputs have been queried and with which answers; the crucial quantitative fact is that a query enlarges the recorded partial function by at most one entry, so after $q$ queries the state is a superposition of partial functions of size at most $q$. Because the simulator carries an explicit record of the queries, proofs can proceed by exhibiting an invariant on that record (``the adversary has not yet seen a zero-preimage'', ``the recorded function is injective'') and bounding how far a single query can push the state out of the invariant subspace. The technique has been generalized to Fourier transforms over abelian groups and parallel queries \\cite{CFHL20}, and to non-uniformly distributed functions \\cite{CMSZ20}, but in every case the outputs of the oracle are sampled \\emph{independently}.\n\nA random permutation does not have independent outputs, and that is exactly where the technique stops. For non-invertible random permutations one can sidestep the issue: a random permutation is quantum-indistinguishable from a random function \\cite{Zha15}, so one replaces it by a random function and proceeds with compressed-oracle tools. The open case is the \\emph{invertible} one, where the adversary also gets superposition access to the inverse. Here the paper reports that no hardness results at all are known, not even query-complexity statements, and consequently that nothing is known about the post-quantum security of permutation-based designs such as SHA3 \\cite{NIST}; an earlier attempt by the same author at collision-resistance of Sponge with an invertible permutation was withdrawn as flawed \\cite{Unruh21}. Random invertible permutations can be \\emph{simulated} efficiently, since quantum-secure strong PRPs exist from quantum one-way functions \\cite{Zha16}, but simulation gives no proof technique.\n\nThis paper defines a candidate simulator, the compressed permutation oracle: forward queries are the sanitized compressed function oracle $\\mathsf{CFO_s}$, and a backward query inverts the recorded partial function in place with an operator $\\mathsf{Flip}$, applies $\\mathsf{CFO_s}$, and inverts back. The conjecture below is that this simulator is sound. The paper's main theorem is a conditional result in the opposite direction from what one might expect: if \\emph{any} permutation-construction (a deterministic construction from oracles that outputs a permutation and its inverse) is indistinguishable from the compressed permutation oracle, then the compressed permutation oracle is indistinguishable from a random permutation. So a single successful application of the methodology --- even to a cryptographically uninteresting construction --- would settle the conjecture, and a proof for e.g. Luby--Rackoff would come with soundness for free. The paper also records why the obvious route to a compressed permutation oracle fails: the natural range-restricting decompression operator for injections depends on an arbitrary ordering of the domain, resists explicit description on basis states, and, worst of all, is not known to grow the recorded partial function by only one entry per query, which is precisely the property that makes an oracle ``compressed''.",
+    "notation_latex": "Let $D$ be a finite set with $N := |D|$, carrying a commutative group operation $\\oplus$ with $x \\oplus x = 0$ for all $x \\in D$ (for instance $D = \\{0,1\\}^n$ with bitwise XOR). Let $\\mathrm{Perm}(D)$ be the set of bijections $D \\to D$.\n\nLet $D \\rightharpoonup D$ be the set of partial functions from $D$ to $D$; for $h : D \\rightharpoonup D$ we write $h(x) = \\bot$ when $h$ is undefined at $x$, $\\operatorname{dom} h := \\{x : h(x) \\neq \\bot\\}$ and $\\operatorname{im} h := \\{h(x) : x \\in \\operatorname{dom} h\\}$. We call $h$ \\emph{injective} if $h$ is injective on $\\operatorname{dom} h$, and then $h^{-1} : D \\rightharpoonup D$ denotes the partial function with $\\operatorname{dom} h^{-1} = \\operatorname{im} h$ and $h^{-1}(h(x)) = x$ for $x \\in \\operatorname{dom} h$. We write $\\varnothing$ for the partial function that is undefined everywhere.\n\nThe registers are $X$ and $Y$ with Hilbert space $\\mathbb{C}^D$ each, and $H$ with Hilbert space $\\mathbb{C}^{D \\rightharpoonup D} = \\bigotimes_{x \\in D} \\mathbb{C}^{D \\cup \\{\\bot\\}}$; we call the tensor factor indexed by $x$ the register $H_x$, and identify the basis state $|h\\rangle$ of $H$ with the tuple of basis states $|h(x)\\rangle$ of the $H_x$. Put $|{*}\\rangle := \\frac{1}{\\sqrt{N}} \\sum_{y \\in D} |y\\rangle \\in \\mathbb{C}^{D}$. For an operator $A$, $\\|A\\|$ is the operator norm.\n\nFor $\\pi \\in \\mathrm{Perm}(D)$, $U_\\pi$ is the unitary on $X, Y$ with $U_\\pi |x\\rangle|y\\rangle = |x\\rangle |y \\oplus \\pi(x)\\rangle$.\n\nAn \\emph{oracle algorithm} $A$ has its own private registers plus $X, Y$; it alternates unitaries on its own registers and $X,Y$ with invocations of one of two supplied oracle operators (the \\emph{forward} and \\emph{backward} oracle), each acting on $X, Y$ and possibly on further registers hidden from $A$. Its \\emph{query count} is the total number of invocations of the two oracles. Because the oracles below need not be unitary but only satisfy $\\|\\cdot\\| \\le 1$, we set $\\Pr[A^{O_1,O_2} \\Rightarrow 1] := \\|\\Pi_1 \\psi_{\\mathrm{final}}\\|^2$, where $\\psi_{\\mathrm{final}}$ is the (possibly sub-normalized) final state and $\\Pi_1$ projects $A$'s output register onto $1$.\n\nA function $\\mu : \\mathbb{N} \\to \\mathbb{R}_{\\ge 0}$ is \\emph{negligible} if for every $c > 0$ there is $m_0$ with $\\mu(m) < m^{-c}$ for all $m \\ge m_0$.",
+    "definitions_latex": "\\begin{definition}[Sanitized compressed function oracle]\nLet $\\mathsf{Decomp}_1$ be the unitary on $\\mathbb{C}^{D \\cup \\{\\bot\\}}$ determined by\n\\[ \\mathsf{Decomp}_1 |\\bot\\rangle = |{*}\\rangle, \\qquad \\mathsf{Decomp}_1|y\\rangle = |y\\rangle + \\langle {*} | y \\rangle \\bigl( |\\bot\\rangle - |{*}\\rangle \\bigr) \\quad (y \\in D), \\]\nand let $\\mathsf{Decomp} := \\bigotimes_{x \\in D} \\mathsf{Decomp}_1$, acting on $H$ by applying $\\mathsf{Decomp}_1$ to every register $H_x$. Let $\\mathsf{StO_s}$ be the operator on $X, Y, H$ defined on basis states by\n\\[ \\mathsf{StO_s} |x\\rangle |y\\rangle |h\\rangle = \\begin{cases} |x\\rangle\\, |y \\oplus h(x)\\rangle\\, |h\\rangle & \\text{if } h(x) \\neq \\bot, \\\\ 0 & \\text{if } h(x) = \\bot. \\end{cases} \\]\nThe \\emph{sanitized compressed function oracle} is $\\mathsf{CFO_s} := \\mathsf{Decomp}^\\dagger \\cdot \\mathsf{StO_s} \\cdot \\mathsf{Decomp}$. It satisfies $\\|\\mathsf{CFO_s}\\| \\le 1$ but is in general not unitary.\n\\end{definition}\n\n\\begin{definition}[Flipping operator]\nA \\emph{flipping operator} is a linear operator $\\mathsf{Flip}$ on $\\mathbb{C}^{D \\rightharpoonup D}$ (extended by the identity to $X, Y$) such that $\\|\\mathsf{Flip}\\| \\le 1$ and $\\mathsf{Flip}|h\\rangle = |h^{-1}\\rangle$ for every injective $h : D \\rightharpoonup D$. Its action on $|h\\rangle$ for non-injective $h$ is not constrained.\n\\end{definition}\n\n\\begin{definition}[Compressed permutation oracle]\nGiven a flipping operator $\\mathsf{Flip}$, the \\emph{compressed permutation oracle} $\\mathsf{CPO}$ is the pair of oracle operators\n\\[ \\bigl( \\mathsf{CFO_s},\\ \\mathsf{Flip} \\cdot \\mathsf{CFO_s} \\cdot \\mathsf{Flip} \\bigr) \\]\non registers $X, Y, H$, where $H$ is private to the oracle (not accessible to the querying algorithm) and is initialized to $|\\varnothing\\rangle$. We write $A^{\\mathsf{CPO}}$ for an oracle algorithm run with $\\mathsf{CFO_s}$ as its forward oracle and $\\mathsf{Flip} \\cdot \\mathsf{CFO_s} \\cdot \\mathsf{Flip}$ as its backward oracle.\n\\end{definition}",
+    "formal_statement_latex": "For every polynomial $p$ there is a negligible function $\\mu$ such that the following holds for every finite set $D$ with group operation $\\oplus$ as above, every flipping operator $\\mathsf{Flip}$ on $\\mathbb{C}^{D \\rightharpoonup D}$, and every oracle algorithm $A$ whose query count is at most $p(\\log |D|)$:\n\\[ \\Bigl| \\Pr\\bigl[ A^{\\mathsf{CPO}} \\Rightarrow 1 \\bigr] \\;-\\; \\Pr\\bigl[ A^{U_\\pi,\\, U_{\\pi^{-1}}} \\Rightarrow 1 \\;:\\; \\pi \\xleftarrow{\\$} \\mathrm{Perm}(D) \\bigr] \\Bigr| \\;\\le\\; \\mu\\bigl(\\log |D|\\bigr), \\]\nwhere $\\mathsf{CPO}$ is built from that $\\mathsf{Flip}$, and where in the second experiment $A$ is run with forward oracle $U_\\pi$ and backward oracle $U_{\\pi^{-1}}$.",
+    "parameters": [
+      {
+        "symbol": "D",
+        "meaning": "The finite domain (= range) of the permutation; the security parameter is $\\log|D|$."
+      },
+      {
+        "symbol": "N",
+        "meaning": "$|D|$, used only in the definition of the uniform superposition $|{*}\\rangle$."
+      },
+      {
+        "symbol": "p",
+        "meaning": "Polynomial bounding the adversary's total query count as a function of $\\log|D|$."
+      },
+      {
+        "symbol": "\\mathsf{Flip}",
+        "meaning": "The operator inverting a recorded injective partial function in place; unconstrained on non-injective records, and the conjecture is asserted for every admissible choice."
+      }
+    ],
+    "openness_kind": "paper-conjectures",
+    "status_note": "Completely open as stated. The paper's Theorem 1 proves only a conditional converse: if some permutation-construction is indistinguishable from CPO then CPO is indistinguishable from a random permutation, so nothing about the conjecture itself is settled anywhere in the paper. Corollary 1 gives a computational variant of that same conditional statement.",
+    "progress_note": "The paper proves (Theorem 1) that if there exists a permutation-construction $(C,\\mathcal{D})$ whose output pair $(\\pi,\\tau)$ is indistinguishable from CPO for all polynomial-query adversaries, then the conjecture holds for the domains that $C$ operates on; Corollary 1 gives the analogue for efficiently implementable $C$ and polynomial-time adversaries, assuming a strong qPRP on $D$ exists. So one successful application of the methodology to any construction whatsoever, however cryptographically uninteresting, discharges the conjecture. The paper also documents a failed direct approach (footnote 14): the natural decompression operator for injections, built by restricting each register's range to the values not used elsewhere, depends on an arbitrary ordering of the domain, resists explicit description on basis states, and is not known to increase the number of non-$\\bot$ entries by at most one per query, which would destroy the compression property.",
+    "why_interesting": "This is the gate in front of an entire missing chapter of post-quantum provable security. The paper reports that no hardness results at all are known for invertible random permutations under superposition access — not even elementary query-complexity statements — and that as a consequence nothing is known about the post-quantum security of permutation-based designs such as SHA3. A proof would immediately license the invariant-based proof style that compressed oracles made routine for random functions, in the permutation setting: hardness of search problems, collision-resistance and indifferentiability of Sponge with an invertible permutation, and quantum analyses of ideal-cipher constructions. A refutation would be at least as informative, because it would show that the specific and rather canonical simulator this paper writes down (sanitized compressed function oracle plus in-place inversion) is the wrong object, and would presumably exhibit the distinguishing attack that has so far eluded everyone.",
+    "why_clean": "The object is fully specified by three short definitions with no unpublished machinery: a one-line decompression unitary on a single register, a norm-non-increasing standard oracle, and an in-place inversion operator whose behavior on the only ambiguous inputs (non-injective records) is deliberately left free, so the statement is robust to that design choice. The claim is a single indistinguishability bound with explicit quantifiers, information-theoretic, no computational assumptions, and no reference to any construction. And the paper's own Theorem 1 means an attacker of the problem has two visibly different routes: attack the indistinguishability head-on, or prove that some construction implements CPO.",
+    "risks": "(1) Resolution status. This is a 2023 eprint, and 2024--2025 saw substantial work on recording techniques for random unitaries and random permutations (path-recording style frameworks). I am not confident whether any of it verifies or refutes this exact CPO, so a reviewer should check the follow-up literature and this eprint's later versions before publishing. (2) Quantifier over $\\mathsf{Flip}$. The paper's Conjecture 2 is stated for ``the'' CPO after Definition 1 leaves $\\mathsf{Flip}$ underspecified on non-injective records; footnote 20 says the paper makes sure its results hold independent of that design choice, which is why I quantified universally over admissible $\\mathsf{Flip}$. A reviewer may prefer to note explicitly that the existential reading (some admissible $\\mathsf{Flip}$ works) is formally weaker. (3) Sub-normalization. Because $\\mathsf{CFO_s}$ is not unitary, $\\Pr[A^{\\mathsf{CPO}} \\Rightarrow 1]$ must be read as a sub-normalized probability; I have made that explicit in the notation, but it is not spelled out in the paper's own equation (7). (4) The paper writes the permutation set as $D \\hookrightarrow D$ (total injections), which coincides with $\\mathrm{Perm}(D)$ for finite $D$; I used the latter.",
+    "quotes": [
+      {
+        "page": 12,
+        "role": "statement",
+        "text": "Define an oracle CPO (for “compressed permutation oracle”) that keeps a superposition of partial functions as its internal state, that responds to forward and backward queries in some way that increases the length of those partial function only by 1 (or at least something small), and that is indistinguishable from having access to a permutation that is chosen uniformly at random."
+      },
+      {
+        "page": 12,
+        "role": "openness",
+        "text": "It turns out that defining such a CPO is not too hard. What is hard (and what we will only make a step towards in this paper) is to prove that the CPO is indeed indistinguishable from a truly random permutation."
+      },
+      {
+        "page": 1,
+        "role": "openness",
+        "text": "A long-standing open question is whether a similar technique can also be used to reason about random (efficiently invertible) permutations."
+      },
+      {
+        "page": 3,
+        "role": "openness",
+        "text": "In this paper, we are specifically interested in the second use case. The problem with that use case is that, even if we show (a), we still do not know whether a CPO is indistinguishable from a random permutation (i.e., (b))."
+      },
+      {
+        "page": 12,
+        "role": "definition",
+        "text": "To define CPO, we need to define its behavior on forward and backwards queries. Forward queries are easy: The internal state is, like in the CFO case, a superposition of partial functions."
+      },
+      {
+        "page": 14,
+        "role": "progress",
+        "text": "In particular, the existence of such a construction shows Conjecture 2."
+      },
+      {
+        "page": 8,
+        "role": "progress",
+        "text": "But if this does not hold, then we do not have a compressed oracle because we have no upper bound on the size of the oracle state."
+      }
+    ],
+    "pages": [
+      1,
+      2,
+      3,
+      8,
+      12,
+      13,
+      14
+    ],
+    "bibliography": [
+      {
+        "key": "Zha19",
+        "authors": "Mark Zhandry",
+        "title": "How to Record Quantum Queries, and Applications to Quantum Indifferentiability",
+        "venue": "Crypto 2019, Vol. 11693, LNCS, Springer, pp. 239–268",
+        "year": "2019",
+        "verified": "printed-in-source-bibliography"
+      },
+      {
+        "key": "CFHL20",
+        "authors": "Kai-Min Chung, Serge Fehr, Yu-Hsuan Huang, Tai-Ning Liao",
+        "title": "On the Compressed-Oracle Technique, and Post-Quantum Security of Proofs of Sequential Work",
+        "venue": "arXiv:2010.11658 [quant-ph]",
+        "year": "2020",
+        "verified": "printed-in-source-bibliography"
+      },
+      {
+        "key": "CMSZ20",
+        "authors": "Jan Czajkowski, Christian Majenz, Christian Schaffner, Sebastian Zur",
+        "title": "Quantum Lazy Sampling and Game-Playing Proofs for Quantum Indifferentiability",
+        "venue": "arXiv:1904.11477 [quant-ph]",
+        "year": "2020",
+        "verified": "printed-in-source-bibliography"
+      },
+      {
+        "key": "Zha15",
+        "authors": "Mark Zhandry",
+        "title": "A note on the quantum collision and set equality problems",
+        "venue": "Quantum Inf. Comput. 15.7&8, pp. 557–567",
+        "year": "2015",
+        "verified": "printed-in-source-bibliography"
+      },
+      {
+        "key": "Zha16",
+        "authors": "Mark Zhandry",
+        "title": "A Note on Quantum-Secure PRPs",
+        "venue": "Cryptology ePrint Archive, Report 2016/1076",
+        "year": "2016",
+        "verified": "printed-in-source-bibliography"
+      },
+      {
+        "key": "Unruh21",
+        "authors": "Dominique Unruh",
+        "title": "Compressed Permutation Oracles (And the Collision-Resistance of Sponge/SHA3)",
+        "venue": "IACR Cryptology ePrint Archive, 2021/062",
+        "year": "2021",
+        "verified": "printed-in-source-bibliography"
+      },
+      {
+        "key": "NIST",
+        "authors": "NIST",
+        "title": "SHA-3 Standard: Permutation-Based Hash and Extendable-Output Functions",
+        "venue": "Draft FIPS 202",
+        "year": "2014",
+        "verified": "printed-in-source-bibliography"
+      }
+    ]
+  },
+  "grounding": [
+    {
+      "quote": "Define an oracle CPO (for “compressed permutation oracle”) that keeps a superposition of partial functions as its internal state, that responds to forward and backward queries in some way that increases the length of those partial function only by 1 (or at least something small), and that is indistinguishable from having access to a permutation that is chosen uniformly at random.",
+      "claimed_page": 12,
+      "found_page": 12,
+      "coverage": 1.0,
+      "longest_run": 0.0,
+      "status": "exact",
+      "role": "statement"
+    },
+    {
+      "quote": "It turns out that defining such a CPO is not too hard. What is hard (and what we will only make a step towards in this paper) is to prove that the CPO is indeed indistinguishable from a truly random permutation.",
+      "claimed_page": 12,
+      "found_page": 12,
+      "coverage": 1.0,
+      "longest_run": 0.0,
+      "status": "exact",
+      "role": "openness"
+    },
+    {
+      "quote": "A long-standing open question is whether a similar technique can also be used to reason about random (efficiently invertible) permutations.",
+      "claimed_page": 1,
+      "found_page": 1,
+      "coverage": 1.0,
+      "longest_run": 0.0,
+      "status": "exact",
+      "role": "openness"
+    },
+    {
+      "quote": "In this paper, we are specifically interested in the second use case. The problem with that use case is that, even if we show (a), we still do not know whether a CPO is indistinguishable from a random permutation (i.e., (b)).",
+      "claimed_page": 3,
+      "found_page": 3,
+      "coverage": 1.0,
+      "longest_run": 0.0,
+      "status": "exact",
+      "role": "openness"
+    },
+    {
+      "quote": "To define CPO, we need to define its behavior on forward and backwards queries. Forward queries are easy: The internal state is, like in the CFO case, a superposition of partial functions.",
+      "claimed_page": 12,
+      "found_page": 12,
+      "coverage": 1.0,
+      "longest_run": 0.0,
+      "status": "exact",
+      "role": "definition"
+    },
+    {
+      "quote": "In particular, the existence of such a construction shows Conjecture 2.",
+      "claimed_page": 14,
+      "found_page": 14,
+      "coverage": 1.0,
+      "longest_run": 0.0,
+      "status": "exact",
+      "role": "progress"
+    },
+    {
+      "quote": "But if this does not hold, then we do not have a compressed oracle because we have no upper bound on the size of the oracle state.",
+      "claimed_page": 8,
+      "found_page": 8,
+      "coverage": 1.0,
+      "longest_run": 0.0,
+      "status": "exact",
+      "role": "progress"
+    }
+  ],
+  "verify": {
+    "checks": [
+      {
+        "name": "Existence",
+        "result": "pass",
+        "page": 13,
+        "finding": "Conjecture 2, eq. (7), is stated verbatim on p.13 directly after Definition 1 (Compressed permutation oracle): |Pr[A^CPO ⇒ 1] − Pr[A^{π,π^{-1}} ⇒ 1 : π ←$ (D ↪ D)]| is negligible, negligible in log|D|. The draft's formal_statement_latex is a formalization of exactly this."
+      },
+      {
+        "name": "Openness",
+        "result": "pass",
+        "page": 1,
+        "finding": "Abstract p.1: 'While the soundness of this technique (i.e., the indistinguishability from a random permutation) remains a conjecture...'. Reading past the passage: Theorem 1 (p.14) and Corollary 1 (pp.18-19) are both conditional on assumptions (9)/(20) about an existing permutation-construction; the Lemma 1 proof (pp.15-18) proves only the symmetry step. Pages 19-22 contain nothing but references, symbol index and keyword index — there is no appendix, footnote or results table anywhere that discharges Conjecture 2."
+      },
+      {
+        "name": "Strength",
+        "result": "pass",
+        "page": 13,
+        "finding": "Clause-by-clause the draft states the same thing as (7): same two experiments, same oracle pair (CFO_s, Flip·CFO_s·Flip) from Definition 1, same uniform draw from the permutations of D, same negligibility in log|D|. It is neither strengthened (the ≤1-growth requirement from the informal desideratum on p.12 is correctly NOT added — that is a property of the defined CPO, not of Conjecture 2) nor weakened (no efficiency restriction on A is smuggled in; polynomial-query is the paper's wording, and the poly-time version is Corollary 1)."
+      },
+      {
+        "name": "Quantifiers and parameters",
+        "result": "pass",
+        "page": 13,
+        "finding": "Checked symbol by symbol. Query bound: 'polynomial-query algorithm' → query count ≤ p(log|D|), with security parameter log|D| as the paper's parenthetical '(Negligible in log|D|.)' dictates. Domain: D fixed once and for all with commutative ⊕ satisfying x⊕x=0 (p.5); since such a group forces |D|=2^m, all admissible (D,⊕) of a given size are isomorphic, so the draft's ∀D and single-μ-per-polynomial rendering is equivalent to the paper's per-adversary phrasing (adversaries here are non-uniform families, so sup-over-A is attained). Flip: ‖Flip‖ ≤ 1 and Flip|h⟩=|h^{-1}⟩ on injective h only, unconstrained elsewhere (p.12), and the ∀Flip quantification is the paper's own stance per footnote 20, p.12 ('our results hold independent of the design choices for that case'); it is also harmless, since p.16 shows the injective invariant is preserved up to O(i/N). U_π|x⟩|y⟩=|x⟩|y⊕π(x)⟩ matches U_f on p.5. Nothing is allowed to depend on anything the paper forbids."
+      },
+      {
+        "name": "Attribution",
+        "result": "pass",
+        "page": 13,
+        "finding": "This is the harvested paper's own conjecture, labelled 'Conjecture 2' and introduced by 'We conjecture:' (p.13). The draft does not present it as someone else's, and does not confuse it with Conjecture 1 (double-sided zero-search, p.12), which is also the paper's own and which the draft correctly leaves out of the formal statement. Cited prior work ([28] random-permutation/random-function indistinguishability, [27] qPRPs, [24] the withdrawn Sponge proof) is attributed to those works, not to this paper."
+      },
+      {
+        "name": "Definitions",
+        "result": "pass",
+        "page": 10,
+        "finding": "Every notion matches: partial functions, dom, im, ∅ (p.4); D ↪ D = total injections, i.e. permutations for D→D (pp.4, 14); Decomp_1 |⊥⟩=|*⟩, |y⟩↦|y⟩+⟨*|y⟩(|⊥⟩−|*⟩) is eq. (2) p.8 (and eq. (3) p.9); Decomp = ⊗_x Decomp_1 is eq. (1) p.7; StO_s is the displayed sanitized standard oracle on p.10 (0 when h(x)=⊥); CFO_s = Decomp†·StO_s·Decomp is eq. (6) p.10; CFO_s not unitary, p.10. N=|R|=|D| in the permutation case (p.5, p.12). No definition is swapped for a standard one. One draft-supplied item: Pr[A^{O_1,O_2} ⇒ 1] := ‖Π_1 ψ_final‖² for sub-normalized states is nowhere defined in the paper, but it agrees with the abort-path reading given in footnote a on p.18."
+      },
+      {
+        "name": "Fabrication",
+        "result": "pass",
+        "page": 4,
+        "finding": "Every assertion in setting/status/progress was located: compressed-oracle record grows by ≤1 per query, size ≤q after q queries (p.7); invariant-based proofs with 'no zero-preimage' and 'h injective' invariants (pp.10-11); [12] generalizes to abelian-group Fourier transforms and parallel queries, [15] to non-uniform but independently sampled outputs (pp.3-4), and independence is exactly what fails for permutations (p.8); non-invertible permutations reducible to random functions via [28] (pp.4, 12); no hardness results at all for invertible random permutations, not even query complexity, hence nothing on SHA3 [22] (p.2); the withdrawn flawed collision-resistance proof is [24] Unruh, ePrint 2021/062 (footnote 5, p.4 + p.21); efficient simulation via strong qPRPs from quantum one-way functions [27] but no proof technique (p.4); Theorem 1 and its footnote-23 domain caveat (p.14); Corollary 1's extra hypotheses — C efficiently implementable, strong qPRP on D exists, poly-time adversaries (pp.18-19); the failed direct approach with domain-ordering dependence, no explicit basis-state description, and no ≤ℓ+1 size bound (footnote 14, pp.8-9). Bibliography: all seven entries match refs [12], [15], [22], [24], [27], [28], [30] as printed on pp.20-21. No fabricated prior result."
+      },
+      {
+        "name": "Self-containment",
+        "result": "pass",
+        "page": 0,
+        "finding": "The notation and definitions blocks fix D, ⊕, ⇀, injectivity of partial functions, h^{-1}, the registers X/Y/H_x, |*⟩, Decomp_1, Decomp, StO_s, CFO_s, Flip, CPO with H private and initialized to |∅⟩, U_π, oracle algorithm, query count, output probability for sub-normalized states, and negligibility. Decomp_1 is specified on a full basis, so it is uniquely determined. A reader who has never seen the paper knows precisely what would have to be proved."
+      },
+      {
+        "name": "Quote provenance and accuracy",
+        "result": "pass",
+        "page": 12,
+        "finding": "All seven quotes are verbatim and on the pages claimed, including the paper's own typo 'those partial function' (p.12) and the footnote-14 sentence on p.8. One curation note, not a misstatement: the quote tagged role 'statement' is the informal desideratum block on p.12, which additionally demands that queries grow the record by only 1 — so it does not state what formal_statement_latex states; Conjecture 2's actual text (7), p.13, is never quoted, only referenced in the status and progress notes."
+      }
+    ],
+    "confidence": "high",
+    "corrections": [],
+    "fabrications": [],
+    "reason": "Conjecture 2 is on p.13 with exactly the two experiments and the exact negligibility-in-log|D| the draft formalizes, and it stays open: the abstract calls soundness a conjecture, Theorem 1 (p.14) and Corollary 1 (pp.18-19) are conditional on a construction being indistinguishable from CPO, and pp.19-22 are only references and indices, so nothing later discharges it. The place a draft like this usually breaks — the unconstrained Flip — survives scrutiny: Definition 1 and footnote 20 (p.12) require only ‖Flip‖ ≤ 1 with Flip|h⟩=|h^{-1}⟩ on injective h and explicitly intend the results to hold for any such choice, and the p.16 argument shows the non-injective branch shifts the advantage only negligibly, so the draft's ∀Flip is faithful rather than a strengthening. The only two things worth recording are non-defects: the quote tagged 'statement' is the informal p.12 desideratum (which also demands the ≤1-growth property) rather than Conjecture 2's text, and the sub-normalized output-probability convention is draft-supplied but matches footnote a on p.18.",
+    "verdict": "faithful"
+  },
+  "build": {
+    "compiled": true,
+    "chktex": [
+      "Warning 1 in statement.tex line 11: Command terminated with space.",
+      "Warning 8 in statement.tex line 115: Wrong length of dash may have been used.",
+      "Warning 13 in statement.tex line 298: Intersentence spacing (`\\@') should perhaps be used."
+    ],
+    "lacheck": [],
+    "errors": []
+  }
+}

@@ -2,13 +2,190 @@
 title: "F-aPAKE — Asymmetric PAKE"
 status: "Canonical"
 layer: 3
-definition: "Not yet written"
+definition: "Defined"
 ---
 
 *F-aPAKE* (Asymmetric PAKE) is part of *Public-Key Primitives, Key Exchange, Messaging* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
 
-Introduced in the same paper as *F-saPAKE*, as part of the OPAQUE asymmetric PAKE protocol.
+An asymmetric PAKE lets a user holding a password and a server holding a *password file* agree on a session key, with the asymmetry being the point: the server's stored file must not be a password. This box is the **weak** notion — the one Jarecki, Krawczyk and Xu print in order to say what is wrong with it. Its defect is at lines 10–11 and 16: an adversary may run offline guesses *before* stealing the file, and if one of them was right, the theft hands over the password immediately. That is a pre-computation attack, and defeating it is what the paper's title is about. The strong version is [*F-saPAKE*](/uc/layer-3-public-key-primitives/f-sapake/index.qmd), and the two boxes are best read side by side.
+
+## Functionality
+
+Reading the box: $\mathcal{A}(\cdot)$ is a call on the adversary slot and $\mathit{id}'.F = \mathbf{A}$ tests that the adversary is the caller; **require** refuses the call, and the framework answers $\textsf{rej}$; $\mathbf{C}$ is the set of corrupted parties; $\square$ marks a value never set; $t$ is a sub-session identifier, so $\mathtt{St}[t,P]$ is the state of party $P$'s session $t$ and $\bar{P}$ is the peer; $U$, $S$ and $\lambda$ are parameters.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{aPAKE}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := (U, S, \lambda)\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{Pw} \gets \square\); &nbsp;&nbsp; \(\mathtt{Stolen} \gets 0\); &nbsp;&nbsp; \(\mathtt{Off} \gets \varnothing\)</li>
+<li>\(\mathtt{St} : \mathcal{I} \times \mathbf{P} \to \{\mathsf{fresh}, \mathsf{intr}, \mathsf{comp}, \mathsf{done}\} \cup \{\square\}\)</li>
+<li>\(\mathtt{Guess}, \mathtt{Key} : \mathcal{I} \times \mathbf{P} \to \{0,1\}^* \cup \{\square\}\)</li>
+<li>\(\mathtt{St}[*,*], \mathtt{Guess}[*,*], \mathtt{Key}[*,*] \gets \square\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.StorePwdFile(<span class="cj-id">mathit{pw}</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="5">
+<li>\(\textbf{require}\ \mathit{id}.P = S \ \wedge\ \mathtt{Pw} = \square\)<span class="cj-comment">// registration happens once</span></li>
+<li>\(\mathtt{Pw} \gets \mathit{pw}\)</li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.StealPwdFile()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="8">
+<li>\(\textbf{require}\ \mathit{id}'.F = \mathbf{A} \ \wedge\ \mathtt{Pw} \neq \square\)</li>
+<li>\(\mathtt{Stolen} \gets 1\)</li>
+<li>\(\textbf{if}\ \mathtt{Pw} \in \mathtt{Off}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \mathtt{Pw}\)</span><span class="cj-comment">// pre-computation pays off: the password itself</span></li>
+<li>\(\textbf{return}\ \mathsf{stolen}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.OfflineTestPwd(<span class="cj-id">mathit{pw}^{*}</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="13">
+<li>\(\textbf{require}\ \mathit{id}'.F = \mathbf{A}\)</li>
+<li>\(\textbf{if}\ \mathtt{Stolen} = 1\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \mathit{pw}^{*} = \mathtt{Pw}\)</span><span class="cj-comment">// after the theft: one guess, one answer</span></li>
+<li>\(\mathtt{Off} \gets \mathtt{Off} \cup \{\mathit{pw}^{*}\}\)<span class="cj-comment">// before it: the guess is banked for later</span></li>
+<li>\(\textbf{return}\ \bot\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.UsrSession(<span class="cj-id">t</span>, <span class="cj-id">mathit{pw}'</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="18">
+<li>\(\textbf{require}\ \mathit{id}.P = U \ \wedge\ \mathtt{St}[t,U] = \square\)</li>
+<li>\(\mathtt{St}[t,U] \gets \mathsf{fresh}\); &nbsp;&nbsp; \(\mathtt{Guess}[t,U] \gets \mathit{pw}'\)</li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{UsrSession}, t\bigr)\)<span class="cj-comment">// that a session started is public; \(\mathit{pw}'\) is not</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.SvrSession(<span class="cj-id">t</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="22">
+<li>\(\textbf{require}\ \mathit{id}.P = S \ \wedge\ \mathtt{Pw} \neq \square \ \wedge\ \mathtt{St}[t,S] = \square\)</li>
+<li>\(\mathtt{St}[t,S] \gets \mathsf{fresh}\); &nbsp;&nbsp; \(\mathtt{Guess}[t,S] \gets \mathtt{Pw}\)</li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{SvrSession}, t\bigr)\)</li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.TestPwd(<span class="cj-id">t</span>, <span class="cj-id">P</span>, <span class="cj-id">mathit{pw}^{*}</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="26">
+<li>\(\textbf{require}\ \mathit{id}'.F = \mathbf{A} \ \wedge\ \mathtt{St}[t,P] = \mathsf{fresh}\)<span class="cj-comment">// one online guess per session, and it is spent</span></li>
+<li>\(\textbf{if}\ \mathit{pw}^{*} = \mathtt{Guess}[t,P]\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{St}[t,P] \gets \mathsf{comp}\)</span></li>
+<li><span class="cj-ind">\(\textbf{return}\) <span class="cj-atom">true</span></span></li>
+<li>\(\mathtt{St}[t,P] \gets \mathsf{intr}\)</li>
+<li>\(\textbf{return}\) <span class="cj-atom">false</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Impersonate(<span class="cj-id">t</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="32">
+<li>\(\textbf{require}\ \mathit{id}'.F = \mathbf{A} \ \wedge\ \mathtt{St}[t,U] = \mathsf{fresh}\)</li>
+<li>\(\textbf{if}\ \mathtt{Stolen} = 1 \ \wedge\ \mathtt{Guess}[t,U] = \mathtt{Pw}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{St}[t,U] \gets \mathsf{comp}\)</span><span class="cj-comment">// a stolen file impersonates the server for free</span></li>
+<li><span class="cj-ind">\(\textbf{return}\) <span class="cj-atom">true</span></span></li>
+<li>\(\mathtt{St}[t,U] \gets \mathsf{intr}\)</li>
+<li>\(\textbf{return}\) <span class="cj-atom">false</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.NewKey(<span class="cj-id">t</span>, <span class="cj-id">P</span>, <span class="cj-id">k^{*}</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="38">
+<li>\(\textbf{require}\ \mathit{id}'.F = \mathbf{A} \ \wedge\ \mathtt{St}[t,P] \notin \{\square, \mathsf{done}\} \ \wedge\ |k^{*}| = \lambda\)</li>
+<li>\(\textbf{if}\ \mathtt{St}[t,P] = \mathsf{comp} \ \vee\ P \in \mathbf{C} \ \vee\ \bar{P} \in \mathbf{C}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{Key}[t,P] \gets k^{*}\)</span><span class="cj-comment">// a broken session takes the adversary's key</span></li>
+<li>\(\textbf{if}\ \mathtt{St}[t,P] = \mathsf{fresh} \ \wedge\ \mathtt{St}[t,\bar{P}] = \mathsf{done} \ \wedge\ \mathtt{Guess}[t,P] = \mathtt{Guess}[t,\bar{P}]\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{Key}[t,P] \gets \mathtt{Key}[t,\bar{P}]\)</span><span class="cj-comment">// matching fresh sessions agree on the key</span></li>
+<li>\(\textbf{if}\ \mathtt{Key}[t,P] = \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{Key}[t,P] \gets \$\,\{0,1\}^{\lambda}\)</span><span class="cj-comment">// and the adversary never learns it</span></li>
+<li>\(\mathtt{St}[t,P] \gets \mathsf{done}\)</li>
+<li>\(\textbf{return}\ \mathtt{Key}[t,P]\) &nbsp;to \(P\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.TestAbort(<span class="cj-id">t</span>, <span class="cj-id">P</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="47">
+<li>\(\textbf{require}\ \mathit{id}'.F = \mathbf{A} \ \wedge\ \mathtt{St}[t,P] \notin \{\square, \mathsf{done}\}\)</li>
+<li>\(\textbf{if}\ \mathtt{St}[t,P] = \mathsf{fresh} \ \wedge\ \mathtt{St}[t,\bar{P}] \neq \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \mathsf{succ}\)</span><span class="cj-comment">// an untouched session cannot be made to abort</span></li>
+<li>\(\mathtt{St}[t,P] \gets \mathsf{done}\)</li>
+<li>\(\textbf{return}\ \mathsf{fail}\), and \(\mathsf{abort}\) to \(P\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="52">
+<li>\(\textbf{if}\ \mathit{id}.P = S\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ (\mathtt{Pw}, \mathtt{Stolen}, \mathtt{St})\)</span></li>
+<li>\(\textbf{return}\ (\mathtt{Stolen}, \mathtt{St})\)</li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+*Source: Figure 1, p. 8 of Jarecki, Krawczyk and Xu, "OPAQUE: An Asymmetric PAKE Protocol Secure Against Pre-computation Attacks", ePrint 2018/163, revision `20191022:184539`, the newest of nine postings. The PDF's pages and its printed folios agree.*
+
+**The printed figure holds two functionalities, told apart by shading.** This is the same trap as the colour-coded accumulator figure, and again invisible in a text extraction: the caption reads "Functionalities $\mathcal{F}_{\mathsf{aPAKE}}$ (full text) and $\mathcal{F}_{\mathsf{saPAKE+}}$ (shadowed text omitted)". The box above is the **full text**, so it includes the shaded lines — and the shaded lines are exactly the pre-computation machinery, lines 10–11 and 16. Deleting them yields $\mathcal{F}_{\mathsf{saPAKE+}}$, an intermediate that Figure 2 then extends into $\mathcal{F}_{\mathsf{saPAKE}}$.
+
+- **Lines 16 and 10–11 are the weakness, and they are two halves of one mechanism.** Line 16 banks a guess made before the theft; line 10 checks the bank at the moment of theft and line 11 pays out the password itself. An adversary that precomputes a dictionary therefore gets the password the instant it compromises the server, with no further work. Real password files built from a plain hash have exactly this property, which is why the weak notion is the one that matches deployed practice.
+- **Line 15 is the post-theft attack, and it is the *only* thing an adversary should get.** One call, one guess, one bit. That is unavoidable — a stolen file always permits offline dictionary search — and the whole design question is whether anything *more* than this is available. In the weak box, it is.
+- **Lines 33–35 are impersonation, and note what they require: the file, not the password.** With $\mathtt{Stolen} = 1$ a server-impersonation against a user whose password matches the file succeeds outright. The strong version withdraws this: there, the file alone is not enough.
+- **Line 26 is the online-guess budget.** A session must be $\mathsf{fresh}$ to be tested, and either outcome moves it out of $\mathsf{fresh}$ — to $\mathsf{comp}$ on success, $\mathsf{intr}$ on failure. So the adversary gets exactly one online guess per session, which is the defining property of any PAKE.
+- **Lines 41–42 are where the two parties come to agree.** A fresh session whose peer has already completed, and whose password matches, copies the peer's key rather than drawing a new one. Without this line honest matching sessions would derive independent keys and the functionality would be unrealizable.
+- **Line 44 is the security guarantee.** Any session that is still $\mathsf{fresh}$, unmatched and uncorrupted gets a uniform key the adversary never sees — and lines 39–40 are the exhaustive list of the ways to avoid that.
+- **Lines 48–49 say an untouched session cannot be made to abort.** If the session is fresh and its peer exists, $\mathsf{TestAbort}$ returns $\textsf{succ}$ and changes nothing. The adversary can abort sessions it has interfered with, and no others.
+
+**Mismatch register.**
+
+| The source | This box | Why |
+|---|---|---|
+| Records $\langle \mathsf{FILE}, U, S, \mathit{pw}\rangle$ and $\langle \mathit{ssid}, P, P', \mathit{pw}'\rangle$ | $\mathtt{Pw}$, and $\mathtt{St}$/$\mathtt{Guess}$ keyed by $(t, P)$ | One instance is one $(U, S)$ pair, so $\mathit{sid}$ folds into the process id; $\mathit{ssid}$ cannot, since one instance carries many sessions, so it stays an explicit index. Keying by $(t,P)$ rather than $t$ is required: the source keeps a *separate* record per party per sub-session. |
+| $\mathsf{UNCOMPROMISED}$ / $\mathsf{COMPROMISED}$ on the file record | $\mathtt{Stolen}$ | The file's mark is only ever read as "has it been stolen"; a boolean is the same information. |
+| "if $(\mathit{sid},\mathit{ssid},SK')$ was sent to $P'$ and at that time there was a record marked $\mathsf{FRESH}$" | Line 41: peer $\mathsf{done}$ and passwords equal | The source's condition is about history; here the peer's completed state plus matching passwords is the same set of runs, because a session leaves $\mathsf{fresh}$ only via lines 28, 30, 34, 36 and each of those is an interference. |
+| No leakage interface | $\mathsf{Leak}$ at lines 52–54 | Required here. A corrupted server loses the password file; anyone else learns only the public schedule. |
+| Session records also name the peer | $\bar{P}$, since $\mathbf{P} = \{U, S\}$ | Two parties per instance, so the peer is determined. |
+
+## Known realizations
+
+**This is the notion OPAQUE is designed *not* to satisfy, and that framing is the paper's.** The weak box is presented as the prior state of the art — it is what earlier aPAKE definitions and protocols achieve — and the paper's contribution is a protocol for the strong one. Reading the two boxes together is the intended use.
+
+**It is still a hybrid ingredient.** Figure 4 gives a strong aPAKE protocol in the $(\mathcal{F}_{\mathsf{OPRF}}, \mathcal{F}_{\mathsf{aPAKE}})$-hybrid world: the weak functionality composed with an oblivious PRF yields the strong one. So this box is not merely a foil — it is a component, and [*F-OPRF*](/uc/layer-5-oblivious-transfer/f-oprf/index.qmd) is the other half.
+
+## Properties
+
+- **One online guess per session, with probability exactly $1$ of being spent.** Line 26 and the state transitions after it.
+- **One offline guess per call after theft, and no more.** Line 15 returns a single bit per call. This is inherent to the primitive, not a weakness.
+- **Pre-computation pays off, with probability exactly $1$ when the banked guess was right.** Lines 10–11 with line 16. This *is* the weakness, and it is what separates this box from the strong one.
+- **Key secrecy for unbroken sessions, with advantage exactly $0$.** Line 44, reachable only when lines 39 and 41 both failed to fire — that is, the session is fresh, unmatched, and neither party corrupt.
+- **Key agreement for matching honest sessions, with probability exactly $1$.** Lines 41–42.
+- **No authentication of the server to the user beyond the password.** Line 33 is the only server-impersonation path and it is gated on the file, not on any key material the user holds.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Jarecki, Krawczyk, and Xu. [*OPAQUE: An asymmetric PAKE protocol secure against pre-computation attacks*](https://eprint.iacr.org/2018/163). In Advances in Cryptology – EUROCRYPT 2018, volume 10822 of LNCS, pages 456–486, 2018.
+- Jarecki, Krawczyk, and Xu. [*OPAQUE: An asymmetric PAKE protocol secure against pre-computation attacks*](https://eprint.iacr.org/2018/163). In Advances in Cryptology – EUROCRYPT 2018, volume 10822 of LNCS, pages 456–486, 2018. The definition transcribed above is Figure 1, p. 8 of ePrint 2018/163, revision `20191022:184539`, the newest of nine postings — the full text, including the shaded lines. Omitting the shaded lines gives $\mathcal{F}_{\mathsf{saPAKE+}}$, which Figure 2 (p. 9) extends into $\mathcal{F}_{\mathsf{saPAKE}}$; that is the object of [*F-saPAKE*](/uc/layer-3-public-key-primitives/f-sapake/index.qmd). The same paper prints $\mathcal{F}_{\mathsf{OPRF}}$ with adaptive compromise (Figure 3) and an adaptively secure $\mathcal{F}_{\mathsf{AKE-KCI}}$ (Figure 7); neither is this page's object.

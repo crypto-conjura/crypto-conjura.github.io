@@ -2,11 +2,143 @@
 title: "F-ABB — Arithmetic black box"
 status: "Canonical"
 layer: 6
-definition: "Not yet written"
+definition: "Defined"
 ---
 
 *F-ABB* (Arithmetic black box) is part of *Secret Sharing, Threshold Cryptography, MPC* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
 
+The arithmetic black box is the interface secure computation *presents* rather than the machinery that implements it. Parties load secret values into named variables, add and multiply them, and open the results; the box holds the values and nobody else sees them. Damgård and Nielsen introduce it because it makes protocol design compositional — an MPC protocol written against this interface can be read without threshold homomorphic encryption anywhere in sight — and because, as they put it, the object "is in fact equivalent to what we call an arithmetic black box".
+
+Two features distinguish it from the ideal-MPC functionalities near it. Every command must be *agreed* by all honest parties before it runs (line 13, 17, 23, 27), which is what makes the box a shared machine rather than a service. And the box has no general multiplication: line 22 restricts multiplication to a variable the caller itself loaded, and general multiplication is recovered by a protocol *in the $\mathcal{F}_{\mathsf{ABB}}$-hybrid model*, not by the box.
+
+## Functionality
+
+Reading the box: $\mathcal{A}(\cdot)$ is a call on the adversary slot; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it; $\mathbf{C}$ is the set of corrupted parties; $\square$ marks a value never set; $\mathcal{I}$ is the space of variable names; $\mathsf{Agree}$ is a local helper, written out in the box, that records a caller's vote and reports whether every honest party has now voted the same way.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{ABB}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := \mathsf{KeyGen}\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\((N, \mathit{sk}) \gets \mathsf{KeyGen}()\)</li>
+<li>\(\mathtt{Val} : \mathcal{I} \to \mathbb{Z}_N \cup \{\square\}\); &nbsp;&nbsp; \(\mathtt{Val}[*] \gets \square\)</li>
+<li>\(\mathtt{Own} : \mathcal{I} \to \mathbf{P} \cup \{\bot\}\); &nbsp;&nbsp; \(\mathtt{Own}[*] \gets \bot\)</li>
+<li>\(\mathtt{Vote} : \mathcal{I} \times \{0,1\}^* \to 2^{\mathbf{P}}\); &nbsp;&nbsp; \(\mathtt{Vote}[*,*] \gets \varnothing\)</li>
+<li>\(\mathtt{Bad} \gets 0\)</li>
+<li>\(\mathcal{A}\bigl(\mathsf{Initialize}, N, \mathit{sk}\bigr)\)<span class="cj-comment">// the key is not a secret of this box</span></li>
+<li>\(\textbf{return}\ N\) &nbsp;to every \(P \in \mathbf{P}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig">Agree(<span class="cj-id">id</span>, <span class="cj-id">c</span>):</div>
+<ol class="cj-code" start="8">
+<li>\(\mathtt{Vote}[\mathit{id}, c] \gets \mathtt{Vote}[\mathit{id}, c] \cup \{\mathit{id}.P\}\)</li>
+<li>\(\textbf{if}\ \exists\, c' \neq c : \mathtt{Vote}[\mathit{id}, c'] \setminus \mathbf{C} \neq \varnothing\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{Bad} \gets 1\)</span><span class="cj-comment">// honest parties disagreed: the box gives up</span></li>
+<li>\(\textbf{return}\ \mathbf{P} \setminus \mathbf{C} \subseteq \mathtt{Vote}[\mathit{id}, c]\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Load(<span class="cj-id">x</span>, <span class="cj-id">s</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="12">
+<li>\(\textbf{require}\ \mathtt{Bad} = 0 \ \wedge\ \mathtt{Val}[x] = \square \ \wedge\ s \in \mathbb{Z}_N\)</li>
+<li>\(\textbf{require}\ \mathsf{Agree}(x, \mathsf{load})\)<span class="cj-comment">// the others vote \(x \gets\, ?\), not on \(s\)</span></li>
+<li>\(\mathtt{Own}[x] \gets \mathit{id}.P\); &nbsp;&nbsp; \(\mathtt{Val}[x] \gets s\)<span class="cj-comment">// \(s\) itself is never disclosed</span></li>
+<li>\(\textbf{return}\ \mathsf{defined}\ x\) &nbsp;to every \(P \in \mathbf{P}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Lin(<span class="cj-id">x</span>, <span class="cj-id">a_0</span>, <span class="cj-id">vec{a}</span>, <span class="cj-id">vec{x}</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="16">
+<li>\(\textbf{require}\ \mathtt{Bad} = 0 \ \wedge\ \mathtt{Val}[x] = \square \ \wedge\ \forall j : \mathtt{Val}[x_j] \neq \square\)</li>
+<li>\(\textbf{require}\ \mathsf{Agree}(x, (\mathsf{lin}, a_0, \vec{a}, \vec{x}))\)</li>
+<li>\(\mathtt{Val}[x] \gets a_0 + \textstyle\sum_j a_j \mathtt{Val}[x_j] \bmod N\)<span class="cj-comment">// free: no interaction</span></li>
+<li>\(\textbf{return}\ \mathsf{defined}\ x\) &nbsp;to every \(P \in \mathbf{P}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Mul(<span class="cj-id">x</span>, <span class="cj-id">x_1</span>, <span class="cj-id">x_2</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="20">
+<li>\(\textbf{require}\ \mathtt{Bad} = 0 \ \wedge\ \mathtt{Val}[x] = \square\)</li>
+<li>\(\textbf{require}\ \mathtt{Val}[x_1] \neq \square \ \wedge\ \mathtt{Val}[x_2] \neq \square\)</li>
+<li>\(\textbf{require}\ \mathtt{Own}[x_1] = \mathit{id}.P\)<span class="cj-comment">// private: only \(x_1\)'s loader may multiply by it</span></li>
+<li>\(\textbf{require}\ \mathsf{Agree}(x, (\mathsf{mul}, x_1, x_2))\)</li>
+<li>\(\mathtt{Val}[x] \gets \mathtt{Val}[x_1] \cdot \mathtt{Val}[x_2] \bmod N\)</li>
+<li>\(\textbf{return}\ \mathsf{defined}\ x\) &nbsp;to every \(P \in \mathbf{P}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Output(<span class="cj-id">x</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="26">
+<li>\(\textbf{require}\ \mathtt{Bad} = 0 \ \wedge\ \mathtt{Val}[x] \neq \square\)</li>
+<li>\(\textbf{require}\ \mathsf{Agree}(x, \mathsf{out})\)</li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Output}, x, \mathtt{Val}[x]\bigr)\)<span class="cj-comment">// the adversary learns it first, and may stall</span></li>
+<li>\(\textbf{return}\ \mathtt{Val}[x]\) &nbsp;to every \(P \in \mathbf{P}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="30">
+<li>\(\textbf{if}\ \mathtt{Bad} = 1\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ (\mathit{sk}, \mathtt{Val}, \mathtt{Own})\)</span></li>
+<li>\(\textbf{return}\ (\mathit{sk}, \mathtt{Own}, \{\, x : \mathtt{Val}[x] \neq \square \,\})\)</li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+*Source: §7, pp. 258–259 (PDF pp. 12–13) of Damgård and Nielsen, "Universally Composable Efficient Multiparty Computation from Threshold Homomorphic Encryption", CRYPTO 2003. The PDF is the proceedings scan, so its folios are the proceedings' own — the paper runs 247–264 and the ABB section is at its end.*
+
+- **Lines 9–10 are the failure mode, and they are unusually blunt.** If two *honest* parties ever vote differently for the same variable, the functionality sets $\mathtt{Bad}$ and stops guaranteeing anything: line 31 then hands the adversary the decryption key, every stored value and every owner. The source says it "outputs its entire current state and all future inputs" and lets the environment determine all future outputs. This is not a security failure being modelled — it is the definition declining to specify behaviour for a situation the protocol's users are responsible for avoiding.
+- **Line 11 is what "agreement" means, and the honest-party quantifier matters.** The command runs when every *honest* party has voted for it; corrupt parties are neither required nor trusted. So a corrupt minority cannot block progress, and cannot force a command either.
+- **Line 13's comment records an asymmetry the source is careful about.** For a load, the other parties cannot echo the command, because they do not know $s$ — they input $(P_i : x \gets\, ?)$ instead, agreeing that $P_i$ may define $x$ with a value they will not see. The vote is on the *shape* of the operation, not on its operand.
+- **Line 22 is the private-multiplication restriction, and it is the box's one real limitation.** Only the party that loaded $x_1$ may multiply by it. The source is explicit that there is "no general multiplication command", and that the $\mathcal{F}_{\mathsf{ABB}}$-hybrid model recovers it. A reader who assumes this box gives arbitrary multiplication will design a protocol it does not support.
+- **Line 28 gives the adversary the output first.** It learns $\mathtt{Val}[x]$ before the parties do and may stall the delivery. That is the standard adversarial-delivery power and it is worth stating, because it is the only place where the adversary influences an unbroken computation at all.
+- **Line 6 hands the adversary the secret key at initialization, and that is correct.** The box is not keeping $\mathit{sk}$ secret — it is keeping the *values* secret. The source generates a Paillier key and outputs $(N, \mathit{sk})$ to the adversary explicitly, with a footnote saying that these values are returned "to specify that it is not part of the functionality to keep $C$ or $m$ secret". The secrecy claim lives entirely in $\mathtt{Val}$, which appears in $\mathsf{Leak}$ only once $\mathtt{Bad}$ is set.
+
+**Mismatch register.**
+
+| The source | This box | Why |
+|---|---|---|
+| Explicit round counts: values defined at round $r+8$, products at $r+4$, outputs at $r+12$ | Immediate | The counts are the *protocol's* latencies exposed in the functionality, and they are tied to the concrete construction; this framework has no round structure to carry them. The consequence is real and stated here: a protocol proved against the printed box gets a timing guarantee this one does not make. |
+| "the adversary inputs `fail`" cancels a pending definition | Not present | It only exists because the definition is pending across rounds. With immediate definition there is no window in which to fail it. Same reason as above. |
+| SOT / SIT tapes for adversary output and input | The adversary slot and $\mathsf{Leak}$ | The two tapes are the IITM-style plumbing for the same two directions. |
+| $\mathtt{Bad}$ makes the box output everything and take orders | $\mathtt{Bad}$ blocks every command (lines 12, 16, 20, 26) and opens $\mathsf{Leak}$ (line 31) | The "environment determines all future outputs" half is not expressible as an interface here; refusing every command and disclosing everything is the closest faithful reading, and it is weaker than the source. Stated rather than hidden. |
+| A fresh Paillier key generated inside | $\mathsf{KeyGen}$, a parameter | Keeps the box independent of Paillier. The source's $\mathsf{SingleToThresh}$ construction is about the realization, not the interface. |
+| No leakage interface | $\mathsf{Leak}$ at lines 30–32 | Required here. Note it discloses which variables are *defined* but not their values — variable names are public, contents are not. |
+
+## Known realizations
+
+**From threshold homomorphic encryption: Theorem 3, p. 260.** Protocol $\pi_{\mathsf{ABB}}$ $\lceil(n-1)/2\rceil$-securely realizes $\mathcal{F}_{\mathsf{ABB}}$ — that is, against an adversary corrupting fewer than half the parties. A variable with value $s$ is represented by an encryption of $s$ under the threshold key, linear combinations are computed locally on ciphertexts by homomorphy, and only multiplication needs interaction, which is exactly why line 18 is free and line 24 is not.
+
+**General multiplication is a protocol, not a command.** The source notes that in the $\mathcal{F}_{\mathsf{ABB}}$-hybrid model parties can multiply any two variables using the private-multiplication command as a subroutine. So the restriction at line 22 costs rounds rather than expressiveness.
+
+## Properties
+
+- **Privacy of loaded values, with advantage exactly $0$ while $\mathtt{Bad} = 0$.** For every adversary: $s$ enters at line 14 and appears in no return and in no adversary call. Line 28 discloses $\mathtt{Val}[x]$ only for a variable every honest party agreed to open, and line 32 discloses names, not contents.
+- **Correctness of arithmetic, with probability exactly $1$.** Lines 18 and 24 compute in $\mathbb{Z}_N$ directly. There is no path by which an agreed command produces a wrong value; the adversary's only influence on a computation with $\mathtt{Bad} = 0$ is the delay at line 28.
+- **Agreement, with probability exactly $1$.** Every command is gated on $\mathsf{Agree}$, and line 11 requires all honest parties. Two honest parties cannot see different values for the same variable.
+- **No guarantee whatever once honest parties disagree.** Lines 9–10 and 31. This is a stated non-property, and it is the box's sharpest edge.
+- **No robustness against a party that never votes.** $\mathsf{Agree}$ waits, with no deadline anywhere in the box. Termination is the realization's problem.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
+
 *References:*
 
-- Damgård and Nielsen. [*Universally composable efficient multiparty computation from threshold homomorphic encryption*](https://iacr.org/archive/crypto2003/27290247/27290247.pdf). In Advances in Cryptology – CRYPTO 2003, 2003.
+- Damgård and Nielsen. [*Universally composable efficient multiparty computation from threshold homomorphic encryption*](https://iacr.org/archive/crypto2003/27290247/27290247.pdf). In Advances in Cryptology – CRYPTO 2003, pages 247–264, 2003. The definition transcribed above is §7, "An Arithmetic Black Box", pp. 258–259 (PDF pp. 12–13); the realization is Theorem 3, p. 260 (PDF p. 14). Not an ePrint posting, so there is no revision stamp — the linked file is the IACR archive's copy of the proceedings version, which is the version of record.

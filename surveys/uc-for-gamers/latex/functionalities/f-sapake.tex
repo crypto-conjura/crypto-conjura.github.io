@@ -1,0 +1,181 @@
+%% The interface box of f-sapake, the one source for both the book
+%% and uc/.../f-sapake/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fsapake$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := (U, S, \lambda)$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{Pw} \gets \unset$; \quad $\V{Stolen}, \V{Flag} \gets 0$
+\State $\V{St} : \Ids \times \Ps \to \{\op{fresh}, \op{intr}, \op{comp}, \op{done}\} \cup \{\unset\}$
+\State $\V{Guess}, \V{Key} : \Ids \times \Ps \to \bits \cup \{\unset\}$
+\State $\V{Dpt} : \Ids \to \{0,1\}$; \quad $\V{Dpt}[*] \gets 0$
+\State $\V{St}[*,*], \V{Guess}[*,*], \V{Key}[*,*] \gets \unset$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{StorePwdFile}(\mathit{pw})$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P = S \ \wedge\ \V{Pw} = \unset$}
+\State $\V{Pw} \gets \mathit{pw}$; \quad $\V{Flag} \gets 0$ \label{ln:sapakeflag}
+  \Comment{$\V{Flag}$: has the password itself been broken}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{StealPwdFile}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F = \Apid \ \wedge\ \V{Pw} \neq \unset$}
+\State $\V{Stolen} \gets 1$
+\State \textbf{return} $\op{stolen}$ \label{ln:sapakesteal}
+  \Comment{the file, and nothing else: no pre-computation}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{OfflineTestPwd}(\mathit{pw}^{*})$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F = \Apid \ \wedge\ \V{Stolen} = 1$} \label{ln:sapakeafter}
+  \Comment{guessing starts only after the theft}
+\If{$\mathit{pw}^{*} = \V{Pw}$}
+  \State $\V{Flag} \gets 1$
+  \State \textbf{return} $\true$
+\EndIf
+\State \textbf{return} $\false$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{UsrSession}(t, \mathit{pw}')$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P = U \ \wedge\ \V{St}[t,U] = \unset$}
+\State $\V{St}[t,U] \gets \op{fresh}$; \quad $\V{Guess}[t,U] \gets \mathit{pw}'$
+\State $\Adv\bigl(\id.\op{UsrSession}, t\bigr)$
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{SvrSession}(t)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P = S \ \wedge\ \V{Pw} \neq \unset \ \wedge\ \V{St}[t,S] = \unset$}
+\State $\V{St}[t,S] \gets \op{fresh}$; \quad $\V{Guess}[t,S] \gets \V{Pw}$
+\State $\Adv\bigl(\id.\op{SvrSession}, t\bigr)$
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Interrupt}(t)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F = \Apid \ \wedge\ \V{St}[t,S] = \op{fresh}$}
+\State $\V{St}[t,S] \gets \op{intr}$; \quad $\V{Dpt}[t] \gets 1$ \label{ln:sapakeint}
+  \Comment{buys one deferred guess against the server}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{TestPwd}(t, P, \mathit{pw}^{*})$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F = \Apid \ \wedge\ \V{St}[t,P] \neq \unset$}
+\State $b \gets \bigl(\mathit{pw}^{*} = \V{Guess}[t,P]\bigr)$
+\If{$\V{St}[t,P] = \op{fresh}$}
+  \State $\V{St}[t,P] \gets \op{comp}$ \textbf{if} $b$ \textbf{else} $\op{intr}$ \label{ln:sapakeonline}
+\EndIf
+\If{$\V{St}[t,P] \neq \op{fresh} \ \wedge\ P = S \ \wedge\ \V{Dpt}[t] = 1$}
+  \State $\V{Dpt}[t] \gets 0$ \label{ln:sapakedpt}
+    \Comment{the deferred guess, spent}
+\EndIf
+\If{$P = S \ \wedge\ b$}
+  \State $\V{Flag} \gets 1$ \label{ln:sapakeflagset}
+    \Comment{a correct guess at the server breaks the password}
+\EndIf
+\State \textbf{return} $b$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Impersonate}(t)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F = \Apid \ \wedge\ \V{St}[t,U] = \op{fresh}$}
+\If{$\V{Flag} = 1 \ \wedge\ \V{Guess}[t,U] = \V{Pw}$} \label{ln:sapakeimp}
+  \State $\V{St}[t,U] \gets \op{comp}$
+    \Comment{the file alone is not enough; the password is}
+  \State \textbf{return} $\true$
+\EndIf
+\State $\V{St}[t,U] \gets \op{intr}$
+\State \textbf{return} $\false$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{NewKey}(t, P, k^{*})$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F = \Apid \ \wedge\ \V{St}[t,P] \notin \{\unset, \op{done}\} \ \wedge\ |k^{*}| = \lambda$}
+\If{$\V{St}[t,P] = \op{comp} \ \vee\ P \in \Cs \ \vee\ \bar{P} \in \Cs$}
+  \State $\V{Key}[t,P] \gets k^{*}$
+\EndIf
+\If{$P = S \ \wedge\ \V{St}[t,P] = \op{intr} \ \wedge\ \V{Flag} = 1$}
+  \State $\V{Key}[t,P] \gets k^{*}$ \label{ln:sapakeflagkey}
+    \Comment{a broken password lets the server be driven}
+\EndIf
+\If{$\V{St}[t,P] = \op{fresh} \ \wedge\ \V{St}[t,\bar{P}] = \op{done} \ \wedge\ \V{Guess}[t,P] = \V{Guess}[t,\bar{P}]$}
+  \State $\V{Key}[t,P] \gets \V{Key}[t,\bar{P}]$ \label{ln:sapakematch}
+\EndIf
+\If{$\V{Key}[t,P] = \unset$}
+  \State $\V{Key}[t,P] \gets \$\,\{0,1\}^{\lambda}$
+\EndIf
+\State $\V{St}[t,P] \gets \op{done}$
+\State \textbf{return} $\V{Key}[t,P]$ \ to $P$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{TestAbort}(t, P)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F = \Apid \ \wedge\ \V{St}[t,P] \notin \{\unset, \op{done}\}$}
+\If{$\V{St}[t,P] = \op{fresh} \ \wedge\ \V{St}[t,\bar{P}] \neq \unset$}
+  \State \textbf{return} $\op{succ}$
+\EndIf
+\If{$\V{St}[t,P] = \op{fresh} \ \wedge\ \bar{P} = S \ \wedge\ \V{Guess}[t,P] = \V{Pw}$}
+  \State \textbf{return} $\op{succ}$ \label{ln:sapakenoabort}
+    \Comment{a correct password cannot be made to abort}
+\EndIf
+\State $\V{St}[t,P] \gets \op{done}$
+\State \textbf{return} $\op{fail}$, and $\op{abort}$ to $P$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$\id.P = S$}
+  \State \textbf{return} $(\V{Pw}, \V{Stolen}, \V{Flag}, \V{St})$ \label{ln:sapakeleaks}
+\EndIf
+\State \textbf{return} $(\V{Stolen}, \V{St})$ \label{ln:sapakeleak}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

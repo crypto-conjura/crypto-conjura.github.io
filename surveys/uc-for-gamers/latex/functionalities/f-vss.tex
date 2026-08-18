@@ -1,0 +1,72 @@
+%% The interface box of f-vss, the one source for both the book
+%% and uc/.../f-vss/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fvss$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := (P_d, t, \op{Com})$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{Sec}, \V{Cm} \gets \unset$; \quad $\V{Pub} \gets 0$
+\State $\V{Op} : \Ps \to \{0,1\}$; \quad $\V{Op}[*] \gets 0$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Spool}(s, r)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P = P_d \ \wedge\ \V{Sec} = \unset$} \label{ln:vssdealer}
+\State $\V{Sec} \gets s$; \quad $\V{Cm} \gets \op{Com}(s; r)$
+\State $\Adv\bigl(\id.\op{Spool}, \V{Cm}\bigr)$ \label{ln:vssspool}
+  \Comment{the commitment leaks; the secret does not}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Share}(s', r')$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P = P_d \ \wedge\ \V{Sec} \neq \unset \ \wedge\ \V{Pub} = 0$}
+\If{$(s', r') \neq \none$} \label{ln:vsschange}
+  \Req{$P_d \in \Cs$}
+    \Comment{only a corrupt dealer may change its mind}
+  \State $\V{Sec} \gets s'$; \quad $\V{Cm} \gets \op{Com}(s'; r')$
+\EndIf
+\State $\V{Pub} \gets 1$
+\State \textbf{return} $\V{Cm}$ \ to every $P \in \Ps$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Open}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{Pub} = 1 \ \wedge\ \id.P \in \Ps$}
+\State $\V{Op}[\id.P] \gets 1$
+\Req{$\bigl|\{\, P : \V{Op}[P] = 1 \,\}\bigr| \ge t + 1$} \label{ln:vssthresh}
+  \Comment{$t+1$ distinct players, and no fewer}
+\State \textbf{return} $\V{Sec}$ \ to every $P \in \Ps$ \label{ln:vssopen}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$\id.P = P_d$}
+  \State \textbf{return} $(\V{Sec}, \V{Cm}, \V{Pub})$ \label{ln:vssleakd}
+\EndIf
+\State \textbf{return} $(\V{Cm}, \V{Pub}, \V{Op})$ \label{ln:vssleak}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

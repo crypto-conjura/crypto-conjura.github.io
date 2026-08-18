@@ -1,0 +1,164 @@
+%% The interface box of f-apake, the one source for both the book
+%% and uc/.../f-apake/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fapake$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := (U, S, \lambda)$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{Pw} \gets \unset$; \quad $\V{Stolen} \gets 0$; \quad $\V{Off} \gets \emptyset$
+\State $\V{St} : \Ids \times \Ps \to \{\op{fresh}, \op{intr}, \op{comp}, \op{done}\} \cup \{\unset\}$
+\State $\V{Guess}, \V{Key} : \Ids \times \Ps \to \bits \cup \{\unset\}$
+\State $\V{St}[*,*], \V{Guess}[*,*], \V{Key}[*,*] \gets \unset$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{StorePwdFile}(\mathit{pw})$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P = S \ \wedge\ \V{Pw} = \unset$} \label{ln:apakereg}
+  \Comment{registration happens once}
+\State $\V{Pw} \gets \mathit{pw}$
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{StealPwdFile}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F = \Apid \ \wedge\ \V{Pw} \neq \unset$}
+\State $\V{Stolen} \gets 1$
+\If{$\V{Pw} \in \V{Off}$} \label{ln:apakeprecomp}
+  \State \textbf{return} $\V{Pw}$
+    \Comment{pre-computation pays off: the password itself}
+\EndIf
+\State \textbf{return} $\op{stolen}$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{OfflineTestPwd}(\mathit{pw}^{*})$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F = \Apid$}
+\If{$\V{Stolen} = 1$}
+  \State \textbf{return} $\mathit{pw}^{*} = \V{Pw}$ \label{ln:apakeoffline}
+    \Comment{after the theft: one guess, one answer}
+\EndIf
+\State $\V{Off} \gets \V{Off} \cup \{\mathit{pw}^{*}\}$ \label{ln:apakeprecord}
+  \Comment{before it: the guess is banked for later}
+\State \textbf{return} $\none$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{UsrSession}(t, \mathit{pw}')$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P = U \ \wedge\ \V{St}[t,U] = \unset$}
+\State $\V{St}[t,U] \gets \op{fresh}$; \quad $\V{Guess}[t,U] \gets \mathit{pw}'$
+\State $\Adv\bigl(\id.\op{UsrSession}, t\bigr)$ \label{ln:apakeleaksess}
+  \Comment{that a session started is public; $\mathit{pw}'$ is not}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{SvrSession}(t)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P = S \ \wedge\ \V{Pw} \neq \unset \ \wedge\ \V{St}[t,S] = \unset$}
+\State $\V{St}[t,S] \gets \op{fresh}$; \quad $\V{Guess}[t,S] \gets \V{Pw}$
+\State $\Adv\bigl(\id.\op{SvrSession}, t\bigr)$
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{TestPwd}(t, P, \mathit{pw}^{*})$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F = \Apid \ \wedge\ \V{St}[t,P] = \op{fresh}$} \label{ln:apakeonline}
+  \Comment{one online guess per session, and it is spent}
+\If{$\mathit{pw}^{*} = \V{Guess}[t,P]$}
+  \State $\V{St}[t,P] \gets \op{comp}$
+  \State \textbf{return} $\true$
+\EndIf
+\State $\V{St}[t,P] \gets \op{intr}$
+\State \textbf{return} $\false$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Impersonate}(t)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F = \Apid \ \wedge\ \V{St}[t,U] = \op{fresh}$}
+\If{$\V{Stolen} = 1 \ \wedge\ \V{Guess}[t,U] = \V{Pw}$} \label{ln:apakeimp}
+  \State $\V{St}[t,U] \gets \op{comp}$
+    \Comment{a stolen file impersonates the server for free}
+  \State \textbf{return} $\true$
+\EndIf
+\State $\V{St}[t,U] \gets \op{intr}$
+\State \textbf{return} $\false$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{NewKey}(t, P, k^{*})$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F = \Apid \ \wedge\ \V{St}[t,P] \notin \{\unset, \op{done}\} \ \wedge\ |k^{*}| = \lambda$}
+\If{$\V{St}[t,P] = \op{comp} \ \vee\ P \in \Cs \ \vee\ \bar{P} \in \Cs$}
+  \State $\V{Key}[t,P] \gets k^{*}$ \label{ln:apakeadvkey}
+    \Comment{a broken session takes the adversary's key}
+\EndIf
+\If{$\V{St}[t,P] = \op{fresh} \ \wedge\ \V{St}[t,\bar{P}] = \op{done} \ \wedge\ \V{Guess}[t,P] = \V{Guess}[t,\bar{P}]$}
+  \State $\V{Key}[t,P] \gets \V{Key}[t,\bar{P}]$ \label{ln:apakematch}
+    \Comment{matching fresh sessions agree on the key}
+\EndIf
+\If{$\V{Key}[t,P] = \unset$}
+  \State $\V{Key}[t,P] \gets \$\,\{0,1\}^{\lambda}$ \label{ln:apakerand}
+    \Comment{and the adversary never learns it}
+\EndIf
+\State $\V{St}[t,P] \gets \op{done}$
+\State \textbf{return} $\V{Key}[t,P]$ \ to $P$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{TestAbort}(t, P)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F = \Apid \ \wedge\ \V{St}[t,P] \notin \{\unset, \op{done}\}$}
+\If{$\V{St}[t,P] = \op{fresh} \ \wedge\ \V{St}[t,\bar{P}] \neq \unset$}
+  \State \textbf{return} $\op{succ}$ \label{ln:apakenoabort}
+    \Comment{an untouched session cannot be made to abort}
+\EndIf
+\State $\V{St}[t,P] \gets \op{done}$
+\State \textbf{return} $\op{fail}$, and $\op{abort}$ to $P$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$\id.P = S$}
+  \State \textbf{return} $(\V{Pw}, \V{Stolen}, \V{St})$ \label{ln:apakeleaks}
+\EndIf
+\State \textbf{return} $(\V{Stolen}, \V{St})$ \label{ln:apakeleak}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

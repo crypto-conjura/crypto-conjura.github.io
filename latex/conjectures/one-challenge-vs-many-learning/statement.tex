@@ -1,0 +1,329 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  One erasing challenge query does not buy security against many
+%  embedding learning queries.
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{ONE ERASING CHALLENGE QUERY VS.\ MANY LEARNING QUERIES}
+
+% Euler Fraktur for the placeholder query-type names; declared here
+% rather than pulled in with a package, matching the other statements in
+% this collection.
+\DeclareMathAlphabet{\mathfrak}{U}{euf}{m}{n}
+
+\newcommand{\KGen}{\mathsf{KGen}}
+\newcommand{\Enc}{\mathsf{Enc}}
+\newcommand{\Dec}{\mathsf{Dec}}
+\newcommand{\ror}{\mathrm{ror}}
+\newcommand{\onect}{1\mathrm{ct}}
+\newcommand{\twoct}{2\mathrm{ct}}
+\newcommand{\learn}{\mathrm{learn}}
+\newcommand{\chall}{\mathrm{chall}}
+\newcommand{\cnb}{\mathfrak{c}_{\mathrm{nb}}}
+\newcommand{\crt}{\mathfrak{c}_{\mathrm{rt}}}
+\newcommand{\ket}[1]{|#1\rangle}
+% the two notions this statement compares, written so that TeX may break
+% the line at the internal hyphen
+\newcommand{\NErOne}{\ensuremath{\learn(*,CL)}-\ensuremath{\chall(1,ER,\twoct)}}
+\newcommand{\NEmMany}{\ensuremath{\learn(*,EM)}-\ensuremath{\chall(*,CL,\onect)}}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{One Erasing Challenge Query Does Not Buy Security Against Many
+  Embedding Learning Queries}
+\cjsubtitle{Single quantum challenge query, classical learning queries,
+  versus polynomially many embedding-model superposition learning
+  queries}
+\cjstatus{Statement: AI-written from Tore Vincent Carstens, Ehsan
+  Ebrahimi, Gelo Tabia and Dominique Unruh, \emph{Relationships between
+  quantum IND-CPA notions}, IACR Cryptology ePrint Archive 2020
+  (preprint, 47 pages), not yet checked by a human. The paper proves
+  that the notion with a single erasing two-ciphertext challenge query
+  implies five other panels ($P7$, $P8$, $P9$, $P13$, $P14$), and
+  separates it from two more ($P2$ and $P12$), but leaves its relation
+  to six panels open, among them the family with many embedding-model
+  superposition learning queries and classical challenge queries; that
+  non-implication is one of the six the paper explicitly conjectures,
+  and by the paper's own bookkeeping it is the one whose resolution
+  would settle the largest number of the remaining open cells.}
+\cjcategory{\emph{Quantum \& Post-Quantum Cryptography}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+In quantum chosen-plaintext security definitions, superposition access
+to the encryption oracle can be granted in the learning phase, in the
+challenge phase, or both, and the number of queries allowed matters.
+Surprisingly, when polynomially many superposition challenge queries are
+available, they can be used to fake superposition learning queries, so a
+definition with no learning phase at all is already as strong as the
+corresponding definition with a full superposition learning phase. That
+trick consumes one challenge query per simulated learning query. This
+leaves open the case where the adversary gets only a single
+superposition challenge query: the conjecture is that a single
+erasing-oracle challenge query returning two ciphertexts, plus unlimited
+classical learning queries, does not buy security against an adversary
+who gets unlimited superposition learning queries in the embedding model
+with only classical challenges. Concretely, there should be a scheme
+secure in the first sense and broken in the second. Settling it would
+close more of the paper's open cases than any of the other separations
+it conjectures, because many notions sit above the second of these two.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+Quantum chosen-plaintext definitions for symmetric encryption differ
+along four axes: how many learning and challenge queries the adversary
+makes ($0$, $1$, or polynomially many $*$), which query model answers
+superposition queries (classical $CL$; \emph{standard} $ST$, the unitary
+$U_f$; \emph{embedding} $EM$, where the challenger supplies the
+$\ket{0}$ output register; \emph{erasing} $ER$, the isometry
+$\hat U^{f}$ of~\cite{KKVB02}), and what the challenge returns (one
+ciphertext, two ciphertexts, or real-or-random). Classically these all
+coincide~\cite{BDJR97}; quantumly they do not, which is why the
+literature contains several incompatible
+proposals~\cite{BZ13b,GHS16,MS16}.
+
+The harvested paper reduces the $57$ achievable notions to $14$
+equivalence classes $P1,\dots,P14$ and orders them. Two of its positive
+results are relevant here. First, its Theorem 18 shows that for erasing
+and embedding learning queries, and for the challenge types
+$(EM,\twoct)$, $(ER,\twoct)$ and $(ER,\onect)$, a notion with \emph{no}
+learning phase already implies the notion with polynomially many
+superposition learning queries; classically this is trivial by copying
+the learning query into a challenge query, and the paper's contribution
+is to make it work without cloning. Second, its Theorem 19 does the same
+for real-or-random challenges. Both reductions spend one challenge query
+per simulated learning query. Panel $P3$ is the singleton \NErOne,
+where only one challenge query is available, so this route is closed;
+panel $P11$ is the family $\learn(*,EM)$-$\chall(\cnb,CL,\crt)$ with
+$\cnb\in\{1,*\}$ and $\crt\in\{\onect,\twoct,\ror\}$, all six members
+proved equivalent. The paper leaves $P3\Rightarrow P11$ open and
+conjectures it fails, on the ground that one quantum challenge query
+cannot be made to serve as many quantum learning queries. Separating
+schemes of this kind are built from quantum-secure pseudorandom
+permutations~\cite{Zha16} with a planted period recoverable by Simon's
+algorithm~\cite{Sim97} from superposition queries only.
+
+Progress to date. The simulation of Theorem 18 just described spends one
+challenge query per simulated superposition learning query, so it needs
+polynomially many challenge queries and says nothing when only one is
+allowed, and Theorem 19 is the same in this respect. On this record's
+own reading, that is why the single-challenge-query restriction looks
+like the crux of $P3\Rightarrow P11$; the
+paper's own stated reason (p.~45) is simply that a reduction adversary
+is unlikely to simulate many quantum queries with only one. Established
+around the cell: the single erasing two-ciphertext notion implies the
+single erasing one-ciphertext notion, the single erasing real-or-random
+notion, the single embedding two-ciphertext notion, the single embedding
+real-or-random notion, and the fully classical notions; it does not
+imply either standard-query real-or-random notion: neither the family
+$P2$ nor the singleton $\learn(*,CL)$-$\chall(1,ST,\ror)$. The paper's
+separations of this shape are built with Simon's algorithm~\cite{Sim97}.
+The paper also records (p.~44) that, since $P3$ implies $P7$, $P8$, $P9$
+and $P13$, a proof that $P3\not\Rightarrow P11$ would immediately give
+$P7, P8, P9, P13\not\Rightarrow P11$ as well; by this record's
+bookkeeping that amounts to nine further cells of the classification.
+
+\section{Notation and parameters}\label{sec:notation}
+
+\begin{itemize}
+  \item $\eta$ is the security parameter. All of $h,n,n',t,t'$ are
+    polynomially bounded functions of $\eta$; \emph{QPT} means quantum
+    polynomial time in $\eta$; a function $\varepsilon$ is
+    \emph{negligible} if $\varepsilon(\eta)<1/p(\eta)$ for every
+    polynomial $p$ and all sufficiently large $\eta$. A
+    \emph{quantum-secure one-way function} is an efficiently computable
+    family of functions that no QPT algorithm inverts with
+    non-negligible probability.
+  \item An \emph{$(h,n,n',t,t')$-encryption scheme} is a triple
+    $\Pi=(\KGen,\Enc,\Dec)$ of efficient classical algorithms with
+    \begin{align*}
+      \KGen&\colon\{0,1\}^{t'}\to\{0,1\}^{h},\\
+      \Enc&\colon\{0,1\}^{h}\times\{0,1\}^{n}\times\{0,1\}^{t}
+        \to\{0,1\}^{n'},\\
+      \Dec&\colon\{0,1\}^{h}\times\{0,1\}^{n'}
+        \to\{0,1\}^{n}\cup\{\bot\}
+    \end{align*}
+    such that $\Dec_k(\Enc_k(m;r))=m$ for all $k,m,r$. We write
+    $\Enc_k(m;r):=\Enc(k,m,r)$ and $\Enc_k(\cdot\,;r)$ for the map
+    $m\mapsto\Enc_k(m;r)$, injective for each fixed $k,r$ by
+    correctness. $\KGen()$ means running $\KGen$ on uniform randomness.
+  \item For $f:\{0,1\}^{a}\to\{0,1\}^{c}$, $U_f$ is the unitary
+    $\ket{x}\ket{y}\mapsto\ket{x}\ket{y\oplus f(x)}$ on $a+c$ qubits.
+  \item For injective $g:\{0,1\}^{a}\to\{0,1\}^{c}$, $\hat U^{g}$ is the
+    isometry $\ket{x}\mapsto\ket{g(x)}$ from $a$ to $c$ qubits; it is
+    realizable by an efficient quantum circuit whenever $g$ and a left
+    inverse of $g$ are efficiently computable.
+  \item $\bar b:=1-b$ for $b\in\{0,1\}$.
+  \item $Q_{in},Q_{in0},Q_{in1}$ denote $n$-qubit input registers and
+    $Q_{out}$ an $n'$-qubit output register.
+\end{itemize}
+
+The parameters, at a glance:
+
+\begin{itemize}
+  \item $\eta$ --- security parameter; all other parameters are
+    polynomially bounded functions of it.
+  \item $n$ --- plaintext length in bits.
+  \item $n'$ --- ciphertext length in bits.
+  \item $h$ --- key length in bits.
+  \item $t$ --- length of the per-encryption randomness.
+  \item $t'$ --- length of the key-generation randomness.
+  \item $b$ --- challenge bit, fixed once for the whole game.
+  \item $\cnb$ --- number of challenge queries permitted: exactly one,
+    or polynomially many.
+\end{itemize}
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{definition}[Query types]\label{def:queries}
+Fix an $(h,n,n',t,t')$-encryption scheme $\Pi$, a key
+$k\in\{0,1\}^{h}$ and a bit $b\in\{0,1\}$. In each query below the
+randomness values $r,r_0,r_1$ are sampled freshly and uniformly from
+$\{0,1\}^{t}$; a single superposition query uses one value of $r$ for
+all messages in the superposition.
+\begin{itemize}
+  \item A \emph{$CL$-learning query}: the adversary sends a classical
+    $m\in\{0,1\}^{n}$ and receives $\Enc_k(m;r)$.
+  \item An \emph{$EM$-learning query}: the adversary hands over
+    $Q_{in}$ ($n$ qubits); the challenger prepares $Q_{out}$ in state
+    $\ket{0}^{\otimes n'}$, applies $U_{\Enc_k(\cdot\,;r)}$ to
+    $(Q_{in},Q_{out})$, and returns both registers.
+  \item A \emph{$(CL,\onect)$-challenge query}: the adversary sends
+    classical $m_0,m_1\in\{0,1\}^{n}$ and receives the classical
+    ciphertext $\Enc_k(m_b;r)$.
+  \item An \emph{$(ER,\twoct)$-challenge query}: the adversary hands
+    over registers $Q_{in0},Q_{in1}$ (each $n$ qubits); the challenger
+    applies the isometry
+    \[
+      \ket{m_0}\ket{m_1}\mapsto
+      \ket{\Enc_k(m_b;r_0)}\,\ket{\Enc_k(m_{\bar b};r_1)}
+    \]
+    and returns the two resulting $n'$-qubit registers.
+\end{itemize}
+\end{definition}
+
+\begin{definition}[$\mathfrak{l}$-$\mathfrak{c}$-IND-CPA]\label{def:indcpa}
+Let $\mathfrak{l}$ name a learning-query type and $\mathfrak{c}$ a
+challenge-query type together with a permitted number of challenge
+queries, $1$ or $*$ (polynomially many). In the game the challenger
+samples $k\sample\KGen()$ and a uniform $b\in\{0,1\}$; a QPT adversary
+$\mathcal{A}$ makes polynomially many learning queries of type
+$\mathfrak{l}$ and the permitted number of challenge queries, in any
+interleaved order (learning queries may be made before and after a
+challenge query), all answered with this same $k$ and this same $b$;
+finally $\mathcal{A}$ outputs a bit $b'$ and wins iff $b'=b$. We write
+$\learn(*,X)$-$\chall(\cnb,Y,\mathrm{rt})$ for this game with
+$X$-learning queries and $\cnb\in\{1,*\}$ challenge queries of type
+$(Y,\mathrm{rt})$, and call $\Pi$ secure for it iff every QPT adversary
+wins with probability at most $\tfrac12+\varepsilon(\eta)$ for some
+negligible $\varepsilon$.
+\end{definition}
+
+\begin{conjecture}[$P3$ does not imply $P11$]\label{conj:main}
+Assume that quantum-secure one-way functions exist. Then there exist
+polynomially bounded parameters $h,n,n',t,t'$ (functions of $\eta$) and
+an $(h,n,n',t,t')$-encryption scheme $\Pi=(\KGen,\Enc,\Dec)$ such that
+both of the following hold.
+\begin{enumerate}
+  \item $\Pi$ is \NErOne-IND-CPA-secure, i.e.\ every QPT adversary that
+    makes polynomially many classical learning queries and \emph{exactly
+    one} $(ER,\twoct)$-challenge query wins the game with probability at
+    most $\tfrac12+\varepsilon(\eta)$ for some negligible $\varepsilon$.
+  \item $\Pi$ is \emph{not} \NEmMany-IND-CPA-secure: there exist a QPT
+    adversary $\mathcal{A}$ making polynomially many $EM$-learning
+    queries and polynomially many $(CL,\onect)$-challenge queries, and a
+    polynomial $p$, such that $\mathcal{A}$ wins that game with
+    probability at least $\tfrac12+1/p(\eta)$ for infinitely many
+    $\eta$.
+\end{enumerate}
+\end{conjecture}
+
+\begin{remark}[panel identification]\label{rem:panels}
+Conjecture~\ref{conj:main} names one representative of each panel:
+\NErOne{} for $P3$, which is a singleton, and \NEmMany{} for $P11$,
+whose six members the paper proves equivalent. Panel membership must not
+be read off the boxed lists on p.~5: the box for Panel 11 there
+erroneously repeats the contents of Panel 10 (erasing learning queries)
+instead of the embedding learning queries. Figure 1 on p.~22 and the
+Panel 11 equivalence derivations on p.~24 make clear that Panel 11 is
+the family with $EM$ learning queries and classical challenge queries,
+and this record follows those. A reviewer should confirm that reading,
+since the conjecture is stated with a representative member of that
+panel.
+\end{remark}
+
+\begin{remark}[on the one-way-function hypothesis]\label{rem:owf}
+The hypothesis ``assuming quantum-secure one-way functions exist'' is
+supplied here rather than quoted. The paper states this hypothesis for
+its proved separations but not explicitly for the conjectured ones.
+Without some such assumption no scheme is secure in either notion and
+the implication holds vacuously.
+\end{remark}
+
+\begin{remark}[strength of the recorded obstruction]\label{rem:obstruction}
+The paper's account of why the implication is hard is one sentence
+(p.~45), about simulating many quantum queries with a single quantum
+query, so a reviewer may judge the recorded obstruction thinner than for
+the paper's other conjectured separations. The substantive evidence is
+that the paper's own simulation theorem, Theorem 18, provably needs many
+challenge queries.
+\end{remark}
+
+\begin{remark}[currency of the source]\label{rem:currency}
+The source is a 2020 ePrint. A later version of this work, or follow-up
+work, may have closed this cell; the record has not been checked against
+the newest version.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem[BDJR97]{BDJR97}
+M. Bellare, A. Desai, E. Jokipii, P. Rogaway.
+\emph{A concrete security treatment of symmetric encryption}.
+38th Annual Symposium on Foundations of Computer Science, FOCS '97,
+pages 394--403, IEEE Computer Society, 1997.
+
+\bibitem[BZ13b]{BZ13b}
+D. Boneh, M. Zhandry.
+\emph{Secure signatures and chosen ciphertext security in a quantum
+computing world}.
+Advances in Cryptology --- CRYPTO 2013, Part II, volume 8043 of Lecture
+Notes in Computer Science, pages 361--379, Springer, 2013.
+
+\bibitem[GHS16]{GHS16}
+T. Gagliardoni, A. H\"ulsing, C. Schaffner.
+\emph{Semantic security and indistinguishability in the quantum world}.
+Advances in Cryptology --- CRYPTO 2016, volume 9816 of Lecture Notes in
+Computer Science, pages 60--89, Springer, 2016.
+
+\bibitem[KKVB02]{KKVB02}
+E. Kashefi, A. Kent, V. Vedral, K. Banaszek.
+\emph{Comparison of quantum oracles}.
+Phys. Rev. A, 65:050304, 2002.
+
+\bibitem[MS16]{MS16}
+S. Mossayebi, R. Schack.
+\emph{Concrete security against adversaries with quantum superposition
+access to encryption and decryption oracles}.
+CoRR, abs/1609.03780, 2016.
+
+\bibitem[Sim97]{Sim97}
+D. R. Simon.
+\emph{On the power of quantum computation}.
+SIAM J. Comput., 26(5):1474--1483, 1997.
+
+\bibitem[Zha16]{Zha16}
+M. Zhandry.
+\emph{A note on quantum-secure PRPs}.
+IACR Cryptology ePrint Archive, 2016:1076, 2016.
+
+\end{conjurabibliography}
+
+\end{document}

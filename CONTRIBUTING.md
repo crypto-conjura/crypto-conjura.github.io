@@ -254,10 +254,17 @@ carry -- the mark is still correct, because it is about the author.
 verified.** An affiliation is a factual claim about a real person and belongs
 under the rule above, not under style.
 
-**It is not a logo.** The wordmark is set in the site's own type, with a CSS
-rule standing in for IO's separator. Do not substitute their SVG or brand
-assets; attribution does not need them, and reproducing them would imply a
-relationship that does not exist.
+**It borrows a colour, not artwork.** The wordmark is set in the site's own
+type, and the separator is a CSS rule rather than a glyph. That rule carries
+IO's own red-orange, `$io-red: #ea3802`, sampled from the brightest pixel of
+their 48px favicon -- their stylesheets expose no brand token, and the only
+red in them belongs to a cookie-consent widget. The same rule leads the `IOG`
+tag chip, so the two read as one family.
+
+Do not go further and substitute their SVG or other brand assets. A colour on
+a 2px rule is attribution; reproducing the mark would imply a relationship
+that does not exist. The colour is used on rules and never on text, so it
+carries no contrast requirement of its own.
 
 Currently applied to: `c/0039` (Cojocaru, Kiayias, Shen, Wallden) and
 `c/0040`/`c/0041` (Abram, Ball, Garay, Kiayias), all citing papers whose

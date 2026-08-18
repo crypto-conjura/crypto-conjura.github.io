@@ -56,6 +56,33 @@ Completed tasks are deleted from this file rather than checked off and kept: thi
 
   One earlier fact still stands: 11 of the stubs cite nothing at all (F-RP, F-CRHF, F-MHF, F-OWF, F-PRG, F-ABE, F-IBE, F-GC, F-ORAM, F-PIR, F-PSI), so they need a literature search before the harvester has anything to work with; and a citation that yields no box is a normal, informative result — Rabin 1981 contains no `F_OT`, because it predates ideal functionalities, and the page should say so rather than force one.
 
+  **Decided 18 August 2026: one bulk harvest first, then write the entries one
+  at a time.** The two halves have opposite economics and the decision is only
+  about the first. `uc_source.py` already caches every download in
+  `~/.cache/conjura-uc-sources` and hits a given paper once rather than once per
+  run, so `--all` is not a speed optimisation — pre-fetching costs nothing that
+  writing entry-by-entry would not pay anyway. What it buys is *triage in one
+  pass*: the 88 stubs cite **102 distinct URLs, 65 of them ePrint and 37 on
+  personal homepages, publisher sites and one-off hosts**, and that second group
+  is where dead links, paywalls and PostScript-only postings live. Each one
+  discovered mid-write is an unrelated detour dropped into the middle of a
+  mathematical judgment call. Harvest first and the entire failure set — dead
+  URLs, papers that print no box under the name at all (the F-SFE finding), and
+  the 11 stubs citing nothing — is a work-list *before* any writing starts, when
+  it can be cleared in one literature-search sitting.
+
+  Do **not** extend that to the writing. Choosing among incompatible variants and
+  keeping a mismatch register is per-entry judgment, and batching it is how a run
+  of 88 pages turns into plausible-sounding filler. The harvest is mechanical and
+  can land as one commit (77 `sources.json` manifests, plus roughly 1 MB of
+  gitignored PNGs per entry — about 80 MB of untracked `_src/` images); the prose
+  stays one entry per commit.
+
+  One thing to fix before pointing it at everything: `uc_source.py` contains no
+  delay between downloads — no `sleep` anywhere in the file — so `--all` fires
+  ~102 requests back to back at ePrint and three dozen other hosts. Add a small
+  per-request pause, or run it in `--limit` batches.
+
   What the estimate is still carrying is the part the tooling cannot shortcut: choosing between incompatible variants, and verifying every citation is a real paper at a real venue in a real year. Expect the mismatch registers to be the most interesting output, and expect some functionalities to have no canonical printed definition at all — that finding is itself a page worth having.
 
   One ordering trap, which turns CI red for the whole site: `gen_interface.py --check` runs in both workflows over every fragment in `functionalities/` and errors if a fragment's page has no `.cj-interface` block to replace. The page scaffold and the fragment must land in the same commit.

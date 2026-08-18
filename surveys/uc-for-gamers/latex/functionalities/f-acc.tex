@@ -1,0 +1,133 @@
+%% The interface box of f-acc, the one source for both the book
+%% and uc/.../f-acc/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Facc$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := (\mathit{AM}, \mathcal{D})$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{Alg}, \V{Sk} \gets \unset$; \quad $\V{Ctr} \gets 0$
+\State $\V{Set}, \V{Acc}, \V{Aux}, \V{Up} : \mathbb{N} \to \bits \cup \{\unset\}$
+\State $\V{Set}[*], \V{Acc}[*], \V{Aux}[*], \V{Up}[*] \gets \unset$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Gen}(S_0)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P = \mathit{AM} \ \wedge\ \V{Alg} = \unset \ \wedge\ S_0 \subseteq \mathcal{D}$} \label{ln:acconce}
+\State $A \gets \Adv^{!}\bigl(\id.\op{Gen}\bigr)$ \label{ln:accalg}
+\State $A \gets \San[\Clean_{A}](A)$ \label{ln:accalgsan}
+\State $(\mathit{sk}, a, m) \gets A.\op{Gen}(S_0)$
+\State $\V{Alg} \gets A$; \quad $\V{Sk} \gets \mathit{sk}$
+\State $\V{Set}[0] \gets S_0$; \quad $\V{Acc}[0] \gets a$; \quad $\V{Aux}[0] \gets m$
+\State \textbf{return} $(S_0, A)$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Update}(\mathit{op}, x)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P = \mathit{AM} \ \wedge\ \V{Alg} \neq \unset \ \wedge\ x \in \mathcal{D}$}
+\Req{$\mathit{op} \in \{\op{add}, \op{del}\}$} \label{ln:accdyn}
+  \Comment{$\op{add}$ only: additive; $\op{del}$ only: subtractive}
+\State $t \gets \V{Ctr} + 1$; \quad $\V{Ctr} \gets t$
+\State $(a, m, w, u) \gets \V{Alg}.\op{Update}(\mathit{op}, \V{Sk}, \V{Acc}[t-1], \V{Aux}[t-1], x)$
+\State $\V{Set}[t] \gets \V{Set}[t-1]$
+\If{$\mathit{op} = \op{add}$}
+\Req{$\V{Alg}.\op{Ver}(\op{in}, a, x, w) = 1$} \label{ln:acccorr}
+  \Comment{correctness}
+\State $\V{Set}[t] \gets \V{Set}[t] \cup \{x\}$
+\EndIf
+\If{$\mathit{op} = \op{del}$}
+\Req{$\V{Alg}.\op{Ver}(\op{out}, a, x, w) = 1$} \label{ln:accnegcorr}
+  \Comment{negative correctness}
+\State $\V{Set}[t] \gets \V{Set}[t] \setminus \{x\}$
+\EndIf
+\State $\V{Acc}[t] \gets a$; \quad $\V{Aux}[t] \gets m$; \quad $\V{Up}[t] \gets u$
+\State \textbf{return} $(\mathit{op}, a, x, w, u)$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{WitCreate}(\mathit{stts}, x)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P = \mathit{AM} \ \wedge\ \V{Alg} \neq \unset$}
+\Req{$\mathit{stts} \in \{\op{in}, \op{out}\}$} \label{ln:accuniv}
+  \Comment{$\op{in}$ only: positive; $\op{out}$ only: negative}
+\State $t \gets \V{Ctr}$
+\State $w \gets \V{Alg}.\op{WitCreate}(\mathit{stts}, \V{Sk}, \V{Acc}[t], \V{Aux}[t], x, \V{Up}[1..t])$
+\If{$\mathit{stts} = \op{in} \ \wedge\ x \in \V{Set}[t]$}
+\Req{$\V{Alg}.\op{Ver}(\op{in}, \V{Acc}[t], x, w) = 1$} \label{ln:acccreate}
+\EndIf
+\If{$\mathit{stts} = \op{out} \ \wedge\ x \notin \V{Set}[t]$}
+\Req{$\V{Alg}.\op{Ver}(\op{out}, \V{Acc}[t], x, w) = 1$} \label{ln:accnegcreate}
+\EndIf
+\State \textbf{return} $(\mathit{stts}, x, w)$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{WitUpdate}(\mathit{stts}, i, j, x, w)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{Alg} \neq \unset \ \wedge\ 0 \le i < j \le \V{Ctr}$}
+\State $w' \gets \V{Alg}.\op{WitUp}(\mathit{stts}, x, w, \V{Up}[i{+}1..j])$
+\State $b \gets \bigl(\mathit{stts} = \op{in}\bigr)$
+\If{$\V{Alg}.\op{Ver}(\mathit{stts}, \V{Acc}[i], x, w) = 1 \ \wedge\ \forall\, t \in [i,j] : (x \in \V{Set}[t]) = b$}
+\Req{$\V{Alg}.\op{Ver}(\mathit{stts}, \V{Acc}[j], x, w') = 1$} \label{ln:accwitup}
+  \Comment{witnesses survive updates}
+\EndIf
+\State \textbf{return} $(\mathit{stts}, i, j, x, w, w')$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Verify}(\mathit{stts}, a, V, x, w)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$V \neq \V{Alg}.\op{Ver} \ \vee\ \neg\exists\, t \le \V{Ctr} : \V{Acc}[t] = a$}
+\State \textbf{return} $V(\mathit{stts}, a, x, w)$ \label{ln:accforeign}
+  \Comment{a foreign algorithm or state: no guarantee}
+\EndIf
+\State $t \gets \max\{\, t : \V{Acc}[t] = a \,\}$
+\State $b \gets \bigl(\mathit{stts} = \op{in}\bigr)$
+\If{$\mathit{AM} \notin \Cs \ \wedge\ (x \in \V{Set}[t]) \neq b$} \label{ln:acccf}
+\Req{$\V{Alg}.\op{Ver}(\mathit{stts}, a, x, w) = 0$}
+  \Comment{collision freeness}
+\EndIf
+\State \textbf{return} $\V{Alg}.\op{Ver}(\mathit{stts}, a, x, w)$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$\id.P = \mathit{AM}$}
+\State \textbf{return} $(\V{Alg}, \V{Sk}, \V{Ctr}, \V{Set}, \V{Acc}, \V{Up})$ \label{ln:accleakam}
+\EndIf
+\State \textbf{return} $(\V{Alg}, \V{Ctr}, \V{Acc}, \V{Up})$ \label{ln:accleak}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\Clean_{A}(A)$}:
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $A.\op{Ver}$ is deterministic and total \label{ln:accclean}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

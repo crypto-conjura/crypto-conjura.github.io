@@ -2,12 +2,93 @@
 title: "F-NIZK — Non-interactive zero knowledge"
 status: "Canonical"
 layer: 4
-definition: "Not yet written"
+definition: "Defined"
 ---
 
 *F-NIZK* (Non-interactive zero knowledge) is part of *Commitments and Proofs* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
 
+The argument is a *string*, and that is the whole difference from [*F-ZK*](/uc/layer-4-commitments-proofs/f-zk/index.qmd). Groth, Ostrovsky and Sahai set out an interactive zero-knowledge functionality first — one in which the prover names a receiver and the receiver learns who proved it — and then decline to use it, because "when we talk about NIZK arguments we do not always know who is going to receive the NIZK argument". A NIZK argument may be produced now and addressed later, and anyone who intercepts it can both check it and convince a third party with it. The paper is explicit about the consequence: a NIZK argument "is not deniable; quite on the contrary, it is transferable". Line 7 below is where that shows up in the code, and it is the line a reader comparing this box with *F-ZK* should look at first.
+
+## Functionality
+
+Reading the box: $\mathcal{A}^{!}(\cdot)$ is a *responsive* call on the adversary slot, meaning the answer comes back before anything else runs; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it; $R$ is the relation the instance is parameterized by, and $\mathtt{Prf}$ is a set of statement–argument pairs the functionality has committed to accepting.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{NIZK}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := R\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{Prf} \gets \varnothing\)<span class="cj-comment">// accepted statement--argument pairs</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Prove(<span class="cj-id">x</span>, <span class="cj-id">w</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="2">
+<li>\(\textbf{require}\ (x, w) \in R\)<span class="cj-comment">// a false statement is refused, not proved</span></li>
+<li>\(\pi \gets \mathcal{A}^{!}\bigl(\mathit{id}.\mathsf{Prove}, x\bigr)\)<span class="cj-comment">// \(w\) is never sent: this line is zero knowledge</span></li>
+<li>\(\mathtt{Prf} \gets \mathtt{Prf} \cup \{(x, \pi)\}\)</li>
+<li>\(\textbf{return}\ \pi\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Verify(<span class="cj-id">x</span>, <span class="cj-id">pi</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="6">
+<li>\(\textbf{if}\ (x, \pi) \in \mathtt{Prf}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ 1\)</span><span class="cj-comment">// transferable: any holder of \(\pi\) verifies</span></li>
+<li>\(w \gets \mathcal{A}^{!}\bigl(\mathit{id}.\mathsf{Verify}, x, \pi\bigr)\)</li>
+<li>\(\textbf{if}\ (x, w) \in R\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{Prf} \gets \mathtt{Prf} \cup \{(x, \pi)\}\)</span><span class="cj-comment">// soundness: a new \(\pi\) costs a witness</span></li>
+<li><span class="cj-ind">\(\textbf{return}\ 1\)</span></li>
+<li>\(\textbf{return}\ 0\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="13">
+<li>\(\textbf{return}\ \mathtt{Prf}\)</li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+*Source: Figure 4, printed p. 18 — PDF p. 19 — of Groth, Ostrovsky and Sahai, "New Techniques for Noninteractive Zero-Knowledge", Journal of the ACM 59(3), 2012, read from the copy on Groth's UCL page. The two numbers differ because the journal PDF's folios run one behind its pages.*
+
+- **Line 3 is the zero-knowledge property, and it is structural rather than probabilistic.** The witness $w$ is checked at line 2 and then never leaves the functionality: the adversary is handed $x$ alone and must produce an argument from it. There is no simulator to construct and no distribution to compare, because the code never gives anything away that a simulator would have to fake. Zero knowledge here is perfect, and it holds against an unbounded environment.
+- **Line 7 is transferability, and it is the design decision, not an implementation detail.** Verification consults $\mathtt{Prf}$, which is keyed by the pair $(x,\pi)$ and by nothing else — not by who proved it, not by whom it was proved to, not by whether the caller was the prover. Any party holding $\pi$ therefore verifies it. That is exactly the property the paper contrasts with deniability, and it is why this functionality has no recipient argument anywhere in its interface.
+- **Lines 8–10 are soundness, and they cost the adversary a witness.** A pair that is not already recorded can still be made to verify, but only by the adversary supplying a $w$ with $(x,w) \in R$ at line 9. So the functionality never accepts an argument for a false statement, from anyone, at any time — and the guarantee is unconditional, not computational. What the adversary buys with its witness is not soundness but *adaptivity*: it may decide after the fact which strings count as arguments for a true statement.
+- **Line 10 records, and the recording is what makes verification consistent.** Once a pair is admitted by the witness route it joins $\mathtt{Prf}$, so a second verifier asking the same question is answered from the set at line 6 rather than re-consulting the adversary. Two honest verifiers cannot be given different answers about the same pair.
+- **Line 13 leaks only $\mathtt{Prf}$.** Every pair in it is either one the adversary itself produced or one it opened with a witness, so the leakage interface reveals nothing the adversary did not already have. The witnesses of honest provers are not in the functionality's state to leak.
+
+## Known realizations
+
+**From a common reference string: Theorem 14, printed p. 21 (PDF p. 22).** The protocol $\varphi_{\mathsf{NIZK}}$ of Figure 7 (printed p. 22, PDF p. 23) securely realizes $\mathcal{F}_{\mathsf{NIZK}}$ in the $\mathcal{F}_{\mathsf{CRS}}$-hybrid model, where $\mathcal{F}_{\mathsf{CRS}}$ (Figure 6, same page) is the functionality that samples a reference string from a fixed distribution and hands it to everyone — this site's [*F-CRS*](/uc/layer-0-idealized-setup/f-crs/index.qmd). The ingredients are the paper's own: an adaptive culpably-sound perfect non-erasure NIZK argument, together with the tools of §8.2. The paper does not treat the realization of $\mathcal{F}_{\mathsf{CRS}}$ itself, noting only that the options run "from blindly trusting a single party to using multi-party computation in a pre-processing step".
+
+**Why the simpler functionality was chosen.** The paper says plainly that it adopts this formulation because with it "the protocol and the security proof becomes a little simpler" than with the receiver-addressed interactive variant, and remarks that the interactive one "can be securely realized with only small modifications" to the same argument. That is a claim about proof convenience, not about strength, and it is worth keeping separate from the transferability argument above, which is a claim about what NIZK arguments *are*.
+
+## Properties
+
+- **Perfect zero knowledge, with advantage exactly $0$.** For every environment and every adversary: the adversary's view of an honest $\mathsf{Prove}$ call is a function of $x$ alone (line 3), so the view is identically distributed whichever witness the prover held. Unbounded environments included.
+- **Unconditional soundness, with probability exactly $0$ of accepting a false statement.** For every $x \notin L_R$ and every $\pi$: line 6 fails, because nothing enters $\mathtt{Prf}$ for such an $x$ — line 4 is guarded by line 2 and line 10 by line 9 — and so line 12 returns $0$. No computational assumption is used, and no bound is negligible-in-anything; it is zero.
+- **Consistency, with probability exactly $1$.** $\mathtt{Prf}$ is only ever added to, never removed from, and both verification paths consult it before the adversary (line 6) or write to it before returning (line 10). A pair that verified once verifies forever, for every caller.
+- **Completeness, with probability exactly $1$.** Line 4 records every argument the functionality hands out, so line 6 answers $1$ for it at any later verification.
+- **No proof-of-knowledge guarantee for honest provers, by construction.** The functionality extracts a witness only along the adversary's path at line 8. It does not follow that the *protocol* is not a proof of knowledge — it is — only that this box does not state it, and a reader wanting that property should look at [*F-ZK*](/uc/layer-4-commitments-proofs/f-zk/index.qmd) instead.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
+
 *References:*
 
-- Groth, Ostrovsky, and Sahai. [*New techniques for noninteractive zero-knowledge*](http://www0.cs.ucl.ac.uk/staff/J.Groth/NIZKJournal.pdf). Journal of the ACM, 59(3):11:1–11:35, 2012.
-- Rackoff and Simon. [*Non-interactive zero-knowledge proof of knowledge and chosen ciphertext attack*](https://doi.org/10.1007/3-540-46766-1_35). In Advances in Cryptology – CRYPTO 1991, 1991.
+- Groth, Ostrovsky, and Sahai. [*New techniques for noninteractive zero-knowledge*](http://www0.cs.ucl.ac.uk/staff/J.Groth/NIZKJournal.pdf). Journal of the ACM, 59(3):11:1–11:35, 2012. The definition transcribed above is Figure 4, printed p. 18 (PDF p. 19); the interactive receiver-addressed variant it is contrasted with is described in the prose immediately before it; $\mathcal{F}_{\mathsf{CRS}}$ is Figure 6 and the realization is Figure 7 (both printed p. 22, PDF p. 23) with Theorem 14 (printed p. 21, PDF p. 22). Read from the copy hosted on Groth's UCL page, which carries no revision stamp — the journal version of record is the DOI above.
+- Rackoff and Simon. [*Non-interactive zero-knowledge proof of knowledge and chosen ciphertext attack*](https://doi.org/10.1007/3-540-46766-1_35). In Advances in Cryptology – CRYPTO 1991, 1991. Cited by this page as the origin of the notion, and it prints no ideal functionality: it predates the UC framework by a decade. That is the expected result for a primitive-origin citation, not a gap — the functionality above is the object this page defines, and Rackoff–Simon is where the primitive it idealizes comes from.

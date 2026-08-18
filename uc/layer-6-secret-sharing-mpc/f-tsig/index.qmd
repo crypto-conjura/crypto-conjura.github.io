@@ -1,12 +1,169 @@
 ---
-title: "F-TSIG — Threshold signature"
+title: "F-TSIG — Threshold signature, unanimous"
 status: "Canonical"
 layer: 6
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-TSIG* (Threshold signature) is part of *Secret Sharing, Threshold Cryptography, MPC* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+*F-TSIG* (Threshold signature, unanimous) is part of *Secret Sharing, Threshold Cryptography, MPC* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+
+An ideal signing service owned by a set of signatories rather than one signer. Three things separate it from [*F-Sig*](/uc/layer-3-public-key-primitives/f-sig/index.qmd), and each is visible as code below: signing takes a *unanimous* vote of the signatories (line 16); a failed signature names a culprit rather than merely aborting (lines 20–21); and the key can be *refreshed*, so that corruption of a party is a condition that expires rather than a permanent loss (lines 29–32).
+
+One correction to this page's own former title, which read simply "Threshold signature". The printed functionality is not $t$-of-$n$: line 16 requires *every* signatory to have asked before a signature exists, and key generation at line 10 likewise requires all of them. The threshold lives in the protocol that realizes this box, not in the box. "Unanimous" is added above so the page does not promise a general threshold interface it does not define.
+
+## Functionality
+
+Reading the box: $\mathcal{A}^{!}(\cdot)$ is a *responsive* call on the adversary slot, meaning the answer comes back before anything else runs; $\mathsf{San}[\mathsf{Clean}_{V}]$ re-asks that slot until the named predicate holds; **require** refuses the call, and the framework answers $\textsf{rej}$; $\mathbf{C}$ is the set of corrupted parties and $\mathit{id}'.F = \mathbf{A}$ tests that the adversary is calling; $\square$ marks a value never set; $\mathbb{P}$ is the signatory set and $P_0$ the administrative owner, both parameters; $\mathcal{I}$ is the space of signing-session identifiers.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{TSig}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := (P_0, \mathbb{P})\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{Ver} \gets \square\); &nbsp;&nbsp; \(\mathtt{Ctr} \gets 0\)</li>
+<li>\(\mathtt{Quar} : \mathbb{P} \to \{0,1\}\); &nbsp;&nbsp; \(\mathtt{Quar}[*] \gets 0\)</li>
+<li>\(\mathtt{Kg} : \mathbb{P} \to \{0,1\}\); &nbsp;&nbsp; \(\mathtt{Kg}[*] \gets 0\)</li>
+<li>\(\mathtt{Ask} : \mathcal{I} \times \mathcal{M} \to 2^{\mathbb{P}}\); &nbsp;&nbsp; \(\mathtt{Ask}[*,*] \gets \varnothing\)</li>
+<li>\(\mathtt{Sig} : \mathcal{I} \times \mathcal{M} \to \Sigma \cup \{\square\}\)</li>
+<li>\(\mathtt{Sig}[*,*] \gets \square\); &nbsp;&nbsp; \(\mathtt{Blame} \gets \square\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig">Spent():</div>
+<ol class="cj-code" start="7">
+<li>\(\textbf{return}\ \forall\, P \in \mathbb{P} : P \in \mathbf{C} \ \vee\ \mathtt{Quar}[P] = 1\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.KeyGen()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="8">
+<li>\(\textbf{require}\ \mathit{id}.P \in \mathbb{P}\)</li>
+<li>\(\mathtt{Kg}[\mathit{id}.P] \gets 1\)</li>
+<li>\(\textbf{require}\ \forall\, P \in \mathbb{P} : \mathtt{Kg}[P] = 1 \ \wedge\ \mathtt{Ver} = \square\)<span class="cj-comment">// every signatory, once</span></li>
+<li>\(V \gets \mathcal{A}^{!}\bigl(\mathit{id}.\mathsf{KeyGen}\bigr)\)</li>
+<li>\(\mathtt{Ver} \gets \mathsf{San}[\mathsf{Clean}_{V}](V)\)</li>
+<li>\(\textbf{return}\ \mathtt{Ver}\) &nbsp;to \(P_0\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Sign(<span class="cj-id">s</span>, <span class="cj-id">msg</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="14">
+<li>\(\textbf{require}\ \mathit{id}.P \in \mathbb{P} \ \wedge\ \mathtt{Ver} \neq \square \ \wedge\ \mathtt{Sig}[s,\mathit{msg}] = \square\)</li>
+<li>\(\mathtt{Ask}[s,\mathit{msg}] \gets \mathtt{Ask}[s,\mathit{msg}] \cup \{\mathit{id}.P\}\)</li>
+<li>\(\textbf{require}\ \mathtt{Ask}[s,\mathit{msg}] = \mathbb{P}\)<span class="cj-comment">// unanimous: no \(t\)-of-\(n\) here</span></li>
+<li>\((\sigma, X) \gets \mathcal{A}^{!}\bigl(\mathit{id}.\mathsf{Sign}, s, \mathit{msg}\bigr)\)</li>
+<li>\(\sigma \gets \mathsf{San}[\mathsf{Clean}_{\sigma}](\sigma)\)</li>
+<li>\(\mathtt{Sig}[s,\mathit{msg}] \gets \sigma\)</li>
+<li>\(\textbf{if}\ \mathtt{Ver}(\mathit{msg}, \sigma) = 0\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{Blame} \gets X\ \textbf{if}\ X \in \mathbf{C}\ \textbf{else}\ \min \mathbf{C}\)</span><span class="cj-comment">// identifiable abort</span></li>
+<li>\(\textbf{return}\ (\sigma, X)\) &nbsp;to \(P_0\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Verify(<span class="cj-id">msg</span>, <span class="cj-id">&sigma;</span>, <span class="cj-id">V</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="23">
+<li>\(\textbf{if}\ V \neq \mathtt{Ver}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ V(\mathit{msg}, \sigma)\)</span><span class="cj-comment">// a foreign key: no guarantee</span></li>
+<li>\(\textbf{if}\ \neg\mathsf{Spent}() \ \wedge\ \forall\, s : \mathtt{Ask}[s,\mathit{msg}] \neq \mathbb{P}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ 0\)</span><span class="cj-comment">// unforgeability, unconditional</span></li>
+<li>\(\textbf{return}\ \mathtt{Ver}(\mathit{msg}, \sigma)\)<span class="cj-comment">// consistency, by determinism of \(\mathtt{Ver}\)</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Refresh()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="28">
+<li>\(\textbf{require}\ \mathit{id}.P \in \mathbb{P} \ \wedge\ \mathtt{Ver} \neq \square\)</li>
+<li>\(\mathcal{A}^{!}\bigl(\mathit{id}.\mathsf{Refresh}\bigr)\)</li>
+<li>\(\mathtt{Quar}[*] \gets 0\)<span class="cj-comment">// quarantined become honest again</span></li>
+<li>\(\mathtt{Ctr} \gets \mathtt{Ctr} + 1\)</li>
+<li>\(\textbf{return}\ \mathtt{Ctr}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Quarantine(<span class="cj-id">P</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="33">
+<li>\(\textbf{require}\ \mathit{id}'.F = \mathbf{A} \ \wedge\ P \in \mathbb{P}\)<span class="cj-comment">// only the adversary decorrupts</span></li>
+<li>\(\mathtt{Quar}[P] \gets 1\)</li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Epoch()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="36">
+<li>\(\textbf{return}\ (\mathtt{Ctr}, \mathtt{Quar}[\mathit{id}.P], \mathtt{Blame})\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="37">
+<li>\(\textbf{return}\ (\mathtt{Ver}, \mathtt{Ctr}, \mathtt{Ask}, \mathtt{Sig})\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig">Clean<sub><span class="cj-id">V</span></sub>(<span class="cj-id">V</span>):</div>
+<ol class="cj-code" start="38">
+<li>\(\textbf{return}\ V\) is deterministic and total</li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+*Source: Figure 15, p. 35 of Canetti, Gennaro, Goldfeder, Makriyannis and Peled, "UC Non-Interactive, Proactive, Threshold ECDSA with Identifiable Aborts", ePrint 2021/060, revision `20241021:172019`, the newest of five postings. The PDF's pages and its printed folios agree.*
+
+- **Line 7 is the proactive security condition, and it is the only interesting predicate in the box.** $\mathsf{Spent}$ holds once every signatory is either corrupted or quarantined — the paper's *compromised* state. The prose states the guarantee it buys as holding "as long as at least one signatory remains uncorrupted between consecutive refreshes", and line 7 is that sentence written as code. Note what it does *not* say: it is not a count, and no threshold appears in it.
+- **Lines 25–26 are unforgeability, and it is unconditional.** No probability, no assumption, no bound: for a message no signing session ever reached unanimity on, verification returns $0$ outright, provided the state is not compromised. The source is emphatic that this "remains the case even for unbounded environments". It is also *local* — the adversary is not consulted anywhere on this path, which the paper says represents the requirement that "signature verification must be a local process which can provide an immediate response".
+- **Line 25 keys on $\mathtt{Ask}$, not $\mathtt{Sig}$, and the distinction is load-bearing.** The printed figure records $(\mathit{sgid}, m)$ as soon as every signatory has asked, *before* any string exists; the unforgeability test then asks whether any such record is present. Keying the test on the stored signature instead would wrongly reject during the window between unanimity and the adversary's reply. This is also the one place where the paper's own §2.6.1 summary and its Figure 15 do not quite agree — the summary says verification fails when "there is a currently uncorrupted party that has not requested to sign $m$", which is a slightly weaker condition than the figure's. The figure is transcribed above, being the definition.
+- **Lines 20–21 are identifiable abort, and they are the paper's distinctive contribution.** When the adversary's string fails to verify, the functionality does not simply refuse: it records a culprit, taken from the adversary's own accusation $X$ when $X$ is genuinely corrupt and otherwise defaulting to a corrupted party. So a failed threshold signing always leaves someone to blame, and the blame is always a real corrupt party — the adversary cannot frame an honest signatory.
+- **Line 27 is consistency, and it is free.** Because $\mathtt{Ver}$ is deterministic (line 38 enforces it at the sanitizer), two verifiers asking about the same pair are answered identically without the functionality storing anything. This is a deliberate simplification over Canetti's signature functionality, which stores every signature string including the invalid ones; §6.2.1 explains that the storage is unnecessary here because unforgeability is already carried by the unanimity record and consistency by determinism.
+- **Lines 33–34 hand decorruption to the adversary alone.** A quarantined party is one the adversary has released but which is not yet trusted again; only line 30, inside a refresh, restores it. The gap between the two is what makes the scheme *proactive* rather than merely recoverable.
+
+**Mismatch register.**
+
+| The source | This box | Why |
+|---|---|---|
+| $(\mathsf{corrupt}, P_j)$ from $\mathcal{S}$ records $P_j$ corrupted | Not present; $\mathbf{C}$ is the framework's | Corruption is handled by the framework here, so only *de*corruption needs an interface. $\mathsf{Quarantine}$ at line 33 is that half, and it is guarded to the adversary. |
+| "end the activation" on a repeated or unrecorded signing reply | `require` at line 14 | Same refusal, written as the framework writes refusals. |
+| Signature strings stored for every request, valid or not | $\mathtt{Sig}$ stores the string only | Follows the source: §6.2.1 argues the fuller record of Canetti's $\mathcal{F}_{\mathsf{SIG}}$ is not needed. |
+| No leakage interface | $\mathsf{Leak}$ at line 37 | Required here. Returns the public algorithm, the refresh counter and the request and signature records — all of which a corrupt signatory sees anyway. |
+| $P_0$ receives the outputs | `return … to $P_0$` at lines 13 and 22 | Kept, because the addressing is not incidental: the paper stresses $P_0$ "has no cryptographic capabilities" and exists to aggregate. |
+
+## Known realizations
+
+**Threshold ECDSA, in two protocol variants.** The paper's Figures 4 and 5 give non-interactive proactive ECDSA signing protocols, and the analysis is staged: **Theorem 6.6** (p. 38) proves the protocol *unforgeable* per Definition 6.3 under DCR, DDH, strong RSA and (enhanced) unforgeability of ECDSA, and **Theorem 6.7** (p. 38) proves it *accountable* per Definition 6.4 under strong RSA. Those game-based properties are what the UC realization of $\mathcal{F}_{\mathsf{TSig}}$ is then argued from — the paper's stated method is "first formulating an ideal functionality … then demonstrating that our protocol securely realizes" it, which "allows us to keep the protocol relatively lean". Signatures produced are verifiable by the standard ECDSA verification algorithm, which is the practical point of the exercise.
+
+**The security holds against adaptive corruption, between refreshes.** The quantifier is the one line 7 encodes: at least one signatory uncorrupted between consecutive refreshes. Corrupting every signatory within a single epoch compromises the instance permanently — line 7 has no path back to $\textsf{false}$ except through line 30.
+
+## Properties
+
+- **Unforgeability, with probability exactly $0$, unconditionally.** Lines 25–26, for every message on which no signing session reached unanimity, while $\neg\mathsf{Spent}()$. Holds against unbounded environments; no cryptographic assumption is used by the functionality.
+- **Consistency, with probability exactly $1$.** Line 27 returns $\mathtt{Ver}(\mathit{msg},\sigma)$ and line 38 forces $\mathtt{Ver}$ deterministic, so repeated verification of the same pair cannot differ.
+- **Completeness is *not* unconditional here, and that is worth noticing.** Nothing forces the adversary's $\sigma$ at line 17 to verify — line 20 contemplates exactly the case where it does not. What the box guarantees instead is accountability: a non-verifying signature costs the adversary a named culprit. A protocol wanting "an honest run always yields a valid signature" must get it from the realization, not from this box.
+- **Accountability, with probability exactly $1$ of naming a genuinely corrupt party.** Line 21: the recorded culprit is $X$ only when $X \in \mathbf{C}$, and otherwise a corrupted party chosen canonically. Since line 20 is reachable only when some string failed, and a failure requires adversarial involvement, $\mathbf{C}$ is non-empty whenever the line runs.
+- **Proactive recovery, exactly at refresh boundaries.** Line 30 is the only write that clears quarantine, and line 32 the only increment of the epoch counter, so recovery is atomic with the epoch change.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Canetti et al. [*UC non-interactive, proactive, threshold ECDSA with identifiable aborts*](https://eprint.iacr.org/2021/060). In ACM Conference on Computer and Communications Security (CCS), 2020.
+- Canetti, Gennaro, Goldfeder, Makriyannis, and Peled. [*UC non-interactive, proactive, threshold ECDSA with identifiable aborts*](https://eprint.iacr.org/2021/060). In ACM Conference on Computer and Communications Security (CCS), pages 1769–1787, 2020. The definition transcribed above is Figure 15, p. 35 of ePrint 2021/060, revision `20241021:172019`, the newest of five postings; the informal description that differs slightly from it is §2.6.1, p. 11; the discussion of what was dropped from Canetti's $\mathcal{F}_{\mathsf{SIG}}$ is §6.2.1, p. 34; the protocol theorems are 6.6 and 6.7, both p. 38.
+
+  *A title to be careful with.* The archive's posting is titled "**Threshold** ECDSA", as is the CCS 2020 version of record, and that is the title cited above. The title page of the revision actually read — `20241021:172019` — reads "UC Non-Interactive, Proactive, **Distributed** ECDSA with Identifiable Aborts". The rename is internal to the newest revision and is not reflected in the archive metadata, so a reader who fetches the PDF and a reader who reads the listing will see different titles for the same document.

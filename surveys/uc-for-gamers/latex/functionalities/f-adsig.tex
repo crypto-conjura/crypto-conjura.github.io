@@ -1,0 +1,137 @@
+%% The interface box of f-adsig, the one source for both the book
+%% and uc/.../f-adsig/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fadsig$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad
+$\pars := (S, R, \DS)$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $(\mathit{sk}, \vk) \gets \DS.\op{KeyGen}()$ \label{ln:adsigkg}
+\State $\V{Sig}, \V{Pre}, \V{PVer} : \Msgs \to 2^{\Sigs}$
+\State $\V{Sig}[*], \V{Pre}[*], \V{PVer}[*] \gets \emptyset$
+\State $\V{Adapt} \gets \emptyset$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{PubKey}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $\vk$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Sign}(\msg)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P = S$} \label{ln:adsigowner}
+  \Comment{one key pair per instance}
+\State $\sigma \gets \DS.\op{Sign}(\mathit{sk}, \msg)$
+\If{$\sigma \neq \none$}
+\State $\V{Sig}[\msg] \gets \V{Sig}[\msg] \cup \{\sigma\}$
+\EndIf
+\State \textbf{return} $\sigma$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{PreSign}(\msg, Y)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P = S$}
+\State $\tilde{\sigma} \gets \DS.\op{PreSign}(\mathit{sk}, \msg, Y)$
+\If{$\tilde{\sigma} \neq \none$}
+\State $\V{Pre}[\msg] \gets \V{Pre}[\msg] \cup \{(\tilde{\sigma}, Y)\}$
+\EndIf
+\State \textbf{return} $\tilde{\sigma}$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Adapt}(\vk', \tilde{\sigma}, y, Y)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $\sigma \gets \DS.\op{Adapt}(\vk', \tilde{\sigma}, y, Y)$
+\If{$\vk' = \vk \ \wedge\ (Y, y) \in R$}
+\State $\V{Adapt} \gets \V{Adapt} \cup \{(\tilde{\sigma}, Y, y, \sigma)\}$
+\EndIf
+\State \textbf{return} $\sigma$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Extract}(\vk', \tilde{\sigma}, \sigma, Y)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $y \gets \DS.\op{Extract}(\vk', \tilde{\sigma}, \sigma, Y)$
+\If{$(Y, y) \notin R \ \wedge\ \exists\, y' : (\tilde{\sigma}, Y, y', \sigma) \in \V{Adapt}$}
+\State $y \gets y'$ \label{ln:adsigextcorr}
+  \Comment{extract correctness}
+\EndIf
+\State \textbf{return} $y$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{PreVerify}(\vk', \msg, Y, \tilde{\sigma})$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $b \gets \DS.\op{PreVerify}(\vk', \msg, Y, \tilde{\sigma})$
+\State $c \gets \bigl(\vk' = \vk \ \wedge\ (\tilde{\sigma}, Y) \in \V{Pre}[\msg]\bigr)$
+\If{$c$}
+\State $b \gets 1$ \label{ln:adsigpcorr}
+  \Comment{pre-sign correctness}
+\EndIf
+\If{$\neg c \ \wedge\ \vk' = \vk \ \wedge\ S \notin \Cs \ \wedge\ \V{Sig}[\msg] = \emptyset$}
+\State $b \gets 0$ \label{ln:adsigpunforge}
+  \Comment{pre-signature unforgeability}
+\EndIf
+\If{$\vk' = \vk \ \wedge\ b = 1$}
+\State $\V{PVer}[\msg] \gets \V{PVer}[\msg] \cup \{(\tilde{\sigma}, Y)\}$
+\EndIf
+\State \textbf{return} $b$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Verify}(\vk', \msg, \sigma)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $b \gets \DS.\op{Verify}(\vk', \msg, \sigma)$
+\State $e \gets \exists\, (\tilde{\sigma}, Y) \in \V{Pre}[\msg] : (Y, \DS.\op{Extract}(\vk', \tilde{\sigma}, \sigma, Y)) \in R$
+\State $c \gets \bigl(\vk' = \vk \ \wedge\ \sigma \in \V{Sig}[\msg]\bigr)$
+\State $a \gets \bigl(\vk' = \vk \ \wedge\ \exists\, (\tilde{\sigma},Y) \in \V{PVer}[\msg], y : (\tilde{\sigma}, Y, y, \sigma) \in \V{Adapt}\bigr)$
+\If{$c \ \vee\ a$} \label{ln:adsigcorr}
+\State \textbf{return} $1$
+  \Comment{correctness; pre-signature adaptability}
+\EndIf
+\If{$\vk' = \vk \ \wedge\ S \notin \Cs \ \wedge\ \V{Sig}[\msg] = \emptyset \ \wedge\ \neg e$}
+\State \textbf{return} $0$ \label{ln:adsigext}
+  \Comment{unforgeability and extractability}
+\EndIf
+\State \textbf{return} $b$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$\id.P = S$}
+\State \textbf{return} $(\mathit{sk}, \vk, \V{Sig}, \V{Pre})$ \label{ln:adsigleaksk}
+\EndIf
+\State \textbf{return} $(\vk, \V{Sig}, \V{Pre})$
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

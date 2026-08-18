@@ -1,14 +1,170 @@
 ---
-title: "F-acc — Accumulator, vector commitment"
+title: "F-acc — Accumulator"
 status: "Canonical"
 layer: 4
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-acc* (Accumulator, vector commitment) is part of *Commitments and Proofs* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+*F-acc* (Accumulator) is part of *Commitments and Proofs* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
 
-The paper introducing this functionality also proves its equivalence with the earlier game-based accumulator definitions.
+An accumulator compresses a set into one short value, and issues a witness for each element saying "this is in" or "this is out". The UC treatment follows Canetti's signature functionality in shape rather than the commitment functionalities next to it: the algorithms are *explicit*, supplied by the adversary at line 5 and then run by the functionality, so that a protocol using an accumulator can hand the value and the witness to another party and have that party check them locally, with no further call. The security properties are then written as **require** clauses that fire when an algorithm the adversary chose fails to do what an accumulator must.
+
+One correction to this page's own former title. It read "Accumulator, vector commitment", and the source defines no vector-commitment functionality — the words "vector commitment" do not appear in the paper. The two primitives are relatives, and the second is not covered here.
+
+## Functionality
+
+Reading the box: $\mathcal{A}^{!}(\cdot)$ is a *responsive* call on the adversary slot, meaning the answer comes back before anything else runs; $\mathsf{San}[\mathsf{Clean}_{A}]$ re-asks that slot until the named predicate holds, with the predicate written out at the end of the box; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it; $\mathbf{C}$ is the set of corrupted parties; $\square$ marks a value never set; $\mathit{AM}$ is the accumulator manager and $\mathcal{D}$ the element domain, both parameters of the instance; $\mathtt{Alg}.\mathsf{Ver}$ abbreviates the scheme's $\mathsf{VerStatus}$.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{ACC}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := (\mathit{AM}, \mathcal{D})\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{Alg}, \mathtt{Sk} \gets \square\); &nbsp;&nbsp; \(\mathtt{Ctr} \gets 0\)</li>
+<li>\(\mathtt{Set}, \mathtt{Acc}, \mathtt{Aux}, \mathtt{Up} : \mathbb{N} \to \{0,1\}^* \cup \{\square\}\)</li>
+<li>\(\mathtt{Set}[*], \mathtt{Acc}[*], \mathtt{Aux}[*], \mathtt{Up}[*] \gets \square\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Gen(<span class="cj-id">S_0</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="4">
+<li>\(\textbf{require}\ \mathit{id}.P = \mathit{AM} \ \wedge\ \mathtt{Alg} = \square \ \wedge\ S_0 \subseteq \mathcal{D}\)</li>
+<li>\(A \gets \mathcal{A}^{!}\bigl(\mathit{id}.\mathsf{Gen}\bigr)\)</li>
+<li>\(A \gets \mathsf{San}[\mathsf{Clean}_{A}](A)\)</li>
+<li>\((\mathit{sk}, a, m) \gets A.\mathsf{Gen}(S_0)\)</li>
+<li>\(\mathtt{Alg} \gets A\); &nbsp;&nbsp; \(\mathtt{Sk} \gets \mathit{sk}\)</li>
+<li>\(\mathtt{Set}[0] \gets S_0\); &nbsp;&nbsp; \(\mathtt{Acc}[0] \gets a\); &nbsp;&nbsp; \(\mathtt{Aux}[0] \gets m\)</li>
+<li>\(\textbf{return}\ (S_0, A)\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Update(<span class="cj-id">mathit{op}</span>, <span class="cj-id">x</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="11">
+<li>\(\textbf{require}\ \mathit{id}.P = \mathit{AM} \ \wedge\ \mathtt{Alg} \neq \square \ \wedge\ x \in \mathcal{D}\)</li>
+<li>\(\textbf{require}\ \mathit{op} \in \{\mathsf{add}, \mathsf{del}\}\)<span class="cj-comment">// \(\mathsf{add}\) only: additive; \(\mathsf{del}\) only: subtractive</span></li>
+<li>\(t \gets \mathtt{Ctr} + 1\); &nbsp;&nbsp; \(\mathtt{Ctr} \gets t\)</li>
+<li>\((a, m, w, u) \gets \mathtt{Alg}.\mathsf{Update}(\mathit{op}, \mathtt{Sk}, \mathtt{Acc}[t-1], \mathtt{Aux}[t-1], x)\)</li>
+<li>\(\mathtt{Set}[t] \gets \mathtt{Set}[t-1]\)</li>
+<li>\(\textbf{if}\ \mathit{op} = \mathsf{add}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{require}\ \mathtt{Alg}.\mathsf{Ver}(\mathsf{in}, a, x, w) = 1\)</span><span class="cj-comment">// correctness</span></li>
+<li><span class="cj-ind">\(\mathtt{Set}[t] \gets \mathtt{Set}[t] \cup \{x\}\)</span></li>
+<li>\(\textbf{if}\ \mathit{op} = \mathsf{del}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{require}\ \mathtt{Alg}.\mathsf{Ver}(\mathsf{out}, a, x, w) = 1\)</span><span class="cj-comment">// negative correctness</span></li>
+<li><span class="cj-ind">\(\mathtt{Set}[t] \gets \mathtt{Set}[t] \setminus \{x\}\)</span></li>
+<li>\(\mathtt{Acc}[t] \gets a\); &nbsp;&nbsp; \(\mathtt{Aux}[t] \gets m\); &nbsp;&nbsp; \(\mathtt{Up}[t] \gets u\)</li>
+<li>\(\textbf{return}\ (\mathit{op}, a, x, w, u)\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.WitCreate(<span class="cj-id">mathit{stts}</span>, <span class="cj-id">x</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="24">
+<li>\(\textbf{require}\ \mathit{id}.P = \mathit{AM} \ \wedge\ \mathtt{Alg} \neq \square\)</li>
+<li>\(\textbf{require}\ \mathit{stts} \in \{\mathsf{in}, \mathsf{out}\}\)<span class="cj-comment">// \(\mathsf{in}\) only: positive; \(\mathsf{out}\) only: negative</span></li>
+<li>\(t \gets \mathtt{Ctr}\)</li>
+<li>\(w \gets \mathtt{Alg}.\mathsf{WitCreate}(\mathit{stts}, \mathtt{Sk}, \mathtt{Acc}[t], \mathtt{Aux}[t], x, \mathtt{Up}[1..t])\)</li>
+<li>\(\textbf{if}\ \mathit{stts} = \mathsf{in} \ \wedge\ x \in \mathtt{Set}[t]\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{require}\ \mathtt{Alg}.\mathsf{Ver}(\mathsf{in}, \mathtt{Acc}[t], x, w) = 1\)</span></li>
+<li>\(\textbf{if}\ \mathit{stts} = \mathsf{out} \ \wedge\ x \notin \mathtt{Set}[t]\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{require}\ \mathtt{Alg}.\mathsf{Ver}(\mathsf{out}, \mathtt{Acc}[t], x, w) = 1\)</span></li>
+<li>\(\textbf{return}\ (\mathit{stts}, x, w)\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.WitUpdate(<span class="cj-id">mathit{stts}</span>, <span class="cj-id">i</span>, <span class="cj-id">j</span>, <span class="cj-id">x</span>, <span class="cj-id">w</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="33">
+<li>\(\textbf{require}\ \mathtt{Alg} \neq \square \ \wedge\ 0 \le i < j \le \mathtt{Ctr}\)</li>
+<li>\(w' \gets \mathtt{Alg}.\mathsf{WitUp}(\mathit{stts}, x, w, \mathtt{Up}[i{+}1..j])\)</li>
+<li>\(b \gets \bigl(\mathit{stts} = \mathsf{in}\bigr)\)</li>
+<li>\(\textbf{if}\ \mathtt{Alg}.\mathsf{Ver}(\mathit{stts}, \mathtt{Acc}[i], x, w) = 1 \ \wedge\ \forall\, t \in [i,j] : (x \in \mathtt{Set}[t]) = b\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{require}\ \mathtt{Alg}.\mathsf{Ver}(\mathit{stts}, \mathtt{Acc}[j], x, w') = 1\)</span><span class="cj-comment">// witnesses survive updates</span></li>
+<li>\(\textbf{return}\ (\mathit{stts}, i, j, x, w, w')\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Verify(<span class="cj-id">mathit{stts}</span>, <span class="cj-id">a</span>, <span class="cj-id">V</span>, <span class="cj-id">x</span>, <span class="cj-id">w</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="39">
+<li>\(\textbf{if}\ V \neq \mathtt{Alg}.\mathsf{Ver} \ \vee\ \neg\exists\, t \le \mathtt{Ctr} : \mathtt{Acc}[t] = a\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ V(\mathit{stts}, a, x, w)\)</span><span class="cj-comment">// a foreign algorithm or state: no guarantee</span></li>
+<li>\(t \gets \max\{\, t : \mathtt{Acc}[t] = a \,\}\)</li>
+<li>\(b \gets \bigl(\mathit{stts} = \mathsf{in}\bigr)\)</li>
+<li>\(\textbf{if}\ \mathit{AM} \notin \mathbf{C} \ \wedge\ (x \in \mathtt{Set}[t]) \neq b\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{require}\ \mathtt{Alg}.\mathsf{Ver}(\mathit{stts}, a, x, w) = 0\)</span><span class="cj-comment">// collision freeness</span></li>
+<li>\(\textbf{return}\ \mathtt{Alg}.\mathsf{Ver}(\mathit{stts}, a, x, w)\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="46">
+<li>\(\textbf{if}\ \mathit{id}.P = \mathit{AM}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ (\mathtt{Alg}, \mathtt{Sk}, \mathtt{Ctr}, \mathtt{Set}, \mathtt{Acc}, \mathtt{Up})\)</span></li>
+<li>\(\textbf{return}\ (\mathtt{Alg}, \mathtt{Ctr}, \mathtt{Acc}, \mathtt{Up})\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig">Clean<sub><span class="cj-id">A</span></sub>(<span class="cj-id">A</span>):</div>
+<ol class="cj-code" start="49">
+<li>\(\textbf{return}\ A.\mathsf{Ver}\) is deterministic and total</li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+*Source: Figures 4 and 5, p. 14 and p. 15 of Baldimtsi, Canetti and Yakoubov, "Universally Composable Accumulators", ePrint 2018/1241, revision `20191206:132541`, the newer of two postings. The PDF's pages and its printed folios agree.*
+
+**The printed figure is a menu, and the box above is one dish from it.** This is the single most important thing to know before comparing the two, and it is invisible in a text extraction: the paper's figures are *colour-coded*, and the key is given in prose on p. 15 — black is a **positive additive** accumulator, green marks what is present only in **subtractive** ones, blue only in **negative** ones, pink only in **strong** ones, and orange marks what is present only in *non*-strong ones. The paper then fixes the naming: unsubscripted $\mathcal{F}_{\mathsf{ACC}}$ "refer[s] to the universal dynamic accumulator functionality", with $\mathsf{Add}$, $\mathsf{Del}$, $\mathsf{in}$, $\mathsf{out}$ and $\mathsf{STRONG}$ added to the subscript to name the restrictions. So the box above is black + green + blue + orange, and drops pink. Lines 12 and 25 are where the menu is visible as code: restricting $\mathit{op}$ to one value gives the additive or subtractive accumulator, restricting $\mathit{stts}$ gives the positive or negative one, and the comments say so.
+
+- **Lines 5–6 hand the scheme to the adversary, and line 49 is the only thing constraining it.** The functionality does not know how the accumulator works; it receives the algorithms, checks only that verification is deterministic and total, and then holds them to their obligations operation by operation. Determinism is not a formality — it is what makes two verifiers asking the same question get the same answer, and the paper's Theorem 1 assumes it explicitly.
+- **Lines 17 and 20 are correctness and negative correctness, and they are `require`s on the adversary's own algorithms.** After an $\mathsf{add}$, the witness the scheme just produced must verify as $\mathsf{in}$; after a $\mathsf{del}$, as $\mathsf{out}$. If it does not, the call is refused. The source phrases this as "output $\bot$ to $\mathcal{AM}$ and halt", and halting is the one thing this site's long-lived boxes do not do — see the mismatch note below.
+- **Lines 43–44 are collision freeness, and the guard on line 43 is the property's entire quantifier structure.** For a state the functionality actually issued, a witness that disagrees with the recorded set must verify to $0$ — but only while $\mathit{AM} \notin \mathbf{C}$. That guard is the orange text of the printed figure: in a *strong* accumulator it is deleted, and the guarantee then holds even against a corrupt manager. This is the single line that separates $\mathcal{F}_{\mathsf{ACC}}$ from $\mathcal{F}_{\mathsf{ACC},\mathsf{STRONG}}$, and a reader who wants the strong variant should read it as "delete the left conjunct of line 43, and add back the pink $\mathsf{VerGen}$ and $\mathsf{VerUpdate}$ interfaces".
+- **Lines 39–40 are the escape hatch, and every explicit-algorithm functionality needs one.** A caller may verify against an algorithm or an accumulator value this instance never produced. The functionality then simply runs what it was given and promises nothing, exactly as *F-Sig* does for a foreign key. Without this line the box would be claiming guarantees about other people's accumulators.
+- **Line 37 is the property that makes witness updates usable at all.** A witness valid at state $i$, for an element whose membership did not change between $i$ and $j$, must still verify after being updated to state $j$. It is a `require` rather than an `if` because a scheme that fails it is not an accumulator.
+- **Lines 46–48 split the leak by role.** A corrupted manager loses the trapdoor $\mathtt{Sk}$ and the tracked sets; a corrupted ordinary party loses only what is public anyway — the algorithms, the accumulator history and the update messages. The source has no leakage interface at all, so this split is this page's, and it is recorded as such below.
+
+**Mismatch register.**
+
+| The source | This box | Why |
+|---|---|---|
+| "output $\bot$ to $\mathcal{AM}$ and **halt**" on a failed check | `require`, which refuses the one call | The framework's boxes are long-lived; halting is not available. A refusal is the local reading, and it is strictly weaker: the source kills the instance, so a scheme that fails once can never be used again. Protocols proved against the printed functionality are proved against the stronger statement. |
+| No leakage interface | $\mathsf{Leak}$ at lines 46–48 | Required on every functionality here. What a corrupt party's adversary reads off had to be decided; the split above is the natural one, but it is a decision the source did not make. |
+| A list $L$ of tuples keyed by $\mathit{sid}$ | One accumulator per instance | Session identifiers live in the process id here, so the outer list disappears. Clean, because no operation in the figure is conditional on $\mathit{sid}$. |
+| $\mathsf{Send}$/$\mathsf{Get}$ to the adversary for the algorithms | $\mathcal{A}^{!}$, a responsive call | The source's Step 1(d–e) is a blocking request–response and nothing may intervene, which is what $\mathcal{A}^{!}$ means. This is a strengthening over ordinary delayed output and is stated here rather than assumed. |
+| Colour-coded menu across five variants | The universal dynamic, non-strong point of it | Named as the paper names it. Lines 12 and 25 carry the axes as comments so the other points are recoverable. |
+
+## Known realizations
+
+**The UC definition and the game-based one agree: Theorem 1, p. 17.** For a universal dynamic accumulator scheme with deterministic $\mathsf{VerStatus}$, the scheme securely realizes $\mathcal{F}_{\mathsf{ACC}}$ *if and only if* it satisfies the paper's Definitions 1, 2 and 3 — correctness, creation-correctness and collision-freeness. The proof follows Canetti's for signatures. This is the result that makes the box worth having: an existing accumulator with the classical properties can be dropped into a UC protocol without a new proof.
+
+**And for the strong variant: Corollary 1, p. 19.** The same equivalence holds between $\mathcal{F}_{\mathsf{ACC},\mathsf{STRONG}}$ and Definitions 1, 2 and 4, for schemes that also carry deterministic $\mathsf{VerGen}$ and $\mathsf{VerUpdate}$. The proof note is worth reading beside line 43 above: in the strong world the check applies "ignoring the condition that $\mathcal{AM}$ is not corrupted, which does not apply for a strong accumulator".
+
+**A concrete scheme: Theorem 2, p. 21.** The Braavos accumulator of Figure 6 securely realizes $\mathcal{F}_{\mathsf{ACC},\mathsf{in},\mathsf{HUM}}$ — the positive variant, against honest-but-curious managers.
+
+## Properties
+
+- **Correctness, refusal with probability exactly $1$ on violation.** Lines 17 and 20: any $\mathsf{Update}$ whose own freshly produced witness does not verify is refused outright. The quantifier is over every $\mathit{op}$ and every $x \in \mathcal{D}$, and there is no probability in it — the check is run on the actual output.
+- **Creation-correctness, likewise exact.** Lines 29 and 31, guarded by membership so that a witness is only demanded to verify for a claim that is in fact true of the current set.
+- **Collision freeness, with probability exactly $0$ of a false witness verifying — while the manager is honest.** Line 43–44. Corrupting $\mathit{AM}$ removes the guarantee entirely in this variant; the strong variant keeps it.
+- **No hiding, and none claimed.** The accumulated set $\mathtt{Set}$ is functionality state, and lines 46–48 disclose it to a corrupted manager. An accumulator is not a commitment: it is not required to conceal what it accumulates, and this box conceals nothing.
+- **Nothing is promised off-instance.** Lines 39–40 return the caller's own computation whenever the algorithm or the state is not this instance's, with no recording and no check.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Baldimtsi, Canetti, and Yakoubov. [*Universally composable accumulators*](https://eprint.iacr.org/2018/1241). In Topics in Cryptology – CT-RSA 2020, volume 12006 of LNCS, pages 638–666, 2020.
+- Baldimtsi, Canetti, and Yakoubov. [*Universally composable accumulators*](https://eprint.iacr.org/2018/1241). In Topics in Cryptology – CT-RSA 2020, volume 12006 of LNCS, pages 638–666, 2020. The definition transcribed above is Figures 4 and 5, p. 14 and p. 15 of ePrint 2018/1241, revision `20191206:132541`, the newer of two postings; the colour key that fixes which variant is which is the prose on p. 15; the game-based definitions are Definitions 1 and 2 (p. 9), 3 (p. 10) and 4 (p. 11); the equivalence is Theorem 1 (p. 17) and Corollary 1 (p. 19); the concrete scheme is Theorem 2 (p. 21). Note that this posting's own title page misspells the first author as "Badimtsi"; the archive metadata, the proceedings and the author's other work all read **Baldimtsi**.

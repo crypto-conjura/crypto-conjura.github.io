@@ -1,0 +1,100 @@
+%% The interface box of f-cot-f-rot, the one source for both the book
+%% and uc/.../f-cot-f-rot/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fcot$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := \kappa$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{S} \gets \unset$; \ $\V{R} \gets \unset$
+  \Comment{sender, receiver}
+\State $\V{D} \gets \unset$
+  \Comment{the global key $\Delta$}
+\State $\V{v} \gets \unset$; \ $\V{u} \gets \unset$; \ $\V{w} \gets \unset$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Init}(Q, \Delta)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{D} = \unset \ \wedge\ \Delta \in \Fld_{2^{\kappa}}$} \label{ln:cotoneinit}
+  \Comment{one $\Delta$ for every extension}
+\State $\V{S} \gets \id.P$; \ $\V{R} \gets Q$; \ $\V{D} \gets \Delta$
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Extend}(\ell)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{D} \neq \unset \ \wedge\ \id.P \in \{\V{S}, \V{R}\}$}
+\State $\V{v} \gets_{\$} \Fld_{2^{\kappa}}^{\ell}$ \label{ln:cotdrawv}
+\If{$\V{S} \in \Cs$}
+  \State $\V{v} \gets \San[\Clean_{v}](\Adv(\id.\op{Extend}, \ell); \ell, \kappa)$ \label{ln:cotsenderchoice}
+\EndIf
+\State $\V{u} \gets_{\$} \Fld_{2}^{\ell}$; \ $\V{w} \gets \V{v} + \V{u} \cdot \V{D}$ \label{ln:cotcorrelation}
+\If{$\V{R} \in \Cs$}
+  \State $(\V{u}, \V{w}) \gets \San[\Clean_{uw}](\Adv(\id.\op{Extend}, \ell); \ell, \kappa)$
+  \State $\V{v} \gets \V{w} + \V{u} \cdot \V{D}$ \label{ln:cotrecompute}
+    \Comment{the correlation is restored, not checked}
+\EndIf
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Read}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{v} \neq \unset$}
+\If{$\id.P = \V{S}$}
+  \State \textbf{return} $\V{v}$ \label{ln:cotsenderout}
+\EndIf
+\If{$\id.P = \V{R}$}
+  \State \textbf{return} $(\V{u}, \V{w})$ \label{ln:cotreceiverout}
+\EndIf
+\State \textbf{return} $\none$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$\id.P = \V{S}$}
+  \State \textbf{return} $(\V{D}, \V{v})$ \label{ln:cotleaksender}
+\EndIf
+\If{$\id.P = \V{R}$}
+  \State \textbf{return} $(\V{u}, \V{w})$ \label{ln:cotleakreceiver}
+\EndIf
+\State \textbf{return} $\none$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\Clean_{v}(v; \ell, \kappa)$}:
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $v \in \Fld_{2^{\kappa}}^{\ell}$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\Clean_{uw}((u,w); \ell, \kappa)$}:
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $u \in \Fld_{2}^{\ell} \ \wedge\ w \in \Fld_{2^{\kappa}}^{\ell}$
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

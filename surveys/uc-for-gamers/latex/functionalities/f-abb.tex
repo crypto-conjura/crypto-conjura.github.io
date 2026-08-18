@@ -1,0 +1,103 @@
+%% The interface box of f-abb, the one source for both the book
+%% and uc/.../f-abb/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fabb$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := \op{KeyGen}$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $(N, \mathit{sk}) \gets \op{KeyGen}()$ \label{ln:abbkey}
+\State $\V{Val} : \Ids \to \mathbb{Z}_N \cup \{\unset\}$; \quad $\V{Val}[*] \gets \unset$
+\State $\V{Own} : \Ids \to \Ps \cup \{\none\}$; \quad $\V{Own}[*] \gets \none$
+\State $\V{Vote} : \Ids \times \bits \to 2^{\Ps}$; \quad $\V{Vote}[*,*] \gets \emptyset$
+\State $\V{Bad} \gets 0$
+\State $\Adv\bigl(\op{Initialize}, N, \mathit{sk}\bigr)$ \label{ln:abbleakkey}
+  \Comment{the key is not a secret of this box}
+\State \textbf{return} $N$ \ to every $P \in \Ps$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\op{Agree}(\id, c)$}:
+\begin{algorithmic}[1]
+\algcont
+\State $\V{Vote}[\id, c] \gets \V{Vote}[\id, c] \cup \{\id.P\}$
+\If{$\exists\, c' \neq c : \V{Vote}[\id, c'] \setminus \Cs \neq \emptyset$}
+  \State $\V{Bad} \gets 1$ \label{ln:abbdisagree}
+    \Comment{honest parties disagreed: the box gives up}
+\EndIf
+\State \textbf{return} $\Ps \setminus \Cs \subseteq \V{Vote}[\id, c]$ \label{ln:abbunan}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Load}(x, s)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{Bad} = 0 \ \wedge\ \V{Val}[x] = \unset \ \wedge\ s \in \mathbb{Z}_N$}
+\Req{$\op{Agree}(x, \op{load})$} \label{ln:abbloadagree}
+  \Comment{the others vote $x \gets\, ?$, not on $s$}
+\State $\V{Own}[x] \gets \id.P$; \quad $\V{Val}[x] \gets s$ \label{ln:abbload}
+  \Comment{$s$ itself is never disclosed}
+\State \textbf{return} $\op{defined}\ x$ \ to every $P \in \Ps$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Lin}(x, a_0, \vec{a}, \vec{x})$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{Bad} = 0 \ \wedge\ \V{Val}[x] = \unset \ \wedge\ \forall j : \V{Val}[x_j] \neq \unset$}
+\Req{$\op{Agree}(x, (\op{lin}, a_0, \vec{a}, \vec{x}))$}
+\State $\V{Val}[x] \gets a_0 + \textstyle\sum_j a_j \V{Val}[x_j] \bmod N$ \label{ln:abblin}
+  \Comment{free: no interaction}
+\State \textbf{return} $\op{defined}\ x$ \ to every $P \in \Ps$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Mul}(x, x_1, x_2)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{Bad} = 0 \ \wedge\ \V{Val}[x] = \unset$}
+\Req{$\V{Val}[x_1] \neq \unset \ \wedge\ \V{Val}[x_2] \neq \unset$}
+\Req{$\V{Own}[x_1] = \id.P$} \label{ln:abbprivmul}
+  \Comment{private: only $x_1$'s loader may multiply by it}
+\Req{$\op{Agree}(x, (\op{mul}, x_1, x_2))$}
+\State $\V{Val}[x] \gets \V{Val}[x_1] \cdot \V{Val}[x_2] \bmod N$ \label{ln:abbmul}
+\State \textbf{return} $\op{defined}\ x$ \ to every $P \in \Ps$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Output}(x)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{Bad} = 0 \ \wedge\ \V{Val}[x] \neq \unset$}
+\Req{$\op{Agree}(x, \op{out})$}
+\State $\Adv\bigl(\id.\op{Output}, x, \V{Val}[x]\bigr)$ \label{ln:abbadvfirst}
+  \Comment{the adversary learns it first, and may stall}
+\State \textbf{return} $\V{Val}[x]$ \ to every $P \in \Ps$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$\V{Bad} = 1$}
+  \State \textbf{return} $(\mathit{sk}, \V{Val}, \V{Own})$ \label{ln:abbgiveup}
+\EndIf
+\State \textbf{return} $(\mathit{sk}, \V{Own}, \{\, x : \V{Val}[x] \neq \unset \,\})$ \label{ln:abbleak}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

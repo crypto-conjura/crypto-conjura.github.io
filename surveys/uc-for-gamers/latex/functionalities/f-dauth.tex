@@ -1,0 +1,91 @@
+%% The interface box of f-dauth, the one source for both the book
+%% and uc/.../f-dauth/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fdauth$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves), (\Fkrk,\serves)\}$, \quad
+$\pars := (S, R, \op{Inc}, \lambda)$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{Act} : \{S, R\} \to \{0,1\}$; \quad $\V{Act}[*] \gets 0$
+\State $\V{Ab}, \V{Done}, \V{Inc} \gets 0$; \quad $\V{Key} \gets \unset$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Exchange}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P \in \{S, R\} \ \wedge\ \V{Act}[\id.P] = 0 \ \wedge\ \V{Done} = 0$}
+\If{$\id.P = R$}
+  \Req{$\V{Act}[S] = 1$} \label{ln:dauthorder}
+    \Comment{the sender moves first}
+\EndIf
+\State $\V{Act}[\id.P] \gets 1$
+\State $\Adv\bigl(\id.\op{Exchange}, \id.P\bigr)$ \label{ln:dauthnotify}
+  \Comment{public delayed output: the peer is told}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{SetKey}(k)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F = \Apid \ \wedge\ \V{Act}[R] = 1 \ \wedge\ \V{Done} = 0$}
+\If{$R \in \Cs$}
+  \State $\V{Key} \gets k$ \label{ln:dauthcorr}
+    \Comment{a corrupt receiver takes the adversary's key}
+\EndIf
+\If{$R \notin \Cs$}
+  \State $\V{Key} \gets \$\,\{0,1\}^{\lambda}$ \label{ln:dauthfresh}
+    \Comment{otherwise fresh, and the adversary never sees it}
+\EndIf
+\State $\V{Done} \gets 1$
+\State \textbf{return} $\V{Key}$ \ to $R$, and to $S$ if $\V{Act}[S] = 1$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Abort}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F = \Apid \ \wedge\ \V{Act}[S] = 1 \ \wedge\ \V{Done} = 0$}
+\State $\V{Ab} \gets 1$ \label{ln:dauthabort}
+  \Comment{$S$ can no longer output a key; $R$ still can}
+\State \textbf{return} $\ok$ \ to $S$, and to $R$ if $\V{Act}[R] = 1$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Incriminate}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F = \Apid \ \wedge\ \V{Ab} = 1 \ \wedge\ \V{Inc} = 0$} \label{ln:dauthonce}
+\Req{$S \notin \Cs$} \label{ln:dauthhonest}
+  \Comment{only an honest, aborted sender is incriminable}
+\State $\V{Inc} \gets 1$
+\State \textbf{return} $\op{Inc}\bigl(S, R, \Fkrk.\op{Pub}(S), \Fkrk.\op{Pub}(R), \Fkrk.\op{Sec}(S)\bigr)$ \label{ln:dauthinc}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$\id.P = R \ \wedge\ \V{Done} = 1$}
+  \State \textbf{return} $(\V{Act}, \V{Ab}, \V{Key})$ \label{ln:dauthleakr}
+\EndIf
+\State \textbf{return} $(\V{Act}, \V{Ab})$ \label{ln:dauthleak}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

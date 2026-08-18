@@ -1,13 +1,118 @@
 ---
-title: "F-VSS — Verifiable secret sharing"
+title: "F-VSS — Committed verifiable secret sharing, with spooling"
 status: "Canonical"
 layer: 6
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-VSS* (Verifiable secret sharing) is part of *Secret Sharing, Threshold Cryptography, MPC* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+*F-VSS* (Committed verifiable secret sharing, with spooling) is part of *Secret Sharing, Threshold Cryptography, MPC* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+
+A *committed* VSS is one where the dealer ends up bound to the shared secret by a public commitment: the sharing phase, in Abe and Fehr's words, "leaks nothing but $\mathrm{com}_K(s;r)$ with regard to secret $s$". The reason this page carries the *spooling* variant rather than the plain one is adaptive corruption, and it is the paper's own reason: an adaptively corrupted dealer must be allowed "to change his mind during the protocol execution", because a simulator that has already announced a commitment cannot otherwise explain a dealer corrupted afterwards. Spooling splits the dealer's move in two — commit privately to the adversary first, announce publicly second — and it is the split that makes the definition realizable against an adaptive adversary.
+
+## Functionality
+
+Reading the box: $\mathcal{A}(\cdot)$ is a call on the adversary slot; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it; $\mathbf{C}$ is the set of corrupted parties; $\square$ marks a value never set and $\bot$ an argument deliberately omitted; $P_d$ is the dealer, $t$ the threshold and $\mathsf{Com}$ the commitment scheme, all parameters of the instance.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{SVSS}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := (P_d, t, \mathsf{Com})\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{Sec}, \mathtt{Cm} \gets \square\); &nbsp;&nbsp; \(\mathtt{Pub} \gets 0\)</li>
+<li>\(\mathtt{Op} : \mathbf{P} \to \{0,1\}\); &nbsp;&nbsp; \(\mathtt{Op}[*] \gets 0\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Spool(<span class="cj-id">s</span>, <span class="cj-id">r</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="3">
+<li>\(\textbf{require}\ \mathit{id}.P = P_d \ \wedge\ \mathtt{Sec} = \square\)</li>
+<li>\(\mathtt{Sec} \gets s\); &nbsp;&nbsp; \(\mathtt{Cm} \gets \mathsf{Com}(s; r)\)</li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Spool}, \mathtt{Cm}\bigr)\)<span class="cj-comment">// the commitment leaks; the secret does not</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Share(<span class="cj-id">s'</span>, <span class="cj-id">r'</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="7">
+<li>\(\textbf{require}\ \mathit{id}.P = P_d \ \wedge\ \mathtt{Sec} \neq \square \ \wedge\ \mathtt{Pub} = 0\)</li>
+<li>\(\textbf{if}\ (s', r') \neq \bot\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{require}\ P_d \in \mathbf{C}\)</span><span class="cj-comment">// only a corrupt dealer may change its mind</span></li>
+<li><span class="cj-ind">\(\mathtt{Sec} \gets s'\); &nbsp;&nbsp; \(\mathtt{Cm} \gets \mathsf{Com}(s'; r')\)</span></li>
+<li>\(\mathtt{Pub} \gets 1\)</li>
+<li>\(\textbf{return}\ \mathtt{Cm}\) &nbsp;to every \(P \in \mathbf{P}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Open()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="13">
+<li>\(\textbf{require}\ \mathtt{Pub} = 1 \ \wedge\ \mathit{id}.P \in \mathbf{P}\)</li>
+<li>\(\mathtt{Op}[\mathit{id}.P] \gets 1\)</li>
+<li>\(\textbf{require}\ \bigl|\{\, P : \mathtt{Op}[P] = 1 \,\}\bigr| \ge t + 1\)<span class="cj-comment">// \(t+1\) distinct players, and no fewer</span></li>
+<li>\(\textbf{return}\ \mathtt{Sec}\) &nbsp;to every \(P \in \mathbf{P}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="17">
+<li>\(\textbf{if}\ \mathit{id}.P = P_d\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ (\mathtt{Sec}, \mathtt{Cm}, \mathtt{Pub})\)</span></li>
+<li>\(\textbf{return}\ (\mathtt{Cm}, \mathtt{Pub}, \mathtt{Op})\)</li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+*Source: Definition 5, p. 7 of Abe and Fehr, "Adaptively Secure Feldman VSS and Applications to Universally-Composable Threshold Cryptography", ePrint 2004/119, revision `20040720:200458`, the newer of two postings. The PDF's pages and its printed folios agree.*
+
+- **Line 5 is the whole of the sharing phase's secrecy claim.** The adversary is handed $\mathtt{Cm}$ and nothing else. Not the secret, not the randomness, not the shares — there are no shares in this functionality at all, which is the point of an ideal VSS: share vectors are an implementation detail of the protocol, and a definition that mentioned them would be describing one.
+- **Lines 8–10 are the spooling, and line 9 is what keeps it honest.** A dealer may replace $(s,r)$ at the moment of announcement, but only if it is corrupt. An honest dealer is bound by what it spooled. Without line 9 the functionality would let anyone equivocate and would guarantee nothing; with it, equivocation is exactly the power an adaptive adversary needs and no more.
+- **Line 15 is the reconstruction threshold, and it counts *distinct* players.** $\mathtt{Op}$ is a set-valued record rather than a counter for that reason: a single corrupt player calling $\mathsf{Open}$ repeatedly must not reach $t+1$ on its own.
+- **What the source says the commitment must not be.** The paper stresses that $y$ "must be determined only from the input", because in the real world it is chosen by a possibly corrupt dealer and "may follow a distribution the simulator does not know". So $\mathsf{Com}$ is a parameter applied to the dealer's own $(s,r)$ at lines 4 and 10, never sampled inside the box. It is "too much demanding that $r$ is generated inside the ideal functionality".
+- **Line 18 hands a corrupt dealer its own secret back, which is not a leak.** It held $(s,r)$ already. The interesting half is line 19: a corrupt *player* learns the commitment, whether the sharing was announced, and who has asked to open — and never the secret, until line 16 releases it to everyone at once.
+
+**Mismatch register.**
+
+| The source | This box | Why |
+|---|---|---|
+| Two functionalities, $\mathcal{F}^{\mathrm{com}_K}_{\mathsf{VSS}}$ (Def. 4) and $\mathcal{F}^{\mathrm{com}_K}_{\mathsf{SVSS}}$ (Def. 5) | The spooling one | Framework currency: this encyclopedia's model has adaptive corruption, and Def. 4 is the one the paper says cannot survive it. Def. 4 is Def. 5 with $\mathsf{Spool}$ and $\mathsf{Share}$ collapsed into a single call. |
+| "on receiving `(share, sid, (s', r'))` from **corrupt** $P_d$" | `require $P_d \in \mathbf{C}$` inside the branch | Same condition, written as a refusal rather than as a side condition on the message. |
+| Optionally announces $r$ at open | Not included | The source marks it optional and nothing here depends on it. A variant that opens $r$ is a different box. |
+| No leakage interface | $\mathsf{Leak}$ at lines 17–19 | Required here; the split is this page's, and follows what each role already holds. |
+| Key generation for $\mathrm{com}_K$ | Not modelled | §6.2 notes that for schemes like Pedersen's the generation of $K$ "needs to be added to the VSS functionality" for the proof to go through. It is not in Definition 5 and is not added here. |
+
+## Known realizations
+
+**Feldman VSS, made adaptively secure: Proposition 1, p. 10.** Protocol $\pi_{\mathsf{XFVSS}}$ securely realizes $\mathcal{F}^{g}_{\mathsf{SVSS}}$ — the discrete-log instantiation, where the commitment is $g^s$. This is the paper's headline: Feldman's classical scheme, which is *not* adaptively secure as stated, becomes so under this formulation.
+
+**And from secure message transmission: Theorem 7, p. 22.** Protocol $\pi_{\mathsf{CFVSS}}$ realizes $\mathcal{F}^{g}_{\mathsf{SVSS}}$ in the $\mathcal{F}_{\mathsf{SSMT}}$-hybrid model.
+
+**Spooling is not always needed.** The paper notes that where the composed protocol is used in a context that does not corrupt the dealer between the two phases, $\mathcal{F}^{g}_{\mathsf{VSS}}$ and $\mathcal{F}^{g}_{\mathsf{SVSS}}$ "are equivalent here". The spooled form is the safe default, not a strictly stronger object in every use.
+
+## Properties
+
+- **Secrecy before opening, with advantage exactly $0$.** For every adversary: the only disclosure before line 16 is $\mathtt{Cm}$ at line 5 and its repetition at line 12. Whether that hides $s$ is a property of $\mathsf{Com}$, not of this box — the box discloses the commitment and nothing more, which is the strongest statement an ideal functionality can make here.
+- **Binding, with probability exactly $1$, for an honest dealer.** Line 9: an honest $P_d$ cannot reach line 10, so the value opened at line 16 is the one spooled at line 4.
+- **Agreement, with probability exactly $1$.** Lines 12 and 16 return to *every* $P \in \mathbf{P}$ in one step. There is no path on which two players receive different commitments or different secrets.
+- **Reconstruction requires $t+1$ distinct players, exactly.** Line 15. Fewer cannot open; the functionality has no other route to $\mathtt{Sec}$ for a non-dealer.
+- **No robustness claim against a silent dealer.** Nothing forces $\mathsf{Share}$ ever to be called. A dealer that spools and stops leaves the instance with $\mathtt{Pub} = 0$ forever, and the box says nothing about it.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Abe and Fehr. [*Adaptively secure feldman VSS and applications to universally-composable threshold cryptography*](https://eprint.iacr.org/2004/119). In Advances in Cryptology – CRYPTO 2004, pages 317–334, 2004.
-- Gennaro, Rabin, and Rabin. [*Simplified VSS and fast-track multiparty computations with applications to threshold cryptography*](https://mit6875.github.io/PAPERS/GennaroRabinRabin.pdf). In 17th ACM Symposium on Principles of Distributed Computing (PODC), pages 101–112, 1998.
+- Abe and Fehr. [*Adaptively secure Feldman VSS and applications to universally-composable threshold cryptography*](https://eprint.iacr.org/2004/119). In Advances in Cryptology – CRYPTO 2004, pages 317–334, 2004. The definition transcribed above is Definition 5, p. 7 of ePrint 2004/119, revision `20040720:200458`, the newer of two postings; the non-spooled form is Definition 4 on the same page; the realizations are Proposition 1 (p. 10) and Theorem 7 (p. 22). The same paper's footnote 1 reports that the standard commitment functionality "cannot be securely realized by an interactive protocol ... not even in the asynchronous communication model", which it says "uncovers a flaw in essentially all 'proven-secure' UC commitments" — worth knowing, and unrelated to the box above.
+- Gennaro, Rabin, and Rabin. [*Simplified VSS and fast-track multiparty computations with applications to threshold cryptography*](https://mit6875.github.io/PAPERS/GennaroRabinRabin.pdf). In 17th ACM Symposium on Principles of Distributed Computing (PODC), pages 101–112, 1998. Cited by this page for the primitive rather than for a functionality: it predates the UC framework and prints none. That is the expected result for an origin citation, not a gap.

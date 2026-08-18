@@ -222,7 +222,7 @@ supplied numbers and several had drifted or were slightly off:
 
 - [ ] **UC Encyclopedia content (~5h — manual: sourcing and verifying real citations per functionality, not just drafting text)**
 
-  56 of the 104 functionality pages (`uc/layer-N-.../<id>/index.qmd`) are still stubs, one is marked *No canonical definition*, and forty-seven are written — measured 18 August 2026. Run `python3 scripts/uc_status.py --check` for the current split rather than trusting these numbers. Added 18 August: F-acc, F-TSIG, F-adsig, F-NIZK and F-PUF, alongside the forty-two already listed in `git log`.
+  51 of the 104 functionality pages (`uc/layer-N-.../<id>/index.qmd`) are still stubs, one is marked *No canonical definition*, and fifty-two are written — measured 18 August 2026. Run `python3 scripts/uc_status.py --check` for the current split rather than trusting these numbers. Added 18 August: F-acc, F-TSIG, F-adsig, F-NIZK, F-PUF, then F-aPAKE, F-saPAKE, F-VSS, F-ABB and F-dauth, alongside the forty-two already listed in `git log`.
 
   The tooling for this now exists end to end, so this is a matter of running it 97 times rather than inventing the process each time:
 
@@ -263,12 +263,40 @@ supplied numbers and several had drifted or were slightly off:
   require it. Every command must sit on **one source line** (a wrapped `\If{...}` condition raises), and a
   `\label` must share the line with its statement rather than sit on the next one.
 
+  **Two more shading-coded figures, and the trap is now a pattern rather than an incident.** After
+  `f-acc`'s colour key, the OPAQUE paper turned out to encode *three* functionalities in two figures by
+  typography alone: Figure 1's caption reads "$\\mathcal{F}_{\\mathsf{aPAKE}}$ (full text) and
+  $\\mathcal{F}_{\\mathsf{saPAKE+}}$ (shadowed text omitted)", and Figure 2 is then a *marked diff* of
+  $\\mathcal{F}_{\\mathsf{saPAKE}}$ against that second one. None of the shading survives `pdftotext`, so a
+  text-only reading silently produces a blend of three different objects. **Render the figure and look at
+  it** whenever a caption mentions full text, shading, marks, colour or omission — `pdftoppm -f <p> -l <p>
+  -r 135 -png` is enough. Treat a caption naming two functionalities as a hard stop.
+
+  **A citekey is not unique across entries, which breaks naive cross-entry scans.** `canetti2001` means
+  Canetti--Fischlin, *Universally composable commitments*, on `f-nmcom` and `f-eqv`, and Canetti's framework
+  paper on `f-ke`. A scan that globs `~/.cache/conjura-uc-sources/<citekey>-*.pdf` and takes the first match
+  will read the wrong paper. Match on the recorded `sha256_16` instead.
+
+  **Still located and unwritten, from the same grep:** `f-se` ($\\mathcal{F}_{\\mathsf{senc}}$,
+  K\u00fcsters--Tuengerthal Figures 10--12, about 120 lines over three pages -- a sitting of its own),
+  `f-secmsg` ($\\mathcal{F}_{\\mathsf{SM}}$, Figure 7, entangled with four sibling modules), `f-chan`
+  (state channels, Dziembowski et al.), `f-cred` ($\\mathcal{F}_{\\mathsf{daa}}$ -- DAA, a naming judgment
+  against "credentials"), `f-snark` ($\\mathcal{F}_{\\textsc{weak-nizk}}$, Kosba et al.), `f-ba`
+  ($\\mathcal{F}_{\\mathsf{csf}}$ and the wrapper family, Cohen et al.), `f-fhe`
+  ($\\mathcal{F}_{\\mathsf{Decrypt}}$; its $\\mathcal{F}_{\\mathsf{ABB}}$ hit belongs to `f-abb`, now
+  written), and `f-mac`/`f-kdf` (both inside one $\\mathcal{F}_{\\mathsf{crypto}}$ library).
+
   **Two more stub titles were claims, and both were wrong (18 August).** `f-acc` read "Accumulator, vector
   commitment" — the source defines no vector-commitment functionality and the phrase "vector commitment"
   appears nowhere in it, checked; retitled to "Accumulator". `f-tsig` read "Threshold signature", but the
   printed box requires *every* signatory to have asked before a signature exists, so it is the unanimous
   ($n$-of-$n$) case and the threshold lives in the protocol; retitled "Threshold signature, unanimous".
-  That is eleven of the last nineteen entries retitled.
+  That is eleven of the last nineteen entries retitled. Two more went on the second batch: `f-dauth` read
+  "On-line deniable authentication" and its source defines no such functionality -- the paper's result is
+  that on-line deniable authentication is *impossible*, and the object it prints is
+  $\\mathcal{F}_{\\mathsf{keia}}$, key exchange with incriminating abort; and `f-vss` now names the
+  *spooling* variant it actually transcribes, since the non-spooled Definition 4 is the one the paper says
+  adaptive corruption defeats.
 
   **A new paging trap: the archive listing and the PDF can disagree about the title.** ePrint 2021/060 is
   posted as "UC Non-Interactive, Proactive, **Threshold** ECDSA with Identifiable Aborts", which is also the

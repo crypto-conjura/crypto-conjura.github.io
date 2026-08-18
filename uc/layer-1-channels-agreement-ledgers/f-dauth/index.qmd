@@ -1,12 +1,130 @@
 ---
-title: "F-dauth — On-line deniable authentication"
+title: "F-dauth — Key exchange with incriminating abort"
 status: "Canonical"
 layer: 1
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-dauth* (On-line deniable authentication) is part of *Channels, Agreement, Ledgers* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+*F-dauth* (Key exchange with incriminating abort) is part of *Channels, Agreement, Ledgers* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+
+This page's former title was "On-line deniable authentication", and the change is not cosmetic. Dodis, Katz, Smith and Walfish define **no** functionality by that name, and the reason is their main result: on-line deniable authentication is *impossible* to realize in their setting. What they define instead is $\mathcal{F}^{\mathsf{IncProc}}_{\mathsf{keia}}$, key exchange with *incriminating abort* — a functionality that concedes the impossibility and parameterizes exactly how much a failed exchange gives away. The interesting object is the concession, and the concession is the parameter $\mathsf{Inc}$.
+
+Read the box as a key exchange in which the adversary has one extra power: it may abort, and if it does, it may then run an incrimination procedure against the *honest* sender's secret key. Line 20 is where the trade-off is priced.
+
+## Functionality
+
+Reading the box: $\mathcal{A}(\cdot)$ is a call on the adversary slot and $\mathit{id}'.F = \mathbf{A}$ tests that the adversary is the caller; **require** refuses the call, and the framework answers $\textsf{rej}$; $\mathbf{C}$ is the set of corrupted parties; $\square$ marks a value never set; $S$ and $R$ are the sender and receiver, $\mathsf{Inc}$ the incrimination procedure and $\lambda$ the key length, all parameters; $\mathcal{F}_{\mathsf{KRK}}$ is the key-registration setup this functionality runs alongside, which is where the long-term keys live.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{KEIA}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves}), (\mathcal{F}_{\mathsf{KRK}},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := (S, R, \mathsf{Inc}, \lambda)\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{Act} : \{S, R\} \to \{0,1\}\); &nbsp;&nbsp; \(\mathtt{Act}[*] \gets 0\)</li>
+<li>\(\mathtt{Ab}, \mathtt{Done}, \mathtt{Inc} \gets 0\); &nbsp;&nbsp; \(\mathtt{Key} \gets \square\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Exchange()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="3">
+<li>\(\textbf{require}\ \mathit{id}.P \in \{S, R\} \ \wedge\ \mathtt{Act}[\mathit{id}.P] = 0 \ \wedge\ \mathtt{Done} = 0\)</li>
+<li>\(\textbf{if}\ \mathit{id}.P = R\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{require}\ \mathtt{Act}[S] = 1\)</span><span class="cj-comment">// the sender moves first</span></li>
+<li>\(\mathtt{Act}[\mathit{id}.P] \gets 1\)</li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Exchange}, \mathit{id}.P\bigr)\)<span class="cj-comment">// public delayed output: the peer is told</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.SetKey(<span class="cj-id">k</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="9">
+<li>\(\textbf{require}\ \mathit{id}'.F = \mathbf{A} \ \wedge\ \mathtt{Act}[R] = 1 \ \wedge\ \mathtt{Done} = 0\)</li>
+<li>\(\textbf{if}\ R \in \mathbf{C}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{Key} \gets k\)</span><span class="cj-comment">// a corrupt receiver takes the adversary's key</span></li>
+<li>\(\textbf{if}\ R \notin \mathbf{C}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{Key} \gets \$\,\{0,1\}^{\lambda}\)</span><span class="cj-comment">// otherwise fresh, and the adversary never sees it</span></li>
+<li>\(\mathtt{Done} \gets 1\)</li>
+<li>\(\textbf{return}\ \mathtt{Key}\) &nbsp;to \(R\), and to \(S\) if \(\mathtt{Act}[S] = 1\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Abort()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="16">
+<li>\(\textbf{require}\ \mathit{id}'.F = \mathbf{A} \ \wedge\ \mathtt{Act}[S] = 1 \ \wedge\ \mathtt{Done} = 0\)</li>
+<li>\(\mathtt{Ab} \gets 1\)<span class="cj-comment">// \(S\) can no longer output a key; \(R\) still can</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span> &nbsp;to \(S\), and to \(R\) if \(\mathtt{Act}[R] = 1\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Incriminate()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="19">
+<li>\(\textbf{require}\ \mathit{id}'.F = \mathbf{A} \ \wedge\ \mathtt{Ab} = 1 \ \wedge\ \mathtt{Inc} = 0\)</li>
+<li>\(\textbf{require}\ S \notin \mathbf{C}\)<span class="cj-comment">// only an honest, aborted sender is incriminable</span></li>
+<li>\(\mathtt{Inc} \gets 1\)</li>
+<li>\(\textbf{return}\ \mathsf{Inc}\bigl(S, R, \mathcal{F}_{\mathsf{KRK}}.\mathsf{Pub}(S), \mathcal{F}_{\mathsf{KRK}}.\mathsf{Pub}(R), \mathcal{F}_{\mathsf{KRK}}.\mathsf{Sec}(S)\bigr)\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="23">
+<li>\(\textbf{if}\ \mathit{id}.P = R \ \wedge\ \mathtt{Done} = 1\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ (\mathtt{Act}, \mathtt{Ab}, \mathtt{Key})\)</span></li>
+<li>\(\textbf{return}\ (\mathtt{Act}, \mathtt{Ab})\)</li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+*Source: Figure 3, p. 14 of Dodis, Katz, Smith and Walfish, "Composability and On-Line Deniability of Authentication", TCC 2009. The copy read is the authors' preprint, whose folios number from 1 and are therefore **not** the proceedings' pages 146–162. Use the preprint's own number with the linked file; the corresponding proceedings page is not computed here, since the two paginations need not differ by a constant.*
+
+- **Lines 10–13 are the key-exchange guarantee, and they are a clean two-case split.** A corrupt receiver gets whatever key the adversary names; an honest one gets a fresh uniform string the adversary never sees. There is no third case and no computational assumption — the secrecy here is information-theoretic, which is what makes it worth stating as a functionality at all.
+- **Line 17 is the asymmetry that gives the functionality its name.** Aborting stops $S$ from ever outputting a key, but leaves $R$ able to. The source is explicit: the adversary "need not notify either party that the protocol was aborted, and may still cause $R$ to output a key using a $\mathsf{setkey}$ message, but cannot cause $S$ to output a key once an abort has occurred". So an abort is not a symmetric failure; it is a wedge driven between the two parties.
+- **Line 20 is the whole point, and it is a `require` on *honesty*.** Incrimination runs only against a sender that is **not** corrupt. That looks backwards until you see what it models: the evidence the adversary walks away with is evidence against an honest party, which is precisely what deniability is supposed to prevent. A corrupt sender needs no incriminating, since the adversary already has its key.
+- **Line 19 spends the incrimination once.** $\mathtt{Inc}$ is a one-shot flag, matching the source's "if this is the first time receiving such a message". The adversary gets one run of $\mathsf{Inc}$, not an oracle.
+- **Line 22 passes the honest sender's *secret* key into $\mathsf{Inc}$.** That is the strongest possible framing of the concession, and it is deliberate: the functionality does not decide what evidence is producible, it hands the procedure everything and lets the parameter decide. Instantiating $\mathsf{Inc}$ with a procedure that outputs nothing recovers full deniability — and the paper's impossibility result says no protocol realizes *that* instantiation.
+- **Line 5 fixes the order.** The receiver cannot move before the sender has. The source achieves this by having $R$'s activation only make sense after $S$'s record exists.
+
+**Mismatch register.**
+
+| The source | This box | Why |
+|---|---|---|
+| "public delayed output" to the peer | $\mathcal{A}(\cdot)$ at line 7, then return | Delayed output is the adversary-scheduled idiom; an ordinary (non-responsive) call is its translation here. Not $\mathcal{A}^{!}$ — the adversary may interleave, and the source intends it to. |
+| Runs "in the $\mathcal{F}_{\mathsf{krk}}$-hybrid model with parties who have already registered secret keys" | $\mathcal{F}_{\mathsf{KRK}}$ in $\mathbf{U}$, read at line 22 | Kept as a used slot rather than folded into parameters, because $\mathsf{Inc}$ genuinely needs the registered keys and hiding that would misstate what the box touches. |
+| "the functionality halts" after $\mathsf{setkey}$ | $\mathtt{Done} \gets 1$ at line 14, tested by every later guard | This site's boxes are long-lived. The flag reproduces the halt exactly; nothing can run afterwards. |
+| No leakage interface | $\mathsf{Leak}$ at lines 23–25 | Required here. A corrupted receiver that has completed learns its key; everyone else learns only the public schedule. |
+| Corruption is the framework's | $\mathbf{C}$ at lines 10, 12, 20 | Same tests, expressed through the corruption set. |
+
+## Known realizations
+
+**The negative result is the reason this functionality exists.** The paper's contribution is that on-line deniable authentication cannot be realized — the incrimination procedure is the measure of how much any realizable protocol must give up. So the honest answer for this box is that it is a *family*: for a strong enough $\mathsf{Inc}$ it is realizable, and for the empty $\mathsf{Inc}$ it is not.
+
+**Two properties the paper reads off any realizing protocol**, and they are worth keeping next to the box because they are claims about the whole family rather than about one instantiation: if no abort occurs, the ideal protocol is *forward secure*, since the key at line 13 is uniform and independent of everything the adversary holds; and a protocol realizing $\mathcal{F}^{\mathsf{Inc}}_{\mathsf{keia}}$ for *any* procedure $\mathsf{Inc}$ is forward-secure.
+
+## Properties
+
+- **Key secrecy against an honest receiver, with advantage exactly $0$.** Line 13: uniform on $\{0,1\}^{\lambda}$, drawn inside the functionality, and never passed to the adversary slot. Unbounded environments included.
+- **Agreement, with probability exactly $1$, when both are active.** Line 15 returns the same $\mathtt{Key}$ to $R$ and to $S$, in one step, and $\mathtt{Done}$ prevents a second key ever being produced.
+- **One-sided abort, with probability exactly $1$.** Line 17, read with line 9's guard: after an abort $S$ has no path to a key, while $R$ still does.
+- **Incrimination is bounded by exactly one run of $\mathsf{Inc}$ against an honest, aborted sender.** Lines 19–22. Whether that run reveals anything is the parameter's business; the quantifier — *at most once, only after an abort, only against an honest $S$* — is the box's.
+- **No authentication claim is made here at all.** This is a key-exchange functionality. The paper's subject is what authentication costs in deniability, and the answer is stated as this object rather than as an $\mathcal{F}_{\mathsf{dauth}}$.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Dodis et al. [*Composability and on-line deniability of authentication*](https://www.cs.umd.edu/~jkatz/papers/deniable.pdf). In 6th Theory of Cryptography Conference (TCC), pages 146–162, 2009.
+- Dodis, Katz, Smith, and Walfish. [*Composability and on-line deniability of authentication*](https://www.cs.umd.edu/~jkatz/papers/deniable.pdf). In 6th Theory of Cryptography Conference (TCC), volume 5444 of LNCS, pages 146–162, 2009. The definition transcribed above is Figure 3, p. 14 of the authors' preprint linked here, whose page numbers run from 1 rather than following the proceedings. The paper prints two other functionalities the harvest also found, $\mathcal{F}_{\mathsf{auth}}$ (p. 7) and the key-registration setup it runs against; neither is the object of this page.

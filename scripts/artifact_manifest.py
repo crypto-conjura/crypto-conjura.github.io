@@ -103,6 +103,14 @@ def book_inputs():
 
     Read from `main.tex` rather than hardcoded, so a fragment promoted into
     the book starts being watched the moment it is `\\input`.
+
+    The `.sty` glob is `latex/*.sty`, not `latex/**/*.sty`, and that is the
+    same decision one level down. `functionalities/encyclopedia.sty` holds the
+    names of those other ninety-odd functionalities, and every entry written
+    adds one `\\newcommand` to it; `main.tex` does not load that file, so
+    nothing in it can reach a page of the book. `ucgamers.sty` sits beside
+    `main.tex` and is watched, because an edit to the book's own notation must
+    still invalidate the PDF.
     """
     latex = ROOT / "surveys" / "uc-for-gamers" / "latex"
     globs = ["surveys/uc-for-gamers/latex/*.tex",

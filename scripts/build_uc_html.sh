@@ -25,6 +25,9 @@
 #      and 68 others, none of which MathJax knows. They are injected from
 #      ucgamers.sty via scripts/gen_interface.py's loader, which already maps
 #      the ones MathJax cannot render (\op is \textsc) through MACRO_OVERRIDES.
+#      That loader also reads functionalities/encyclopedia.sty, so the config
+#      carries a handful of names the book itself never uses -- harmless, and
+#      cheaper than teaching it which file a macro came from.
 #
 #   5. Splitting needs the two Unicode characters in the source declared.
 #      Four headings use \texorpdfstring whose PDF branch is a literal Δ or π

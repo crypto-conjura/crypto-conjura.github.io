@@ -1,12 +1,67 @@
 # Tasks
 
-Split into two sections: **Website and repository** (~5.0h) covers the site, its build tooling and the repository's configuration; **Conjectures and papers** (~4.5h) covers the mathematics — proving conjectures, and writing and checking the papers that report them. Within each section, tasks are ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~17.5h** (rough; the UC Encyclopedia content dominates the uncertainty and could run well over its estimate).
+Split into two sections: **Website and repository** (~5.5h) covers the site, its build tooling and the repository's configuration; **Conjectures and papers** (~4.5h) covers the mathematics — proving conjectures, and writing and checking the papers that report them. Within each section, tasks are ordered by difficulty: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~18.0h** (rough; the UC Encyclopedia content dominates the uncertainty and could run well over its estimate).
 
 Last reconciled against `main` at `cbb23c7` on 18 August 2026.
 
 Completed tasks are deleted from this file rather than checked off and kept: this is a list of live work, and `git log` is the record of what closed and when.
 
 ## Website and repository
+
+- [ ] **Revisit "Supporting the project" against the project roadmap (~0.5h)**
+
+  Requested 18 August 2026, with a roadmap supplied in the request: the
+  project's aim is to move from *a repository of AI-generated content* to *a
+  reliable platform of verified cryptographic research*, under three headings —
+  **strengthen verification** (formalization in Lean; a structured,
+  community-led peer review run through GitHub), **deepen the research core**
+  (expand the UC encyclopedia; complete book-length surveys that map subfields
+  and show how conjectures connect), and **refine AI tooling**.
+
+  **The third heading arrived truncated** — the request ends mid-sentence at
+  "Conjura's unique angle is it" — so that bullet is not yet specified and this
+  entry should not be run until it is. Ask before starting.
+
+  `support/index.qmd` § "Supporting the project" is today a six-item list
+  ordered *by how scarce each kind of help is*: reviewing, conjecture
+  formulation and resolutions, formalizations, website and workflow
+  maintenance, tokens, ideas. Checked against the roadmap, four of the six
+  already carry it and two gaps are real:
+
+  - Roadmap 1a (formalization) is item 3, and 1b (human review) is item 1 —
+    both already the top of the list, and item 1 already says most statements
+    have never been read by a person. Nothing missing but emphasis.
+  - Roadmap 3 (AI tooling) is item 4, which mentions "the scripts and prompts
+    behind it" but reads as ordinary site maintenance. Sharpening it is
+    probably where the truncated bullet lands.
+  - **Roadmap 2a and 2b have no item at all.** Neither the UC encyclopedia nor
+    the surveys is mentioned anywhere in this section, though both are the
+    largest bodies of work on the site — 104 functionality pages and
+    `surveys/uc-for-gamers/`. That is the substantive addition.
+
+  **The editorial decision to make first**, because it changes the shape rather
+  than the wording. The existing list answers "what can *I* do", ordered by
+  scarcity; the roadmap answers "where is the *project* going", ordered by
+  theme. Merging them turns a list of asks into a list of goals and loses the
+  scarcity ordering, which is the thing that makes the list useful to someone
+  deciding where to spend an afternoon. The alternative — keep the six asks as
+  they are, add a short roadmap above or beside them, and have each ask point
+  at the part of the roadmap it serves — preserves both, at the cost of a
+  longer page. Recommend the second; decide it explicitly either way.
+
+  Two factual errors on the same page to fix while it is open, neither of them
+  about this section. **Mohammad Mahmoody is listed as "Bilkent University"
+  while his own entry links to `cs.virginia.edu`** — the label and its own link
+  disagree, and his homepage says the University of Virginia. **Jens Groth's
+  link is `http`-only** (`http://www0.cs.ucl.ac.uk/staff/j.groth/`), a
+  mixed-content nag from an `https` site, and he is the one name carrying no
+  affiliation.
+
+  What the rewrite must not drop, since it is why the wording is careful: that
+  support is not an endorsement or a review of any statement, that reviews are
+  recorded only in the [provenance badge](/open-problems/status-legend/), that
+  anyone listed can ask to be removed without giving a reason, and the pointer
+  to [Philosophy](/about/) for the compute-not-budget argument.
 
 - [ ] **Stop encyclopedia macros from asking for a book rebuild (~0.5h)**
 

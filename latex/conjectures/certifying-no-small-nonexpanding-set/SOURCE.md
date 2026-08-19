@@ -1,0 +1,89 @@
+# Provenance: Short Certificates That a Random Bipartite Graph Has No Small Non-Expanding Set
+
+Written by `scripts/harvest_conjectures.py`. Nothing here was checked
+by a human yet; this file is what the run believed and why.
+
+## Source
+
+- Paper: **The Complexity of Public-Key Cryptography**
+- Authors: Boaz Barak
+- Venue/archive: Cryptology ePrint Archive 2017
+- Identifier: 2017/365
+- Bibliographic detail: inferred
+- File: `2017-365.pdf` (33 pages)
+- sha256: `783db89538f26c3bdba6e5efbd019977d75f405771d71bb31cd1a83dd263a789`
+- Read on 2026-08-18T23:26:18Z via the `cli` backend
+
+## How the paper leaves it open
+
+`paper-asks-question`. Open in the paper, and posed there as a question with no position taken on the answer. The paper reports that no algorithm is known for the unbalanced expansion problem in this parameter range, and that a worst-case NP-hardness of approximation result at matching parameters would be evidence for a negative answer, while saying it does not know whether such a result is likely to hold. The direction stated in the conjecture above (that a certificate exists) is the author of this page's choice of direction, made because an unconditional negative answer is not attackable.
+
+## Quotes, checked against the PDF text layer
+
+Each was matched mechanically against `pdftotext` output after undoing
+ligatures, line-broken hyphens and curly quotes. `exact` is a verbatim
+hit; `near` means the span is present with a symbol mangled by the
+extractor. A conjecture whose statement or openness quote failed to
+ground was dropped before this file was written.
+
+| role | page | found | match | quote |
+| --- | --- | --- | --- | --- |
+| statement | 20 | 20 | exact (100%) | Does the reliance on the unbalanced expansion problem introduce new structure in the problem? For example, is there a nondeterministic procedure to certify the ... |
+| openness | 20 | 20 | exact (100%) | This viewpoint raises the following open questions: |
+| definition | 9 | 9 | exact (100%) | Define an (n, m, d) graph to be a bipartite graph with n left vertices, m right vertices, and right degree d. |
+| definition | 19 | 19 | exact (100%) | The unbalanced expansion problem: this is the problem of distinguishing between a random (n, m, d) bipartite graph as above, and such a graph where we plant a s... |
+| progress | 19 | 19 | exact (100%) | Expansion problems in graphs have been widely studied (e.g., see [HLW06]), and at the moment no algorithm is known for this range of parameters. |
+| progress | 20 | 20 | exact (100%) | So this problem can be thought of as the task of looking for a short linear dependency. |
+| parameter | 20 | 20 | exact (100%) | Increasing the parameter k makes the second problem harder (and in fact, depending on m/n, at some point the assumption becomes unconditionally true since there... |
+| progress | 21 | 21 | exact (100%) | One way to get evidence for a negative answer for the second question would be to get a worst-case NP hardness of approximation result for the unbalanced expans... |
+
+## Adversarial check
+
+**Verdict: faithful-with-corrections** (confidence: high)
+
+The question is genuinely the survey's own (p.20, \"This viewpoint raises the following open questions\"), genuinely open (p.21 offers only a route to evidence and says the author does not know whether it holds; nothing later resolves it), and the draft's formalization as a sound, average-case-complete nondeterministic certificate matches what is asked. The single most important defect is that the setting states the paper's linear-dependency observation backwards -- it claims a short dependency implies a non-expanding set, whereas p.20 gives only the forward implication and the converse is false, which inverts the one direction that makes the certification route sound. Compounding that, the progress note credits the paper with a minimum-distance-of-a-random-sparse-code reformulation it never makes, and the formal statement universally quantifies over parameters the paper scopes to those used by [ABW10].
+
+| check | result | page | finding |
+| --- | --- | --- | --- |
+| Existence | pass | 20 | The question is posed verbatim on p.20 as the second of two bulleted open questions: "Does the reliance on the unbalanced expansion problem introduce new structure in the problem? For example, is there a nondeterministic procedure to certify the nonexistence of a short non-expanding subset in a graph?" The draft's quote and page number are accurate. |
+| Openness | pass | 21 | It stays open. p.21 offers only a route to evidence for a negative answer (worst-case NP hardness of approximation at ABW-matching parameters) and closes with "We do not at the moment know whether such a result is likely or not to hold." I read forward through 5.4, the closing sections and p.23; nothing returns to it. Figure 3 (p.15) records "has nondeterministic refutation" but only for ABW Scheme 1's planted-3LIN assumption, not for unbalanced expansion, so it does not resolve this question. |
+| Strength | pass | 20 | The drafted content matches what p.20 asks: a nondeterministic (sound, average-case-complete) certificate of the nonexistence of a short non-expanding set. The paper poses a neutral question and the draft states the affirmative; status_note discloses this as the page author's choice of direction, which is the disclosed-choice case, not a silent strengthening of the paper's claim. |
+| Quantifiers and parameters | fail | 21 | The formal statement demands a certification scheme "for every such $(d, m, k)$" satisfying only $k=O(\log n)$ and whp $k$-goodness. The paper scopes the question to "parameters matching those used by [ABW10]" (p.21) and to the parameter set $(n,m,d,k)$ with $k=O(\log n)$ for which both ABW assumptions hold (p.20). The universal makes the drafted claim strictly stronger: one bad parameter setting refutes it. Separately, $d \ge 3$ and $m \ge n$ appear nowhere in the paper, which says only that $d$ is a constant and that "the larger $m$ is compared with $n$" the weaker the expansion assumption. |
+| Attribution | pass | 20 | This is the survey's own open question, introduced by "This viewpoint raises the following open questions" (p.20), not a problem it cites someone else for. The draft correctly attributes the cryptosystem to [ABW10] and the certificate precedent to [FKO06] without claiming either as the survey's own result. |
+| Definitions | unclear | 19 | The paper contradicts itself on p.19. Figure 6, assumption (ii), plants "a set $S$ of right vertices of size $k=O(\log n)$ such that $\|\Gamma_H(S)\| = k-1$ where $\Gamma_H(S)$ denotes the set of left-neighbors of $S$"; the prose bullet on the same page says "a set $S$ of size $k$ of left vertices such that $S$ has at most $k-1$ neighbors on the right-hand side". The draft's definitions follow Figure 6 (right vertices, left-neighbours), which is the orientation decryption requires -- but the draft files the contradicting prose bullet under role "definition" as if it supported the same reading. The choice is defensible; the evidence cited for it is not, and the paper does not let me settle which sentence the author intended. |
+| Fabrication | fail | 20 | Three unsupported assertions. (a) progress_note credits the paper with "three pieces of context" including that the reformulation "becomes a question about certifying the minimum distance of a random sparse binary code" -- the paper stops at "the task of looking for a short linear dependency" (p.20) and never mentions codes or minimum distance. (b) setting_latex calls [ABW10] "the leading candidate for a public-key encryption scheme built on combinatorics"; the section is titled "Combinatorial(?) Constructions" and says "this term is not well defined" (p.18), and Figure 3 (p.15) lists it as one of several non-mainstream candidates without ranking. (c) setting_latex states the linear-dependency implication in the wrong direction -- see the correction on that field. |
+| Self-containment | pass | - | The notation, both definitions, and the explicit non-vacuity hypothesis (that a random graph is $k$-good whp) make the statement readable without the paper, and the refutation condition is stated. No evidence needed from the paper for this check. |
+
+### Unsupported by the paper
+
+- That the survey reformulates the certification question as certifying the minimum distance of a random sparse binary / low-density code. The paper stops at "the task of looking for a short linear dependency" (p.20); no code-theoretic framing appears anywhere on pp.19-21.
+- That a short linear dependency implies a non-expanding set ("the negation of $k$-goodness is implied by ... a short linear dependency", setting_latex). The paper asserts only the forward implication (p.20), and the converse is false.
+- That [ABW10] is "the leading candidate" for combinatorial public-key encryption. The paper titles the section "Combinatorial(?)" and disclaims the classification (p.18, p.20); Figure 3 (p.15) lists it unranked among several non-mainstream candidates.
+- The parameter constraints $d \ge 3$ and $m \ge n$ in the formal statement and parameter list. The paper states only that $d$ is a constant (Figure 6, p.19) and gives no bound relating $m$ to $n$.
+- That the Feige-Kim-Ofek certificates "live at high constraint density, whereas the graphs here are sparse" is presented as part of the survey's reasoning. The paper cites [FKO06] once (p.20) for the claim that the low-noise variant of the *first* assumption admits a non-constructive short certificate; it draws no density comparison with the expansion problem.
+
+### Corrections the checker asked for
+
+- **setting_latex** — The linear-dependency implication is stated backwards. The draft writes "the negation of $k$-goodness is implied by, and in the survey's phrase amounts to looking for, a short linear dependency" and then "certifying that no small non-expanding set exists would mean certifying that a random sparse binary matrix has no short dependency among its columns". The paper (p.20) gives only the forward direction: a set $S$ with $|\Gamma_H(S)| < |S|$ forces the equations indexed by $S$ to be linearly dependent. The converse is false -- $k$ vectors summing to zero over $\mathbb{F}_2$ can have a support union of size up to $dk$.
+  - suggested: Replace with: a non-expanding set $S$ yields $|S|$ vectors supported inside a coordinate subspace of dimension $|S|-1$, hence a linear dependency among at most $k$ of the $m$ vectors -- so $k$-goodness is *implied by* the absence of any short dependency, and a certificate that no $\le k$ columns are dependent is a sound (though possibly incomplete) certificate of $k$-goodness. The paper's phrase "this problem can be thought of as the task of looking for a short linear dependency" (p.20) is offered as evidence that the problem may be algebraic rather than combinatorial, not as a certification route.
+- **progress_note** — Attributes to the paper a reformulation it does not contain: that certifying no short dependency "becomes a question about certifying the minimum distance of a random sparse binary code". Nothing on pp.19-21 mentions codes, minimum distance, or LDPC. The accompanying claim "no efficient method for that is known" is also beside the point, since the question asks only for the *existence* of a certificate, not its efficient computability.
+  - suggested: Attribute only the linear-dependency observation to the paper (p.20), and present the minimum-distance framing, if kept at all, explicitly as the page author's own gloss.
+- **formal_statement_latex** — Universally quantifies over all $(d,m,k)$ with $d \ge 3$, $m \ge n$, $k = O(\log n)$ and whp $k$-goodness. The paper scopes the question to "parameters matching those used by [ABW10]" (p.21). $d \ge 3$ and $m \ge n$ are invented; the paper says only that $d$ is a constant, and $m > n$ follows from assumption (i) being a PRG rather than from any stated bound.
+  - suggested: Scope the existential to the ABW parameter range: "for the parameters $(n,m,d,k)$ with $k = O(\log n)$ used by [ABW10], for which a random $(n,m,d)$ graph is $k$-good with probability $1-o(1)$, there exists a certification scheme ...". Drop $d \ge 3$ and $m \ge n$ or mark them as the page author's normalization.
+- **setting_latex** — Calls [ABW10] "the leading candidate for a public-key encryption scheme whose hardness is combinatorial rather than algebraic or geometric". The paper heads the section "Combinatorial(?) Constructions" (p.18), notes the term "is not well defined", and says it does "not yet fully understand ... nor even the right way to formally define" the combinatorial-versus-algebraic question (p.20).
+  - suggested: "The [ABW10] cryptosystem is the survey's main example of an attempt to base public-key encryption on the average-case difficulty of a combinatorial problem, a classification the survey itself flags as not well defined."
+- **quotes** — The p.19 quote filed under role "definition" ("plant a set $S$ of size $k$ of left vertices such that $S$ has at most $k-1$ neighbors on the right-hand side") states the opposite orientation to the draft's own definitions, which use $S \subseteq [m]$ with left-neighbours. The paper is internally inconsistent: Figure 6 on the same page says right vertices with left-neighbours, and that is the orientation decryption requires.
+  - suggested: Cite Figure 6, p.19 -- "we plant a set $S$ of right vertices of size $k = O(\log n)$ such that $|\Gamma_H(S)| = k-1$ where $\Gamma_H(S)$ denotes the set of left-neighbors of $S$ in $H$" -- and note in the setting that the prose bullet on p.19 states the orientation the other way round.
+- **setting_latex** — "the distinguishing assumption becomes unconditionally true and useless". The paper (p.20) says only that at large enough $k$ the assumption becomes unconditionally true; at p.20 it treats reaching that regime as a feature of the low-noise linear variant, which can then "avoid the second assumption ... altogether".
+  - suggested: Say that in that regime the assumption becomes unconditionally true, which is what makes the certification question vacuous there -- not that it makes the assumption useless to the scheme.
+
+## Build
+
+- pdflatex: ok
+- chktex: 5 warnings
+- lacheck: 2 warnings
+
+## What to check hardest
+
+The single thing a reviewer must check is the orientation of the planted set, because the paper is internally inconsistent about it. The bullet on page 19 says a set S of size k of left vertices with at most k-1 neighbours on the right; Figure 6 on the same page says a set S of right vertices of size k with exactly k-1 left-neighbours; and the discussion on page 20, which speaks of a linear equation for each right vertex and says the equations corresponding to S are linearly dependent, agrees with Figure 6. The formal statement above follows Figure 6 and page 20, because that is the orientation under which the scheme in Figure 6 actually decrypts and under which the linear-dependency remark is correct. The definition quote I supply is the page 19 bullet, so it reads left where the statement reads right; that is the discrepancy, not an error in transcription. Second, the random graph model is mine: the paper says only 'a random (n,m,d) graph' and never fixes the distribution, and the independent-uniform-d-subsets model is the natural reading but not the only one. Third, the paper asks the question at 'parameters matching those used by [ABW10]', and the survey does not state ABW's m; I have therefore quantified over all m at least n and k = O(log n) for which the random graph is k-good with high probability, which is broader than the paper's phrasing and makes the affirmative statement stronger and a refutation easier. Fourth, the 1-o(1) completeness threshold and the requirement that soundness be worst-case are my formalisation of 'a nondeterministic procedure to certify'. Fifth, my claim in the setting that certifying the minimum distance of random low-density codes has no known efficient method is my own characterisation of the literature, not the paper's, and should be checked. Sixth, I have not verified against post-2017 work on sum-of-squares certification for sparse random graphs whether this has since been answered.
+

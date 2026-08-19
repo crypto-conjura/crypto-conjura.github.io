@@ -61,6 +61,44 @@ AREA_SLUGS = [
 # typos and near-synonyms, and nothing would catch "IOG" against "iog".
 TAG_SLUGS = {"iog"}
 
+# Topic tags: StackExchange-style, several per statement, one fine-grained
+# technique/object/primitive per value -- distinct from both AREA_SLUGS (19
+# broad categories, at most 1-3 per statement, never rendered anywhere) and
+# TAG_SLUGS (provenance, not subject matter). Deliberately excludes any slug
+# that duplicates an AREA_SLUGS value verbatim (e.g. no "lattices",
+# "obfuscation" or "secret-sharing" topic, even though those would fit some
+# statements): a topic page and an area page with the same name and the same
+# handful of statements would be two URLs for one list, which is confusing
+# rather than more granular. Where a topic is genuinely more specific than its
+# area (e.g. "learning-with-errors" under the "lattices" area), both are used.
+#
+# Human-readable label and one-paragraph tag-wiki description live in
+# scripts/gen_topics.py, not here: this file only validates and emits data,
+# the way it never stored AREA_SLUGS's labels either (those are hand-written
+# in problems/by-area/index.qmd). Closed like the areas/tags above, and
+# growable the same way: add a slug here, add its label/description in
+# gen_topics.py, run it.
+TOPIC_SLUGS = {
+    "feistel-networks", "pseudorandom-permutations", "mirror-theory",
+    "block-ciphers", "indifferentiability", "collision-finding",
+    "time-space-tradeoffs", "limited-independence", "leftover-hash-lemma",
+    "randomness-extraction", "multi-source-extractors", "random-oracle-model",
+    "quantum-random-oracle-model", "generic-group-model", "compressed-oracle",
+    "black-box-separations", "one-way-functions", "collision-resistant-hashing",
+    "snarks", "proof-size-lower-bounds", "non-interactive-key-exchange",
+    "key-agreement", "blind-signatures", "signature-schemes",
+    "threshold-signatures", "tight-reductions", "learning-with-errors",
+    "quantum-query-complexity", "quantum-cryptography", "quantum-key-agreement",
+    "sum-of-squares", "log-rank-conjecture", "quantum-information",
+    "verifiable-delay-functions", "time-lock-puzzles", "byzantine-agreement",
+    "coin-tossing", "fine-grained-cryptography", "registration-based-encryption",
+    "commitment-schemes", "physically-uncloneable-functions",
+    "pseudorandom-generators", "planted-constraint-satisfaction",
+    "average-case-hardness", "expander-graphs", "garbled-circuits",
+    "witness-encryption", "one-shot-signatures", "search-trees",
+    "direct-product-theorems", "quantum-encryption-notions",
+}
+
 MODELS = {"rom", "prom", "icm", "ggm", "qrom", "standard", "other"}
 FORMS = {
     "separation", "lower-bound", "tight-bound", "equivalence", "impossibility",
@@ -94,7 +132,7 @@ STATUS_FIELDS = {
 OPTIONAL_STATUS_FIELDS = {"proof_direction": DIRECTIONS}
 
 REQUIRED_FIELDS = [
-    "id", "problem", "title", "areas", "model", "form", "assumption_class",
+    "id", "problem", "title", "areas", "topics", "model", "form", "assumption_class",
     "category", "statement_sha", "revision", "status", "status_summary",
     "difficulty",
 ]
@@ -172,6 +210,18 @@ def validate_leaf(fm, path, errors):
             for tg in tags:
                 if tg not in TAG_SLUGS:
                     err(f"tag {tg!r} is not one of {sorted(TAG_SLUGS)}")
+
+    # Required, unlike tags: every statement should be findable by subject,
+    # the way every one already has areas -- topics are just the finer-grained
+    # version of that same requirement. At least one, no upper bound enforced
+    # here (gen_topics.py's own judgment call, not a schema one).
+    topics = fm.get("topics")
+    if not isinstance(topics, list) or not topics:
+        err("topics must be a non-empty list")
+    else:
+        for tp in topics:
+            if tp not in TOPIC_SLUGS:
+                err(f"topic {tp!r} is not one of the registered TOPIC_SLUGS (scripts/build_index.py)")
 
     if "model" in fm and fm["model"] not in MODELS:
         err(f"model {fm['model']!r} not in {sorted(MODELS)}")
@@ -265,6 +315,7 @@ def listing_item(leaf_id, fm):
         "difficulty_by": (fm.get("difficulty") or {}).get("by", ""),
         "difficulty_note": (fm.get("difficulty") or {}).get("note", ""),
         "tags": sorted(fm.get("tags") or []),
+        "topics": sorted(fm.get("topics") or []),
         "open_obligations": sum(1 for o in fm["_obligations"] if not o["done"]),
     }
 
@@ -274,7 +325,7 @@ def write_yaml(path, items):
 
 
 def emit(leaves):
-    for sub in ("areas", "model", "form", "assumption", "problems", "tags"):
+    for sub in ("areas", "model", "form", "assumption", "problems", "tags", "topics"):
         (GENERATED_DIR / sub).mkdir(parents=True, exist_ok=True)
 
     browsable = {lid: fm for lid, fm in leaves.items() if fm.get("category") != "withdrawn"}
@@ -307,6 +358,19 @@ def emit(leaves):
         if items:
             write_yaml(GENERATED_DIR / "tags" / f"{tag}.yml", items)
 
+    # Same pattern as tags: one file per topic actually in use. topics is
+    # required and non-empty (unlike tags), but plenty of TOPIC_SLUGS values
+    # will still be unused at any given moment as the taxonomy grows ahead of
+    # the statements that will eventually need a given slug.
+    for topic in sorted(TOPIC_SLUGS):
+        items = sorted(
+            (listing_item(lid, fm) for lid, fm in browsable.items()
+             if topic in (fm.get("topics") or [])),
+            key=lambda x: x["id"],
+        )
+        if items:
+            write_yaml(GENERATED_DIR / "topics" / f"{topic}.yml", items)
+
     problems = sorted({fm["problem"] for fm in leaves.values() if "problem" in fm})
     for slug in problems:
         items = sorted(
@@ -325,6 +389,7 @@ def emit(leaves):
             "short_title": fm.get("short_title", fm.get("title")),
             "problem": fm.get("problem"),
             "areas": fm.get("areas"),
+            "topics": fm.get("topics"),
             "model": fm.get("model"),
             "form": fm.get("form"),
             "assumption_class": fm.get("assumption_class"),

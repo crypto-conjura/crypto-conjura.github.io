@@ -84,9 +84,13 @@ if python3 -c "import yaml" 2>/dev/null; then
     fail "the relation graph is inconsistent (e.g. a relation pointing at a removed statement)." \
          "python3 scripts/check_relations.py   # then fix the offending relations: block"
   fi
+  if ! python3 scripts/gen_topics.py --check >/dev/null; then
+    fail "a topic page, the tag-cloud overview, or a statement's topic chips are stale." \
+         "python3 scripts/gen_topics.py   # run build_index.py first if topics: changed"
+  fi
 else
-  echo "pre-commit: note -- PyYAML not installed, so build_index.py and" >&2
-  echo "  check_relations.py were skipped (CI still runs them)." >&2
+  echo "pre-commit: note -- PyYAML not installed, so build_index.py," >&2
+  echo "  check_relations.py and gen_topics.py were skipped (CI still runs them)." >&2
   echo "  Install with: pip install -r requirements.txt" >&2
 fi
 

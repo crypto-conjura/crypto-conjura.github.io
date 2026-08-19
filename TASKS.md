@@ -93,6 +93,25 @@ supplied numbers and several had drifted or were slightly off:
 
 ## Website and repository
 
+- [ ] **Merge `problems/programmes/` into `projects/proposals/`, and shorten the latter's explanatory text (~45min — the merge has one real editorial call to make first)**
+
+  Requested 20 August 2026, with the exact shortened text supplied for the second half.
+
+  **The two pages are not quite the same concept, so "move the contents" needs one decision before it's mechanical.** `problems/programmes/index.qmd` ("Research Programmes") holds 8 hand-curated entries, each a direction a *specific paper's own future-work section* names without ever cashing out as a provable claim — quoted, sourced, checked against the PDF, exactly like a rejected conjecture-harvest candidate. `projects/proposals/index.qmd` ("Proposals") is currently a placeholder (0 entries) framed differently: a *forward-looking ask*, for a person who has a research idea but not the compute to work it, posted so an AI (or whoever has spare tokens) can pick it up. One is "here's a loose end this paper left"; the other is "here's an idea, someone/something please work it."
+
+  **Recommendation: treat every harvested programme as a proposal with a specific provenance**, rather than as a separate category — a paper's own "extend this to X" is exactly the kind of focused, under-resourced research topic the Proposals page already says it wants (see its "Who this is for" paragraph, kept below). Concretely: replace the "*No proposals have been posted yet*" placeholder under "## Open proposals" with the 8 entries from `problems/programmes/index.qmd` (same content, quotes and sourcing — don't re-derive them), and add one sentence distinguishing provenance where it matters ("harvested from a paper's own future-work section" vs. "freshly submitted"), rather than silently blending two different-sounding origins under one unmarked list. Decide this explicitly rather than defaulting to a bare copy-paste if the two don't read as compatible once actually merged.
+
+  **Mechanical parts, once that's settled:**
+  - Retire `problems/programmes/index.qmd` — either delete it with an `aliases:` redirect on `projects/proposals/index.qmd` pointing old visitors to the new URL (check `_quarto.yml`'s existing `aliases:` pattern, e.g. `support/index.qmd`'s `/steering/index.html`), or leave a short stub there linking to the new location. Prefer the alias: this site already treats stale URLs as a real cost (see the `problems/by-area/` broken-links fix, 19 August).
+  - `_quarto.yml`: remove `problems/programmes/index.qmd` from the `problems` sidebar (line ~132); it's already correctly absent from the `papers`/projects sidebar's own list, so no addition needed there since `projects/proposals/index.qmd` is already on it.
+  - `schema/index.qmd:10,27-29` explicitly documents "research programmes" as living on `problems/programmes/index.qmd` and describes why it sits outside the `c/` schema entirely — update this pointer and check whether its explanation still holds once programmes are presented as a flavour of proposal rather than a separate page.
+
+  **The shortened text, supplied verbatim, to replace the current three sections (`## What a proposal is`, `## How a proposal gets worked`, `## Who this is for`) on `projects/proposals/index.qmd`:**
+
+  > A proposal names a focused research topic — narrower than a survey, not yet precise enough to be a conjecture — that an AI (possibly multi-agent, possibly distributed) works by surveying the literature, generating and checking candidate statements, and autoformalizing whatever holds up. The result seeds a [paper](/projects/index.qmd) or an [open problem](/problems/index.qmd). Proposals exist for people with the idea but not the compute to pursue it themselves; posting one is how it gets worked anyway, by whoever picks it up.
+
+  One paragraph, roughly 40% the length of the original three sections combined, every fact kept except the illustrative example ("When is a problem in the Uber assumption family random self-reducible?") — dropped for length, not because it was wrong; add it back as a parenthetical if a concrete example is worth the extra sentence.
+
 - [ ] **Revisit "Supporting the project" against the project roadmap (~0.5h)**
 
   Requested 18 August 2026, with a roadmap supplied in the request: the

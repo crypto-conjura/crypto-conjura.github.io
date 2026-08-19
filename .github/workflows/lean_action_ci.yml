@@ -5,12 +5,6 @@ on:
   pull_request:
   workflow_dispatch:
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
-permissions:
-  contents: read # Read access to repository contents
-  pages: write # Write access to GitHub Pages
-  id-token: write # Write access to ID tokens
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -18,4 +12,16 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: leanprover/lean-action@v1
-      - uses: leanprover-community/docgen-action@v1
+        with:
+          lake-package-directory: lean
+      # leanprover-community/docgen-action@v1 deliberately left out here: at
+      # the exact `v1` ref this repo would pin to, its "Deploy to GitHub
+      # Pages" step runs unconditionally on every push with no opt-out input
+      # (later branches added a `deploy` toggle, but `v1` itself has none).
+      # This repo's Pages site is already deployed by
+      # .github/workflows/publish.yml (the Quarto build); adding docgen-action
+      # as-is would make every push race that deployment and can overwrite the
+      # live site with Lean API docs. Re-add it only once Lean docs have a
+      # deliberate home (e.g. a subpath the Quarto build copies in, or a newer
+      # pinned version/SHA with a real deploy toggle) rather than the whole
+      # Pages site.

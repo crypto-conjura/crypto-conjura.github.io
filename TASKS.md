@@ -93,6 +93,17 @@ supplied numbers and several had drifted or were slightly off:
 
 ## Website and repository
 
+- [ ] **Make the IOG provenance tag look like the rest, in the `problems/` listing tables (~20min)**
+
+  Requested 19 August 2026. The IOG chip (`c/0039`, `c/0040`, `c/0041` — the only statements carrying `tags: [iog]`) renders via `.cj-tag-org` (`theme-{light,dark}.scss`, rendered in `_listing-templates/statement-table.ejs.md`'s Tags column): outlined rather than filled, `0.7em` versus the row's `0.78em`, `UPPERCASED`, and at `0.7` opacity — deliberately quieter than everything else in the row, by a design comment already in the CSS ("kept quieter than a subject tag: it says where a statement came from, which is a smaller claim than what it is about"). Since the 19 August topic-tag work added `.cj-tag-topic` (filled, accent-coloured, clickable) beside it in the same row, IOG now visibly stands out as the one small, grey, outlined, all-caps chip among filled ones — which reads like an oversight rather than a deliberate quieter treatment.
+
+  **"The rest" has two plausible readings — pick one before touching the CSS**, since they're different amounts of work and different results:
+
+  - **Match `.cj-tag-topic`** (recommended): IOG is, like a topic chip, a clickable link to its own listing page (`/problems/tags/iog/`), so of everything in the row it is functionally closest to the topic chips, not the plain non-clickable `model`/`form`/`category`/`difficulty` pills. Drop the outline/uppercase/reduced-opacity treatment and give it the same filled, accent-coloured, same-size look as `.cj-tag-topic` — reusing that class (`class="cj-tag cj-tag-org cj-tag-topic"` or simply retargeting `.cj-tag-org`'s rules to match `.cj-tag-topic`'s) rather than inventing a third visual style for a one-tag facet.
+  - **Match plain `.cj-tag`**: treat IOG as just another descriptive pill (same size, same grey fill, not uppercased, no outline) — visually blends into the row rather than standing out as clickable at all, which somewhat undersells that it *is* a link.
+
+  Either way: check both `theme-light.scss` and `theme-dark.scss` (the rule is duplicated in both, same as every other `.cj-tag*` class), and re-check the same row on an individual `c/0039`/`c/0040`/`c/0041` page too — IOG doesn't currently render in the per-page topic-chip block `gen_topics.py` writes (that's topics-only), so if it's meant to appear there as well, that's a second, separate change to `gen_topics.py`'s `topics_block()`, not just a CSS tweak. Verify in a real browser (Playwright, per the pattern already established this session), not just by reading the CSS.
+
 - [ ] **Revisit "Supporting the project" against the project roadmap (~0.5h)**
 
   Requested 18 August 2026, with a roadmap supplied in the request: the

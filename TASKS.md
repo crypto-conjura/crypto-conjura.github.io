@@ -93,19 +93,6 @@ supplied numbers and several had drifted or were slightly off:
 
 ## Website and repository
 
-- [ ] **Replace the "not reviewed either" sentence on Philosophy with a divider — but this sentence is the site-wide footer's link target, check that first (~15min once resolved)**
-
-  Requested 20 August 2026: remove `philosophy/index.qmd:19` — "[This site has not been reviewed either]{#this-site-has-not-been-reviewed-either}: its prose, schema, scripts and this page were AI-generated, directed by a human but never independently reviewed, and the notice narrows only as review happens." — and put a small separating line/icon in its place instead.
-
-  **Before touching it: this exact sentence is the destination of a link on every single page of the site.** `_quarto.yml`'s `page-footer` (line ~85-88) puts "This site is AI-generated and has not been independently reviewed. [What that means](/philosophy/index.qmd#this-site-has-not-been-reviewed-either)" at the bottom of every page, and `#this-site-has-not-been-reviewed-either` is this sentence's own anchor — grepped, it's the only place that id is defined and the only place it's linked from. Deleting the sentence and leaving only a decorative divider means the site-wide footer's "What that means" link resolves to a page with no explanation on it at all: the promise every page makes ("click here to find out what that means") would go unanswered.
-
-  **Three ways to resolve this, in order of how much they change**, pick one rather than deleting the sentence outright and discovering the broken promise afterward:
-  1. Keep a short explanation *and* add the divider/icon around it — satisfies "put a separator where it is" without breaking the footer's link. Probably closest to what was actually asked, if the ask is about visual separation from the paragraph before it rather than about deleting the explanation itself.
-  2. Move the anchored explanation elsewhere on the same page (e.g. next to the existing disclosure earlier in the page, if any) and repoint the footer's `#anchor` to the new location, replacing this exact spot with a bare divider.
-  3. If the intent really is "no more explanation, anywhere" — also revisit the footer text itself (`_quarto.yml`), since "What that means" stops being a real link and either needs different wording or removal, site-wide, not just on this one page.
-
-  Whichever is chosen, re-check the footer link actually still lands somewhere meaningful on the rendered page (not just that the build doesn't error — a dangling `#anchor` reference doesn't fail a Quarto build, it just silently stops scrolling anywhere) before calling this done.
-
 - [ ] **Revisit "Supporting the project" against the project roadmap (~0.5h)**
 
   Requested 18 August 2026, with a roadmap supplied in the request: the

@@ -1,0 +1,319 @@
+{
+  "pdf": {
+    "name": "2017-365.pdf",
+    "sha256": "783db89538f26c3bdba6e5efbd019977d75f405771d71bb31cd1a83dd263a789",
+    "pages": 33
+  },
+  "run": {
+    "at": "2026-08-18T23:26:18Z",
+    "backend": "cli",
+    "effort": "high"
+  },
+  "document": {
+    "title": "The Complexity of Public-Key Cryptography",
+    "authors": [
+      "Boaz Barak"
+    ],
+    "year": "2017",
+    "venue_or_archive": "Cryptology ePrint Archive",
+    "identifier": "2017/365",
+    "citation_confidence": "inferred"
+  },
+  "candidate": {
+    "slug": "pke-constant-noise-kxor",
+    "title": "Public-Key Encryption from Constant-Noise Planted k-XOR",
+    "subtitle": "a linear number of equations, constant noise rate",
+    "category": "Public-Key Cryptography & Assumptions",
+    "one_line": "There should be a public-key encryption scheme whose security rests only on the difficulty of finding a planted assignment to a linear number of random sparse XOR equations at a constant noise rate.",
+    "informal": "Every public-key encryption scheme we actually rely on comes from one of two places: number theory in Abelian groups, or geometry of codes and lattices. There is a third kind of hardness that private-key cryptography uses freely and public-key cryptography cannot: take a system of random XOR equations, each involving a constant number of the variables, plant an assignment that satisfies most of them, and ask an algorithm to find an assignment that does as well. With a linear number of equations and a constant fraction of them deliberately falsified, this looks like a plain, structureless average-case problem, and it immediately gives candidate one-way functions. The conjecture is that it also gives public-key encryption: there is some constant arity, some constant equation-to-variable ratio, and some constant noise rate $\\varepsilon$ for which one can build an encryption scheme whose semantic security follows from nothing but the hardness of that search problem. What makes this hard is that every non-algebraic scheme we have needs the noise to be far smaller than a constant, below one over the square root of the number of variables, and that small noise is precisely the feature that lets lattice-based schemes be broken by an oracle for a problem believed to be much easier than the encryption scheme itself. So the conjecture asks for a scheme built on noise so large that this structural weakness cannot arise, and there is evidence that noise this large may be incompatible with the way all known schemes of this kind work.",
+    "openness_kind": "paper-asks-question",
+    "pages": [
+      14,
+      19,
+      20
+    ],
+    "parameters": [
+      {
+        "symbol": "n",
+        "meaning": "number of variables in the equation system, and the security parameter"
+      },
+      {
+        "symbol": "k",
+        "meaning": "arity of each XOR equation; a constant, at least 3"
+      },
+      {
+        "symbol": "c",
+        "meaning": "equation density: the system has $m = \\lceil cn \\rceil$ equations, so a linear number of them; a constant"
+      },
+      {
+        "symbol": "\\varepsilon",
+        "meaning": "noise rate: the planted assignment falsifies an $\\varepsilon$ fraction of the equations; a constant in $(0,1/2)$"
+      }
+    ],
+    "notation_latex": "Write $[n] = \\{1,\\dots,n\\}$, and let $\\oplus$ denote addition in $\\mathbb{F}_2$. Throughout, $k \\ge 3$ is an integer constant, $c > 0$ and $\\varepsilon \\in (0,1/2)$ are real constants, all three independent of $n$, and $m := \\lceil c n \\rceil$.\n\nA \\emph{$k$-XOR instance} on $n$ variables with $m$ equations is a pair\n\\[\n  \\Phi \\;=\\; \\bigl( (S_1,\\dots,S_m),\\, (b_1,\\dots,b_m) \\bigr),\n  \\qquad S_i \\subseteq [n],\\; |S_i| = k,\\; b_i \\in \\{0,1\\} .\n\\]\nFor $y \\in \\{0,1\\}^n$ the \\emph{value} of $y$ on $\\Phi$ is the fraction of equations it satisfies,\n\\[\n  \\mathrm{val}_\\Phi(y) \\;:=\\; \\frac{1}{m}\\,\\Bigl|\\Bigl\\{\\, i \\in [m] \\;:\\; \\bigoplus_{j \\in S_i} y_j = b_i \\,\\Bigr\\}\\Bigr| .\n\\]\n\n\\emph{Efficient} means probabilistic polynomial time in $n$, and $\\mathrm{negl}(n)$ denotes a function that is eventually smaller than $n^{-a}$ for every constant $a > 0$.",
+    "definitions_latex": "\\begin{definition}[Planted $k$-XOR at linear density]\nLet $\\mathcal{P}^{k,c,\\varepsilon}_n$ be the distribution on $k$-XOR instances obtained as follows: sample $x \\leftarrow \\{0,1\\}^n$ uniformly; sample $S_1,\\dots,S_m$ independently and uniformly from the $k$-element subsets of $[n]$; sample $T \\subseteq [m]$ uniformly among the subsets of size $\\lfloor \\varepsilon m \\rfloor$; and set\n\\[\n  b_i \\;=\\; \\bigoplus_{j \\in S_i} x_j \\quad (i \\notin T),\n  \\qquad\n  b_i \\;=\\; 1 \\oplus \\bigoplus_{j \\in S_i} x_j \\quad (i \\in T).\n\\]\nThe output is $\\Phi = ((S_i)_{i}, (b_i)_{i})$; the planted assignment $x$ is not output, and satisfies exactly a $1 - \\lfloor \\varepsilon m\\rfloor / m \\ge 1-\\varepsilon$ fraction of the equations.\n\nThe planted $k$-XOR problem with parameters $(k,c,\\varepsilon)$ is \\emph{hard} if for every efficient algorithm $A$,\n\\[\n  \\Pr_{\\Phi \\leftarrow \\mathcal{P}^{k,c,\\varepsilon}_n}\\bigl[\\, \\mathrm{val}_\\Phi\\bigl(A(\\Phi)\\bigr) \\ge 1 - \\varepsilon \\,\\bigr] \\;=\\; \\mathrm{negl}(n).\n\\]\n\\end{definition}\n\n\\begin{definition}[Public-key encryption of one bit]\nA public-key encryption scheme is a triple $\\Pi = (\\mathrm{Gen}, \\mathrm{Enc}, \\mathrm{Dec})$ of efficient algorithms, where $\\mathrm{Gen}(1^n)$ outputs a pair $(pk, sk)$, $\\mathrm{Enc}(pk, b)$ takes $b \\in \\{0,1\\}$ and outputs a ciphertext, and $\\mathrm{Dec}(sk, \\cdot)$ outputs a bit. It is \\emph{correct} if\n\\[\n  \\Pr\\bigl[\\,\\mathrm{Dec}\\bigl(sk, \\mathrm{Enc}(pk, b)\\bigr) = b\\,\\bigr] \\;\\ge\\; 1 - \\mathrm{negl}(n)\n  \\qquad \\text{for both } b \\in \\{0,1\\},\n\\]\nthe probability being over $(pk,sk) \\leftarrow \\mathrm{Gen}(1^n)$ and the coins of $\\mathrm{Enc}$ and $\\mathrm{Dec}$. It is \\emph{CPA-secure} if for every efficient $A$,\n\\[\n  \\Bigl| \\Pr\\bigl[A\\bigl(pk, \\mathrm{Enc}(pk,0)\\bigr) = 1\\bigr] - \\Pr\\bigl[A\\bigl(pk, \\mathrm{Enc}(pk,1)\\bigr) = 1\\bigr] \\Bigr| \\;=\\; \\mathrm{negl}(n).\n\\]\n\\end{definition}",
+    "formal_statement_latex": "There exist an integer constant $k \\ge 3$, real constants $c > 0$ and $\\varepsilon \\in (0,1/2)$, and a correct public-key encryption scheme $\\Pi = (\\mathrm{Gen},\\mathrm{Enc},\\mathrm{Dec})$, such that the following holds:\n\\[\n  \\text{if the planted $k$-XOR problem with parameters } (k,c,\\varepsilon) \\text{ is hard, then } \\Pi \\text{ is CPA-secure.}\n\\]\nHere the three algorithms of $\\Pi$ must be efficient and its correctness must hold unconditionally, so that the hardness of planted $k$-XOR at linear density $m = \\lceil cn \\rceil$ with constant noise rate $\\varepsilon$ is the only assumption carrying the security of $\\Pi$.",
+    "setting_latex": "Public-key encryption, unlike private-key cryptography, rests on a very short list of assumptions. The survey this problem is taken from divides the well-studied schemes into two families: an ``algebraic'' family built on Abelian groups (integer factoring, discrete logarithm, elliptic curves) and a ``geometric'' family built on codes and lattices, whose cleanest formalisation is Learning With Errors \\cite{Reg09}. Private-key cryptography is in a completely different position: candidate one-way functions fall out of almost any planted average-case problem, including random constraint satisfaction problems with a planted assignment \\cite{BKS13} and random local functions \\cite{Gol11,App15}. The gap between these two pictures is the gap between Impagliazzo's Minicrypt and Cryptomania \\cite{Imp95}, and the survey's subject is what, if anything, forces it.\n\nApplebaum, Barak and Wigderson \\cite{ABW10} made the most serious attempt at a public-key scheme from a combinatorial assumption. Their scheme uses a random bipartite graph with $n$ left vertices, $m$ right vertices and constant right degree $d$, and rests on two assumptions: that the induced local map is a pseudorandom generator, and that a planted set of $O(\\log n)$ right vertices whose neighbourhood is smaller than itself cannot be detected. They also gave a variant in which the local predicate is replaced by a linear function with added noise at rate $\\delta$, and that variant carries a hard constraint: decryption requires $\\delta k = O(1/\\log n)$, so $\\delta$ is forced to be sub-constant. Driving $\\delta$ lower buys a larger $k$ --- low enough and the expansion assumption can be dropped altogether --- but at that point the pseudorandomness assumption itself acquires structure, since it admits a non-constructive short certificate of the kind Feige, Kim and Ofek \\cite{FKO06} built for dense random 3CNF formulas.\n\nAlekhnovich's scheme \\cite{Ale11} sits in the same trap from the other side: it is a mod-2 analogue of the lattice schemes and uses linear equations with noise rate about $1/\\sqrt{n}$. The survey's diagnosis is that the small noise, and not the linearity, is what does the damage --- after all, the knapsack and approximate $k$-XOR problems are $\\mathbf{NP}$-hard as worst-case problems. A noise rate below $1/\\sqrt{n}$ is the analogue of a lattice approximation factor above $\\sqrt{n}$, and it is exactly at those approximation factors that lattice-based schemes can be broken given an oracle for a problem in $\\mathbf{NP} \\cap \\mathbf{coNP}$ \\cite{AR05}, structure that generic one-way function candidates do not have. Ben-Sasson et al.\\ \\cite{BBD16} give evidence that noise this sparse is an inherent limitation of a general family of schemes built from noisy codewords, a family containing both Alekhnovich's scheme and Regev's.\n\nThat is what makes the constant-noise regime the one worth asking about. At $m = O(n)$ equations of constant arity $k$, with a planted assignment satisfying a $1-\\varepsilon$ fraction for a constant $\\varepsilon$, the assumption has no known structure of this kind: it is a plain planted constraint satisfaction problem, of exactly the sort that yields one-way functions with no difficulty at all. The density is part of the question rather than an incidental parameter, since planted problems of this shape get easier as equations pile up, and $O(n)$ is the sparsest and therefore strongest form. What is missing is a public-key scheme that can run on it: every construction in the survey needs either group structure or noise well below $1/\\sqrt{n}$.",
+    "why_interesting": "Settling this affirmatively would give a third family of public-key encryption, resting on an assumption of the same character as the ones that give one-way functions: a random constraint satisfaction problem with a planted solution and a constant noise rate, with no group, no lattice, and no known algebraic or geometric handle. It would also remove the single structural feature the survey identifies as common to every non-algebraic scheme we have --- sub-constant noise, equivalently an approximation factor above the square root of the dimension --- which is precisely the feature that lets lattice-based schemes be broken with an oracle for a problem in NP cap coNP. In the survey's own framing, it would be the strongest evidence yet that the scarcity of public-key assumptions is a fact about our techniques rather than about computation.",
+    "why_clean": "The statement needs a system of random XOR equations with a planted noisy assignment, and the textbook definition of a CPA-secure public-key encryption scheme. Nothing else: no idealised model, no group, no lattice, no concrete-security bookkeeping, no protocol. The three parameters are explicit constants, and the target object is one paragraph long.",
+    "status_note": "Open in the paper, and posed there as a question rather than a conjecture. The paper's own reference point, the Applebaum-Barak-Wigderson linear variant, builds public-key encryption from planted noisy linear equations only when the noise rate is sub-constant (it needs the noise rate times the arity to be O(1/log n)); Alekhnovich's scheme needs noise about one over the square root of the dimension, on dense rather than sparse equations. No scheme in the survey is based on constant noise at linear density.",
+    "progress_note": "The paper reports two partial results, both negative in flavour. First, the ABW linear-function variant works only with sub-constant noise, since efficient decryption forces the noise rate times the arity to be O(1/log n); and pushing the noise low enough to drop the expansion assumption makes the remaining pseudorandomness assumption structured, because it then admits a non-constructive short certificate in the style of Feige-Kim-Ofek. Second, Ben-Sasson, Ben-Tov, Damgard, Ishai and Ron-Zewi define a general family of schemes from noisy codewords, containing Alekhnovich's scheme and Regev's, and show that under a conjecture from additive combinatorics all such schemes need noise patterns satisfying a generalised square-root-sparsity condition; the survey reads this as evidence that sparse noise may be inherent for schemes of this type.",
+    "risks": "Four things a reviewer should check hardest. (1) The mechanical grounding of the statement quote: the two occurrences of the Greek epsilon in the open-question bullet on page 20 do not survive text extraction (pdftotext renders each as a control character), so a character-exact match on that quote may come back partial even though the sentence is verbatim from the page. (2) Whether this has been resolved since 2017. I have a recollection of post-2017 work building public-key encryption and lossy primitives from sparse LPN, but in the regime of a slightly super-linear number of samples rather than the O(n) equations asked for here; I am not confident enough of the authors, venue or exact parameters to cite it, and a reviewer should look at the sparse-LPN literature and check whether the linear-density constant-noise case Barak asks about is still open. If it has been settled, this candidate should be withdrawn. (3) The formalisation of 'base a public-key encryption scheme on the difficulty of' as a bare implication from hardness to CPA security is mine; one could reasonably instead demand a black-box reduction with polynomial loss, which would be a stronger conjecture. (4) I have taken 'solving' in the paper's sentence to mean the search problem (find an assignment of the promised value); if one substitutes the distinguishing version of the assumption the conjecture becomes weaker, and the paper does not say which it means. Minor: I fix the noise model so that exactly an epsilon fraction of equations is falsified, matching the paper's 'satisfying 1 - epsilon of them'; the i.i.d. Bernoulli variant differs only by o(1) in the value and should be considered equivalent here. I also read 'O(n)' as 'cn for some constant c we are free to choose'; a stricter reading would fix c in advance.",
+    "quotes": [
+      {
+        "page": 20,
+        "role": "statement",
+        "text": "Can we base a public-key encryption scheme on the difficulty of solving O(n) random kXOR equations on n variables with a planted solution satisfying 1 − ε of them for some constant ε > 0?"
+      },
+      {
+        "page": 20,
+        "role": "openness",
+        "text": "This viewpoint raises the following open questions:"
+      },
+      {
+        "page": 20,
+        "role": "progress",
+        "text": "The noise level δ should satisfy δk = O(1/ log n) for efficient decryption, and so the lower the noise level we consider (and hence the stronger we make our assumption on the pseudo-random generator), the larger value of k we can afford."
+      },
+      {
+        "page": 14,
+        "role": "progress",
+        "text": "A recent result of Ben-Sasson et al. [BBD+ 16] suggests that using such a small amount of noise might be an inherent limitation of schemes of this general type."
+      }
+    ],
+    "bibliography": [
+      {
+        "key": "ABW10",
+        "authors": "Benny Applebaum, Boaz Barak, and Avi Wigderson",
+        "title": "Public-key cryptography from different assumptions",
+        "venue": "Proceedings of the 42nd ACM Symposium on Theory of Computing, STOC 2010, pages 171-180",
+        "year": "2010",
+        "verified": "printed-in-source-bibliography"
+      },
+      {
+        "key": "Ale11",
+        "authors": "Michael Alekhnovich",
+        "title": "More on average case vs approximation complexity",
+        "venue": "Computational Complexity, 20(4):755-786; preliminary version in FOCS '03",
+        "year": "2011",
+        "verified": "printed-in-source-bibliography"
+      },
+      {
+        "key": "AR05",
+        "authors": "Dorit Aharonov and Oded Regev",
+        "title": "Lattice problems in NP cap conp",
+        "venue": "J. ACM, 52(5):749-765; preliminary version in FOCS '04",
+        "year": "2005",
+        "verified": "printed-in-source-bibliography"
+      },
+      {
+        "key": "BBD16",
+        "authors": "Eli Ben-Sasson, Iddo Ben-Tov, Ivan Damgard, Yuval Ishai, and Noga Ron-Zewi",
+        "title": "On public key encryption from noisy codewords",
+        "venue": "Public-Key Cryptography - PKC 2016, Part II, pages 417-446",
+        "year": "2016",
+        "verified": "printed-in-source-bibliography"
+      },
+      {
+        "key": "FKO06",
+        "authors": "Uriel Feige, Jeong Han Kim, and Eran Ofek",
+        "title": "Witnesses for non-satisfiability of dense random 3cnf formulas",
+        "venue": "47th Annual IEEE Symposium on Foundations of Computer Science (FOCS 2006), pages 497-508",
+        "year": "2006",
+        "verified": "printed-in-source-bibliography"
+      },
+      {
+        "key": "Gol11",
+        "authors": "Oded Goldreich",
+        "title": "Candidate one-way functions based on expander graphs",
+        "venue": "Studies in Complexity and Cryptography, pages 76-87; original version ECCC TR00-090, 2000",
+        "year": "2011",
+        "verified": "printed-in-source-bibliography"
+      },
+      {
+        "key": "App15",
+        "authors": "Benny Applebaum",
+        "title": "The cryptographic hardness of random local functions - survey",
+        "venue": "IACR Cryptology ePrint Archive, 2015:165",
+        "year": "2015",
+        "verified": "printed-in-source-bibliography"
+      },
+      {
+        "key": "Reg09",
+        "authors": "Oded Regev",
+        "title": "On lattices, learning with errors, random linear codes, and cryptography",
+        "venue": "J. ACM, 56(6); preliminary version in STOC 2005",
+        "year": "2009",
+        "verified": "printed-in-source-bibliography"
+      },
+      {
+        "key": "Imp95",
+        "authors": "Russell Impagliazzo",
+        "title": "A personal view of average-case complexity",
+        "venue": "Proceedings of the Tenth Annual Structure in Complexity Theory Conference, pages 134-147",
+        "year": "1995",
+        "verified": "printed-in-source-bibliography"
+      },
+      {
+        "key": "BKS13",
+        "authors": "Boaz Barak, Guy Kindler, and David Steurer",
+        "title": "On the optimality of semidefinite relaxations for average-case and generalized constraint satisfaction",
+        "venue": "Innovations in Theoretical Computer Science, ITCS '13, pages 197-214",
+        "year": "2013",
+        "verified": "printed-in-source-bibliography"
+      }
+    ]
+  },
+  "grounding": [
+    {
+      "quote": "Can we base a public-key encryption scheme on the difficulty of solving O(n) random kXOR equations on n variables with a planted solution satisfying 1 − ε of them for some constant ε > 0?",
+      "claimed_page": 20,
+      "found_page": 20,
+      "coverage": 0.962,
+      "longest_run": 0.815,
+      "status": "near",
+      "role": "statement"
+    },
+    {
+      "quote": "This viewpoint raises the following open questions:",
+      "claimed_page": 20,
+      "found_page": 20,
+      "coverage": 1.0,
+      "longest_run": 0.0,
+      "status": "exact",
+      "role": "openness"
+    },
+    {
+      "quote": "The noise level δ should satisfy δk = O(1/ log n) for efficient decryption, and so the lower the noise level we consider (and hence the stronger we make our assumption on the pseudo-random generator), the larger value of k we can afford.",
+      "claimed_page": 20,
+      "found_page": 20,
+      "coverage": 1.0,
+      "longest_run": 0.0,
+      "status": "exact",
+      "role": "progress"
+    },
+    {
+      "quote": "A recent result of Ben-Sasson et al. [BBD+ 16] suggests that using such a small amount of noise might be an inherent limitation of schemes of this general type.",
+      "claimed_page": 14,
+      "found_page": 14,
+      "coverage": 1.0,
+      "longest_run": 0.0,
+      "status": "exact",
+      "role": "progress"
+    }
+  ],
+  "verify": {
+    "verdict": "faithful-with-corrections",
+    "confidence": "high",
+    "checks": [
+      {
+        "name": "Existence",
+        "result": "pass",
+        "page": 20,
+        "finding": "The question appears verbatim on p. 20 as the first bullet of Section 5.3's closing list: \"Can we base a public-key encryption scheme on the difficulty of solving O(n) random kXOR equations on n variables with a planted solution satisfying 1 − ε of them for some constant ε > 0?\" The draft's quote is exact."
+      },
+      {
+        "name": "Openness",
+        "result": "pass",
+        "page": 20,
+        "finding": "Introduced by \"This viewpoint raises the following open questions:\" (p. 20). I read past it: the remainder of 5.3 (p. 21) discusses only the second bullet (unbalanced expansion), Section 5.4 (pp. 21–22) is about IO, Section 6 (pp. 22–24) is philosophical, and pp. 24–33 are references. The paper never returns to the kXOR question, and no table or footnote answers it."
+      },
+      {
+        "name": "Strength",
+        "result": "pass",
+        "page": 20,
+        "finding": "The draft's existential (∃ k, c, ε, Π such that hardness of planted k-XOR ⇒ CPA security of Π) matches \"Can we base a public-key encryption scheme on ... for some constant ε > 0\". Reading \"base on\" as a single-assumption reduction is supported by the immediate context, where ABW's schemes are explicitly said to rest on two assumptions (pp. 18–19). Requiring correctness unconditionally is an addition but does not change what would count as a proof."
+      },
+      {
+        "name": "Quantifiers and parameters",
+        "result": "pass",
+        "page": 20,
+        "finding": "m = ⌈cn⌉ for an existentially quantified constant c faithfully renders \"O(n) ... equations\"; ε is a constant existentially quantified, matching \"for some constant ε > 0\". Narrowing to ε ∈ (0,1/2) and k ≥ 3 restricts the existential slightly beyond what the paper writes, but excludes only trivial ranges (a random assignment already achieves ≈1/2). Order of quantifiers is correct."
+      },
+      {
+        "name": "Attribution",
+        "result": "pass",
+        "page": 20,
+        "finding": "This is the survey author's own open question, posed in his own voice in Section 5.3, not one he attributes to ABW or anyone else; openness_kind \"paper-asks-question\" is right. Section 5.3's framing on p. 18 (\"[ABW10] tried to explore the question of whether public-key encryption can be based on the conjectured average-case difficulty of combinatorial problems\") is correctly presented as background, not as the open problem."
+      },
+      {
+        "name": "Definitions",
+        "result": "unclear",
+        "page": 7,
+        "finding": "The paper gives no formal definition of the kXOR problem where it asks the question, so the draft must supply one — but its choices diverge from the paper's own machinery. Definition 2 (p. 6) calls a planted problem hard when no PPT algorithm succeeds with probability ≥ 0.9, not with negligible probability; the planted-CSP problem on p. 7 is defined as finding an assignment of value ≥ μ_D/2 + μ/2, a strictly lower bar than the draft's val ≥ 1−ε; and the draft's fixed-weight noise (exactly ⌊εm⌋ flipped equations) replaces the i.i.d. δ-mixture of Definition 3 (p. 7, from [BKS13]). I cannot settle from the paper which formalization it intends."
+      },
+      {
+        "name": "Fabrication",
+        "result": "fail",
+        "page": 15,
+        "finding": "setting_latex asserts \"every construction in the survey needs either group structure or noise well below 1/√n\", and informal asserts every non-algebraic scheme needs noise \"below one over the square root of the number of variables\". Figure 3 (p. 15) contradicts this: ABW Scheme 1 is listed with noise n^{-0.1}, far above 1/√n, and ABW Scheme 3 (nonlinear-PRG based, p. 19) uses no noise at all. The paper's own constraint on the ABW linear variant is only δk = O(1/log n), i.e. sub-constant (p. 20). Five further unsupported items are listed in fabrications."
+      },
+      {
+        "name": "Self-containment",
+        "result": "pass",
+        "page": 0,
+        "finding": "notation_latex and definitions_latex fix [n], ⊕, val_Φ, the planted distribution, and CPA security; a reader who has never seen the survey could tell what would count as a proof. No page evidence is needed for this check."
+      }
+    ],
+    "corrections": [
+      {
+        "field": "setting_latex",
+        "problem": "\"every construction in the survey needs either group structure or noise well below $1/\\sqrt{n}$\" is contradicted by Figure 3 on p. 15, which lists ABW Scheme 1 with noise $n^{-0.1}$, and by ABW Scheme 3, which uses a nonlinear PRG and no noise at all.",
+        "corrected": "\"no scheme in the survey is based on constant noise: ABW's linear-function variant needs $\\delta k = O(1/\\log n)$ (p. 20), and Alekhnovich's uses noise $\\approx 1/\\sqrt{n}$ (Figure 3, p. 15).\" The $1/\\sqrt{n}$ threshold belongs to Alekhnovich and LPN, not to every non-algebraic scheme."
+      },
+      {
+        "field": "informal",
+        "problem": "\"every non-algebraic scheme we have needs the noise to be far smaller than a constant, below one over the square root of the number of variables\" conflates the paper's two distinct thresholds: sub-constant (ABW linear variant, p. 20) and below $1/\\sqrt{n}$ (Alekhnovich and LPN, p. 9 fn. 10 and p. 15).",
+        "corrected": "\"every non-algebraic scheme we have needs the noise to be sub-constant — for the ABW linear variant, noise rate times arity $O(1/\\log n)$; for Alekhnovich, about $1/\\sqrt{n}$, which is where the paper locates the structural weakness.\""
+      },
+      {
+        "field": "informal",
+        "problem": "\"broken by an oracle for a problem believed to be much easier than the encryption scheme itself\" inverts the paper's caveat on p. 14: \"while most experts believe that NP ∩ coNP is not contained in P, this result can still be viewed as showing that these lattice-based schemes have some computational structure that is not shared with many one-way function candidates.\"",
+        "corrected": "\"broken given an oracle for a problem in $\\mathbf{NP} \\cap \\mathbf{coNP}$ — not a problem believed to be easy, but a form of computational structure that generic one-way function candidates do not have.\""
+      },
+      {
+        "field": "setting_latex",
+        "problem": "\"planted problems of this shape get easier as equations pile up, and $O(n)$ is the sparsest and therefore strongest form\" is nowhere in the paper. The nearest passage (p. 19) says larger $m$ strengthens ABW's PRG assumption while weakening their expansion assumption — a trade-off between two different assumptions, not a monotonicity claim about planted $k$-XOR.",
+        "corrected": "Drop the claim or attribute it outside the paper; report the density $O(n)$ simply as what the question on p. 20 fixes."
+      },
+      {
+        "field": "setting_latex",
+        "problem": "\"on dense rather than sparse equations\" for Alekhnovich's scheme is unsupported: Figure 3 (p. 15) and Section 4.2 (p. 12) characterise it only as solving linear mod 2 equations with $\\approx 1/\\sqrt{n}$ noise, a variant of Ajtai–Dwork based on learning parity with very small noise. Equation density is never mentioned.",
+        "corrected": "Drop \"on dense rather than sparse equations\"; the paper's contrast is noise level, not density."
+      },
+      {
+        "field": "setting_latex",
+        "problem": "\"made the most serious attempt at a public-key scheme from a combinatorial assumption\" is an evaluative claim the paper does not make.",
+        "corrected": "The paper says only that ABW \"tried to explore the question of whether public-key encryption can be based on the conjectured average-case difficulty of combinatorial problems\" (p. 18)."
+      },
+      {
+        "field": "informal",
+        "problem": "\"there is evidence that noise this large may be incompatible with the way all known schemes of this kind work\" overstates [BBD+16], which p. 14 and footnote 13 describe as covering a specific family of noisy-codeword schemes containing Alekhnovich's, Regev's, and some other lattice schemes.",
+        "corrected": "\"there is evidence that noise this sparse may be an inherent limitation of one general family of schemes built from noisy codewords — the family containing Alekhnovich's and Regev's schemes.\""
+      }
+    ],
+    "fabrications": [
+      "setting_latex and informal: the claim that every non-group-based scheme in the survey requires noise below 1/√n. Figure 3 (p. 15) lists ABW Scheme 1 at noise n^{-0.1}, and ABW Scheme 3 uses a nonlinear PRG with no noise (p. 19). The paper's stated constraint on the ABW linear variant is only δk = O(1/log n) (p. 20).",
+      "setting_latex: \"planted problems of this shape get easier as equations pile up, and O(n) is the sparsest and therefore strongest form.\" Not in the paper; the p. 19 remark about larger m concerns the trade-off between ABW's two assumptions, not the difficulty of planted k-XOR.",
+      "setting_latex: Alekhnovich's scheme described as using \"dense rather than sparse equations.\" The paper (pp. 12, 15) characterises it only by noise level, never by density.",
+      "informal: the NP ∩ coNP oracle described as \"a problem believed to be much easier than the encryption scheme itself.\" The paper states the opposite belief on p. 14 (most experts believe NP ∩ coNP ⊄ P) and frames the result as evidence of structure, not of easiness.",
+      "setting_latex: ABW called \"the most serious attempt at a public-key scheme from a combinatorial assumption.\" The paper makes no such comparative judgement (p. 18).",
+      "informal: \"there is evidence that noise this large may be incompatible with the way all known schemes of this kind work.\" The [BBD+16] evidence (p. 14 and fn. 13) covers a specific family of noisy-codeword schemes containing Alekhnovich's, Regev's, and some other lattice schemes — not all known schemes, and notably not ABW's."
+    ],
+    "reason": "The question is on p. 20 word for word, is posed in the survey author's own voice as an open question, and nothing in Sections 5.4, 6, or the references (pp. 21–33) resolves it, so the conjecture is genuine and the formal statement is a fair rendering of it. The single most important defect is a fabricated premise repeated in both informal and setting_latex — that every non-algebraic scheme in the survey requires noise below 1/√n — which Figure 3 on p. 15 directly contradicts, since ABW Scheme 1 is listed with noise n^{-0.1} and ABW Scheme 3 uses no noise at all; the paper's actual constraint on the ABW linear variant is only δk = O(1/log n), i.e. sub-constant. That error, plus five smaller unsupported assertions in the prose, is repairable without touching the formal statement."
+  },
+  "build": {
+    "compiled": true,
+    "chktex": [
+      "Warning 8 in statement.tex line 31: Wrong length of dash may have been used.",
+      "Warning 8 in statement.tex line 31: Wrong length of dash may have been used.",
+      "Warning 8 in statement.tex line 137: Wrong length of dash may have been used.",
+      "Warning 8 in statement.tex line 137: Wrong length of dash may have been used.",
+      "Warning 8 in statement.tex line 308: Wrong length of dash may have been used."
+    ],
+    "lacheck": [
+      "\"statement.tex\", line 162: Whitespace before punctation mark in \" .\""
+    ],
+    "errors": []
+  }
+}

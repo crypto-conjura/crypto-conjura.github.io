@@ -1,6 +1,6 @@
 # Tasks
 
-Split into three sections. **Credibility and distribution** (~4.5h) covers review, prior-art checking, and — as of 19 August 2026 — the legal/security/governance items below; it is first because the project's binding constraint is there rather than in content supply. **Website and repository** (~24.5h) covers the site, its build tooling, the repository's configuration, and the product/data-model redesign added 19 August 2026. **Conjectures and papers** (~4.5h, plus one unbounded item added 19 August 2026 — see below) covers the mathematics — proving conjectures, and writing and checking the papers that report them. Within each section, tasks are ordered by difficulty, *except* where noted: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools, anything needing a lawyer or a GitHub org owner) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~33h** (rough; the UC Encyclopedia content, the new data-model item, and the new harvest-and-promote item all dominate the uncertainty — the last of these has no meaningful estimate since 403 unread PDFs are waiting and the count of conjectures they'll yield is unknown until it's run).
+Split into three sections. **Credibility and distribution** (~4.5h) covers review, prior-art checking, and — as of 19 August 2026 — the legal/security/governance items below; it is first because the project's binding constraint is there rather than in content supply. **Website and repository** (~24h) covers the site, its build tooling, the repository's configuration, and the product/data-model redesign added 19 August 2026. **Conjectures and papers** (~4.5h, plus one unbounded item added 19 August 2026 — see below) covers the mathematics — proving conjectures, and writing and checking the papers that report them. Within each section, tasks are ordered by difficulty, *except* where noted: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools, anything needing a lawyer or a GitHub org owner) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~33h** (rough; the UC Encyclopedia content, the new data-model item, and the new harvest-and-promote item all dominate the uncertainty — the last of these has no meaningful estimate since 403 unread PDFs are waiting and the count of conjectures they'll yield is unknown until it's run).
 
 Tasks added 19 August 2026 come from `maintainer-brief.md`, a compact maintainer brief (Jens, 18 August 2026) arguing Conjura's product should be a living AI-native record of open problems — pose → investigate → record progress → verify → preserve — evaluated on evidence rather than origin, with a visibly separate vetted archive and incubator lane. Within the two sections it touches, its tasks are ordered by *leverage and risk* rather than difficulty: cheap legal/security/governance fixes first, then the data-model work everything else (problem cards, the canonical page, admission) depends on, then the website/IA changes themselves. This pushes UC Encyclopedia content — the largest existing item — to the end of its section, consistent with the standing argument above that content supply is not the binding constraint.
 
@@ -92,39 +92,6 @@ supplied numbers and several had drifted or were slightly off:
   flag a review moves and what it does not claim.
 
 ## Website and repository
-
-- [ ] **Fix every link on `/problems/by-area/` — all 27 of them 404 (~0.5h)**
-
-  Reported 19 August 2026: a user hit this live, confirmed by fetching
-  `https://conjura.org/problems/by-area/areas/foundations/` directly — HTTP 404.
-  Root cause: `problems/by-area/index.qmd` links to 19 area pages, 4 model
-  pages, 3 form pages and 1 assumption-class page (27 links total), all under
-  paths like `areas/foundations/index.qmd`, `model/rom/index.qmd`, etc. **None
-  of these files exist, and `git log --all` shows none ever have** — this
-  isn't a regression, the index page was written aspirationally and the pages
-  it points at were never built.
-
-  The data side is actually done and just needs a page to consume it:
-  `scripts/build_index.py` already writes one gitignored YAML feed per facet
-  value to `_generated/{areas,model,form,assumption}/<value>.yml` (verified
-  present: 19 area files, 5 model, 7 form, 3 assumption-class), in exactly the
-  shape `problems/all/index.qmd` already consumes via a Quarto `listing:`
-  block (`contents: "../../_generated/all.yml"`, `template:
-  "../../_listing-templates/statement-table.ejs.md"`). Fixing this is
-  mechanically creating one small `.qmd` per facet value at
-  `problems/by-area/<facet>/<value>/index.qmd`, each a `listing:` block
-  pointing at its matching `_generated/<facet>/<value>.yml` — copy
-  `problems/all/index.qmd`'s pattern and adjust the `contents:` path and
-  title per value.
-
-  **While in there:** the index page's own "only values at least one
-  statement currently uses" claim is stale too — it lists 4 models but
-  `_generated/model/` has 5 (missing `qrom`), 3 forms but `_generated/form/`
-  has 7 (missing `assumption`, `characterization`, `equivalence`,
-  `separation`), and 1 assumption class but `_generated/assumption/` has 3
-  (missing `falsifiable`, `non-falsifiable`). Regenerate that list from
-  `_generated/` rather than hand-copying it again, or a future statement
-  using a new value will silently have no facet page and no link to it.
 
 - [ ] **Revisit "Supporting the project" against the project roadmap (~0.5h)**
 

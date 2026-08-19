@@ -1,10 +1,10 @@
 # Tasks
 
-Split into three sections. **Credibility and distribution** (~7.5h) covers review, prior-art checking, and — as of 19 August 2026 — the legal/security/governance items below; it is first because the project's binding constraint is there rather than in content supply. **Website and repository** (~24h) covers the site, its build tooling, the repository's configuration, and the product/data-model redesign added 19 August 2026. **Conjectures and papers** (~4.5h, plus one unbounded item added 19 August 2026 — see below) covers the mathematics — proving conjectures, and writing and checking the papers that report them. Within each section, tasks are ordered by difficulty, *except* where noted: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools, anything needing a lawyer or a GitHub org owner) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~36h** (rough; the UC Encyclopedia content, the new data-model item, and the new harvest-and-promote item all dominate the uncertainty — the last of these has no meaningful estimate since 403 unread PDFs are waiting and the count of conjectures they'll yield is unknown until it's run).
+Split into three sections. **Credibility and distribution** (~4.5h) covers review, prior-art checking, and — as of 19 August 2026 — the legal/security/governance items below; it is first because the project's binding constraint is there rather than in content supply. **Website and repository** (~24h) covers the site, its build tooling, the repository's configuration, and the product/data-model redesign added 19 August 2026. **Conjectures and papers** (~4.5h, plus one unbounded item added 19 August 2026 — see below) covers the mathematics — proving conjectures, and writing and checking the papers that report them. Within each section, tasks are ordered by difficulty, *except* where noted: web-related tweaks, new web content, new conjectures, new papers, new books, resolutions. Time estimates are wall-clock: how long Opus 5 Max (Max reasoning effort) actually takes to finish the task end-to-end once the prompt is given, plus a flat 5-minute buffer — not human labor-hours. Tasks with a real manual component the model can't shortcut (testing on physical devices, sourcing/verifying external PDFs and citations, actual audio/podcast production, troubleshooting third-party tools, anything needing a lawyer or a GitHub org owner) are weighted up accordingly, flagged per task below. Keep new estimates calibrated the same way. Total estimated time: **~33h** (rough; the UC Encyclopedia content, the new data-model item, and the new harvest-and-promote item all dominate the uncertainty — the last of these has no meaningful estimate since 403 unread PDFs are waiting and the count of conjectures they'll yield is unknown until it's run).
 
 Tasks added 19 August 2026 come from `maintainer-brief.md`, a compact maintainer brief (Jens, 18 August 2026) arguing Conjura's product should be a living AI-native record of open problems — pose → investigate → record progress → verify → preserve — evaluated on evidence rather than origin, with a visibly separate vetted archive and incubator lane. Within the two sections it touches, its tasks are ordered by *leverage and risk* rather than difficulty: cheap legal/security/governance fixes first, then the data-model work everything else (problem cards, the canonical page, admission) depends on, then the website/IA changes themselves. This pushes UC Encyclopedia content — the largest existing item — to the end of its section, consistent with the standing argument above that content supply is not the binding constraint.
 
-Last reconciled against `main` at `2f56125` on 19 August 2026.
+Last reconciled against `main` at `4cd26ae` on 19 August 2026. The prior-resolution sweep is done as of this reconciliation: 6 statements (c/0018, c/0026, c/0027, c/0037, c/0038, and c/0046 from an earlier pass) turned out to already be resolved and are now marked accordingly; the other 37 are confirmed still open, each with a dated literature-check note on its own page.
 
 Completed tasks are deleted from this file rather than checked off and kept: this is a list of live work, and `git log` is the record of what closed and when.
 
@@ -90,24 +90,6 @@ supplied numbers and several had drifted or were slightly off:
   be cited and one that cannot. Before sending anything, read the badge
   semantics in `problems/status-legend/` so the ask names exactly which
   flag a review moves and what it does not claim.
-
-- [ ] **Sweep every statement for a prior resolution already in the literature (~3h — manual: a real literature search per statement, and the failure mode is a false negative)**
-
-  The review's most useful borrowed finding is that on erdosproblems.com
-  "open" status tracked *obscurity* rather than difficulty — most of what a
-  large model resolved there turned out to be already solved in the
-  literature. Conjura is more exposed to this than that list is, because its
-  statements are harvested from other papers' open-problem sections, and an
-  open-problem section ages from the day it is printed. Twelve of the
-  twenty-nine — `c/0019`–`c/0030` — were promoted in a batch on 18 August 2026
-  from eight source papers, and none has had a forward-citation check.
-
-  Do this before spending compute on attacks, not after. It is cheap, it is
-  publishable on its own if it finds anything, and it forecloses the failure
-  the site could not recover from: announcing a resolution of something that
-  was already known. For each statement, follow citations *forward* from the
-  source paper rather than searching the statement's own wording, since a
-  resolution rarely reuses the phrasing of the question.
 
 ## Website and repository
 

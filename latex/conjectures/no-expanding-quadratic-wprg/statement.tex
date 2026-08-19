@@ -1,0 +1,321 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  No expanding weak pseudorandom generators computed by quadratic
+%  polynomials over the integers.
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{NO EXPANDING WEAK QUADRATIC PRGS}
+
+\newcommand{\ZZ}{\mathbb{Z}}
+\newcommand{\RR}{\mathbb{R}}
+\newcommand{\NN}{\mathbb{N}}
+\newcommand{\EE}{\mathbb{E}}
+\newcommand{\cA}{\mathcal{A}}
+\newcommand{\cX}{\mathcal{X}}
+\newcommand{\cQ}{\mathcal{Q}}
+\newcommand{\Adv}{\mathrm{Adv}}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{No Expanding Weak Quadratic Pseudorandom Generators}
+\cjsubtitle{Arbitrary integer quadratic maps at stretch
+  $n^{1+\varepsilon}$}
+\cjstatus{Statement: AI-written from Boaz Barak, Samuel B. Hopkins,
+  Aayush Jain, Pravesh Kothari, Amit Sahai, \emph{Sum-of-Squares Meets
+  Program Obfuscation, Revisited}, IACR Cryptology ePrint Archive 2018,
+  not yet checked by a human. Settled only in the restricted case where
+  $q_1, \dots, q_m$ are drawn independently and identically from a
+  \emph{nice} distribution --- supported on homogeneous (no linear
+  term) degree-two polynomials, with
+  $\|q\|_2^2 \le C \cdot \EE\|q\|_2^2$ for a constant $C$, with
+  $\mathrm{Var}(Q_{i,j}) = 1$ and with the coefficients $Q_{i,j}$
+  pairwise independent --- and where the input is polynomially bounded
+  and sub-Gaussian: there the paper's Theorem~2 gives a polynomial-time
+  algorithm that recovers $x$ exactly from $m \ge n(\log n)^{O(1)}$
+  samples, which in particular distinguishes. The hypothesis as stated,
+  with arbitrary (possibly correlated) polynomials and an arbitrary
+  bounded input distribution, is open.}
+\cjcategory{\emph{Public-Key Cryptography \& Assumptions}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+Several candidate constructions of indistinguishability obfuscation
+reduce security to a very weak kind of generator: you publish a list of
+quadratic polynomials with small integer coefficients, evaluate all of
+them at one secret input drawn from some distribution, and you only
+need the resulting list of values to be indistinguishable from that
+same list with small independent integer noise added to each entry.
+Nothing needs to look uniformly random, and the secret need not be
+recoverable even in principle. This paper conjectures that no such
+object exists once the number of polynomials exceeds the number of
+variables by any fixed polynomial factor: whenever you have more than
+about $n$ polynomials in $n$ variables, all with polynomially bounded
+integer coefficients, and the input distribution is also polynomially
+bounded, there is an efficient distinguisher for that family which
+achieves a constant advantage, the constant depending only on the
+stretch and the coefficient bound. The authors prove this in the
+special case where the polynomials are drawn independently from a
+distribution on homogeneous degree-two polynomials satisfying mild
+normalisation and pairwise-independence conditions, using a
+semidefinite program, and they report that they know of no degree-two
+candidate their attacks do not break. The general case, where the
+polynomials may be correlated with each other or chosen adversarially,
+is left open.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+Candidate constructions of indistinguishability obfuscation (iO) have
+converged on a common shape: bootstrap iO from a low-degree
+cryptographic multilinear map, LWE, and a low-degree expanding
+generator over the integers. Lin and Tessaro~\cite{LT} reduced iO to
+bilinear maps together with a block-wise two-local pseudorandom
+generator of superlinear stretch. Barak, Brakerski, Komargodski and
+Kothari~\cite{BBKK}, and independently Lombardi and
+Vaikuntanathan~\cite{LV}, then showed that the Lin--Tessaro candidate,
+and indeed any generator with their required parameters, can be broken
+using the degree-two sum-of-squares semidefinite program.
+
+The works of Ananth, Jain and Sahai~\cite{AJS}, Agrawal~\cite{Agr18}
+and Lin and Matt~\cite{LM} proposed a way around that obstacle by
+weakening the requirement in two directions at once. Structurally, the
+outputs need only be \emph{degree-two polynomials} of the input, rather
+than block-wise local. Security-wise, one asks only that the vector of
+evaluations $q_1(x), \dots, q_m(x)$ be indistinguishable from the same
+vector with small independent integer perturbations added --- the
+\emph{$\Delta$RG} property of~\cite{AJS}, and the closely related
+\emph{pseudo flawed-smudging} property of~\cite{LM}. Nothing is
+required to look uniform, and the input need not be recoverable.
+
+This paper conjectures that the retreat does not help: at stretch
+$n^{1+\varepsilon}$ no such object exists, for \emph{any} choice of
+quadratic polynomials with polynomially bounded integer coefficients
+and \emph{any} polynomially bounded input distribution. The conjecture
+is stated as a hypothesis about the existence of an efficient
+distinguisher for each such family, so a proof is an algorithm and a
+refutation is a construction.
+
+Two obstructions are recorded. First, the obvious route to a
+distinguisher --- recover $x$ from the evaluations --- is not available
+in general: it need not even be information-theoretically possible to
+recover $x$, and where it is, doing so is an instance of the NP-hard
+problem of solving quadratic equations. Second, the paper's own theorem
+covers only the case where the polynomials are drawn
+\emph{independently and identically} from a distribution supported on
+homogeneous degree-two polynomials and satisfying normalisation and
+pairwise-independence conditions (called \emph{nice}); the conjecture
+allows arbitrary, possibly heavily correlated, polynomials.
+
+The technical route to the theorem goes through low-rank recovery.
+Writing a homogeneous quadratic as
+$q_i(x) = \langle Q_i, xx^{\top} \rangle$ turns seed recovery into
+recovering a rank-one matrix from $m$ linear measurements, which
+nuclear-norm (trace-norm) minimisation provably solves when the
+measurement matrices satisfy matrix RIP~\cite{RFP} or the incoherence
+condition of Gross~\cite{Gross}. Both conditions are randomness
+conditions on the measurements; a proof of the conjecture would have to
+dispense with them entirely, since the polynomials are adversarial.
+
+Progress to date. Theorem~2 of the paper proves the i.i.d.-nice case: a
+polynomial-time sum-of-squares/trace-norm algorithm recovers $x$
+exactly with probability $1 - n^{-\log n}$ from
+$m \ge n(\log n)^{O(1)}$ observations, for every nice distribution
+$\cQ$ --- that is, every distribution supported on homogeneous (no
+linear term) degree-two polynomials with
+$\|q\|_2^2 \le C \cdot \EE\|q\|_2^2$ for a constant $C$, with
+$\mathrm{Var}(Q_{i,j}) = 1$ and with the coefficients $Q_{i,j}$
+pairwise independent --- and every input uniform on
+$\{-t, \dots, t\}^n$ with $t \le n^{O(1)}$ (and more generally for
+centred $O(\EE\|x\|^2/n)$-sub-Gaussian real inputs, whose coordinates
+need not be independent). This covers random dense and random sparse
+polynomials, and hence breaks the Ananth--Jain--Sahai and Agrawal
+candidates. The paper additionally reports experiments that break every
+degree-two candidate the authors are aware of, including the Lin--Matt
+one, and states that it knows of no degree-two construction that
+escapes a variant of the attack.
+
+\section{Notation and parameters}\label{sec:notation}
+
+\begin{itemize}[leftmargin=1.2em]
+  \item $n \in \NN$ is the number of variables; all asymptotics are as
+  $n \to \infty$, and $[m] := \{1, \dots, m\}$.
+  \item A \emph{quadratic polynomial} is a polynomial
+  $q : \RR^n \to \RR$ of total degree at most $2$. Such a polynomial is
+  presented to an algorithm as its vector of coefficients.
+  \item A function $\Lambda : \NN \to \NN$ is \emph{polynomially
+  bounded} if $\Lambda(n) \le n^{O(1)}$.
+  \item An algorithm $\cA$ is \emph{efficient} if it is probabilistic
+  and runs in time polynomial in the bit length of its input.
+  \item For distributions $D_1, D_2$ over a common domain, the
+  \emph{advantage} of an algorithm $\cA$ is
+  \begin{align*}
+    \Adv_{\cA}(D_1, D_2) \;:=\; \Bigl|
+      &\Pr_{z \sim D_1}[\cA(z) = 1] \\
+      &{}- \Pr_{z \sim D_2}[\cA(z) = 1] \Bigr| .
+  \end{align*}
+\end{itemize}
+
+The parameters of the statement below are as follows.
+
+\begin{itemize}[leftmargin=1.2em]
+\item $n$: number of variables of each polynomial, i.e.\ the length of
+  the secret input.
+\item $m$: number of polynomials published, i.e.\ the output length of
+  the generator. No upper bound is imposed; efficiency is measured in
+  the input length, which grows with $m$.
+\item $\varepsilon$: stretch exponent; the conjecture assumes
+  $m \ge n^{1+\varepsilon}$.
+\item $\Lambda(n)$: polynomial bound on the coefficients of the
+  polynomials, on the support of the input distribution, and on the
+  support of the noise.
+\item $\cX$: distribution of the secret input over $\ZZ^n$.
+\item $\Delta_i$: distribution of the noise added to the $i$-th output;
+  required to have no atom of mass $0.9$ or more.
+\item $c$: the constant distinguishing advantage the conjectured
+  algorithm achieves.
+\end{itemize}
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{definition}[$\Lambda$-bounded polynomial]\label{def:boundedpoly}
+An $n$-variate polynomial $q$ is \emph{$\Lambda$-bounded} if all of
+$q$'s coefficients are integers in the interval
+$[-\Lambda, +\Lambda]$.
+\end{definition}
+
+\begin{definition}[$\Lambda$-bounded distribution]\label{def:bounddist}
+A distribution $\cX$ over $\ZZ^n$ is \emph{$\Lambda$-bounded} if it is
+supported on $[-\Lambda, +\Lambda]^n$. A distribution $\Delta$ over
+$\ZZ$ is \emph{$\Lambda$-bounded} if it is supported on
+$[-\Lambda, +\Lambda]$.
+\end{definition}
+
+\begin{conjecture}[no expanding weak quadratic
+  generators]\label{conj:main}
+For every constant $\varepsilon > 0$ and every polynomially bounded
+$\Lambda : \NN \to \NN$ there is a constant $c > 0$ such that the
+following holds for all sufficiently large $n \in \NN$.
+
+Let $m \ge n^{1+\varepsilon}$ be an integer, let
+$q_1, \dots, q_m : \RR^n \to \RR$ be quadratic $\Lambda(n)$-bounded
+polynomials, let $\cX$ be a $\Lambda(n)$-bounded distribution over
+$\ZZ^n$, and for each $i \in [m]$ let $\Delta_i$ be a
+$\Lambda(n)$-bounded distribution over $\ZZ$ such that
+$\Pr[\Delta_i = z] < 0.9$ for every $z \in \ZZ$. Define the two
+distributions
+\begin{align*}
+  D_1 &\;:=\; \bigl( q_1, \dots, q_m,\; q_1(x), \dots, q_m(x) \bigr), \\
+  D_2 &\;:=\; \bigl( q_1, \dots, q_m, \\
+      &\qquad\quad\; q_1(x) + \delta_1, \dots, q_m(x) + \delta_m \bigr),
+\end{align*}
+where $x \sim \cX$ in both, and where in $D_2$ the perturbations
+$\delta_i \sim \Delta_i$ are drawn independently of one another and of
+$x$. Then there exists an efficient algorithm $\cA$ with
+\[
+  \Adv_{\cA}(D_1, D_2) \;\ge\; c .
+\]
+
+Equivalently: there is no family of quadratic $\Lambda(n)$-bounded
+polynomials, of stretch $m \ge n^{1+\varepsilon}$, whose evaluations at
+a $\Lambda(n)$-bounded random input are computationally
+indistinguishable from those evaluations perturbed by bounded
+independent noise no one value of which is taken with probability $0.9$
+or more.
+\end{conjecture}
+
+\begin{remark}[readings fixed by this write-up]\label{rem:readings}
+Two choices above are the page author's rather than the paper's. First,
+the paper writes ``then there exists an algorithm $\cA$ that can
+distinguish'' without the word \emph{efficient}; polynomial time has
+been made explicit here, because the very next paragraph of the paper
+reasons about ``an efficient algorithm to recover $x$'', and because
+the accompanying Theorem~2 supplies a polynomial-time algorithm. Read
+literally without an efficiency requirement the hypothesis is far
+weaker, so this is almost certainly the intended reading --- but it is
+a reading, not a transcription. Second, the paper imposes no upper
+bound on $m$ and none is imposed above; since efficiency is measured in
+the bit length of the input, which contains all $m$ polynomials, the
+running time allowed to $\cA$ grows with $m$. Note also that, following
+the paper's quantifier order, $\cA$ is quantified after the instance
+and so may depend on $m$, on $q_1, \dots, q_m$, on $\cX$ and on the
+$\Delta_i$; only the advantage $c$ is uniform over instances.
+\end{remark}
+
+\begin{remark}[scope of the quantification --- the page author's
+  commentary, postdating the paper]\label{rem:scope}
+The following is not drawn from the source and postdates it. The
+hypothesis fixes the polynomials independently of the input
+distribution: the same $q_1, \dots, q_m$ appear in both distributions
+and are not correlated with $x$. Later constructions of iO which use
+degree-two maps evade attacks of this kind by sampling public data
+jointly with the secret seed, so that the effective polynomials depend
+on the secret~\cite{JLS}; such objects fall outside the quantification
+above and are not refutations of it. This reading of the later
+literature has not been verified, and a reviewer should confirm that no
+refutation has appeared.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem[Agr18]{Agr18}
+S. Agrawal.
+\emph{New methods for indistinguishability obfuscation: bootstrapping
+and instantiation}.
+IACR Cryptology ePrint Archive, 2018:633, 2018.
+
+\bibitem[AJS]{AJS}
+P. Ananth, A. Jain, A. Sahai.
+\emph{Indistinguishability obfuscation without multilinear maps: iO
+from LWE, bilinear maps, and weak pseudorandomness}.
+IACR Cryptology ePrint Archive, 2018:615, 2018.
+
+\bibitem[BBKK]{BBKK}
+B. Barak, Z. Brakerski, I. Komargodski, P. Kothari.
+\emph{Limits on low-degree pseudorandom generators (or: sum-of-squares
+meets program obfuscation)}.
+Electronic Colloquium on Computational Complexity (ECCC), 24:60, 2017.
+
+\bibitem[Gross]{Gross}
+D. Gross.
+\emph{Recovering low-rank matrices from few coefficients in any basis}.
+IEEE Transactions on Information Theory, 57(3):1548--1566, 2011.
+
+\bibitem[JLS]{JLS}
+A. Jain, H. Lin, A. Sahai.
+\emph{Indistinguishability obfuscation from well-founded assumptions}.
+STOC, 2021 (recalled from memory; not in this paper's reference list).
+[UNVERIFIED]
+
+\bibitem[LM]{LM}
+H. Lin, C. Matt.
+\emph{Pseudo flawed-smudging generators and their application to
+indistinguishability obfuscation}.
+IACR Cryptology ePrint Archive, 2018:646, 2018.
+
+\bibitem[LT]{LT}
+H. Lin, S. Tessaro.
+\emph{Indistinguishability obfuscation from bilinear maps and
+block-wise local PRGs}.
+Cryptology ePrint Archive, Report 2017/250, 2017.
+
+\bibitem[LV]{LV}
+A. Lombardi, V. Vaikuntanathan.
+\emph{On the non-existence of blockwise 2-local PRGs with applications
+to indistinguishability obfuscation}.
+IACR Cryptology ePrint Archive, 2017:301, 2017.
+
+\bibitem[RFP]{RFP}
+B. Recht, M. Fazel, P. A. Parrilo.
+\emph{Guaranteed minimum-rank solutions of linear matrix equations via
+nuclear norm minimization}.
+SIAM Review, 52(3):471--501, 2010.
+
+\end{conjurabibliography}
+
+\end{document}

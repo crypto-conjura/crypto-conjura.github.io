@@ -93,10 +93,6 @@ supplied numbers and several had drifted or were slightly off:
 
 ## Website and repository
 
-- [ ] **Point Mahmoody's link on `support/index.qmd` at `https://momahmoody.github.io/` (~5min)**
-
-  Requested 19 August 2026. `support/index.qmd:14` currently reads `- **[Mohammad Mahmoody](https://www.cs.virginia.edu/~mohammad/)** — Bilkent University`; change only the URL to `https://momahmoody.github.io/`. Leave the "Bilkent University" affiliation text alone — that mismatch (and Jens Groth's `http`-only link) is separately tracked in the "Revisit Supporting the project" task below, which is blocked pending clarification; don't fold this into that blocked item; it's independent and unblocked.
-
 - [ ] **Revisit "Supporting the project" against the project roadmap (~0.5h)**
 
   Requested 18 August 2026, with a roadmap supplied in the request: the

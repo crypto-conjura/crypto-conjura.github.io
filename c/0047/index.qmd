@@ -1,0 +1,269 @@
+---
+id: "0047"
+problem: single-session-lattice-cm
+draft: single-session-lattice-cm
+title: "Tight Security of the Single-Session Lattice Chevallier-Mames Signature"
+short_title: "Single-session lattice Chevallier-Mames tightness"
+areas: [lattices, public-key, foundations]
+model: rom
+form: tight-bound
+assumption_class: falsifiable
+category: research-open
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: new-idea
+  note: "The only known reduction resamples challenges and loses a factor about 1/epsilon, and the paper's own fix -- a two-fold parallel repetition whose inclusion-exclusion identity turns an accepting pair in either session into evidence at least as strong as the adversary's success -- has no single-session analogue: with one challenge per query the pair probability is epsilon^2 with nothing to polarize it back up. A tight proof needs either a genuinely different extraction strategy for the one-session scheme, or a meta-reduction ruling one out; neither exists yet."
+  by: ai
+status_summary: "Open: whether the one-session lattice translation of the Chevallier-Mames signature has a tight SUF-CMA reduction to search Module-LWE, or whether the paper's two-fold parallel repetition (which doubles signature size and signing time) is inherent to a tight proof of this shape."
+status_updated: 2026-08-19
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Chairattana-Apirom, Döttling, Loss, Tessaro, Wagner, Tight Lattice-Based Signatures without Trapdoors from Search LWE, Cryptology ePrint Archive, Report 2026/953 (full version of an article to appear at CRYPTO 2026), 2026", url: "https://eprint.iacr.org/2026/953"}
+revision: 1
+statement_sha: "548c91d9717b381371e68303ee7cca819739a0a3726b25299df3c444e8baa61f"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [LaTeX source](latex/main.tex) · Formal statement -- *not yet formalized*
+
+Let $\kappa$ be the security parameter, $N = N(\kappa)$ a power of two, $q =
+q(\kappa)$ an odd prime, $\mathcal{R} := \mathbb{Z}[X]/\langle X^N + 1
+\rangle$ and $\mathcal{R}_q := \mathcal{R}/q\mathcal{R}$. For $\gamma_c \in
+\mathbb{N}$ let $\mathcal{C} := \{c \in \mathcal{R} : \|c\|_\infty = 1,\
+\|c\|_1 = \gamma_c\}$ be the challenge set.
+
+**Search Module-LWE.** For $n, m, N, q$ as above and $\sigma > 0$, an
+algorithm $\mathcal{B}$ has advantage
+$$
+\mathsf{Adv}^{\mathrm{smlwe}}_{n,m,N,q,\sigma}(\mathcal{B},\kappa) := \Pr\bigl[\, \mathbf{s} = \mathbf{s}' \;\bigl|\; \mathbf{A} \leftarrow \mathcal{R}_q^{n\times m},\ \mathbf{s} \leftarrow \mathcal{R}_q^{n},\ \mathbf{e} \leftarrow \mathcal{D}_{\mathcal{R}^m,\sigma},\ \mathbf{s}' \leftarrow \mathcal{B}(\mathbf{A},\, \mathbf{s}\mathbf{A}+\mathbf{e}) \,\bigr],
+$$
+with $\mathbf{A}, \mathbf{s}$ uniform. $\mathsf{sMLWE}_{n,m,N,q,\sigma}$
+asserts this is negligible for every PPT $\mathcal{B}$.
+
+**The single-session scheme $\mathsf{SS}^1$.** Public key $(\mathbf{A},
+\mathbf{t})$ with $\mathbf{t} = \mathbf{s}\mathbf{A} + \mathbf{e}$,
+$\mathbf{e} \leftarrow \mathcal{D}_{\mathcal{R}^m,\sigma_{\mathsf{sk}}}$.
+Signing on message $\mu$: sample a commitment $\mathbf{u} = \mathbf{r}
+\mathbf{A} + \mathbf{d}$, derive $\mathbf{H} \leftarrow
+\mathsf{H}_1(\mathbf{u},\mu) \in \mathcal{R}_q^{n\times m'}$, publish a second
+noisy sample $\bar{\mathbf{t}} = \mathbf{s}\mathbf{H} + \bar{\mathbf{e}}$
+under $\mathbf{H}$ with the *same* secret $\mathbf{s}$ (the width of
+$\bar{\mathbf{e}}$ depends on $\mathbf{e}$, so that $(\mathbf{H},
+\bar{\mathbf{t}})$ is rerandomized against $(\mathbf{A}, \mathbf{t})$), draw
+the challenge $c \leftarrow \mathsf{H}_2(\mathbf{u}, \bar{\mathbf{u}},
+\mathbf{H}, \bar{\mathbf{t}}, \mu) \in \mathcal{C}$, and output
+$\mathbf{z} = \mathbf{r} + c\mathbf{s}$ together with
+$(\bar{\mathbf{t}}, \mathbf{u}, \bar{\mathbf{u}})$, after Lyubashevsky-style
+rejection sampling on both the $\mathbf{A}$-side and $\mathbf{H}$-side
+responses. Verification checks
+$$
+\|\mathbf{u} + c\cdot\mathbf{t} - \mathbf{z}\mathbf{A}\| \le \beta_{\mathbf{z}}
+\qquad\text{and}\qquad
+\|\bar{\mathbf{u}} + c\cdot\bar{\mathbf{t}} - \mathbf{z}\mathbf{H}\| \le \bar\beta_{\mathbf{z}}.
+$$
+(Full pseudocode with all seven algorithm steps is in the PDF, Definition 2.)
+
+**$\mathrm{SUF\text{-}CMA}$.** A signing oracle records $(\mu,\sigma)$ pairs
+in a set $\mathsf{Sigs}$; an adversary $\mathcal{A}$ wins if it outputs
+$(\mu^*,\sigma^*) \notin \mathsf{Sigs}$ that verifies, with $\mathsf{H}_1,
+\mathsf{H}_2$ modelled as random oracles.
+
+**Admissible parameters.** An admissible family fixes $n, m, m', N, q, \ell,
+\gamma_c, b \in \mathbb{N}$ and $M, \sigma_{\mathsf{sk}}, \sigma_r,
+\bar\sigma_r, \sigma_x, \sigma_y, \beta_{\mathbf{z}}, \bar\beta_{\mathbf{z}},
+\sigma_{\mathsf{td}}, \alpha, t, \varepsilon_{\mathsf{sm}}$, all
+$\mathrm{poly}(\kappa)$-computable, satisfying (with $\eta := \tfrac{8}{\sqrt{\pi}}\, q^{n/m} \sqrt{N \ln(2mN(1+1/\varepsilon_{\mathsf{sm}}))}$):
+$m > n$, $m' \ge m + n\log_b q$; $\sigma_{\mathsf{sk}} \ge \sqrt{n\log N}$ and
+$\sigma_{\mathsf{sk}} \ge \sqrt{\log(2mN(1+1/\varepsilon_{\mathsf{sm}}))/\pi}$;
+$\sigma_x = \sqrt{2}\eta$, $\sigma_y = \sigma_x \sigma_{\mathsf{sk}}
+N\sqrt{m}$; $\sigma_r = \alpha\gamma_c\sigma_{\mathsf{sk}}\sqrt{mN}$,
+$\bar\sigma_r = \alpha\gamma_c\sigma_y\sqrt{2m'N}$; $\beta_{\mathbf{z}} =
+\sigma_r\sqrt{mN}$, $\bar\beta_{\mathbf{z}} = \bar\sigma_r\sqrt{m'N}$; $M =
+\exp(t/\alpha + 2/\alpha^2)$ with $\alpha, t = \omega(\sqrt{\log(mN)})$;
+$|\mathcal{C}| \ge 2^{2\kappa}$; and $\sigma_{\mathsf{td}} \ge \eta$, $q \ge
+4b\,\sigma_{\mathsf{td}}\bar\beta_{\mathbf{z}}\sqrt{m'mN}$. These are the
+paper's own Table 1 constraints with the parallel repetition removed --
+critically, $\sigma_{\mathsf{sk}} \ge \sqrt{n\log N}$ is exactly the
+condition under which search Module-LWE is hard from worst-case module
+lattice problems, so an admissible family is one at which the underlying
+assumption is meaningful, not merely one satisfying cosmetic type
+constraints.
+
+**Conjecture (tight security of $\mathsf{SS}^1$).** For every admissible
+parameter family as above, with $\mathsf{H}_1, \mathsf{H}_2$ modelled as
+random oracles, the scheme $\mathsf{SS}^1$ has correctness error
+$\mathrm{negl}(\kappa)$, and there exist a constant $C_0 \ge 1$ and a
+polynomial $p$ such that for every adversary $\mathcal{A}$ against
+$\mathrm{SUF\text{-}CMA}$ security of $\mathsf{SS}^1$, running in time
+$\mathsf{Time}(\mathcal{A})$ and making at most $\mathcal{Q}_{\mathsf{S}}$
+signing queries and $\mathcal{Q}_1, \mathcal{Q}_2$ random-oracle queries,
+there is an adversary $\mathcal{B}$ against
+$\mathsf{sMLWE}_{n,m,N,q,\sigma_{\mathsf{sk}}}$ with
+$$
+\mathsf{Time}(\mathcal{B}) \le \mathsf{Time}(\mathcal{A}) + (\mathcal{Q}_{\mathsf{S}}\ell + \mathcal{Q}_1 + \mathcal{Q}_2)\cdot p(\kappa)
+$$
+and
+$$
+\mathsf{Adv}^{\mathrm{sufcma}}_{\mathsf{SS}^1}(\mathcal{A},\kappa) \le C_0\cdot \mathsf{Adv}^{\mathrm{smlwe}}_{n,m,N,q,\sigma_{\mathsf{sk}}}(\mathcal{B},\kappa) + \mathrm{negl}(\kappa),
+$$
+where $C_0$ and $p$ do not depend on $\mathcal{A}$, and the loss is
+independent of $\mathcal{Q}_{\mathsf{S}}, \mathcal{Q}_1, \mathcal{Q}_2$ and
+of $\mathcal{A}$'s own advantage. (The paper's matching bound for the
+two-session scheme has the two-adversary shape
+$\mathsf{Adv}^{\mathrm{smlwe}}(\mathcal{B}) +
+\mathsf{Adv}^{\mathrm{smlwe}}(\mathcal{B}') + \mathrm{negl}$, so $C_0 = 2$ is
+the faithful constant to aim at here.)
+
+### Sources
+
+- Chairattana-Apirom, Döttling, Loss, Tessaro, Wagner. [*Tight Lattice-Based
+  Signatures without Trapdoors from Search LWE*](https://eprint.iacr.org/2026/953).
+  Cryptology ePrint Archive, Report 2026/953, full version of an article to
+  appear at CRYPTO 2026. Verified against the ePrint listing (posted 13 May
+  2026, revised 10 June 2026): title, author list and identifier all match.
+  The single-session scheme is "Attempt 1" (p. 4), the extraction
+  obstruction and the sentence leaving it open are p. 5, the two-session
+  fix and its inclusion-exclusion polarization argument are p. 6, the fully
+  specified scheme is Figure 2 (p. 19), Table 1's parameter constraints are
+  p. 20, and the tight two-session theorem (Theorem 4.2, via Section 4.3's
+  SUF-CMA $\leftarrow$ UF-KOA + sMLWE split and Lemmas 4.4-4.5) is p. 21.
+
+## Proof
+
+View PDF -- *no proof written yet* · LaTeX source -- *no proof written yet* ·
+Formal proof -- *not yet formalized*
+
+Open, and the paper takes no position on which way it goes; it states
+plainly "we do not know how to prove tight security for this protocol"
+(p. 5) and never returns to the one-session case after introducing the
+two-session fix.
+
+**What is known.** A *non-tight* reduction exists: a reduction holding a
+trapdoor for $\mathbf{H}$ can decide, from an $\mathsf{H}_2$ query alone,
+whether that query could lead to a forgery, without waiting for one, because
+once the challenge $c$ is fixed the response $\mathbf{z}$ is statistically
+determined. From two accepting challenges $c \ne c'$ for the *same* query,
+$(c-c')\mathbf{t} = (\mathbf{z}-\mathbf{z}')\mathbf{A} + \mathbf{f} -
+\mathbf{f}'$ yields $\mathbf{e}$, and then $\mathbf{s}$ by linear algebra.
+But if a single challenge is accepting with probability $\varepsilon$, a
+*pair* of accepting challenges for the same query appears only with
+probability $\varepsilon^2$, so the reduction must resample about
+$1/\varepsilon$ times before it sees a second acceptance, and the resulting
+security loss is polynomial in $1/\varepsilon$ -- not tight.
+
+**Why the paper's fix does not transfer.** Running two independent sessions
+in parallel under one key gives two independent per-session acceptance
+probabilities $\varepsilon_0, \varepsilon_1$, and the inclusion-exclusion
+identity $\varepsilon_0^2 + \varepsilon_1^2 - \varepsilon_0^2\varepsilon_1^2
+\ge \varepsilon_0\varepsilon_1$ says an accepting *pair* within one session
+is at least as likely as an accepting pair *across* both sessions -- i.e. at
+least as likely as the adversary's own success. That identity has no
+one-variable analogue: with a single challenge per query there is only one
+$\varepsilon$, and the corresponding pair probability is $\varepsilon^2$,
+with nothing available to polarize it back up to $\varepsilon$. This is the
+precise sense in which the doubling is not merely the paper's chosen fix but
+the thing the rest of the proof (the balanced sampler controlling
+worst-case rather than expected running time, and the monotone coupling
+lifting the per-query guarantee to the whole game) is built on top of.
+
+**What a resolution would need.** A positive answer needs an extraction
+strategy structurally different from resample-until-a-second-acceptance --
+this page does not know one. A negative answer needs a meta-reduction ruling
+out *any* tight reduction of this shape for $\mathsf{SS}^1$, in the style of
+the known impossibility results for tight reductions for Schnorr-type
+signatures; no such argument for the lattice setting is known either.
+
+## Discussion
+
+**Why this is not a parameter question.** The two-session scheme is not a
+different assumption or a different hardness regime -- it is the identical
+scheme with one bit of the construction changed (one session instead of
+two), so a resolution in either direction says something about the
+*extraction technique* itself, "polarization" via inclusion-exclusion, which
+the paper presents as its main conceptual contribution and claims is of
+independent interest beyond this one construction.
+
+**What a positive answer buys.** Removing the parallel repetition would
+halve the signature size and signing time of the first efficient,
+trapdoor-free lattice Fiat-Shamir signature with a tight reduction to a
+*search* assumption, on a scheme whose parameters (driven by $\eta$, the
+smoothing bound, and the trapdoor width $\sigma_{\mathsf{td}}$) are already
+large by the standards of practical lattice signatures.
+
+**What a negative answer buys.** A meta-reduction ruling out a tight
+single-session proof would be the first evidence that two-fold parallel
+repetition is *inherent* to this style of tight Fiat-Shamir proof from
+search LWE, and would sit next to the existing impossibility results for
+tight reductions for Schnorr-type identification-based signatures -- except
+here the obstruction is specific to the *extraction* step (recovering
+$\mathbf{s}$ from a lattice trapdoor for $\mathbf{H}$) rather than to
+rewinding a discrete-log-style protocol.
+
+**How this differs from the CDH original.** Chevallier-Mames's own
+signature has a tight reduction to CDH *without* any doubling (Kiltz-Loss-Pan's
+five-move abstraction). The obstruction here is specifically a lattice
+phenomenon: unlike the secret-key error $\mathbf{e}$, the second error term
+$\bar{\mathbf{e}}$ is adversarially chosen, and an adversary can pick a
+non-short $\bar{\mathbf{e}}$ for which $c\cdot\bar{\mathbf{e}}$ is
+nonetheless short with inverse-polynomial probability over $c$ -- so the
+proximity proof is not sound and decoding $\mathbf{s}$ from
+$\bar{\mathbf{t}}$ with a lattice trapdoor for $\mathbf{H}$ fails outright.
+That is why the discrete-log analogue's tight reduction does not simply
+port over, and why the paper needed a new idea (parallel repetition plus
+polarization) rather than a routine lattice adaptation of Kiltz-Loss-Pan.
+
+## Open obligations
+
+- [ ] **Check the specialization against Figure 2.** The sentence the paper
+      leaves this open with refers to "this protocol", meaning the
+      overview-level Attempt 1 on p. 4, which omits rejection sampling and
+      all parameter choices. This page (following the source draft)
+      instantiates it as the one-session specialization of the fully
+      specified scheme in Figure 2 (p. 19); the paper's own text says the
+      missing details are "a routine modification", but a careful reader
+      should verify that specialization line by line against Figure 2 and
+      Table 1 rather than take that on trust.
+- [ ] **No polynomial-modulus requirement is imposed.** The two-session
+      scheme achieves a polynomial modulus $q$; this conjecture does not
+      require it for $\mathsf{SS}^1$, since a polynomial modulus is not part
+      of what the paper says is open. A tight reduction obtained only at a
+      super-polynomial modulus would technically resolve this conjecture
+      without matching the two-session scheme's other properties.
+- [ ] **The negative direction has no fixed formal model.** "There exists a
+      reduction with constant loss" is the standard informal theorem shape
+      in this literature but is not formalized by the paper itself; anyone
+      attempting a meta-reduction against the single-session scheme needs
+      to first commit to a precise meta-reduction model, which does not yet
+      exist for this specific extraction problem.
+- [ ] **Whether follow-up work has since settled this is unchecked.** The
+      source paper is dated 2026 and only its own reference list was
+      available when this page was written; no search for subsequent work
+      citing it, or independently resolving the single-session case, has
+      been done.
+- [ ] **SUF-CMA vs. UF-CMA.** This page's conjecture asks for tight
+      *strong* unforgeability (SUF-CMA, matching the paper's own Figure 1
+      notion and its Theorem 4.2 target for the two-session scheme), not
+      the weaker ordinary unforgeability. Confirm this reading is the one
+      intended by "we do not know how to prove tight security for this
+      protocol" (p. 5), since the paper's overview does not itself name a
+      security notion for the one-session Attempt 1.
+
+:::

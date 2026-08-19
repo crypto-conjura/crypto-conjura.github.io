@@ -1,0 +1,84 @@
+---
+title: "Does the single-session lattice Chevallier-Mames signature have a tight security reduction from search Module-LWE?"
+subtitle: "One challenge per query instead of two, and whether the doubling the known proof needs is really necessary"
+---
+
+## Motivation
+
+Tightness is a concrete concern for lattice signatures, not a cosmetic one: a
+reduction that loses a factor polynomial in the forger's inverse success
+probability forces larger parameters to compensate, and lattice parameters
+are already large. The hash-and-sign route of Gentry, Peikert and
+Vaikuntanathan has a tight reduction to SIS but needs trapdoor preimage
+sampling; the trapdoor-free Fiat-Shamir route -- the one Dilithium uses --
+avoids trapdoors but its known tight proofs go through *lossy
+identification* and so rely on *decisional* LWE, whose known
+search-to-decision reductions themselves lose a factor polynomial in
+$1/\varepsilon$. A tight reduction from *search* Module-LWE for an efficient,
+trapdoor-free Fiat-Shamir lattice signature would be quantitatively better
+than anything on the table, which is exactly what a 2026 paper of
+Chairattana-Apirom, Döttling, Loss, Tessaro and Wagner sets out to build.
+
+The paper gets there, but only after doubling the scheme: the natural
+one-session lattice translation of the Chevallier-Mames signature resists a
+tight reduction, and the paper's fix is to run two independent copies of the
+protocol in parallel under one key. That halves neither signature size nor
+signing time for free -- the question this hub tracks is whether the
+doubling is a real requirement of the proof technique or an artifact of it.
+
+## Provenance and history
+
+The construction traces back to Chevallier-Mames's CDH-based signature
+(CRYPTO 2005), later abstracted by Kiltz, Loss and Pan (ASIACRYPT 2017) as a
+five-move identification protocol with a tight reduction to CDH: a signature
+is a $\Sigma$-protocol transcript proving that $X = g^x$ and $Z = h^x$ share a
+discrete logarithm, where $h$ is a hash of the commitment and the message.
+
+Chairattana-Apirom, Döttling, Loss, Tessaro and Wagner, *Tight Lattice-Based
+Signatures without Trapdoors from Search LWE* (Cryptology ePrint Archive,
+Report [2026/953](https://eprint.iacr.org/2026/953), full version of an
+article to appear at CRYPTO 2026), translate this into the Module-LWE
+setting: the public key is a noisy linear sample $\mathbf{t} = \mathbf{s}
+\mathbf{A} + \mathbf{e}$, the signer derives a second matrix $\mathbf{H}$
+from a hash of its own commitment, publishes a second noisy sample
+$\bar{\mathbf{t}} = \mathbf{s}\mathbf{H} + \bar{\mathbf{e}}$ under that
+matrix with the same secret, and the verifier checks both samples are close
+to the row span of their respective matrices under the same secret.
+
+The paper (Section 5, technical overview, pp. 4-6) gives this one-session
+scheme first, calls it "Attempt 1", and works out exactly why the natural
+extraction strategy fails: two accepting challenges for the same query let a
+reduction read off the secret, but a *pair* of accepting challenges appears
+with only probability $\varepsilon^2$ when a single challenge accepts with
+probability $\varepsilon$, so the reduction must resample about
+$1/\varepsilon$ times and the resulting proof is not tight. The paper's fix
+runs two sessions in parallel under one key with two independent challenges;
+an inclusion-exclusion identity then shows an accepting pair *within* one of
+the two sessions is at least as likely as the adversary's own success across
+both, which makes the reduction tight at the cost of doubling signature size
+and signing time (its Theorem 4.2, via Sections 4.3-4.5). The paper states
+plainly that it does not know how to prove tight security for the
+one-session scheme, and never returns to that case after introducing the
+fix.
+
+## Parameter lattice
+
+The one dimension this hub tracks is session count, crossed against what
+kind of reduction (if any) is known from search Module-LWE:
+
+| | Non-tight reduction known | Tight reduction known |
+|---|---|---|
+| **Single session ($\mathsf{SS}^1$)** | Yes -- resample until a second accepting challenge appears, losing a factor $\approx 1/\varepsilon$ | **Open** -- tracked at [c/0047](/c/0047/) |
+| **Two-fold parallel ($\mathsf{SS}_{\mathsf{R}}$)** | subsumed by the tight result | Yes -- the paper's own Theorem 4.2 |
+
+The two-session cell is the paper's main theorem, not a further target for
+this hub; it is the fixed point the single-session question is measured
+against. No coarser or finer session count (e.g. three-fold repetition, or a
+non-parallel fix) is analyzed by the paper, so those cells are unstated
+rather than ruled out.
+
+## Statements in this hub
+
+<!-- Driven from _generated/problems/single-session-lattice-cm.yml once
+     build_index.py has run; until then, list children by hand: -->
+- [Tight security of the single-session lattice Chevallier-Mames signature](/c/0047/) -- open: whether $\mathsf{SS}^1$ has a tight reduction to search Module-LWE, or the two-fold parallel repetition is inherent.

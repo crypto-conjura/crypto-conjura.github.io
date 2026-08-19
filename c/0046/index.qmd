@@ -1,0 +1,128 @@
+---
+id: "0046"
+problem: offline-round-adaptive-threshold
+draft: offline-round-adaptive-threshold
+title: "A Two-Round Adaptively Secure Threshold Signature With a Message-Independent First Round"
+short_title: "1+1 adaptively secure lattice threshold signature"
+areas: [public-key, lattices, foundations]
+model: rom
+form: separation
+assumption_class: falsifiable
+category: research-solved
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: human
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: new-idea
+  by: ai
+  note: "The source paper (Tweed) named a specific barrier -- existing 1+1 lattice proofs rewind the adversary, which cannot be reconciled with corruptions requested after the forking point -- and said its own techniques were unlikely to overcome it. Oriole (eprint 2026/793), posted a month later by three of Tweed's four authors, resolves it not by patching the rewinding approach but by changing foundations entirely: it builds on lattice hash-and-sign signatures, whose non-rewinding security proofs (GPV-style) were not previously known to support a partially non-interactive threshold construction, and develops new simulation techniques (salt derivation from per-signer first-round messages rather than their sum, plus masking) to get adaptive security from that base. The paper's own framing -- 'our primary contribution lies in introducing new techniques' -- and its explicit rejection of the rewinding paradigm used by every prior 1+1 scheme support grading this new-idea rather than adaptation."
+status_summary: "Resolved. Oriole (Jiang, Wee, Zhu, ePrint 2026/793, posted April 2026, a month after Tweed) gives a lattice-based threshold signature with exactly this shape -- two rounds, only the second message-dependent, adaptive security against T-1 corruptions with no erasures, from MSIS and MLWE in the ROM -- verified here directly against the paper's PDF (Definition of adp-TS-sUF-4 in its Figure 4, and the Theorem 2 + Theorem 3 reduction chain to MSIS), not just its abstract. The proof is human-written and published, but not yet independently re-verified line-by-line by this site, nor formalized in Lean."
+status_updated: 2026-08-19
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Jiang, Tessaro, Wee, Zhu, Tweed: Adaptively Secure Lattice-Based Two-Round Threshold Signatures, Cryptology ePrint Archive 2026/417 (EUROCRYPT 2026)", url: "https://eprint.iacr.org/2026/417"}
+  - {cite: "Jiang, Wee, Zhu, Oriole: Adaptively Secure Partially Non-Interactive Threshold Signatures from Lattices, Cryptology ePrint Archive, Report 2026/793", url: "https://eprint.iacr.org/2026/793"}
+revision: 1
+statement_sha: "9cad3ea92f3760fa9048793ffd3e18c0103c255670f20f2122cdfaf08c03d2c4"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: human draft, not yet independently reviewed, not yet formalized. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-2'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>•</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: human draft, not yet independently reviewed, not yet formalized. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-2'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>•</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: human draft, not yet independently reviewed, not yet formalized.*
+<!-- status:end -->
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [Download LaTeX source](latex/main.tex)
+
+**Setting.** A $T$-out-of-$N$ threshold signature lets any $T$ of $N$ signers jointly produce a signature under a shared public key, while fewer than $T$ of them cannot. A scheme with $X$ *offline* (message-independent) rounds followed by $Y$ *online* (message-dependent) rounds is written $X+Y$. Fix a security parameter $\kappa$; $\mathrm{negl}(\kappa)$ denotes an unspecified function that is $\kappa^{-\omega(1)}$, and "PPT" means probabilistic polynomial time in $\kappa$. Let $d$ be a power of two, $q$ an odd prime, $\mathcal{R} := \mathbb{Z}[X]/(X^d+1)$, $\mathcal{R}_q := \mathcal{R}/q\mathcal{R}$, and for $\beta > 0$ let $\mathcal{B}_\beta$ be the elements of $\mathcal{R}$ with all coefficients in $[-\beta, \beta]$.
+
+**Definition (two-round threshold signature with offline first round).** A tuple $\mathsf{TS} = (\mathsf{KeyGen}, \mathsf{Sign}_1, \mathsf{Sign}_2, \mathsf{Combine}, \mathsf{Ver})$ of PPT algorithms for $N$ signers and threshold $T$, all taking the public key $\mathsf{pk}$ implicitly:
+
+- $\mathsf{KeyGen}(1^\kappa) \to (\mathsf{pk}, \{\mathsf{sk}_i\}_{i \in [N]})$.
+- $\mathsf{Sign}_1(i, \mathsf{sk}_i, \mathsf{SS}) \to (\mathsf{st}, \mathit{psig}^{(1)}_i)$ for $\mathsf{SS} \subseteq [N]$ with $|\mathsf{SS}| \ge T$ and $i \in \mathsf{SS}$. *The message $\mu$ is not an input here -- this is what makes the first round offline.*
+- $\mathsf{Sign}_2(i, \mathsf{sk}_i, \mathsf{st}, \mathsf{SS}, \mu, M) \to \mathit{psig}^{(2)}_i$, where $M = \{\mathit{psig}^{(1)}_j\}_{j \in \mathsf{SS}}$.
+- $\mathsf{Combine}(\mathsf{SS}, \mu, M, M') \to \mathit{sig}$, where $M' = \{\mathit{psig}^{(2)}_j\}_{j \in \mathsf{SS}}$; takes no secret input.
+- $\mathsf{Ver}(\mathsf{pk}, \mu, \mathit{sig}) \to \{0,1\}$.
+
+$\mathsf{TS}$ has correctness error $\varepsilon_{\mathsf{cor}}$ if running $\mathsf{KeyGen}$, then $\mathsf{Sign}_1$ and $\mathsf{Sign}_2$ for every signer in any $\mathsf{SS}$ with $|\mathsf{SS}| \ge T$, then $\mathsf{Combine}$, produces a valid signature except with probability at most $\varepsilon_{\mathsf{cor}}(\kappa)$.
+
+**Definition (adaptive unforgeability, $\mathrm{adp}\text{-}\mathrm{TSUF}$).** With $H$ a random oracle, the game initialises $S \gets \emptyset$, $\mathsf{CS} \gets \emptyset$, samples keys, and gives $\mathcal{A}(\mathsf{pk})$ access to:
+
+- $\mathrm{oSign}_1(i, \mathsf{SS})$ (for $i \in \mathsf{SS} \setminus \mathsf{CS}$): runs $\mathsf{Sign}_1$, stores a fresh per-session state $(\mathit{isUsed} = 0, \mathsf{st}, \mathsf{SS})$, returns $\mathit{psig}^{(1)}$.
+- $\mathrm{oSign}_2(i, \mathit{sid}, \mathsf{SS}, \mu, M)$ (for $i \in \mathsf{SS} \setminus \mathsf{CS}$): looks up session $\mathit{sid}$, returns $\bot$ if it is already used *or if its stored signer set differs from $\mathsf{SS}$*, otherwise adds $\mu$ to $S$, marks the session used, and returns $\mathsf{Sign}_2(i, \mathsf{sk}_i, \mathsf{st}, \mathsf{SS}, \mu, M)$.
+- $\mathrm{Cor}(i)$ (while $|\mathsf{CS}| < T-1$): adds $i$ to $\mathsf{CS}$ and returns $\mathsf{sk}_i$ together with the stored state of *every* session of signer $i$, used or unused -- there are no erasures.
+- $H$.
+
+$\mathcal{A}$ wins (outputs $(\mu, \mathit{sig})$ with the game returning 1) if $|\mathsf{CS}| \le T-1$, $\mu \notin S$, and $\mathsf{Ver}(\mathsf{pk}, \mu, \mathit{sig}) = 1$. Write $\mathrm{Adv}^{\mathrm{adp}\text{-}\mathrm{tsuf}}_{\mathsf{TS}[N,T]}(\mathcal{A}, \kappa)$ for the winning probability.
+
+Two features of this game are forced by removing $\mu$ from the first round, relative to the source paper's own game (its Figure 4): $\mu$ is added to $S$ in $\mathrm{oSign}_2$ rather than $\mathrm{oSign}_1$, since the first-round oracle never sees it, and $\mathrm{oSign}_2$ additionally rejects when the signer set has changed since the matching first-round call -- the paper's own oracle stores only $(\mathit{isUsed}, \mathsf{st})$ and makes no such check. This second change slightly restricts the adversary relative to the paper's own notion; it is added here because once $\mu$ is gone from $\mathsf{Sign}_1$, the signer set is the only thing the first round commits the session to, and it is disclosed here rather than silently folded in.
+
+**Definition (MLWE and MSIS).** Fix $d, q, k, m, \beta$.
+
+- $\mathrm{MSIS}_{q,d,k,m,\beta}$: sample $\mathbf{A} \gets \mathcal{R}_q^{k \times m}$; an adversary $\mathcal{C}$ wins by outputting $\mathbf{x} \in \mathcal{R}^m$ with $\mathbf{x} \ne \mathbf{0}$, $\|\mathbf{x}\| \le \beta$ (Euclidean norm), and $\mathbf{A}\mathbf{x} = \mathbf{0} \bmod q$.
+- $\mathrm{MLWE}_{q,d,k,m,\beta}$: sample $\mathbf{A}' \gets \mathcal{R}_q^{k \times (m-k)}$, $\mathbf{A} := [\mathbf{A}' \mid \mathbf{I}_k]$, $\mathbf{s} \gets \mathcal{B}_\beta^m$, $\mathbf{t}_0 := \mathbf{A}\mathbf{s}$, $\mathbf{t}_1 \gets \mathcal{R}_q^k$, $b \gets \{0,1\}$; an adversary $\mathcal{B}$ sees $(\mathbf{A}, \mathbf{t}_b)$ and guesses $b$.
+
+*The two problems are parametrised independently.* The norm bound a proof of this kind tolerates on the MSIS branch is a signature-norm bound; the MLWE branch's secret bound is a small-noise bound of a very different magnitude. A single tuple $(k,m,\beta)$ should not be made to serve both.
+
+**Conjecture (a $1+1$ adaptively secure lattice threshold signature).** For every pair of polynomially bounded $N = N(\kappa)$, $T = T(\kappa)$ with $1 \le T(\kappa) \le N(\kappa)$, there exist a power of two $d = d(\kappa)$, an odd prime $q = q(\kappa)$ with $\log q = \mathrm{poly}(\kappa)$, two *independent* tuples $(k_1, m_1, \beta_{\mathsf{sis}})$ and $(k_2, m_2, \beta_{\mathsf{lwe}})$ of polynomially bounded functions of $\kappa$ with $k_1 < m_1$ and $k_2 < m_2$, and a two-round threshold signature scheme $\mathsf{TS}$ with offline first round for $N$ signers and threshold $T$ in the random oracle model, such that:
+
+1. **Correctness.** $\mathsf{TS}$ has correctness error $\mathrm{negl}(\kappa)$.
+2. **Adaptive unforgeability from MLWE and MSIS.** If $\mathrm{MSIS}_{q,d,k_1,m_1,\beta_{\mathsf{sis}}}$ and $\mathrm{MLWE}_{q,d,k_2,m_2,\beta_{\mathsf{lwe}}}$ are hard (every PPT algorithm has $\mathrm{negl}(\kappa)$ advantage against each), then every PPT adversary $\mathcal{A}$ making at most $\mathrm{poly}(\kappa)$ queries to $\mathrm{oSign}_1$, $\mathrm{oSign}_2$, $\mathrm{Cor}$ and the random oracle has
+   $$
+   \mathrm{Adv}^{\mathrm{adp}\text{-}\mathrm{tsuf}}_{\mathsf{TS}[N,T]}(\mathcal{A}, \kappa) = \mathrm{negl}(\kappa).
+   $$
+
+The two clauses are to be read together: the claim is a single scheme that is simultaneously (a) two rounds total, (b) message-independent in its first round, (c) adaptively secure at the optimal threshold $T-1$ with no erasures and no state carried across sessions, and (d) proved so under MLWE and MSIS in the random oracle model.
+
+**Why the bound is asymptotic, not linear-loss.** The source paper's own reductions are not linear-loss: Tweed's proof gives, on one branch, a bound with a quadratic dependence on the number $Q_h$ of random-oracle queries and a cube-root (in one place, square-root) loss to MSIS, and on the other branch a bound polynomial in the MLWE advantage -- an either/or statement, not a single sum. A clause demanding instead $\mathrm{Adv}^{\mathrm{adp}\text{-}\mathrm{tsuf}} \le p(\kappa)\bigl(\mathrm{Adv}^{\mathrm{mlwe}} + \mathrm{Adv}^{\mathrm{msis}}\bigr) + \mathrm{negl}(\kappa)$ for a fixed polynomial $p$ would be strictly stronger than anything the source paper achieves or asks for; a scheme meeting the paper's own standard would not satisfy it. The conjecture above is stated asymptotically for exactly this reason.
+
+**A reading fixed by this write-up, not the source.** The source paper never calls this an "open problem"; it is stated under a paragraph headed "What we do not achieve," where the authors record the limitation and say their techniques are "unlikely to overcome this barrier." The paper also takes no position on direction -- a refutation (an impossibility or a weaker-threshold separation) is exactly as consistent with what it says as the existence claim above. The existence phrasing here is this page's choice of how to pose the question, not something the authors assert.
+
+## Proof
+
+Resolved, by a different paper than the one this page's Statement was transcribed from. **Oriole** (Jiang, Wee, Zhu, [ePrint 2026/793](https://eprint.iacr.org/2026/793), posted April 2026 -- a month after Tweed, and by three of Tweed's four authors) constructs a scheme meeting every clause of the Conjecture above, and proves it. This was checked against Oriole's actual PDF text in this session, not only its abstract.
+
+**The construction.** Oriole abandons the Fiat–Shamir/rewinding paradigm every prior $1+1$ scheme (including Tweed) used, and instead builds a threshold version of a lattice hash-and-sign signature (GPV-style), whose security proofs do not rewind the adversary at all. Signing splits into $\mathsf{Sign}_1(i, T_i) \to w_i = Ar_i$ (message-independent) and $\mathsf{Sign}_2$, which derives a salt from the *set* of first-round messages $\{(j, w_j)\}_{j \in SS}$ -- not their sum -- computes a Gaussian preimage using each signer's Shamir share $T_i$ of the trapdoor, and adds a zero-sum masking term (adapted from Attema-Klooss-Loss/Tessaro-style masking) so that no partial information about $T_i$ leaks even under adaptive corruption.
+
+**The reduction chain.** Oriole's Theorem 2 reduces its adaptive strong-unforgeability game ($\mathrm{adp}\text{-}\mathrm{TS}\text{-}\mathrm{sUF}\text{-}4$, defined in its Figure 4 with an $\mathrm{oSign}_1$/$\mathrm{oSign}_2$/$\mathrm{Cor}$ oracle structure matching Definition 2 above clause for clause -- stateless per-signer, no erasures, $|\mathsf{CS}| < T-1$) to an intermediate adaptive interactive-unforgeability game ($\mathrm{adp}\text{-}\mathrm{IUF}$) with only a random-oracle-collision loss; Theorem 3 then reduces that to a Hermite-normal-form variant of MSIS. Composing the two, plus the standard MLWE-based masking argument, gives $\mathrm{Adv}^{\mathrm{adp}\text{-}\mathrm{tsuf}} = \mathrm{negl}(\kappa)$ under MSIS and MLWE in the ROM, exactly the asymptotic conclusion of clause 2 above.
+
+**What has and hasn't been checked here.** Confirmed directly from the PDF: the abstract's claims, the exact corruption/erasure model ("we only consider schemes that are stateless and without erasures, and for which optimal corruptions (up $T-1$ parties) are tolerated" -- Oriole, p. 3), the $\mathrm{oSign}_1$/$\mathrm{oSign}_2$/$\mathrm{Cor}$ oracle definitions in Figure 4, and the statement of Theorems 2 and 3. Not independently re-derived here: the proofs of Theorems 2 and 3 themselves, or the correctness/parameter analysis. This is a human-written, published proof, matched against this page's formalisation by AI review rather than by an independent human cryptographer or a machine-checked formalization -- see Open obligations.
+
+## Discussion
+
+**Why a message-independent first round is worth having.** If the first round does not depend on the message, it can be precomputed and stockpiled before any message is known, so that once a message does arrive, producing a signature costs a single online broadcast -- "nearly as good as round-optimal," in the source paper's own words. Combined with adaptive security at the optimal threshold $T-1$, this would be a post-quantum threshold signature with no compromise on round count, corruption model, or (via random-oracle-based lattice assumptions) quantum resistance.
+
+**The source paper itself deflates the goal it does not reach.** Immediately after describing the appeal of an offline first round, the same paper adds that the feature "is likely less beneficial than one may think, as ensuring that parts of the preprocessed first-round communication are not reused adds significant complexity from an engineering standpoint, and such reuse typically leads to a complete loss of security." So the offline round is recorded both as something the paper does not achieve and as something whose practical value the paper itself questions -- a reader should weigh that against the interest of closing the gap, rather than assume the paper treats it as an unqualified prize.
+
+**Why this is the last cell in the table.** For lattice-based threshold signatures, the field has settled: $1+1$ at static security (several constructions), $0+2$ at adaptive security (this paper), and 5 rounds at adaptive security with an offline round (Katsumata-Reichle-Takemure, CRYPTO 2024). The same pattern -- adaptive plus offline needs strictly more than two rounds -- holds for pairing-free group-based schemes too, per the source's own comparison table, which restricts its coverage to lattice constructions and to pairing-free group schemes proved adaptively secure without the algebraic group model; it says nothing about pairing-friendly or AGM-based constructions, so this conjecture is scoped the same way.
+
+**The obstruction the paper names.** Existing $1+1$ lattice proofs rewind the adversary to extract a forgery; a reduction running two correlated executions of the adversary cannot bound the total number of corruptions across both runs once corruptions may be requested after the point where the executions diverge. Tweed avoids this by using a proof strategy (following Dazzle and Twinkle) in which the reduction knows the secret key throughout and so can answer corruption queries without rewinding for that purpose -- but at the cost of making both of Tweed's rounds message-dependent.
+
+### Closed by a 2026 follow-up, by three of the same authors
+
+Kaijie Jiang, Hoeteck Wee and Chenzhi Zhu -- three of Tweed's four authors -- posted *Oriole: Adaptively Secure Partially Non-Interactive Threshold Signatures from Lattices* (Cryptology ePrint Archive 2026/793) in April 2026, a month after Tweed, and its own introduction frames it as closing exactly this gap: *"no known scheme provides these guarantees under post-quantum assumptions, leaving a fundamental gap in the lattice setting... In this work, we close this gap with Oriole"* -- citing Tweed by name as the adaptively-secure lattice scheme it improves on. Oriole even reports better signature sizes than Tweed (about 110KB vs. Tweed's 160KB at 128-bit security) as a side benefit of the new proof technique, not just a qualitative fix.
+
+### Sources
+
+- Jiang, Tessaro, Wee, Zhu. [*Tweed: Adaptively Secure Lattice-Based Two-Round Threshold Signatures*](https://eprint.iacr.org/2026/417). Cryptology ePrint Archive, Report 2026/417 (accepted to EUROCRYPT 2026). "What we do not achieve" and the offline-round deflation are p. 3; the rewinding obstruction and the comparison to KRT24 are p. 2; Figure 1's scope (lattices and AGM-free pairing-free groups) is p. 2; the concrete reduction bounds are Theorem 2 (p. 12) and Lemma 17 (p. 19).
+
+## Open obligations
+
+- **No independent human or machine-checked review of Oriole's proof yet.** This page's Proof tab confirms Oriole's oracle definitions and theorem *statements* match Definition 2 above, checked directly against the paper's PDF. It does not independently re-derive Theorem 2's or Theorem 3's proofs, re-check the parameter analysis (the concrete $q, n, m, \ell$ ranges for which the reduction is meaningful), or check the correctness/completeness argument. `proof_review` is graded `ai` for exactly this reason.
+- **Not yet formalized.** Neither this page's statement nor Oriole's proof has a Lean formalization; `statement_formal`, `statement_match` and `proof_formal` all remain `open`.
+- **A structural difference between Definition 2 above and Oriole's actual oracles, worth a second look.** Definition 2 models $\mathsf{Sign}_1$ as taking a signer set $\mathsf{SS}$ per session; Oriole's $\mathrm{oSign}_1(i)$ (Figure 4) takes no session argument and instead advances a single running state $\mathsf{st}_i$ per signer, with the signer set only entering at $\mathrm{oSign}_2$. The two appear equivalent in what they let the adversary do, but this page's Definition 2 was written before Oriole was found, from Tweed's own game, and has not been re-derived from Oriole's -- a reviewer should confirm the equivalence rather than assume it.
+- **Whether the source paper's own phrasing counts as leaving this open in the authors' words.** Tweed never uses the phrase "open problem"; it states a limitation under "What we do not achieve" and says its techniques are "unlikely to overcome this barrier." That this page phrased the target as an existence claim (rather than, say, an impossibility) was this page's choice, made before Oriole was known to exist.
+- **Whether the paper's comparison table (Tweed's Figure 1) has other 2025-2026 entries worth checking.** Oriole closes the lattice cell; the pairing-free-groups line the paper attributes to Chen (Dazzle, HBTS-Mask) was not re-examined here and may have its own since-superseded status.
+
+:::

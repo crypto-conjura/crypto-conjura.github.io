@@ -1,0 +1,93 @@
+---
+id: "0045"
+problem: blockwise-random-quadratic-recovery
+draft: sparse-plus-dense-quadratic-recovery
+title: "Polynomial-Time Recovery for the Blockwise-Random Sparse-Plus-Dense Quadratic Candidate"
+short_title: "Blockwise-random quadratic recovery"
+areas: [obfuscation, foundations]
+model: standard
+form: assumption
+assumption_class: falsifiable
+category: research-open
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: new-idea
+  by: ai
+  note: "The paper's own proof technique (Gross's incoherence criterion for nuclear-norm minimisation, via a Bernstein bound and Hanson-Wright) requires every measurement polynomial to come from a single normalised distribution; the blockwise-random candidate's coefficient variances are non-uniform across its two blocks by construction, so no renormalisation makes the existing proof go through, and matrix RIP is not known to apply to mixtures of very different sparsity levels either. Only experimental evidence (a modified SDP with one extra trace constraint) is available; no partial proof or weaker unconditional bound is known."
+status_summary: "Open: whether there is a polynomial-time algorithm that provably recovers the planted input from m = n^{1+eps} published quadratics of the blockwise-random (Lin-Matt) form, sum of a random sparse (perfect-matching) part and an independent random dense part. The paper proves this for i.i.d.-nice polynomial distributions (Theorem 2) but the blockwise-random distribution is not nice, and reports only experimental recovery via a modified semidefinite program."
+status_updated: 2026-08-19
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Barak, Hopkins, Jain, Kothari, Sahai, Sum-of-Squares Meets Program Obfuscation, Revisited, IACR Cryptology ePrint Archive 2018/1237", url: "https://eprint.iacr.org/2018/1237"}
+revision: 1
+statement_sha: "70480d7e5c20b89de9715cf40abc95f46058acb92b9f5862151924db77333d54"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [Download LaTeX source](latex/main.tex) · Formal statement -- *not yet formalized*
+
+**Setting.** Let $n$ be an even positive integer, $[n] := \{1, \dots, n\}$. Variables split into two blocks of $n$ each, $x = (x_1, \dots, x_n)$ and $x' = (x'_1, \dots, x'_n)$. An algorithm is *efficient* if it is probabilistic and runs in time polynomial in the bit length of its input, given polynomials by their coefficient vectors. A function $P : \mathbb{N} \to \mathbb{N}$ is *polynomially bounded* if $P(n) \le n^{O(1)}$.
+
+**Definition (blockwise-random polynomial distribution $\mathcal{Q}_{n,C}$).** Let $n$ be even and $C$ a positive integer. A sample from $\mathcal{Q}_{n,C}$ is a polynomial in the $2n$ variables $(x, x')$ of the form $q(x, x') = S(x) + \mathit{MQ}(x')$, with all randomness fresh per sample:
+
+- *(Dense block.)* $\mathit{MQ}(x') = \sum_{1 \le i \le k \le n} c_{i,k}\, x'_i x'_k + \sum_{i=1}^n c_i\, x'_i$, where every $c_{i,k}$ and every $c_i$ is drawn independently and uniformly from $\{-C, \dots, C\}$.
+- *(Sparse block.)* A permutation $\sigma$ of $[n]$ is drawn uniformly at random and $S(x) = \sum_{i=1}^{n/2} \alpha_i\, x_{\sigma(2i)}\, x_{\sigma(2i-1)} + \sum_{i=1}^n \beta_i\, x_i + \gamma$, where $\alpha_1, \dots, \alpha_{n/2}, \beta_1, \dots, \beta_n, \gamma$ are drawn independently and uniformly from $\{-C, \dots, C\}$.
+
+Each sample is quadratic in $2n$ variables, with at most $n/2$ quadratic monomials on the first block (supported on a uniformly random perfect matching) and all $\binom{n+1}{2}$ of them on the second — so the two blocks' coefficient variances cannot be equalised by a single normalisation, which is exactly the feature that puts this distribution outside the paper's "nice" class.
+
+**Definition (blockwise input distribution $\mathcal{X}_{n, B_1, B_2, B'}$).** Let $B_1, B_2, B'$ be positive integers. A sample $(x, x') \in \mathbb{Z}^n \times \mathbb{Z}^n$ is drawn so that each $x_i$, $i \in [n]$, is independently uniform on $\{-B_1, \dots, B_1\}$ with probability $1/2$ and on $\{-B_2, \dots, B_2\}$ with probability $1/2$; each $x'_i$ is independently uniform on $\{-B', \dots, B'\}$.
+
+**Conjecture (provable recovery for the blockwise-random candidate).** There is an efficient algorithm $\mathcal{A}$ such that the following holds for every constant $\varepsilon > 0$, every constant $\kappa > 0$, and every polynomially bounded $P : \mathbb{N} \to \mathbb{N}$. For all sufficiently large even $n$, every integer $m \ge n^{1+\varepsilon}$, and all positive integers $C, B, B_1, B', B_2 \le P(n)$ satisfying $B_2 \ge \kappa\,(nB^2 + nBB_1)$: if $q_1, \dots, q_m$ are drawn independently from $\mathcal{Q}_{n,C}$ and $(x, x')$ is drawn from $\mathcal{X}_{n, B_1, B_2, B'}$ independently of the $q_j$, then with probability $1 - o(1)$ over these draws and the coins of $\mathcal{A}$,
+$$
+\mathcal{A}\bigl(q_1, \dots, q_m,\; q_1(x,x'), \dots, q_m(x,x')\bigr) = (x, x').
+$$
+
+Refuting it means exhibiting a choice of $(\varepsilon, \kappa, P)$ for which every efficient algorithm fails with non-negligible probability.
+
+### Sources
+
+- Barak, Hopkins, Jain, Kothari, Sahai. [*Sum-of-Squares Meets Program Obfuscation, Revisited*](https://eprint.iacr.org/2018/1237). IACR Cryptology ePrint Archive, 2018/1237. Theorem 2 (PDF p. 5) is the nice-distribution recovery theorem this conjecture extends; the blockwise-random candidate and the remark that the analysis does not extend to it are on PDF p. 6; the candidate itself is recalled from Lin and Matt in Section 4.2 (PDF p. 11); the experimental attack is Section 6.2 (PDF pp. 16-18).
+
+## Proof
+
+This statement is open — no proof exists. What exists is an experimental substitute for one.
+
+**The paper's proof technique, and where it stops.** Theorem 2 writes $q_i(x) = \langle Q_i, xx^\top \rangle$, turning recovery into recovering a rank-one matrix from $m \ll n^2$ linear measurements, then verifies Gross's incoherence criterion for nuclear-norm minimisation: an approximate-isotropy condition on $\frac{1}{N}\sum_a \mathrm{vec}(Q^{(a)})\mathrm{vec}(Q^{(a)})^\top$ (via a Bernstein bound) and a small-inner-product condition $|x^\top(Q^{(a)}/n)x| \le \nu \|xx^\top\|_F/n$ (via Hanson–Wright). Both steps use that every $Q^{(a)}$ comes from one normalised distribution — exactly what fails here, since the sparse and dense blocks have structurally different coefficient variances.
+
+**What the experiment substitutes for a proof.** Because the planted input is polynomially bounded, one can enumerate all candidate values of $\sum_{i \in [n]} x_i^2$ and add, to the trace-norm minimisation SDP, a linear constraint fixing the trace of the sparse block's matrix variable to the guessed value. The authors report recovering the planted solution in every experiment once $m > 3(n+n')$, at $n+n' = 60$ and $n+n' = 120$ total variables, with correlation to the planted solution already about $0.95$ by $m/n \approx 2$. That is evidence a proof exists, not a proof — no analogue of Gross's criterion or of matrix RIP is known to cover measurement ensembles that mix two very different sparsity levels this way.
+
+## Discussion
+
+**Why turning the experiment into a theorem matters.** The paper's stated goal is to map exactly which degree-two weak-PRG candidates its sum-of-squares attack breaks. Theorem 2 already breaks the Ananth–Jain–Sahai and Agrawal candidates by covering i.i.d.-nice polynomial distributions. The Lin–Matt candidate is the one specific published construction the paper's own theory does not reach, even though its own experiments suggest the attack still works. Closing this gap would complete that mapping for degree-two candidates, and would do so via a genuinely new recovery guarantee: a low-rank matrix recovery result for a measurement ensemble that is a mixture of very different sparsity levels, which is of interest to the matrix-recovery literature independently of the cryptographic motivation for it — Gross's incoherence criterion and matrix RIP are both stated for ensembles from a single distribution, and neither is known to survive being split across blocks this way.
+
+**A companion open question from the same paper.** This paper poses a second, logically independent open question about a different candidate: whether an expanding weak quadratic pseudorandom generator can exist at all, its own Hypothesis 1. That question is about non-existence of a generator (an impossibility conjecture); this one is about existence of a recovery algorithm for one specific published generator that is known to exist. They are tracked as separate problem hubs. It is tracked at [c/0044](/c/0044/).
+
+**Direction of the statement.** The paper takes a position: it states its belief that recovery is possible and attributes the gap to the difficulty of the analysis, not to any known obstruction. The conjecture above follows that belief and states the existence claim; refuting it would require showing that no efficient algorithm can do what the experiments already appear to do at $n + n' \in \{60, 120\}$, which would itself be a surprising result given the experimental evidence.
+
+## Open obligations
+
+- [ ] **Shared vs.\ fresh sparse-block coefficients.** Section 4.2 of the source paper writes the sparse-part coefficients $\alpha_i, \beta_i, \gamma$ with no index for the polynomial number, so read literally the same coefficients could be shared across all $m$ polynomials with only the matching $\sigma_j$ varying. This statement takes them to be fresh per polynomial, matching the paper's own Julia code in Appendix A (`genmatrixsmq` redraws every coefficient for each of the $m$ samples). A reviewer should confirm this reading against the original Lin–Matt paper (ePrint 2018/646): the shared-coefficient reading is a genuinely different and more structured problem.
+- [ ] **The hidden constant $\kappa$.** The paper states $B_2 = \Omega(nB^2 + nBB_1)$ without naming the constant; this statement quantifies over all constants $\kappa > 0$, which is one reasonable reading but not the only one.
+- [ ] **Success probability and sample threshold are this page's extrapolation, not the paper's.** The paper says only "it is possible to recover in this case as well", naming neither a success probability nor a sample threshold. Exact recovery with probability $1 - o(1)$ is stated here by analogy with Theorem 2 (which achieves $1 - n^{-\log n}$ from $m \ge n(\log n)^{O(1)}$), and the candidate's own stretch $m \ge n^{1+\varepsilon}$ is kept rather than Theorem 2's $n(\log n)^{O(1)}$. A reviewer may reasonably prefer the weaker target of distinguishing, or of approximate recovery, since that is what the experiments actually measure (correlation with the planted solution, not exact equality).
+- [ ] Confirm whether the Lin–Matt candidate has since been withdrawn or amended in the literature. That would not close this question but would change how much anyone should care about it; this has not been checked.
+- [ ] The extension to a general $O(n)$-monomial sparse polynomial, and to the three-block variant $S_{j,1}(x_1) + S_{j,2}(x_2) + \mathit{MQ}_j(x_3)$, are reported experimentally in the same section of the paper but are not separately stated as conjectures in this page or its hub; a reviewer may want to add them as siblings once someone commits to precise statements.
+
+:::

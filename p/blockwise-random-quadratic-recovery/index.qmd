@@ -1,0 +1,90 @@
+---
+title: "Is there a polynomial-time algorithm that provably recovers the planted input of the blockwise-random (Lin–Matt) quadratic candidate?"
+subtitle: "Turning an experimental break of a published iO candidate into a theorem"
+---
+
+## Motivation
+
+The paper's main theorem (its Theorem 2) proves that a modified nuclear-norm
+minimisation algorithm recovers, in polynomial time and with high
+probability, the planted input behind $m$ published quadratic polynomials
+drawn i.i.d.\ from a *nice* distribution — one whose coefficients are
+normalised to unit variance and pairwise independent. Niceness covers both
+random dense and random sparse quadratics, and so the theorem breaks the
+weak-PRG candidates of Ananth–Jain–Sahai and of Agrawal.
+
+It does not cover the one candidate the paper cares most about closing:
+Lin and Matt's, in which each published polynomial is a sum of two
+independent pieces on disjoint variable blocks — a sparse part supported on
+a random perfect matching, and a fully dense part — because the two blocks'
+coefficient variances are wildly non-uniform, so no single normalisation
+makes niceness hold. The paper reports, rather than proves, that a
+modified semidefinite program with one extra constraint (fixing the guessed
+squared norm of the sparse block) recovers the planted input in every
+experiment once the number of polynomials exceeds about three times the
+number of variables. The authors state plainly that they believe recovery
+is possible here too but that their analysis does not reach it.
+
+Resolving this in the affirmative would upgrade an experimental break of a
+published obfuscation candidate to a theorem, and would do so by extending
+nuclear-norm recovery guarantees to measurement ensembles that mix very
+different sparsity levels — an extension of Gross's incoherence criterion
+and of matrix RIP that neither is currently known to supply. That is a
+question of independent interest to the matrix-recovery literature, not
+just to the cryptanalysis of one PRG candidate. Resolving it in the
+negative would be the more surprising direction, since it would mean the
+authors' own experiments are misleading about what their SDP is actually
+doing at these sample sizes.
+
+## Provenance and history
+
+Posed in Boaz Barak, Samuel B. Hopkins, Aayush Jain, Pravesh Kothari, Amit
+Sahai, *Sum-of-Squares Meets Program Obfuscation, Revisited*, IACR
+Cryptology ePrint Archive 2018/1237. The relevant remark is on PDF p. 6:
+*"At the moment however our theoretical analysis does not extend to the
+'blockwise random' polynomials that were used by Lin and Matt which can be
+thought of as a sum of random dense polynomial and a random sparse
+polynomial. While this combination creates theoretical difficulty in the
+analysis, we believe that it can be overcome and that it is possible to
+recover in this case as well."* The candidate itself — due to Lin and Matt,
+*Pseudo Flawed-Smudging Generators and Their Application to
+Indistinguishability Obfuscation*, ePrint 2018/646 — is recalled in
+Section 4.2 (PDF p. 11) and attacked experimentally in Section 6.2
+(PDF pp. 16–18).
+
+**Progress to date.** Theorem 2 handles the i.i.d.-nice case, including
+separately the random-dense and random-sparse special cases; what is
+missing is their sum. Experimentally, adding a single linear trace
+constraint on the sparse block — obtained by enumerating the polynomially
+many possible values of the squared $\ell_2$ norm of the sparse part of the
+planted solution — suffices: the authors report recovery in all their
+experiments once $m > 3(n+n')$, with correlation to the planted solution
+already about $0.95$ by $m/n \approx 2$ and reaching $1$ near
+$m/n \approx 3$ (ratio measured against the total variable count
+$n + n'$). They also report that the same approach works when the sparse
+part is replaced by a general random sparse polynomial with $O(n)$
+monomials, and that a three-block variant $S_{j,1}(x_1) + S_{j,2}(x_2) +
+\MQ_j(x_3)$ recovers using about the same number of samples when the two
+sparse-block traces are constrained jointly. No proof for any of this is
+given anywhere in the paper.
+
+A companion open question from the same paper — whether an expanding weak
+quadratic pseudorandom generator can exist at all (the paper's own
+Hypothesis 1) — is tracked separately at [c/0044](/c/0044/); the two
+questions are independent and address different candidates.
+
+## Parameter lattice
+
+Only one statement occupies this hub so far. The axes below are the ones
+the source paper itself varies experimentally, without stating a separate
+conjecture for each; an empty cell is a research prompt, not an omission.
+
+| axis | values | tracked here |
+|---|---|---|
+| sparse-block structure | perfect matching (as below); general $O(n)$-monomial sparse polynomial; two-sparse-block variant $S_1 + S_2 + \mathit{MQ}$ | **perfect matching** ([c/0045](/c/0045/)) — the other two are reported experimentally in the same section but not separately conjectured here |
+| recovery target | exact recovery, probability $1-o(1)$ (as below); distinguishing; approximate recovery | **exact recovery** — the weaker targets are what the experiments actually measure and may be an easier route to a proof |
+| sample regime | $m \ge n^{1+\varepsilon}$ (as below, matching the candidate's own stretch); $m \ge n(\log n)^{O(1)}$ (Theorem 2's regime) | **$m \ge n^{1+\varepsilon}$** — *unstated* whether Theorem 2's stronger $1 - n^{-\log n}$ success probability is achievable here at the weaker stretch |
+
+## Statements in this hub
+
+- [Provable recovery for the blockwise-random sparse-plus-dense quadratic candidate](/c/0045/) — open: no proof exists that the modified SDP (or any efficient algorithm) provably recovers the planted input for this candidate; the paper reports only experimental success.

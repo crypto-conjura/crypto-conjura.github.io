@@ -1,0 +1,515 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  A two-round adaptively secure threshold signature with a
+%  message-independent first round.
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{OFFLINE-ROUND ADAPTIVE THRESHOLD SIGNATURES}
+
+\newcommand{\NN}{\mathbb{N}}
+\newcommand{\ZZ}{\mathbb{Z}}
+\newcommand{\TS}{\mathsf{TS}}
+\newcommand{\pk}{\mathsf{pk}}
+\newcommand{\seck}{\mathsf{sk}}
+\newcommand{\KeyGen}{\mathsf{KeyGen}}
+\newcommand{\Signone}{\mathsf{Sign}_1}
+\newcommand{\Signtwo}{\mathsf{Sign}_2}
+\newcommand{\Combine}{\mathsf{Combine}}
+\newcommand{\Ver}{\mathsf{Ver}}
+\newcommand{\SSet}{\mathsf{SS}}
+\newcommand{\CSet}{\mathsf{CS}}
+\newcommand{\sstate}{\mathsf{st}}
+\newcommand{\psig}{\mathit{psig}}
+\newcommand{\sessid}{\mathit{sid}}
+\newcommand{\sig}{\mathit{sig}}
+\newcommand{\oSignone}{\mathrm{oSign}_1}
+\newcommand{\oSigntwo}{\mathrm{oSign}_2}
+\newcommand{\Cor}{\mathrm{Cor}}
+\newcommand{\negl}{\mathrm{negl}}
+\newcommand{\Adv}{\mathrm{Adv}}
+\newcommand{\Advadp}{\Adv^{\mathrm{adp}\text{-}\mathrm{tsuf}}}
+\newcommand{\Advmsis}{\Adv^{\mathrm{msis}}}
+\newcommand{\Advmlwe}{\Adv^{\mathrm{mlwe}}}
+\newcommand{\TSUF}{\mathrm{adp}\text{-}\mathrm{TSUF}}
+\newcommand{\MSIS}{\mathrm{MSIS}}
+\newcommand{\MLWE}{\mathrm{MLWE}}
+\newcommand{\Rr}{\mathcal{R}}
+\newcommand{\Rq}{\mathcal{R}_q}
+\newcommand{\Ball}{\mathcal{B}}
+\newcommand{\bsis}{\beta_{\mathsf{sis}}}
+\newcommand{\blwe}{\beta_{\mathsf{lwe}}}
+\newcommand{\bA}{\mathbf{A}}
+\newcommand{\bx}{\mathbf{x}}
+\newcommand{\bsv}{\mathbf{s}}
+\newcommand{\btv}{\mathbf{t}}
+\newcommand{\bI}{\mathbf{I}}
+\newcommand{\bzero}{\mathbf{0}}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{A Two-Round Adaptively Secure Threshold Signature With a
+  Message-Independent First Round}
+\cjsubtitle{Lattice assumptions, optimal corruption threshold $T-1$,
+  random oracle model}
+\cjstatus{Statement: AI-written from Kaijie Jiang, Stefano Tessaro,
+  Hoeteck Wee, Chenzhi Zhu, \emph{Tweed: Adaptively Secure
+  Lattice-Based Two-Round Threshold Signatures}, Cryptology ePrint
+  Archive 2026, not yet checked by a human. Settled: two-round adaptive
+  security with both rounds message-dependent ($0+2$), from MLWE and
+  MSIS, is achieved by this paper; $1+1$ lattice schemes exist but are
+  proved only statically secure; and adaptive security with an offline
+  round is achieved at three rounds in the pairing-free setting. Open:
+  any scheme that is $1+1$ (two rounds total, message-independent first
+  round) and adaptively secure against $T-1$ corruptions, in the
+  lattice setting, and --- per the paper's Figure~1, which covers
+  lattices and pairing-free groups without the algebraic group model
+  --- among pairing-free group-based schemes as well; the paper says
+  nothing about pairing-friendly or algebraic-group-model
+  constructions.}
+\cjcategory{\emph{Public-Key Cryptography \& Assumptions}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+A threshold signature lets any large-enough subset of a group of
+signers jointly sign a message under a single public key. Because
+signing is interactive, one counts rounds, and one distinguishes rounds
+that can be run before the message is known --- those can be
+precomputed offline --- from rounds that need the message. Separately
+one asks how strong the corruption model is: the conservative choice
+lets the adversary decide which signers to corrupt while protocols are
+already running, learning their key shares and all of their in-progress
+session state, up to one fewer than the threshold. These two goals have
+not so far been met together at two rounds. The efficient two-round
+lattice schemes do precompute their first round, but are only proved
+secure against corruptions fixed in advance, because their proofs
+rewind the adversary, and rewinding wrecks the simulation of
+corruptions once corruptions may happen after the forking point. The
+schemes proved secure against adaptive corruptions either need more
+than two rounds, or make both of their two rounds depend on the
+message. The conjecture is that the gap can be closed: there is a
+two-round threshold signature whose first round does not depend on the
+message and which is provably unforgeable against adaptive corruption
+of up to one fewer than the threshold number of signers, under standard
+lattice assumptions, in the random oracle model.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+A $T$-out-of-$N$ threshold signature lets any $T$ of $N$ signers
+jointly produce a signature under a public key whose secret key is
+shared among them, while fewer than $T$ of them cannot. Practical
+schemes are interactive, and the resource to minimise is the number of
+communication rounds. It is standard to split those rounds into an
+\emph{offline} part, whose messages do not depend on the message $\mu$
+to be signed and can therefore be precomputed, and an \emph{online}
+part, which does depend on $\mu$; a scheme with $X$ offline and $Y$
+online rounds is written $X+Y$. A message-independent first round can
+be preprocessed, and signing can then be completed later, in a single
+round, once the message becomes known, so that such schemes ``promise
+to be nearly as good as round-optimal ones''. The paper immediately
+qualifies this: the feature ``is likely less beneficial than one may
+think, as ensuring that parts of the preprocessed first-round
+communication are not reused adds significant complexity from an
+engineering standpoint, and such reuse typically leads to a complete
+loss of security''. The offline round is thus recorded both as
+something the paper does not achieve and as something whose practical
+value the paper questions.
+
+A second axis is the corruption model. Static security fixes the
+corrupted set before the protocol runs. Adaptive security lets the
+adversary choose whom to corrupt during execution, on the basis of what
+it has already seen, and hands it the corrupted signer's key share
+together with the secret state of every one of that signer's open
+signing sessions. Adaptive security is the conservative model, NIST has
+stated its interest in it, and the folklore heuristic that a statically
+secure scheme is also adaptively secure has recently been
+undermined~\cite{CS25}.
+
+In the lattice setting the two axes have so far been incompatible at
+two rounds. The efficient two-round lattice
+schemes~\cite{EKT24,CATZ24,ZT25,BKL25} are all $1+1$: their first round
+is message-independent, so once $\mu$ arrives a signature costs one
+online round. All of them are proved only statically secure. The
+obstruction the paper names is rewinding: their proofs fork the
+adversary, and a reduction running two correlated executions cannot
+guarantee that fewer than $T$ corruptions occur across both once
+corruptions may be made after the forking point. The one previously
+known adaptively secure lattice scheme~\cite{KRT24} needs five rounds.
+
+The paper builds Tweed, a $0+2$ scheme --- two rounds, but both
+message-dependent --- that is adaptively secure against $T-1$
+corruptions under MLWE and MSIS in the random oracle model. It follows
+the ``the reduction knows the secret key, and so can simulate
+corruptions for free'' strategy of Dazzle~\cite{Che25a} and
+Twinkle~\cite{BLT24}, which sidesteps rewinding in the corruption
+simulation, and its underlying signature follows Lyubashevsky's
+framework~\cite{Lyu12} with noise flooding in place of rejection
+sampling.
+
+The same gap is open over pairing-free groups, and the paper's own
+comparison table says so: the adaptively secure group-based schemes
+that do have an offline round need three rounds in total (for instance
+Twinkle~\cite{BLT24} at $2+1$ and FROST-Mask~\cite{Che25b} at $2+1$),
+while the two-round adaptively secure ones (Dazzle~\cite{Che25a},
+HBTS-Mask~\cite{Che25b}, and Tweed) are all $0+2$. So in neither
+setting is there a scheme that is simultaneously two rounds, offline in
+its first round, and adaptively secure at the optimal threshold $T-1$.
+The authors record this as something Tweed does not achieve, and say
+their techniques are unlikely to reach it.
+
+\smallskip\noindent\textbf{Progress to date.} The paper delivers the
+$0+2$ adaptive lattice scheme, so the remaining gap is exactly the
+offline/online split. It also isolates why the existing $1+1$ schemes
+resist an adaptive proof: their reductions rewind, and rewinding forces
+the simulator to handle two correlated executions in which more than
+$T-1$ corruptions may occur in total, all of which can be requested
+after the forking point. The paper's own proof shows that rewinding is
+not entirely forbidden in this style of argument --- the MSIS branch of
+its single-signer proof does rewind --- but the paper's own explanation
+for why this is safe is only that its reduction knows the secret key
+throughout and can therefore simulate corruptions without the forked
+run needing to succeed, and that its unforgeability proof ``largely
+avoids rewinding'' to begin with. The paper does not itself say why
+this suffices where the rewinding in the $1+1$ schemes does not; that
+comparison is left to the reader, not asserted by the authors.
+
+\smallskip\noindent\textbf{Why it is worth settling.} It is the last
+gap in a table the community has been filling in for three years: round
+count against corruption model. Closing it would give a post-quantum
+threshold signature where the only online cost, once a message arrives,
+is a single broadcast, with no weakening of the corruption threshold,
+no erasures, and no ideal group model. Refuting it --- a separation
+showing that two rounds with an offline first round forces static
+security, or at least a $T/2$ threshold --- would be the first genuine
+round/adaptivity separation for threshold signatures, and would explain
+a pattern that currently rests only on the observation that nobody has
+done it.
+
+\section{Notation and parameters}\label{sec:notation}
+
+$\kappa \in \NN$ is the security parameter; all algorithms take
+$1^{\kappa}$ as an implicit input, ``PPT'' means probabilistic
+polynomial time in $\kappa$, and $\negl(\kappa)$ denotes an unspecified
+function that is $\kappa^{-\omega(1)}$. For $N \in \NN$ write
+$[N] := \{1, \dots, N\}$.
+
+$N$ is the number of signers and $T$ the threshold, with
+$1 \le T \le N$; both are polynomially bounded functions of $\kappa$. A
+\emph{signer set} is a subset $\SSet \subseteq [N]$ with
+$|\SSet| \ge T$. Messages are strings $\mu \in \{0,1\}^{*}$.
+
+Let $d$ be a power of two and $q$ an odd prime, and set
+$\Rr := \ZZ[X]/(X^{d}+1)$ and $\Rq := \Rr/q\Rr$. Representatives of
+elements of $\Rq$ are taken with coefficients in $(-q/2, q/2]$. For
+$v \in \Rr$ with coefficient vector
+$(v_0, \dots, v_{d-1}) \in \ZZ^{d}$, $\|v\|_\infty := \max_j |v_j|$,
+and for $\beta > 0$ set
+$\Ball_\beta := \{v \in \Rr : \|v\|_\infty \le \beta\}$. For
+$\bx \in \Rr^{m}$, $\|\bx\|$ denotes the Euclidean norm of the
+concatenated coefficient vector of $\bx$ in $\ZZ^{md}$. $\bI_k$ is the
+$k \times k$ identity matrix over $\Rq$, and $k, m \in \NN$ are module
+dimensions with $k < m$.
+
+The parameters of the statement below are as follows.
+
+\begin{itemize}[leftmargin=1.2em]
+  \item $\kappa$: security parameter.
+  \item $N$: number of signers.
+  \item $T$: threshold; any $T$ signers can sign, and the adversary may
+  adaptively corrupt up to $T-1$ of them.
+  \item $\SSet$: the signer set of a signing session, a subset of $[N]$
+  of size at least $T$.
+  \item $d$: degree of the cyclotomic ring $\Rr = \ZZ[X]/(X^{d}+1)$, a
+  power of two.
+  \item $q$: modulus of $\Rq = \Rr/q\Rr$, an odd prime.
+  \item $k_1, m_1, \bsis$: the MSIS parameters --- number of rows and
+  of columns of the matrix over $\Rq$, with $k_1 < m_1$, and the
+  Euclidean-norm bound on solutions.
+  \item $k_2, m_2, \blwe$: the MLWE parameters --- number of rows and
+  of columns of the matrix over $\Rq$, with $k_2 < m_2$, and the
+  infinity-norm bound on secrets.
+\end{itemize}
+
+The two problems are parametrised independently: the norm bound
+tolerated by the MSIS branch of a proof of the kind envisaged here is a
+signature-norm bound, and is of a very different magnitude from the
+small secret bound of the MLWE branch, so no single tuple
+$(k, m, \beta)$ should be made to serve both.
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{definition}[two-round threshold signature with offline first
+  round]\label{def:ts}
+A \emph{two-round threshold signature scheme with offline first round}
+for $N$ signers and threshold $T$ is a tuple
+$\TS = (\KeyGen, \Signone, \Signtwo, \Combine, \Ver)$ of
+polynomial-time algorithms, all of which take the public key $\pk$
+implicitly as input:
+\begin{itemize}[leftmargin=1.2em]
+\item $\KeyGen(1^{\kappa}) \to (\pk, \{\seck_i\}_{i \in [N]})$.
+\item $\Signone(i, \seck_i, \SSet) \to (\sstate, \psig^{(1)}_i)$,
+defined for $\SSet \subseteq [N]$ with $|\SSet| \ge T$ and
+$i \in \SSet$, producing a secret state $\sstate$ and a first-round
+protocol message $\psig^{(1)}_i$. \emph{The message $\mu$ is not an
+input to $\Signone$; this is what makes the first round offline.}
+\item $\Signtwo(i, \seck_i, \sstate, \SSet, \mu, M) \to
+\psig^{(2)}_i$, where $\mu \in \{0,1\}^{*}$ and
+$M = \{\psig^{(1)}_j\}_{j \in \SSet}$.
+\item $\Combine(\SSet, \mu, M, M') \to \sig$, where
+$M' = \{\psig^{(2)}_j\}_{j \in \SSet}$. $\Combine$ takes no secret
+input and may be run by any party.
+\item $\Ver(\pk, \mu, \sig) \to 0/1$.
+\end{itemize}
+$\TS$ has \emph{correctness error} $\varepsilon_{\mathsf{cor}}$ if for
+every $\mu \in \{0,1\}^{*}$ and every $\SSet \subseteq [N]$ with
+$|\SSet| \ge T$, running $\KeyGen$, then $\Signone$ for every
+$i \in \SSet$, then $\Signtwo$ for every $i \in \SSet$ on the resulting
+$M$, then $\Combine$, yields $\sig$ with $\Ver(\pk, \mu, \sig) = 1$
+except with probability at most $\varepsilon_{\mathsf{cor}}(\kappa)$.
+\end{definition}
+
+\begin{definition}[adaptive unforgeability, $\TSUF$]\label{def:adp}
+Let $\TS$ be as in Definition~\ref{def:ts} and let $H$ be a random
+oracle. The game $\TSUF^{\mathcal{A}}_{\TS[N,T]}(\kappa)$ initialises
+$S \gets \emptyset$, $\CSet \gets \emptyset$, samples
+$(\pk, \{\seck_i\}_{i \in [N]}) \gets \KeyGen(1^{\kappa})$, and for
+each $i \in [N]$ sets a counter $\sstate_i.\mathsf{cnt} \gets 0$, an
+empty table $\sstate_i.\mathsf{P}$ of per-session states, and
+$\sstate_i.\mathsf{sk} \gets \seck_i$. It runs $\mathcal{A}(\pk)$ with
+access to:
+\begin{itemize}[leftmargin=1.2em]
+\item $\oSignone(i, \SSet)$: requires $i \in \SSet \setminus \CSet$,
+$\SSet \subseteq [N]$, $|\SSet| \ge T$. Sets
+$\sstate_i.\mathsf{cnt} \gets \sstate_i.\mathsf{cnt} + 1$, runs
+$(\psig^{(1)}, \sstate) \gets \Signone(i, \seck_i, \SSet)$, stores
+$\sstate_i.\mathsf{P}(\sstate_i.\mathsf{cnt}) \gets
+(0, \sstate, \SSet)$, and returns $\psig^{(1)}$.
+\item $\oSigntwo(i, \sessid, \SSet, \mu, M)$: requires
+$i \in \SSet \setminus \CSet$, $\sessid \le \sstate_i.\mathsf{cnt}$,
+$\SSet \subseteq [N]$, $|\SSet| \ge T$. Parses
+$(\mathit{isUsed}, \sstate, \SSet') \gets
+\sstate_i.\mathsf{P}(\sessid)$ and returns $\bot$ if
+$\mathit{isUsed} = 1$ or $\SSet' \ne \SSet$. Otherwise it sets
+$S \gets S \cup \{\mu\}$ and
+$\sstate_i.\mathsf{P}(\sessid) \gets (1, \sstate, \SSet)$, and returns
+$\psig^{(2)} \gets \Signtwo(i, \seck_i, \sstate, \SSet, \mu, M)$.
+\item $\Cor(i)$: requires $|\CSet| < T - 1$. Sets
+$\CSet \gets \CSet \cup \{i\}$ and returns the whole of $\sstate_i$,
+i.e.\ the secret-key share $\seck_i$ together with the stored state of
+\emph{every} session of signer $i$, used or unused. (There are no
+erasures, and signers keep no state beyond $\seck_i$ and these
+per-session states.)
+\item $H$.
+\end{itemize}
+When $\mathcal{A}$ halts with output $(\mu, \sig)$, the game returns
+$1$ if $|\CSet| \le T-1$, $\mu \notin S$ and
+$\Ver(\pk, \mu, \sig) = 1$, and $0$ otherwise. Write
+$\Advadp_{\TS[N,T]}(\mathcal{A},\kappa) :=
+\Pr[\TSUF^{\mathcal{A}}_{\TS[N,T]}(\kappa) = 1]$.
+
+\smallskip\noindent Two features of this game are adaptations of the
+paper's own, forced by removing $\mu$ from the first round. The message
+$\mu$ is added to $S$ in $\oSigntwo$ rather than in $\oSignone$, since
+the first-round oracle does not see it. And $\oSigntwo$ rejects when
+$\SSet' \ne \SSet$: the signer set is now the only thing the first
+round commits to, so the second round re-checks it. The paper's own
+game stores only $(\mathit{isUsed}, \sstate)$ and makes neither check.
+\end{definition}
+
+\begin{definition}[MLWE and MSIS]\label{def:lattice}
+Fix $d, q, k, m, \beta$ and let $\Rq$, $\Ball_\beta$ be as in the
+notation. The two problems below are parametrised separately; a
+statement that uses both quantifies over one tuple for each.
+\begin{itemize}[leftmargin=1.2em]
+\item $\MSIS_{q,d,k,m,\beta}$: sample
+$\bA \gets \Rq^{k \times m}$ and give it to $\mathcal{C}$, which
+outputs $\bx \in \Rr^{m}$; $\mathcal{C}$ wins if $\bx \ne \bzero$,
+$\|\bx\| \le \beta$ and $\bA\bx = \bzero \bmod q$. Write
+$\Advmsis_{q,d,k,m,\beta}(\mathcal{C},\kappa)$ for the winning
+probability.
+\item $\MLWE_{q,d,k,m,\beta}$: sample
+$\bA' \gets \Rq^{k \times (m-k)}$, set $\bA := [\bA' \mid \bI_k]$,
+sample $\bsv \gets \Ball_\beta^{m}$, set $\btv_0 := \bA\bsv$, sample
+$\btv_1 \gets \Rq^{k}$ and $b \gets \{0,1\}$, and give
+$(\bA, \btv_b)$ to $\mathcal{B}$, which outputs a guess $\tilde{b}$.
+Write $\Advmlwe_{q,d,k,m,\beta}(\mathcal{B},\kappa) :=
+|\Pr[\tilde{b} = b] - 1/2|$.
+\end{itemize}
+\end{definition}
+
+\begin{conjecture}[a $1+1$ adaptively secure lattice threshold
+  signature]\label{conj:main}
+For every pair of polynomially bounded functions $N = N(\kappa)$ and
+$T = T(\kappa)$ with $1 \le T(\kappa) \le N(\kappa)$ for all $\kappa$,
+there exist polynomially bounded parameters $d = d(\kappa)$ (a power of
+two), $q = q(\kappa)$ (an odd prime with $\log q = \poly(\kappa)$), and
+two independent tuples $(k_1, m_1, \bsis)$ and $(k_2, m_2, \blwe)$ of
+polynomially bounded functions of $\kappa$, with $k_1 < m_1$ and
+$k_2 < m_2$, and a two-round threshold signature scheme $\TS$ with
+offline first round for $N$ signers and threshold $T$ in the random
+oracle model (Definition~\ref{def:ts}), such that both of the following
+hold.
+
+\smallskip\noindent\textbf{(i) Correctness.} $\TS$ has correctness
+error $\negl(\kappa)$ in the sense of Definition~\ref{def:ts}.
+
+\smallskip\noindent\textbf{(ii) Adaptive unforgeability from MLWE and
+MSIS.} Suppose that $\MSIS_{q,d,k_1,m_1,\bsis}$ and
+$\MLWE_{q,d,k_2,m_2,\blwe}$ are hard, in the sense that every PPT
+$\mathcal{C}$ has $\Advmsis_{q,d,k_1,m_1,\bsis}(\mathcal{C},\kappa) =
+\negl(\kappa)$ and every PPT $\mathcal{B}$ has
+$\Advmlwe_{q,d,k_2,m_2,\blwe}(\mathcal{B},\kappa) = \negl(\kappa)$,
+with the two problems as in Definition~\ref{def:lattice}. Then for
+every PPT adversary $\mathcal{A}$ making at most $\poly(\kappa)$
+queries to each of $\oSignone$, $\oSigntwo$, $\Cor$ and the random
+oracle,
+\[
+  \Advadp_{\TS[N,T]}(\mathcal{A},\kappa) \;=\; \negl(\kappa),
+\]
+where the advantage is as in Definition~\ref{def:adp}.
+
+\smallskip\noindent The two clauses are to be read together: what is
+asserted is the existence of a single scheme that is simultaneously
+(a) two rounds in total, (b) message-independent in its first round,
+(c) adaptively secure at the optimal corruption threshold $T-1$ with no
+erasures and no state carried across sessions, and (d) proved so under
+MLWE and MSIS in the random oracle model.
+\end{conjecture}
+
+\begin{remark}[the shape of a concrete bound]\label{rem:concrete}
+Clause~(ii) is stated asymptotically on purpose. The reductions the
+paper itself achieves are not linear-loss: they are either/or
+statements, one branch reducing to MSIS with a cube-root (in one place,
+a square-root) loss and a quadratic dependence on the number $Q_h$ of
+random oracle queries, the other reducing to MLWE with a polynomial
+factor. Suppressing parameter subscripts, a concrete version of
+clause~(ii) in the paper's own style would assert that for every PPT
+$\mathcal{A}$ there are $\mathcal{B}$, $\mathcal{C}$ of comparable
+running time and a constant $c$ such that either
+\[
+  \Advadp \;\le\;
+    c\,Q_h^{2}\bigl(\Advmsis + 2^{-\Omega(\kappa)}\bigr)^{1/3}
+\]
+or
+\[
+  \Advadp \;\le\; \poly(\kappa)\cdot\Advmlwe + \negl(\kappa) .
+\]
+Demanding instead a single bound linear in
+$\Advmlwe + \Advmsis$ would be strictly stronger than anything the
+paper achieves or asks for, and a scheme proved to the paper's own
+standard would fail it.
+\end{remark}
+
+\begin{remark}[readings fixed by this write-up]\label{rem:readings}
+Several points are the page author's rather than the paper's. The paper
+never writes the words ``open problem'' here: it heads the paragraph
+``What we do not achieve'', states the limitation, and says its
+techniques are unlikely to overcome the barrier; a reviewer should
+judge whether that is enough to count as the authors leaving it open.
+Relatedly, the paper takes no position on direction --- an
+impossibility result is just as consistent with what it says --- so the
+existence phrasing of Conjecture~\ref{conj:main} is a choice about how
+to state the open problem, not something the authors assert. The paper
+also argues that a preprocessing round is worth less in practice than
+one might think, because reuse of preprocessed material is catastrophic
+and preventing it is an engineering burden; a reviewer may weigh that
+against the value of settling this. On the formalisation: the paper's
+own $\TSUF$ game adds $\mu$ to the set $S$ of signed messages in the
+first-round oracle, which is impossible when the first round does not
+see $\mu$, so Definition~\ref{def:adp} moves that bookkeeping to the
+second-round oracle and adds the signer-set check; a reviewer should
+confirm that this is the intended adaptation and does not weaken the
+game. Finally, the paper's comparison table is a snapshot; a reviewer
+should check whether any 2025--2026 follow-up --- in particular further
+work along the lines of the two-round group-based scheme the paper
+attributes to Chen --- already gives a $1+1$ adaptively secure scheme.
+\end{remark}
+
+\begin{remark}[why the statement is clean]\label{rem:clean}
+The target is a single object with four crisply checkable properties:
+exactly two rounds, no $\mu$ in the first-round algorithm, negligible
+advantage in a fully specified adaptive unforgeability game with $T-1$
+corruptions and no erasures, and a reduction to MLWE and MSIS. All four
+are pinned down by the definitions above, and the whole statement fits
+on one page. Someone can attack it with nothing beyond the standard
+lattice toolkit; no unpublished machinery is involved.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem[BKL25]{BKL25}
+C. Boschini, D. Kaviani, R. W. F. Lai, G. Malavolta, A. Takahashi,
+M. Tibouchi.
+\emph{Ringtail: Practical two-round threshold signatures from learning
+with errors}.
+2025 IEEE Symposium on Security and Privacy, pages 149--164, IEEE
+Computer Society Press, 2025.
+
+\bibitem[BLT24]{BLT24}
+R. Bacho, J. Loss, S. Tessaro, B. Wagner, C. Zhu.
+\emph{Twinkle: Threshold signatures from DDH with full adaptive
+security}.
+EUROCRYPT 2024, Part I, volume 14651 of LNCS, pages 429--459, Springer,
+2024.
+
+\bibitem[CATZ24]{CATZ24}
+R. Chairattana-Apirom, S. Tessaro, C. Zhu.
+\emph{Partially non-interactive two-round lattice-based threshold
+signatures}.
+ASIACRYPT 2024, Part IV, volume 15487 of LNCS, pages 268--302,
+Springer, 2024.
+
+\bibitem[Che25a]{Che25a}
+Y. Chen.
+\emph{Dazzle: Improved adaptive threshold signatures from DDH}.
+PKC 2025, Part III, volume 15676 of LNCS, pages 233--261, Springer,
+2025.
+
+\bibitem[Che25b]{Che25b}
+Y. Chen.
+\emph{Round-efficient adaptively secure threshold signatures with
+rewinding}.
+IACR Communications in Cryptology, 2(2), 2025.
+
+\bibitem[CS25]{CS25}
+E. C. Crites, A. Stewart.
+\emph{A plausible attack on the adaptive security of threshold Schnorr
+signatures}.
+CRYPTO 2025, Part VI, volume 16005 of LNCS, pages 457--479, Springer,
+2025.
+
+\bibitem[EKT24]{EKT24}
+T. Espitau, S. Katsumata, K. Takemure.
+\emph{Two-round threshold signature from algebraic one-more learning
+with errors}.
+CRYPTO 2024, Part VII, volume 14926 of LNCS, pages 387--424, Springer,
+2024.
+
+\bibitem[KRT24]{KRT24}
+S. Katsumata, M. Reichle, K. Takemure.
+\emph{Adaptively secure 5 round threshold signatures from MLWE/MSIS and
+DL with rewinding}.
+CRYPTO 2024, Part VII, volume 14926 of LNCS, pages 459--491, Springer,
+2024.
+
+\bibitem[Lyu12]{Lyu12}
+V. Lyubashevsky.
+\emph{Lattice signatures without trapdoors}.
+EUROCRYPT 2012, volume 7237 of LNCS, pages 738--755, Springer, 2012.
+
+\bibitem[ZT25]{ZT25}
+C. Zhu, S. Tessaro.
+\emph{The algebraic one-more MISIS problem and applications to
+threshold signatures}.
+CRYPTO 2025, Part I, volume 16000 of LNCS, pages 548--581, Springer,
+2025.
+
+\end{conjurabibliography}
+
+\end{document}

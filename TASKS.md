@@ -93,6 +93,19 @@ supplied numbers and several had drifted or were slightly off:
 
 ## Website and repository
 
+- [ ] **List proposals in the same style as problems, built to scale — this is a data-model change, not a CSS one (~3h)**
+
+  Requested 20 August 2026, with the explicit expectation that many more proposals are coming — worth designing for that up front rather than reskinning the current page and hitting the same wall `problems/by-area/` hit before it was fixed 19 August.
+
+  **Why this can't be "just make it look like the table."** The problems listings (`problems/all/`, `problems/by-area/`, `problems/by-topic/`) all work the same way: `scripts/build_index.py` reads structured frontmatter from every `c/<id>/index.qmd`, emits `_generated/<facet>/<value>.yml`, and a Quarto `listing:` block renders that YAML through `_listing-templates/statement-table.ejs.md` — sortable table, status badge, clickable tag chips, one row per statement. `projects/proposals/index.qmd` today (84 lines, 8 entries from the 19/20 August programmes merge) is the opposite: hand-written prose, one `### Paper Title` / `#### Direction` / quote / description block per entry, no frontmatter, nothing a script could read. Matching the *look* without matching the *data shape* means hand-formatting an ever-growing wall of prose into table rows by hand, forever — the thing "a lot more will be added" is specifically warning against.
+
+  **Recommended shape, mirroring the `c/` pattern at a scale that fits what a proposal actually is:**
+  - Each proposal gets its own small page, `projects/proposals/<slug>/index.qmd`, with light frontmatter — no Lean, no sigma/pi status badge (a proposal has no proof to grade, unlike a statement): `title`, `short_title`, `source` (citation + URL), `topics` (reuse the 19 August `TOPIC_SLUGS` taxonomy rather than inventing a second one), `date_added`, and a `status` simpler than a statement's (e.g. `open` / `claimed` / `resolved-into: c/00NN`). The existing 8 entries migrate into 8 such pages as the first step, not left inline.
+  - `projects/proposals/index.qmd` becomes an index/listing page like `problems/all/index.qmd`: a small generator (a leaner sibling of `build_index.py`, or an extension of it — decide which when this is picked up) walks `projects/proposals/*/index.qmd`, writes `_generated/proposals/all.yml`, and a `listing:` block renders it through a proposals-specific template (a trimmed copy of `statement-table.ejs.md` — same tag-chip rendering for `topics`, no status-badge SVG column since there's nothing to grade yet).
+  - Add a `--check` gate for the new generator and wire it into `.githooks/pre-commit` and `.github/workflows/publish.yml`, matching every other generated-content gate on this site (`gen_topics.py`'s is the most recent example, 19 August).
+
+  **The one design call worth confirming before building, since it changes the file count:** per-proposal pages (recommended above, matches "problems" most literally and gives each proposal a stable URL to cite/link once one graduates into a real statement) vs. keeping everything on one page with a generated table at the top linking to same-page anchors below (less scalable as the count grows, but avoids ~50+ tiny files if proposals turn out to be numerous and short-lived). Decide explicitly; don't default to whichever is less code today if it doesn't hold up once "a lot more" actually arrive.
+
 - [ ] **Revisit "Supporting the project" against the project roadmap (~0.5h)**
 
   Requested 18 August 2026, with a roadmap supplied in the request: the

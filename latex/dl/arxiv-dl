@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+
+# arxiv-dl: Downloads the top N most recent papers for a given author from arXiv.
+
+# Enforce strict execution mode
+set -euo pipefail
+
+# 1. Parameter Validation
+if [ "$#" -lt 2 ]; then
+    printf "Usage: %s <Author Name> <n>\n" "$0"
+    printf "Example: %s Boaz Barak 10\n" "$0"
+    printf "Example: %s \"Barak, B\" 10\n" "$0"
+    exit 1
+fi
+
+# Dynamically extract the count (last argument) and the name (all preceding arguments)
+N="${@: -1}"
+NAME="${@:1:$#-1}"
+
+if ! [[ "$N" =~ ^[0-9]+$ ]] || [ "$N" -eq 0 ]; then
+    printf "Error: The final argument must be a strictly positive integer representing the number of papers.\n" >&2
+    exit 1
+fi
+
+# 2. URL Encoding & Initialization
+# Replace spaces with '+' and translate commas to '%2C' to perfectly match arXiv's web query format.
+ENCODED_NAME="$(echo "$NAME" | tr ' ' '+' | sed 's/,/%2C/g')"
+DIR_NAME="$NAME"
+
+mkdir -p "$DIR_NAME"
+
+# Construct the search URL using a size of 200 to ensure we capture a large enough pool of results
+# on a single page before truncating to N. 
+SEARCH_URL="https://arxiv.org/search/?searchtype=author&query=${ENCODED_NAME}&abstracts=show&size=200&order=-announced_date_first"
+
+printf "Querying arXiv for top %d paper(s) by: %s\n" "$N" "$NAME"
+
+# 3. HTML Parsing & Extraction
+# curl: Fetches the search page HTML, following any redirects.
+# grep: Isolates href attributes pointing strictly to the arXiv PDF endpoints.
+# cut: Extracts the clean URL string.
+# awk: Deduplicates identical PDF links while perfectly preserving the chronological order.
+# head: Truncates the final list to strictly N papers.
+PAPER_URLS=$(curl -sS -L "$SEARCH_URL" | grep -oE 'href="https?://arxiv\.org/pdf/[^"]+"' | cut -d'"' -f2 | awk '!seen[$0]++' | head -n "$N")
+
+if [ -z "$PAPER_URLS" ]; then
+    printf "No papers found for the specified author.\n"
+    exit 0
+fi
+
+# Count the actual extracted URLs (in case the author has fewer than N total papers published)
+ACTUAL_COUNT=$(echo "$PAPER_URLS" | wc -l | tr -d ' \t')
+printf "Found %d paper(s). Commencing download to '%s/'...\n" "$ACTUAL_COUNT" "$DIR_NAME"
+
+# 4. File Retrieval
+for URL in $PAPER_URLS; do
+    # Extract the identifier (e.g., 2405.01234 or legacy hep-th/9901001)
+    ID="${URL#*arxiv.org/pdf/}"
+    
+    # Replace any legacy slashes with hyphens and append the .pdf extension
+    FILENAME="${ID//\//-}.pdf"
+    FILE_PATH="${DIR_NAME}/${FILENAME}"
+    
+    if [ -s "$FILE_PATH" ]; then
+        printf " [Skipping] %s (File already exists)\n" "$FILENAME"
+    else
+        printf " [Downloading] %s ... " "$FILENAME"
+        
+        # arXiv's PDF endpoints automatically serve binary PDF files, even without a .pdf extension in the URL
+        if curl -sS -L -o "$FILE_PATH" "$URL"; then
+            # Verify the magic number to ensure a valid PDF was retrieved. 
+            # This is critical for catching Cloudflare rate-limit HTML blocks or 403 pages.
+            if head -c 4 "$FILE_PATH" | grep -q "%PDF"; then
+                printf "Done.\n"
+            else
+                printf "Failed (Not a valid PDF; potential rate limit encountered).\n"
+                rm -f "$FILE_PATH"
+            fi
+        else
+            printf "Failed (Network error).\n"
+            rm -f "$FILE_PATH"
+        fi
+        
+        # Politeness interval (arXiv officially requests modest delays to prevent automated bans)
+        sleep 1
+    fi
+done
+
+printf "Synchronization complete.\n"

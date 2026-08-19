@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+
+# prune-papers: Recursively isolates PDF files from the current directory structure
+# by moving them to a 'pruned' directory if a file with the identical basename 
+# exists within the 'processed' directory.
+
+# Enforce strict execution mode
+set -euo pipefail
+
+PROCESSED_DIR="processed"
+PRUNED_DIR="pruned"
+
+if [ ! -d "$PROCESSED_DIR" ]; then
+    printf "Error: The target directory '%s' does not exist in the current working directory.\n" "$PROCESSED_DIR" >&2
+    exit 1
+fi
+
+# Initialize the destination directory
+mkdir -p "$PRUNED_DIR"
+
+# Create a temporary file to store the basenames of the processed papers.
+# Using a temporary file combined with grep ensures full compatibility with macOS Bash 3.2.
+TMP_PROCESSED=$(mktemp)
+trap 'rm -f "$TMP_PROCESSED"' EXIT
+
+# Find all PDFs within the processed directory, extract their basenames, 
+# and construct a deduplicated list.
+find "$PROCESSED_DIR" -type f -iname "*.pdf" -exec basename {} \; | sort -u > "$TMP_PROCESSED"
+
+if [ ! -s "$TMP_PROCESSED" ]; then
+    printf "No PDF files found within '%s'. No pruning required.\n" "$PROCESSED_DIR"
+    exit 0
+fi
+
+COUNT=0
+
+printf "Analyzing directory structure against '%s'...\n" "$PROCESSED_DIR"
+
+# Traverse the current directory structure. 
+# The \( -path ... -o -path ... \) -prune directive explicitly prevents the find 
+# command from descending into either the processed or pruned directories.
+while IFS= read -r -d '' FILE; do
+    FILENAME=$(basename "$FILE")
+    
+    # Check if the filename exists exactly in our list of processed basenames.
+    # -F: Fixed strings (treats characters like '.' literally)
+    # -x: Match the whole line exactly
+    # -q: Quiet mode (exits immediately with status 0 upon finding a match)
+    if grep -Fxq "$FILENAME" "$TMP_PROCESSED"; then
+        printf " [Moving] %s -> %s/\n" "$FILE" "$PRUNED_DIR"
+        mv "$FILE" "${PRUNED_DIR}/"
+        ((COUNT++))
+    fi
+done < <(find . \( -path "./$PROCESSED_DIR" -o -path "./$PRUNED_DIR" \) -prune -o -type f -iname "*.pdf" -print0)
+
+printf "Pruning complete. Moved %d duplicate file(s) to the '%s' directory.\n" "$COUNT" "$PRUNED_DIR"

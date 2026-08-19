@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+
+# iacr-dl: Synchronize IACR ePrint papers for a given author and year.
+
+# Enforce strict execution mode (exit on error, undefined variables, or pipe failures)
+set -euo pipefail
+
+# 1. Parameter Validation
+if [ "$#" -lt 2 ]; then
+    printf "Usage: %s <Author Name> <Year>\n" "$0"
+    printf "Example: %s Stefano Tessaro 2020\n" "$0"
+    exit 1
+fi
+
+# Dynamically extract the year (last argument) and the name (all preceding arguments)
+YEAR="${@: -1}"
+NAME="${@:1:$#-1}"
+
+if ! [[ "$YEAR" =~ ^[0-9]{4}$ ]]; then
+    printf "Error: The final argument must be a four-digit year (e.g., 2020).\n" >&2
+    exit 1
+fi
+
+# 2. Variable Initialization and URL Encoding
+# Translate spaces into '+' for standard HTTP GET query formatting
+ENCODED_NAME="$(echo "$NAME" | tr ' ' '+')"
+BASE_URL="https://eprint.iacr.org"
+SEARCH_URL="${BASE_URL}/search?q=&title=&authors=${ENCODED_NAME}&category=&submittedafter=${YEAR}&submittedbefore=&revisedafter=&revisedbefore="
+
+# Create the target directory using the exact author name provided
+DIR_NAME="$NAME"
+mkdir -p "$DIR_NAME"
+
+printf "Querying IACR ePrint archive for: %s (>= %s)\n" "$NAME" "$YEAR"
+
+# 3. HTML Parsing
+# Fetch the HTML and extract paths utilizing standard extended regular expressions (-E).
+# The expected href pattern for a paper is "/YYYY/NNNN". 
+# cut isolates the path from the href attribute, and sort -u removes duplicate occurrences.
+PAPER_PATHS=$(curl -s "$SEARCH_URL" | grep -oE 'href="/[0-9]{4}/[0-9]+"' | cut -d '"' -f 2 | sort -u || true)
+
+if [ -z "$PAPER_PATHS" ]; then
+    printf "No papers found matching the specified criteria.\n"
+    exit 0
+fi
+
+PAPER_COUNT=$(echo "$PAPER_PATHS" | wc -l | tr -d ' \t')
+printf "Found %s papers. Commencing synchronization...\n" "$PAPER_COUNT"
+
+# 4. File Retrieval
+for PATH_URI in $PAPER_PATHS; do
+    # Transform URI path (e.g., /2020/1234) into a flat filename (e.g., 2020-1234.pdf)
+    ID="${PATH_URI#/}"                   # Strip leading slash -> 2020/1234
+    FILENAME="${ID/\//-}.pdf"            # Replace intermediate slash with a hyphen -> 2020-1234.pdf
+    FILE_PATH="${DIR_NAME}/${FILENAME}"
+    DOWNLOAD_URL="${BASE_URL}${PATH_URI}.pdf"
+    
+    # The -s flag ensures the file exists and is strictly greater than zero bytes 
+    # (preventing the retention of empty files from aborted downloads).
+    if [ -s "$FILE_PATH" ]; then
+        printf " [Skipping] %s (File already exists)\n" "$FILENAME"
+    else
+        printf " [Downloading] %s ... " "$FILENAME"
+        # Retrieve the PDF silently, outputting standard errors only upon failure
+        curl -sS -o "$FILE_PATH" "$DOWNLOAD_URL"
+        printf "Done.\n"
+        
+        # Politeness interval to avoid triggering automated rate-limiting algorithms
+        sleep 1
+    fi
+done
+
+printf "Synchronization complete.\n"

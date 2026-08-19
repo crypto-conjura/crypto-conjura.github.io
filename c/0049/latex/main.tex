@@ -1,0 +1,306 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  Subexponential Best Separable State with imperfect completeness.
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{BEST SEPARABLE STATE WITH IMPERFECT COMPLETENESS}
+
+\newcommand{\BSS}{\mathrm{BSS}}
+\newcommand{\tO}{\tilde{O}}
+\newcommand{\Tr}{\operatorname{Tr}}
+\newcommand{\CC}{\mathbb{C}}
+\newcommand{\QMA}{\mathsf{QMA}}
+\newcommand{\EXP}{\mathsf{EXP}}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{Subexponential Best Separable State with Imperfect
+  Completeness}
+\cjsubtitle{Constant completeness error rather than $1/n$}
+\cjstatus{Statement: AI-written from Boaz Barak, Pravesh K. Kothari,
+  David Steurer, \emph{Quantum entanglement, sum of squares, and the log
+  rank conjecture}, arXiv preprint (quant-ph), v2 submitted 9 July 2017,
+  not yet checked by a human. The perfect-completeness case $c = 1$ and
+  the near-perfect case $c = 1 - 1/n$ are settled by the source
+  (Theorem 1.3 together with Remarks 1.4 and 4.3); the case of a
+  constant $c$ strictly below $1$ --- the case asserted here --- is
+  open, and the paper lists it first among the open questions of its
+  Section 8 and conjectures the affirmative answer.}
+\cjcategory{\emph{Quantum}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+Given a quantum measurement on a pair of subsystems, deciding whether
+some non-entangled state passes it is not known to be doable faster than
+trying essentially everything, which costs exponential time in the
+dimension. This paper gives the first improvement: an algorithm running
+in time roughly two to the square root of the dimension, but only in the
+case where the yes-instances are perfect, meaning that some
+non-entangled state is accepted with probability exactly one. The
+authors observe that their proof also tolerates a completeness error of
+one over the dimension, and no more, because the rank one matrix their
+rounding procedure produces is only guaranteed to have norm about the
+square root of the dimension divided by the dimension, so anything
+larger than a roughly one-over-the-dimension error swamps it. They
+conjecture that the result nevertheless holds with a constant
+completeness error: for any two constants with the first strictly larger
+than the second and strictly below one, distinguishing the case that
+some non-entangled state is accepted with probability at least the first
+from the case that every non-entangled state is accepted with
+probability at most the second should also be possible in time two to
+roughly the square root of the dimension.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+Deciding whether a given quantum state is entangled is not known to be
+doable in time polynomial in the dimension, and the robust version, the
+Quantum Separability Problem, is NP hard for inverse-polynomial
+$\varepsilon$ by Gharibian~\cite{Gha10}, improving on
+Gurvits~\cite{Gur03}. The closely related Best Separable State problem
+$\BSS_{c,s}$ asks to distinguish the case that some separable state is
+accepted by a given measurement with probability at least $c$ from the
+case that every separable state is accepted with probability at most
+$s$. Certifying the \textsc{no} case makes the measurement an
+entanglement witness, which is how entanglement is certified
+experimentally.
+
+$\BSS$ is NP hard when $c - s = 1/\poly(n)$~\cite{BT09,Gur03}, and
+Harrow and Montanaro~\cite{HM13} show that under the Exponential Time
+Hypothesis there is no $n^{o(\log n)}$ time algorithm for
+$\BSS_{1,1/2}$. The problem is the algorithmic face of the complexity
+class $\QMA(2)$: an algorithm for $\BSS_{c,s}$ decides languages in
+$\QMA(2)$ with completeness $c$ and soundness $s$, so a
+quasi-polynomial time algorithm for $\BSS_{0.99,0.5}$ would give
+$\QMA(2) \subseteq \EXP$. Doherty, Parrilo and
+Spedalieri~\cite{DPS04} proposed a sum-of-squares algorithm; it is not
+known whether it solves $\BSS_{c,s}$ for constants $c > s$ in
+quasi-polynomial time, though Brand\~{a}o, Christandl and
+Yard~\cite{BaCY11} showed quasi-polynomial time for the restricted class
+of 1-LOCC measurements, and Brand\~{a}o and Harrow~\cite{BH15} obtained
+comparable performance by an $\varepsilon$-net search. Aaronson,
+Impagliazzo and Moshkovitz~\cite{AIM14} suggested that $\BSS_{c,s}$ for
+constants $s < c$ might admit a quasi-polynomial time algorithm.
+
+This paper gives the first improvement over brute force for general
+measurements: a $2^{\tO(\sqrt{n})}$ time algorithm, based on
+$\tO(\sqrt{n})$ rounds of the sum-of-squares hierarchy, for
+$\BSS_{1,s}$ for every constant $s < 1$. The completeness side is
+perfect: the analysis runs the sum-of-squares program with the hard
+constraint that the rank one matrix $uv^{\top}$ lie exactly in the
+eigenspace $\mathcal{W}$ of $\mathcal{M}$ for eigenvalue $1$. Remark~4.3
+of the paper records the slack the argument has, and supplies the
+numbers: the proof would still go through if $uv^{\top}$ merely had
+small component orthogonal to $\mathcal{W}$, the rounding guarantees
+that the output rank one matrix $u_{0} v_{0}^{\top}$ has norm at least
+$k/n$ with $k = \tO(\sqrt{n})$, and it therefore suffices that
+$\|\Pi_{\mathcal{W}} uv^{\top}\|^{2} \ge 1 - k^{2}/n^{2}$ --- which is
+what yields the near-perfect completeness case $c = 1 - 1/n$. The
+remark is framed there as an extension, not as a barrier. Comparing its
+numbers with the conjecture is our own inference, not a claim the paper
+makes: a tolerable completeness error of order $k^{2}/n^{2}$, that is
+$\tO(1/n)$, falls short of a constant error by a factor of order $n$,
+and we are not aware of anything in the published analysis that closes
+that gap. Section~8 lists removing the perfect or near-perfect
+completeness condition first among the questions the paper leaves open.
+
+Why it matters. The version of Best Separable State that bears on
+quantum complexity and on practice is the two-sided-error one, where the
+accepting separable state is only required to pass with probability
+bounded away from one by a constant: perfect completeness is a fragile
+promise, and the motivation the paper itself gives for studying $\BSS$
+--- noisy, experimentally realizable measurements used as entanglement
+witnesses --- lives in the constant-error regime. Settling this in the
+affirmative would give the first subexponential algorithm for
+constant-gap $\BSS$, that is for $\QMA(2)$ with two-sided error, which
+is precisely the regime in which a quasi-polynomial algorithm would give
+$\QMA(2) \subseteq \EXP$. Settling it in the negative would be more
+striking still, since it would separate the constant-completeness
+problem from the perfect-completeness one and show that the
+$2^{\tO(\sqrt{n})}$ algorithm depends essentially on an exact algebraic
+promise rather than on the geometry of the separable cone.
+
+Progress to date. The paper proves the case $c = 1$ (Theorem 1.3) and
+states in Remark 1.4 that all the proofs extend to near perfect
+completeness, $c = 1 - 1/n$. Remark 4.3 supplies the quantitative
+reason: the analysis of Theorem 4.1 guarantees that the rounded rank one
+matrix has norm at least $k/n$ with $k = \tO(\sqrt{n})$, so it suffices
+that the projection of $uv^{\top}$ onto $\mathcal{W}$ have squared norm
+at least $1 - k^{2}/n^{2}$, a completeness error of order $\tO(1/n)$.
+Nothing in the paper closes the remaining factor of order $n$ up to a
+constant error, and no partial result at any intermediate completeness
+error, such as $1/\mathrm{polylog}(n)$ or $1/n^{0.9}$, is reported.
+
+\section{Notation and parameters}\label{sec:notation}
+
+\begin{itemize}
+\item $n \in \mathbb{N}$ is the local dimension; the joint system has
+  dimension $m = n^{2}$, and $\CC^{n^{2}}$ is identified with
+  $\CC^{n} \otimes \CC^{n}$ by identifying the vector indexed by
+  $[n] \times [n]$ with the $n \times n$ matrix of its coordinates.
+  Brute force over the separable states costs $2^{O(n)}$.
+\item For $u \in \CC^{n}$, $u^{*}$ denotes the conjugate transpose; for
+  Hermitian $A, B$, $A \preceq B$ means $B - A$ is positive
+  semidefinite; $I$ is the identity matrix.
+\item $\Tr$ denotes the trace.
+\item $c$ and $s$ are the completeness and soundness thresholds,
+  $0 \le s < c < 1$, both constants independent of $n$. The paper proves
+  the case $c = 1$ and extends to $c = 1 - 1/n$; the conjecture is the
+  case where $c$ is a constant strictly below $1$.
+\item $C = C(c,s)$ is the constant hidden in the running time
+  $2^{\tO(\sqrt{n})}$; it may depend on $c$ and $s$ but not on $n$ or
+  $\mathcal{M}$.
+\end{itemize}
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{definition}[Quantum state]\label{def:state}
+A \emph{quantum state} on a system of $m$ elementary states is an
+$m \times m$ complex Hermitian positive semidefinite matrix $\rho$ with
+$\Tr \rho = 1$. It is \emph{pure} if $\rho = w w^{*}$ for a unit vector
+$w \in \CC^{m}$.
+\end{definition}
+
+\begin{definition}[Measurement operator]\label{def:meas}
+A \emph{measurement operator} on a system of $m$ elementary states is an
+$m \times m$ complex Hermitian matrix $\mathcal{M}$ with
+$0 \preceq \mathcal{M} \preceq I$. The probability that $\mathcal{M}$
+accepts a state $\rho$ is $\Tr(\rho \mathcal{M})$.
+\end{definition}
+
+\begin{definition}[Separable state]\label{def:sep}
+Take $m = n^{2}$ and identify $[m]$ with $[n] \times [n]$ as above. A
+pure state $\rho = w w^{*}$ on $\CC^{m}$ is \emph{separable} if the
+vector $w \in \CC^{m}$, viewed as an $n \times n$ matrix, equals
+$u v^{*}$ for some $u, v \in \CC^{n}$. A general state $\rho$ is
+\emph{separable} if it is a convex combination of separable pure states,
+that is $\rho = \mathbb{E}\,(u v^{*})(u v^{*})^{*}$ for some
+distribution over pairs of unit vectors $u, v \in \CC^{n}$. A state that
+is not separable is \emph{entangled}.
+\end{definition}
+
+\begin{definition}[The promise problem $\BSS_{c,s}$]\label{def:bss}
+Let $0 \le s < c \le 1$. An instance of $\BSS_{c,s}$ is an
+$n^{2} \times n^{2}$ measurement operator $\mathcal{M}$. It is a
+\textsc{yes} instance if there exists a separable state $\rho$ on
+$\CC^{n^{2}}$ with $\Tr(\rho \mathcal{M}) \ge c$, and a \textsc{no}
+instance if every separable state $\rho$ on $\CC^{n^{2}}$ satisfies
+$\Tr(\rho \mathcal{M}) \le s$. Instances that are neither carry no
+promise.
+\end{definition}
+
+\begin{conjecture}[subexponential $\BSS$ with constant completeness
+  error]\label{conj:main}
+For all constants $c, s$ with $0 \le s < c < 1$ there exist a finite
+constant $C = C(c,s)$ and a randomized algorithm $\mathcal{A}$ with the
+following property. On input an $n^{2} \times n^{2}$ measurement
+operator $\mathcal{M}$ (Definition~\ref{def:meas}), the algorithm
+$\mathcal{A}$ halts after at most
+\[
+  2^{\,C \sqrt{n} \, (\log n)^{C}}
+\]
+steps and decides the promise problem $\BSS_{c,s}$ of
+Definition~\ref{def:bss}: it outputs
+\textsf{YES} with probability at least $2/3$ whenever there exists a
+separable state $\rho$ on $\CC^{n^{2}}$ with
+$\Tr(\rho \mathcal{M}) \ge c$, and outputs \textsf{NO} with probability
+at least $2/3$ whenever every separable state $\rho$ on $\CC^{n^{2}}$
+satisfies $\Tr(\rho \mathcal{M}) \le s$. (Its output is unconstrained on
+inputs satisfying neither condition.) Here the entries of $\mathcal{M}$
+are given as complex numbers with rational real and imaginary parts of
+bit length at most $\poly(n)$ --- an encoding fixed here for
+definiteness, not a condition taken from the paper, which specifies
+none.
+\end{conjecture}
+
+\begin{remark}[why randomized]\label{rem:randomized}
+The paper's own algorithm is randomized: its Lemma 7.1 locates the
+reweighting direction by showing that a random unit vector succeeds with
+probability $2^{-O(k)}$, and no derandomization is given. Since Remark
+1.4 conjectures that the paper's results extend, a randomized
+$2^{\tO(\sqrt{n})}$ algorithm should suffice to settle
+Conjecture~\ref{conj:main}, and the statement is written to allow one; a
+deterministic algorithm settles it a fortiori.
+\end{remark}
+
+\begin{remark}[the quantifier over $c$ and $s$]\label{rem:quantifier}
+The paper writes of ``the setting where in the \textsc{yes} case
+$\Tr(\rho \mathcal{M}) = 1 - \varepsilon$ for some absolute constant
+$\varepsilon$'', which read literally is an existential over
+$\varepsilon$. Conjecture~\ref{conj:main} states the universal form, for
+all constants $0 \le s < c < 1$, on the grounds that Remark 1.4 frames
+the question as whether the paper's results extend and that Theorem 1.3,
+the result being extended, is universally quantified over the soundness
+parameter; a single unspecified $\varepsilon$ would be an odd thing to
+conjecture. A reviewer who prefers the weaker existential reading should
+say so.
+\end{remark}
+
+\begin{remark}[algorithmic versus sum-of-squares
+  form]\label{rem:sosform}
+What the paper conjectures is that its own proofs extend, which is
+formally stronger than the existence of some $2^{\tO(\sqrt{n})}$
+algorithm: it asserts that the specific sum-of-squares algorithm of its
+Section~4, with $\tO(\sqrt{n})$ rounds, works. Stated above is the
+algorithmic consequence, since pinning down ``the same algorithm''
+would require reproducing the paper's program. A solver who wants to
+match the paper exactly should aim at the sum-of-squares version.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem[AIM14]{AIM14}
+Scott Aaronson, Russell Impagliazzo, and Dana Moshkovitz.
+\emph{AM with multiple merlins}.
+Electronic Colloquium on Computational Complexity (ECCC) 21, 12, 2014.
+
+\bibitem[BaCY11]{BaCY11}
+Fernando G.S.L. Brand\~{a}o, Matthias Christandl, and Jon Yard.
+\emph{A quasipolynomial-time algorithm for the quantum separability
+problem}.
+Proceedings of the Forty-third Annual ACM Symposium on Theory of
+Computing, STOC '11, ACM, pp.\ 343--352, 2011.
+
+\bibitem[BH15]{BH15}
+Fernando G. S. L. Brand\~{a}o and Aram Wettroth Harrow.
+\emph{Estimating operator norms using covering nets}.
+CoRR abs/1509.05065, 2015.
+
+\bibitem[BT09]{BT09}
+Hugue Blier and Alain Tapp.
+\emph{All languages in np have very short quantum proofs}.
+Quantum, Nano and Micro Technologies, 2009. ICQNM'09. Third
+International Conference on, IEEE, pp.\ 34--37, 2009.
+
+\bibitem[DPS04]{DPS04}
+Andrew C Doherty, Pablo A Parrilo, and Federico M Spedalieri.
+\emph{Complete family of separability criteria}.
+Physical Review A 69, no.\ 2, 022308, 2004.
+
+\bibitem[Gha10]{Gha10}
+Sevag Gharibian.
+\emph{Strong np-hardness of the quantum separability problem}.
+Quantum Information \& Computation 10, no.\ 3, 343--360, 2010.
+
+\bibitem[Gur03]{Gur03}
+Leonid Gurvits.
+\emph{Classical deterministic complexity of edmonds' problem and quantum
+entanglement}.
+Proceedings of the thirty-fifth annual ACM symposium on Theory of
+computing, ACM, pp.\ 10--19, 2003.
+
+\bibitem[HM13]{HM13}
+Aram Wettroth Harrow and Ashley Montanaro.
+\emph{Testing product states, quantum merlin-arthur games and tensor
+optimization}.
+J. ACM 60, no.\ 1, 3, 2013.
+
+\end{conjurabibliography}
+
+\end{document}

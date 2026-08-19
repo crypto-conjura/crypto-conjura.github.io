@@ -93,6 +93,39 @@ supplied numbers and several had drifted or were slightly off:
 
 ## Website and repository
 
+- [ ] **Rename "Get Involved" to "Participate", and replace two passages on `support/index.qmd` with supplied, smoothed copy (~20min)**
+
+  Requested 19 August 2026, with the exact replacement prose supplied for both passages. Three mechanical changes, plus two content questions to resolve before pasting rather than after — flagged below so the substitution doesn't silently drop something the site currently says on purpose.
+
+  1. **Navbar label.** `_quarto.yml`'s `navbar.left` entry `text: "Get Involved"` (still pointing at `support/index.qmd`) becomes `text: "Participate"`. One line.
+
+  2. **The `## Steering` section's closing paragraph** (`support/index.qmd:19-25`, currently three short paragraphs after the committee list) — replace with, smoothed for flow while keeping every fact:
+
+     > The steering committee supports the project and its general aims — this is not an endorsement of any particular statement on the site. The project's direction is still evolving rapidly, and it is looking for steering members to help shape it. (Anyone listed here can ask to be removed at any time, without giving a reason.)
+     >
+     > The project is currently maintained by Pooya Farshim.
+
+     **Dropped on purpose by the supplied text, worth a second look before pasting:** the current wording names *what kind* of steering member is wanted — "in cryptography, in formal methods and DevOps, and anyone who can bring tokens" — where the supplied text just says "help shape this project." Confirm that genericization is intended and not an accidental loss of the more useful, specific ask.
+
+  3. **The `## Supporting the project` section**, replaced in full with the supplied passage (smoothing kept light, per the explicit "stay close to the original wording" instruction — mostly grammar and a few connective words, not restructuring):
+
+     > The project's stated aim is to advance the field collaboratively with the help of AI, and to disseminate the results: remove the low-hanging fruit and move to the next layer as AI advances. (See the statement on the [Philosophy](/philosophy/) page.)
+     >
+     > Participants can help in multiple ways:
+     >
+     > - **Steering.** Help establish the direction of the project, and widen participation among colleagues and students.
+     > - **Conjecture formulation and resolutions.** Open questions from your own work or others', stated precisely, then proved or disproved.
+     > - **Formalizations.** Formalizing statements and proofs in Lean and other ITPs.
+     > - **Reviewing.** Review the correspondence between informal and formal statements, and help prioritize problems by significance and difficulty.
+     > - **Contributing tokens.** Pooled, distributed compute capacity from idle tokens.
+     > - **Website and workflow maintenance.** The site, its build, and the scripts and prompts behind it — building a coherent website and the tooling around it.
+     > - **Ideas!** How the archive should be organized, what a statement's page owes a contributor, which conventions are wrong. Open a PR, or say so on [Zulip](https://conjura.zulipchat.com/join/xkvwelhn7w3l34a5mqqrsstq/).
+
+     **Two things this drops that the current page says on purpose — resolve before pasting, don't paste over silently:**
+     - The current opening sentence is a specific, load-bearing claim: "the cost of attacking a problem should come down to compute anyone can bring, rather than to whose budget is larger" — this is the exact "compute not budget" argument the *other*, still-open task in this file ("Revisit 'Supporting the project'...") says must not be lost in any rewrite of this section. The supplied replacement's framing ("advance the field... disseminate the result... remove the low-hanging fruit") is a different, broader claim about the project's mission, not the same argument restated. Decide whether this is a deliberate reframing (in which case the other task's "must not drop" note needs updating too) or whether the compute-not-budget sentence should be kept alongside the new intro rather than replaced by it.
+     - The current list is explicitly ordered "in rough order of how scarce" each kind of help is, with Reviewing first because it's scarcest ("Most statements on this site have never been read by a person"). The supplied list has no stated ordering principle and puts Steering first — which also now duplicates the `## Steering` section immediately above it on the same page (that one lists *who currently steers*; this bullet is *how anyone can help with* steering — related but worth a sentence distinguishing them so a reader doesn't read the page as contradicting itself two headings apart).
+     - Also check that dropping the explicit "Anyone listed here can ask to be removed..." *from this section* is fine given it now lives only in the Steering section above (it does, per point 2) — the current page repeats a version of the disclaimer in both sections, and the supplied text only keeps it in Steering, which is a reasonable dedup rather than a loss, but confirm that reading.
+
 - [ ] **Make the IOG provenance tag look like the rest, in the `problems/` listing tables (~20min)**
 
   Requested 19 August 2026. The IOG chip (`c/0039`, `c/0040`, `c/0041` — the only statements carrying `tags: [iog]`) renders via `.cj-tag-org` (`theme-{light,dark}.scss`, rendered in `_listing-templates/statement-table.ejs.md`'s Tags column): outlined rather than filled, `0.7em` versus the row's `0.78em`, `UPPERCASED`, and at `0.7` opacity — deliberately quieter than everything else in the row, by a design comment already in the CSS ("kept quieter than a subject tag: it says where a statement came from, which is a smaller claim than what it is about"). Since the 19 August topic-tag work added `.cj-tag-topic` (filled, accent-coloured, clickable) beside it in the same row, IOG now visibly stands out as the one small, grey, outlined, all-caps chip among filled ones — which reads like an oversight rather than a deliberate quieter treatment.

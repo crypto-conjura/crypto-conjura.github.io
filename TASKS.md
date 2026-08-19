@@ -93,6 +93,10 @@ supplied numbers and several had drifted or were slightly off:
 
 ## Website and repository
 
+- [ ] **Point Mahmoody's link on `support/index.qmd` at `https://momahmoody.github.io/` (~5min)**
+
+  Requested 19 August 2026. `support/index.qmd:14` currently reads `- **[Mohammad Mahmoody](https://www.cs.virginia.edu/~mohammad/)** — Bilkent University`; change only the URL to `https://momahmoody.github.io/`. Leave the "Bilkent University" affiliation text alone — that mismatch (and Jens Groth's `http`-only link) is separately tracked in the "Revisit Supporting the project" task below, which is blocked pending clarification; don't fold this into that blocked item; it's independent and unblocked.
+
 - [ ] **Revisit "Supporting the project" against the project roadmap (~0.5h)**
 
   Requested 18 August 2026, with a roadmap supplied in the request: the
@@ -135,11 +139,12 @@ supplied numbers and several had drifted or were slightly off:
   longer page. Recommend the second; decide it explicitly either way.
 
   Two factual errors on the same page to fix while it is open, neither of them
-  about this section. **Mohammad Mahmoody is listed as "Bilkent University"
-  while his own entry links to `cs.virginia.edu`** — the label and its own link
-  disagree, and his homepage says the University of Virginia. **Jens Groth's
-  link is `http`-only** (`http://www0.cs.ucl.ac.uk/staff/j.groth/`), a
-  mixed-content nag from an `https` site, and he is the one name carrying no
+  about this section. **Mohammad Mahmoody is still listed as "Bilkent
+  University"** — his link itself is fixed separately, above, but the
+  affiliation label disagreeing with it is not; confirm what his actual
+  current affiliation is before writing a replacement rather than guessing.
+  **Jens Groth's link is `http`-only** (`http://www0.cs.ucl.ac.uk/staff/j.groth/`),
+  a mixed-content nag from an `https` site, and he is the one name carrying no
   affiliation.
 
   What the rewrite must not drop, since it is why the wording is careful: that

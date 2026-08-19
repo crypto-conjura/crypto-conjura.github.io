@@ -1,0 +1,32 @@
+---
+title: "Is there a two-round lattice-based threshold signature whose first round does not depend on the message, provably unforgeable against adaptive corruption of up to one fewer than the threshold?"
+subtitle: "Resolved: yes, by Oriole (ePrint 2026/793), a month after the gap was identified"
+---
+
+## Motivation
+
+A threshold signature lets any large-enough subset of a group of signers jointly produce a signature under one public key. Because signing is interactive, two things are worth minimising or strengthening independently: the number of communication rounds, and the strength of the corruption model the security proof tolerates. On rounds, a scheme is written $X+Y$ for $X$ *offline* (message-independent, precomputable) rounds followed by $Y$ *online* (message-dependent) rounds; a $1+1$ scheme lets signers precompute everything before the message is even known, so that a signature costs a single online broadcast once it arrives. On corruptions, *adaptive* security -- letting the adversary choose whom to corrupt during the protocol, based on what it has already seen, and handing it the corrupted signer's full session state -- is the conservative and NIST-favoured model, and the folklore belief that static security implies adaptive security has recently been shown false for threshold Schnorr signatures.
+
+The efficient two-round lattice-based threshold signatures are all $1+1$, but every one of them is proved only statically secure, because their security proofs rewind the adversary and rewinding cannot be reconciled with corruptions chosen after the forking point. Schemes proved adaptively secure either need more rounds, or make both of their two rounds depend on the message ($0+2$). Closing this gap -- a $1+1$ scheme that is also adaptively secure at the optimal threshold $T-1$ -- would give a post-quantum threshold signature with no round-count or corruption-model compromise at all. A separation in the other direction (showing that an offline first round forces either static security or a weaker threshold) would be the first genuine round/adaptivity impossibility result for threshold signatures.
+
+## Provenance and history
+
+The gap is identified, and left open, by Kaijie Jiang, Stefano Tessaro, Hoeteck Wee and Chenzhi Zhu, *Tweed: Adaptively Secure Lattice-Based Two-Round Threshold Signatures* (Cryptology ePrint Archive 2026/417, accepted to EUROCRYPT 2026). Tweed itself is the first lattice-based $0+2$ scheme with adaptive security at threshold $T-1$ from MLWE and MSIS, improving on the only prior adaptively secure lattice scheme, a five-round construction of Katsumata, Reichle and Takemure (CRYPTO 2024). The existing $1+1$ lattice schemes -- Espitau-Katsumata-Takemure (CRYPTO 2024), Chairattana-Apirom-Tessaro-Zhu (ASIACRYPT 2024), Zhu-Tessaro (CRYPTO 2025) and Ringtail (Boschini et al., IEEE S&P 2025) -- are all proved only statically secure. Tweed's authors name the obstruction precisely (rewinding breaks the corruption simulation once corruptions may follow the fork) and write, under a section headed "What we do not achieve," that they are "unlikely to overcome this barrier" using their own techniques; they do not use the words "open problem," and take no position on whether the gap should be closed or proved impossible.
+
+The same gap holds over pairing-free groups: the adaptively secure group-based schemes with an offline round need three rounds total (Twinkle at $2+1$, FROST-Mask at $2+1$), while the two-round adaptively secure group-based schemes (Dazzle, HBTS-Mask) are $0+2$, matching the lattice picture.
+
+**Closed a month later, by three of the same authors.** In April 2026, Kaijie Jiang, Hoeteck Wee and Chenzhi Zhu posted *Oriole: Adaptively Secure Partially Non-Interactive Threshold Signatures from Lattices* (Cryptology ePrint Archive 2026/793), whose introduction frames itself as closing exactly this gap ("no known scheme provides these guarantees under post-quantum assumptions... In this work, we close this gap with Oriole"), citing Tweed by name. Checked here directly against Oriole's PDF, not just its abstract: its $\mathrm{oSign}_1$/$\mathrm{oSign}_2$/$\mathrm{Cor}$ oracles (Figure 4) match the stateless, no-erasure, $T-1$-corruption model this hub asks for, and its Theorem 2 + Theorem 3 reduce adaptive strong unforgeability to MSIS and MLWE in the ROM. Oriole reaches this not by patching Tweed's rewinding-based proof but by switching to a hash-and-sign (GPV-style) foundation with a non-rewinding security proof -- a genuinely new technique, not an incremental fix. See [c/0046](/c/0046/), now marked `research-solved`, for the full statement and the residual review obligations (Oriole's proofs themselves have not been independently re-derived, and nothing here is formalized in Lean).
+
+## Parameter lattice
+
+Restricted to lattice-based constructions (the pairing-free group-based picture is structurally the same but is not tracked in this hub).
+
+| | Static security | Adaptive security, threshold $T-1$ |
+|---|---|---|
+| **$1+1$ (offline first round)** | EKT24, CATZ24, ZT25, Ringtail | **resolved** -- Oriole (2026/793), tracked as [c/0046](/c/0046/) |
+| **$0+2$ (both rounds online)** | *unstated* (weaker than the adaptive $0+2$ result, not of independent interest) | Tweed (2026/417) |
+| **5 rounds** | *unstated* | Katsumata-Reichle-Takemure (CRYPTO 2024) |
+
+## Statements in this hub
+
+- [A Two-Round Adaptively Secure Threshold Signature With a Message-Independent First Round](/c/0046/) -- resolved: Oriole (ePrint 2026/793) gives a $1+1$ lattice-based threshold signature, adaptively secure at threshold $T-1$ from MLWE and MSIS in the ROM, closing the gap Tweed identified a month earlier.

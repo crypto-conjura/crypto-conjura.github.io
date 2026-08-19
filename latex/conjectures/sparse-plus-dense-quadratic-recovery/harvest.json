@@ -1,0 +1,322 @@
+{
+  "pdf": {
+    "name": "2018-1237.pdf",
+    "sha256": "6221bd8394c58980710670e310654de2c6725c737d69cd01311e0345ec828427",
+    "pages": 28
+  },
+  "run": {
+    "at": "2026-08-18T23:53:50Z",
+    "backend": "cli",
+    "effort": "high"
+  },
+  "document": {
+    "title": "Sum-of-Squares Meets Program Obfuscation, Revisited",
+    "authors": [
+      "Boaz Barak",
+      "Samuel B. Hopkins",
+      "Aayush Jain",
+      "Pravesh Kothari",
+      "Amit Sahai"
+    ],
+    "year": "2018",
+    "venue_or_archive": "IACR Cryptology ePrint Archive",
+    "identifier": "ePrint 2018/1237",
+    "citation_confidence": "inferred"
+  },
+  "candidate": {
+    "title": "Provable Recovery from Sparse-Plus-Dense Quadratic Systems",
+    "subtitle": "the blockwise-random Lin-Matt candidate",
+    "slug": "sparse-plus-dense-quadratic-recovery",
+    "category": "Public-Key Cryptography & Assumptions",
+    "one_line": "There is a polynomial-time algorithm that provably recovers the planted input of the blockwise-random quadratic generator whose polynomials are a random sparse matching form plus an independent random dense quadratic.",
+    "informal": "The sum-of-squares attack in this paper is proved to work when the published quadratic polynomials are drawn independently from a distribution whose coefficients are normalised and pairwise independent, which covers both random dense and random sparse polynomials. It does not cover one specific published candidate, whose polynomials are a sum of two independent pieces on disjoint variable blocks: a sparse piece supported on a random perfect matching of the first block, and a fully dense random quadratic on the second block. The input is drawn in a way that matches this split, with the first block a half-and-half mixture of a small range and a much larger range. The authors report experiments in which a modified semidefinite program, given one extra constraint that fixes the squared length of the part of the solution belonging to the sparse block, recovers the planted input whenever the number of polynomials exceeds about three times the number of variables. They state that their theoretical analysis does not reach this case but that they believe it can, and conjecture that efficient recovery is provably possible here too. The problem is to turn the experiment into a theorem: give a polynomial-time algorithm, with a proof, that recovers the planted input from this specific structured family at stretch above linear.",
+    "openness_kind": "paper-conjectures",
+    "pages": [
+      6,
+      7,
+      11,
+      17,
+      18
+    ],
+    "parameters": [
+      {
+        "symbol": "$n$",
+        "meaning": "number of variables in each of the two blocks (the paper sets the two block sizes equal); the total input length is $2n$"
+      },
+      {
+        "symbol": "$m$",
+        "meaning": "number of published polynomials; the conjecture assumes $m \\ge n^{1+\\varepsilon}$"
+      },
+      {
+        "symbol": "$\\varepsilon$",
+        "meaning": "stretch exponent"
+      },
+      {
+        "symbol": "$C$",
+        "meaning": "bound on the coefficients of the polynomials, which are drawn uniformly from $\\{-C, \\dots, C\\}$"
+      },
+      {
+        "symbol": "$B_1, B_2$",
+        "meaning": "the two ranges of the mixture from which each coordinate of the sparse-block input is drawn"
+      },
+      {
+        "symbol": "$B'$",
+        "meaning": "range from which each coordinate of the dense-block input is drawn"
+      },
+      {
+        "symbol": "$B$",
+        "meaning": "the perturbation magnitude of the intended application; enters only through the constraint $B_2 \\ge nB^2 + nBB_1$"
+      }
+    ],
+    "notation_latex": "\\begin{itemize}\n  \\item $n$ is an even positive integer, $[n] := \\{1, \\dots, n\\}$, and all asymptotics are as $n \\to \\infty$.\n  \\item Variables are split into two blocks of $n$ each, written $x = (x_1, \\dots, x_n)$ and $x' = (x'_1, \\dots, x'_n)$.\n  \\item An algorithm $\\mathcal{A}$ is \\emph{efficient} if it is probabilistic and runs in time polynomial in the bit length of its input; polynomials are given to it by their coefficient vectors.\n  \\item A function $P : \\mathbb{N} \\to \\mathbb{N}$ is \\emph{polynomially bounded} if $P(n) \\le n^{O(1)}$.\n\\end{itemize}",
+    "definitions_latex": "\\begin{definition}[Blockwise-random polynomial distribution $\\mathcal{Q}_{n,C}$]\nLet $n$ be an even positive integer and $C$ a positive integer. A sample from $\\mathcal{Q}_{n,C}$ is a polynomial in the $2n$ variables $(x, x')$ of the form\n\\[\n  q(x, x') \\;=\\; S(x) \\;+\\; MQ(x'),\n\\]\ndrawn as follows, with all randomness fresh for each sample.\n\\begin{itemize}\n  \\item \\emph{(Dense block.)} $MQ(x') = \\sum_{1 \\le i \\le k \\le n} c_{i,k}\\, x'_i x'_k + \\sum_{i=1}^{n} c_i\\, x'_i$, where every $c_{i,k}$ and every $c_i$ is drawn independently and uniformly from $\\{-C, \\dots, C\\}$.\n  \\item \\emph{(Sparse block.)} A permutation $\\sigma$ of $[n]$ is drawn uniformly at random and\n  \\[\n    S(x) \\;=\\; \\sum_{i=1}^{n/2} \\alpha_i\\, x_{\\sigma(2i)}\\, x_{\\sigma(2i-1)} \\;+\\; \\sum_{i=1}^{n} \\beta_i\\, x_i \\;+\\; \\gamma,\n  \\]\n  where $\\alpha_1, \\dots, \\alpha_{n/2}, \\beta_1, \\dots, \\beta_n, \\gamma$ are drawn independently and uniformly from $\\{-C, \\dots, C\\}$.\n\\end{itemize}\nThus each sample is quadratic in $2n$ variables, with exactly $n/2$ quadratic monomials on the first block and all $\\binom{n+1}{2}$ of them on the second.\n\\end{definition}\n\n\\begin{definition}[Blockwise input distribution $\\mathcal{X}_{n, B_1, B_2, B'}$]\nLet $B_1, B_2, B'$ be positive integers. A sample $(x, x') \\in \\mathbb{Z}^n \\times \\mathbb{Z}^n$ is drawn as follows. Each $x_i$, $i \\in [n]$, is drawn independently: with probability $1/2$ uniformly from $\\{-B_1, \\dots, B_1\\}$, and with probability $1/2$ uniformly from $\\{-B_2, \\dots, B_2\\}$. Each $x'_i$, $i \\in [n]$, is drawn independently and uniformly from $\\{-B', \\dots, B'\\}$.\n\\end{definition}",
+    "formal_statement_latex": "There is an efficient algorithm $\\mathcal{A}$ such that the following holds for every constant $\\varepsilon > 0$ and every polynomially bounded $P : \\mathbb{N} \\to \\mathbb{N}$.\n\nFor all sufficiently large even $n$, every integer $m \\ge n^{1+\\varepsilon}$, and all positive integers $C, B, B_1, B', B_2 \\le P(n)$ satisfying $B_2 \\ge n B^2 + n B B_1$: if $q_1, \\dots, q_m$ are drawn independently from $\\mathcal{Q}_{n,C}$ and $(x, x')$ is drawn from $\\mathcal{X}_{n, B_1, B_2, B'}$, independently of the $q_j$, then with probability $1 - o(1)$ over these draws and the coins of $\\mathcal{A}$,\n\\[\n  \\mathcal{A}\\bigl( q_1, \\dots, q_m,\\; q_1(x, x'), \\dots, q_m(x, x') \\bigr) \\;=\\; (x, x') .\n\\]",
+    "setting_latex": "The main theorem of this paper (its Theorem 2) shows that when $q_1, \\dots, q_m$ are drawn independently and identically from a \\emph{nice} distribution $\\mathcal{Q}$ --- one supported on homogeneous degree-two polynomials whose coefficient vector has $\\ell_2$ norm within a constant factor of typical, whose coefficient of $x_i x_j$ has variance one, and whose coefficients are pairwise independent --- a polynomial-time algorithm recovers a polynomially bounded random input $x$ exactly from $m \\ge n(\\log n)^{O(1)}$ observations $q_i(x)$. The proof writes $q_i(x) = \\langle Q_i, xx^{\\top} \\rangle$, so that recovery becomes recovery of a rank-one matrix from $m \\ll n^2$ linear measurements, and then verifies the two conditions in Gross's incoherence criterion \\cite{Gross} for nuclear-norm minimisation: an approximate-isotropy condition on $\\frac{1}{N}\\sum_a \\mathrm{vec}(Q^{(a)})\\mathrm{vec}(Q^{(a)})^{\\top}$, proved by a Bernstein bound, and a small-inner-product condition $|x^{\\top}(Q^{(a)}/n)x| \\le \\nu \\|xx^{\\top}\\|_F / n$, proved by Hanson-Wright. A key step is that in the cryptographic setting one needs incoherence only for \\emph{most} $x$, not for all $x$. Niceness covers random dense polynomials and random sparse polynomials, and therefore breaks the candidate generators of Ananth, Jain and Sahai \\cite{AJS} and Agrawal \\cite{Agr18}.\n\nIt does not cover the candidate of Lin and Matt \\cite{LM}, which is recalled in Section 4.2 of the paper and reproduced in the definitions above. There each polynomial is $S_j(x) + MQ_j(x')$: a sparse part supported on a uniformly random perfect matching of the first block of variables, plus an independent fully dense random quadratic on a second, disjoint block. Two features of this take it outside Definition 1 of the paper. The coefficient variances are wildly non-uniform across the two blocks --- on the first block only $n/2$ of the $\\binom{n+1}{2}$ quadratic monomials are present, so the coefficient of a fixed $x_i x_j$ is zero with probability $1 - O(1/n)$, while on the second block every coefficient is present --- so no single normalisation makes all variances equal to one. And the input distribution on the first block is a half-and-half mixture of two ranges of very different scales, with $B_2 \\ge n B^2 + n B B_1$, so it is far from the centred, uniformly sub-Gaussian input the Hanson-Wright step is applied to. The paper names the obstruction as exactly this combination: it is the sum of a random dense and a random sparse polynomial, and the mixture creates difficulty in the analysis.\n\nThe paper's experimental attack shows what a proof should look for. Because the planted input is polynomially bounded, one can enumerate all candidate values of $\\sum_{i \\in [n]} x_i^2$ and add, to the trace-norm minimisation semidefinite program, the linear constraint that the trace of the block of the matrix variable corresponding to the sparse variables equals the guessed value. With this one extra constraint, the authors report recovering the planted solution in every experiment once $m > 3(n + n')$, for $n + n' = 60$ and $n + n' = 120$ total variables. So the conjecture is not that recovery is possible in some unspecified way; it is that this concrete semidefinite program, or something like it, admits an analysis in a regime where Gross's criterion and matrix RIP \\cite{RFP, Recht} both fail to apply directly.\n\nSettling this would upgrade an experimental break of a published iO assumption to a theorem, and would do so by extending nuclear-norm recovery guarantees to measurement ensembles that are mixtures of very different sparsity levels --- a question of interest to the matrix-recovery literature independently of the cryptographic motivation. It is also the last gap between the paper's theorems and its stated position that it knows of no degree-two candidate that survives its attacks; see also the companion conjecture \\cite{BBKK} that no expanding weak quadratic generator exists at all.",
+    "status_note": "Open as a theorem. The paper proves exact polynomial-time recovery when the polynomials are drawn i.i.d. from a nice distribution (Theorem 2), which does not include this blockwise-random distribution, and reports experiments in which the modified semidefinite program recovers the planted input for $m > 3 \\cdot (\\text{number of variables})$ at $n + n' = 60$ and $120$. No proof for this family is given anywhere in the paper.",
+    "progress_note": "The paper's Theorem 2 handles the i.i.d.-nice case, including separately the random dense and the random sparse case; what is missing is their sum. Experimentally, adding a single trace constraint on the sparse block (obtained by enumerating the polynomially many possible values of the squared $\\ell_2$ norm of the sparse part of the planted solution) suffices: the authors report recovery in all their experiments once $m > 3(n + n')$, with correlation to the planted solution reaching $1$ by $m/n \\approx 2$. They also report that the same works if the sparse part $S$ is replaced by a general random sparse polynomial with $O(n)$ monomials, and that in the three-block variant $S_{j,1}(x_1) + S_{j,2}(x_2) + MQ_j(x_3)$ constraining the sum of the two sparse-block traces recovers the planted solution using about the same number of samples.",
+    "why_interesting": "The Lin-Matt candidate is one of the three degree-two objects proposed as a substitute for trilinear maps in iO, and it is the only one the paper breaks by experiment rather than by theorem. Closing that gap either confirms the break --- and with it the paper's broader position that no degree-two candidate survives --- or exposes a case where the experiment misleads at the accessible values of $n$, which would be considerably more interesting, since the accessible values are tiny (60 to 120 variables) and the input distribution mixes two scales differing by a factor $\\Omega(n)$. On the algorithmic side, the technical content is a nuclear-norm recovery guarantee for a measurement ensemble that is a sum of a matching-sparse and a dense random matrix, which neither Gross's incoherence condition nor matrix RIP covers.",
+    "why_clean": "The statement is a single recovery guarantee for one explicitly specified pair of distributions, both of which fit in a few lines and involve nothing but uniform integers, a random permutation, and a two-component mixture. There are no oracles, no idealised models, no security games and no unpublished machinery: the target is an exact-recovery theorem about a semidefinite program, and the paper's own appendix gives the working code. A prover needs no cryptography at all.",
+    "risks": "Three things to check. (1) The paper's Section 4.2 writes the sparse-part coefficients as $\\alpha_i, \\beta_i, \\gamma$ with no index $j$, so read literally the same coefficients are shared across all $m$ polynomials and only the matching $\\sigma_j$ varies. I have taken them to be fresh per polynomial, which is what the paper's own Julia code in Appendix A does (\\texttt{genmatrixsmq} redraws every coefficient for each of the $m$ samples). A reviewer should confirm this reading against the original Lin-Matt paper, since the shared-coefficient reading gives a genuinely different and much more structured problem. (2) The parameters $B_1, B'$ and $C$ are \"set arbitrarily\" in the paper, and $B$ --- described elsewhere as the magnitude of the allowed perturbations --- enters only through $B_2 \\ge nB^2 + nBB_1$, so the constraint effectively just forces $B_2$ to dominate $nB_1$. I have quantified over all such settings bounded by a fixed polynomial in $n$; the polynomial boundedness is my explicit addition, though it is forced by the paper's framing (the planted solution must consist of polynomially bounded integers for the enumeration step to be efficient). (3) The paper says only \"it is possible to recover in this case as well\", without naming a success probability or a sample threshold. I have stated exact recovery with probability $1 - o(1)$, by analogy with Theorem 2 (which achieves $1 - n^{-\\log n}$ from $m \\ge n(\\log n)^{O(1)}$), and I have kept the candidate's own stretch $m \\ge n^{1+\\varepsilon}$ rather than the theorem's $n(\\log n)^{O(1)}$; a reviewer may reasonably prefer the weaker target of distinguishing, or approximate recovery, which is what the experiments actually measure (correlation with the planted solution). I have not checked whether the Lin-Matt candidate was subsequently withdrawn or amended, which would not close this question but would change how much anyone cares.",
+    "quotes": [
+      {
+        "page": 6,
+        "role": "openness",
+        "text": "At the moment however our theoretical analysis does not extend to the \"blockwise random\" polynomials that were used by Lin and Matt which can be thought of as a sum of random dense polynomial and a random sparse polynomial."
+      },
+      {
+        "page": 6,
+        "role": "statement",
+        "text": "While this combination creates theoretical difficulty in the analysis, we believe that it can be overcome and that it is possible to recover in this case as well."
+      },
+      {
+        "page": 6,
+        "role": "progress",
+        "text": "In particular, we also have experimental results showing that we can break the Lin-Matt generator as well."
+      },
+      {
+        "page": 7,
+        "role": "progress",
+        "text": "We show experimentally that this attack breaks the Lin-Matt candidate for moderate values of n."
+      },
+      {
+        "page": 11,
+        "role": "definition",
+        "text": "Lin and Matt [21] proposed a variant of pseudorandom generators with security properties closely related to the notion of ∆RGs above. Here, we recall their candidate polynomials."
+      }
+    ],
+    "bibliography": [
+      {
+        "key": "LM",
+        "authors": "Lin, H., Matt, C.",
+        "title": "Pseudo flawed-smudging generators and their application to indistinguishability obfuscation",
+        "venue": "IACR Cryptology ePrint Archive 2018, 646",
+        "year": "2018",
+        "verified": "printed-in-source-bibliography"
+      },
+      {
+        "key": "AJS",
+        "authors": "Ananth, P., Jain, A., Sahai, A.",
+        "title": "Indistinguishability obfuscation without multilinear maps: io from lwe, bilinear maps, and weak pseudorandomness",
+        "venue": "IACR Cryptology ePrint Archive 2018, 615",
+        "year": "2018",
+        "verified": "printed-in-source-bibliography"
+      },
+      {
+        "key": "Agr18",
+        "authors": "Agrawal, S.",
+        "title": "New methods for indistinguishability obfuscation: Bootstrapping and instantiation",
+        "venue": "IACR Cryptology ePrint Archive 2018, 633",
+        "year": "2018",
+        "verified": "printed-in-source-bibliography"
+      },
+      {
+        "key": "Gross",
+        "authors": "Gross, D.",
+        "title": "Recovering low-rank matrices from few coefficients in any basis",
+        "venue": "IEEE Trans. Inform. Theory 57(3), 1548-1566",
+        "year": "2011",
+        "verified": "printed-in-source-bibliography"
+      },
+      {
+        "key": "RFP",
+        "authors": "Recht, B., Fazel, M., Parrilo, P.A.",
+        "title": "Guaranteed minimum-rank solutions of linear matrix equations via nuclear norm minimization",
+        "venue": "SIAM Rev. 52(3), 471-501",
+        "year": "2010",
+        "verified": "printed-in-source-bibliography"
+      },
+      {
+        "key": "Recht",
+        "authors": "Recht, B.",
+        "title": "A simpler approach to matrix completion",
+        "venue": "Journal of Machine Learning Research 12, 3413-3430",
+        "year": "2011",
+        "verified": "printed-in-source-bibliography"
+      },
+      {
+        "key": "BBKK",
+        "authors": "Barak, B., Brakerski, Z., Komargodski, I., Kothari, P.",
+        "title": "Limits on low-degree pseudorandom generators (or: Sum-of-squares meets program obfuscation)",
+        "venue": "Electronic Colloquium on Computational Complexity (ECCC) 24, 60",
+        "year": "2017",
+        "verified": "printed-in-source-bibliography"
+      }
+    ]
+  },
+  "grounding": [
+    {
+      "quote": "At the moment however our theoretical analysis does not extend to the \"blockwise random\" polynomials that were used by Lin and Matt which can be thought of as a sum of random dense polynomial and a random sparse polynomial.",
+      "claimed_page": 6,
+      "found_page": 6,
+      "coverage": 1.0,
+      "longest_run": 0.0,
+      "status": "exact",
+      "role": "openness"
+    },
+    {
+      "quote": "While this combination creates theoretical difficulty in the analysis, we believe that it can be overcome and that it is possible to recover in this case as well.",
+      "claimed_page": 6,
+      "found_page": 6,
+      "coverage": 1.0,
+      "longest_run": 0.0,
+      "status": "exact",
+      "role": "statement"
+    },
+    {
+      "quote": "In particular, we also have experimental results showing that we can break the Lin-Matt generator as well.",
+      "claimed_page": 6,
+      "found_page": 6,
+      "coverage": 1.0,
+      "longest_run": 0.0,
+      "status": "exact",
+      "role": "progress"
+    },
+    {
+      "quote": "We show experimentally that this attack breaks the Lin-Matt candidate for moderate values of n.",
+      "claimed_page": 7,
+      "found_page": 7,
+      "coverage": 1.0,
+      "longest_run": 0.0,
+      "status": "exact",
+      "role": "progress"
+    },
+    {
+      "quote": "Lin and Matt [21] proposed a variant of pseudorandom generators with security properties closely related to the notion of ∆RGs above. Here, we recall their candidate polynomials.",
+      "claimed_page": 11,
+      "found_page": 11,
+      "coverage": 1.0,
+      "longest_run": 0.0,
+      "status": "exact",
+      "role": "definition"
+    }
+  ],
+  "verify": {
+    "verdict": "faithful-with-corrections",
+    "confidence": "high",
+    "checks": [
+      {
+        "name": "existence",
+        "result": "pass",
+        "page": 6,
+        "finding": "The problem is in the paper. PDF p. 6 (printed 5): \"At the moment however our theoretical analysis does not extend to the 'blockwise random' polynomials that were used by Lin and Matt which can be thought of as a sum of random dense polynomial and a random sparse polynomial. While this combination creates theoretical difficulty in the analysis, we believe that it can be overcome and that it is possible to recover in this case as well.\" The candidate itself is specified in Section 4.2, PDF p. 11, and restated in Section 6.2, PDF pp. 16-17."
+      },
+      {
+        "name": "openness",
+        "result": "pass",
+        "page": 17,
+        "finding": "It stays open through the whole paper. Section 6.2 (PDF pp. 16-18) is experimental only: a modified SDP with one extra trace constraint, Figure 2, \"for m > 3(n + n'), in our experiments, we always recover the correct solution\". Section 6.3 (PDF p. 18) extends the experiments to S+S+MQ, again experimentally (\"This seems to generalise\"). Section 7 (PDF pp. 19-20) is the unrelated cubic assumption. Appendix A (PDF pp. 23-27) is Julia code. There is no theorem, lemma, or proof sketch anywhere covering S + MQ; Theorem 2 (PDF p. 5) requires a nice distribution, and Theorems 4 and 5 (PDF pp. 13, 19) concern incoherent measurements and degree-3 linearisation."
+      },
+      {
+        "name": "strength",
+        "result": "pass",
+        "page": 10,
+        "finding": "The drafted statement is what the paper poses. Exact recovery of the planted input is the paper's own target, not a strengthening: PDF p. 10 says \"any algorithm that given the polynomials q_1,...,q_m and measurements q_1(x),...q_m(x) ... successfully recovers x, also breaks the corresponding candidate\", and Theorem 2 (PDF p. 5) concludes A(...) = x exactly. The experiments target the full planted vector (PDF p. 17). No sign ambiguity arises, since S carries linear terms and a constant (PDF p. 11). The draft asks only for probability 1-o(1) where Theorem 2 delivers 1 - n^{-log n}; the paper's belief statement fixes no probability, so this is not a misrepresentation."
+      },
+      {
+        "name": "quantifiers-and-parameters",
+        "result": "pass",
+        "page": 11,
+        "finding": "Checked symbol by symbol against PDF p. 11: n = n', m = n^{1+eps} for some eps > 0, B_1/B'/C \"set arbrarily\", B_2 = Omega(nB^2 + nBB_1), B a polynomial in the security parameter, coefficients from [-C,C], sparse block a sum over i in [n/2] of alpha_i x_{sigma_j(2i)} x_{sigma_j(2i-1)} plus linear terms plus gamma with sigma_j a fresh random permutation. The draft's ExistsA-ForAll-eps,P shape matches Theorem 2's own shape (PDF p. 5). Two deviations, both harmless in direction: m >= n^{1+eps} where the paper sets m = n^{1+eps} (more samples cannot hurt, and quantifying over every eps > 0 is the demanding direction), and B_2 = Omega(nB^2 + nBB_1) rendered as B_2 >= nB^2 + nBB_1, silently fixing the hidden constant to 1."
+      },
+      {
+        "name": "attribution-of-the-problem",
+        "result": "pass",
+        "page": 6,
+        "finding": "Correctly split. The candidate generator is Lin and Matt's [21] and the draft says so in its title and throughout; the belief that recovery is nonetheless possible is this paper's own (PDF p. 6), not something it cites to anyone. Section 4.2's heading is \"Candidate for Pseudo Flawed-Smudging Generators (Lin-Matt)\" (PDF p. 11) and Section 6.2's is \"Attacking [Lin-Matt18] Candidate Polynomials\" (PDF p. 16)."
+      },
+      {
+        "name": "attribution-of-the-cited-hypothesis",
+        "result": "fail",
+        "page": 4,
+        "finding": "The setting's closing line, \"see also the companion conjecture \\cite{BBKK} that no expanding weak quadratic generator exists at all\", attaches that hypothesis to Barak-Brakerski-Komargodski-Kothari [4]. It is this paper's own Hypothesis 1, \"No expanding weak quadratic pseudorandom generators\", stated on PDF p. 4. [4] is cited (PDF pp. 3, 8) for the earlier sum-of-squares break of the Lin-Tessaro candidate and blockwise-2-local PRGs, and for the SDP constraints this paper reuses."
+      },
+      {
+        "name": "definitions",
+        "result": "pass",
+        "page": 11,
+        "finding": "Every notion the formal statement uses matches the paper. The dense block including squares x'_i x'_i is confirmed by the code on PDF p. 25 (the MQ loop runs over all i,j in the second block, then symmetrises), which settles the ambiguity in \"each degree two monomial x'_i x'_k\" on PDF p. 11 on the evidence rather than by assumption. chi_{B_1,B_2} and chi_{B'} are reproduced exactly (PDF p. 11). Nothing is silently swapped for a standard notion. One trivial slip in the definition's closing remark: \"exactly n/2 quadratic monomials\" should be \"at most n/2\", since alpha_i is drawn from a range containing 0."
+      },
+      {
+        "name": "fabrication",
+        "result": "fail",
+        "page": 6,
+        "finding": "Three assertions the paper does not support, all in the prose rather than the statement. (a) The setting claims the half-and-half input mixture is a second reason the candidate falls outside the theorem and is \"far from the centred, uniformly sub-Gaussian input the Hanson-Wright step is applied to\". Definition 1 (PDF p. 5) constrains only the polynomial distribution Q and says nothing about the input, and the remark \"On the distribution of x\" (PDF p. 6) explicitly permits any x with E x = 0 that is O(E||x||^2/n)-sub-Gaussian, which chi_{B_1,B_2}^n is. The paper names one obstruction only: that each polynomial is a sum of a random dense and a random sparse polynomial. (b) \"Correlation to the planted solution reaching 1 by m/n approx 2\" contradicts Figure 2 (PDF p. 18), where the curve is about 0.95 at m/n = 2.00 and reaches 1 only near m/n = 3. (c) \"The last gap between the paper's theorems and its stated position\" is the draft's own characterisation; the paper's Hypothesis 1 (PDF p. 4) and its explicit statement that it has no attack on degree-3 candidates (PDF pp. 4, 19-20) are larger unproved gaps."
+      },
+      {
+        "name": "self-containment",
+        "result": "pass",
+        "page": 0,
+        "finding": "A reader who has never seen the paper could work from the statement alone. Both distributions are given in full, the observation model is explicit, the success criterion is exact equality with probability 1-o(1), and every symbol in the formal statement is either quantified there or defined in the notation and definitions block. B appears only inside the constraint on B_2, which looks odd but is stated, and matches the paper."
+      }
+    ],
+    "corrections": [
+      {
+        "field": "setting_latex",
+        "problem": "Claims the input distribution is a second reason the candidate escapes the theorem: \"the input distribution on the first block is a half-and-half mixture of two ranges of very different scales ... so it is far from the centred, uniformly sub-Gaussian input the Hanson-Wright step is applied to\", and frames both features as taking the candidate \"outside Definition 1 of the paper\". Definition 1 (PDF p. 5) constrains only the polynomial distribution Q, and the paper's remark on the distribution of x (PDF p. 6) explicitly allows any centred O(E||x||^2/n)-sub-Gaussian input, which chi_{B_1,B_2}^n satisfies since it is symmetric and bounded by B_2 with variance Theta(B_2^2). The draft also glosses the paper's phrase \"this combination\" (dense plus sparse polynomials) as covering the input mixture.",
+        "corrected": "Only one feature takes this candidate outside Definition 1 of the paper, and it concerns the polynomials alone: the coefficient variances are wildly non-uniform across the two blocks, since on the first block only n/2 of the binom(n+1,2) quadratic monomials are present while on the second every coefficient is, so no single normalisation makes all variances equal to one (compare the paper's footnote 3, PDF p. 5). The input distribution is not an obstruction: the paper notes (PDF p. 6) that the proof of Theorem 2 allows x to be any real random vector with E x = 0 that is O(E||x||^2/n)-sub-Gaussian, and the half-and-half mixture chi_{B_1,B_2}^n is such a vector. The obstruction the paper names is exactly that each polynomial is the sum of a random dense and a random sparse polynomial: \"this combination creates theoretical difficulty in the analysis\"."
+      },
+      {
+        "field": "progress_note",
+        "problem": "\"with correlation to the planted solution reaching 1 by m/n approx 2\". Figure 2 (PDF p. 18) shows the correlation at about 0.95 at m/n = 2.00; it reaches 1 only around m/n = 2.7 to 3.3. This also contradicts the draft's own (correct) report of the m > 3(n + n') threshold from PDF p. 17.",
+        "corrected": "with correlation to the planted solution already about 0.95 by m/n approx 2 and reaching 1 near m/n approx 3, where the ratio is measured against the total number of variables n + n'"
+      },
+      {
+        "field": "setting_latex",
+        "problem": "\"see also the companion conjecture \\cite{BBKK} that no expanding weak quadratic generator exists at all\" attributes the no-expanding-generator hypothesis to Barak, Brakerski, Komargodski and Kothari [4]. That hypothesis is this paper's own Hypothesis 1, \"No expanding weak quadratic pseudorandom generators\" (PDF p. 4); [4] is cited for the earlier sum-of-squares break of the Lin-Tessaro candidate and for the SDP constraints reused here (PDF pp. 3, 8).",
+        "corrected": "see also this paper's own Hypothesis 1, \"No expanding weak quadratic pseudorandom generators\", which conjectures that no expanding weak quadratic generator exists at all"
+      },
+      {
+        "field": "parameters ($B_2$) and formal_statement_latex",
+        "problem": "The draft imposes B_2 >= n B^2 + n B B_1, fixing to 1 the hidden constant in the paper's B_2 = Omega(n B^2 + n B B_1) (PDF p. 11). This narrows the admissible parameter range rather than reproducing it.",
+        "corrected": "State the constraint as B_2 >= c (n B^2 + n B B_1) for an arbitrary constant c > 0, or note explicitly that the paper writes B_2 = Omega(n B^2 + n B B_1) and that the statement fixes the constant to 1."
+      },
+      {
+        "field": "definitions_latex",
+        "problem": "The closing remark of the polynomial-distribution definition says each sample has \"exactly n/2 quadratic monomials on the first block\". Each alpha_i is drawn uniformly from {-C, ..., C}, which contains 0, so some vanish.",
+        "corrected": "at most n/2 quadratic monomials on the first block, supported on a uniformly random perfect matching, and all binom(n+1,2) of them on the second"
+      }
+    ],
+    "fabrications": [
+      "The input distribution is presented as a second obstruction that puts the candidate outside the paper's Definition 1. Definition 1 (PDF p. 5) constrains only the polynomial distribution Q and never mentions the input, and the paper's remark \"On the distribution of x\" (PDF p. 6) explicitly allows any x with E x = 0 that is O(E||x||^2/n)-sub-Gaussian, which the half-and-half mixture chi_{B_1,B_2}^n is. The paper attributes the difficulty solely to the polynomials being a sum of a random dense and a random sparse polynomial.",
+      "\"the mixture creates difficulty in the analysis\" is presented as the paper naming the input mixture as the obstruction. The paper's words are \"this combination creates theoretical difficulty in the analysis\" (PDF p. 6), where \"this combination\" is the sum of a random dense and a random sparse polynomial.",
+      "\"correlation to the planted solution reaching 1 by m/n approx 2\" (progress_note). Figure 2 (PDF p. 18) shows about 0.95 at m/n = 2.00, with 1 attained only near m/n = 3.",
+      "\"the companion conjecture \\cite{BBKK} that no expanding weak quadratic generator exists at all\". That is this paper's own Hypothesis 1 (PDF p. 4), not a result or conjecture of [4].",
+      "\"It is also the last gap between the paper's theorems and its stated position that it knows of no degree-two candidate that survives its attacks.\" The paper makes no such claim; its own Hypothesis 1 (PDF p. 4) is unproved, and it states outright that it has no attack on the degree-3 candidates (PDF pp. 4, 19-20).",
+      "\"a question of interest to the matrix-recovery literature independently of the cryptographic motivation\" is asserted as though the paper says so. The paper notes only that matrix RIP is not known to apply to sparse ensembles (PDF pp. 8, 12); it claims no independent interest for the mixed-sparsity question."
+    ],
+    "reason": "The problem is genuinely in the paper and genuinely left open: PDF p. 6 states that the analysis does not extend to the blockwise-random Lin-Matt polynomials but that the authors believe recovery is possible, and nothing later closes it — Sections 6.2 and 6.3 (PDF pp. 16-18) are experiments only, Section 7 is the unrelated cubic assumption, and Appendix A is code. The formal statement and both definitions reproduce Section 4.2 (PDF p. 11) clause by clause, including the perfect-matching sparse block with fresh sigma_j, the linear and constant terms, and the chi_{B_1,B_2} input. The single most important error is the draft's invented second obstruction: it claims the half-and-half input mixture puts the candidate outside Definition 1 and away from the sub-Gaussian regime Hanson-Wright needs, when Definition 1 (PDF p. 5) constrains only the polynomial distribution and the paper explicitly allows any centred O(E||x||^2/n)-sub-Gaussian input (PDF p. 6) — which this mixture is; that, the misread correlation figure, and the misattribution of Hypothesis 1 to [4] are each repairable without touching the statement."
+  },
+  "build": {
+    "compiled": true,
+    "chktex": [
+      "Warning 8 in statement.tex line 24: Wrong length of dash may have been used.",
+      "Warning 8 in statement.tex line 81: Wrong length of dash may have been used.",
+      "Warning 8 in statement.tex line 258: Wrong length of dash may have been used.",
+      "Warning 8 in statement.tex line 278: Wrong length of dash may have been used."
+    ],
+    "lacheck": [
+      "\"statement.tex\", line 245: Whitespace before punctation mark in \" .\""
+    ],
+    "errors": []
+  }
+}

@@ -1,0 +1,598 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  Tight security of the single-session lattice Chevallier-Mames
+%  signature.
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{SINGLE-SESSION LATTICE CHEVALLIER-MAMES}
+
+\newcommand{\ZZ}{\mathbb{Z}}
+\newcommand{\RR}{\mathbb{R}}
+\newcommand{\NN}{\mathbb{N}}
+\newcommand{\II}{\mathbb{I}}
+\newcommand{\cR}{\mathcal{R}}
+\newcommand{\cD}{\mathcal{D}}
+\newcommand{\cC}{\mathcal{C}}
+\newcommand{\cA}{\mathcal{A}}
+\newcommand{\cB}{\mathcal{B}}
+\newcommand{\cQ}{\mathcal{Q}}
+\newcommand{\negl}{\mathrm{negl}}
+\newcommand{\Rot}{\mathsf{Rot}}
+\newcommand{\Adv}{\mathsf{Adv}}
+\newcommand{\Time}{\mathsf{Time}}
+\newcommand{\smlwe}{\mathsf{sMLWE}}
+\newcommand{\SSone}{\mathsf{SS}^1}
+\newcommand{\ssk}{\sigma_{\mathsf{sk}}}
+\newcommand{\std}{\sigma_{\mathsf{td}}}
+\newcommand{\esm}{\varepsilon_{\mathsf{sm}}}
+\newcommand{\Hone}{\mathsf{H}_1}
+\newcommand{\Htwo}{\mathsf{H}_2}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{Tight Security of the Single-Session Lattice
+  Chevallier-Mames Signature}
+\cjsubtitle{One challenge per query instead of two, from search
+  Module-LWE}
+\cjstatus{Statement: AI-written from Rutchathon
+  Chairattana-Apirom, Nico D\"ottling, Julian Loss, Stefano Tessaro,
+  Benedikt Wagner, \emph{Tight Lattice-Based Signatures without
+  Trapdoors from Search LWE}, Cryptology ePrint Archive, full version
+  of an article to appear at CRYPTO 2026, 2026, not yet checked by a
+  human. The two-session scheme $\mathsf{SS}_{\mathsf{R}}$ is settled
+  --- the paper's Theorem~4.2 proves tight strong unforgeability for
+  it from search Module-LWE --- while the single-session scheme
+  $\SSone$ below is open: for it the paper sketches only a reduction
+  that resamples challenges and therefore loses a factor about
+  $1/\varepsilon$, and states that it does not know how to prove tight
+  security.}
+\cjcategory{\emph{Public-Key Cryptography \& Assumptions}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+There is a lattice signature scheme built by translating the
+Chevallier-Mames CDH-based signature into the Module-LWE world: the
+public key is a noisy linear sample, the signer derives a second matrix
+from a hash of its own commitment, publishes a second noisy sample
+under that matrix with the same secret, and proves that both samples
+are close to the row span of their respective matrices with the same
+secret. A security reduction wants to take a forgery and read the
+secret out of it, and it can: from two different accepting challenges
+for the same query it recovers the noise term and then the secret. The
+trouble is the arithmetic of how often that happens. If a single
+challenge is accepting with probability epsilon, then a pair of
+accepting challenges shows up only with probability epsilon squared, so
+the reduction has to keep resampling challenges, and the resulting
+proof loses a polynomial factor. The paper's fix is to run two
+independent copies of the protocol side by side under one public key
+with two independent challenges; a short inclusion-exclusion argument
+then shows that a pair of accepting challenges for one of the two
+copies is at least as likely as a forgery, which makes the reduction
+tight, at the cost of doubling signature size and signing time. The
+question left open is whether the doubling is really needed: is the
+single-copy scheme itself tightly secure under search Module-LWE, or is
+the parallel repetition inherent to this style of proof?
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+A security reduction for a signature scheme is \emph{tight} when a
+forger running in time $t$ with success probability $\varepsilon$
+yields an algorithm for the underlying problem running in time
+$t' \approx t$ with success probability $\varepsilon' \approx
+\varepsilon$. Tightness matters concretely: a lossy reduction forces
+larger parameters to absorb the loss. For lattices, the hash-and-sign
+approach of Gentry, Peikert and Vaikuntanathan~\cite{GPV08} has a tight
+reduction to SIS but requires trapdoor preimage sampling, while the
+trapdoor-free Fiat--Shamir route of Lyubashevsky~\cite{Lyu12} is proved
+by rewinding and is not amenable to a tight reduction to SIS; tight
+proofs for Fiat--Shamir lattice signatures, including the one for
+Dilithium~\cite{LDK22}, instead go through lossy identification and
+therefore rely on \emph{decisional} LWE. Since known
+search-to-decision reductions for LWE lose a factor polynomial in
+$1/\varepsilon$, a proof from \emph{search} LWE is quantitatively
+preferable, and obtaining one for an efficient Fiat--Shamir lattice
+signature is the paper's stated goal.
+
+The paper's starting point is the Chevallier-Mames
+signature~\cite{Che05}, abstracted as a five-move identification
+protocol in~\cite{KLP17}, which has a tight reduction to CDH: a
+signature is a $\Sigma$-protocol transcript proving that $X = g^x$ and
+$Z = h^x$ share a discrete logarithm, where $h$ is a hash of the
+commitment and the message. The naive lattice translation is the scheme
+$\SSone$ of Definition~\ref{def:ss1}: the public key is a Module-LWE
+sample $\mathbf{t} = \mathbf{s}\mathbf{A} + \mathbf{e}$, the signer
+derives $\mathbf{H} = \Hone(\mathbf{u},\mu)$ from its own commitment,
+publishes $\bar{\mathbf{t}} = \mathbf{s}\mathbf{H} + \bar{\mathbf{e}}$,
+and the verification equations assert simultaneous proximity of
+$\mathbf{t}$ to $\mathbf{s}\mathbf{A}$ and of $\bar{\mathbf{t}}$ to
+$\mathbf{s}\mathbf{H}$. Signing is simulatable without the secret key
+by rejection sampling~\cite{Lyu12} together with a rerandomisation of
+$(\mathbf{A},\mathbf{t})$ into
+$(\mathbf{H},\bar{\mathbf{t}})$~\cite{GMPW20}; hardness of $\smlwe$ for
+a uniform secret and a Gaussian error of this width follows from
+worst-case module lattice problems~\cite{LS15}, provided
+$\ssk > \sqrt{n}\cdot\omega(\sqrt{\log N})$.
+
+The obstruction is on the extraction side. Unlike $\mathbf{e}$, the
+term $\bar{\mathbf{e}}$ is adversarially chosen, and an adversary can
+pick a non-short $\bar{\mathbf{e}}$ for which $c \cdot \bar{\mathbf{e}}$
+is nonetheless short with inverse polynomial probability over the
+challenge $c$: the proximity proof is not sound, so decoding
+$\mathbf{s}$ from $\bar{\mathbf{t}}$ with a lattice trapdoor for
+$\mathbf{H}$~\cite{MP12} fails. What survives is a shortcut: once $c$
+is fixed, the response $\mathbf{z}$ is statistically determined, so a
+reduction holding a trapdoor for $\mathbf{H}$ can decide from an
+$\Htwo$ query alone whether the query can lead to a forgery, without
+waiting for the forgery. From two accepting challenges $c \neq c'$ for
+the same query one gets
+\[
+  (c-c')\mathbf{t} = (\mathbf{z}-\mathbf{z}')\mathbf{A}
+    + \mathbf{f} - \mathbf{f}',
+\]
+whence $\mathbf{e} = (c-c')^{-1}(\mathbf{f}-\mathbf{f}')$ computed in
+the number field, and then $\mathbf{s}$ by linear algebra. But if a
+single challenge is accepting with probability $\varepsilon$, a
+\emph{pair} of accepting challenges appears only with probability
+$\varepsilon^2$, so the reduction must resample about $1/\varepsilon$
+times, and the proof is not tight.
+
+The paper's fix is a two-fold parallel repetition: two sessions share
+one public key and one $\mathbf{H}$, and $\Htwo$ returns two
+independent challenges $(c_0,c_1)$. Writing $\varepsilon_b$ for the
+per-session acceptance probability, the inclusion-exclusion identity
+\[
+  \varepsilon_0^2 + \varepsilon_1^2 - \varepsilon_0^2\varepsilon_1^2
+    \;\ge\; \varepsilon_0\varepsilon_1
+\]
+says that a pair of accepting challenges for \emph{one} of the two
+sessions is at least as likely as an accepting pair $(c_0,c_1)$ for
+both, i.e.\ at least as likely as the adversary's own success. This
+``polarization'', combined with a balanced sampler that keeps the
+reduction's \emph{worst-case} rather than expected running time under
+control~\cite{JT20} and a monotone coupling argument lifting the
+per-query guarantee to the whole game, yields a tight reduction from
+$\smlwe$ to strong unforgeability of the two-session scheme, with
+polynomial modulus. That proof factors through key-only unforgeability:
+strong unforgeability under chosen-message attack follows from key-only
+unforgeability together with $\smlwe$ (the paper's Section~4.3), and
+the extraction argument above is what carries the key-only step. The
+price of the repetition is exactly a factor two in signature size and
+signing time. The question recorded here is whether that price is
+necessary.
+
+Progress to date. The paper gives, in its technical overview, a
+non-tight reduction for the single-session scheme: the reduction
+generates $\mathbf{H}$ with a lattice trapdoor, and because the
+response is statistically determined once the challenge is fixed, it
+can decide from each $\Htwo$ query whether the query is accepting; on
+an accepting query it resamples challenges until a second accepting one
+appears, which costs about $1/\varepsilon$ attempts, and then recovers
+$\mathbf{e}$ and $\mathbf{s}$ from the two transcripts. It also shows
+precisely what the two-session variant buys: for two independently
+sampled challenges the probability of an accepting pair within one
+session is at least the probability of an accepting pair across the two
+sessions, which is the adversary's advantage. No such identity is
+available with a single challenge per query, where the pair probability
+is $\varepsilon^2$.
+
+\section{Notation and parameters}\label{sec:notation}
+
+Throughout, $\kappa$ is the security parameter, $N = N(\kappa)$ is a
+power of two, $q = q(\kappa)$ is an odd prime, and
+\[
+  \cR := \ZZ[\mathsf{X}]/\langle \mathsf{X}^N + 1\rangle,
+  \qquad \cR_q := \cR/q\cR.
+\]
+We write $\poly(\kappa)$ and $\negl(\kappa)$ for the classes of
+polynomially bounded and of negligible functions of $\kappa$. All
+vectors are row vectors. An element
+$a = \sum_{i=0}^{N-1} a_i \mathsf{X}^i \in \cR$ is identified with its
+coefficient vector $(a_0,\dots,a_{N-1}) \in \ZZ^N$, and a vector
+$\mathbf{a} \in \cR^m$ with the concatenation of the coefficient
+vectors of its entries, an element of $\ZZ^{mN}$; $\|\cdot\|$,
+$\|\cdot\|_1$ and $\|\cdot\|_\infty$ denote the $\ell_2$, $\ell_1$ and
+$\ell_\infty$ norms of that integer vector. For $a \in \cR$,
+$\Rot(a) \in \ZZ^{N\times N}$ is the negacirculant matrix of
+multiplication by $a$ on $\cR$, and for
+$\mathbf{e} = (e_1,\dots,e_m) \in \cR^m$ we set
+\[
+  \Rot(\mathbf{e}) := (\Rot(e_1) \mid \cdots \mid \Rot(e_m))
+    \in \ZZ^{N \times mN}.
+\]
+
+For $\sigma > 0$ and $\mathbf{v} \in \cR^m$,
+$\cD_{\cR^m,\mathbf{v},\sigma}$ denotes the discrete Gaussian on
+$\cR^m$ (through the above embedding) with standard deviation $\sigma$
+centred at $\mathbf{v}$, i.e.\ the distribution with probability mass
+proportional to $\exp(-\pi\|\mathbf{x}-\mathbf{v}\|^2/\sigma^2)$; we
+write $\cD_{\cR^m,\sigma} := \cD_{\cR^m,\mathbf{0},\sigma}$ and denote
+by $\cD_{\cR^m,\mathbf{v},\sigma}(\mathbf{x})$ the probability it
+assigns to $\mathbf{x}$. For a symmetric positive definite
+$\boldsymbol\Sigma \in \RR^{mN\times mN}$,
+$\cD_{\cR^m,\sqrt{\boldsymbol\Sigma}}$ is the discrete Gaussian on
+$\cR^m$ centred at $\mathbf{0}$ with covariance $\boldsymbol\Sigma$,
+i.e.\ with probability mass proportional to
+$\exp(-\pi\,\mathbf{x}\boldsymbol\Sigma^{-1}\mathbf{x}^\top)$. We write
+$\II_k$ for the $k\times k$ identity matrix and $\otimes$ for the
+Kronecker product.
+
+For $\gamma_c \in \NN$, the challenge set is
+\[
+  \cC := \{\, c \in \cR \;:\;
+    \|c\|_\infty = 1 \ \wedge\ \|c\|_1 = \gamma_c \,\},
+\]
+the set of ring elements with coefficients in $\{-1,0,1\}$ of which
+exactly $\gamma_c$ are nonzero. We write $x \sample S$ for sampling $x$
+uniformly from a finite set $S$ or according to a distribution $S$.
+
+The parameters of the statement below are as follows.
+
+\begin{itemize}[leftmargin=1.2em]
+  \item $\kappa$: security parameter.
+  \item $N$: degree of the cyclotomic ring, a power of two.
+  \item $q$: odd prime modulus of the ring $\cR_q$.
+  \item $n, m$: row and column dimensions of the public matrix
+  $\mathbf{A} \in \cR_q^{n\times m}$; also the dimensions of the search
+  Module-LWE instance.
+  \item $m'$: number of columns of the hash-derived matrix
+  $\mathbf{H} \in \cR_q^{n\times m'}$.
+  \item $\ssk$: standard deviation of the discrete Gaussian
+  secret-key error $\mathbf{e}$.
+  \item $\sigma_r, \bar\sigma_r$: standard deviations of the commitment
+  noise $\mathbf{d}$ and $\bar{\mathbf{d}}$, and the target widths of
+  the rejection sampling.
+  \item $\sigma_x, \sigma_y$: parameters of the covariance
+  $\bar{\boldsymbol\Sigma} =
+   \sigma_x^2\Rot(\mathbf{e})\Rot(\mathbf{e})^\top + \sigma_y^2\II_N$
+  of the second error $\bar{\mathbf{e}}$.
+  \item $\beta_{\mathbf{z}}, \bar\beta_{\mathbf{z}}$: verification norm
+  bounds for the two proximity checks.
+  \item $\gamma_c$: number of nonzero coefficients of a challenge,
+  i.e.\ the $\ell_1$ norm of every $c \in \cC$.
+  \item $M$: rejection sampling parameter,
+  $M = \exp(t/\alpha + 2/\alpha^2)$; for $\SSone$ the per-iteration
+  acceptance probability is $1/M^2$, so the expected number of signing
+  iterations is about $M^2$ (the paper's two-session scheme has
+  $1/M^4$).
+  \item $\alpha, t$: the two rejection-sampling slack parameters
+  entering $M$, both $\omega(\sqrt{\log(mN)})$.
+  \item $\ell$: maximum number of rejection sampling iterations before
+  signing gives up.
+  \item $\esm$: the smoothing-parameter slack appearing in the bounds
+  on $\ssk$ and $\eta$ (written $\varepsilon$ in the paper's Table~1;
+  renamed here to keep $\varepsilon$ for a forger's success
+  probability).
+  \item $\eta$: the Gaussian width below which the paper's
+  rerandomisation and trapdoor arguments apply.
+  \item $b, \std$: the gadget base and the trapdoor Gaussian width of
+  the trapdoor sampler used by the reduction; they constrain $m'$ and
+  $q$ only.
+  \item $\cQ_{\mathsf{S}}, \cQ_1, \cQ_2$: numbers of signing, $\Hone$
+  and $\Htwo$ queries made by the forger.
+  \item $C_0, p$: the multiplicative advantage loss and the per-query
+  time overhead polynomial that make the reduction tight.
+\end{itemize}
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{definition}[Search Module-LWE]
+\label{def:smlwe}
+Let $n,m,N,q$ be as above and $\sigma > 0$. For an algorithm $\cB$
+define
+\[
+  \Adv^{\mathrm{smlwe}}_{n,m,N,q,\sigma}(\cB,\kappa)
+    := \Pr[\, \mathbf{s} = \mathbf{s}' \,],
+\]
+where the probability is over
+$\mathbf{A} \sample \cR_q^{n\times m}$,
+$\mathbf{s} \sample \cR_q^{n}$,
+$\mathbf{e} \sample \cD_{\cR^m,\sigma}$ and
+$\mathbf{s}' \sample \cB(\mathbf{A},\, \mathbf{s}\mathbf{A}+\mathbf{e})$,
+with $\mathbf{A}$ and $\mathbf{s}$ uniform and all arithmetic over
+$\cR_q$. The assumption $\smlwe_{n,m,N,q,\sigma}$ states that this
+advantage is negligible for every probabilistic polynomial-time $\cB$.
+\end{definition}
+
+\begin{definition}[The single-session scheme $\SSone$]
+\label{def:ss1}
+Let $n,m,m',\ell,\gamma_c \in \NN$, $M \ge 1$, and
+$\ssk,\sigma_r,\bar\sigma_r,\sigma_x,\sigma_y,\beta_{\mathbf{z}},
+\bar\beta_{\mathbf{z}} > 0$, and let
+$\Hone : \{0,1\}^* \to \cR_q^{n\times m'}$ and
+$\Htwo : \{0,1\}^* \to \cC$ be hash functions. The signature scheme
+\begin{multline*}
+  \SSone = \SSone[n,m,m',N,q,\ell,M,\ssk,\sigma_r,\\
+  \bar\sigma_r,\sigma_x,\sigma_y,\beta_{\mathbf{z}},
+  \bar\beta_{\mathbf{z}},\gamma_c,\Hone,\Htwo]
+\end{multline*}
+consists of the following algorithms, with all arithmetic over $\cR_q$.
+
+\smallskip\noindent$\mathsf{KeyGen}(1^\kappa)$: sample
+$\mathbf{A} \sample \cR_q^{n\times m}$, $\mathbf{s} \sample \cR_q^{n}$
+and $\mathbf{e} \sample \cD_{\cR^m,\ssk}$, set
+$\mathbf{t} \leftarrow \mathbf{s}\mathbf{A} + \mathbf{e}$, and return
+$\mathsf{pk} := (\mathbf{A},\mathbf{t})$ and
+$\mathsf{sk} := (\mathsf{pk},\mathbf{s},\mathbf{e})$.
+
+\smallskip\noindent$\mathsf{Sign}(\mathsf{sk},\mu)$ for
+$\mu \in \{0,1\}^*$: set
+\[
+  \bar{\boldsymbol\Sigma} := \sigma_x^2\,\Rot(\mathbf{e})
+    \Rot(\mathbf{e})^\top + \sigma_y^2\,\II_N \in \RR^{N\times N}.
+\]
+Repeat the following at most $\ell$ times; if no signature is output,
+return $\bot$.
+\begin{enumerate}[leftmargin=1.4em]
+\item Sample $\mathbf{r} \sample \cR_q^{n}$,
+$\mathbf{d} \sample \cD_{\cR^m,\sigma_r}$ and
+$\bar{\mathbf{d}} \sample \cD_{\cR^{m'},\bar\sigma_r}$, and set
+$\mathbf{u} \leftarrow \mathbf{r}\mathbf{A} + \mathbf{d} \in \cR_q^{m}$.
+\item Set
+$\mathbf{H} \leftarrow \Hone(\mathbf{u},\mu) \in \cR_q^{n\times m'}$.
+\item Sample
+$\bar{\mathbf{e}} \sample
+  \cD_{\cR^{m'},\sqrt{\II_{m'}\otimes\bar{\boldsymbol\Sigma}}}$
+and set
+$\bar{\mathbf{t}} \leftarrow \mathbf{s}\mathbf{H} + \bar{\mathbf{e}}
+ \in \cR_q^{m'}$ and
+$\bar{\mathbf{u}} \leftarrow \mathbf{r}\mathbf{H} + \bar{\mathbf{d}}
+ \in \cR_q^{m'}$.
+\item Set
+$c \leftarrow \Htwo(\mathbf{u},\bar{\mathbf{u}},\mathbf{H},
+ \bar{\mathbf{t}},\mu) \in \cC$.
+\item Set $\mathbf{z} \leftarrow \mathbf{r} + c\,\mathbf{s}$,
+$\mathbf{f} \leftarrow \mathbf{d} + c\,\mathbf{e}$ and
+$\bar{\mathbf{f}} \leftarrow \bar{\mathbf{d}} + c\,\bar{\mathbf{e}}$
+(over $\cR$).
+\item With probability $\rho\cdot\bar\rho$ return
+$\sigma := (\bar{\mathbf{t}},\mathbf{u},\bar{\mathbf{u}},\mathbf{z})$;
+otherwise go to the next iteration. Here
+\[
+  \rho := \min\Bigl\{1,
+    \tfrac{\cD_{\cR^{m},\sigma_r}(\mathbf{f})}
+          {M\,\cD_{\cR^{m},c\mathbf{e},\sigma_r}(\mathbf{f})}\Bigr\}
+\]
+and
+\[
+  \bar\rho := \min\Bigl\{1,
+    \tfrac{\cD_{\cR^{m'},\bar\sigma_r}(\bar{\mathbf{f}})}
+          {M\,\cD_{\cR^{m'},c\bar{\mathbf{e}},\bar\sigma_r}
+            (\bar{\mathbf{f}})}\Bigr\}.
+\]
+\end{enumerate}
+
+\smallskip\noindent$\mathsf{Ver}(\mathsf{pk},\mu,\sigma)$: parse
+\[
+  \sigma = (\bar{\mathbf{t}},\mathbf{u},\bar{\mathbf{u}},\mathbf{z})
+    \in \cR_q^{m'}\times\cR_q^{m}\times\cR_q^{m'}\times\cR_q^{n},
+\]
+set $\mathbf{H} \leftarrow \Hone(\mathbf{u},\mu)$ and
+$c \leftarrow \Htwo(\mathbf{u},\bar{\mathbf{u}},\mathbf{H},
+\bar{\mathbf{t}},\mu)$, and return $1$ if and only if both
+\begin{gather*}
+  \|\mathbf{u} + c\cdot\mathbf{t} - \mathbf{z}\mathbf{A}\|
+    \le \beta_{\mathbf{z}}, \\
+  \|\bar{\mathbf{u}} + c\cdot\bar{\mathbf{t}} - \mathbf{z}\mathbf{H}\|
+    \le \bar\beta_{\mathbf{z}},
+\end{gather*}
+where the two vectors are taken with representatives in
+$\{-\lfloor q/2\rfloor,\dots,\lfloor q/2\rfloor\}$ coefficientwise.
+\end{definition}
+
+\begin{definition}[Correctness and $\mathrm{SUF\text{-}CMA}$ security]
+\label{def:sufcma}
+A signature scheme $\mathsf{SS}$ has correctness error at most
+$\varepsilon$ if for every $\mu \in \{0,1\}^*$,
+$\Pr[\mathsf{SS}.\mathsf{Ver}(\mathsf{pk},\mu,\sigma) = 0] \le
+\varepsilon$, over
+$(\mathsf{sk},\mathsf{pk}) \sample \mathsf{SS}.\mathsf{KeyGen}(1^\kappa)$
+and $\sigma \sample \mathsf{SS}.\mathsf{Sign}(\mathsf{sk},\mu)$ (an
+output of $\bot$ counts as a failure). For an adversary $\cA$ with
+access to a signing oracle $\mathsf{S}$ that on input $\mu$ returns
+$\sigma \sample \mathsf{SS}.\mathsf{Sign}(\mathsf{sk},\mu)$ and records
+the pair $(\mu,\sigma)$ in a set $\mathsf{Sigs}$, define
+\[
+  \Adv^{\mathrm{sufcma}}_{\mathsf{SS}}(\cA,\kappa) :=
+  \Pr\bigl[\, (\mu^*,\sigma^*) \notin \mathsf{Sigs}
+    \ \wedge\ \mathsf{Win} \,\bigr],
+\]
+where $\mathsf{Win}$ is the event
+$\mathsf{SS}.\mathsf{Ver}(\mathsf{pk},\mu^*,\sigma^*) = 1$ and the
+probability is over
+$(\mathsf{sk},\mathsf{pk}) \sample
+ \mathsf{SS}.\mathsf{KeyGen}(1^\kappa)$ and
+$(\mu^*,\sigma^*) \sample \cA^{\mathsf{S}}(\mathsf{pk})$. In the random
+oracle model $\cA$ additionally has oracle access to $\Hone$ and
+$\Htwo$, drawn uniformly from the corresponding function spaces, and so
+do $\mathsf{Sign}$ and $\mathsf{Ver}$.
+\end{definition}
+
+\begin{definition}[Admissible parameters]
+\label{def:params}
+An \emph{admissible parameter family} is a tuple of functions
+\begin{multline*}
+  \Pi = (n,m,m',N,q,\ell,\gamma_c,b,\\
+  M,\ssk,\sigma_r,\bar\sigma_r,\sigma_x,\sigma_y,\\
+  \beta_{\mathbf{z}},\bar\beta_{\mathbf{z}},\std,\alpha,t,\esm)
+\end{multline*}
+of $\kappa$, the first eight taking values in $\NN$ and the rest in
+$\RR_{>0}$, with $\esm \in (0,1)$, all computable in time
+$\poly(\kappa)$, such that $N$ is a power of two, $q$ is an odd prime,
+$b \ge 2$, $M \ge 1$, all of $n,m,m',\ell,\gamma_c,\log q$ are bounded
+by $\poly(\kappa)$, and such that for every $\kappa$ the following hold,
+where
+\[
+  \eta := \tfrac{8}{\sqrt{\pi}}\, q^{n/m}
+    \sqrt{N \ln\bigl(2mN(1+1/\esm)\bigr)}.
+\]
+\begin{itemize}[leftmargin=1.2em]
+  \item $m > n$ and $m' \ge m + n\log_b q$;
+  \item $\ssk \ge \sqrt{n \log N}$ and
+  $\ssk \ge \sqrt{\log(2mN(1+1/\esm))/\pi}$;
+  \item $\sigma_x = \sqrt{2}\,\eta$ and
+  $\sigma_y = \sigma_x\,\ssk\,N\sqrt{m}$;
+  \item $\sigma_r = \alpha\,\gamma_c\,\ssk\sqrt{mN}$ and
+  $\bar\sigma_r = \alpha\,\gamma_c\,\sigma_y\sqrt{2m'N}$;
+  \item $\beta_{\mathbf{z}} = \sigma_r\sqrt{mN}$ and
+  $\bar\beta_{\mathbf{z}} = \bar\sigma_r\sqrt{m'N}$;
+  \item $M = \exp(t/\alpha + 2/\alpha^2)$, with
+  $\alpha = \omega(\sqrt{\log(mN)})$ and
+  $t = \omega(\sqrt{\log(mN)})$;
+  \item $|\cC| \ge 2^{2\kappa}$;
+  \item $\std \ge \eta$ and
+  $q \ge 4\,b\,\std\,\bar\beta_{\mathbf{z}}\sqrt{m'mN}$.
+\end{itemize}
+These are the paper's Table~1 constraints with the parallel repetition
+removed.
+\end{definition}
+
+\begin{conjecture}[tight security of $\SSone$]\label{conj:main}
+Let $\Pi$ be an admissible parameter family as in
+Definition~\ref{def:params}, and let $\Hone$ and $\Htwo$ be modelled as
+random oracles. Then the scheme $\SSone = \SSone[\Pi,\Hone,\Htwo]$ of
+Definition~\ref{def:ss1} satisfies both of the following.
+
+\smallskip\noindent\emph{(i) (Correctness.)} The correctness error of
+$\SSone$ is $\negl(\kappa)$.
+
+\smallskip\noindent\emph{(ii) (Tight security.)} There exist a constant
+$C_0 \ge 1$ and a polynomial $p$ such that for every adversary $\cA$
+against $\mathrm{SUF\text{-}CMA}$ security of $\SSone$ in the random
+oracle model, running in time $\Time(\cA)$ and making at most
+$\cQ_{\mathsf{S}}$ signing queries and at most $\cQ_1$ and $\cQ_2$
+queries to $\Hone$ and $\Htwo$, there is an adversary $\cB$ against
+$\smlwe_{n,m,N,q,\ssk}$ with
+\[
+  \Time(\cB) \;\le\; \Time(\cA)
+    + \bigl(\cQ_{\mathsf{S}}\ell + \cQ_1 + \cQ_2\bigr)\cdot p(\kappa)
+\]
+and
+\begin{align*}
+  \Adv^{\mathrm{sufcma}}_{\SSone}(\cA,\kappa) \;\le\;
+    & C_0 \cdot
+      \Adv^{\mathrm{smlwe}}_{n,m,N,q,\ssk}(\cB,\kappa) \\
+    & {}+ \negl(\kappa).
+\end{align*}
+In particular, $C_0$ and $p$ do not depend on $\cA$, and the loss is
+independent of $\cQ_{\mathsf{S}},\cQ_1,\cQ_2$ and of
+$\Adv^{\mathrm{sufcma}}_{\SSone}(\cA,\kappa)$.
+\end{conjecture}
+
+\begin{remark}[the constant $C_0$]\label{rem:cnought}
+The paper's own bound for the two-session scheme
+$\mathsf{SS}_{\mathsf{R}}$ has the two-adversary form
+$\Adv^{\mathrm{smlwe}}(\cB) + \Adv^{\mathrm{smlwe}}(\cB') +
+\delta_{\negl}$, from its Lemmas~4.4 and~4.5, so $C_0 = 2$ is the
+faithful constant to aim at; the statement above leaves $C_0$ an
+unspecified constant because that is what tightness requires.
+\end{remark}
+
+\begin{remark}[readings fixed by this write-up]\label{rem:readings}
+The sentence the paper leaves this open with refers to ``this
+protocol'', meaning the overview-level Attempt~1 on page~4, which omits
+the rejection sampling and all parameter choices. It is instantiated
+here as the one-session specialisation of the fully specified scheme in
+Figure~2, which is the faithful reading (the overview says the missing
+details are a routine modification), but a reader should check that
+specialisation against Figure~2 on page~19. Two further deliberate
+choices. The conjecture does not require a polynomial modulus, which
+the paper does achieve for the two-session scheme, since that is not
+part of what the paper says is open; and the formulation ``there exists
+a reduction with constant loss'' is the standard theorem shape in this
+literature and is not formalised by the paper itself, so anyone
+attacking the negative direction will need to fix a meta-reduction
+model. Finally, it has not been checked whether follow-up work has
+since settled this; the paper is dated 2026 and only its own reference
+list was available.
+\end{remark}
+
+\begin{remark}[why the statement is clean]\label{rem:clean}
+The object is the paper's own published scheme with one bit of the
+construction changed: run one session instead of two. Both the scheme
+and the assumption are fully specified in the paper, so the statement
+can be written from scratch in a page, and the target is a single
+well-defined implication rather than a research programme. The
+obstruction is named and quantitative: with one challenge per query, an
+accepting pair has probability $\varepsilon^2$ rather than
+$\varepsilon$, and the paper's inclusion-exclusion identity, which
+repairs this, has no single-session analogue.
+\end{remark}
+
+\begin{remark}[why it is interesting]\label{rem:interest}
+The question isolates a clean structural point: is two-fold parallel
+repetition inherent to tight lattice Fiat--Shamir proofs from search
+assumptions, or an artifact of this particular argument? A positive
+answer halves the signature size and signing time of the first
+efficient lattice Fiat--Shamir signature with a tight reduction to a
+search assumption, on a scheme whose parameters are already large. A
+negative answer, in the form of a meta-reduction ruling out tight
+reductions for the single-session scheme, would be the first evidence
+that the repetition is necessary and would sit naturally beside the
+known impossibility results for tight reductions for Schnorr-type
+signatures. Either way the answer says something about the polarization
+technique the paper introduces, which is its main conceptual
+contribution and is claimed to be of independent interest.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem[Che05]{Che05}
+B. Chevallier-Mames.
+\emph{An efficient CDH-based signature scheme with a tight security
+reduction}.
+CRYPTO 2005, LNCS 3621, pages 511--526, Springer, 2005.
+
+\bibitem[GMPW20]{GMPW20}
+N. Genise, D. Micciancio, C. Peikert, M. Walter.
+\emph{Improved discrete gaussian and subgaussian analysis for lattice
+cryptography}.
+PKC 2020, Part I, LNCS 12110, pages 623--651, Springer, 2020.
+
+\bibitem[GPV08]{GPV08}
+C. Gentry, C. Peikert, V. Vaikuntanathan.
+\emph{Trapdoors for hard lattices and new cryptographic constructions}.
+40th ACM STOC, pages 197--206, ACM Press, 2008.
+
+\bibitem[JT20]{JT20}
+J. Jaeger, S. Tessaro.
+\emph{Expected-time cryptography: Generic techniques and applications
+to concrete soundness}.
+TCC 2020, Part III, LNCS 12552, pages 414--443, Springer, 2020.
+
+\bibitem[KLP17]{KLP17}
+E. Kiltz, J. Loss, J. Pan.
+\emph{Tightly-secure signatures from five-move identification
+protocols}.
+ASIACRYPT 2017, Part III, LNCS 10626, pages 68--94, Springer, 2017.
+
+\bibitem[LDK22]{LDK22}
+V. Lyubashevsky, L. Ducas, E. Kiltz, T. Lepoint, P. Schwabe,
+G. Seiler, D. Stehl\'e, S. Bai.
+\emph{CRYSTALS-DILITHIUM}.
+Technical report, National Institute of Standards and Technology, 2022.
+
+\bibitem[LS15]{LS15}
+A. Langlois, D. Stehl\'e.
+\emph{Worst-case to average-case reductions for module lattices}.
+Designs, Codes and Cryptography 75(3):565--599, 2015.
+
+\bibitem[Lyu12]{Lyu12}
+V. Lyubashevsky.
+\emph{Lattice signatures without trapdoors}.
+EUROCRYPT 2012, LNCS 7237, pages 738--755, Springer, 2012.
+
+\bibitem[MP12]{MP12}
+D. Micciancio, C. Peikert.
+\emph{Trapdoors for lattices: Simpler, tighter, faster, smaller}.
+EUROCRYPT 2012, LNCS 7237, pages 700--718, Springer, 2012.
+
+\end{conjurabibliography}
+
+\end{document}

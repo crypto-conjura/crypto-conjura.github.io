@@ -1,42 +1,40 @@
 ---
 title: "How many Feistel rounds suffice against a quantum adversary?"
-subtitle: "Four are broken, five are unknown, and no round count has a proof"
+subtitle: "Four are broken, seven are now proved, five and six remain unknown"
 ---
 
 ## Motivation
 
 Classically this is a textbook result: four rounds of Luby–Rackoff turn a non-invertible pseudorandom function into a strong pseudorandom permutation. The construction is the Feistel network, and the analysis is standard.
 
-Quantumly, almost none of that survives. A quantum chosen-ciphertext attack rules out four rounds outright. Five rounds are not excluded by anything known — and no round count, at any value, has a proof. That gap is one of the sharper illustrations of how much less is provable once the adversary may query in superposition **and** invert.
+Quantumly, almost none of that survived past 2023. A quantum chosen-ciphertext attack ruled out four rounds outright, and no round count had a proof of security. A 2025 paper changed the last part: seven rounds are now proved, unconditionally.
 
 ## Provenance and history
 
-The question as recorded here is from Unruh, [*Towards compressed permutation oracles*](https://eprint.iacr.org/2023/770), ePrint 2023/770, ASIACRYPT 2023, pp. 369–400, which poses and motivates it without proving anything about Luby–Rackoff itself. Tracked as [c/0038](/c/0038/).
+The question as recorded here is from Unruh, [*Towards compressed permutation oracles*](https://eprint.iacr.org/2023/770), ePrint 2023/770, ASIACRYPT 2023, pp. 369–400, which poses and motivates it without proving anything about Luby–Rackoff itself. Tracked as [c/0038](/c/0038/), now resolved for $r = 7$ by Carolan, [*Compressed Permutation Oracles*](https://eprint.iacr.org/2025/1734), ePrint 2025/1734 (accepted STOC 2026) — see below.
 
-Two facts from that source shape the state of play, and both are discouraging for anyone hoping to extend existing work:
+Two facts from Unruh's paper shaped the state of play as of 2023, and both were discouraging for anyone hoping to extend existing work:
 
 - **Four rounds are refuted.** *"We know that four rounds are not sufficient"*, by a known quantum chosen-ciphertext attack on Feistel ciphers.
-- **The published proof of the weaker forward-only four-round claim is reported flawed.** So the literature offers no working technique even for the weaker statement — a would-be prover may have to re-derive a claim before generalising it.
+- **The published proof of the weaker forward-only four-round claim is reported flawed.** So the literature offered no working technique even for the weaker statement — a would-be prover would have to re-derive a claim before generalising it. Carolan's 2025 paper separately corroborates this (citing Hosoyamada–Iwata's claimed proof and a subsequent erratum finding a bug in it), though [c/0038](/c/0038/) has still not resolved either reference to a specific paper independently of Carolan's mention.
 
-The source names both by reference number only, and this archive has not resolved either to a paper; [c/0038](/c/0038/) marks that gap rather than guessing.
-
-## Two versions of the question
+## Two versions of the question, and where each stands now
 
 | version | round functions | status |
 |---|---|---|
-| indistinguishable from a random invertible permutation | drawn uniformly at random — information-theoretic | open for every $r$; this is what [c/0038](/c/0038/) states |
-| strong qPRP | pseudorandom | open; the source's own framing, and the cryptographically useful form |
+| indistinguishable from a random invertible permutation | drawn uniformly at random — information-theoretic | **resolved for $r=7$** by Carolan's Theorem 6.5; this is what [c/0038](/c/0038/) states |
+| strong qPRP | pseudorandom | asserted to follow from the row above by a standard hybrid argument (Carolan, p. 58), not spelled out in full |
 
-The first is the natural first step toward the second, and keeping them apart matters because only the first is unconditional.
+The first is the natural first step toward the second, and keeping them apart matters because only the first is proved outright here; the second is asserted rather than proved in detail.
 
-## Why it is stuck
+## Why it was stuck, and how it was resolved
 
-The obstruction is not specific to Feistel. **No existing technique reaches superposition access to an invertible permutation** — which is exactly the gap the compressed permutation oracle is built to fill, and why this question appears in a paper about that tool rather than in a paper about block ciphers.
+The obstruction was not specific to Feistel. **No existing technique reached superposition access to an invertible permutation** — which is exactly the gap the compressed permutation oracle is built to fill, and why this question appeared in a paper about that tool rather than in a paper about block ciphers.
 
-The source adds a two-for-one observation worth checking: a proof of this conjecture *via* the compressed permutation oracle would additionally establish the oracle's soundness for free, settling [c/0036](/c/0036/). That claim is asserted rather than proved, and verifying it is listed as an obligation on [c/0038](/c/0038/).
+Unruh's paper added a two-for-one observation: a proof of this conjecture *via* the compressed permutation oracle would additionally establish the oracle's soundness for free. That is not, in the end, how the resolution went. Carolan's 2025 paper proves his own compressed permutation oracle sound *first* and *directly* (see [c/0036](/c/0036/)), then derives seven-round Feistel security as an application of that already-proved soundness result, reusing the same twirling/cromulence machinery with the twirl distribution set to two-round Feistel rather than a uniform permutation. So the dependency runs the opposite way from what Unruh's own remark anticipated — Feistel security is downstream of the oracle's soundness, not upstream of it.
 
 ## A companion question, from the other end of this archive
 
 [c/0001](/c/0001/) — the oldest statement on this site — asks for exact full **indifferentiability** of 6-round Feistel from a random permutation, classically. Same construction, same shape of question, different security notion and different adversary. Neither implies the other.
 
-Read together they make a point worth stating plainly: *"how many Feistel rounds are enough"* has no single answer. It has one answer per security notion, and for the quantum notion here there is not yet any answer at all.
+Read together they make a point worth stating plainly: *"how many Feistel rounds are enough"* has no single answer. It has one answer per security notion — for the quantum notion here, seven rounds are now known to suffice, while the classical notion at c/0001 is still unresolved at six.

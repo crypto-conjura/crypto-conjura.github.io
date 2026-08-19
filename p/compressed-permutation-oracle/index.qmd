@@ -1,6 +1,6 @@
 ---
 title: "Can the compressed-oracle technique be extended to permutations?"
-subtitle: "The oracle has been defined; proving it sound is the open half"
+subtitle: "Yes, by a 2025 redesign -- but whether Unruh's own 2023 construction is itself sound is still open"
 ---
 
 ## Motivation
@@ -19,25 +19,24 @@ The title is doing real work. The paper **defines** a compressed permutation ora
 
 | | status |
 |---|---|
-| defining a compressed permutation oracle | **done** — this is the paper's contribution |
-| CPO is indistinguishable from a random permutation with inverse access — the paper's Conjecture 2 | **open** — tracked as [c/0036](/c/0036/) |
-| double-sided zero search is hard — the paper's Conjecture 1 | **open** — tracked as [c/0037](/c/0037/) |
-| *if* some permutation-construction is indistinguishable from CPO, *then* CPO is indistinguishable from a random permutation | **proved** — the paper's Theorem 1, with a computational variant in Corollary 1 |
-| Conjecture 2 $\Rightarrow$ Conjecture 1 | **proved** — the paper's usage example, p. 13 |
+| defining a compressed permutation oracle | **done** — this is Unruh's contribution |
+| Unruh's CPO is indistinguishable from a random permutation with inverse access — Unruh's Conjecture 2 | **still open, precisely** — tracked as [c/0036](/c/0036/) |
+| a *different, redesigned* compressed permutation oracle (unitarily injectivity-preserving) is indistinguishable from a random permutation | **proved unconditionally** — Carolan, ePrint 2025/1734 (STOC 2026), Theorem 5.19 |
+| double-sided zero search is hard — Unruh's Conjecture 1 | **resolved unconditionally**, via Carolan's oracle rather than Unruh's — tracked as [c/0037](/c/0037/) |
+| *if* some permutation-construction is indistinguishable from Unruh's CPO, *then* Unruh's CPO is indistinguishable from a random permutation | **proved** — Unruh's Theorem 1, with a computational variant in Corollary 1 |
+| Unruh's Conjecture 2 $\Rightarrow$ Conjecture 1 | **proved by Unruh**, p. 13 — but superseded as the route to Conjecture 1, since Carolan proves it directly instead |
 
-The last line is the shape of the paper: a tool whose soundness is conjectured, and an application derived from it. Neither endpoint is established, and the dependency runs one way only — the source does not claim the converse, so [c/0037](/c/0037/) could in principle fall to a technique that never mentions CPO.
-
-The third line is the paper's actual result, and it relocates the difficulty rather than removing it. Discharging its hypothesis would settle [c/0036](/c/0036/) through the converse the paper already has — which is probably the most concrete route in.
+**2025 update.** Joseph Carolan's *Compressed Permutation Oracles* (ePrint 2025/1734, accepted STOC 2026) builds a compressed permutation oracle of his own and proves it unconditionally sound — the first unconditional soundness result of this kind. Carolan's own framing is that his construction is *"similar to that of Unruh [Unr23], though we explicitly and unitarily maintain injectivity of the database"* — and a footnote of his states plainly that in Unruh's paper *"soundness is only conjectured."* Whether this settles Unruh's Conjecture 2 exactly as stated, or a closely related but technically distinct statement, is a genuine judgment call: [c/0036](/c/0036/)'s Proof tab works through it in detail and concludes a specific residual gap remains (Carolan's compression operator excludes colliding outputs by construction, rather than tolerating Unruh's `CFOs`-based construction's small collision amplitude the way the free choice in Unruh's own flipping-operator definition was designed to absorb). [c/0037](/c/0037/) and [c/0038](/c/0038/), the two applications, do not inherit that gap: both are proved directly from Carolan's own sound oracle, without routing through Unruh's Conjecture 2 at all.
 
 ## The problem the tool exists for
 
-[c/0037](/c/0037/) is worth reading first, because it shows how bare the ground is. Take a random permutation on $\{0,1\}^{2n}$, give the adversary quantum access to it *and its inverse*, and ask for one input whose low half is zero mapping to an output whose low half is zero. Classically that is a routine calculation. Quantumly the source reports that **no hardness result is known at all** — *"not even simple query complexity results such as the hardness"* of this.
+[c/0037](/c/0037/) is worth reading first, because it shows how bare the ground was before 2025. Take a random permutation on $\{0,1\}^{2n}$, give the adversary quantum access to it *and its inverse*, and ask for one input whose low half is zero mapping to an output whose low half is zero. Classically that is a routine calculation. Quantumly, Unruh's 2023 paper reported that **no hardness result was known at all** — *"not even simple query complexity results such as the hardness"* of this. Carolan's 2025 paper (see above) proves this hardness result unconditionally, via his own sound oracle.
 
 The reason the obvious shortcut fails is instructive: a random permutation is quantumly indistinguishable from a random function, and compressed-oracle machinery handles random functions — but only with forward access. Hand over the inverse and the substitution collapses, because a random function has no inverse to hand over.
 
-## Why permutations resist the technique
+## Why permutations resisted the technique, and what changed
 
-For a random function the compressed oracle works because each query can be answered by a local update to the internal state. A permutation must remain injective, and an inverse query reads the same table from the other side, so the two directions constrain each other globally rather than locally. That is the structural reason the function argument does not transfer, and it is why the easy half of this problem is the definition.
+For a random function the compressed oracle works because each query can be answered by a local update to the internal state. A permutation must remain injective, and an inverse query reads the same table from the other side, so the two directions constrain each other globally rather than locally. Unruh's 2023 construction reused the plain function-oracle compression operator anyway, tolerating a small amplitude of the database landing on a non-injective (i.e. not-quite-a-permutation) partial function at each step, and needed a separate invariance argument to show this didn't matter for the one thing he did prove (his conditional Theorem 1). Carolan's 2025 construction instead redesigns the compression operator itself to exclude colliding outputs at the point of sampling, so the database is *exactly* (not approximately) injective throughout — a structurally different mechanism, not merely a resolution of a leftover free choice, which is why proving it sound was "much more difficult" (Carolan's own words) than the analogous step for functions, and why it is judged on [c/0036](/c/0036/) not to be simply "Unruh's conjecture, now proved."
 
 ## A note on this site's taxonomy
 

@@ -1,6 +1,6 @@
 ---
 title: "How many decryption updates does registration-based encryption need?"
-subtitle: "The known bound is Ω(log n / log log n), every construction spends Θ(log n), and the tool that proved the bound is provably out of room."
+subtitle: "Resolved both ways: the bound survives key-dependent schedules, and Θ(log n / log log n) — not Θ(log n) — is the truth"
 ---
 
 ## Motivation
@@ -15,6 +15,8 @@ One source paper: Mahmoody, Qi and Rahimi, [*Lower Bounds for the Number of Decr
 
 Both statements were drafted by `scripts/harvest_conjectures.py` from that PDF and are AI-written and unreviewed, as the [status badges](/problems/status-legend/) say. One repair was applied before publication: the first draft asserted a specific accumulator shape — a Merkle *forest* merged like a binary counter — for the known constructions, where the paper describes a Merkle-tree root; the claim is now attributed to the construction papers rather than to this one.
 
+**Both open questions closed within a year, by the same two authors.** Mahmoody and Qi, [*Online Mergers and Applications to Registration-Based Encryption and Accumulators*](https://doi.org/10.4230/LIPIcs.ITC.2023.15) (ITC 2023) refute [c/0027](/c/0027/) with a higher-arity "online merger" construction achieving $O(\log n/\log\log n)$ updates — matching, not beating, the lower bound, so that endpoint of the gap was the tight one all along. Wei Qi's later [*Tight Lower Bound on Witness Update Frequency in Additive Positive Accumulators*](https://doi.org/10.62056/av7t7ta5v) (IACR Communications in Cryptology, 2026) proves [c/0026](/c/0026/), generalizing the lower-bound framework to schedules that depend on the sampled keys themselves via a new combinatorial object (a *falling-step sequence*). Between them, both cells this hub was tracking are now settled.
+
 ## Parameter lattice
 
 Two axes: what the update schedule may depend on, and how tight the bound is.
@@ -23,16 +25,16 @@ Two axes: what the update schedule may depend on, and how tight the bound is.
 |---|---|---|
 | registration times only | $\Omega(\log n/\log\log n)$ | settled — Theorem 4.1 |
 | registered identity names and the CRS | $\Omega(\log n/\log\log n)$ | settled — Theorem 4.12 |
-| the sampled public keys (on-demand updates) | — | **open** — [c/0026](/c/0026/) |
+| the sampled public keys (on-demand updates) | $\Omega(\log n/\log\log n)$ | **resolved** — [c/0026](/c/0026/), Qi 2026 |
 
 | regime | known lower bound | known upper bound | status |
 |---|---|---|---|
-| fixed update times, $\mathrm{poly}(\kappa,\log n)$ parameters | $\Omega(\log n/\log\log n)$ | $O(\log n)$ | **open** — [c/0027](/c/0027/) |
+| fixed update times, $\mathrm{poly}(\kappa,\log n)$ parameters | $\Omega(\log n/\log\log n)$ | $O(\log n/\log\log n)$ | **resolved (refuted)** — [c/0027](/c/0027/), Mahmoody–Qi 2023 |
 | constant $d$ | $\alpha \ge \Omega(n^{1/(d+1)})$ | — | settled, from the same trade-off |
 
-The second table is the sharper question. Neither endpoint is known to be the truth, and the paper's own tool cannot decide it: Appendix C proves the skipping-sequence bound tight, so a better lower bound needs a different combinatorial object, and a better construction needs an accumulator nobody has built.
+The second table's gap is now closed at the *lower* endpoint: Mahmoody–Qi's online-merger construction (ITC 2023) achieves $O(\log n/\log\log n)$ updates, matching rather than beating the bound, so $\Theta(\log n/\log\log n)$ was the truth and [c/0027](/c/0027/)'s $\Omega(\log n)$ conjecture is refuted. The first table's gap closes in the other direction: Wei Qi's 2026 paper proves the *same* $\Omega(\log n/\log\log n)$ bound survives even when the schedule depends on the sampled keys, so [c/0026](/c/0026/) is proved as conjectured.
 
 ## Statements in this hub
 
-- [Update lower bounds with key-dependent update times](/c/0026/) — open; the case where updates are fetched on demand, which is the standard completeness notion
-- [Logarithmically many updates are necessary](/c/0027/) — open; picks the $\log n$ end of the gap, and its refutation would be a better construction
+- [Update lower bounds with key-dependent update times](/c/0026/) — resolved (proved); the bound survives on-demand updates
+- [Logarithmically many updates are necessary](/c/0027/) — resolved (refuted); the true answer is $\Theta(\log n/\log\log n)$, not $\Theta(\log n)$

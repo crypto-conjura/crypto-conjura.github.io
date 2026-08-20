@@ -70,7 +70,7 @@ supplied numbers and several had drifted or were slightly off:
 
   The sharpest number on the site is that `proof_review` is `ai` on all 29
   statements. Seven established cryptographers already back the project on
-  `support/index.qmd`, and the ask that converts a name into a review is not a
+  `participate/index.qmd`, and the ask that converts a name into a review is not a
   committee seat but one statement in that person's own area — bounded, and
   completable by a busy person in an evening. The review's suggested pairings,
   which match the areas on each statement page:
@@ -108,7 +108,7 @@ supplied numbers and several had drifted or were slightly off:
   entry should not be run until it is. Ask before starting.
 
   **Superseded 19 August 2026, read this before the rest of this entry.**
-  `support/index.qmd` § "Supporting the project" was rewritten the same day
+  `participate/index.qmd` § "Supporting the project" was rewritten the same day
   on direct instruction, to different supplied copy — dropping the scarcity
   ordering this entry was written against, and dropping the "cost of
   attacking a problem should come down to compute anyone can bring" sentence
@@ -119,7 +119,7 @@ supplied numbers and several had drifted or were slightly off:
   no longer applies and should be removed once the rest is re-checked, not
   followed.
 
-  `support/index.qmd` § "Supporting the project" was, as of 18 August 2026, a
+  `participate/index.qmd` § "Supporting the project" was, as of 18 August 2026, a
   six-item list ordered *by how scarce each kind of help is*: reviewing,
   conjecture formulation and resolutions, formalizations, website and
   workflow maintenance, tokens, ideas. Checked against the roadmap, four of

@@ -219,8 +219,7 @@ supplied numbers and several had drifted or were slightly off:
 
   **Already located, for the next batches, with the box named in the cited paper:** `f-cred`
   ($\mathcal{F}_{\mathsf{daa}}$, Camenisch et al. — note the name is DAA, not credentials, so it is a naming
-  judgment), `f-snark` ($\mathcal{F}_{\textsc{weak-nizk}}$, Kosba et al.), `f-fhe` ($\mathcal{F}_{\mathsf{ABB}}$ and $\mathcal{F}_{\mathsf{Decrypt}}$ — the first is
-  arguably `f-abb`'s object, not this one) and `f-secmsg`
+  judgment), `f-snark` ($\mathcal{F}_{\textsc{weak-nizk}}$, Kosba et al.) and `f-secmsg`
   ($\mathcal{F}_{\mathsf{SM}}$, Figure 7 — large, and entangled with the paper's other four modules).
 
   **The generator accepts a narrow LaTeX subset, and finding out the hard way costs a rebuild.**
@@ -277,9 +276,17 @@ supplied numbers and several had drifted or were slightly off:
   **Still located and unwritten, from the same grep:**
   `f-secmsg` ($\\mathcal{F}_{\\mathsf{SM}}$, Figure 7, entangled with four sibling modules), `f-chan`
   (state channels, Dziembowski et al.), `f-cred` ($\\mathcal{F}_{\\mathsf{daa}}$ -- DAA, a naming judgment
-  against "credentials"), `f-snark` ($\\mathcal{F}_{\\textsc{weak-nizk}}$, Kosba et al.), `f-fhe`
-  ($\\mathcal{F}_{\\mathsf{Decrypt}}$; its $\\mathcal{F}_{\\mathsf{ABB}}$ hit belongs to `f-abb`, now
-  written).
+  against "credentials"), `f-snark` ($\\mathcal{F}_{\\textsc{weak-nizk}}$, Kosba et al.).
+
+  **`f-fhe`'s citation resolved to nothing of its own (21 August 2026).** Checked Zyskind, Zarchy,
+  Leibovich and Peikert (CCS 2025, ePrint 2025/1781) directly: it prints $\\mathcal{F}_{\\mathsf{ABB}}$
+  (`f-abb`'s object) and $\\mathcal{F}_{\\mathsf{Decrypt}}$ (`f-thdec`'s -- now written, and it converges
+  with an independently-drafted reading almost line for line, which is as strong a confirmation as this
+  process gets that the object landed on the right page). Neither is a general FHE functionality --
+  $\\mathcal{F}_{\\mathsf{Decrypt}}$ decrypts one already-computed LWE ciphertext and says nothing about
+  the homomorphic evaluation that produced it. `f-fhe` itself is therefore back to unlocated: it needs a
+  forward search for a paper that prints an actual FHE-evaluation functionality, not another look at this
+  one.
 
   **Two more stub titles were claims, and both were wrong (18 August).** `f-acc` read "Accumulator, vector
   commitment" — the source defines no vector-commitment functionality and the phrase "vector commitment"

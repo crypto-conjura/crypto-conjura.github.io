@@ -2,11 +2,142 @@
 title: "F-SE — Symmetric encryption, stream cipher"
 status: "Canonical"
 layer: 2
-definition: "Not yet written"
+definition: "Defined"
 ---
 
 *F-SE* (Symmetric encryption, stream cipher) is part of *Cryptographic Library and Symmetric Primitives* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
 
+## Functionality
+
+Reading the box: $\square$ marks a key never generated; $\bot$ is a call the functionality has nothing to answer for. $\mathtt{Known}$ tracks which keys the simulator already has real access to. $\mathtt{DecTable}$ is the functionality's own memory, per unknown key, of every (plaintext, ciphertext) pair it has produced — the only pairs an honest decryption is ever allowed to recover. $L$ is the box's own parameter: a leakage algorithm fixing exactly what an encryption under an *unknown* key discloses about the plaintext (its length, typically) while hiding the rest.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{SE}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := L\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{Keys}, \mathtt{Known} \gets \varnothing\)</li>
+<li>\(\mathtt{Key} : \mathcal{F}_{\mathsf{SE}}.\mathbf{P} \times \mathbb{N} \rightharpoonup \mathtt{Keys}\)</li>
+<li>\(\mathtt{Next} : \mathcal{F}_{\mathsf{SE}}.\mathbf{P} \to \mathbb{N}\)</li>
+<li>\(\mathtt{Next}[*] \gets 0\)</li>
+<li>\(\mathtt{DecTable} : \mathtt{Keys} \to 2^{\{0,1\}^{*} \times \{0,1\}^{*}}\)</li>
+<li>\(\mathtt{DecTable}[*] \gets \varnothing\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.KeyGen()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="7">
+<li>\((\mathit{corr}, k) \gets \mathcal{A}\bigl(\mathit{id}.\mathsf{KeyGen}\bigr)\)</li>
+<li>\(k \gets \mathsf{San}[\mathsf{Clean}_{k}](k; \mathtt{Keys})\)</li>
+<li>\(\mathtt{Keys} \gets \mathtt{Keys} \cup \{k\}\)</li>
+<li>\(\textbf{if}\ \mathit{corr} = 1\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{Known} \gets \mathtt{Known} \cup \{k\}\)</span></li>
+<li>\(\mathit{ptr} \gets \mathtt{Next}[\mathit{id}.P]\);&nbsp;&nbsp;\(\mathtt{Next}[\mathit{id}.P] \gets \mathit{ptr} + 1\)</li>
+<li>\(\mathtt{Key}[\mathit{id}.P, \mathit{ptr}] \gets k\)</li>
+<li>\(\textbf{return}\ \mathit{ptr}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Store(<span class="cj-id">k</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="15">
+<li>\(\textbf{if}\ k \in \mathtt{Keys} \setminus \mathtt{Known}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \bot\)</span><span class="cj-comment">// a bare guess of an unknown key is refused</span></li>
+<li>\(\mathtt{Keys} \gets \mathtt{Keys} \cup \{k\}\);&nbsp;&nbsp;\(\mathtt{Known} \gets \mathtt{Known} \cup \{k\}\)</li>
+<li>\(\mathit{ptr} \gets \mathtt{Next}[\mathit{id}.P]\);&nbsp;&nbsp;\(\mathtt{Next}[\mathit{id}.P] \gets \mathit{ptr} + 1\)</li>
+<li>\(\mathtt{Key}[\mathit{id}.P, \mathit{ptr}] \gets k\)</li>
+<li>\(\textbf{return}\ \mathit{ptr}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Enc(<span class="cj-id">mathit{ptr}</span>, <span class="cj-id">msg</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="21">
+<li>\(k \gets \mathtt{Key}[\mathit{id}.P, \mathit{ptr}]\)</li>
+<li>\(\textbf{if}\ k = \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \bot\)</span></li>
+<li>\(c \gets \bot\)</li>
+<li>\(\textbf{if}\ k \notin \mathtt{Known}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(c \gets \mathcal{A}\bigl(\mathit{id}.\mathsf{Enc}, L(\mathit{msg})\bigr)\)</span></li>
+<li><span class="cj-ind">\(c \gets \mathsf{San}[\mathsf{Clean}_{c}](c)\)</span></li>
+<li><span class="cj-ind">\(\textbf{if}\ c \neq \bot\ \textbf{then}\)</span></li>
+<li><span class="cj-ind">\(\mathtt{DecTable}[k] \gets \mathtt{DecTable}[k] \cup \{(\mathit{msg}, c)\}\)</span></li>
+<li>\(\textbf{if}\ k \in \mathtt{Known}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(c \gets \mathcal{A}\bigl(\mathit{id}.\mathsf{Enc}, \mathit{msg}\bigr)\)</span></li>
+<li>\(\textbf{return}\ c\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Dec(<span class="cj-id">mathit{ptr}</span>, <span class="cj-id">c</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="33">
+<li>\(k \gets \mathtt{Key}[\mathit{id}.P, \mathit{ptr}]\)</li>
+<li>\(\textbf{if}\ k = \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \bot\)</span></li>
+<li>\(\mathit{msg} \gets \bot\)</li>
+<li>\(\textbf{if}\ k \notin \mathtt{Known}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{if}\ \exists!\, \mathit{msg}' : (\mathit{msg}', c) \in \mathtt{DecTable}[k]\ \textbf{then}\)</span></li>
+<li><span class="cj-ind">\(\mathit{msg} \gets \mathit{msg}'\)</span><span class="cj-comment">// unique match; otherwise stays refused</span></li>
+<li>\(\textbf{if}\ k \in \mathtt{Known}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathit{msg} \gets \mathcal{A}\bigl(\mathit{id}.\mathsf{Dec}, c\bigr)\)</span></li>
+<li>\(\textbf{return}\ \mathit{msg}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="43">
+<li>\(\textbf{return}\ \bigl(\{(\mathit{ptr}, \mathtt{Key}[\mathit{id}.P, \mathit{ptr}])\}_{\mathit{ptr} < \mathtt{Next}[\mathit{id}.P]}, \{(k, \mathtt{DecTable}[k]) : \exists\, \mathit{ptr}\, .\ \mathtt{Key}[\mathit{id}.P,\mathit{ptr}] = k\}\bigr)\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig">Clean<sub><span class="cj-id">k</span></sub>(<span class="cj-id">k</span>; <span class="cj-rm">Keys</span>):</div>
+<ol class="cj-code" start="44">
+<li>\(\textbf{return}\ k \in \{0,1\}^{*} \ \wedge\ k \notin \mathtt{Keys}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig">Clean<sub><span class="cj-id">c</span></sub>(<span class="cj-id">c</span>):</div>
+<ol class="cj-code" start="45">
+<li>\(\textbf{return}\ c \in \{0,1\}^{*}\)</li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+The box is transcribed from Küsters and Tuengerthal, *Universally Composable Symmetric Encryption*, ePrint 2009/055, revision `20090811:144642`, Figure 10 (p. 27, the encryption clause, item 8) and Figure 12 (p. 29, the decryption clause, item 11). The source's actual object, $\mathcal{F}^{\mathsf{auth}}_{\mathsf{senc}}(q, L, (\mathcal{T}_{\mathsf{users}}, \mathcal{T}_{\mathsf{adv}}))$, is considerably larger than this box: three figures and thirteen numbered clauses (Figures 10–12, pp. 27–29), because it also handles long-term keys and public keys by delegating to two sibling functionalities, and lets messages carry embedded pointers to other keys so that key material itself can be sent as a plaintext.
+
+This box keeps only the short-term-symmetric-key core — `KeyGen`, `Store`, `Enc`, `Dec` (items 2–4, 6, 8, 11 of the source) — and drops three things the source's full object does, each stated here rather than left to be discovered by comparison:
+
+- **No long-term-key or public-key delegation** (the source's items 9, 10, 12, 13). Those clauses do nothing this box's own logic doesn't already do once — they just forward the same encrypt/decrypt decision to a long-term-key or public-key sibling functionality and relay its answer. A page about the composed system that actually uses those siblings is where that forwarding belongs, not a box about what symmetric encryption alone guarantees.
+- **No key-carrying plaintexts.** The source lets a message contain `(Key, ptr)` tokens that get translated to the underlying key bits before encrypting and back to fresh pointers after decrypting, so that a protocol can transport key material as ordinary plaintext. This box treats every message as an opaque bit string; a page about key-encapsulation is where that machinery belongs.
+- **No adversary-supplied algorithm pair.** The source's `enc`/`dec` are algorithms the adversary installs once (its item 1, `Algorithms`) and the functionality re-invokes on every call, so that one functionality can stay agnostic across whichever scheme eventually realizes it. A box that only ever means symmetric encryption has nothing else to stay agnostic across, so `Enc`/`Dec` here just ask the adversary directly for a ciphertext or a plaintext — the same behaviour with one fewer moving part, exactly the simplification already made on [F-MAC](/uc/layer-2-crypto-library-symmetric/f-mac/index.qmd).
+
+## Known realizations
+
+Realized, Section 5.2 (protocol $\mathcal{P}_{\mathsf{senc}}$, Figure 13, p. 33 of the same paper), by any IND-CPA and INT-CTXT secure (i.e. authenticated) encryption scheme, restricted to environments that avoid key cycles and the commitment problem. The paper also gives a separate, weaker variant, $\mathcal{F}^{\mathsf{unauth}}_{\mathsf{senc}}$ (Section 6.1), which drops this box's refusal of ill-formed or dishonestly-produced ciphertexts under an unknown key — decrypting them for real instead — realized from IND-CCA security alone, without requiring authentication.
+
+## Properties
+
+- **Indistinguishability under an unknown key.** Encrypting under a key the simulator does not hold discloses only $L(\mathit{msg})$, never the message itself — the adversary's answer to `Enc` is never given more than the leakage.
+- **Ciphertext integrity under an unknown key.** `Dec` recovers a plaintext for ciphertext $c$ only if $c$ is exactly what some prior `Enc` call under that same key produced; every other ciphertext, including an adversarially forged one, is refused. This is the box's authenticated-encryption guarantee, and it is why $\mathcal{F}^{\mathsf{unauth}}_{\mathsf{senc}}$ above needed a different name rather than a parameter.
+- **Real crypto under a known key.** Once a key is known — corrupted, or explicitly `Store`d by a party that already had it — both `Enc` and `Dec` simply defer to the adversary, which is exactly the standard real-vs-ideal contract: idealization applies only where the environment cannot already see through it.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
+
 *References:*
 
-- Küsters and Tuengerthal. [*Universally composable symmetric encryption*](https://eprint.iacr.org/2009/055). In IEEE Computer Security Foundations Symposium (CSF), pages 293–307, 2009.
+- Küsters and Tuengerthal. [*Universally composable symmetric encryption*](https://eprint.iacr.org/2009/055). In IEEE Computer Security Foundations Symposium (CSF), pages 293–307, 2009. Figure 10, p. 27 (item 8) and Figure 12, p. 29 (item 11), of revision `20090811:144642`, the definition transcribed above.

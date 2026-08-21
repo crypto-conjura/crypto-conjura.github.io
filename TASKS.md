@@ -220,8 +220,7 @@ supplied numbers and several had drifted or were slightly off:
   **Already located, for the next batches, with the box named in the cited paper:** `f-cred`
   ($\mathcal{F}_{\mathsf{daa}}$, Camenisch et al. — note the name is DAA, not credentials, so it is a naming
   judgment), `f-snark` ($\mathcal{F}_{\textsc{weak-nizk}}$, Kosba et al.), `f-fhe` ($\mathcal{F}_{\mathsf{ABB}}$ and $\mathcal{F}_{\mathsf{Decrypt}}$ — the first is
-  arguably `f-abb`'s object, not this one), `f-se`
-  ($\mathcal{F}_{\mathsf{senc}}$, Figures 10--12 — three figures, a sitting of its own) and `f-secmsg`
+  arguably `f-abb`'s object, not this one) and `f-secmsg`
   ($\mathcal{F}_{\mathsf{SM}}$, Figure 7 — large, and entangled with the paper's other four modules).
 
   **The generator accepts a narrow LaTeX subset, and finding out the hard way costs a rebuild.**
@@ -275,8 +274,7 @@ supplied numbers and several had drifted or were slightly off:
   paper on `f-ke`. A scan that globs `~/.cache/conjura-uc-sources/<citekey>-*.pdf` and takes the first match
   will read the wrong paper. Match on the recorded `sha256_16` instead.
 
-  **Still located and unwritten, from the same grep:** `f-se` ($\\mathcal{F}_{\\mathsf{senc}}$,
-  K\u00fcsters--Tuengerthal Figures 10--12, about 120 lines over three pages -- a sitting of its own),
+  **Still located and unwritten, from the same grep:**
   `f-secmsg` ($\\mathcal{F}_{\\mathsf{SM}}$, Figure 7, entangled with four sibling modules), `f-chan`
   (state channels, Dziembowski et al.), `f-cred` ($\\mathcal{F}_{\\mathsf{daa}}$ -- DAA, a naming judgment
   against "credentials"), `f-snark` ($\\mathcal{F}_{\\textsc{weak-nizk}}$, Kosba et al.), `f-fhe`

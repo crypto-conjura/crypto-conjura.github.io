@@ -2,11 +2,137 @@
 title: "F-MAC — Message authentication code"
 status: "Canonical"
 layer: 2
-definition: "Not yet written"
+definition: "Defined"
 ---
 
 *F-MAC* (Message authentication code) is part of *Cryptographic Library and Symmetric Primitives* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
 
+## Functionality
+
+Reading the box: $\square$ marks a key never generated; $\bot$ is a call the functionality has nothing to answer for — no key at that pointer, or a key-guess it refuses. Every key is a bit string in one shared pool $\mathtt{Keys}$; a party never holds a key directly, only a numbered pointer into its own $\mathtt{Key}$ table. $\mathtt{Known}$ tracks which keys the simulator already has real access to — either because it chose one at generation, or because some party `Store`d a bit string it already possessed — and is exactly the boundary between the functionality computing a tag for real and the functionality only remembering that it did.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{MAC}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := \bot\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{Keys}, \mathtt{Known} \gets \varnothing\)</li>
+<li>\(\mathtt{Key} : \mathcal{F}_{\mathsf{MAC}}.\mathbf{P} \times \mathbb{N} \rightharpoonup \mathtt{Keys}\)</li>
+<li>\(\mathtt{Next} : \mathcal{F}_{\mathsf{MAC}}.\mathbf{P} \to \mathbb{N}\)</li>
+<li>\(\mathtt{Next}[*] \gets 0\)</li>
+<li>\(\mathtt{Tagged} : \mathtt{Keys} \to 2^{\mathcal{M}}\)</li>
+<li>\(\mathtt{Tagged}[*] \gets \varnothing\)</li>
+<li>\(\mathtt{Ver} : \mathcal{K} \times \mathcal{M} \times \Sigma \to \{0,1\} \cup \{\square\}\)</li>
+<li>\(\mathtt{Ver}[*,*,*] \gets \square\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.KeyGen()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="9">
+<li>\((\mathit{corr}, k) \gets \mathcal{A}\bigl(\mathit{id}.\mathsf{KeyGen}\bigr)\)</li>
+<li>\(k \gets \mathsf{San}[\mathsf{Clean}_{k}](k; \mathtt{Keys})\)</li>
+<li>\(\mathtt{Keys} \gets \mathtt{Keys} \cup \{k\}\)</li>
+<li>\(\textbf{if}\ \mathit{corr} = 1\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{Known} \gets \mathtt{Known} \cup \{k\}\)</span></li>
+<li>\(\mathit{ptr} \gets \mathtt{Next}[\mathit{id}.P]\);&nbsp;&nbsp;\(\mathtt{Next}[\mathit{id}.P] \gets \mathit{ptr} + 1\)</li>
+<li>\(\mathtt{Key}[\mathit{id}.P, \mathit{ptr}] \gets k\)</li>
+<li>\(\textbf{return}\ \mathit{ptr}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Store(<span class="cj-id">k</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="17">
+<li>\(\textbf{if}\ k \in \mathtt{Keys} \setminus \mathtt{Known}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \bot\)</span><span class="cj-comment">// a bare guess of an unknown key is refused</span></li>
+<li>\(\mathtt{Keys} \gets \mathtt{Keys} \cup \{k\}\);&nbsp;&nbsp;\(\mathtt{Known} \gets \mathtt{Known} \cup \{k\}\)</li>
+<li>\(\mathit{ptr} \gets \mathtt{Next}[\mathit{id}.P]\);&nbsp;&nbsp;\(\mathtt{Next}[\mathit{id}.P] \gets \mathit{ptr} + 1\)</li>
+<li>\(\mathtt{Key}[\mathit{id}.P, \mathit{ptr}] \gets k\)</li>
+<li>\(\textbf{return}\ \mathit{ptr}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Mac(<span class="cj-id">mathit{ptr}</span>, <span class="cj-id">msg</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="23">
+<li>\(k \gets \mathtt{Key}[\mathit{id}.P, \mathit{ptr}]\)</li>
+<li>\(\textbf{if}\ k = \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \bot\)</span></li>
+<li>\(\sigma \gets \mathcal{A}\bigl(\mathit{id}.\mathsf{Mac}, \mathit{msg}\bigr)\)</li>
+<li>\(\sigma \gets \mathsf{San}[\mathsf{Clean}_{\sigma}](\sigma)\)</li>
+<li>\(\textbf{if}\ k \notin \mathtt{Known}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{Tagged}[k] \gets \mathtt{Tagged}[k] \cup \{\mathit{msg}\}\)</span></li>
+<li>\(\textbf{return}\ \sigma\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Verify(<span class="cj-id">mathit{ptr}</span>, <span class="cj-id">msg</span>, <span class="cj-id">&sigma;</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="31">
+<li>\(k \gets \mathtt{Key}[\mathit{id}.P, \mathit{ptr}]\)</li>
+<li>\(\textbf{if}\ k = \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \bot\)</span></li>
+<li>\(\textbf{if}\ \mathtt{Ver}[k, \mathit{msg}, \sigma] \neq \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \mathtt{Ver}[k, \mathit{msg}, \sigma]\)</span></li>
+<li>\(b \gets \mathcal{A}\bigl(\mathit{id}.\mathsf{Verify}, \mathit{msg}, \sigma\bigr)\)</li>
+<li>\(\textbf{if}\ b \not\in \{0,1\}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(b \gets 0\)</span></li>
+<li>\(\textbf{if}\ k \notin \mathtt{Known} \wedge \mathit{msg} \notin \mathtt{Tagged}[k]\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(b \gets 0\)</span><span class="cj-comment">// no forgery under an unknown key</span></li>
+<li>\(\mathtt{Ver}[k, \mathit{msg}, \sigma] \gets b\)</li>
+<li>\(\textbf{return}\ b\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="43">
+<li>\(\textbf{return}\ \bigl(\{(\mathit{ptr}, \mathtt{Key}[\mathit{id}.P, \mathit{ptr}])\}_{\mathit{ptr} < \mathtt{Next}[\mathit{id}.P]}, \{(k, \mathtt{Tagged}[k]) : \exists\, \mathit{ptr}\, .\ \mathtt{Key}[\mathit{id}.P,\mathit{ptr}] = k\}\bigr)\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig">Clean<sub><span class="cj-id">k</span></sub>(<span class="cj-id">k</span>; <span class="cj-rm">Keys</span>):</div>
+<ol class="cj-code" start="44">
+<li>\(\textbf{return}\ k \in \{0,1\}^{*} \ \wedge\ k \notin \mathtt{Keys}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig">Clean<sub><span class="cj-id">&sigma;</span></sub>(<span class="cj-id">&sigma;</span>):</div>
+<ol class="cj-code" start="45">
+<li>\(\textbf{return}\ \sigma \in \Sigma\)</li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+The box is transcribed from Küsters and Tuengerthal, *Ideal key derivation and encryption in simulation-based security*, ePrint 2010/295, revision `20101011:201701`, Figure 6, p. 32 — the `Mac` and `MacVerify` clauses (items 13–14) of their single functionality $\mathcal{F}_{\mathsf{crypto}}$, which also covers encryption, signatures and key derivation in one object parameterized over every key type at once ([F-KDF](/uc/layer-2-crypto-library-symmetric/f-kdf/index.qmd) draws on item 12 of the same figure). This box keeps only the MAC-relevant fragment: `KeyGen`/`Store` are the paper's generic key-management commands restricted to this box's one key type, and `Mac`/`Verify` are its items 13 and 14 in substance.
+
+Two things the source does that this box doesn't, both because a box that only ever stands for a MAC has less to stay generic across. The paper lets the adversary supply an arbitrary pair of algorithms, `mac` and `mac-verify`, and recomputes both fresh on every call, since $\mathcal{F}_{\mathsf{crypto}}$ has to stay agnostic across whichever scheme eventually realizes it — here `Mac` and `Verify` just ask the adversary directly for a tag or a verdict, which is the same behaviour (the adversary still controls what "real" MACing and verifying compute) with one fewer moving part. And the paper's forgery-prevention rule is stated in terms of `mac-verify` returning true on a message that was never MACed; here it is stated directly against the `Tagged` ledger, which is what that rule actually tracks.
+
+## Known realizations
+
+Realized, Section 3.2 (p. 10 of the same paper), by protocol $\mathcal{P}_{\mathsf{crypto}}$: it computes `Mac` and `Verify` for real using any UF-CMA-secure MAC scheme, which is exactly what the paper's realization theorem requires.
+
+## Properties
+
+- **Unforgeability.** `Verify` accepts a pair $(\mathit{msg},\sigma)$ under an *unknown* key only if that exact message was `Mac`ed under that key beforehand — a guarantee that holds with probability exactly 1 in the ideal world, and is what a UF-CMA realization is required to preserve.
+- **No confidentiality claim.** The box authenticates; it discloses nothing about a MACed message beyond what `Leak` already reveals to a corrupted holder of the key. Realizing it does not require the underlying primitive to hide anything, only to resist forgery.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
+
 *References:*
 
-- Küsters and Tuengerthal. [*Ideal key derivation and encryption in simulation-based security*](https://eprint.iacr.org/2010/295). In Topics in Cryptology – CT-RSA 2011, volume 6558 of LNCS, pages 161–179, 2011.
+- Küsters and Tuengerthal. [*Ideal key derivation and encryption in simulation-based security*](https://eprint.iacr.org/2010/295). In Topics in Cryptology – CT-RSA 2011, volume 6558 of LNCS, pages 161–179, 2011. Figure 6, p. 32 of revision `20101011:201701`, items 13–14, the definition transcribed above.

@@ -221,8 +221,7 @@ supplied numbers and several had drifted or were slightly off:
   ($\mathcal{F}_{\mathsf{daa}}$, Camenisch et al. — note the name is DAA, not credentials, so it is a naming
   judgment), `f-snark` ($\mathcal{F}_{\textsc{weak-nizk}}$, Kosba et al.), `f-ba` ($\mathcal{F}_{\mathsf{csf}}$,
   Cohen et al.), `f-fhe` ($\mathcal{F}_{\mathsf{ABB}}$ and $\mathcal{F}_{\mathsf{Decrypt}}$ — the first is
-  arguably `f-abb`'s object, not this one), `f-mac` and `f-kdf` (both inside Küsters--Tuengerthal's single
-  $\mathcal{F}_{\mathsf{crypto}}$ library, so one reading serves two entries), `f-se`
+  arguably `f-abb`'s object, not this one), `f-se`
   ($\mathcal{F}_{\mathsf{senc}}$, Figures 10--12 — three figures, a sitting of its own) and `f-secmsg`
   ($\mathcal{F}_{\mathsf{SM}}$, Figure 7 — large, and entangled with the paper's other four modules).
 
@@ -284,7 +283,7 @@ supplied numbers and several had drifted or were slightly off:
   against "credentials"), `f-snark` ($\\mathcal{F}_{\\textsc{weak-nizk}}$, Kosba et al.), `f-ba`
   ($\\mathcal{F}_{\\mathsf{csf}}$ and the wrapper family, Cohen et al.), `f-fhe`
   ($\\mathcal{F}_{\\mathsf{Decrypt}}$; its $\\mathcal{F}_{\\mathsf{ABB}}$ hit belongs to `f-abb`, now
-  written), and `f-mac`/`f-kdf` (both inside one $\\mathcal{F}_{\\mathsf{crypto}}$ library).
+  written).
 
   **Two more stub titles were claims, and both were wrong (18 August).** `f-acc` read "Accumulator, vector
   commitment" — the source defines no vector-commitment functionality and the phrase "vector commitment"

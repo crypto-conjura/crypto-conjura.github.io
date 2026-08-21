@@ -1,0 +1,107 @@
+%% The interface box of f-kdf, the one source for both the book
+%% and uc/.../f-kdf/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fkdf$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := \none$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{Keys}, \V{Known} \gets \emptyset$
+\State $\V{Key} : \Fkdf.\Ps \times \mathbb{N} \rightharpoonup \V{Keys}$
+\State $\V{Next} : \Fkdf.\Ps \to \mathbb{N}$
+\State $\V{Next}[*] \gets 0$
+\State $\V{Derived} : \V{Keys} \times \{0,1\}^{*} \rightharpoonup \V{Keys}$
+\State $\V{Derived}[*,*] \gets \unset$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{KeyGen}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $(\mathit{corr}, k) \gets \Adv\bigl(\id.\op{KeyGen}\bigr)$
+\State $k \gets \San[\Clean_{k}](k; \V{Keys})$
+\State $\V{Keys} \gets \V{Keys} \cup \{k\}$
+\If{$\mathit{corr} = 1$}
+  \State $\V{Known} \gets \V{Known} \cup \{k\}$
+\EndIf
+\State $\mathit{ptr} \gets \V{Next}[\id.P]$;\ \ $\V{Next}[\id.P] \gets \mathit{ptr} + 1$
+\State $\V{Key}[\id.P, \mathit{ptr}] \gets k$
+\State \textbf{return} $\mathit{ptr}$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Store}(k)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$k \in \V{Keys} \setminus \V{Known}$}
+  \State \textbf{return} $\none$
+    \Comment{a bare guess of an unknown key is refused}
+\EndIf
+\State $\V{Keys} \gets \V{Keys} \cup \{k\}$;\ \ $\V{Known} \gets \V{Known} \cup \{k\}$
+\State $\mathit{ptr} \gets \V{Next}[\id.P]$;\ \ $\V{Next}[\id.P] \gets \mathit{ptr} + 1$
+\State $\V{Key}[\id.P, \mathit{ptr}] \gets k$
+\State \textbf{return} $\mathit{ptr}$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Derive}(\mathit{ptr}, s)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $k \gets \V{Key}[\id.P, \mathit{ptr}]$
+\If{$k = \unset$}
+  \State \textbf{return} $\none$
+\EndIf
+\If{$\V{Derived}[k, s] = \unset$}
+  \State $k' \gets \Adv\bigl(\id.\op{Derive}, s, k \in \V{Known}\bigr)$
+  \State $k' \gets \San[\Clean_{k'}](k'; k, \V{Keys}, \V{Known})$
+  \State $\V{Keys} \gets \V{Keys} \cup \{k'\}$
+  \If{$k \in \V{Known}$}
+    \State $\V{Known} \gets \V{Known} \cup \{k'\}$
+  \EndIf
+  \State $\V{Derived}[k, s] \gets k'$
+\EndIf
+\State $\mathit{ptr}' \gets \V{Next}[\id.P]$;\ \ $\V{Next}[\id.P] \gets \mathit{ptr}' + 1$
+\State $\V{Key}[\id.P, \mathit{ptr}'] \gets \V{Derived}[k, s]$
+\State \textbf{return} $\mathit{ptr}'$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $\{(\mathit{ptr}, \V{Key}[\id.P, \mathit{ptr}])\}_{\mathit{ptr} < \V{Next}[\id.P]}$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\Clean_{k}(k; \V{Keys})$}:
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $k \in \{0,1\}^{*} \ \wedge\ k \notin \V{Keys}$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\Clean_{k'}(k'; k, \V{Keys}, \V{Known})$}:
+\begin{algorithmic}[1]
+\algcont
+\If{$k \in \V{Known}$}
+  \State \textbf{return} $k' \notin \V{Keys} \setminus \V{Known}$
+\EndIf
+\State \textbf{return} $k' \notin \V{Keys}$
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

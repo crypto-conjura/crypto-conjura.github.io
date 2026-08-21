@@ -2,11 +2,125 @@
 title: "F-KDF — Key derivation"
 status: "Canonical"
 layer: 2
-definition: "Not yet written"
+definition: "Defined"
 ---
 
 *F-KDF* (Key derivation) is part of *Cryptographic Library and Symmetric Primitives* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
 
+## Functionality
+
+Reading the box: $\square$ marks a key never generated; $\bot$ is a call the functionality has nothing to answer for — no key at that pointer. $\mathtt{Known}$ tracks which keys the simulator already has real access to. $\mathtt{Derived}$ is the functionality's own memory of every derivation it has already answered, keyed by the *pair* (source key, seed) — consulting it before asking the adversary again is what makes derivation deterministic: the same seed against the same key yields the same output, on the first ask or the hundredth.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{KDF}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := \bot\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{Keys}, \mathtt{Known} \gets \varnothing\)</li>
+<li>\(\mathtt{Key} : \mathcal{F}_{\mathsf{KDF}}.\mathbf{P} \times \mathbb{N} \rightharpoonup \mathtt{Keys}\)</li>
+<li>\(\mathtt{Next} : \mathcal{F}_{\mathsf{KDF}}.\mathbf{P} \to \mathbb{N}\)</li>
+<li>\(\mathtt{Next}[*] \gets 0\)</li>
+<li>\(\mathtt{Derived} : \mathtt{Keys} \times \{0,1\}^{*} \rightharpoonup \mathtt{Keys}\)</li>
+<li>\(\mathtt{Derived}[*,*] \gets \square\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.KeyGen()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="7">
+<li>\((\mathit{corr}, k) \gets \mathcal{A}\bigl(\mathit{id}.\mathsf{KeyGen}\bigr)\)</li>
+<li>\(k \gets \mathsf{San}[\mathsf{Clean}_{k}](k; \mathtt{Keys})\)</li>
+<li>\(\mathtt{Keys} \gets \mathtt{Keys} \cup \{k\}\)</li>
+<li>\(\textbf{if}\ \mathit{corr} = 1\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{Known} \gets \mathtt{Known} \cup \{k\}\)</span></li>
+<li>\(\mathit{ptr} \gets \mathtt{Next}[\mathit{id}.P]\);&nbsp;&nbsp;\(\mathtt{Next}[\mathit{id}.P] \gets \mathit{ptr} + 1\)</li>
+<li>\(\mathtt{Key}[\mathit{id}.P, \mathit{ptr}] \gets k\)</li>
+<li>\(\textbf{return}\ \mathit{ptr}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Store(<span class="cj-id">k</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="15">
+<li>\(\textbf{if}\ k \in \mathtt{Keys} \setminus \mathtt{Known}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \bot\)</span><span class="cj-comment">// a bare guess of an unknown key is refused</span></li>
+<li>\(\mathtt{Keys} \gets \mathtt{Keys} \cup \{k\}\);&nbsp;&nbsp;\(\mathtt{Known} \gets \mathtt{Known} \cup \{k\}\)</li>
+<li>\(\mathit{ptr} \gets \mathtt{Next}[\mathit{id}.P]\);&nbsp;&nbsp;\(\mathtt{Next}[\mathit{id}.P] \gets \mathit{ptr} + 1\)</li>
+<li>\(\mathtt{Key}[\mathit{id}.P, \mathit{ptr}] \gets k\)</li>
+<li>\(\textbf{return}\ \mathit{ptr}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Derive(<span class="cj-id">mathit{ptr}</span>, <span class="cj-id">s</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="21">
+<li>\(k \gets \mathtt{Key}[\mathit{id}.P, \mathit{ptr}]\)</li>
+<li>\(\textbf{if}\ k = \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \bot\)</span></li>
+<li>\(\textbf{if}\ \mathtt{Derived}[k, s] = \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(k' \gets \mathcal{A}\bigl(\mathit{id}.\mathsf{Derive}, s, k \in \mathtt{Known}\bigr)\)</span></li>
+<li><span class="cj-ind">\(k' \gets \mathsf{San}[\mathsf{Clean}_{k'}](k'; k, \mathtt{Keys}, \mathtt{Known})\)</span></li>
+<li><span class="cj-ind">\(\mathtt{Keys} \gets \mathtt{Keys} \cup \{k'\}\)</span></li>
+<li><span class="cj-ind">\(\textbf{if}\ k \in \mathtt{Known}\ \textbf{then}\)</span></li>
+<li><span class="cj-ind">\(\mathtt{Known} \gets \mathtt{Known} \cup \{k'\}\)</span></li>
+<li><span class="cj-ind">\(\mathtt{Derived}[k, s] \gets k'\)</span></li>
+<li>\(\mathit{ptr}' \gets \mathtt{Next}[\mathit{id}.P]\);&nbsp;&nbsp;\(\mathtt{Next}[\mathit{id}.P] \gets \mathit{ptr}' + 1\)</li>
+<li>\(\mathtt{Key}[\mathit{id}.P, \mathit{ptr}'] \gets \mathtt{Derived}[k, s]\)</li>
+<li>\(\textbf{return}\ \mathit{ptr}'\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="34">
+<li>\(\textbf{return}\ \{(\mathit{ptr}, \mathtt{Key}[\mathit{id}.P, \mathit{ptr}])\}_{\mathit{ptr} < \mathtt{Next}[\mathit{id}.P]}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig">Clean<sub><span class="cj-id">k</span></sub>(<span class="cj-id">k</span>; <span class="cj-rm">Keys</span>):</div>
+<ol class="cj-code" start="35">
+<li>\(\textbf{return}\ k \in \{0,1\}^{*} \ \wedge\ k \notin \mathtt{Keys}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig">Clean<sub><span class="cj-id">k'</span></sub>(<span class="cj-id">k'</span>; <span class="cj-id">k</span>, <span class="cj-rm">Keys</span>, <span class="cj-rm">Known</span>):</div>
+<ol class="cj-code" start="36">
+<li>\(\textbf{if}\ k \in \mathtt{Known}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ k' \notin \mathtt{Keys} \setminus \mathtt{Known}\)</span></li>
+<li>\(\textbf{return}\ k' \notin \mathtt{Keys}\)</li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+The box is transcribed from Küsters and Tuengerthal, *Ideal key derivation and encryption in simulation-based security*, ePrint 2010/295, revision `20101011:201701`, Figure 6, p. 32 — item 12 (`Derive`) of their single functionality $\mathcal{F}_{\mathsf{crypto}}$ ([F-MAC](/uc/layer-2-crypto-library-symmetric/f-mac/index.qmd) draws on items 13–14 of the same figure). `KeyGen`/`Store` are the paper's generic key-management commands, kept here only so the box has a key to derive from.
+
+The one substantive choice made in translating this: the source parameterizes `Derive` by a target *type* for the new key, since a derived key can become an encryption key, a MAC key, or another derivation seed inside the paper's shared, multi-primitive functionality. A box that only ever produces one kind of thing — another key, usable as this box's own input — has no second type to name, so that parameter is dropped rather than transcribed as a no-op.
+
+## Known realizations
+
+Realized, Section 3.2 (p. 10 of the same paper), by protocol $\mathcal{P}_{\mathsf{crypto}}$: it instantiates a derived key as a pseudorandom function of the source key, keyed on the seed, once the source key is in real use — which is exactly what the paper's realization theorem requires that PRF to withstand.
+
+## Properties
+
+- **Determinism.** The same key and seed always derive the same output — the $\mathtt{Derived}$ lookup guarding the whole adversary call. A UC functionality could instead let the adversary answer afresh every time; this one deliberately doesn't.
+- **Freshness under an unknown source.** Deriving from a key the simulator does not hold produces a key that is, in turn, entirely new (`Clean_k'`'s second branch) — never a value that collides with anything generated so far, ideal or real.
+- **No downgrade from a known source.** Deriving from a key the simulator already holds can only produce another key the simulator holds (`Clean_k'`'s first branch) — real-world knowledge propagates forward through derivation; it never becomes ideal by passing through this box.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
+
 *References:*
 
-- Küsters and Tuengerthal. [*Ideal key derivation and encryption in simulation-based security*](https://eprint.iacr.org/2010/295). In Topics in Cryptology – CT-RSA 2011, volume 6558 of LNCS, pages 161–179, 2011.
+- Küsters and Tuengerthal. [*Ideal key derivation and encryption in simulation-based security*](https://eprint.iacr.org/2010/295). In Topics in Cryptology – CT-RSA 2011, volume 6558 of LNCS, pages 161–179, 2011. Figure 6, p. 32 of revision `20101011:201701`, item 12, the definition transcribed above.

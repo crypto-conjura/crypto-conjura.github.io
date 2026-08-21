@@ -1,0 +1,125 @@
+%% The interface box of f-mac, the one source for both the book
+%% and uc/.../f-mac/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fmac$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := \none$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{Keys}, \V{Known} \gets \emptyset$
+\State $\V{Key} : \Fmac.\Ps \times \mathbb{N} \rightharpoonup \V{Keys}$
+\State $\V{Next} : \Fmac.\Ps \to \mathbb{N}$
+\State $\V{Next}[*] \gets 0$
+\State $\V{Tagged} : \V{Keys} \to 2^{\Msgs}$
+\State $\V{Tagged}[*] \gets \emptyset$
+\State $\V{Ver} : \Keys \times \Msgs \times \Sigs \to \{0,1\} \cup \{\unset\}$
+\State $\V{Ver}[*,*,*] \gets \unset$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{KeyGen}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $(\mathit{corr}, k) \gets \Adv\bigl(\id.\op{KeyGen}\bigr)$
+\State $k \gets \San[\Clean_{k}](k; \V{Keys})$
+\State $\V{Keys} \gets \V{Keys} \cup \{k\}$
+\If{$\mathit{corr} = 1$}
+  \State $\V{Known} \gets \V{Known} \cup \{k\}$
+\EndIf
+\State $\mathit{ptr} \gets \V{Next}[\id.P]$;\ \ $\V{Next}[\id.P] \gets \mathit{ptr} + 1$
+\State $\V{Key}[\id.P, \mathit{ptr}] \gets k$
+\State \textbf{return} $\mathit{ptr}$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Store}(k)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$k \in \V{Keys} \setminus \V{Known}$}
+  \State \textbf{return} $\none$
+    \Comment{a bare guess of an unknown key is refused}
+\EndIf
+\State $\V{Keys} \gets \V{Keys} \cup \{k\}$;\ \ $\V{Known} \gets \V{Known} \cup \{k\}$
+\State $\mathit{ptr} \gets \V{Next}[\id.P]$;\ \ $\V{Next}[\id.P] \gets \mathit{ptr} + 1$
+\State $\V{Key}[\id.P, \mathit{ptr}] \gets k$
+\State \textbf{return} $\mathit{ptr}$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Mac}(\mathit{ptr}, \msg)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $k \gets \V{Key}[\id.P, \mathit{ptr}]$
+\If{$k = \unset$}
+  \State \textbf{return} $\none$
+\EndIf
+\State $\sigma \gets \Adv\bigl(\id.\op{Mac}, \msg\bigr)$
+\State $\sigma \gets \San[\Clean_{\sigma}](\sigma)$
+\If{$k \notin \V{Known}$}
+  \State $\V{Tagged}[k] \gets \V{Tagged}[k] \cup \{\msg\}$
+\EndIf
+\State \textbf{return} $\sigma$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Verify}(\mathit{ptr}, \msg, \sigma)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $k \gets \V{Key}[\id.P, \mathit{ptr}]$
+\If{$k = \unset$}
+  \State \textbf{return} $\none$
+\EndIf
+\If{$\V{Ver}[k, \msg, \sigma] \neq \unset$}
+  \State \textbf{return} $\V{Ver}[k, \msg, \sigma]$
+\EndIf
+\State $b \gets \Adv\bigl(\id.\op{Verify}, \msg, \sigma\bigr)$
+\If{$b \not\in \{0,1\}$}
+  \State $b \gets 0$
+\EndIf
+\If{$k \notin \V{Known} \wedge \msg \notin \V{Tagged}[k]$}
+  \State $b \gets 0$
+    \Comment{no forgery under an unknown key}
+\EndIf
+\State $\V{Ver}[k, \msg, \sigma] \gets b$
+\State \textbf{return} $b$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $\bigl(\{(\mathit{ptr}, \V{Key}[\id.P, \mathit{ptr}])\}_{\mathit{ptr} < \V{Next}[\id.P]},$
+\Statex \quad\ $\{(k, \V{Tagged}[k]) : \exists\, \mathit{ptr}\, .\ \V{Key}[\id.P,\mathit{ptr}] = k\}\bigr)$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\Clean_{k}(k; \V{Keys})$}:
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $k \in \{0,1\}^{*} \ \wedge\ k \notin \V{Keys}$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\Clean_{\sigma}(\sigma)$}:
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $\sigma \in \Sigs$
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

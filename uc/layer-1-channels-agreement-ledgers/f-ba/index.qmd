@@ -2,12 +2,94 @@
 title: "F-BA — Byzantine agreement"
 status: "Canonical"
 layer: 1
-definition: "Not yet written"
+definition: "Defined"
 ---
 
 *F-BA* (Byzantine agreement) is part of *Channels, Agreement, Ledgers* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
 
+## Functionality
+
+Reading the box: $\square$ marks a value not yet set. $\mathtt{X}$ records what each party has input so far; $\mathtt{Y}$, once set, is the one decided value every party's `FetchOutput` returns — this box has no per-party outputs, because plain Byzantine agreement has no per-party disagreement left to have once it decides. The framework's own live corrupted-party set stands in for the source's fixed corruption bound $t$: a value counts as the decision once at least (party count $-$ corrupted-party count) of the input slots agree on it, i.e. once it has an honest-majority's worth of support even if every corrupted party's slot disagreed.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{BA}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := V\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{X} : \mathcal{F}_{\mathsf{BA}}.\mathbf{P} \to V \cup \{\square\}\)</li>
+<li>\(\mathtt{X}[*] \gets \square\)</li>
+<li>\(\mathtt{Y} \gets \square\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Input(<span class="cj-id">v</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="4">
+<li>\(\textbf{require}\ v \in V \ \wedge\ \mathtt{Y} = \square\)</li>
+<li>\(\mathtt{X}[\mathit{id}.P] \gets v\)</li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Input}, (\mathtt{X}[P])_{P \in \mathbf{P}}\bigr)\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.FetchOutput()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="7">
+<li>\(\textbf{if}\ \mathtt{Y} = \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{if}\ \exists\, v \in V : |\{P \in \mathbf{P} : \mathtt{X}[P] = v\}| \geq |\mathbf{P}| - |\mathbf{C}|\ \textbf{then}\)</span></li>
+<li><span class="cj-ind">\(\mathtt{Y} \gets v\)</span><span class="cj-comment">// the majority value, if one exists</span></li>
+<li><span class="cj-ind">\(\textbf{if}\ \mathtt{Y} = \square\ \textbf{then}\)</span></li>
+<li><span class="cj-ind">\(\mathtt{Y} \gets \mathcal{A}\bigl(\mathit{id}.\mathsf{FetchOutput}\bigr)\)</span></li>
+<li><span class="cj-ind">\(\mathtt{Y} \gets \mathsf{San}[\mathsf{Clean}_{Y}](\mathtt{Y})\)</span></li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{FetchOutput}, \mathit{id}.P\bigr)\)</li>
+<li>\(\textbf{return}\ \mathtt{Y}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="15">
+<li>\(\textbf{return}\ \bigl((\mathtt{X}[P])_{P \in \mathbf{P}},\ \mathtt{Y}\bigr)\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig">Clean<sub><span class="cj-id">Y</span></sub>(<span class="cj-id">Y</span>):</div>
+<ol class="cj-code" start="16">
+<li>\(\textbf{return}\ Y \in V\)</li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+The box is transcribed from Cohen, Coretti, Garay and Zikas, *Probabilistic Termination and Composability of Cryptographic Protocols*, ePrint 2016/350, Figure 1 (p. 8) and the Byzantine-agreement instantiation given in prose immediately after it (p. 9). The paper states Byzantine agreement not as its own box but as one parametrization $\mathcal{F}^{V}_{\mathsf{ba}}$ of a generic two-round template, $\mathcal{F}^{f,l}_{\mathsf{csf}}$ ("canonical synchronous functionality"), instantiated with the decision rule $f_{\mathsf{ba}}(x_1,\dots,x_n,a) = (y,\dots,y)$ — $y$ is whichever value some $n{-}t$ of the inputs share, or the adversary's own value $a$ if no such majority exists — and the leakage rule $l_{\mathsf{ba}}(x_1,\dots,x_n) = (x_1,\dots,x_n)$, full disclosure of every input as soon as it arrives. This box folds that instantiation directly into one object rather than keeping the generic template as a separate layer, since nothing else on this site currently needs $\mathcal{F}_{\mathsf{csf}}$ unparametrized.
+
+Two translation choices worth stating plainly. First, the source's two labelled rounds — collect inputs and optional adversarial input, then compute and fetch outputs — become, here, operations available at any time, guarded by $\mathtt{Y}$'s own $\square$/set state rather than by a round counter: `Input` refuses once $\mathtt{Y}$ is set, and every `FetchOutput` after the first just returns the cached value, which is exactly the behaviour the source's round boundary was there to guarantee. Second, the source lets the adversary supply its fallback value $a$ unconditionally, at any point up to the output computation; here the functionality only ever asks for it exactly when it is needed — when no majority exists — which is behaviourally identical (an earlier, unused value of $a$ never affects anything) and matches how this book's other boxes poll the adversary, rather than giving the adversary its own standing inbound operation.
+
+One property of the source worth flagging rather than softening: $l_{\mathsf{ba}}$'s full-disclosure leakage means every party's vote is visible to the adversary the moment it is cast, before any decision is reached. That is a real, deliberate weakness of this exact formulation, not an artifact of translating it — a protocol realizing this box is not promising to hide anyone's input.
+
+## Known realizations
+
+The paper's own concern is a *different* functionality, $\mathcal{F}_{\mathsf{rba}}$ — Byzantine agreement with probabilistic rather than guaranteed termination — built by composing the guaranteed-termination $\mathcal{F}^{\{0,1\}}_{\mathsf{ba}}$ above with a generic termination wrapper (Figures 4–5, pp. 12–13) under a specific round-count distribution (Lemma 5.2, requiring $t < n/3$), then realized (Figure 9, p. 23) by a protocol in the $(\mathcal{F}_{\mathsf{psmt}}, \mathcal{F}_{\mathsf{oc}}, \mathcal{F}^{\{0,1\}}_{\mathsf{ba}})$-hybrid model. This box is the un-wrapped object that construction starts from, not that construction's end result.
+
+## Properties
+
+- **Agreement.** Every party's `FetchOutput` returns the same $\mathtt{Y}$, by construction — there is exactly one decision variable, not one per party.
+- **Validity.** If an $n{-}t$ majority of the input slots share a value, $\mathtt{Y}$ is that value with probability exactly 1; the adversary is never consulted when a majority already exists.
+- **No confidentiality.** Every input is disclosed to the adversary in full as soon as it is cast (the `Leak`-equivalent push inside `Input`), independent of who is corrupted. This is a property of the box, stated above rather than left implicit.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
+
 *References:*
 
-- Cohen, Coretti, Garay, and Zikas. [*Probabilistic Termination and Composability of Cryptographic Protocols*](https://eprint.iacr.org/2016/350). In Advances in Cryptology – CRYPTO 2016, Part III, volume 9816 of LNCS, pages 240–269, 2016.
-- Lindell, Lysyanskaya, and Rabin. [*On the composition of authenticated byzantine agreement*](https://eprint.iacr.org/2004/181). In 34th ACM Symposium on Theory of Computing (STOC), 2002.
+- Cohen, Coretti, Garay, and Zikas. [*Probabilistic Termination and Composability of Cryptographic Protocols*](https://eprint.iacr.org/2016/350). In Advances in Cryptology – CRYPTO 2016, Part III, volume 9816 of LNCS, pages 240–269, 2016. Figure 1, p. 8, and its Byzantine-agreement instantiation, p. 9, the definition transcribed above.
+- Lindell, Lysyanskaya, and Rabin. [*On the composition of authenticated byzantine agreement*](https://eprint.iacr.org/2004/181). In 34th ACM Symposium on Theory of Computing (STOC), 2002. Predates the ideal-functionality formalism entirely: it gives property-based definitions (Agreement, Validity, Termination, Definitions 1–3) rather than a UC box, so it is the origin of the composability *question* this book's $\mathcal{F}_{\mathsf{BA}}$ answers in the functionality style, not a second source for the box itself.

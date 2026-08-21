@@ -1,0 +1,68 @@
+%% The interface box of f-ba, the one source for both the book
+%% and uc/.../f-ba/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fba$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := V$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{X} : \Fba.\Ps \to V \cup \{\unset\}$
+\State $\V{X}[*] \gets \unset$
+\State $\V{Y} \gets \unset$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Input}(v)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$v \in V \ \wedge\ \V{Y} = \unset$}
+\State $\V{X}[\id.P] \gets v$
+\State $\Adv\bigl(\id.\op{Input}, (\V{X}[P])_{P \in \Ps}\bigr)$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{FetchOutput}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$\V{Y} = \unset$}
+  \If{$\exists\, v \in V : |\{P \in \Ps : \V{X}[P] = v\}| \geq |\Ps| - |\Cs|$}
+    \State $\V{Y} \gets v$
+      \Comment{the majority value, if one exists}
+  \EndIf
+  \If{$\V{Y} = \unset$}
+    \State $\V{Y} \gets \Adv\bigl(\id.\op{FetchOutput}\bigr)$
+    \State $\V{Y} \gets \San[\Clean_{Y}](\V{Y})$
+  \EndIf
+\EndIf
+\State $\Adv\bigl(\id.\op{FetchOutput}, \id.P\bigr)$
+\State \textbf{return} $\V{Y}$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $\bigl((\V{X}[P])_{P \in \Ps},\ \V{Y}\bigr)$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\Clean_{Y}(Y)$}:
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $Y \in V$
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

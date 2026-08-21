@@ -15,8 +15,11 @@ module.exports = defineConfig({
   reporter: [['list'], ['json', { outputFile: 'results.json' }]],
   expect: {
     toHaveScreenshot: {
-      // Invariant budget from the refactor brief.
-      maxDiffPixelRatio: 0.002,
+      // Invariant budget from the refactor brief (0.002). CJ_STRICT=1
+      // reruns at an exact 0 to distinguish "within budget" from
+      // "byte-for-byte identical" -- used once to confirm the token
+      // consolidation was truly zero-diff, not just under tolerance.
+      maxDiffPixelRatio: process.env.CJ_STRICT ? 0 : 0.002,
       animations: 'disabled',
     },
   },

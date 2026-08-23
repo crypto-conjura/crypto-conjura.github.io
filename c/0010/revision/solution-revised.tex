@@ -1,0 +1,743 @@
+% =====================================================================
+%  CONJURA SOLUTION / PARTIAL PROOF
+%  Extraction and decomposition for two split unpredictable sources.
+%  Requires conjura-solution.cls and conjura-conjecture.cls here.
+% =====================================================================
+\documentclass{conjura-solution}
+
+\runninghead{EXTRACTION FOR SPLIT UNPREDICTABLE SOURCES}
+
+\newcommand{\Fun}{\mathsf{Fun}}
+\newcommand{\Adv}{\mathsf{Adv}}
+\newcommand{\Real}{\mathsf{Real}}
+\newcommand{\Dec}{\mathsf{Dec}}
+\newcommand{\Prob}[1]{\Pr\!\left[#1\right]}
+\newcommand{\Exp}{\mathbb{E}}
+\newcommand{\bits}{\{0,1\}}
+\newcommand{\vx}{\mathbf{x}}
+\newcommand{\vz}{\mathbf{z}}
+\newcommand{\vu}{\mathbf{u}}
+\newcommand{\ind}{\mathbb{1}}
+\newcommand{\Unif}{\mathrm{Unif}}
+\newcommand{\supp}{\mathrm{supp}}
+\newcommand{\kna}{\kappa^{\mathrm{na}}}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} PARTIAL SOLUTION}
+\cjtitle{Extraction for Split Unpredictable Sources, and Decomposition on a Region}
+\cjresolves{\emph{Decomposition for Split Unpredictable Sources} (see
+  \texttt{main.tex} in this folder). \textbf{Partially.} Two unconditional
+  extraction bounds are proved outright; the conjecture itself is proved on a
+  restricted region of $P$, $q$ and $M$, and remains open in general.}
+
+\vspace{0.4em}
+
+\section*{Reader's guide}
+
+\noindent\textbf{What is proved.} Write $\kna(q)$ for the extraction advantage
+restricted to observers whose query positions, for each fixed coin string, do not
+depend on the challenge value, and $\mu(s):=\min\bigl(s\delta,\,3(s\delta^{2})^{1/3},\,1\bigr)$.
+
+\begin{itemize}
+\item[(A)] $\kna(q)\le 5\sqrt{\sigma'\delta}+q\delta$ for every $q$, and
+  $\kappa(0)\le5\sqrt{\sigma'\delta}$ against \emph{all} observers.
+  Unconditional (Theorem~\ref{thm:A}). This settles the statement's assertion that queries whose
+  positions ignore the challenge value are almost free at every budget: their
+  cost is the additive $q\delta$, with no multiplier on the leading term and no
+  dependence on $M$.
+\item[(B)] $\kappa(q)\le 5\sqrt{\sigma'\delta}+\mu(\min(qM,N^{2}))$ for every $q$
+  and every observer. Unconditional (Theorem~\ref{thm:B}).
+\item[(C)] An explicit family, chosen before $q$, indexed by the oracle and the
+  leakage, and consistent with the oracle, with
+  $\Adv_{\mathcal Y,D}\le\varepsilon(D)+2(\sigma'+\log\gamma^{-1})q/P+\gamma+P\delta+q\delta$ (Theorem~\ref{thm:C}).
+\item[(C$'$)] Hence the conjecture, with the absolute constants $c=2$ and $C=8$, for
+  every $P\le\sqrt{\sigma'/\delta}$ and every $q$ with $q^{+}\delta\le\sigma'$,
+  provided either the observer's query positions are challenge-blind per coin
+  string, or $M\le\sigma'/\sqrt{27\delta}$ (Theorem~\ref{thm:cprime}).
+\end{itemize}
+
+\noindent\textbf{What is not proved.} The conjecture in full. Two obstructions
+survive, stated as mechanisms in \S\ref{sec:barriers}: challenge-steered probes
+at large $M$, and large $P$ with growing $q$. The statement's own remark already
+names the second as a separate problem.
+
+\medskip
+
+\noindent\textbf{Where to be most sceptical.} Two rounds of blind review found
+two serious defects, both since repaired, and both of the same species: a
+claim left \emph{underdetermined} rather than false. They were at
+Theorem~\ref{thm:cprime}'s first proof line (which quantity the cited corollary
+actually bounds) and in Definition~\ref{def:res} (whether challenge resolution is
+a condition on the law of the query positions or on each coin string). Those two
+places are where a third error, if there is one, is most likely to be. The review
+status is recorded honestly in \S\ref{sec:review}.
+
+\medskip
+
+\noindent\textbf{Notation} is that of the statement document and is not repeated:
+$\Fun=\{f:[N]\times[N]\to[M]\}$, $H\sample\Fun$, split $\delta$-unpredictable
+sources $(S_1,S_2)$ with leakage bounded by $\sigma_1,\sigma_2$,
+$\sigma=\sigma_1+\sigma_2$, $\sigma'=\sigma+2\log N$, $q^{+}=q+1$, and the
+experiments $\Real,\Dec,\Real_0,\Dec_0$ with $\Adv_{\mathcal Y,D}$ and
+$\kappa(q)$. Throughout $N\ge2$ and $M\ge2$; logarithms are base two. Write
+$\mathcal Z:=\bits^{\le\sigma_1}\times\bits^{\le\sigma_2}$, so
+$|\mathcal Z|=(2^{\sigma_1+1}-1)(2^{\sigma_2+1}-1)<2^{\sigma+2}$.
+
+\section{The two structural facts}
+
+Everything below rests on two observations, which together turn the conjecture
+into a statement about the discrepancy of a random matrix on combinatorial
+rectangles.
+
+\begin{lemma}[derandomisation]\label{lem:derand}
+For every $q$ and every $q$-query challenge-oblivious $D$ there is a
+deterministic such $D'$ with \emph{(i)}
+$\Adv_{\mathcal Y,D}\le\Adv_{\mathcal Y,D'}$ and
+$\bigl|\Prob{\Real=1}-\Prob{\Real_0=1}\bigr|$ no larger for $D$ than for $D'$,
+and \emph{(ii)} $D'$ of the same challenge resolution as $D$
+(Definition~\ref{def:res}). Consequently the suprema defining $\kappa(q)$ and
+$\kna(q)$ are both attained on deterministic observers, the latter on
+deterministic observers of resolution~$1$.
+\end{lemma}
+
+\begin{proof}
+Let $\rho$ be $D$'s coins and $D_\rho$ the deterministic strategy it then runs.
+All of $\Fun,[N],[M],\mathcal Z$ are finite and $D$ makes at most $q$ queries, so
+there are finitely many deterministic $q$-query challenge-oblivious strategies.
+Each quantity at issue is $|\Exp_\rho[\alpha(\rho)]|$ with
+$\alpha(\rho)=\Prob{\mathsf E_1=1\mid\rho}-\Prob{\mathsf E_0=1\mid\rho}$, the
+coins being independent of every other draw and the paired experiments differing
+in no other component; so it is at most $\max_\rho|\alpha(\rho)|$, attained at
+some $\rho^{*}$. Take $D':=D_{\rho^{*}}$, which is $q$-query and
+challenge-oblivious. It inherits $D$'s challenge resolution: the definition
+quantifies over every coin string, so if $D^{f}_{\rho}(v,\zeta)$ and
+$D^{f}_{\rho}(v',\zeta)$ issue the same query positions for every $\rho$ whenever
+$h(v)=h(v')$, they do so in particular at $\rho^{*}$, which is what $D'$ runs.
+The argument is identical for either paired experiment, giving both parts.
+\end{proof}
+
+Once $D$ is deterministic and its oracle is fixed to $f$, its output is a
+function of its challenge input alone; write $\theta:[M]\to\bits$ for that
+function and $p_\theta:=|\theta^{-1}(1)|/M$. That the test is \emph{named by
+short data} is the crux of Lemma~\ref{lem:disc}.
+
+\begin{lemma}[posterior product structure]\label{lem:prod}
+For every $(f,\zeta)$ in the support of $(H,\vz)$ the conditional law of $\vx$ is
+the product $\Pi_{f,\zeta}=\pi^{1}_{f,\zeta_1}\otimes\pi^{2}_{f,\zeta_2}$, where
+$\pi^{i}_{f,\zeta_i}(u)=\Prob{x_i=u\mid H=f,\ z_i=\zeta_i}$. Writing
+$m_i:=\|\pi^{i}_{f,\zeta_i}\|_\infty$:
+\begin{enumerate}
+\item $\max_{\vu\in[N]^2}\Pi_{f,\zeta}(\vu)=m_1m_2$;
+\item $\Exp[m_i]\le\delta$ for $i=1,2$;
+\item $\Exp[m_1m_2]\le\delta$;
+\item $\Prob{m_1m_2>\theta}\le2\delta/\sqrt\theta$ for every $\theta\in(0,1]$.
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+The sources run on independent private coins and on the same $H$, so conditioned
+on $H=f$ their output pairs are independent:
+$\Prob{x_1=u_1,z_1=\zeta_1,x_2=u_2,z_2=\zeta_2\mid f}=\prod_i\Prob{x_i=u_i,z_i=\zeta_i\mid f}$.
+Summing over $u_1,u_2$ gives
+$\Prob{\vz=\zeta\mid f}=\prod_i\Prob{z_i=\zeta_i\mid f}>0$, and dividing gives the
+product form. Item~1 is the fact that the maximum of a product measure is the
+product of the maxima.
+
+For Item~2, let $\mathsf P$ be the predictor that, on input $\vz$ and with oracle
+access to $H$, reads all of $H$, computes $\pi^{i}_{H,z_i}$ (it may, the
+sources being fixed and predictors being arbitrary, possibly randomised,
+functions of their inputs, as the statement document's own proof of its
+fixed-set lemma instructs), and outputs a maximiser. Then
+$\Prob{\mathsf P^{H}(\vz)=x_i}=\Exp_{(f,\zeta)}[m_i(f,\zeta)]$, which
+unpredictability bounds by $\delta$. Item~3 follows from $m_2\le1$ and Item~2.
+For Item~4, $m_1m_2>\theta$ with both factors in $[0,1]$ forces
+$m_i>\sqrt\theta$ for some $i$; Markov and Item~2 give
+$\Prob{m_i>\sqrt\theta}\le\delta/\sqrt\theta$.
+\end{proof}
+
+Item~1 is where the second source is spent: a \emph{single cell} of $[N]^2$
+carries mass $m_1m_2$, a product of two independently small numbers, whereas one
+unpredictable source over $[N]^2$ gives only $\delta$ per cell.
+
+\begin{remark}[{$\Exp[m_1m_2]\le\delta^{2}$ is false}]\label{rem:corr}
+The failure forces the exponent $1/3$ in
+Lemma~\ref{lem:mass}. Let $2\le M\le N$, put $\delta:=1/M$, let $E$ be the event
+$f(1,1)=1$, of probability $\delta$, and let both sources output $x_i:=1$ if $E$
+holds and $x_i$ uniform on $[N]$ otherwise, leaking the empty string. The coins
+are independent, so the pair is split, and
+$\Exp[m_i]=\delta+(1-\delta)/N\le2\delta$, so the pair is
+$2\delta$-unpredictable; yet $m_1m_2=1$ on $E$, so $\Exp[m_1m_2]\ge\delta$.
+Splitness constrains the coins, not the two sources' common dependence on $f$.
+\end{remark}
+
+\section{Flattening and rectangle discrepancy}
+
+\begin{lemma}[flattening]\label{lem:flat}
+Let $\pi$ be a distribution on $[N]$ with $\|\pi\|_\infty=m$ and
+$k:=\lfloor1/m\rfloor$. Then $1\le k\le N$, $1/k\le2m$, and $\pi$ is a convex
+combination of distributions each uniform on a subset of size exactly $k$.
+Consequently, for every $G:[N]^{2}\to[-1,1]$ and every $\pi^{1},\pi^{2}$ with
+$\|\pi^{i}\|_\infty=m_i$, writing $k_i:=\lfloor1/m_i\rfloor$,
+\[
+  \bigl|\Exp_{\pi^{1}\otimes\pi^{2}}[G]\bigr|\ \le\
+  \max\bigl\{\ \bigl|\Exp_{\Unif(B_1)\otimes\Unif(B_2)}[G]\bigr|\ :\ |B_i|=k_i\ \bigr\}.
+\]
+\end{lemma}
+
+\begin{proof}
+The inequality $m\ge1/N$ gives $k\le N$; $m\le1$ gives $k\ge1$. For $x\ge1$ we
+have $\lfloor x\rfloor\ge x/2$ (for $1\le x<2$ because $\lfloor x\rfloor=1\ge x/2$;
+for $x\ge2$ because $\lfloor x\rfloor>x-1\ge x/2$), so taking $x=1/m$ yields
+$1/k\le2m$. If $k=1$ the claimed decomposition is the identity
+$\pi=\sum_u\pi(u)\delta_u$, a convex combination of distributions uniform on
+singletons, and no external result is needed; assume $k\ge2$. Since
+$\|\pi\|_\infty\le1/k=2^{-\log k}$ with $\log k>0$ and $2^{\log k}=k\in\mathbb N$,
+the flat-decomposition lemma [CFHS, Lemma~3] applies and writes $\pi$ as a convex
+combination of distributions uniform on $k$-subsets. The displayed inequality
+follows because $(\rho^1,\rho^2)\mapsto\Exp_{\rho^1\otimes\rho^2}[G]$ is
+bilinear, so substituting both decompositions expresses the left side as a convex
+combination of the quantities on the right.
+\end{proof}
+
+Note $G$ is arbitrary: it will carry an indicator $\ind[\vu\notin\mathcal S]$ that
+does \emph{not} factor over the coordinates. The failure to factor is harmless, because the linear
+structure used lives in $(\pi^1,\pi^2)$, not in $G$.
+
+\begin{definition}[revealing rule]\label{def:rr}
+A \emph{revealing rule of budget $s$} is a family
+$(\mathcal A_\zeta)_{\zeta\in\mathcal Z}$ of procedures, where $\mathcal A_\zeta$
+inspects the coordinates of $f$ one at a time (the next a function of $\zeta$
+and the values already seen), halts having inspected a set
+$\mathcal S(f,\zeta)$ with $|\mathcal S(f,\zeta)|\le s$, and outputs a test
+$\theta_{\zeta,f}:[M]\to\bits$ that is a function of $\zeta$ and the inspected
+values alone.
+\end{definition}
+
+\begin{lemma}[rectangle discrepancy against leakage-named tests]\label{lem:disc}
+Let $\gamma_0\in(0,1)$ and let $(\mathcal A_\zeta)$ be a revealing rule. Put
+$L:=\ln(eN)$, $C_0:=(\sigma+2)\ln2+\ln\frac{4N^{2}}{\gamma_0}$, and
+\[
+  t(k_1,k_2):=\sqrt{\frac{k_1\ln\frac{eN}{k_1}+k_2\ln\frac{eN}{k_2}+C_0}{2k_1k_2}}\,.
+\]
+Then with probability at least $1-\gamma_0$ over $f\sample\Fun$, simultaneously
+for every $\zeta\in\mathcal Z$, all $k_1,k_2\in[N]$ and all $B_i\subseteq[N]$
+with $|B_i|=k_i$, writing $R:=B_1\times B_2$,
+\begin{equation}\label{eq:disc}
+  \Bigl|\ \frac{1}{k_1k_2}\!\!\sum_{u\in R\setminus\mathcal S(f,\zeta)}\!\!
+  \bigl(\theta_{\zeta,f}(f(u))-p_{\theta_{\zeta,f}}\bigr)\Bigr|\ \le\ t(k_1,k_2).
+\end{equation}
+Moreover $t(k_1,k_2)\le\sqrt{L(m_1+m_2)+2C_0m_1m_2}$ whenever
+$k_i=\lfloor1/m_i\rfloor$, and hence
+\begin{equation}\label{eq:Et}
+  \Exp\bigl[t(k_1,k_2)\bigr]\ \le\ \sqrt{2\delta(L+C_0)}\ \le\
+  \sqrt{8\delta\bigl(\sigma'+\log\gamma_0^{-1}\bigr)}.
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+\emph{Conditional uniformity off the revealed set.} Fix $\zeta$. For
+$S_0\subseteq[N]^{2}$ and $w\in[M]^{S_0}$ the event
+$\mathcal T_{S_0,w}:=\{\mathcal S(f,\zeta)=S_0\wedge f|_{S_0}=w\}$ is measurable
+with respect to $f|_{S_0}$: replaying $\mathcal A_\zeta$ on $w$ reproduces its
+whole inspection sequence. The coordinates of $f$ being i.i.d.\ uniform,
+conditioning on such an event leaves $f|_{[N]^{2}\setminus S_0}$ i.i.d.\ uniform;
+and $\theta_{\zeta,f}$, $p_{\theta_{\zeta,f}}$ are constant on
+$\mathcal T_{S_0,w}$.
+
+\emph{One tuple.} Fix also $k_1,k_2,B_1,B_2$ and condition on
+$\mathcal T_{S_0,w}$. Write $\theta,p_\theta$ for the constants and
+$n_0:=|R\setminus S_0|\le k_1k_2$. The variables $\theta(f(u))-p_\theta$,
+for $u\in R\setminus S_0$, are independent, lie in an interval of length $1$, and have
+mean $0$, since $f(u)$ is uniform on $[M]$ and
+$\Prob{\theta(f(u))=1}=p_\theta$ exactly. Hoeffding's inequality with
+$\lambda:=k_1k_2\,t(k_1,k_2)$ gives conditional failure probability at most
+$2\exp(-2\lambda^{2}/n_0)\le2\exp(-2t^{2}k_1k_2)$, uniformly in $(S_0,w)$, hence
+also unconditionally.
+
+\emph{Union bound.} By the definition of $t$,
+$2\exp(-2t^{2}k_1k_2)=2\,e^{-k_1\ln\frac{eN}{k_1}}e^{-k_2\ln\frac{eN}{k_2}}2^{-(\sigma+2)}\frac{\gamma_0}{4N^{2}}$.
+There are $|\mathcal Z|\binom{N}{k_1}\binom{N}{k_2}$ tuples with the given
+$(k_1,k_2)$, and $\binom{N}{k}\le(eN/k)^{k}$ [CFHS, Lemma~4.3] while
+$|\mathcal Z|<2^{\sigma+2}$. Multiplying, all three exponential factors cancel
+and the contribution of the pair $(k_1,k_2)$ is at most
+$2\gamma_0/(4N^{2})=\gamma_0/(2N^{2})$; summing over the $N^{2}$ pairs gives
+$\gamma_0/2\le\gamma_0$.
+
+\emph{Bounding $t$.} Expanding and using $k_i\ge1$, so
+$\ln(eN/k_i)\le L$,
+\[
+  t(k_1,k_2)^2=\frac{\ln\frac{eN}{k_1}}{2k_2}+\frac{\ln\frac{eN}{k_2}}{2k_1}
+  +\frac{C_0}{2k_1k_2}\ \le\ \frac{L}{2k_2}+\frac{L}{2k_1}+\frac{C_0}{2k_1k_2},
+\]
+and $1/k_i\le2m_i$ from Lemma~\ref{lem:flat} bounds the three terms by $Lm_2$,
+$Lm_1$ and $2C_0m_1m_2$.
+
+\emph{Expectations.} By concavity of $\sqrt{\cdot}$ and
+Lemma~\ref{lem:prod}(2),(3),
+$\Exp[t]\le\sqrt{L(\Exp m_1+\Exp m_2)+2C_0\Exp[m_1m_2]}\le\sqrt{2\delta(L+C_0)}$.
+Numerically
+$L+C_0=1+\ln N+(\sigma+2)\ln2+\ln4+2\ln N+\ln\gamma_0^{-1}\le3\ln N+0.694\sigma+3.78+\ln\gamma_0^{-1}$;
+as $\sigma'\ge2.885\ln N$ and $\sigma'\ge2$ for $N\ge2$, this is at most
+$3.63\sigma'+\ln\gamma_0^{-1}$, giving~\eqref{eq:Et}.
+\end{proof}
+
+\begin{remark}[why $M$ is absent, and where one source would break this]\label{rem:one}
+The alphabet enters $t$ only through $p_\theta$, which cancels, and through the
+i.i.d.\ structure of $\{f(u)\}$, which is alphabet-blind. There are $2^{M}$
+possible tests, but the union runs over \emph{which} test, and once the observer
+is fixed and the revealed values are conditioned away only $|\mathcal Z|<2^{\sigma+2}$
+are reached. The narrow union is the one respect in which the route beats a Fourier or
+chi-squared analysis, which would pay $\sqrt M$ to reduce an arbitrary test to
+characters.
+
+The statement document demands that every proof fail visibly when the two sources
+are replaced by one. It does, and not in the size of $t$: at $k_1=1,k_2=N$ one
+gets $t(1,N)^{2}=(L+N+C_0)/(2N)\to\tfrac12$, so $t\to1/\sqrt2$, neither large nor
+vacuous; and in any case $k_1=1$ models a \emph{deterministic first
+coordinate}, not a single source. The failure is earlier and total. A single
+source emits a point of $[N]^{2}$ whose posterior given the oracle and the
+leakage need not factor at all; Lemma~\ref{lem:prod}(1) is then unavailable, a
+cell carries mass up to $\delta$ rather than $m_1m_2$, and there is no product
+measure for Lemma~\ref{lem:flat} to flatten onto a rectangle. Lemmas~\ref{lem:flat}
+and~\ref{lem:disc} have no input and the argument does not begin.
+\end{remark}
+
+\section{The observer as a revealing rule}
+
+\begin{definition}[challenge resolution]\label{def:res}
+An observer $D$ has \emph{challenge resolution $M'$} if there is $h:[M]\to[M']$ such that for
+\textbf{every coin string $\rho$ of $D$}, every $f$, every $\zeta$, and all
+$v,v'$ with $h(v)=h(v')$, the runs $D^{f}_{\rho}(v,\zeta)$ and
+$D^{f}_{\rho}(v',\zeta)$ issue the same sequence of query \emph{positions}; the
+output bit is unconstrained. Every $D$ has resolution $M$; resolution $1$ means
+that, for each fixed coin string, the query positions ignore the challenge value.
+We may take $h$ surjective without loss: replacing $[M']$ by $\mathrm{image}(h)$
+issues fewer runs below and only shrinks the budget.
+\end{definition}
+
+The coin quantifier is part of the definition, not a technicality. The weaker
+condition that the query positions be challenge-independent \emph{in law} defines
+a strictly larger class: at $N=M=2$ and $q=1$, the observer that flips $\rho$ and
+queries $(1,1)$ when $v\oplus\rho=1$ and $(2,2)$ otherwise has query position
+uniform on $\{(1,1),(2,2)\}$ for both challenge values, yet each of its two coin
+fixings has resolution $2$. Such an observer steers its probes by the challenge
+once its coins are fixed (exactly the behaviour Barrier~1 leaves open), and
+is not in the class $\kna$ ranges over.
+
+\begin{lemma}[the observer as a revealing rule]\label{lem:rr}
+Let $D$ be deterministic, $q$-query, challenge-oblivious, of resolution $M'$.
+Then the procedures ``$\mathcal A_\zeta$: for $j=1,\dots,M'$ in order, run
+$D^{f}(v_j,\zeta)$ for a fixed $v_j\in h^{-1}(j)$ (which exists, $h$ being
+surjective), inspecting each queried cell not already known'' form a revealing
+rule of budget $s=\min(qM',N^{2})$, with $\theta_{\zeta,f}(v):=D^{f}(v,\zeta)$.
+\end{lemma}
+
+\begin{proof}
+The procedure $\mathcal A_\zeta$ inspects one coordinate at a time, the next being a function
+of $\zeta$ and the values already seen: the loop and the representatives are
+fixed in advance, and inside run $j$ the next position is a function of
+$(v_j,\zeta)$ and previous answers. Each of the $M'$ runs issues at most $q$
+positions, so at most $qM'$ cells, and at most $N^{2}$ exist. Finally, for
+arbitrary $v$ with $j=h(v)$, the run $D^{f}(v,\zeta)$ issues exactly the
+positions run $j$ issued, all inspected and recorded, so its whole execution,
+hence its output bit, is reconstructible from
+$(v,\zeta,\mathcal S,f|_{\mathcal S})$. Therefore the entire function
+$\theta_{\zeta,f}$, and $p_{\theta_{\zeta,f}}$, is determined by
+$(\zeta,\mathcal S,f|_{\mathcal S})$.
+\end{proof}
+
+The resolution parameter is the whole difference between the settled and the open
+case. Lemma~\ref{lem:disc} needs the test \emph{as a function on all of} $[M]$,
+because the reference $p_\theta$ averages over the alphabet; so every value the
+observer might receive must have its query path revealed in advance, and an
+observer that steers by $v$ forces $M'=M$.
+
+\begin{lemma}[product mass of the revealed set]\label{lem:mass}
+For a revealing rule of budget $s\ge1$,
+$\Exp\bigl[\min(\Pi_{f,\zeta}(\mathcal S(f,\zeta)),1)\bigr]\le
+\mu(s):=\min\bigl(s\delta,\ 3(s\delta^{2})^{1/3},\ 1\bigr)$; for $s=0$ the left
+side is $0$.
+\end{lemma}
+
+\begin{proof}
+By Lemma~\ref{lem:prod}(1),
+$\Pi(\mathcal S)=\sum_{\vu\in\mathcal S}\pi^1(u_1)\pi^2(u_2)\le s\,m_1m_2$.
+Taking expectations and using Lemma~\ref{lem:prod}(3) gives the arm $s\delta$;
+the arm $1$ is trivial. For the third, fix $\theta\in(0,1]$, bound by $s\theta$ on
+$\{m_1m_2\le\theta\}$ and by $1$ off it, and use Lemma~\ref{lem:prod}(4):
+$\Exp[\min(\Pi(\mathcal S),1)]\le g(\theta):=s\theta+2\delta\theta^{-1/2}$. Then
+$g'(\theta)=s-\delta\theta^{-3/2}$ vanishes at $\theta^{*}=(\delta/s)^{2/3}$,
+which is $\le1$ since $s\ge1\ge\delta$, and $g''>0$; and
+$g(\theta^{*})=s^{1/3}\delta^{2/3}+2s^{1/3}\delta^{2/3}=3(s\delta^{2})^{1/3}$.
+\end{proof}
+
+By Remark~\ref{rem:corr} the bound $s\delta^{2}$ is \emph{not} available, and the
+exponent $1/3$ is exactly what the $\sqrt\theta$ of Lemma~\ref{lem:prod}(4)
+produces. Lemma~\ref{lem:mass} is tight at $s=1$ for that example.
+
+\section{Extraction}
+
+\begin{lemma}\label{lem:ident}
+For deterministic $D$ with associated $\theta_{\zeta,f}$,
+$\Prob{\Real=1}=\Exp_{(f,\zeta)}\bigl[\Exp_{\vx\sim\Pi_{f,\zeta}}[\theta_{\zeta,f}(f(\vx))]\bigr]$
+and $\Prob{\Real_0=1}=\Exp_{(f,\zeta)}[p_{\theta_{\zeta,f}}]$.
+\end{lemma}
+
+\begin{proof}
+Condition on $(H,\vz)=(f,\zeta)$. In both experiments $D$'s oracle is $f$, so its
+output on challenge $v$ is $\theta_{\zeta,f}(v)$. In $\Real$ the challenge is
+$f(\vx)$ with $\vx\sim\Pi_{f,\zeta}$ by Lemma~\ref{lem:prod}; in $\Real_0$ it is
+uniform and independent, with $\Exp_{v\sample[M]}[\theta(v)]=p_\theta$.
+\end{proof}
+
+So $\Real$ and $\Real_0$ differ in the challenge alone, the oracle being the true
+$H$ in both: the whole problem is the one-cell question \emph{is $f(\vx)$
+distributed like a fresh uniform value, to a reader who knows $\zeta$ and can
+probe $f$ in $q$ queries?}
+
+\begin{proposition}\label{prop:master}
+For every $\gamma_0\in(0,1)$ and every deterministic $q$-query
+challenge-oblivious $D$ of resolution $M'$,
+\[
+  \bigl|\Prob{\Real=1}-\Prob{\Real_0=1}\bigr|\le\gamma_0
+  +\sqrt{8\delta(\sigma'+\log\gamma_0^{-1})}+\mu\bigl(\min(qM',N^{2})\bigr).
+\]
+\end{proposition}
+
+\begin{proof}
+By Lemma~\ref{lem:ident} and the triangle inequality the left side is at most
+$\Exp[\Delta]$ with
+$\Delta(f,\zeta):=|\Exp_{\Pi}[\theta(f(\vx))-p_\theta]|$. Put
+$G_{f,\zeta}(\vu):=(\theta(f(\vu))-p_\theta)\ind[\vu\notin\mathcal S(f,\zeta)]\in[-1,1]$,
+so that, since $|\theta-p_\theta|\le1$,
+\[
+  \Delta(f,\zeta)\ \le\ \bigl|\Exp_{\Pi_{f,\zeta}}[G_{f,\zeta}]\bigr|
+  +\Pi_{f,\zeta}(\mathcal S(f,\zeta)),
+\]
+the two terms being an exhaustive split of the challenge cell. Lemma~\ref{lem:flat}
+bounds the first by the largest $|\Exp_{\Unif(B_1)\otimes\Unif(B_2)}[G]|$ over
+$|B_i|=k_i:=\lfloor1/m_i\rfloor$, and for such a rectangle that quantity is
+\[
+  \frac{1}{k_1k_2}\sum_{\vu\in R}G_{f,\zeta}(\vu)
+  =\frac{1}{k_1k_2}\sum_{\vu\in R\setminus\mathcal S(f,\zeta)}\bigl(\theta(f(\vu))-p_\theta\bigr),
+\]
+verbatim the quantity Lemma~\ref{lem:disc} controls; on the event $\mathcal E$ of
+that lemma it is at most $t(k_1,k_2)$. As $\Delta\le1$ always, splitting on
+$\mathcal E$ gives
+$\Exp[\Delta]\le\Prob{\mathcal E^{c}}+\Exp[t]+\Exp[\min(\Pi(\mathcal S),1)]$, all
+terms nonnegative so the indicators may be dropped; these are at most
+$\gamma_0$, \eqref{eq:Et}, and $\mu(s)$ by Lemmas~\ref{lem:rr} and~\ref{lem:mass}.
+\end{proof}
+
+\begin{theorem}[extraction, challenge-blind query positions]\label{thm:A}
+$\kna(q)\le5\sqrt{\sigma'\delta}+q\delta$, and
+$\kappa(0)\le5\sqrt{\sigma'\delta}$ with no restriction on the observer.
+\end{theorem}
+
+\begin{proof}
+Both $\kna(q)$ and $\kappa(0)$ are suprema over observers the statement permits
+to randomise, whereas Proposition~\ref{prop:master} is stated for deterministic
+$D$; by Lemma~\ref{lem:derand} the suprema are attained on deterministic
+observers and $D'$ inherits $D$'s challenge resolution, so restricting to
+deterministic resolution-$1$ observers loses nothing. If $\delta=1$ then
+$\sqrt{\sigma'\delta}\ge\sqrt2>1$ and there is nothing to prove; else take
+$\gamma_0:=\delta$ in Proposition~\ref{prop:master}. Since $\delta\ge1/N$ we get
+$\log\gamma_0^{-1}\le\log N\le\sigma'/2$, so the middle term is at most
+$\sqrt{12\sigma'\delta}\le3.47\sqrt{\sigma'\delta}$, and
+$\gamma_0=\delta\le\sqrt{\sigma'\delta}$ because $\delta\le1\le\sigma'$.
+Resolution $1$ gives $s\le q$ and $\mu(q)\le q\delta$. For $q=0$ we have $s=0$, and every
+observer has resolution $1$ vacuously.
+\end{proof}
+
+\begin{corollary}\label{cor:A}
+If $q^{+}\delta\le\sigma'$ then $\kna(q)\le6\sqrt{\sigma'q^{+}\delta}$. Outside
+that regime $q^{+}\delta>\sigma'\ge2$, so $\sqrt{\sigma'q^{+}\delta}>\sigma'>1$
+and the target bound is vacuous.
+\end{corollary}
+
+\begin{proof}
+Monotonicity gives $5\sqrt{\sigma'\delta}\le5\sqrt{\sigma'q^{+}\delta}$; and $q^{+}\delta\le\sigma'$
+gives $(q^{+}\delta)^{2}\le\sigma'q^{+}\delta$, i.e.
+$q\delta\le q^{+}\delta\le\sqrt{\sigma'q^{+}\delta}$.
+\end{proof}
+
+The corollary settles the statement's line that queries whose positions ignore the
+challenge value are almost free at every budget: their cost is the additive
+$q\delta$, with no multiplier on the leading term and no $\log M$.
+
+\begin{theorem}[extraction, unrestricted observers]\label{thm:B}
+$\kappa(q)\le5\sqrt{\sigma'\delta}+\mu(\min(qM,N^{2}))$ for every $q$.
+\end{theorem}
+
+\begin{proof}
+By Lemma~\ref{lem:derand} the supremum is attained on deterministic observers;
+apply Proposition~\ref{prop:master} to such a $D$ with $M'=M$ and
+$\gamma_0=\delta$, as in Theorem~\ref{thm:A}.
+\end{proof}
+
+\begin{corollary}\label{cor:B}
+$\kappa(q)\le6\sqrt{\sigma'q^{+}\delta}$ whenever $q^{+}\delta\le\sigma'$ and
+either $M\le\sqrt{\sigma'/(q\delta)}$ or
+$M\le\sigma'^{3/2}\sqrt{q/\delta}/27$. If $M\le\sigma'/\sqrt{27\delta}$ then one
+of the two holds for every $q\ge1$.
+\end{corollary}
+
+\begin{proof}
+The inequality $qM\delta\le\sqrt{\sigma'q^{+}\delta}$ follows from $qM^{2}\delta\le\sigma'$, and
+$3(qM\delta^{2})^{1/3}\le\sqrt{\sigma'q^{+}\delta}$ from
+$27qM\delta^{1/2}\le\sigma'^{3/2}q^{3/2}$. The first arm fails only if
+$q>\sigma'/(M^{2}\delta)$ and the second only if $q<729M^{2}\delta/\sigma'^{3}$;
+both fail at some $q$ only if $\sigma'^{4}<729M^{4}\delta^{2}$, i.e.
+$M>\sigma'/\sqrt{27\delta}$.
+\end{proof}
+
+\section{Presampling, and the decomposition}
+
+\begin{lemma}[presampling, oracle-indexed and consistent]\label{lem:P}
+Let $P\in\mathbb N$ and $\gamma\in(0,1)$. \emph{(For $M=1$ the set $\Fun$ is a singleton,
+so $\Real_0$ and $\Dec_0$ are the same experiment and the bound holds with left
+side $0$; the construction divides by $\log M$ and is stated for $M\ge2$.)} There
+is a family $\mathcal Y^{P,\gamma}=\{Y_{f,\zeta}\}$ indexed by $f\in\Fun$ and
+$\zeta\in\bits^{*}\times\bits^{*}$ (with $Y_{f,\zeta}$ uniform on $\Fun$ at
+every $\zeta$ outside the support of $\vz$, so the family is total, no experiment
+reaching such a $\zeta$), depending only on $(S_1,S_2,P,\gamma)$, in which every
+$Y_{f,\zeta}$ is a $P$-mixture consistent with $f$, indeed a single
+$P$-bit-fixing source, such that for every $q$ and every $q$-query observer
+taking $\vz$ and an independent uniform value of $[M]$,
+\[
+  \bigl|\Prob{\Real_0=1}-\Prob{\Dec_0=1}\bigr|\ \le\
+  \frac{q(\sigma+2+2\log\gamma^{-1})}{P}+2\gamma .
+\]
+\end{lemma}
+
+\begin{proof}
+\emph{Step 1: deficiency under randomised leakage.} For $\zeta$ with
+$\Prob{\vz=\zeta}>0$ let $\mu_\zeta$ be the law of $H$ given $\vz=\zeta$ and
+$S_\zeta:=N^{2}\log M-H_\infty(\mu_\zeta)$. Since
+$\mu_\zeta(f)=\Prob{H=f}\Prob{\vz=\zeta\mid H=f}/\Prob{\vz=\zeta}\le(|\Fun|\Prob{\vz=\zeta})^{-1}$,
+we get $S_\zeta\le\log(1/\Prob{\vz=\zeta})$. With
+$\bar S:=\sigma+2+\log\gamma^{-1}$ and $\mathcal B:=\{\zeta:S_\zeta>\bar S\}$,
+every $\zeta\in\mathcal B$ has $\Prob{\vz=\zeta}<\gamma2^{-(\sigma+2)}$, so
+$\Prob{\vz\in\mathcal B}<|\mathcal Z|\gamma2^{-(\sigma+2)}<\gamma$. This replaces
+the source's own expectation bound on the deficiency, which assumes the advice is
+a deterministic function of the oracle and fails here.
+
+\emph{Step 2: the family.} Fix $\zeta$ and set
+$\delta_\zeta:=(S_\zeta+\log\gamma^{-1})/(P\log M)$. If $\delta_\zeta>1$ then
+$(S_\zeta+\log\gamma^{-1})/P>\log M\ge1$, so the asserted bound exceeds
+$q\ge1$ and is vacuous for $q\ge1$, while for $q=0$ both experiments give the
+observer a uniform challenge and no oracle access; set $Y_{f,\zeta}$ uniform.
+(The governing condition $\delta_\zeta>1$ is $q$-free, so the family is still
+defined before $q$.) Otherwise apply the decomposition [CDGS, Claim~2] to
+$\mu_\zeta$ with parameter $\delta_\zeta$; since
+$(S_\zeta+\log\gamma^{-1})/(\delta_\zeta\log M)=P$ it yields
+$\mu_\zeta=\sum_j\lambda_jX_j+\lambda_{\mathrm{fin}}Y_{\mathrm{fin}}$ with
+$\lambda_{\mathrm{fin}}\le\gamma$, each $X_j$ a $(P,1-\delta_\zeta)$-dense
+source, all supports pairwise disjoint, and each $X_j$ fixing its set $I_j$,
+with $|I_j|\le P$, to values that every $f$ in its support takes. Let $Y_j$ be the
+corresponding $P$-bit-fixing source and define $Y_{f,\zeta}:=Y_j$ for the unique
+$j$ with $f\in\supp X_j$, and uniform otherwise. Consistency is immediate; the
+construction reads only $(f,\zeta)$ and the decomposition, which depends only on
+$(S_1,S_2,P,\gamma)$. Write $J=J(f,\zeta)$.
+
+\emph{Step 3: one component.} Fix $\zeta\notin\mathcal B$ with $\delta_\zeta\le1$
+and condition on $J=j$. Because the decomposition is of $\mu_\zeta$ itself,
+$\lambda_jX_j$ is the restriction of $\mu_\zeta$ to $\supp X_j$, so the
+conditional law of $H$ is exactly $X_j$; in $\Dec_0$ the oracle is drawn freshly
+from $Y_j$. The challenge is uniform and independent, so conditioning on it
+leaves a fixed $q$-query adaptive distinguisher between $X_j$ and $Y_j$;
+[CDGS, Claim~3] bounds its advantage by
+$q\delta_\zeta\log M=q(S_\zeta+\log\gamma^{-1})/P$, and averaging over the
+challenge preserves this.
+
+\emph{Step 4: averaging.} Averaging over $j$ and bounding the residue event, of
+conditional probability at most $\gamma$, by $1$; then averaging over $\zeta$,
+bounding $\mathcal B$'s contribution by $\Prob{\vz\in\mathcal B}<\gamma$ and
+using $S_\zeta\le\bar S$ off $\mathcal B$, gives the claim.
+\end{proof}
+
+\begin{theorem}\label{thm:C}
+With $\mathcal Y:=\mathcal Y^{P,\gamma/2}$, for every $q$ and every $q$-query
+challenge-oblivious $D$, writing
+$\varepsilon(D):=\bigl|\Prob{\Real=1}-\Prob{\Real_0=1}\bigr|$ for that same $D$,
+\[
+  \Adv_{\mathcal Y,D}\ \le\ \varepsilon(D)
+  +\frac{2(\sigma'+\log\gamma^{-1})q}{P}+\gamma+P\delta+q\delta .
+\]
+Since $\varepsilon(D)\le\kappa(q)$, the same holds with $\kappa(q)$ in place of
+$\varepsilon(D)$; but the $D$-relative form is what Theorem~\ref{thm:cprime}
+uses, and the inequality $\kappa(q)\le\kna(q)$ is false in general and nowhere
+needed.
+\end{theorem}
+
+\begin{proof}
+Interpolate $\mathsf G_0=\Real$, $\mathsf G_1=\Real_0$, $\mathsf G_2=\Dec_0$ and
+$\mathsf G_3=\Dec$.
+
+$|\mathsf G_0-\mathsf G_1|=\varepsilon(D)$ by definition, for the fixed $D$ the
+theorem is instantiated at; no supremum is taken here.
+
+$|\mathsf G_1-\mathsf G_2|$: Lemma~\ref{lem:P} with slack $\gamma/2$ gives
+$q(\sigma+2+2\log(2/\gamma))/P+\gamma$; as $N\ge2$ gives $\sigma+2\le\sigma'$ and
+$\sigma'\ge2$, the numerator is at most $2\sigma'+2\log\gamma^{-1}$. For $q\ge P$
+that term already exceeds $2\sigma'>1$, so no hypothesis $q<P$ is needed.
+
+$|\mathsf G_2-\mathsf G_3|\le P\delta+q\delta$: draw $H$, $(\vx,\vz)$ and $J$
+with fixed set $I_J$; let $H^{\circ}\sim Y_J$ and $U\sample[M]$ be independent of
+everything else; let $H^{*}$ be $H^{\circ}$ with its value at $\vx$ overwritten by
+$U$ when $\vx\notin I_J$. As $J$ is a function of $(H,\vz)$, the oracle $H^{\circ}$ is
+independent of $\vx$ given $(H,\vz,J)$; conditioning on $\vx=\vu\notin I_J$, the
+source $Y_J$ is uniform and independent at $\vu$, so both $H^{\circ}$ and
+$H^{*}$ are distributed as $Y_J$. Running $\mathsf G_3$ with oracle $H^{*}$ and
+$\mathsf G_2$ with oracle $H^{\circ}$ and challenge $U$, the two executions
+receive the same input on $\{\vx\notin I_J\}$, since there $H^{*}(\vx)=U$, and
+their oracles agree off $\vx$. So they diverge only if $\vx\in I_J$ or $D$ queries
+$\vx$; being identical up to the step before a first query at $\vx$, that event
+has equal probability in both and may be measured in $\mathsf G_2$. The statement
+document's lemma \emph{the fixed set misses the challenge} gives
+$\Prob{\vx\in I_J}\le P\delta$; its proof requires only that $\mathcal Y$
+depend on $(S_1,S_2,P,\gamma)$ alone, be indexed by $(f,\zeta)$, and have its
+component drawn independently of $\vx$ given $(H,\vz)$, all of which hold, $J$
+being a function of $(H,\vz)$. Its lemma \emph{the observer misses the challenge}
+gives $\Prob{\vx\in Q}\le q\delta$ in $\mathsf G_2$, its predictor being
+simulable there because the challenge is uniform and independent.
+\end{proof}
+
+\begin{theorem}[the conjecture, on the region reached]\label{thm:cprime}
+Suppose $q^{+}\delta\le\sigma'$, $P\le\sqrt{\sigma'/\delta}$, and either $D$ has
+challenge resolution $1$, or the hypothesis of Corollary~\ref{cor:B} holds (in
+particular if $M\le\sigma'/\sqrt{27\delta}$). Then with
+$\mathcal Y=\mathcal Y^{P,\gamma/2}$,
+\[
+  \Adv_{\mathcal Y,D}\ \le\
+  \frac{2(\sigma'+\log\gamma^{-1})q^{+}}{P}+8\sqrt{\sigma'q^{+}\delta}+\gamma,
+\]
+that is, the conjecture holds on that region with $c=2$ and $C=8$.
+\end{theorem}
+
+\begin{proof}
+We have $\varepsilon(D)\le6\sqrt{\sigma'q^{+}\delta}$: in the first branch $D$ has
+challenge resolution $1$, so $\varepsilon(D)\le\kna(q)$ and
+Corollary~\ref{cor:A} applies (equivalently, Proposition~\ref{prop:master}
+bounds $\varepsilon(D)$ directly at $M'=1$); in the second branch
+Corollary~\ref{cor:B} bounds $\kappa(q)\ge\varepsilon(D)$. Then
+$P\delta\le\sqrt{\sigma'\delta}\le\sqrt{\sigma'q^{+}\delta}$ by the hypothesis on
+$P$, and $q\delta\le q^{+}\delta\le\sqrt{\sigma'q^{+}\delta}$ by
+$q^{+}\delta\le\sigma'$. Summing, $6+1+1=8$.
+\end{proof}
+
+The family is built from $(P,\gamma)$ before $q$ and the bound holds for every
+$q$, so the statement's quantifier order is respected; and every $Y_{f,\zeta}$ is
+consistent with $f$, so the conclusion is the conjecture and not the weakening
+its remark on consistency describes.
+
+\section{Combination with the compression bound}
+
+For $q\ge1$, [CFHS, Theorem~3] with $\ell=2$, $2^{-k}=\delta$ and $q_D=q$ gives
+$\kappa(q)=O\bigl(\log M\cdot(q\delta^{2}(\sigma+2N))^{1/3}\bigr)$. Hence
+\[
+  \kappa(q)\le5\sqrt{\sigma'\delta}+\min\Bigl\{\mu(\min(qM,N^{2})),\
+  O\bigl(\log M\,(q\delta^{2}(\sigma+2N))^{1/3}\bigr)\Bigr\},
+\]
+and Theorem~\ref{thm:C} converts either arm. The arms are complementary:
+Theorem~\ref{thm:B} is smaller when $M\lesssim N\log^{3}M$, the compression arm
+when $M$ is very large relative to $N$; the latter also relaxes as $q$ grows,
+giving the target shape with no condition on $M$ once
+$q\gtrsim\log^{6}M(\sigma+2N)^{2}\delta/\sigma'^{3}$. What neither arm reaches is
+$M$ large together with $q$ small. Recorded against that source: its right-hand
+side vanishes at $q_D=0$ whereas $\kappa(0)>0$ in general, so it is invoked only
+for $q\ge1$, and its constant is not extracted, so this arm is asymptotic while
+everything else here is explicit.
+
+\section{What is not proved}\label{sec:barriers}
+
+\paragraph{Barrier 1: challenge-steered probes.} Uncovered:
+$M>\sigma'/\sqrt{27\delta}$ with $q$ in the window left by
+Corollary~\ref{cor:B} and the compression arm. The gap is not slack in the counting.
+Lemma~\ref{lem:disc} compares $\Exp_\Pi[\theta(f(\vx))]$ with $p_\theta$, an
+average over \emph{all} of $[M]$, so $\theta$ must be known everywhere; by
+Lemma~\ref{lem:rr} an observer that steers its probes by the challenge makes
+$\theta(v)$ depend on $q$ cells varying with $v$, so all $qM$ must be revealed
+before the test is fixed; and Lemma~\ref{lem:mass} is then tight for what it is
+given, because coordinatewise $\delta$-unpredictability does not yield
+$\Exp[m_1m_2]\le\delta^{2}$ (Remark~\ref{rem:corr}). An observer whose query
+positions are challenge-independent only \emph{in law}, steering once its coins
+are fixed, has per-coin resolution above $1$ and sits here rather than in
+Theorem~\ref{thm:cprime}'s first branch. Two exits, neither taken: replace the
+reference $p_\theta$ by $\theta(f'(\vx))$ for an independent copy $f'$ of $f$ off
+a single cell, which would cut the budget from $qM$ to $q$ at the price of
+proving Lemma~\ref{lem:disc} for a random, $f$-dependent reference; or bound
+$\Pi(\mathcal S)$ for \emph{reachable} query sets (unions of $M$
+decision-tree paths) rather than arbitrary $qM$-sets.
+
+\paragraph{Barrier 2: large $P$ with growing $q$.} Theorem~\ref{thm:C} loses
+$P\delta$ at $\mathsf G_2\to\mathsf G_3$, capping the range at
+$P\le\sqrt{\sigma'/\delta}$; the statement document names this as a separate open
+problem and nothing here improves it. The slack is identifiable: on
+$\{\vx\in I_J\}$, which is what costs $P\delta$, consistency makes the decomposed
+challenge $H^{*}(\vx)$ equal the real challenge $H(\vx)$, so the event does not
+harm $\Adv_{\mathcal Y,D}$ at all, only the route through the uniform-challenge
+worlds. A proof comparing $\mathsf G_3$ with $\mathsf G_0$ directly would not pay
+it.
+
+\section{External results used}
+
+\begin{itemize}
+\item \textbf{[CDGS, Claim~2]} (Coretti, Dodis, Guo, Steinberger, \emph{Random
+  Oracles and Non-Uniformity}, ePrint 2017/937, App.~A). \emph{A distribution on
+  $[M]^{n}$ with min-entropy deficiency $S$ is $\gamma$-close to a convex
+  combination of finitely many $(P',1-\delta)$-dense sources,
+  $P'=(S+\log1/\gamma)/(\delta\log M)$.} The paper states this for a uniform
+  variable conditioned on a deterministic function; its proof uses only the
+  min-entropy deficiency, and the form above is what that proof establishes. The
+  proof's structure (conditioning on $\{Y_I=y_I\}$ and recursing on
+  $\{Y_I\ne y_I\}$) also supplies the disjointness of the components'
+  supports, the fact that fixed values are values the sampled $f$ takes, and,
+  via its recursion invariant, that the decomposition is of the conditioned
+  distribution itself, so each component is its restriction and the residue's
+  mass is at most $\gamma$ measured under it and not under the uniform
+  distribution. All three are used in Lemma~\ref{lem:P}.
+\item \textbf{[CDGS, Claim~3]} (same paper). \emph{For a $(P',1-\delta)$-dense
+  source $X'$ and its corresponding $P'$-bit-fixing $Y'$, and any adaptive
+  $T$-query distinguisher, $|\Prob{D^{X'}=1}-\Prob{D^{Y'}=1}|\le T\delta\log M$.}
+\item \textbf{[CFHS, Lemma~3]} (Coretti, Farshim, Harasser, Southern,
+  \emph{Multi-Source Randomness Extraction and Generation in the ROM}, ePrint
+  2025/1258). \emph{For $k\in\mathbb R_{>0}$ with $2^{k}\in\mathbb N$, every
+  $k$-source is a convex combination of flat $k$-sources.}
+\item \textbf{[CFHS, Lemma~4.3]} \emph{$(n/k)^{k}\le\binom nk\le(en/k)^{k}$.}
+\item \textbf{[CFHS, Theorem~3]} \emph{For $\ell$ sources each
+  $(N^{\ell},2^{-k})$-unpredictable with unbounded oracle access and a
+  $q_D$-query distinguisher,
+  $\Adv^{\mathrm{mse}}=O(\ell\log M\sqrt[\ell+1]{q_D2^{-k\ell}(\sigma+\ell N)})$.}
+  Used only for the compression arm.
+\item \textbf{Hoeffding's inequality}, two-sided, for independent variables with
+  ranges of length $c_i$.
+\end{itemize}
+
+\section{Review status}\label{sec:review}
+
+This document has \textbf{not} been independently verified, and a reader should
+weigh it accordingly.
+
+Two rounds of adversarial review were run, six passes recording a verdict and two
+aborting on infrastructure. \textbf{No pass returned clean.} Five findings were
+upheld across the two rounds, of which two were serious; both were repaired, and
+both were of the same species: a claim left underdetermined rather than false,
+each recoverable from machinery already present. Zero numbered conclusions were
+falsified at any point.
+
+Three limitations of that review are material. Every referee, the adjudicator and
+the author are the same vendor's models, so the errors that survive are the
+correlated ones by construction; both serious findings came from the strongest
+model and were missed by weaker ones examining the same lines. No pass satisfied
+the campaign's own blindness condition, which requires a process carrying none of
+the project context and was unavailable in this environment. And no protocol
+document existed, so every referee ran on instructions written by the session
+that produced the proof.
+
+The text above is the third revision. Its own tally is empty: nothing in it has
+been reviewed, and the repair that produced it touched
+Definition~\ref{def:res}, on which every resolution argument depends.
+
+\end{document}

@@ -89,6 +89,9 @@ TOPIC_DESCRIPTIONS = {
     "one-shot-signatures": "Quantum signature-like primitives that can be used at most once, related to no-cloning.",
     "search-trees": "Optimal construction of search trees over structured query distributions.",
     "direct-product-theorems": "Theorems on whether solving many independent instances of a hard problem is proportionally harder than solving one.",
+    "circular-security": "Whether an encryption scheme stays secure when an encryption of its own secret key -- or a cycle of keys encrypting each other -- is published. The assumption every bootstrapping-based homomorphic scheme rests on, and the subject of a long line of counterexamples.",
+    "fully-homomorphic-encryption": "Encryption supporting arbitrary computation on ciphertexts: its definitions, what composing evaluations requires, and what bootstrapping costs.",
+    "presampling": "Replacing an oracle conditioned on an adversary's auxiliary input by a mixture of sources fixed on a few coordinates, so that non-uniform security follows from a bound in the simpler bit-fixing model.",
     "quantum-encryption-notions": "Relations among competing definitions of IND-CPA-style security against quantum adversaries.",
 }
 

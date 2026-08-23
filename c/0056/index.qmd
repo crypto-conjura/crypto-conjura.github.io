@@ -1,0 +1,105 @@
+---
+id: "0056"
+problem: quantum-presampling
+draft: quantum-presampling-bit-fixing
+title: "Classical Presampling Against Quantum Queries"
+short_title: "Classical presampling, quantum queries"
+areas: [quantum, idealized-models, foundations]
+topics: [presampling, quantum-random-oracle-model, random-oracle-model, quantum-query-complexity]
+model: qrom
+form: lower-bound
+assumption_class: unconditional
+category: research-open
+revision: 1
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: barrier
+  by: ai
+  note: "The source paper's own Theorem 4 is the barrier: this conjecture, even weakened so that the dependence on the advice length is an arbitrary function and even restricted to a single advice bit, implies the folklore conjecture that any quantum algorithm can be approximated classically on most inputs -- a question open since at least 1999 and the target of the Aaronson-Ambainis programme, which after twenty years is proved only for restricted classes. So no proof is reachable without settling that first. Refutation is unobstructed but equally unattempted: it would need a quantum distinguisher exploiting global structure that no classical pre-fixing of P coordinates can imitate, and no candidate has been proposed."
+status_summary: "Open, and provably hard to prove: the source's Theorem 4 shows it implies a central open problem in quantum computing. No refutation has been attempted either, and the source takes no position on which way it goes -- it states the conjecture in order to show that the classical technique cannot simply be transplanted."
+status_updated: 2026-08-23
+lean:
+  mode: none
+sources:
+  - {cite: "Guo, Li, Liu, Zhang, Unifying Presampling via Concentration Bounds, IACR ePrint 2020/1589; TCC 2021, LNCS 13042, pp. 177-208", url: "https://eprint.iacr.org/2020/1589"}
+  - {cite: "Coretti, Dodis, Guo, Steinberger, Random Oracles and Non-Uniformity, EUROCRYPT 2018, Part I, LNCS 10820, pp. 227-258", url: "https://eprint.iacr.org/2017/937"}
+  - {cite: "Aaronson, Ambainis, The Need for Structure in Quantum Speedups, ITCS 2011, pp. 338-352", url: "https://arxiv.org/abs/0911.0996"}
+statement_sha: "7a44351f4115236117f586cf20c11dce1c9278f2cbebdff4738c0cb2a670852e"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+<!-- topics:start -->
+<div class="cj-tags cj-page-topics"><a class="cj-tag cj-tag-topic" href="/problems/by-topic/presampling/">Presampling</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/quantum-query-complexity/">Quantum Query Complexity</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/quantum-random-oracle-model/">Quantum Random Oracle Model</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/random-oracle-model/">Random Oracle Model</a></div>
+<!-- topics:end -->
+
+Presampling is the reason non-uniform security proofs in the random oracle model are tractable at all: instead of reasoning about an adversary holding $S$ bits of arbitrary advice about the whole oracle, one reasons about an adversary facing an oracle that was fixed in advance at $P \approx ST$ points and is uniform elsewhere, and the two are indistinguishable to within $ST/P$. Everything about the classical statement suggests it should carry over to superposition queries. It does not carry over cheaply, and this page is the precise sense in which: even a badly weakened quantum version would settle a question about quantum speedups that has been open since before the millennium.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [LaTeX source](latex/main.tex) · Formal statement — *not yet formalized*
+
+An oracle $O : [N] \to [M]$ is an element of $[M]^{N}$, so a distribution over oracles is an **$(N,M)$-source**. Such a source is **$P$-bit-fixing** if it is fixed on at most $P$ coordinates and uniform on the rest. Write $\mathcal{A}^{Y}(z)$ for a distinguisher run on input $z$ with oracle access to an oracle drawn from the source $Y$.
+
+**Classical presampling (Coretti–Dodis–Guo–Steinberger; the source's Lemma 3).** Let $X$ be uniform over $[M]^{N}$ and $Z := f(X)$ for an arbitrary $f : [M]^{N} \to \{0,1\}^{S}$. For any $\gamma > 0$ and $P \in \mathbb{N}$ there is a family $\{Y_{z}\}_{z \in \{0,1\}^{S}}$ of convex combinations of $P$-bit-fixing $(N,M)$-sources such that every classical distinguisher $\mathcal{D}$ taking an $S$-bit input and querying at most $T < P$ coordinates satisfies
+$$\bigl|\Pr[\mathcal{D}^{X}(f(X)) = 1] - \Pr[\mathcal{D}^{Y_{f(X)}}(f(X)) = 1]\bigr| \le \frac{(S + \log 1/\gamma)\cdot T}{P} + \gamma.$$
+
+**Conjecture (the source's Conjecture 4).** Let $X$ be distributed uniformly over $[M]^{N}$ and $Z := f(X)$, where $f : [M]^{N} \to \{0,1\}^{S}$ is an arbitrary function. For any $P \in \mathbb{N}$, there exists a family $\{Y_{z}\}_{z \in \{0,1\}^{S}}$ of convex combinations $Y_{z}$ of $P$-bit-fixing $(N,M)$-sources such that for any quantum distinguisher $\mathcal{A}$ taking an $S$-bit input and making $T$ quantum queries of its oracle,
+$$\bigl|\Pr[\mathcal{A}^{X}(f(X)) = 1] - \Pr[\mathcal{A}^{Y_{f(X)}}(f(X)) = 1]\bigr| \le h(S) \cdot T \cdot \left(\frac{\log M}{P}\right)^{C}.$$
+Here $C$ is a universal constant and $h : \mathbb{N} \to \mathbb{R}^{+}$ can be any function.
+
+**Three notes on reading it.** *(i) The bound is deliberately generous.* The source: "this conjecture is weaker than Section 2.5 in the sense that the dependency on $S$ can be arbitrary, but Lemma 3 is polynomial in $S$". There is also no additive slack term $\gamma$. *(ii) $C$ and $h$ are existentially quantified*, which is what makes it weaker in the way the source says; they are printed in a sentence after the display rather than inside the statement, so this is a reading. Note that $T$ appears to the first power, outside the $C$-th power, exactly as printed. *(iii) The source is not asserting it.* The conjecture appears in a section titled "Barriers for Leveraging Presampling Techniques" in order to be shown hard, and the paper takes no position on whether it is true.
+
+### Sources
+
+- Guo, Li, Liu and Zhang. [*Unifying Presampling via Concentration Bounds*](https://eprint.iacr.org/2020/1589). IACR ePrint 2020/1589; TCC 2021, LNCS 13042, pp. 177–208. The conjecture is Conjecture 4, p. 17 of the ePrint, in §3; the barrier is its Theorem 4, same page; $(N,M)$-source and $P$-bit-fixing are its Definitions 7 and 8 and the classical lemma its Lemma 3, all p. 13; the discussion of what the ideal version would buy is pp. 5–6, and the "fix quantumly" remark p. 19.
+- Coretti, Dodis, Guo and Steinberger. [*Random Oracles and Non-Uniformity*](https://eprint.iacr.org/2017/937). EUROCRYPT 2018. The classical presampling bound quoted above.
+- Aaronson and Ambainis. [*The Need for Structure in Quantum Speedups*](https://arxiv.org/abs/0911.0996). ITCS 2011. The conjecture the barrier runs into.
+
+## Proof
+
+View PDF — *no proof written yet* · LaTeX source — *no proof written yet* · Formal proof — *not yet formalized*
+
+Open, with a published barrier against one direction and no attempt at the other.
+
+**The barrier, in the source's Theorem 4.** Conjecture 4 implies the source's Conjecture 3, which it shows is an equivalent form (following an observation of Keller and Klein) of the folklore Conjecture 1: for every $T$-query quantum algorithm and every $\varepsilon, \delta > 0$ there is a deterministic classical algorithm making $\mathrm{poly}(T, 1/\varepsilon, 1/\delta)$ queries that approximates the quantum algorithm's acceptance probability to within $\varepsilon$ on a $(1-\delta)$ fraction of inputs. The proof is short and worth knowing, because it explains why weakening the conjecture does not help: take $f$ to be the *single bit* indicating whether the distinguisher's acceptance probability on the sampled oracle exceeds its mean by $\sigma/2$, where $\sigma^{2}$ is the variance; a Chebyshev-style argument makes that bit fire with probability $\ge 3\sigma^{2}/8$; the conjecture applied with $S = 1$ then produces a $P$-bit-fixing source on which the acceptance probability is still high, with $P = O((h(1) T/\sigma^{3})^{1/C})$, which is a bit-fixing source of the size Conjecture 3 asks for. Only $S = 1$ is used, so no relaxation in the advice length escapes.
+
+**What that leaves.** The source's own summary: "the natural extension of Lemma 3 does not work in the quantum world; otherwise, we can prove AA conjecture". Its response is to change the model rather than the technique — it re-characterizes the classical $P$-bit-fixing model as "the oracle distribution conditioned on a $P$-query algorithm accepting", which generalizes verbatim to a $P$-query *quantum* algorithm, and proves an optimal presampling theorem into that quantum bit-fixing model. The remaining gap is named in one sentence: "To overcome the barrier, we may need to 'quantumly' fix $P$ input-output pairs and avoid the AA conjecture barrier. However, it is not clear how to 'fix quantumly' or 'fix in superposition'".
+
+**What a refutation would look like, and why nobody has tried.** A counterexample is an advice function $f$, a parameter $P$, and a quantum distinguisher separating the auxiliary-input distribution from *every* convex combination of $P$-bit-fixing sources by more than the bound allows — a distinguisher exploiting global structure in a random oracle that no classical pre-fixing of $P$ coordinates can imitate. Nothing in Theorem 4 obstructs this: the barrier is entirely on the proving side. The reason the direction is unexplored is presumably that the quantum bit-fixing model already gives the applications, so the classical version stopped being needed the moment the source found its way around it.
+
+**Note what a refutation would and would not settle.** It would not touch the Aaronson–Ambainis conjecture, since the implication runs the other way. It would confirm that the quantum bit-fixing detour is necessary rather than merely convenient — which is currently believed on the strength of one barrier and no counterexample.
+
+## Discussion
+
+**Why it matters.** Presampling is a convenience theorem whose value is measured in how many hard proofs it makes easy, and the source is concrete about the case it would settle: "If the ideal presampling holds, we can get the lower bound of function inversion in the AI-QROM easily, without using any involved techniques" (p. 5), the two cases being, over the page break, "either the challenge image is in one of the fixed coordinates (with probability $ST/N$), or it is outside the fixed coordinates, in which we argue the success probability by simply using the existing lower bound of Grover's search" (p. 6). That is a two-case argument replacing the compressed-oracle and multi-instance machinery of Chung–Guo–Liu–Qian. The barrier says that convenience has a price nobody knows how to pay.
+
+**It is also a statement about quantum advice that reads as a statement about quantum algorithms.** The content of Theorem 4 is that classically pre-fixing coordinates is *equivalent in difficulty* to classically simulating a quantum algorithm on most inputs — a connection between a cryptographic proof technique and a question in quantum query complexity that was not visible before this paper. Anyone who cares about the Aaronson–Ambainis programme has a second, cryptographic, formulation of it here.
+
+**What a reviewer should be suspicious of, in order.** The quantifier reading for $C$ and $h$, which is inferred from the sentence that the conjecture is weaker than the classical lemma rather than printed in the statement — a reader who quantifies $C$ universally has a stronger statement and a different page. Then the absolute-value bars in both displays, which the PDF's text layer drops and which were confirmed by rendering p. 17 of the source at 150 dpi. Then the claim that no later work addresses the classically-bit-fixed version, which is a targeted search rather than a survey.
+
+**Checked against the literature, 2026-08-23.** Liu, *Non-uniformity and Quantum Advice in the Quantum Random Oracle Model* (EUROCRYPT 2023; arXiv:2210.06693), was read directly: it builds on the *quantum* bit-fixing model of the source — its §4.1 recalls the definitions "adapted from [GLLZ21]" — and neither states nor addresses Conjecture 4. Akshima, Besselman, Chung, Guo and Yang, *Tight Quantum Time-Space Tradeoffs for Permutation Inversion* (arXiv:2510.12112, October 2025), was also read directly: it works in the same quantum bit-fixing model, by way of representation theory rather than presampling, and settles two of the source's neighbours — the tight AI-QRPM bound and, as its Lemma 2, the source's own Conjecture 7 — but does not touch this one. On the far side of the barrier the Aaronson–Ambainis conjecture remains open: proved for completely bounded block-multilinear forms by Bansal, Sinha and de Wolf (arXiv:2203.00212) and for a non-negligible fraction of random restrictions by Bhattacharya (arXiv:2402.13952, ITCS 2025). **This is a targeted check, not an exhaustive sweep.**
+
+## Open obligations
+
+- [ ] Settle the quantifier reading of $C$ and $h$ against the TCC 2021 proceedings version, which may phrase Conjecture 4 differently from the ePrint read here.
+- [ ] Check whether the barrier survives if the bit-fixing sources are allowed to depend on the distinguisher, or if the family $\{Y_{z}\}$ is allowed to depend on $T$. Both are natural weakenings the source does not consider, and either might escape the $S = 1$ argument.
+- [ ] Look for a counterexample. The refuting direction carries no barrier at all and has, as far as this page can tell, never been attempted.
+- [ ] Confirm that no application of the quantum bit-fixing theorem has quietly established the classical version as a corollary.
+- [ ] Prove or refute the statement.
+- [ ] Formalize the statement in Lean; nothing here has been formalized.
+
+:::

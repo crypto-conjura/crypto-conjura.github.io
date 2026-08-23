@@ -1,0 +1,302 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  Micciancio's Conjecture 2: every encryption scheme has a partner
+%  scheme with which it can safely publish a two-scheme key cycle.
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{A SAFE TWO-SCHEME KEY CYCLE FOR EVERY SCHEME}
+
+\newcommand{\Gen}{\mathsf{Gen}}
+\newcommand{\Enc}{\mathsf{Enc}}
+\newcommand{\Dec}{\mathsf{Dec}}
+\newcommand{\Eval}{\mathsf{Eval}}
+\newcommand{\Msp}{\mathcal{M}}
+\newcommand{\Csp}{\mathcal{C}}
+\newcommand{\Ksp}{\mathcal{K}}
+\newcommand{\Fset}{\mathcal{F}}
+\newcommand{\secpar}{\kappa}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{A Safe Two-Scheme Key Cycle for Every Encryption Scheme}
+\cjsubtitle{Can every public-key encryption scheme be paired with a
+  partner that makes a $2$-cycle safe to publish?}
+\cjstatus{Statement: AI-written from Daniele Micciancio,
+  \emph{Fully Composable Homomorphic Encryption}, IACR ePrint
+  2024/1545 (2 October 2024); published in IACR Communications in
+  Cryptology 2(1), 8 April 2025. Not yet checked by a human. Open in
+  both directions: the known circular-security counterexamples are all
+  of the opposite quantifier shape, exhibiting particular pairs of
+  schemes whose cycle is insecure, and the source paper says explicitly
+  that they do not rule this out.}
+\cjcategory{\emph{Public-Key Encryption}, \emph{Foundations}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+Publishing an encryption of a secret key under its own public key --- a
+key cycle --- is not safe in general: there are schemes that are
+perfectly secure until the cycle is published and completely broken
+afterwards. This conjecture asks for something weaker and, as far as
+anyone knows, still possible. Take any public-key encryption scheme
+$\mathsf{E}$. May one always find a second, possibly quite different
+scheme $\mathsf{E}'$ such that the two-step cycle --- $\mathsf{E}$'s
+secret key encrypted under $\mathsf{E}'$, and $\mathsf{E}'$'s secret
+key encrypted under $\mathsf{E}$ --- can be published without harming
+$\mathsf{E}$? The partner scheme is chosen after seeing $\mathsf{E}$
+and is not required to be homomorphic or to be good for anything else.
+The known counterexamples do not settle this, because they build a
+\emph{pair} of schemes that break each other, whereas here the pair is
+chosen to cooperate.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+Gentry's bootstrapping~\cite{Gen09} makes a homomorphic encryption
+scheme composable by publishing $\Enc_{pk}(sk)$: an encryption of the
+secret key under its own public key. Its security therefore rests on a
+circular security assumption, and the source paper's Theorem 6 isolates
+exactly that dependency by recasting bootstrapping as a transformation
+from a circular-secure, non-composable scheme into a fully composable
+one.
+
+Circular security does not come for free. A long line of
+work~\cite{KRW15,KW16,AP16,GKW17a,GKW17b,HK17} constructs IND-CPA
+secure schemes that are broken as soon as a key cycle involving them is
+published --- for cycles of length $1$, of length $2$, and of arbitrary
+length. The source paper draws the consequence for bootstrapping in one
+sentence: ``Previous results have shown how to build encryption schemes
+$\Enc$ such that publishing such a cycle is insecure. So, one cannot
+achieve full composability generically by publishing such an encryption
+cycle for any scheme $\Enc$''.
+
+\paragraph{The gap those counterexamples leave.}
+Theorem 6 generalizes from a $1$-cycle $\Enc_{pk}(sk)$ to longer cycles
+$\Enc_{pk_{1}}(sk_{2}), \dots, \Enc_{pk_{n}}(sk_{1})$, and --- this is
+the observation the conjecture rests on --- the schemes at the
+different steps of the cycle need not be the same one. The source
+paper: ``However, for the purpose of applying (a generalization of)
+Theorem 6 it is not necessary to use the same encryption scheme at
+every step of the cycle''. It also notes that the second scheme carries
+no homomorphic burden: ``Note that the new (existentially quantified)
+scheme $\Enc'$ is not required to be homomorphic''.
+
+Concretely, for bootstrapping it would be enough to publish a $2$-cycle
+$\Enc_{pk}(sk')$, $\Enc'_{pk'}(sk)$ across two schemes. Given those two
+ciphertexts as key material and an input ciphertext
+$c'' = \Enc_{pk}(m)$, one bootstraps $c''$ by homomorphically
+evaluating, on $\Enc_{pk}(sk')$, the map $sk' \mapsto
+\Dec_{\Dec_{sk'}(c')}(c'')$. The source paper's argument that the known
+separations do not apply is a distributional one: this ``is different
+from computing a simple cycle $\Enc_{pk}(sk)$ directly, because the
+evaluated ciphertext follows a different distribution. So, it is not
+ruled out by previous separation results, and we conjecture the
+following''.
+
+\paragraph{Quantifier shape is the whole difficulty.}
+The counterexamples in the literature are of the form: \emph{there
+exists} a scheme (or a pair of schemes) whose cycle is insecure. The
+conjecture is: \emph{for every} scheme \emph{there exists} a partner
+making the cycle secure. Neither implies anything about the other. To
+refute the conjecture one would have to construct a single scheme
+$\mathsf{E}$ that is poisoned against \emph{every} possible partner
+$\mathsf{E}'$ --- a universally uncooperative scheme --- and no
+technique for that is known. To prove it one would have to build, from
+an arbitrary $\mathsf{E}$, a partner tailored to it; the natural
+attempts run into the same self-reference that makes circular security
+hard in the first place.
+
+\paragraph{What settling it would give.}
+The source is careful about what a proof would and would not deliver:
+``Note that this Conjecture does not by itself imply the existence of
+composable FHE schemes. The reason is that for any homomorphic
+encryption scheme $\Enc$ (capable of evaluating functions in a given
+set $\Fset$), one may select a scheme $\Enc'$ such that the required
+computation $sk' \mapsto \Dec_{\Dec_{sk'}(c')}(c'')$ is not in
+$\Fset$''. The partner might, in other words, be too complicated to
+bootstrap with. What a proof \emph{would} give is stated in the next
+sentence --- ``interesting information about the feasibility of
+achieving circular security in a generic way'' --- and one concrete
+corollary: ``if the starting scheme $\Enc$ is (non-composable) fully
+homomorphic (i.e., $\Fset$ is the set of all possible functions), this
+would be enough to achieve full composability''. That is, for a scheme
+that can already evaluate everything, the conjecture closes the gap to
+composable FHE\@.
+
+\paragraph{Variants the source records.}
+``Several variants of this conjecture are possible. For example, one
+may consider cycles of length greater than 2, or set $\Enc'$ to a
+private key encryption scheme where the side information is
+$\Enc'_{sk'}(sk), \Enc_{pk}(sk')$, or consider the special case of
+encryption schemes that encrypt their messages bit by bit''. Only the
+$2$-cycle public-key form is stated below; the variants are separate
+statements, and choosing one of them is not the same problem.
+
+\section{Notation and parameters}\label{sec:notation}
+
+\begin{itemize}
+\item $\secpar$ is the security parameter. A scheme's message space
+  $\Msp$ is finite and of fixed length; $\Ksp$ is its secret-key space.
+\item $\Enc^{*}$ is the componentwise extension of $\Enc$ to message
+  vectors, $\Enc^{*}(pk, (m_{1}, \dots, m_{w})) = (\Enc(pk, m_{1}),
+  \dots, \Enc(pk, m_{w}))$, so that a secret key encoded as a vector of
+  messages can be encrypted.
+\item $\psi : \Ksp \to \Msp^{k}$ and $\psi' : \Ksp' \to (\Msp')^{k'}$
+  are injective key encodings: $\psi$ encodes $\mathsf{E}$'s secret key
+  as a vector of $\mathsf{E}'$-messages, $\psi'$ encodes $\mathsf{E}'$'s
+  secret key as a vector of $\mathsf{E}$-messages. The source writes
+  $\Enc'_{pk'}(sk)$ and $\Enc_{pk}(sk')$ and leaves the encodings
+  implicit; they are named here only so that the two ciphertexts are
+  well typed.
+\item Advantages are asymptotic in $\secpar$ and ``negligible'' has its
+  usual meaning; see Remark~\ref{rem:advantage} for the source's own
+  concrete measure of advantage.
+\end{itemize}
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{definition}[Encryption scheme, valid]\label{def:scheme}
+A public key encryption scheme with message space $\Msp$ is a triple of
+probabilistic polynomial-time algorithms $(\Gen, \Enc, \Dec)$ where
+$(sk, pk) \gets \Gen(\secpar)$, $c \gets \Enc(pk, m)$ for $m \in \Msp$,
+and $\Dec(sk, c) \in \Msp \cup \{\bot\}$. It is \emph{valid} if
+$\Dec(sk, \Enc(pk, m)) = m$ holds with probability $1$ for every $m \in
+\Msp$ and every $(sk, pk) \gets \Gen(\secpar)$.
+\end{definition}
+
+\begin{definition}[IND-CPA]\label{def:indcpa}
+$(\Gen, \Enc, \Dec)$ is IND-CPA secure if every probabilistic
+polynomial-time adversary has negligible advantage in the game: sample
+$b \gets \{0,1\}$ and $(sk, pk) \gets \Gen(\secpar)$; the adversary,
+given $pk$, outputs $m_{0}, m_{1} \in \Msp$ of equal length, receives
+$c \gets \Enc(pk, m_{b})$, and outputs a guess for $b$.
+\end{definition}
+
+\begin{definition}[The two-scheme cycle]\label{def:cycle}
+Let $\mathsf{E} = (\Gen, \Enc, \Dec)$ and $\mathsf{E}' = (\Gen', \Enc',
+\Dec')$ be encryption schemes with message spaces $\Msp$, $\Msp'$ and
+secret-key spaces $\Ksp$, $\Ksp'$, and let $\psi : \Ksp \to
+(\Msp')^{k}$ and $\psi' : \Ksp' \to \Msp^{k'}$ be injective encodings.
+The \emph{$(\mathsf{E}, \mathsf{E}')$-cycle scheme} is
+$(\widehat\Gen, \widehat\Enc, \Dec)$ where
+\[
+  \widehat\Gen(\secpar) =
+  \bigl(sk,\ (pk,\ pk',\ \Enc^{*}(pk, \psi'(sk')),\
+  (\Enc')^{*}(pk', \psi(sk)))\bigr),
+\]
+with $(sk, pk) \gets \Gen(\secpar)$ and $(sk', pk') \gets
+\Gen'(\secpar)$ drawn independently, and $\widehat\Enc$ ignores
+everything but $pk$: $\widehat\Enc(\cdot, m) = \Enc(pk, m)$.
+Decryption is $\mathsf{E}$'s own $\Dec$.
+\end{definition}
+
+\begin{conjecture}[Micciancio, as printed]\label{conj:printed}
+For any (public key) encryption scheme $\Enc$ there is a (possibly
+different) encryption scheme $\Enc'$ such that $\Enc(pk, \cdot)$ is
+secure in the presence of side information $\Enc'_{pk'}(sk),
+\Enc_{pk}(sk')$ for a randomly chosen key pair $(pk', sk')$.
+\end{conjecture}
+
+\begin{conjecture}[One formalization]\label{conj:formal}
+For every valid, IND-CPA secure public key encryption scheme
+$\mathsf{E}$ there exist a valid encryption scheme $\mathsf{E}'$ and
+injective encodings $\psi, \psi'$ such that the
+$(\mathsf{E}, \mathsf{E}')$-cycle scheme of
+Definition~\ref{def:cycle} is IND-CPA secure.
+\end{conjecture}
+
+\begin{remark}[A degenerate reading to exclude]\label{rem:degenerate}
+Conjecture~\ref{conj:printed} is trivially true if $\mathsf{E}'$ is
+allowed to be an arbitrary triple of algorithms in the sense of
+Definition~\ref{def:scheme} without the validity requirement: take
+$\Enc'$ to output a constant. Then $\Enc'_{pk'}(sk)$ carries no
+information about $sk$, and $\Enc_{pk}(sk')$ is an encryption of an
+independent random string, which IND-CPA security of $\mathsf{E}$ already
+covers. Nothing is cyclic about it. Conjecture~\ref{conj:formal}
+therefore requires $\mathsf{E}'$ to be \emph{valid} --- so that
+$\Enc'_{pk'}(sk)$ really does determine $sk$ to a holder of $sk'$ ---
+which is also what the intended application needs, since bootstrapping
+has to recover $sk$ by decrypting that ciphertext. The source does not
+spell this out, and a reader should treat the requirement as part of
+the statement rather than as pedantry.
+\end{remark}
+
+\begin{remark}[Two more choices made here]\label{rem:reading}
+The printed conjecture says ``for any (public key) encryption scheme
+$\Enc$'', with no security hypothesis on $\Enc$;
+Conjecture~\ref{conj:formal} restricts to IND-CPA secure $\mathsf{E}$,
+without which the conclusion is false for trivial reasons. And the
+printed conjecture requires nothing of $\mathsf{E}'$ beyond validity:
+in particular it is not required to be IND-CPA secure, though any
+$\mathsf{E}'$ witnessing the conjecture must at least not leak $sk$
+outright.
+\end{remark}
+
+\begin{remark}[The source's advantage
+  convention]\label{rem:advantage}
+The source measures IND-CPA advantage as $\delta = (\beta -
+\bar\beta)^{2}/(\beta + \bar\beta)$, where $\beta = \Pr[b' = b]$ and
+$\bar\beta = \Pr[b' = 1-b]$, following the bit-security definition of
+Micciancio and Walter, and lets the adversary output $\bot$ to express
+low confidence. For adversaries that always output a bit this is the
+square of the usual distinguishing gap, so the conjecture is the same
+statement under either convention.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem[AP16]{AP16}
+Navid Alamati and Chris Peikert.
+\emph{Three's compromised too: circular insecurity for any cycle length
+from (ring-)LWE}.
+CRYPTO 2016, Part II, LNCS 9815, pp.\ 659--680. Springer, 2016.
+
+\bibitem[Gen09]{Gen09}
+Craig Gentry.
+\emph{Fully homomorphic encryption using ideal lattices}.
+STOC 2009, pp.\ 169--178. ACM, 2009.
+
+\bibitem[GKW17a]{GKW17a}
+Rishab Goyal, Venkata Koppula and Brent Waters.
+\emph{Separating IND-CPA and circular security for unbounded length key
+cycles}.
+PKC 2017, Part I, LNCS 10174, pp.\ 232--246. Springer, 2017.
+
+\bibitem[GKW17b]{GKW17b}
+Rishab Goyal, Venkata Koppula and Brent Waters.
+\emph{Separating semantic and circular security for symmetric-key bit
+encryption from the learning with errors assumption}.
+EUROCRYPT 2017, Part II, LNCS 10211, pp.\ 528--557. 2017.
+
+\bibitem[HK17]{HK17}
+Mohammad Hajiabadi and Bruce M.\ Kapron.
+\emph{Toward fine-grained blackbox separations between semantic and
+circular-security notions}.
+EUROCRYPT 2017, Part II, LNCS 10211, pp.\ 561--591. 2017.
+
+\bibitem[KRW15]{KRW15}
+Venkata Koppula, Kim Ramchen and Brent Waters.
+\emph{Separations in circular security for arbitrary length key
+cycles}.
+TCC 2015, Part II, LNCS 9015, pp.\ 378--400. Springer, 2015.
+
+\bibitem[KW16]{KW16}
+Venkata Koppula and Brent Waters.
+\emph{Circular security separations for arbitrary length cycles from
+LWE}.
+CRYPTO 2016, Part II, LNCS 9815, pp.\ 681--700. Springer, 2016.
+
+\bibitem[Mic24]{Mic24}
+Daniele Micciancio.
+\emph{Fully composable homomorphic encryption}.
+IACR Cryptology ePrint Archive, Report 2024/1545, 2024. Published in
+IACR Communications in Cryptology 2(1), 2025.
+
+\end{conjurabibliography}
+
+\end{document}

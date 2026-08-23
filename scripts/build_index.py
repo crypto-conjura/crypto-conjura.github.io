@@ -97,6 +97,7 @@ TOPIC_SLUGS = {
     "average-case-hardness", "expander-graphs", "garbled-circuits",
     "witness-encryption", "one-shot-signatures", "search-trees",
     "direct-product-theorems", "quantum-encryption-notions",
+    "circular-security", "fully-homomorphic-encryption", "presampling",
 }
 
 MODELS = {"rom", "prom", "icm", "ggm", "qrom", "standard", "other"}

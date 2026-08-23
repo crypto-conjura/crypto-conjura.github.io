@@ -1,0 +1,107 @@
+---
+id: "0054"
+problem: circular-security-and-composability
+draft: composable-fhe-circular-security
+title: "Every Fully Composable Homomorphic Encryption Scheme Yields a Circular-Secure One"
+short_title: "Composability implies circular security"
+areas: [homomorphic-encryption, foundations, public-key]
+topics: [circular-security, fully-homomorphic-encryption]
+model: standard
+form: equivalence
+assumption_class: unconditional
+category: research-open
+revision: 1
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: new-idea
+  by: ai
+  note: "Nothing in the literature builds a circular-secure scheme out of a homomorphic one. The known technology runs the other way: circular security is assumed and composability is derived from it, which is the source paper's own Theorem 6. The obvious weakening -- that a fully composable scheme is already circular secure -- is refuted by adapting the standard counterexamples, so a resolution has to construct a genuinely different scheme from the composable one, and no construction in the circular-security literature takes a homomorphic scheme as input. A refutation is equally out of reach: it would need an oracle world containing fully composable homomorphic encryption and no circular-secure encryption at all, and the black-box separation machinery has never been aimed at a primitive as strong as composable FHE."
+status_summary: "Open with no partial result in either direction. The converse -- circular security plus limited homomorphism gives full composability -- is the source paper's Theorem 6; this direction, which would make the two properties essentially equivalent, is conjectured there and nothing has been published towards it."
+status_updated: 2026-08-23
+lean:
+  mode: none
+sources:
+  - {cite: "Micciancio, Fully Composable Homomorphic Encryption, IACR ePrint 2024/1545; IACR Communications in Cryptology 2(1), 2025", url: "https://eprint.iacr.org/2024/1545"}
+statement_sha: "45a8b7c555c94814b394e404c73fd3bc86b473dbe7a9d4d8a305c056ad656cf6"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+<!-- topics:start -->
+<div class="cj-tags cj-page-topics"><a class="cj-tag cj-tag-topic" href="/problems/by-topic/circular-security/">Circular Security</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/fully-homomorphic-encryption/">Fully Homomorphic Encryption</a></div>
+<!-- topics:end -->
+
+Bootstrapping is the only route anyone has to fully homomorphic encryption that does not go through obfuscation, and it costs a circular security assumption: an encryption of the secret key under its own public key is published, and everything rests on that being safe. The recurring question is whether the cost is intrinsic. Phrased in terms of lattice noise it is not even well posed, since "noisy" is a property of a construction rather than of an encryption scheme. The source paper's contribution is a phrasing in which it is: bootstrapping becomes a transformation into a scheme whose evaluation function commutes with decryption, and the question becomes whether that property can be had without circular security.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [LaTeX source](latex/main.tex) · Formal statement — *not yet formalized*
+
+Let $\mathcal{M}$ be a finite message space, $\mathcal{C}$ a ciphertext space and $\mathcal{K}$ a secret-key space. Write $\mathsf{Enc}^{*}$ and $\mathsf{Dec}^{*}$ for the componentwise extensions of $\mathsf{Enc}$ and $\mathsf{Dec}$ to vectors.
+
+**Valid encryption scheme.** A triple $(\mathsf{Gen}, \mathsf{Enc}, \mathsf{Dec})$ of probabilistic polynomial-time algorithms with $(sk, pk) \gets \mathsf{Gen}(\kappa)$, $c \gets \mathsf{Enc}(pk, m)$ and $\mathsf{Dec}(sk, c) \in \mathcal{M} \cup \{\bot\}$, satisfying $\mathsf{Dec}(sk, \mathsf{Enc}(pk, m)) = m$ with probability $1$.
+
+**$\psi$-circular IND-CPA security.** For an injective key encoding $\psi : \mathcal{K} \to \mathcal{M}^{k}$, define $\mathsf{Gen}^{\psi}(\kappa) = (sk, (pk, pk'))$ with $(sk, pk) \gets \mathsf{Gen}(\kappa)$ and $pk' \gets \mathsf{Enc}^{*}(pk, \psi(sk))$, and $\mathsf{Enc}^{\psi}((pk, pk'), m) = \mathsf{Enc}(pk, m)$. The scheme is $\psi$-circular IND-CPA secure if $(\mathsf{Gen}^{\psi}, \mathsf{Enc}^{\psi}, \mathsf{Dec})$ is IND-CPA secure.
+
+**Full composability.** $(\mathsf{Gen}, \mathsf{Enc}, \mathsf{Dec}, \mathsf{Eval})$ is a *fully composable $\mathcal{F}$-homomorphic* encryption scheme if $(\mathsf{Gen}, \mathsf{Enc}, \mathsf{Dec})$ is valid and
+$$\mathsf{Dec}\bigl(sk, \mathsf{Eval}(pk, f, c)\bigr) = f\bigl(\mathsf{Dec}^{*}(sk, c)\bigr)$$
+for all $(sk, pk) \gets \mathsf{Gen}(\kappa)$, all $f : \mathcal{M}^{w} \to \mathcal{M}$ in $\mathcal{F}$, and **all** $c \in \mathcal{C}^{w}$ with $\mathsf{Dec}^{*}(sk, c) \in \mathcal{M}^{w}$ — not merely those produced by $\mathsf{Enc}$.
+
+**Conjecture (as printed, the source's Conjecture 1).** *Any fully composable homomorphic encryption scheme can be modified into a circular secure one.*
+
+**Conjecture (one formalization).** Let $\mathcal{F}$ be a set of functions. If there exists a valid, IND-CPA secure, fully composable $\mathcal{F}$-homomorphic encryption scheme, then there exist an injective encoding $\psi$ and a valid, $\psi$-circular IND-CPA secure encryption scheme; the latter may be constructed from, and depend on, the former.
+
+**Three things to know before working on this.** *(i) The formalization is this page's, not the source's.* The source states one English sentence and fixes no quantifiers. Three choices are made above and none is forced: that the conclusion is the existence of a circular-secure scheme rather than a property of the original one; that $\psi$ is existentially quantified; and that the constructed scheme need not itself be homomorphic. The first follows the source's own gloss that the circular-secure scheme "can be different from (but still depend on) the original composable FHE scheme"; the third is consistent with its parenthetical that it is the *reverse* implication which needs a limited-homomorphic scheme. The second is a guess. *(ii) The implication is the content, not the conclusion.* Circular-secure encryption exists under LWE, so the conclusion holds outright in the world we think we are in; what is being conjectured is that no world separates the two, in the sense in which one primitive is said to imply another. *(iii) The naive version is false.* Asking whether a fully composable scheme is *already* circular secure is a different and, per the source, almost certainly false statement.
+
+### Sources
+
+- Micciancio. [*Fully Composable Homomorphic Encryption*](https://eprint.iacr.org/2024/1545). IACR ePrint 2024/1545, dated 2 October 2024; published in IACR Communications in Cryptology 2(1), 8 April 2025. The conjecture and the displayed Question it answers are on p. 19 of the ePrint, in §6, "Conclusions and Open Problems"; full composability is its Definition 6 (p. 9), $\psi$-circular security its Definition 3 (p. 7), and the bootstrapping transformation its Definition 10 and Theorem 6 (pp. 13–14).
+
+## Proof
+
+View PDF — *no proof written yet* · LaTeX source — *no proof written yet* · Formal proof — *not yet formalized*
+
+Open, with no partial result on either side.
+
+**What is proved, and it is the other direction.** The source's Theorem 6 shows that if $\mathsf{FHE}$ is a valid $\mathcal{F}^{\circlearrowleft}_{\psi}$-homomorphic scheme — where $\mathcal{F}^{\circlearrowleft}_{\psi}$ collects the functions $f^{\circlearrowleft}_{c}$ sending $\psi(sk)$ to $f(\mathsf{Dec}^{*}(sk, c))$ and everything else to $\bot$ — then appending $pk' = \mathsf{Enc}^{*}(pk, \psi(sk))$ to the public key and setting $\mathsf{Eval}^{\circlearrowleft}((pk,pk'), f, c) = \mathsf{Eval}(pk, f^{\circlearrowleft}_{c}, pk')$ yields a valid, $\mathcal{F}$-homomorphic, **fully composable** scheme, which is IND-CPA secure whenever the original was $\psi$-circular IND-CPA secure. The proof is three lines of rewriting. So circular security, plus enough homomorphism to evaluate a decryption circuit, suffices.
+
+**What is refuted.** The strengthening in which the composable scheme is itself the circular-secure one: "one could ask if any fully composable homomorphic encryption scheme is already circular secure, but this is most likely false as one can adapt the simple counterexamples demonstrating the existence of circular insecure encryption schemes to the fully composable setting". The source does not carry out the adaptation, so even this is a claim rather than a theorem — but the counterexample literature it points to (Koppula–Ramchen–Waters, Koppula–Waters, Alamati–Peikert, Goyal–Koppula–Waters, Hajiabadi–Kapron) is substantial and there is no reason to doubt it.
+
+**What is missing.** A construction. Every circular-secure scheme in the literature is built from a concrete assumption — LWE, DDH, subgroup indistinguishability — and not from another primitive handed to it as a black box. A proof here has to take an arbitrary fully composable scheme and manufacture circular security out of it, and the only structure available is that its evaluation commutes with decryption for *all* ciphertexts, including ones no honest party would produce. That quantification is the one non-standard handle the hypothesis provides, and whether it is enough to encrypt a key safely is exactly the open question.
+
+**What a refutation would need.** A world — most plausibly an oracle world — containing a fully composable homomorphic encryption scheme and no circular-secure encryption whatsoever. Since composable FHE implies FHE, which implies a great deal, such a world is a strong object, and the black-box separation machinery has not been pointed at anything like it.
+
+## Discussion
+
+**Why it matters.** It decides whether the circular security assumption that every bootstrapping-based FHE construction pays is intrinsic to homomorphic composition or an artifact of how we build these schemes. The source states the consequence of a proof itself: with Theorem 6 in hand, "proving the conjecture would show that circular security and full composability are essentially equivalent (assuming the existence of a non-composable encryption scheme with limited homomorphic properties, as those that can be built from lattices.)". A refutation would be the more surprising outcome and the more useful one for constructions: it would establish that a route to fully homomorphic encryption exists that provably need not pass through a circular security assumption.
+
+**The reformulation is the paper's real contribution here, and it is worth understanding before attacking the conjecture.** The question people actually ask is whether "noise" is necessary for FHE. The source declines to answer it as posed, on the ground that being noisy is "not an abstract property (which may or may not be satisfied by any encryption scheme,) but a peculiar characteristic of specific constructions". It sketches one way to make that question formal — schemes where $\mathsf{Enc}_{pk}(m; r \in R_{0})$ stays secure with randomness confined to $R_{0}$ and evaluation maps $R_{i}$ into $R_{i+1}$ — and then abandons it in favour of the composability framing, in which every notion involved already has a standard definition. Whether the composability framing is the *right* formalization of the noise question is a judgement, not a theorem, and a reader who thinks it is not has a legitimate objection to the whole page.
+
+**What a reviewer should be suspicious of, in order.** The formalization, first: the source's sentence admits several readings and the one committed to above is one of them. Then the non-vacuity argument — an implication whose conclusion is known to hold under LWE is only interesting relative to a notion of "world", and this page does not make that notion precise. Then the status of the refuted naive version, which is asserted by the source rather than proved.
+
+**Checked against the literature, 2026-08-23.** Searched for work citing ePrint 2024/1545 or otherwise settling either conjecture in its §6, and for recent circular-security separations that might bear on it. Nothing was found that addresses this statement. The nearest active line is the circular-insecurity literature, which continues to produce counterexamples of the opposite quantifier shape — Wu, *Circular Insecure Encryption: from Long Cycles to Short Cycles* (IACR Communications in Cryptology 2(2), July 2025), shows that insecurity at cycle length $n+1$ yields schemes insecure at every shorter length, and does not mention the source paper. **This is a targeted check, not an exhaustive sweep.**
+
+## Open obligations
+
+- [ ] **Decide the formalization before anything else.** The three choices listed in the Statement tab are not the source's, and a reader who resolves them differently is working on a different problem. Deciding them, in public, is the first useful contribution this statement can receive.
+- [ ] Make "the implication is the content" precise — a relativizing or black-box formulation under which the statement is not trivially true given LWE.
+- [ ] Verify the source's claim that the standard circular-insecurity counterexamples adapt to the fully composable setting. It is asserted on p. 19 and not proved anywhere.
+- [ ] Settle whether the conjectured construction should be required to preserve homomorphism. The source's parenthetical suggests not; a version that does preserve it is a stronger and possibly more useful statement.
+- [ ] Prove or refute the implication.
+- [ ] Re-run the forward literature check against work citing ePrint 2024/1545.
+- [ ] Formalize the statement in Lean; nothing here has been formalized.
+
+:::

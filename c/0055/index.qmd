@@ -1,0 +1,105 @@
+---
+id: "0055"
+problem: circular-security-and-composability
+draft: two-scheme-encryption-cycle
+title: "A Safe Two-Scheme Key Cycle for Every Encryption Scheme"
+short_title: "Two-scheme key cycle"
+areas: [public-key, foundations, homomorphic-encryption]
+topics: [circular-security, fully-homomorphic-encryption]
+model: standard
+form: assumption
+assumption_class: falsifiable
+category: research-open
+revision: 1
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: new-idea
+  by: ai
+  note: "The whole circular-security counterexample literature has the opposite quantifier shape -- it exhibits particular schemes, or particular pairs, whose cycle is insecure -- and none of it constrains a partner chosen after the fact to cooperate. Refuting this needs a single scheme poisoned against every possible partner, which no known technique produces: the standard constructions embed an obfuscated or LWE-based trigger that fires on a ciphertext of a specific shape, and the partner is free to avoid that shape. Proving it needs a generic construction of a cooperating partner from an arbitrary scheme, and the only handle the hypothesis offers is IND-CPA security, from which circular security is not known to follow."
+status_summary: "Open in both directions, and the source paper says why the existing separations miss it: the counterexamples fix both schemes, whereas here the second is chosen after the first. Two hypotheses left implicit in the printed statement have to be added before it is even non-vacuous."
+status_updated: 2026-08-23
+lean:
+  mode: none
+sources:
+  - {cite: "Micciancio, Fully Composable Homomorphic Encryption, IACR ePrint 2024/1545; IACR Communications in Cryptology 2(1), 2025", url: "https://eprint.iacr.org/2024/1545"}
+statement_sha: "18d8161bc85b178cfa65c86cf4e99d1a6a956caff03b7fbe0d18ba9e6cece1fc"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+<!-- topics:start -->
+<div class="cj-tags cj-page-topics"><a class="cj-tag cj-tag-topic" href="/problems/by-topic/circular-security/">Circular Security</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/fully-homomorphic-encryption/">Fully Homomorphic Encryption</a></div>
+<!-- topics:end -->
+
+An encryption of a secret key under its own public key is not safe to publish in general: there are IND-CPA secure schemes that collapse completely the moment such a cycle appears. That is why bootstrapping costs an assumption. But every counterexample builds the cycle out of schemes it also gets to choose, and bootstrapping does not need the cycle to run through one scheme twice — it can run through two. This statement is what is left when the second scheme is allowed to be chosen, adversarially to the counterexamples, in the first scheme's favour.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [LaTeX source](latex/main.tex) · Formal statement — *not yet formalized*
+
+**Valid encryption scheme.** A triple $(\mathsf{Gen}, \mathsf{Enc}, \mathsf{Dec})$ of probabilistic polynomial-time algorithms with $(sk,pk) \gets \mathsf{Gen}(\kappa)$, $c \gets \mathsf{Enc}(pk,m)$ for $m \in \mathcal{M}$, and $\mathsf{Dec}(sk,c) \in \mathcal{M} \cup \{\bot\}$, such that $\mathsf{Dec}(sk, \mathsf{Enc}(pk,m)) = m$ with probability $1$.
+
+**The two-scheme cycle.** Let $\mathsf{E} = (\mathsf{Gen}, \mathsf{Enc}, \mathsf{Dec})$ and $\mathsf{E}' = (\mathsf{Gen}', \mathsf{Enc}', \mathsf{Dec}')$ be encryption schemes with message spaces $\mathcal{M}, \mathcal{M}'$ and secret-key spaces $\mathcal{K}, \mathcal{K}'$, and let $\psi : \mathcal{K} \to (\mathcal{M}')^{k}$ and $\psi' : \mathcal{K}' \to \mathcal{M}^{k'}$ be injective encodings. The *$(\mathsf{E}, \mathsf{E}')$-cycle scheme* has
+$$\widehat{\mathsf{Gen}}(\kappa) = \bigl(sk,\ (pk,\ pk',\ \mathsf{Enc}^{*}(pk, \psi'(sk')),\ (\mathsf{Enc}')^{*}(pk', \psi(sk)))\bigr),$$
+with $(sk,pk) \gets \mathsf{Gen}(\kappa)$ and $(sk',pk') \gets \mathsf{Gen}'(\kappa)$ drawn independently; encryption ignores everything but $pk$ and decryption is $\mathsf{E}$'s own.
+
+**Conjecture (as printed, the source's Conjecture 2).** *For any (public key) encryption scheme $\mathsf{Enc}$ there is a (possibly different) encryption scheme $\mathsf{Enc}'$ such that $\mathsf{Enc}(pk, \cdot)$ is secure in the presence of side information $\mathsf{Enc}'_{pk'}(sk), \mathsf{Enc}_{pk}(sk')$ for a randomly chosen key pair $(pk', sk')$.*
+
+**Conjecture (one formalization).** For every valid, IND-CPA secure public key encryption scheme $\mathsf{E}$ there exist a valid encryption scheme $\mathsf{E}'$ and injective encodings $\psi, \psi'$ such that the $(\mathsf{E}, \mathsf{E}')$-cycle scheme is IND-CPA secure.
+
+**Two hypotheses the printed statement leaves implicit, and one it does not need.** *(i) $\mathsf{E}'$ must be valid.* The source's Definition 1 calls a triple of algorithms an encryption scheme whether or not it is correct, and under that reading the conjecture is trivially true: let $\mathsf{Enc}'$ ignore its message. Then $\mathsf{Enc}'_{pk'}(sk)$ says nothing about $sk$, $\mathsf{Enc}_{pk}(sk')$ is an encryption of an independent string, and nothing cyclic has been published. Perfect correctness of $\mathsf{E}'$ is what makes the two ciphertexts a cycle, and it is also what the intended application needs, since bootstrapping recovers $sk$ by decrypting the first of them. *(ii) $\mathsf{E}$ must be IND-CPA secure*, or the conclusion fails for reasons having nothing to do with cycles. *(iii) $\mathsf{E}'$ need not be homomorphic* — the source says so in as many words — and it is not required to be IND-CPA secure either, though any witness must at least not hand $sk$ over.
+
+**The variants are not this statement.** The source lists three: cycles longer than $2$, a private-key $\mathsf{E}'$ with side information $\mathsf{Enc}'_{sk'}(sk), \mathsf{Enc}_{pk}(sk')$, and the special case of bitwise encryption. Each is a separate problem.
+
+### Sources
+
+- Micciancio. [*Fully Composable Homomorphic Encryption*](https://eprint.iacr.org/2024/1545). IACR ePrint 2024/1545, dated 2 October 2024; published in IACR Communications in Cryptology 2(1), 8 April 2025. The conjecture is on p. 20, in §6, "Conclusions and Open Problems"; the paragraph explaining why the known separations do not apply, and the bootstrapping use of the two-scheme cycle, are on p. 19. Validity and IND-CPA security are its Definitions 1 and 2 (pp. 5–6).
+
+## Proof
+
+View PDF — *no proof written yet* · LaTeX source — *no proof written yet* · Formal proof — *not yet formalized*
+
+Open in both directions, and the source offers no partial result.
+
+**What the literature has, and why it is the wrong shape.** Koppula–Ramchen–Waters (TCC 2015), Koppula–Waters (CRYPTO 2016), Alamati–Peikert (CRYPTO 2016), Goyal–Koppula–Waters (PKC and EUROCRYPT 2017) and Hajiabadi–Kapron (EUROCRYPT 2017) construct IND-CPA secure schemes for which publishing a key cycle is fatal, at cycle length $1$, at length $2$, and at arbitrary length, from LWE and ring-LWE. Every one of them is an existential statement about a scheme, or about a pair of schemes both of which the construction chooses. This conjecture is $\forall\mathsf{E}\,\exists\mathsf{E}'$, and nothing in that literature bears on it: the counterexamples show only that *some* pairs are bad, not that some scheme is bad with *every* partner.
+
+**Why the distributional point matters.** The source's reason for expecting the separations not to extend is specific rather than a general appeal to quantifiers. Bootstrapping across a $2$-cycle turns $(\mathsf{Enc}_{pk}(sk'), \mathsf{Enc}'_{pk'}(sk))$ into an evaluated ciphertext encrypting $\mathsf{Dec}_{sk'}(c') = sk$ under $\mathsf{Enc}_{pk}$ — so morally a $1$-cycle appears, but "this is different from computing a simple cycle $\mathsf{Enc}_{pk}(sk)$ directly, because the evaluated ciphertext follows a different distribution". A counterexample keyed to the distribution of freshly encrypted key material therefore need not fire.
+
+**What a refutation would need.** A single scheme $\mathsf{E}$ that is poisoned against *every* valid partner: for every $\mathsf{E}'$ and every pair of encodings, publishing the cycle breaks $\mathsf{E}$. The known constructions all embed a trigger that fires when a decrypted value has a particular form, and the partner scheme is free to encode $sk$ in a way that trigger never sees, so the technique does not obviously scale to a universal quantifier over partners.
+
+**What a proof would need.** A generic construction of the partner from $\mathsf{E}$. The hypothesis supplies only IND-CPA security, which is not known to imply circular security in any form, so a proof would either have to extract more structure from an arbitrary scheme than seems available or find a partner whose own security is what carries the argument.
+
+## Discussion
+
+**Why it matters.** It is the smallest question standing between the source paper's reformulation of bootstrapping and a generic route to composable homomorphic encryption. The source is careful about the limits: "Note that this Conjecture does not by itself imply the existence of composable FHE schemes", because the partner might make the bootstrapping computation $sk' \mapsto \mathsf{Dec}_{\mathsf{Dec}_{sk'}(c')}(c'')$ fall outside the function set $\mathcal{F}$ the scheme can evaluate. But it also says what a proof would give: "if the starting scheme $\mathsf{Enc}$ is (non-composable) fully homomorphic (i.e., $\mathcal{F}$ is the set of all possible functions), this would be enough to achieve full composability". For an FHE scheme, in other words, this conjecture closes the gap.
+
+**Independently of bootstrapping, it is a clean question about circular security.** After fifteen years of counterexamples the field knows a great deal about which cycles are unsafe and almost nothing about whether *any* scheme can be made safe to cycle with a chosen accomplice. A proof would be, as the source puts it, "interesting information about the feasibility of achieving circular security in a generic way".
+
+**What a reviewer should be suspicious of, in order.** The validity requirement on $\mathsf{E}'$, which this page adds and the source does not state — if a reader disagrees that the printed statement is vacuous without it, the disagreement is about what "encryption scheme" means in the source's Definition 1, and should be settled by reading that definition. Then the IND-CPA hypothesis on $\mathsf{E}$, added here on the same grounds. Then the claim that the known separations have the opposite shape, which is a reading of that literature made from its abstracts and from the source's own summary, not from a line-by-line audit of five papers.
+
+**Checked against the literature, 2026-08-23.** Searched for work resolving either of the source's conjectures, and for any construction of a scheme circular-insecure with respect to all partners. Nothing found. Adjacent items checked far enough to rule out: Wu, *Circular Insecure Encryption: from Long Cycles to Short Cycles* (IACR Communications in Cryptology 2(2), July 2025), which converts insecurity at one cycle length into insecurity at shorter ones and constructs no universally poisoned scheme; and Hopkins–Jain–Lin, *Counterexamples to New Circular Security Assumptions Underlying iO* (CRYPTO 2021), which refutes specific structured assumptions rather than this one. **This is a targeted check, not an exhaustive sweep.**
+
+## Open obligations
+
+- [ ] Confirm against the source's Definition 1 that an "encryption scheme" there need not be correct, and hence that the validity requirement added here is a repair rather than a strengthening.
+- [ ] Audit the five separation papers directly for anything that constrains a partner chosen after the fact. This page's claim that none of them does is read off abstracts and the source's summary.
+- [ ] Decide whether $\mathsf{E}'$ should additionally be required to be IND-CPA secure. It changes the statement and the source does not say.
+- [ ] State the three variants the source lists — longer cycles, private-key partner, bitwise encryption — as their own pages, or record a decision not to.
+- [ ] Prove or refute the statement.
+- [ ] Re-run the forward literature check against work citing ePrint 2024/1545.
+- [ ] Formalize the statement in Lean; nothing here has been formalized.
+
+:::

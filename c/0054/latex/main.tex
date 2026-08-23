@@ -1,0 +1,343 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  Micciancio's Conjecture 1: every fully composable homomorphic
+%  encryption scheme can be modified into a circular secure one.
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{COMPOSABILITY IMPLIES CIRCULAR SECURITY?}
+
+\newcommand{\Gen}{\mathsf{Gen}}
+\newcommand{\Enc}{\mathsf{Enc}}
+\newcommand{\Dec}{\mathsf{Dec}}
+\newcommand{\Eval}{\mathsf{Eval}}
+\newcommand{\Msp}{\mathcal{M}}
+\newcommand{\Csp}{\mathcal{C}}
+\newcommand{\Ksp}{\mathcal{K}}
+\newcommand{\Fset}{\mathcal{F}}
+\newcommand{\Escheme}{\mathsf{E}}
+\newcommand{\secpar}{\kappa}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{Every Fully Composable Homomorphic Encryption Scheme Yields a
+  Circular-Secure One}
+\cjsubtitle{Is circular security necessary for full composability?}
+\cjstatus{Statement: AI-written from Daniele Micciancio,
+  \emph{Fully Composable Homomorphic Encryption}, IACR ePrint
+  2024/1545 (2 October 2024); published in IACR Communications in
+  Cryptology 2(1), 8 April 2025. Not yet checked by a human. The
+  converse direction is a theorem of the source paper (its Theorem 6,
+  the bootstrapping construction); this direction is open in both
+  senses, with no partial result and no counterexample known.}
+\cjcategory{\emph{Homomorphic Encryption}, \emph{Foundations}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+Every known way of building fully homomorphic encryption goes through
+bootstrapping, and bootstrapping needs a circular security assumption:
+one publishes an encryption of the secret key under its own public key.
+Micciancio's reformulation of bootstrapping makes it possible to ask
+whether that assumption is avoidable without mentioning lattice noise
+at all. His Theorem~6 is one half of the answer --- circular security
+plus a limited amount of homomorphism gives full composability. The
+conjecture is the other half: that a fully composable scheme can always
+be turned back into a circular-secure one, so that the two properties
+stand or fall together. It is not the claim that a composable scheme is
+\emph{already} circular secure, which the paper says is most likely
+false; the circular-secure scheme is allowed to be a different scheme
+built from the first.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+An encryption scheme is $\Fset$-homomorphic, in the standard sense, if
+decrypting $\Eval(pk, f, \Enc^{*}(pk, \mathbf{m}))$ returns
+$f(\mathbf{m})$ for every $f \in \Fset$ and every message vector
+$\mathbf{m}$. As Gentry, Halevi and Vaikuntanathan
+observed~\cite{GHV10}, this says nothing about what happens when a
+second evaluation is applied to the output of the first: the
+ciphertexts $\Eval$ accepts and the ciphertexts it produces need not
+even have the same shape, so $\Eval(pk, g, \Eval(pk, f, c))$ may be
+meaningless.
+
+The source paper's response is a definition that quantifies over
+\emph{all} ciphertexts rather than over the freshly encrypted ones:
+$\Eval$ commutes with $\Dec$ (Definition~\ref{def:composable}). This is
+syntactically no more complicated than the standard definition and it
+implies arbitrary composition, so a scheme satisfying it supports
+homomorphic evaluation of any circuit whose gates lie in $\Fset$ (its
+Theorem 2).
+
+\paragraph{Bootstrapping, restated as a transformation.}
+Fix an injective key encoding $\psi : \Ksp \to \Msp^{k}$. For $f \in
+\Fset$ and a ciphertext vector $c$, let $f^{\circlearrowleft}_{c} :
+\Msp^{k} \to \Msp$ send $\psi(sk)$ to $f(\Dec^{*}(sk, c))$ and
+everything else to $\bot$, and let
+$\Fset^{\circlearrowleft}_{\psi}$ be the set of all such functions.
+Gentry's bootstrapping~\cite{Gen09} is then exactly the following
+construction: given a scheme that is
+$\Fset^{\circlearrowleft}_{\psi}$-homomorphic, append
+$pk' = \Enc^{*}(pk, \psi(sk))$ to the public key and define
+$\Eval^{\circlearrowleft}((pk, pk'), f, c) = \Eval(pk,
+f^{\circlearrowleft}_{c}, pk')$ --- that is, evaluate the function
+selected by $c$ on the fixed ciphertext sitting in the public key. The
+source paper's Theorem 6 proves that the result is valid,
+$\Fset$-homomorphic and \emph{fully composable}, and that it inherits
+IND-CPA security whenever the scheme one started from was $\psi$-circular
+IND-CPA secure.
+
+So circular security (together with a limited homomorphic capability)
+\emph{suffices} for full composability. The question the paper then
+poses, printed as a displayed question on its page~19, is whether it is
+also necessary:
+
+\begin{quote}
+\itshape Question: Is circular security necessary necessary to achieve
+full composability?
+\end{quote}
+
+\noindent
+(The repeated word is the source's.) The paper's own comment on why the
+question is well posed is that it ``does not make any reference to
+encryption noise, and all concepts (circular security, homomorphic
+encryption and full composability) have well formalized abstract
+cryptographic definitions''. This is the point of the reformulation:
+the recurring informal question of whether ``noisy'' ciphertexts are
+necessary for fully homomorphic encryption is, as the paper says, ``not
+really well posed'', because being noisy is a property of particular
+constructions rather than of encryption schemes as abstract objects.
+
+\paragraph{Why the naive version is false.}
+One might ask instead whether a fully composable scheme is already
+circular secure. The paper rules that out: ``this is most likely false
+as one can adapt the simple counterexamples demonstrating the existence
+of circular insecure encryption schemes to the fully composable
+setting''. There is a substantial body of such
+counterexamples~\cite{KRW15,KW16,AP16,GKW17a,GKW17b,HK17}. Hence the
+conjecture's ``can be modified into'': the circular-secure scheme is
+allowed to differ from the composable one, while still being built from
+it.
+
+\paragraph{What settling it would give.}
+The source paper states the consequence itself: ``Given that circular
+security implies full composability (Theorem 6), proving the conjecture
+would show that circular security and full composability are
+essentially equivalent (assuming the existence of a non-composable
+encryption scheme with limited homomorphic properties, as those that
+can be built from lattices.)'' A refutation would be at least as
+interesting, since it would exhibit a world in which arbitrary
+homomorphic computation composes and yet no circular-secure encryption
+exists --- that is, a route to fully homomorphic encryption that
+provably does not pass through a circular security assumption.
+
+\paragraph{What is \emph{not} claimed.}
+Nothing here says that a fully composable scheme can be built without
+circular security, nor that it cannot. Both directions are open, and
+the source paper offers no partial result towards either: this is a
+conjecture stated in a concluding section, not a theorem with a missing
+case.
+
+\section{Notation and parameters}\label{sec:notation}
+
+\begin{itemize}
+\item $\secpar$ is the security parameter; $\Msp$ is a finite,
+  fixed-length message space, $\Csp$ the ciphertext space and $\Ksp$
+  the secret-key space, all possibly depending on $\secpar$.
+\item $\Enc^{*}$ and $\Dec^{*}$ are the componentwise extensions of
+  $\Enc$ and $\Dec$ to vectors: $\Enc^{*}(pk, (m_{1}, \dots, m_{w})) =
+  (\Enc(pk, m_{1}), \dots, \Enc(pk, m_{w}))$, and likewise for $\Dec$.
+\item $\Fset \subseteq \bigcup_{w \ge 0}\{f : \Msp^{w} \to \Msp\}$ is
+  the set of functions a homomorphic scheme supports; $w$ is the arity
+  of the function under discussion.
+\item $\psi : \Ksp \to \Msp^{k}$ is an injective encoding of secret
+  keys as message vectors, so that a secret key can be encrypted
+  componentwise.
+\item $\bot \notin \Msp$ is the decryption-failure symbol.
+\item Correctness is required to hold with probability $1$, following
+  the source; the source notes this can be relaxed to a negligible
+  failure probability but that perfect correctness is much more
+  convenient in the homomorphic setting.
+\end{itemize}
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{definition}[Encryption scheme, valid]\label{def:scheme}
+A public key encryption scheme with message space $\Msp$ is a triple
+of probabilistic polynomial-time algorithms $(\Gen, \Enc, \Dec)$ where
+$(sk, pk) \gets \Gen(\secpar)$, $c \gets \Enc(pk, m)$ for $m \in \Msp$,
+and $\Dec(sk, c)$ outputs an element of $\Msp \cup \{\bot\}$. The scheme
+is \emph{valid} if $\Dec(sk, \Enc(pk, m)) = m$ for all $m \in \Msp$ and
+all $(sk, pk) \gets \Gen(\secpar)$.
+\end{definition}
+
+\begin{definition}[IND-CPA]\label{def:indcpa}
+$(\Gen, \Enc, \Dec)$ is IND-CPA secure if every probabilistic
+polynomial-time adversary has negligible advantage in the game: sample
+$b \gets \{0,1\}$ and $(sk, pk) \gets \Gen(\secpar)$; the adversary,
+given $pk$, outputs $m_{0}, m_{1} \in \Msp$ of equal length, receives
+$c \gets \Enc(pk, m_{b})$, and outputs $b' \in \{0, 1, \bot\}$. See
+Remark~\ref{rem:advantage} for the source's measure of advantage.
+\end{definition}
+
+\begin{definition}[$\psi$-circular IND-CPA security]\label{def:circular}
+Let $\psi : \Ksp \to \Msp^{k}$ be a (possibly randomized) key encoding.
+Define
+\[
+  \Gen^{\psi}(\secpar) = \bigl(sk, (pk, pk')\bigr),
+  \qquad
+  \Enc^{\psi}\bigl((pk, pk'), m\bigr) = \Enc(pk, m),
+\]
+where $(sk, pk) \gets \Gen(\secpar)$ and $pk' \gets \Enc^{*}(pk,
+\psi(sk))$. Then $(\Gen, \Enc, \Dec)$ is \emph{$\psi$-circular IND-CPA
+secure} if $(\Gen^{\psi}, \Enc^{\psi}, \Dec)$ is IND-CPA secure. In
+words: the scheme stays secure when an encryption of its own secret key
+is published alongside the public key.
+\end{definition}
+
+\begin{definition}[Homomorphic encryption]\label{def:homomorphic}
+A homomorphic encryption scheme with message space $\Msp$ and function
+set $\Fset$ is an encryption scheme $(\Gen, \Enc, \Dec)$ together with
+an algorithm $\Eval$ that on input $pk$, a function $f : \Msp^{w} \to
+\Msp$ in $\Fset$ and a vector $c \in \Csp^{w}$ outputs a ciphertext
+$\Eval(pk, f, c) \in \Csp$.
+\end{definition}
+
+\begin{definition}[Full composability]\label{def:composable}
+$(\Gen, \Enc, \Dec, \Eval)$ is a \emph{fully composable
+$\Fset$-homomorphic} encryption scheme if $(\Gen, \Enc, \Dec)$ is a
+valid encryption scheme and
+\[
+  \Dec\bigl(sk, \Eval(pk, f, c)\bigr) = f\bigl(\Dec^{*}(sk, c)\bigr)
+\]
+for all $(sk, pk) \gets \Gen(\secpar)$, all $f : \Msp^{w} \to \Msp$ in
+$\Fset$, and all $c \in \Csp^{w}$ such that $\Dec^{*}(sk, c) \in
+\Msp^{w}$. The quantification over \emph{all} such $c$, rather than
+over freshly encrypted ones, is the whole of the definition's content.
+\end{definition}
+
+\begin{conjecture}[Micciancio, as printed]\label{conj:printed}
+Any fully composable homomorphic encryption scheme can be modified into
+a circular secure one.
+\end{conjecture}
+
+\begin{conjecture}[One formalization]\label{conj:formal}
+Let $\Fset$ be a set of functions. If there exists a valid, IND-CPA
+secure, fully composable $\Fset$-homomorphic encryption scheme, then
+there exist an injective encoding $\psi$ and a valid, $\psi$-circular
+IND-CPA secure encryption scheme. The latter may be constructed from,
+and depend on, the former.
+\end{conjecture}
+
+\begin{remark}[Conjecture~\ref{conj:formal} is the page's reading, not
+  the source's]\label{rem:reading}
+The source states only Conjecture~\ref{conj:printed}, in one English
+sentence, and does not say what ``modified into'' quantifies over.
+Conjecture~\ref{conj:formal} makes three choices the source does not
+make explicit: that the conclusion is the existence of a circular
+secure scheme rather than a property of the original one; that $\psi$
+is existentially rather than universally quantified; and that the
+constructed scheme is not required to be homomorphic. The first is
+forced by the source's own remark that the modified scheme ``can be
+different from (but still depend on) the original composable FHE
+scheme''; the third is consistent with the source's parenthetical that
+the reverse implication is what needs ``a non-composable encryption
+scheme with limited homomorphic properties''. The second is a guess. A
+reader who intends to work on this should decide these for themselves
+before starting.
+\end{remark}
+
+\begin{remark}[Why the formalization is not vacuous]\label{rem:vacuous}
+Circular secure encryption is known to exist under concrete assumptions
+such as LWE~\cite{ACPS09}, so in the world we believe we live in the
+conclusion of Conjecture~\ref{conj:formal} holds outright. The content
+of the conjecture is the implication itself, in the usual sense in
+which one primitive is said to imply another: it asserts that no world
+contains fully composable homomorphic encryption and no circular secure
+encryption. That is exactly the claim that circular security is
+necessary, and it is not settled by any construction from a specific
+assumption. A reader who prefers a sharper form should read the
+implication as asking for a construction of the circular secure scheme
+from the composable one.
+\end{remark}
+
+\begin{remark}[The source's advantage
+  convention]\label{rem:advantage}
+The source measures the advantage of an IND-CPA adversary as
+$\delta = (\beta - \bar\beta)^{2}/(\beta + \bar\beta)$, where $\beta =
+\Pr[b' = b]$ and $\bar\beta = \Pr[b' = 1-b]$, following the
+bit-security definition of Micciancio and Walter, and allows the
+adversary to output $\bot$. For adversaries that always output a bit,
+$\beta + \bar\beta = 1$ and $\delta$ is the square of the usual
+distinguishing gap, so nothing in this conjecture turns on the choice.
+The source says as much.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem[ACPS09]{ACPS09}
+Benny Applebaum, David Cash, Chris Peikert and Amit Sahai.
+\emph{Fast cryptographic primitives and circular-secure encryption
+based on hard learning problems}.
+CRYPTO 2009, LNCS 5677, pp.\ 595--618. Springer, 2009.
+
+\bibitem[AP16]{AP16}
+Navid Alamati and Chris Peikert.
+\emph{Three's compromised too: circular insecurity for any cycle length
+from (ring-)LWE}.
+CRYPTO 2016, Part II, LNCS 9815, pp.\ 659--680. Springer, 2016.
+
+\bibitem[Gen09]{Gen09}
+Craig Gentry.
+\emph{Fully homomorphic encryption using ideal lattices}.
+STOC 2009, pp.\ 169--178. ACM, 2009.
+
+\bibitem[GHV10]{GHV10}
+Craig Gentry, Shai Halevi and Vinod Vaikuntanathan.
+\emph{i-Hop homomorphic encryption and rerandomizable Yao circuits}.
+CRYPTO 2010, LNCS 6223, pp.\ 155--172. Springer, 2010.
+
+\bibitem[GKW17a]{GKW17a}
+Rishab Goyal, Venkata Koppula and Brent Waters.
+\emph{Separating IND-CPA and circular security for unbounded length key
+cycles}.
+PKC 2017, Part I, LNCS 10174, pp.\ 232--246. Springer, 2017.
+
+\bibitem[GKW17b]{GKW17b}
+Rishab Goyal, Venkata Koppula and Brent Waters.
+\emph{Separating semantic and circular security for symmetric-key bit
+encryption from the learning with errors assumption}.
+EUROCRYPT 2017, Part II, LNCS 10211, pp.\ 528--557. 2017.
+
+\bibitem[HK17]{HK17}
+Mohammad Hajiabadi and Bruce M.\ Kapron.
+\emph{Toward fine-grained blackbox separations between semantic and
+circular-security notions}.
+EUROCRYPT 2017, Part II, LNCS 10211, pp.\ 561--591. Springer, 2017.
+
+\bibitem[KRW15]{KRW15}
+Venkata Koppula, Kim Ramchen and Brent Waters.
+\emph{Separations in circular security for arbitrary length key
+cycles}.
+TCC 2015, Part II, LNCS 9015, pp.\ 378--400. Springer, 2015.
+
+\bibitem[KW16]{KW16}
+Venkata Koppula and Brent Waters.
+\emph{Circular security separations for arbitrary length cycles from
+LWE}.
+CRYPTO 2016, Part II, LNCS 9815, pp.\ 681--700. Springer, 2016.
+
+\bibitem[Mic24]{Mic24}
+Daniele Micciancio.
+\emph{Fully composable homomorphic encryption}.
+IACR Cryptology ePrint Archive, Report 2024/1545, 2024. Published in
+IACR Communications in Cryptology 2(1), 2025.
+
+\end{conjurabibliography}
+
+\end{document}

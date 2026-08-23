@@ -1,0 +1,101 @@
+---
+title: "Presampling against quantum queries"
+subtitle: "Can an auxiliary-input random oracle be replaced by a classically bit-fixed one when the adversary queries in superposition?"
+---
+
+## Motivation
+
+Non-uniform security is the right model for a real attacker: someone who can
+spend unbounded effort studying a hash function before the target is chosen,
+and who carries away $S$ bits of notes. Reasoning about that adversary
+directly is unpleasant, because the notes may encode any global property of
+the function whatsoever. Presampling is the trick that makes it bearable.
+Instead of the auxiliary-input model, one analyses a **bit-fixing** model in
+which an adversary picks $P$ input–output pairs and the oracle is uniform
+everywhere else; bounds there are usually one or two lines, and the classical
+transfer theorem says the two models differ by about $ST/P$. Almost every
+concrete non-uniform bound in the random oracle model is obtained this way.
+
+The question is what happens when the online adversary may query in
+superposition. The classical proof does not obviously fail — it just does not
+obviously work — and the answer turns out to be more interesting than either:
+Guo, Li, Liu and Zhang showed that a quantum version of the transfer theorem,
+even a badly weakened one, would settle a question about quantum speedups
+that has been open since before 2000. That is why the presampling technique
+that post-quantum cryptography actually uses fixes coordinates *quantumly*
+rather than classically, and why the classical statement is still sitting
+here unresolved.
+
+## Provenance and history
+
+Unruh introduced the auxiliary-input random oracle model and the first
+presampling theorem ([CRYPTO 2007](https://eprint.iacr.org/2007/168)).
+Coretti, Dodis, Guo and Steinberger
+([EUROCRYPT 2018](https://eprint.iacr.org/2017/937)) tightened the loss to the
+optimal $ST/P$ and made the bit-fixing route standard; Coretti, Dodis and Guo
+(CRYPTO 2018) carried it to the random-permutation, ideal-cipher and
+generic-group models.
+
+The quantum story starts with Nayebi, Aaronson, Belovs and Trevisan (QIC
+2015) and Hhan, Xagawa and Yamakawa (ASIACRYPT 2019), and with
+Chung, Guo, Liu and Qian ([FOCS 2020](https://eprint.iacr.org/2020/693)),
+whose route to auxiliary-input quantum bounds goes through multi-instance
+games rather than presampling. Guo, Li, Liu and Zhang's *Unifying Presampling
+via Concentration Bounds* ([ePrint 2020/1589](https://eprint.iacr.org/2020/1589),
+TCC 2021) does three things: it reproves the classical theorems from
+concentration bounds alone, it proves the *first* quantum presampling
+theorem — into a quantum bit-fixing model of its own devising — and it shows,
+in the section this hub is named after, that the naive quantum version is
+blocked. Liu ([EUROCRYPT 2023](https://eprint.iacr.org/2022/1384)) developed
+the quantum bit-fixing framework further and matched quantum-advice bounds to
+classical-advice ones; Akshima, Besselman, Chung, Guo and Yang
+([arXiv:2510.12112](https://arxiv.org/abs/2510.12112), October 2025) used the
+same model, with representation theory in place of compressed oracles, to
+settle the tight time-space tradeoff for permutation inversion — and with it
+the source paper's own Conjecture 7, which is why that conjecture is not a
+page here.
+
+## Parameter lattice
+
+Two axes: how the $P$ coordinates are fixed, and whether the online
+adversary's queries are classical or quantum. The advice itself is classical
+throughout — quantum advice is a third axis and is not what this hub is
+about.
+
+| | Oracle fixed on a list of $P$ pairs | Oracle conditioned on a $P$-query algorithm accepting |
+|---|---|---|
+| **Classical online queries** | proved, optimal — Coretti–Dodis–Guo–Steinberger, and reproved by the source from concentration bounds (not a leaf here) | the same model, for a classical offline algorithm: the source's Lemma 6 (not a leaf here) |
+| **Quantum online queries** | [c/0056](/c/0056/) — open, and proving it implies the Aaronson–Ambainis programme | proved, optimal, for a quantum offline algorithm: the source's Theorem 1, which matches the classical loss (not a leaf here) |
+
+The right-hand column is what "fixing quantumly" means: the source's Definition 10 re-characterizes the classical bit-fixing model as "sample the oracle, run a $P$-query algorithm on it, restart unless it accepts", which is the same model classically (Lemma 6) and a strictly different one when the $P$ queries are made in superposition.
+
+The same question in the random *permutation* model — presampling into a
+bit-fixing quantum random permutation model — is *unstated* here, and the
+source's own conjecture about it (its Conjecture 7, on the security of
+one-way functions in the $P$-BF-QRPM) was resolved affirmatively in 2025 as
+Lemma 2 of arXiv:2510.12112.
+
+## Why the open cell is the interesting one
+
+The quantum bit-fixing model in the bottom-right cell is what all subsequent
+work uses, and it delivers the applications. So why care about the
+bottom-left one? Because the two models are not equally useful. A classically
+bit-fixed oracle is a list of $P$ pairs plus uniform randomness, and a
+security proof against it is a counting argument. A quantumly bit-fixed
+oracle is "a uniform oracle conditioned on a $P$-query quantum algorithm
+accepting", and proving anything about it needs compressed oracles or
+representation theory. The source spells out what the classical version would
+buy: function inversion in the auxiliary-input QROM would follow from
+Grover's optimality in two cases and nothing else.
+
+And the reason it is unavailable is not a missing technique but a theorem.
+The source's Theorem 4 shows the conjecture implies that every quantum
+algorithm can be classically approximated on most inputs — the question
+Aaronson and Ambainis proposed attacking through influences of low-degree
+functions, still open, still only proved for restricted classes. The proof
+needs the conjecture only for a *single bit* of advice, so there is no
+weakening in $S$ that escapes.
+
+## Statements in this hub
+
+- [Classical Presampling Against Quantum Queries](/c/0056/) — open, with a published barrier against proving it and no attempt at refuting it.

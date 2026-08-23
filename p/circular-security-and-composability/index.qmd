@@ -1,0 +1,96 @@
+---
+title: "Circular security and composable homomorphic encryption"
+subtitle: "Is the circular security assumption that every bootstrapping-based FHE scheme pays actually necessary?"
+---
+
+## Motivation
+
+Every construction of fully homomorphic encryption that does not go through
+indistinguishability obfuscation is built by bootstrapping, and bootstrapping
+publishes an encryption of the secret key under its own public key. That
+ciphertext is not covered by IND-CPA security, so every such scheme rests on
+a circular security assumption that is believed rather than derived — and
+believed in the face of a fifteen-year literature constructing IND-CPA secure
+schemes for which exactly that ciphertext is fatal.
+
+The question this hub collects is whether the assumption is intrinsic. It is
+usually asked as "is noise necessary for FHE?", and in that form it is not a
+mathematical question at all: being noisy is a property of lattice
+constructions, not of encryption schemes. Micciancio's reformulation makes it
+one. Say a homomorphic scheme is **fully composable** when its evaluation
+function commutes with decryption — for *every* ciphertext, not only for
+honestly generated ones. Composability is what bootstrapping actually
+achieves, and it is stated without reference to noise, so "is circular
+security necessary for full composability?" is a question about two
+well-defined abstract properties. One direction is a theorem. The other is
+open, and so is a smaller question about key cycles that would go a long way
+towards it.
+
+## Provenance and history
+
+Gentry's bootstrapping ([STOC 2009](https://dl.acm.org/doi/10.1145/1536414.1536440))
+introduced both the technique and its assumption. Gentry, Halevi and
+Vaikuntanathan ([CRYPTO 2010](https://link.springer.com/chapter/10.1007/978-3-642-14623-7_9))
+first observed that the standard correctness definition does not compose at
+all — the ciphertexts an evaluation accepts and the ones it produces need not
+even have the same shape — and proposed $i$-hop correctness as a fix.
+
+The circular-security side developed independently and almost entirely in the
+negative direction: Koppula, Ramchen and Waters (TCC 2015), Koppula and
+Waters (CRYPTO 2016), Alamati and Peikert (CRYPTO 2016), Goyal, Koppula and
+Waters (PKC 2017 and EUROCRYPT 2017) and Hajiabadi and Kapron (EUROCRYPT
+2017) between them show that IND-CPA security implies nothing about cycles,
+at length one, at length two, and at every length. Positive results exist
+only from concrete assumptions — Boneh–Halevi–Hamburg–Ostrovsky from DDH,
+Applebaum–Cash–Peikert–Sahai from LWE and LPN — never from another primitive.
+
+Micciancio's *Fully Composable Homomorphic Encryption*
+([ePrint 2024/1545](https://eprint.iacr.org/2024/1545), IACR Communications in
+Cryptology 2(1), 2025) supplies the definition, proves that composability sits
+strictly above multi-hop correctness and is equivalent to it for surjective
+schemes, and — the part this hub is about — recasts bootstrapping as a
+transformation whose input is a circular-secure scheme and whose output is a
+composable one. Its §6 then poses the two conjectures below. Both are stated
+in one sentence each, with no formalization; the pages here supply one and
+say so.
+
+## Parameter lattice
+
+The two statements differ in what is being asked to exist and how strong the
+hypothesis is. The axes are the primitive one starts from and the object one
+is asked to produce.
+
+| | Produce: a circular-secure scheme | Produce: a partner scheme making a $2$-cycle safe |
+|---|---|---|
+| **From: a fully composable homomorphic scheme** | [c/0054](/c/0054/) — open | *unstated* (strictly easier than c/0055; nobody has asked it for the composable hypothesis alone) |
+| **From: an arbitrary IND-CPA scheme** | *unstated*, and false as stated — this is exactly what the counterexample literature refutes | [c/0055](/c/0055/) — open |
+
+Two further axes vary inside c/0055 and are not separate leaves yet: the
+cycle length (the source names $>2$ as a variant), and whether the partner
+scheme is public-key or private-key (the source names
+$\mathsf{Enc}'_{sk'}(sk), \mathsf{Enc}_{pk}(sk')$ as a variant). Both are
+*unstated*.
+
+## How the two relate
+
+Neither statement implies the other, and the temptation to draw an edge
+between them should be resisted. [c/0055](/c/0055/) is about publishing a
+cycle across two schemes and says nothing about composability on its own —
+the source is explicit that it "does not by itself imply the existence of
+composable FHE schemes", because the partner may make the bootstrapping
+computation fall outside what the starting scheme can evaluate.
+[c/0054](/c/0054/) runs in the opposite direction, from composability back to
+circular security. What they share is the question in the section title: one
+asks whether circular security is necessary, the other whether it is
+generically achievable.
+
+There is one conditional link worth recording. The source observes that if
+the starting scheme in c/0055 is already (non-composable) fully homomorphic,
+so that the function set is everything, then a proof of c/0055 "would be
+enough to achieve full composability" — that is, it would give composable FHE
+from plain FHE. That is a consequence of c/0055, not a relation to c/0054.
+
+## Statements in this hub
+
+- [Every Fully Composable Homomorphic Encryption Scheme Yields a Circular-Secure One](/c/0054/) — open with no partial result in either direction; the converse is the source's own Theorem 6.
+- [A Safe Two-Scheme Key Cycle for Every Encryption Scheme](/c/0055/) — open in both directions; the known separations have the opposite quantifier shape.

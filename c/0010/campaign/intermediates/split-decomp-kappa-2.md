@@ -7,6 +7,12 @@ r3. Its Lemma P and Theorem C are used here and are not reproved; its Theorems A
 strengthened, not replaced; its Lemmas 0–2 and Claim 6.1 are reproved from scratch below so
 that the new results do not rest on an artifact that has yet to be blind-verified.
 
+Two items raised by an in-session smell test are repaired in place: Lemma 0's clause (iii)
+conjoined the two paired experiments where its proof supplies a maximiser per pair, and §0's
+aside on (D) claimed of the collected corollary what holds only of the display. Neither is
+load-bearing. The id is unchanged and no revision suffix is taken, because that test is not a
+verification pass and no tally has ever been recorded against this content.
+
 ## 0. Goal
 
 Fix $N,M\in\mathbb N$ with $N\ge2$, $M\ge2$, and let $\mathsf{Fun}:=\{f:[N]\times[N]\to[M]\}$
@@ -26,7 +32,8 @@ This document establishes five things.
 **(D)** $\bigl|\Pr[\mathsf{Real}=1]-\Pr[\mathsf{Real}_0=1]\bigr|\le\gamma_0+\sqrt{2\delta\ln(eN)}+\delta\sqrt{2M\ln2+2\ln(4N^{2}/\gamma_0)}$
 for **every** challenge-oblivious observer, of any query count — bounded or unbounded — and
 any challenge resolution. Consequently $\kappa(q)\le5\sqrt{\sigma'\delta}+2\delta\sqrt M$ for
-every $q$. The bound mentions neither $q$ nor $\sigma$.
+every $q$. The display mentions neither $q$ nor $\sigma$; the collected corollary is free of
+$q$ and retains $\sigma$ only inside $\sigma'$.
 
 **(A⁺, B⁺)** r3's Theorems A and B hold with $5\sqrt{\sigma'\delta}$ replaced by
 $\sqrt{2\delta\ln(eN)}+4\delta\sqrt{\sigma'}$ and $\mu$ replaced by
@@ -67,11 +74,20 @@ $\sqrt{M\delta}$ and enlarge nothing.
 Throughout, $\mathbb E[\cdot]$ without a subscript is over $(f,\zeta)\sim(H,\mathbf z)$, and
 $m_i=m_i(f,\zeta)$, $k_i=\lfloor1/m_i\rfloor$.
 
-**Lemma 0 (derandomisation).** For every challenge-oblivious observer $D$ whose query count is
-bounded by $q\in\mathbb N\cup\{0\}$, or unbounded, there is a deterministic challenge-oblivious
-$D'$ with (i) query count no larger than $D$'s, (ii) the same challenge resolution as $D$, and
-(iii) $\bigl|\Pr[\mathsf{Real}=1]-\Pr[\mathsf{Real}_0=1]\bigr|$ and $\mathsf{Adv}_{\mathcal Y,D}$
-both no larger for $D$ than for $D'$.
+**Lemma 0 (derandomisation).** Fix one of the two paired experiments,
+$(\mathsf{Real},\mathsf{Real}_0)$ or $(\mathsf{Real},\mathsf{Dec})$. For every
+challenge-oblivious observer $D$ whose query count is bounded by $q\in\mathbb N\cup\{0\}$, or
+unbounded, there is a deterministic challenge-oblivious $D'$ with (i) query count no larger
+than $D$'s, (ii) the same challenge resolution as $D$, and (iii) the advantage *in that pair*
+no larger for $D$ than for $D'$ — that is,
+$\bigl|\Pr[\mathsf{Real}=1]-\Pr[\mathsf{Real}_0=1]\bigr|$ in the first case and
+$\mathsf{Adv}_{\mathcal Y,D}$ in the second.
+
+The maximiser is chosen per pair, and the two need not coincide: the lemma does **not** supply
+a single $D'$ dominating both, and nothing below asks it to. Every appeal to it — in
+Theorem D and in Theorems A⁺, B⁺ — is to the pair $(\mathsf{Real},\mathsf{Real}_0)$, and
+Theorem C is stated for a fixed $D$ with no supremum taken, so $\mathsf{Adv}_{\mathcal Y,D}$ is
+never bounded by passing to a derandomised observer.
 
 *Proof.* Let $\rho$ be $D$'s coins and $D_\rho$ the deterministic strategy it then runs. A
 deterministic strategy may be assumed never to repeat a query, replaying a recorded answer
@@ -87,7 +103,8 @@ independent of every other draw: for $(\mathsf{Real},\mathsf{Real}_0)$ the two d
 the challenge, for $(\mathsf{Real},\mathsf{Dec})$ only in the oracle and challenge. So with
 $\alpha(s):=\Pr[\mathsf E_1=1\mid D_\rho=s]-\Pr[\mathsf E_0=1\mid D_\rho=s]$,
 $$\bigl|\Pr[\mathsf E_1=1]-\Pr[\mathsf E_0=1]\bigr|=\Bigl|\sum_{i}\Pr[D_\rho=s_i]\alpha(s_i)\Bigr|\le\max_i|\alpha(s_i)|,$$
-a maximum over a finite set, attained at some $s^{*}$; take $D':=s^{*}$, giving (i) and (iii).
+a maximum over a finite set, attained at some $s^{*}=s^{*}(\mathsf E_0,\mathsf E_1)$; take
+$D':=s^{*}$, giving (i) and (iii) for the pair fixed at the outset, and for that pair only.
 For (ii), let $D$ have resolution $M'$ via $h$. The definition quantifies over *every* coin
 string: for all $\rho,f,\zeta$ and all $v,v'$ with $h(v)=h(v')$, the runs
 $D^{f}_{\rho}(v,\zeta)$ and $D^{f}_{\rho}(v',\zeta)$ issue the same query positions. Taking

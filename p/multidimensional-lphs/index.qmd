@@ -1,0 +1,122 @@
+---
+title: "Multidimensional locality-preserving hashing for shifts"
+subtitle: "Two parties reading a few entries of the same shifted array, and the error rate they cannot get below"
+---
+
+## Motivation
+
+Here is a problem that looks like it belongs to sublinear algorithms and turns
+out to be the bottleneck in group-based secure computation.
+
+Two parties hold the same huge random array — except that one holds it shifted
+by a small amount. Each may read $d$ entries, they cannot communicate, and
+each must output a position, such that the two positions differ by exactly the
+shift. A function that does this is a **locality-preserving hash for shifts**,
+and the quantity of interest is the error probability $\delta$ as a function of
+the query budget $d$.
+
+The cryptographic reason to care is a two-way reduction, proved in the generic
+group model, between LPHS and the **distributed discrete logarithm** problem:
+two parties holding $v$ and $g \cdot v$ must non-interactively output shares
+differing by the known amount. DDL is the share-conversion step at the heart of
+group-based homomorphic secret sharing, and its error probability is what
+dominates the cost. So a better LPHS is a better HSS, and a lower bound for
+LPHS is a lower bound for DDL. The one-dimensional case is settled. The
+multidimensional case — which is what *packed* HSS and location-sensitive
+encryption need — is not, and its two-dimensional instance is one lemma away
+from being closed.
+
+There is also a reason to care that survives quantum computers. Group-based
+cryptography is broken by Shor's algorithm, so all of its traditional
+applications become worthless if scalable quantum machines arrive. Sublinear
+classical algorithms do not: the source paper's own observation is that this
+is "an unusual example for the usefulness of results on group-based
+cryptography in a post-quantum world".
+
+## Provenance and history
+
+The problem was isolated by Boyle, Dinur, Gilboa, Ishai, Keller and Klein in
+*Locality-Preserving Hashing for Shifts with Connections to Cryptography*
+([ePrint 2022/028](https://eprint.iacr.org/2022/028), ITCS 2022), which named
+the notion, proved the equivalence with distributed discrete logarithm in the
+generic group model, and settled the one-dimensional case by translating known
+DDL results across the reduction.
+
+The DDL side is older. The simplest protocol — mark each group element as
+distinguished with probability $\delta$, walk forward to the next distinguished
+one — gives $\delta = \widetilde{O}(1/d)$ and is implicit in the first
+group-based HSS constructions. Dinur, Keller and Klein ([CRYPTO
+2018](https://eprint.iacr.org/2018/731), J. Cryptology 2020) gave the optimal
+protocol, an Iterated Random Walk that is a non-trivial extension of Pollard's
+kangaroo method, achieving $\widetilde{O}(1/d^{2})$, and proved a matching
+lower bound. Read through the reduction, that says the one-dimensional LPHS
+optimum is $\widetilde{\Theta}(d^{-2})$ — and, incidentally, that any
+sublinear-time LPHS must make adaptive queries, which is unusual for a
+sublinear metric algorithm.
+
+Dimensions above one behave differently and are where the source's own
+contribution lies. It proves a lower bound of $\Omega(d^{-2/k})$ for
+$k$-dimensional LPHS, and gives four two-dimensional algorithms: MinHash
+($\widetilde{O}(d^{-1/2})$), MinHash on one axis with the one-dimensional
+optimum on the other ($\widetilde{O}(d^{-2/3})$), the one-dimensional optimum
+on both axes ($\widetilde{O}(d^{-4/5})$), and a three-stage asymmetric
+algorithm analysed with martingales ($\widetilde{O}(d^{-7/8})$). Then it prints
+a fifth, symmetric algorithm and says it believes that one is optimal.
+
+## Parameter lattice
+
+Two axes: the dimension $k$, and whether the bound is an achieved upper bound
+or a proved lower bound. Entries are error probability $\delta$ at query
+budget $d$.
+
+| | Best proved upper bound | Lower bound | Gap |
+|---|---|---|---|
+| **$k = 1$** | $\widetilde{O}(d^{-2})$, from the Iterated Random Walk via the DDL reduction (not a leaf here) | $\Omega(d^{-2})$ (not a leaf here) | closed |
+| **$k = 2$** | $\widetilde{O}(d^{-7/8})$, the source's three-stage algorithm (not a leaf here) | $\Omega(d^{-1})$, the source's Theorem 1.4 (not a leaf here) | [c/0062](/c/0062/) — open, and one printed algorithm is conjectured to close it |
+| **$k \ge 3$** | *unstated*: the source's constructions are two-dimensional, and it does not claim a general-$k$ upper bound | $\Omega(d^{-2/k})$, the source's Theorem 1.4 (not a leaf here) | wide, and not committed to in either direction |
+| **non-cyclic, $k = 2$** | $\widetilde{O}(d^{-7/8})$, same algorithm (not a leaf here) | $\Omega(1/n)$ regardless of $d$, plus the cyclic bound (not a leaf here) | open, and not separately stated here |
+
+The bottom two rows are why the source's "main question" — optimal parameters
+for general $k$ — is *not* a statement on this site. It has no committed value:
+the $\Omega(d^{-2/k})$ lower bound is not claimed to be optimal for $k \ge 3$,
+and no matching construction is offered. The $k = 2$ row is different, because
+there the source commits.
+
+## Why the $k = 2$ cell is one lemma from closed
+
+Everything needed is printed. The lower bound $\Omega(d^{-1})$ is the source's
+Theorem 1.4. The candidate algorithm — $\textsc{Random-Walk-Hash}$: a MinHash
+followed by $\lg\lg d$ stages of a deterministic random walk over $\mathbb{Z}^{2}$
+with step sizes $d'^{1/4}, d'^{3/8}, d'^{7/16}, \dots$ — is printed in full,
+with an experimental error rate matching $\widetilde{O}(1/d)$. Even the
+intended analysis is printed: assume the walks are independent, quote two facts
+about meeting times of bounded-step walks on the plane, and the stage failure
+probabilities telescope to $\widetilde{O}(1/d)$.
+
+The single missing ingredient is that the independence assumption is false, for
+a reason the source identifies exactly. A walk whose step at each point is a
+deterministic function of the symbol read there must eventually revisit a
+point, and both parties must break out of the loop by the same rule — which
+correlates the steps. The source names the fix it would prefer and cannot
+supply: an algorithm monotone along one axis, which would avoid loops
+altogether, but which it does not know how to design at this performance.
+
+## What a resolution buys
+
+For the theory of LPHS, the two-dimensional case closed exactly, and a
+symmetric algorithm that plausibly generalizes to higher $k$ where the
+asymmetric ones do not — the source says the asymmetry is "not obvious how to
+generalize". For cryptography, a better packed HSS: the source's own
+application uses $k$-dimensional LPHS to convert $k$ HSS instances' worth of
+shares with one walk, and the error rate is the cost.
+
+For the wider question of what these random walks can do, a proof would
+require a meeting-time estimate for walks that break their own loops
+deterministically — a self-contained probabilistic statement that does not
+currently exist, and that would likely be reusable wherever a two-party
+protocol needs both parties to walk the same path from different starting
+points.
+
+## Statements in this hub
+
+- [An Optimal Two-Dimensional Locality-Preserving Hash for Shifts](/c/0062/) — open, with the algorithm printed, the target proved optimal, and the intended analysis blocked at one named assumption.

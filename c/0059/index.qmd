@@ -1,0 +1,128 @@
+---
+id: "0059"
+problem: pcfs-from-sparse-lpn
+draft: sparse-code-dual-distance-field-size
+title: "The Binary Dual-Distance Bound Never Exceeds the Bound Over a Larger Field"
+short_title: "Binary dual-distance bound is the worst case"
+areas: [information-theoretic, mpc]
+topics: [dual-distance, learning-parity-with-noise, average-case-hardness]
+model: standard
+form: lower-bound
+assumption_class: falsifiable
+category: research-open
+revision: 1
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: adaptation
+  by: ai
+  note: "Both sides are explicit finite sums, and the visible route is a term-by-term comparison: show that raising p shrinks the probability that w random weight-k rows cancel by at least the (p-1)^w factor that raising p adds to the number of candidate kernel vectors. The real obstacle is that the two effects are of comparable size and that the source's two formulae are written for different code ensembles, so a term-by-term argument has to survive that mismatch as well."
+status_summary: "Open, and asserted rather than asked -- the source writes that it expects the inequality, gives an intuition covering one of the two competing effects, records that all prior work assumes it, and proves nothing. A probe at small parameters is consistent with it; the parameters the source's own construction uses are out of computational reach, which is why the source does not check it either."
+status_updated: 2026-08-23
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Braun, Couteau, Melissaris, Riahinia, Sadeghi, Fast Pseudorandom Correlation Functions from Sparse LPN, IACR ePrint 2025/1644; ASIACRYPT 2025", url: "https://eprint.iacr.org/2025/1644"}
+  - {cite: "Couteau, Rindal, Raghuraman, Silver: Silent VOLE and Oblivious Transfer from Hardness of Decoding Structured LDPC Codes, CRYPTO 2021, Part III", url: "https://eprint.iacr.org/2021/1150"}
+  - {cite: "Khabbazian, Linear Distance for Fixed-Row-Weight Expand-Accumulate Codes over Arbitrary Fields, IACR ePrint 2026/1753", url: "https://eprint.iacr.org/2026/1753"}
+statement_sha: "25e778751169ae70cd933dd785f54d278e80c6e7cf7ec29346b8f80fdd71bf48"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+<!-- topics:start -->
+<div class="cj-tags cj-page-topics"><a class="cj-tag cj-tag-topic" href="/problems/by-topic/average-case-hardness/">Average Case Hardness</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/dual-distance/">Dual Distance</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/learning-parity-with-noise/">Learning Parity With Noise</a></div>
+<!-- topics:end -->
+
+Concrete parameters for sparse-LPN-based constructions are not chosen by reduction. They are chosen by pricing one number — the dual distance of the random sparse code matrix, the smallest weight of a non-zero vector in its kernel — and nobody computes that number. What gets computed is a union-bound lower bound on it, and the computation is only tractable over the binary field, where a cancellation is just a collision of supports. Everything built over a larger field then uses the binary number anyway, on the reasonable-sounding belief that a larger field only makes cancellation harder. This page is that belief, stated precisely enough that one parameter triple could refute it.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [LaTeX source](latex/main.tex) · Formal statement — *not yet formalized*
+
+Fix integers $3 \le k \le n$ with $k \mid n$, an integer $m \ge 1$, a prime $p$, and a statistical security parameter $\rho > 0$. Write $\omega(v)$ for Hamming weight and $\mathsf{dd}(A) = \min\{\omega(v) : v \ne 0,\ v^{\top} A = 0\}$ for the dual distance.
+
+- $\mathsf{SparseCodeGen}(k, m, n, \mathbb{F}_{p})$ outputs a uniformly random matrix in $\mathbb{F}_{p}^{m \times n}$ with exactly $k$ non-zero entries per row (the source's Definition 3).
+- $\mathsf{RegularCodeGen}(k, m, n, \mathbb{F}_{2})$ outputs a matrix in $\mathbb{F}_{2}^{m \times n}$ each of whose rows is a concatenation of $k$ blocks of length $n/k$, each block a uniformly random unit vector (the source's Definition 4).
+- $q_{w}$ is the probability that $2w$ independent uniformly random unit vectors of length $N := n/k$ sum to zero over $\mathbb{F}_{2}$.
+- $\pi^{(p)}_{w}$ is the probability that $w$ independent uniformly random weight-$k$ vectors in $\mathbb{F}_{p}^{n}$ sum to zero.
+
+**The binary bound (the source's Section 4.3).**
+$$D_{2}(k, m, n, \rho) := \max\Bigl\{ d > 0 \ :\ \sum_{w=1}^{\lfloor (d-1)/2 \rfloor} \binom{m}{2w} (q_{w})^{k} \le 2^{-\rho} \Bigr\}.$$
+
+**The general-field bound (the source's Section 4.5).**
+$$D_{p}(k, m, n, \rho) := \max\Bigl\{ d > 0 \ :\ \sum_{w=1}^{d-1} \binom{m}{w} \pi^{(p)}_{w} (p-1)^{w} \le 2^{-\rho} \Bigr\}.$$
+
+In both, the value is $0$ when no $d$ satisfies the constraint, following the source's own convention for its table: "D = 0 indicates that we can only guarantee a trivial bound".
+
+**Conjecture.** For every prime $p > 2$, every $\rho > 0$, and all integers $3 \le k \le n$ with $k \mid n$ and $m \ge 1$,
+$$D_{2}(k, m, n, \rho) \ \le \ D_{p}(k, m, n, \rho).$$
+
+**How the source states it.** As a belief, not a question: "However, we expect the bound obtained through our analysis over F2 to provide a lower bound on that over larger fields." Its reason: "Intuitively, as the field grows, canceling rows gets harder; it no longer suffices for balls to land in the same bins but they must have opposite values." Its account of the practice this licenses: "All previous works assume that the bound does not degrade as the field size grows and a common heuristic is, therefore, to use the bounds from the analysis over F2."
+
+**One thing to notice before believing the statement.** $D_{2}$ is computed for the *regular* ensemble and $D_{p}$ for the *sparse* ensemble, so the source's sentence compares two bounds that differ in ensemble as well as in field. That is a feature of the sentence rather than of this transcription, and it is left as stated. The source does give a same-ensemble variant in one line — replace $(q_{w})^{k}$ by the probability that $2wk$ unit vectors of length $n$ sum to zero — and the corresponding claim is arguably the more natural one; it is not what is stated above. A structural consequence of the mismatch: over the regular ensemble an odd number of rows can never cancel, so $D_{2}$'s sum runs over even weights only, while $D_{p}$'s runs over every weight.
+
+### Sources
+
+- Braun, Couteau, Melissaris, Riahinia and Sadeghi. [*Fast Pseudorandom Correlation Functions from Sparse LPN*](https://eprint.iacr.org/2025/1644). IACR ePrint 2025/1644; ASIACRYPT 2025. The claim and its intuition are on p. 26 of the ePrint, in the paragraph "Analysis Over a General Field"; the binary bound is derived on pp. 24–26 and tabulated in Table 2 on p. 28; the general-field formulae are Section 4.5, pp. 30–32; the cost remark closes p. 32. The public script for the binary side is at [github.com/IRIFCrypto/dualdistance](https://github.com/IRIFCrypto/dualdistance).
+- Couteau, Rindal and Raghuraman. [*Silver: Silent VOLE and Oblivious Transfer from Hardness of Decoding Structured LDPC Codes*](https://eprint.iacr.org/2021/1150). CRYPTO 2021, Part III. The general heuristic for LPN variants that the dual distance serves, and asymptotic dual-distance bounds for arbitrary fields.
+- Khabbazian. [*Linear Distance for Fixed-Row-Weight Expand–Accumulate Codes over Arbitrary Fields*](https://eprint.iacr.org/2026/1753). IACR ePrint 2026/1753. A different code ensemble, and the nearest data point on whether bounds of this kind are field-uniform.
+
+## Proof
+
+View PDF — *no proof written yet* · LaTeX source — *no proof written yet* · Formal proof — *not yet formalized*
+
+Open. Nothing is proved in either direction, and the source proves nothing.
+
+**Two effects pull against each other, and the source's intuition covers one.** Raising $p$ does shrink $\pi^{(p)}_{w}$: rows must now cancel in value as well as in support. But raising $p$ also multiplies the number of candidate kernel vectors on each support by $(p-1)^{w}$, and that factor sits in $D_{p}$'s summand. The conjecture asserts the first effect wins, uniformly in $k$, $m$, $n$ and $\rho$. The source does not discuss the second, which is the single clearest gap between its intuition and its claim.
+
+**The visible route to a proof** is a term-by-term comparison: show that for every $w$, the general-field summand $\binom{m}{w} \pi^{(p)}_{w} (p-1)^{w}$ is at most the binary summand at the matching weight. That is not a formality, because the two sums are indexed differently — the binary sum steps by two in the weight and raises its per-block probability to the $k$-th power — and because a term-by-term inequality is strictly stronger than the inequality on the resulting thresholds, so it may fail where the conjecture holds.
+
+**A probe at small parameters, done for this page, 2026-08-23.** Both bounds were reimplemented in exact rational arithmetic. The binary side was validated first against the source's own Table 2: at $n = 2^{15}$, $m/n = 32$ it reproduces $D = 1574$, $1948$, $2244$, $2478$ for $k = 7, 8, 9, 10$ at $\rho = 40$, matching the published values exactly, and at three other spot checks it lands 2 above the published value — a boundary effect at the last term rather than a disagreement. On the general-field side, at every parameter set where both are non-trivial the bound rises with $p$:
+
+| $n$ | $m$ | $k$ | $\rho$ | $D_{p}$, $p = 2$ | $p = 3$ | $p = 5$ | $p = 257$ |
+|---|---|---|---|---|---|---|---|
+| 512 | 1024 | 8 | 40 | 2 | 141 | 193 | 251 |
+| 512 | 1024 | 10 | 40 | 97 | 149 | 202 | — |
+| 256 | 512 | 8 | 40 | 2 | 2 | 91 | 121 |
+
+That is consistent with the conjecture and is not evidence for it at the parameters that matter: at these dimensions $D_{2}$ is $0$ or trivial (the binary regular bound first becomes non-trivial around $n = 2^{11}$ at $m = 2n$), so the inequality holds vacuously there, and a like-for-like comparison at $n = 2^{15}$ is out of reach on the general-field side — exactly the cost the source names. **The probe also surfaced something the source does not mention**: at these parameters the *sparse*-ensemble bound at $p = 2$ can be far stronger than the *regular*-ensemble bound at the same parameters ($97$ against $1$ at $n = 512$, $k = 10$), because exact-weight-$k$ rows collide with probability $1/\binom{n}{k}$ while block-regular rows collide with probability $(k/n)^{k}$. So part of what makes the source's sentence plausible may be the ensemble difference rather than the field.
+
+**What a refutation looks like.** One triple $(k, m, n, \rho)$ and one prime $p > 2$ with $D_{2} > D_{p}$, exhibited by computation. This is the rare conjecture on this site that a laptop could settle in the negative, and the only reason it has not been is that the interesting range for the general-field side is expensive.
+
+**What is at stake if it fails.** The source's own large-field parameters are chosen from binary numbers, as are those of the zero-knowledge systems it re-analyses. A failure at parameters anyone uses means those sets overstate the dual distance they achieve, hence overstate the linear-test security level $\mathsf{dd}(A) \cdot t / m$ that the whole selection procedure targets. A failure only at parameters nobody uses would be a curiosity, and would still remove the licence to state the belief unrestrictedly.
+
+**Checked against the literature, 2026-08-23.** No proof or counterexample found. The nearest relevant result is Khabbazian, ePrint 2026/1753, which proves a conjecture of Block et al. about fixed-row-weight expand–accumulate codes "in a stronger, field-uniform form", with "the same constants" for every prime power $q$ — a field-uniformity statement of the kind wanted here, but for the expand–accumulate ensemble rather than the sparse random one, and about minimum distance rather than about these two union bounds. Hasler and Reisert (ePrint 2025/2002, December 2025) reimplemented the source's binary algorithm and instantiate their own PCF concretely over $\mathbb{F}_{2}$ only, so they neither test nor need the claim. **This is a targeted check, not an exhaustive sweep.**
+
+## Discussion
+
+**Why a claim about two union bounds, rather than about the dual distance itself.** Because that is what the source's sentence says, and the two are different statements. The mathematically prettier claim — that the dual distance of a random sparse matrix over $\mathbb{F}_{p}$ stochastically dominates that over $\mathbb{F}_{2}$ — is *not* what licenses the parameter-selection practice, since practice uses the computed bounds, not the true distances. Stating the pretty version would have made the page about something the source does not assert, and would have quietly severed the link to the practice that makes it matter.
+
+**This page is the odd one of the three under its hub.** Its companions, [c/0057](/c/0057/) and [c/0058](/c/0058/), are questions the source asks and declines to answer. This one is a claim the source makes and declines to prove — the difference between "we leave this open" and "we expect this" — and it is load-bearing in a way the other two are not: the source's own concrete parameters over $\mathbb{F}_{p}$ depend on it, while nothing in the source depends on the answers to the other two.
+
+**What a reviewer should be suspicious of, in order.** First, the ensemble mismatch: whether the statement should be the same-ensemble variant instead, which would change what a proof has to establish. Second, whether "larger fields" in the source's sentence means larger prime fields or also extension fields — the source's Section 4.5 says "arbitrary prime fields", so the statement is restricted to primes, but the constructions themselves work over $\mathbb{F}_{p^{r}}$. Third, the probe table: it is this page's own computation, validated against Table 2 on the binary side but unvalidated on the general-field side, where no published numbers exist to check against.
+
+## Open obligations
+
+- [ ] Decide whether the intended claim is the same-ensemble variant, and if so, state that as a separate statement rather than editing this one.
+- [ ] Settle whether the claim is meant to cover extension fields $\mathbb{F}_{p^{r}}$, which the constructions use and Section 4.5 does not cover.
+- [ ] Push the general-field computation to a dimension where $D_{2}$ is non-trivial, so that the comparison stops being vacuous. This needs a better algorithm than the cubic one, not more compute.
+- [ ] Attempt the term-by-term inequality, and record whether it fails where the threshold inequality holds.
+- [ ] Independently reproduce the general-field column of the probe table; it has no published numbers to check against.
+- [ ] Prove or refute the statement.
+- [ ] Formalize the statement in Lean; nothing here has been formalized.
+
+:::

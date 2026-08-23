@@ -93,6 +93,13 @@ TOPIC_DESCRIPTIONS = {
     "fully-homomorphic-encryption": "Encryption supporting arbitrary computation on ciphertexts: its definitions, what composing evaluations requires, and what bootstrapping costs.",
     "presampling": "Replacing an oracle conditioned on an adversary's auxiliary input by a mixture of sources fixed on a few coordinates, so that non-uniform security follows from a bound in the simpler bit-fixing model.",
     "quantum-encryption-notions": "Relations among competing definitions of IND-CPA-style security against quantum adversaries.",
+    "pseudorandom-correlation-functions": "Primitives that let two parties expand short correlated keys into unbounded correlated pseudorandomness on demand, and the generators (PCGs) they extend -- the machinery behind silent secure computation.",
+    "learning-parity-with-noise": "Hardness of decoding a noisy random linear code, and the variants -- sparse, regular-noise, variable-density, expand-accumulate -- that correlated-pseudorandomness constructions are built on.",
+    "dual-distance": "The smallest Hamming weight of a non-zero vector in a code matrix's kernel: the quantity every concrete LPN-variant parameter set is priced against, via the linear test framework.",
+    "adaptivity": "What an algorithm loses when its queries cannot depend on the answers to earlier ones -- the resource that separates Pollard's Rho from baby-step giant-step, and whose value in the preprocessing model is largely unquantified.",
+    "discrete-logarithm": "The discrete logarithm problem and its decisional relatives (DDH, square-DDH), and their generic hardness with and without preprocessing.",
+    "locality-preserving-hashing": "Hashing a long string to a position so robustly that shifting the input moves the output by exactly the shift, using a sublinear number of queries.",
+    "distributed-discrete-logarithm": "Two parties holding group elements that differ by a known small amount must non-interactively output shares differing by that amount -- the share-conversion step group-based homomorphic secret sharing rests on.",
 }
 
 missing_desc = TOPIC_SLUGS - set(TOPIC_DESCRIPTIONS)

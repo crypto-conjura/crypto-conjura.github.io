@@ -98,6 +98,9 @@ TOPIC_SLUGS = {
     "witness-encryption", "one-shot-signatures", "search-trees",
     "direct-product-theorems", "quantum-encryption-notions",
     "circular-security", "fully-homomorphic-encryption", "presampling",
+    "pseudorandom-correlation-functions", "learning-parity-with-noise",
+    "dual-distance", "adaptivity", "discrete-logarithm",
+    "locality-preserving-hashing", "distributed-discrete-logarithm",
 }
 
 MODELS = {"rom", "prom", "icm", "ggm", "qrom", "standard", "other"}

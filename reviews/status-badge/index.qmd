@@ -7,18 +7,14 @@ aliases:
 
 ## The status badge {#status-legend}
 
-Every conjecture on this site carries one small badge showing how far it has got. Click any badge,
-anywhere, to come back here.
+Every conjecture carries one badge showing how far it has got. Click any badge to come back here.
 
-The badge is worked out from six fields on the conjecture's own page, always the same way, and nobody
-picks it by hand. It answers two questions at once: **how solid is the statement**, and **how far has
-the proof got**.
+It is worked out from six fields on the conjecture's own page, always the same way, never by hand, and
+it answers two questions: **how solid is the statement**, and **how far has the proof got**.
 
-The reason it treats those as two separate questions is worth spelling out, because it is the whole
-design. You can write a conjecture out in Lean and have a machine verify a proof of it, and still have
-proved nothing about the conjecture -- because the Lean version might not say the same thing as the
-English one. So "somebody checked that the Lean matches the English" is tracked as its own signal, not
-as a footnote.
+Those stay apart for a reason. A machine can verify a Lean proof and you can still have proved nothing
+about the conjecture, because the Lean might not say what the English says. So "somebody checked the
+Lean matches the English" is its own signal, not a footnote.
 
 ### What the parts mean
 
@@ -47,46 +43,33 @@ as a footnote.
 </table>
 ```
 
-**Which way it points is not a score.** A badge can say the work *disproves* the statement rather than
-proving it. That never changes either score, and it cannot: how well established a piece of work is,
-and which way it points, are different questions. A machine-checked disproof is exactly as finished as
-a machine-checked proof. You also cannot claim a disproof without one: setting `proof_direction:
-refutes` while the proof is still open is rejected when the site is built, because suspecting something
-is false refutes nothing.
+**Direction is not a score.** A badge can say the work *disproves* the statement, and that never changes
+either score: a machine-checked disproof is as finished as a machine-checked proof. You cannot claim one
+without a proof, either -- `proof_direction: refutes` with the proof still open is rejected at build
+time.
 
-**If you cannot see the colours.** Red and green are the classic pair colour-blind readers cannot
-separate. At the top of the proof scale the cross does the job on its own, so the badge still works in
-black and white. Lower down -- a disproof drafted but not yet in Lean -- colour really is the only
-visual difference, and the honest answer is that colour is not the only channel: the badge's caption
-and its screen-reader label both say "Refutation" instead of "Proof", and the one-line summary next to
-it is expected to say so in words. Read those rather than the hue.
+**If you cannot see the colours.** At the top of the proof scale the cross works on its own. Lower down,
+colour is the only visual difference, so the caption and the screen-reader label say "Refutation"
+instead of "Proof", and the one-line summary is expected to as well. Read those, not the hue.
 
 ### The six fields
 
-**The statement half** (the outer ring) comes from three fields: who wrote the English version
-(`statement_informal`), whether anyone has written it in Lean and who (`statement_formal`), and whether
-anyone has checked that the Lean says the same thing as the English, and who (`statement_match`). Those
-combine into a statement score from 0 (written by an AI, not in Lean) to 5 (written, put into Lean, and
-checked, all by people).
+**Statement half** (outer ring): who wrote the English (`statement_informal`), whether it is in Lean and
+who put it there (`statement_formal`), and whether anyone checked the Lean matches, and who
+(`statement_match`). Score 0 (AI-written, not in Lean) to 5 (written, formalised and checked, all by
+people).
 
-**The proof half** (the inner disc) comes from three more: whether there is a written proof and who
-wrote it (`proof_informal`), whether anyone reviewed it (`proof_review`, which stops mattering once
-there is a machine-checked proof), and whether there is a finished Lean proof (`proof_formal` -- finished
-meaning no `sorry` left standing in for a missing step). Those combine into a proof score from 0
-(nobody has tried) to 4 (checked by machine). At 4 it stops mattering who wrote it, because the proof
-checker is what decides.
+**Proof half** (inner disc): whether there is a written proof and who wrote it (`proof_informal`),
+whether anyone reviewed it (`proof_review`, which stops mattering once a machine has checked a proof),
+and whether there is a finished Lean proof (`proof_formal` -- no `sorry` standing in for a missing step).
+Score 0 (nobody has tried) to 4 (machine-checked). At 4, who wrote it stops mattering: the proof checker
+decides.
 
-### Reading a badge
-
-The ring's colour is the statement score. Its line style repeats the same information a second way, so
-it survives black and white: dotted means nobody has checked the Lean against the English, dashed means
-an AI checked, solid means a person checked. The disc's colour is the proof score, with a mark in the
-middle (`– · • ● ✓`) as a second channel again. Everything turns red, at the same lightness, when the
-work disproves the statement instead of proving it, and the top mark becomes `✗`. A thin gold halo, which this site calls the *seal*,
-appears only when a person has confirmed the Lean matches *and* the proof, or the disproof, is checked
-by machine. Hover over any badge for the full status in plain words.
-
-Five examples, from nothing done to fully checked, the last two pointing in opposite directions:
+Each score has a second channel so the badge survives black and white. The ring's line style: dotted
+means nobody has checked the Lean against the English, dashed means an AI did, solid means a person did.
+The disc's centre mark: `– · • ● ✓`. Everything turns red when the work disproves rather than proves,
+with `✗` at the top. A thin gold halo, the *seal*, appears only when a person confirmed the match and a
+machine checked the proof. Hover any badge for the full status in words.
 
 ```{=html}
 <table class="cj-badge-examples">
@@ -100,28 +83,20 @@ Five examples, from nothing done to fully checked, the last two pointing in oppo
 </table>
 ```
 
-To change a conjecture's status, edit the `status.*` fields in its `c/<id>/index.qmd` (the six above,
-plus `proof_direction` if the work disproves rather than proves), then run `python3
-scripts/status_badge.py` from the repository root. That regenerates the badge in two places: the
-`status_badge:` field and the copy in the page body between the `<!-- status:start -->` and
-`<!-- status:end -->` markers. Never edit `status_badge:` by hand.
+To change a status, edit the `status.*` fields in `c/<id>/index.qmd` and run `python3
+scripts/status_badge.py` from the repository root. Never edit `status_badge:` by hand.
 
 ## Difficulty {#difficulty-legend}
 
-Every conjecture also carries a difficulty grade, shown as an italic tag next to its other tags, with
-the reason on hover.
+Every conjecture also carries a difficulty grade, an italic tag with the reason on hover.
 
-**It measures one thing, not three.** It measures *how far the conjecture is from techniques that
-already exist*: what a solution would have to invent. It is deliberately not how much effort a solution
-would take, because that depends on who is doing the work and with what. And it is deliberately not the
-chance of it being solved by some date, which a handful of conjectures cannot possibly calibrate and
-which no honest grader could defend. Reading it as either of those will mislead you.
+**It measures one thing:** how far the conjecture is from techniques that already exist, or what a
+solution would have to invent. Not the effort, which depends on who is working. Not the chance of being
+solved by some date, which no honest grader could defend.
 
-The first of those two is tracked separately, and only for one kind of worker:
-[attackability](/problems/attackability/index.qmd) estimates the effort for a machine with a fixed
-budget. It is a different number and it does not feed this one. A conjecture can be `new-idea` here and
-easy to attack there, or `adaptation` here and out of reach there. They disagree often enough that
-treating them as one scale would mislead you in both directions.
+Effort is tracked separately, and only for a machine on a fixed budget: see
+[attackability](/problems/attackability/index.qmd). It does not feed this grade, and the two disagree
+often.
 
 | Grade | What it says |
 |---|---|
@@ -130,38 +105,19 @@ treating them as one scale would mislead you in both directions.
 | `new-idea` | Nothing in the literature gets there. Something unpublished is needed. |
 | `barrier` | A published result says techniques of this kind cannot suffice. |
 
-**Who graded it.** Every grade records whether a person or a machine made the call, and the tag shows
-`(ai)` where a machine did. As everywhere on this site, a machine may never mark its own work as a
-person's, and a person's assessment replaces a machine's openly rather than quietly. Where the evidence
-is thin the grade rounds towards *harder than it looks*, on the same principle as the badge: it may
-understate what is known, never overstate it.
-
-Every grade comes with a one-sentence reason, and the reason is the part worth checking. A grade you
-cannot argue with is decoration, not evidence, so the reason is required and a conjecture without one
-fails the build.
-
-## Where the badge appears
-
-The same badge, ring and disc together, appears in listing tables and at the top of each conjecture's
-own page, just above the Statement / Proof / Formal Artifact tabs.
+Every grade records whether a person or a machine decided, and shows `(ai)` where a machine did. A
+machine may never mark its own work as a person's. Where evidence is thin the grade rounds towards
+*harder than it looks*. Every grade needs a one-sentence reason, and the reason is the part worth
+checking, so a conjecture without one fails the build.
 
 ## What the badge cannot tell you
 
-The badge is deliberately narrow. It is worked out from those six fields and nothing else, and it always
-will be. That means it cannot call a result settled before a machine has checked it, and its caption is
-necessarily short. Two things beside it fill the gap.
+The badge is a function of those six fields and nothing else, so it cannot call a result settled before
+a machine has checked it. Two things beside it fill the gap: the **one-line summary**
+(`status_summary`), required and shown in every listing table, and the **category**, without which a
+result that is proved but not yet in Lean would look identical to one nobody has touched.
+[c/0004](/c/0004/) is the example -- informal proof, low badge, and the category and summary are what
+say so.
 
-**The one-line summary** (`status_summary`) is required, and appears next to the badge in every listing
-table, so you can scan a page of conjectures without opening each one.
-
-**The category** matters here too. Conjectures marked solved, or marked as test cases, exist on this
-site precisely because the badge alone would make a result that is proved but not yet in Lean look
-identical to one nobody has touched. [c/0004](/c/0004/) is a real example: it has an informal proof, its
-badge is still low, and it is the category and the summary that actually say so.
-
-Each conjecture page also lists its open obligations: the specific things still outstanding, such as
-steps nobody has verified, files nobody has audited, Lean statements nobody has matched, or missing
-sanity checks. How many are open is its own column in listing tables.
-
-In short: **the badge and its caption summarise; the summary and the category say what the badge
-cannot.**
+Each conjecture page also lists its open obligations: unverified steps, unaudited files, unmatched Lean
+statements, missing sanity checks. The open count is its own column in listing tables.

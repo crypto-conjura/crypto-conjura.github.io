@@ -385,6 +385,20 @@ supplied numbers and several had drifted or were slightly off:
 
 ## Conjectures and papers
 
+- [ ] **Add the missing salt to `c/0003`, whose statement is false as printed (~1h — placed first in this section because it is a correctness defect, not an improvement)**
+
+  Found 23 August 2026 by the attackability triage (`audits/2026-08-23-conjecture-attackability-triage.md`). The page states the k-collision time-space tradeoff for an **unsalted** random oracle, and in that model it is refuted in one line: the offline stage stores a single k-collision in `k log N` bits, the online stage outputs it with no queries at all, and the claimed `S^{k-1} T^k = Omega(N^{k-1})` fails outright while success tends to one. A random `H : [N] -> [N]` has about `N/k!` k-collisions, so one exists almost surely and the advice is `O(log N)` bits.
+
+  The diagnosis is a dropped hypothesis rather than a wrong belief: every source the page cites is stated relative to a salt drawn *after* the advice is fixed. The k = 2 baseline in its own comparison table, `S*T^2 = Theta(N)` attributed to Coretti–Dodis–Guo–Steinberger, is the salted theorem transcribed without its salt, and the multicollision literature it points at (Akshima, ITC 2024) is salted Merkle-Damgård throughout, indexed by a block bound `B` the page never mentions. Independent corroboration from inside the repo: the Lean file's own signature is `opaque FindsKCollision (S T k N : Nat) : Prop`, with no salt argument either, which the item below already flags for a different reason.
+
+  Restore the salt, decide whether the target is the threshold form or the advantage form the cited results actually prove, and say whether `B` is in scope. Then re-check whether the repaired statement is still open, because the salted `k >= 3` cell has at least one paper on it.
+
+- [ ] **Refresh `c/0024`'s state of the art, which its own caveat flagged as unchecked (~1h)**
+
+  Found 23 August 2026 by the same pass. The page's caveats say it is a 2023 ePrint whose citing papers have not been checked. They have been now: Bauer, Couteau and Sadeghi, *Fine-Grained Non-Interactive Key Exchange, Revisited* (ePrint 2024/834, CRYPTO 2024) reach a hardness gap up to `N^1.6` **in Maurer's model**, assuming non-uniformly secure injective pseudorandom generators with exponential hardness, and achieve the quadratic gap in the standard model.
+
+  This does not settle the page. Its conjecture demands vanishing advantage against computationally unbounded query-bounded eavesdroppers, so it is information-theoretic, whereas the `N^1.6` construction is conditional on a computational assumption. But it is a rung the page does not record, it is what any future attempt would be measured against, and it is exactly the object a produced "solution" would be mistaken for. Add it to the progress remark, and check the sibling [c/0025](/c/0025/) in the same pass, since the same paper works the other half of that gap.
+
 - [ ] **Make the LaTeX and Lean statements say the same thing (~9h — placed first in this section for risk, not difficulty; the bridge-lemma item is real mathematics and may not land)**
 
   Requested 23 August 2026, and the request is about the mathematics, not the tooling: the conjecture as printed in the original paper, as typeset in `c/<id>/latex/main.tex`, and as formalized in `c/<id>/lean/Statement.lean` should be the same statement, as literally as possible. Surveyed 23 August 2026 across all four formalized statements.

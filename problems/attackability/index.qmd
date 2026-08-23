@@ -2,88 +2,113 @@
 title: "Attackability"
 ---
 
-How attackable each statement is *by a bounded automated proof campaign*: a machine-checked
-estimate of whether pointing a multi-agent harness at it would produce a correct, non-vacuous,
-novel result inside a fixed budget. Every statement under `c/` carries one, scored on a fixed
-scale on 23 August 2026.
+Each statement under `c/` carries a number out of 31. It answers one question: **if you gave a
+machine a fixed budget and pointed it at this conjecture, would you get back something correct, not
+trivial, and not already known?** Higher is better. Scored 23 August 2026.
 
-## This is not the difficulty grade, and not a ranking of truth
+That is all it measures. It is not how likely the statement is to be true, not how hard it would be
+for a person, and not how interesting or important it is.
 
-Two axes, easy to confuse, deliberately separate.
+## It is not the difficulty grade
 
-The [difficulty grade](/reviews/status-badge/index.qmd#difficulty-legend) each statement carries is
-*distance from known technique*: what a resolution would have to invent. It says nothing about who
-is working or with what.
+Every statement also carries a [difficulty grade](/reviews/status-badge/index.qmd#difficulty-legend),
+and the two are easy to confuse. The difficulty grade asks *how far the statement is from known
+technique* -- what a solution would have to invent. It says nothing about who is doing the work.
+Attackability asks the other question: how much effort this would take **for one particular worker**,
+a machine with a fixed budget.
 
-Attackability is the other thing that legend disclaims -- expected effort for one specific worker
-with specific compute. It is not a probability that the statement is true, not a probability it will
-be resolved, and not a judgement of how interesting it is. **A statement can be easy for a human
-expert and hard here, or the reverse.** [c/0001](/c/0001/) is the first case: the six-round Feistel
-gap is one rung wide and a human knows exactly what to try, but the deliverable is a simulator, which
-has no scalar score and no small-case decision procedure, so it scores 11. [c/0015](/c/0015/) is the
-second: a combinatorial approximation ratio that no expert has bothered with, exhaustively decidable
-at ten leaves, scoring 25.
+They disagree often. [c/0001](/c/0001/), the six-round Feistel gap, is one step wide, and a person
+knows exactly what to try. It scores 11, because what you have to hand over is a simulator: there is
+no number to compute, no small case to settle, and several inequivalent definitions of the thing being
+proved, so you could not be sure which statement you had proved. [c/0015](/c/0015/) is the reverse: an
+approximation ratio for a greedy algorithm that nobody has ever attempted, where you can check the
+answer exhaustively on ten leaves. It scores 25.
 
-Reading attackability as importance would get the corpus exactly backwards. Eight of the top nine
-scores here sit on statements their own source raised in a sentence and never returned to, and six of
-them carry no idealized model at all -- Fourier analysis on abelian groups, finite martingales, binary
-trees, matrix recovery, reweightings on the sphere. They score high because a reading cannot drift, a
-small case can be decided exactly, and there is nothing to compose. That is a statement about
-tractability and about nobody having bothered, and about nothing else.
+So reading this ranking as a ranking of importance gets the corpus backwards. Eight of the top nine
+are statements their own source mentioned in a single sentence and never returned to, and six of them
+involve no idealized model at all: Fourier analysis on abelian groups, finite martingales, binary
+trees, matrix recovery, reweightings on the sphere. They score high because the statement cannot be
+misread, a small case can be checked exactly, and there is nothing to stitch together. That is a
+claim about tractability, and about nobody having bothered. Nothing else.
 
-## The eight axes
+## What the score is made of
 
-Three groups, maximum 31. Each axis has a stated reason on the record; a score without one is
-decoration.
+Three groups, added up, minus penalties.
 
-**P, proof-path tractability (max 12).** `P1` directionality: is the machine-friendly side the side
-being asked for? Construction search finds objects, not lower bounds. `P2` ladder quality: is there
-an explicit restriction axis with a settled base case, and a next rung whose surviving mechanism can
-be named? `P3` technique proximity: how many independent published results must be composed, and how
-much unstated context from their preliminaries does the statement silently depend on. A route needing
-a genuinely new framework caps `P3` at 1: long is fine, novel is not.
+**Can it find anything? (out of 12.)** Machines are good at *building* things -- a scheme, an attack,
+an algorithm, a counterexample -- and bad at proving that nothing exists. So a statement that asks
+you to build something scores well, and one that asks for a lower bound against an adversary with
+unlimited preprocessing scores near zero.
 
-**V, verification tractability (max 12).** `V1` statement determinacy, weighted heaviest at 6,
-because drift is the failure that survives verification -- a correct proof of the wrong statement
-passes every local check. `V2` refutation affordance: is there a finite instantiation where the claim
-is decidable by exact computation, and can the predicate be hardened against being gamed? `V3`
-formalization reach: does a matching proof assistant exist, is the lemma decomposition cheap for a
-human to write, and is there a machine-checkable witness short of a full proof.
+**Can you tell whether the answer is right? (out of 12.)** This half carries the same weight as the
+first, deliberately. The usual failure is not a wrong proof. It is a **correct proof of a slightly
+different statement**, which passes every check you can run on it locally. About four in five
+technically correct answers to open problems turn out to answer a subtly different question.
 
-**O, opportunity (max 7).** `O1` obscurity dividend: open status usually reflects obscurity rather
-than difficulty, so a conjecture stated in one line and never returned to scores above a named
-conjecture with a tradition. `O2` source access and campaign fit.
+**Has anyone already done it, and can you get the papers? (out of 7.)** A conjecture one paper raised
+in passing and dropped scores higher than a famous one. Famous conjectures are famous partly because
+people have tried them.
 
-**Risk deductions.** Contamination (the answer may sit in training data, which inflates apparent
-success and destroys the novelty claim), vacuity, ladder length, predicate exploitability, expert
-scarcity.
+**Penalties** come off for things that make a result look better than it is. The main one is the risk
+that the answer is already sitting in the training data, so recall gets mistaken for discovery.
 
-## Bands
+Eight questions, in plain terms:
 
-The band is the inverse reading of the same number. It is difficulty **for this harness**, and its
-names are deliberately not the difficulty grades: nothing here is called `routine`, `adaptation`,
-`new-idea` or `barrier`.
+| Question | Out of |
+|---|---|
+| Does it ask you to build something, or to rule something out? | 4 |
+| Is there a settled special case to climb from, and can you say what carries over? | 4 |
+| How many papers must be combined, and how much unstated background do they assume? | 4 |
+| **Is the statement pinned down to exactly one reading?** | **6** |
+| Is there a small case you can settle by exact computation? | 3 |
+| Can a proof assistant hold it, and is there a certificate short of a full proof? | 3 |
+| Did anyone ever actually try this? | 4 |
+| Are the sources reachable, and is the expected proof short? | 3 |
 
-| Band | Score | What it means |
+That 6 is the heaviest single item in the scheme, and it is heaviest for the reason given above: a
+statement you cannot pin down is a statement whose proof you cannot audit.
+
+Two rules in here are counterintuitive and worth stating outright.
+
+**Long and boring beats short and clever.** A twenty-page grind of routine steps scores higher than a
+three-page proof turning on one new idea. If the route needs a genuinely new framework, that item is
+capped at 1 out of 4 however elegant the idea is.
+
+**Obscurity counts in favour.** Being open usually means nobody looked, not that it is hard.
+
+## Bands and verdicts
+
+The band is the same number read as difficulty, and it is difficulty **for this machine**, not in
+general. The names deliberately avoid the difficulty grades: nothing here is called `routine`,
+`adaptation`, `new-idea` or `barrier`.
+
+| Band | Score | What to do |
 |---|---|---|
-| `prime` | 26 to 31 | Everything the scale rewards is present. Run it first. |
-| `reachable` | 22 to 25 | A full campaign is worth resourcing. |
-| `stretch` | 18 to 21 | Worth a scout, a refuter and a case planner, then re-triage. No prover wave. |
-| `hard` | 15 to 17 | Same, and expect the cheap refutation to be the whole return. |
-| `very hard` | 8 to 14 | Expect a barrier note, not a proof. |
-| `out of reach` | 0 to 7 | Do not resource a proof attempt. |
+| `prime` | 26 to 31 | Everything the scale rewards is here. Start with these. |
+| `reachable` | 22 to 25 | Worth a full attempt. |
+| `stretch` | 18 to 21 | Search the literature, try to refute it, plan the special cases. Do not spend a proof budget yet. |
+| `hard` | 15 to 17 | Same, and expect the cheap refutation attempt to be the whole return. |
+| `very hard` | 8 to 14 | Expect a note explaining why it is stuck, not a proof. |
+| `out of reach` | 0 to 7 | Do not spend a proof budget. |
 | `gated` | n/a | Stopped before scoring. See below. |
 
-Verdicts follow mechanically from the axes, never by hand: `go` at 22 or more with both `P` and `V`
-clearing a floor of 7, `probe` from 15, `park` below. The floors are quality gates rather than a
-reason to park a strong candidate, so a statement scoring 22 or more that misses one of them lands at
-`probe`. Two overrides matter. A statement whose reading
-cannot be pinned is capped at `probe` however high it scores, because a proof you cannot audit is not
-evidence. And maximal cheap refutability promotes a `park` to a `probe`, because a counterexample is
-cheap to check and expensive to overlook -- which is why [c/0050](/c/0050/), [c/0051](/c/0051/) and
-[c/0053](/c/0053/) appear as probes despite scoring 11, 12 and 14.
+The verdict follows from the numbers, never by hand. `go` needs 22 or more with at least 7 in each of
+the first two groups. `probe` needs 15. Below that is `park`. Scoring 22 or more while missing one of
+the two floors lands at `probe` rather than `park`, because a floor is a quality check, not a reason
+to give up on a strong candidate.
+
+Two adjustments. A statement whose reading cannot be pinned down is capped at `probe` however high it
+scores, because a proof you cannot audit is not evidence. And a statement you can cheaply try to
+refute is promoted from `park` to `probe`, because a counterexample is cheap to check and expensive to
+miss. That last one is why [c/0050](/c/0050/), [c/0051](/c/0051/) and [c/0053](/c/0053/) appear as
+probes while scoring only 11, 12 and 14.
 
 ## The ranking
+
+Scored on 23 August 2026. Check a statement's own page before starting on it: work can be in flight
+that this snapshot does not know about. [c/0010](/c/0010/) is the case in point, and it sits at the
+top of this table -- it already has a typeset partial solution, and two changes landed on it the same
+day this was scored.
 
 | Statement | Score | Band | P | V | O | Risk | Verdict |
 |---|---:|---|---:|---:|---:|---:|---|
@@ -142,77 +167,87 @@ cheap to check and expensive to overlook -- which is why [c/0050](/c/0050/), [c/
 | [c/0011](/c/0011/) Logarithmic independence implies PRP | n/a | gated | -- | -- | -- | -- | no go |
 | [c/0056](/c/0056/) Classical presampling, quantum queries | n/a | gated | -- | -- | -- | -- | no go |
 
-## What the pass found
+## What the pass turned up
 
-**Fourteen statements were gated before scoring.** A gate stops a campaign; it is not a low score.
+**Fourteen were stopped before scoring.** A stop is not a bad grade. It means scoring would be
+pretending to measure something.
 
-Two hit a transferred barrier: a proof would resolve a named open problem elsewhere.
-[c/0011](/c/0011/) is unconditional as stated, and its source records that an unconditional proof
-would imply that one-way functions exist and that P is not NP. [c/0056](/c/0056/) is gated by its own
-source's Theorem 4. In both cases the *refutation* direction is unobstructed and cheap, and that is
-where any budget should go.
+Two would need you to solve a different famous problem first. [c/0011](/c/0011/) is stated without
+any assumption, and its own source says that proving it that way would show one-way functions exist
+and that P is not NP. [c/0056](/c/0056/) is stopped by a theorem in its own source. In both cases
+*disproving* them is not blocked and is cheap, so that is where any budget should go.
 
-Five need their statement fixed before anything else. [c/0016](/c/0016/) asks for a class of query
-distributions without naming it, so identifying the class is part of the problem rather than a
-hypothesis of it; the repair is already written on its own page. [c/0040](/c/0040/) is stated against a
-definition its page describes as departing from the source's in three ways, under a hardness
-hypothesis the source offers only as an example. [c/0019](/c/0019/), [c/0039](/c/0039/) and
-[c/0003](/c/0003/) turn on load-bearing definitions their sources never give.
+Five need their statement fixed first. [c/0016](/c/0016/) asks for a class of query distributions
+without saying which class, so finding the class is part of the problem rather than something you are
+given; the fix is already written on its own page. [c/0040](/c/0040/) is stated against a definition
+that its own page says differs from the source's in three ways, under an assumption the source offers
+only as an example. [c/0019](/c/0019/), [c/0039](/c/0039/) and [c/0003](/c/0003/) all turn on
+definitions their sources never actually give.
 
-**[c/0003](/c/0003/) is the one to fix first, because the statement as written is false.** The oracle
-carries no salt, so the offline stage can store a single k-collision in k log N bits and the online
-stage can output it with no queries at all, winning with probability tending to one while the claimed
-tradeoff is violated outright. The whole literature the page cites is stated relative to a salt drawn
-after the advice is fixed, and the k = 2 baseline in its own comparison table is a salted theorem
-transcribed without its salt. Adding the salt makes it a real open problem again.
+**[c/0003](/c/0003/) should be fixed first, because as written it is false.** There is no salt. So the
+offline stage can simply store one k-collision, using about k log N bits, and the online stage can
+print it without making a single query. That wins almost always, while the tradeoff the page claims is
+violated outright. Everything the page cites is stated for a salt drawn *after* the advice is fixed,
+and the k = 2 row of its own comparison table is a salted theorem copied across without its salt. Put
+the salt back and it becomes a real open problem again.
 
-**Seven were already resolved.** Six confirm the site's own August sweep: [c/0018](/c/0018/),
-[c/0026](/c/0026/), [c/0027](/c/0027/) (refuted, not proved), [c/0037](/c/0037/), [c/0038](/c/0038/),
-[c/0046](/c/0046/). [c/0004](/c/0004/) is resolved in-repo by a proof that has not been reviewed, so
-its remaining work is verification rather than proving.
+**Seven were already solved.** Six of them confirm the site's own August sweep: [c/0018](/c/0018/),
+[c/0026](/c/0026/), [c/0027](/c/0027/) (disproved, not proved), [c/0037](/c/0037/),
+[c/0038](/c/0038/), [c/0046](/c/0046/). [c/0004](/c/0004/) has a proof in this repo that nobody has
+reviewed, so what is left there is checking, not proving.
 
-**One state of the art was stale.** [c/0024](/c/0024/) carried a caveat saying its citing papers had
-not been checked. They have been now: a CRYPTO 2024 follow-up reaches a hardness gap of `N^1.6` in
-Maurer's model under exponentially hard injective pseudorandom generators. That does not settle the
-page, whose statement is information-theoretic, but it adds a rung the page does not record, and it is
-exactly the object a produced solution would be mistaken for.
+**One page was out of date.** [c/0024](/c/0024/) said its citing papers had not been checked. They
+have now: a CRYPTO 2024 follow-up gets a gap of `N^1.6` in Maurer's model, assuming very strong
+injective pseudorandom generators. That does not settle the page, whose statement asks for security
+against unbounded adversaries and so cannot rest on an assumption. But it is a step the page does not
+record, and it is exactly what someone would mistake a fresh solution for.
 
-**Four pairs can silently answer each other's question.** [c/0008](/c/0008/) and [c/0009](/c/0009/)
-share a byte-identical LaTeX source stating two conjectures, and only the frontmatter says which page
-is which; so do [c/0004](/c/0004/) and [c/0005](/c/0005/). [c/0050](/c/0050/) and [c/0053](/c/0053/)
-differ by one word, quantum. [c/0024](/c/0024/) and [c/0025](/c/0025/) differ by which generic group
-model. Any attempt on one of these has to name its sibling explicitly, or a correct proof of the
-neighbour's statement will pass every check.
+**Four pairs can quietly answer each other's question.** [c/0008](/c/0008/) and [c/0009](/c/0009/)
+have byte-identical LaTeX stating two different conjectures, and only the frontmatter says which page
+means which; the same is true of [c/0004](/c/0004/) and [c/0005](/c/0005/). [c/0050](/c/0050/) and
+[c/0053](/c/0053/) differ by one word, quantum. [c/0024](/c/0024/) and [c/0025](/c/0025/) differ by
+which generic group model. Anyone attacking one of these has to name its twin, or a correct proof of
+the twin's statement will sail through every check.
 
-**The corpus is not lower-bound dominated,** which is the usual failure mode of an open-problem
-archive: 27 statements ask for a construction against 20 asking for a lower bound. The clearest case
-is a pair. [c/0051](/c/0051/), the sponge STB conjecture, scores 12 and survives only on cheap
-refutability. [c/0052](/c/0052/), which asks for the attack that would refute it, is the same
-mathematics from the machine-friendly side and scores 24. Where a statement is a lower bound, the
-record carries its construction-side dual, and that dual is usually the thing worth attacking.
+**Most of this corpus asks you to build something,** which is unusual for an open-problem archive and
+is good news here: 27 statements want a construction against 20 that want a lower bound. The clearest
+example is a pair. [c/0051](/c/0051/), the sponge STB conjecture, scores 12 and survives only because
+it is cheap to try to refute. [c/0052](/c/0052/) asks for the attack that would refute it, which is the
+same mathematics approached from the side a machine is good at, and scores 24. Wherever a statement is
+a lower bound, its record also names the thing you would build to disprove it, and that is usually the
+part worth attacking.
 
-## What this is worth, honestly
+## How much to trust this
 
-Every grade here is machine-made, in one pass, by one model. The scale is anchored on four worked
-examples and the totals, verdicts, overrides and bands are all derived from the axis scores rather
-than asserted, so the arithmetic is checkable and the judgement is not. Three things are outstanding.
-The scores were re-derived once in the same session rather than in a fresh one, and that re-derivation
-moved four of them by a point each, which suggests a genuinely independent pass would move more.
-Several records rest on a source read only through the site's own restatement rather than in full;
-those are flagged per record. And the deductions for contamination are estimates, not measurements:
-where a nearby result sits in training data, apparent success and real success are hard to tell apart
-without re-checking the technique rather than the statement.
+Every grade here was made by one machine, in one pass. The arithmetic is checkable and the judgement
+is not: the totals, verdicts, adjustments and bands are all computed from the eight numbers rather
+than typed in, and the whole set passes its validator, but the eight numbers themselves are opinions
+with a written reason attached.
 
-Grades round towards *harder than it looks*, on the same principle as the badge.
+Three things are outstanding. The scores were re-checked once in the same sitting rather than fresh,
+and that re-check moved four of them by a point each, which suggests a genuinely independent pass
+would move more. Several records rest on a paper read only through this site's summary of it rather
+than in full, and those are flagged individually. And the penalty for the answer already being in
+training data is a guess, not a measurement: where a close result exists, real success and remembered
+success are hard to tell apart without checking the technique rather than the statement.
+
+Where the evidence is thin, grades round towards *harder than it looks*, on the same principle as the
+status badge.
 
 ## Provenance
 
 Produced by the `conjecture-triage` skill on 23 August 2026 over all 55 statements under `c/`.
-[c/0005](/c/0005/) is excluded: it was withdrawn at its author's request and is no longer tracked as
-an open problem. The remaining 54 records, with the full per-axis reasons, the scout evidence and its
-retrieval tags, the construction-side duals and the entry rung proposed for each campaign, are in
+[c/0005](/c/0005/) is left out: it was withdrawn at its author's request and is no longer tracked as
+an open problem. The other 54 records carry the reason behind each of the eight numbers, the
+literature search and how each source was actually obtained, the thing you would build to disprove
+each statement, and a suggested first step for each attempt. They are in
 [the audit record](https://github.com/crypto-conjura/crypto-conjura.github.io/blob/main/audits/2026-08-23-conjecture-attackability-triage.md)
 and its
 [machine-readable companion](https://github.com/crypto-conjura/crypto-conjura.github.io/blob/main/audits/2026-08-23-conjecture-attackability-triage.records.jsonl).
-This page is a dated snapshot of those records, not a live view: attackability is not yet a statement
-field, and deliberately so until the research-object data model lands.
+
+Those records use short codes for the eight questions, in the order listed above: `P1`, `P2`, `P3` for
+the first group, `V1`, `V2`, `V3` for the second, `O1`, `O2` for the third.
+
+This page is a dated snapshot of those records, not a live view. Attackability is deliberately not a
+field on each statement yet: the research-object data model already reserves research priority and
+problem horizons, and this should feed that rather than compete with it.

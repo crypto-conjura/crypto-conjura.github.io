@@ -1,14 +1,121 @@
 ---
-title: "F-fairSFE — Guaranteed output delivery"
+title: "F-fairSFE — Secure function evaluation with guaranteed termination"
 status: "Canonical"
 layer: 6
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-fairSFE* (Guaranteed output delivery) is part of *Secret Sharing, Threshold Cryptography, MPC* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+*F-fairSFE* (Secure function evaluation with guaranteed termination) is part of *Secret Sharing, Threshold Cryptography, MPC* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+
+Every party gives an input, every party gets its output, and the adversary cannot prevent that by refusing to act. The printed box buys this with a *round budget*: a counter the parties spend down, so the functionality hands the simulator a fixed number of activations and then produces output whether the simulator cooperated or not.
+
+## Functionality
+
+Reading the box: $\mathbf{C}$ is the corrupted set, so $\mathbf{P} \setminus \mathbf{C}$ is the source's honest set $\mathcal{H}$; $\bot$ marks an input or output slot not yet filled; $\mathcal{A}(\cdot)$ is a call on the adversary slot, and here it is an *activation* rather than a request — nothing is read back from it. $\mathtt{t}$ is the source's per-party delay $t_i$ and $\mathtt{l}$ its global round counter. $\mathit{Rnd}$ is the source's round function of the security parameter, used here as the number it evaluates to. **require** refuses the call, and the framework answers $\textsf{rej}$.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}^{f,\mathit{Rnd}}_{\mathsf{SFE}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := (f, R, \mathit{Rnd})\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{x}[*] \gets \bot\); &nbsp;\(\mathtt{y}[*] \gets \bot\)<span class="cj-comment">// inputs and outputs, one slot per party</span></li>
+<li>\(\mathtt{t}[*] \gets |\mathbf{P}|\)<span class="cj-comment">// activations still owed this round, per party</span></li>
+<li>\(\mathtt{l} \gets 1\)<span class="cj-comment">// the round counter</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Input(<span class="cj-id">v</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="4">
+<li>\(\mathtt{x}[\mathit{id}.P] \gets v\)</li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Input},\ \mathit{id}.P\bigr)\)<span class="cj-comment">// that a party gave input, never what</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Output()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="7">
+<li>\(\textbf{require}\ \mathit{id}.P \in \mathbf{C} \ \vee\ \mathtt{x}[\mathit{id}.P] \neq \bot\)</li>
+<li>\(\textbf{if}\ \mathtt{t}[\mathit{id}.P] > 1\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{t}[\mathit{id}.P] \gets \mathtt{t}[\mathit{id}.P] - 1\)</span></li>
+<li><span class="cj-ind">\(\textbf{if}\ \forall Q \in \mathbf{P} \setminus \mathbf{C} : \mathtt{t}[Q] = 1\ \textbf{then}\)</span></li>
+<li><span class="cj-ind">\(\mathtt{l} \gets \mathtt{l} + 1\); &nbsp;\(\mathtt{t}[*] \gets |\mathbf{P}|\)</span></li>
+<li><span class="cj-ind">\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Output},\ \mathit{id}.P\bigr)\)</span></li>
+<li><span class="cj-ind">\(\textbf{return}\ \bot\)</span></li>
+<li>\(\textbf{if}\ \mathtt{l} < \mathit{Rnd}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \mathsf{early}\)</span></li>
+<li>\(\textbf{if}\ \mathtt{y}[*] = \bot \ \wedge\ \forall Q \in \mathbf{P} \setminus \mathbf{C} : \mathtt{x}[Q] \neq \bot\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(r \gets_{\$} R\); &nbsp;\((\mathtt{y}[P])_{P \in \mathbf{P}} \gets f\bigl((\mathtt{x}[P])_{P \in \mathbf{P}}, r\bigr)\)</span></li>
+<li>\(\textbf{return}\ \mathtt{y}[\mathit{id}.P]\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="19">
+<li>\(\textbf{return}\ \bigl(\mathtt{x}[\mathit{id}.P],\ \mathtt{y}[\mathit{id}.P],\ \mathtt{t}[\mathit{id}.P],\ \mathtt{l}\bigr)\)<span class="cj-comment">// a corrupt party's own slots, and the clock</span></li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+The box is transcribed from Katz, Maurer, Tackmann and Zikas, *Universally composable synchronous computation*, ePrint 2011/310, revision `20131026:194047`, the box titled `Functionality F^{f,Rnd}_SFE(P)` on p. 12 — the PDF's numbering and the printed numbering agree — together with Definition 1 on the same page, which is what makes this the guaranteed-termination object rather than a generic SFE box.
+
+**The stub's title was a claim about a property; the printed object names it differently, and the difference matters.** The page said "Guaranteed output delivery". The source's term is *guaranteed termination*, and Definition 1 defines it as realizing this functionality for **some** polynomial $\mathit{Rnd}$. That existential quantifier is the content: a protocol has guaranteed termination when there is a round bound it meets, not when output is somehow unconditional. The retitle keeps the property in the title and adds the object.
+
+What the code does not say:
+
+- **Line 7 is the concession that makes the box realizable, and it is asymmetric on purpose.** An honest party that has not given input cannot ask for output; a corrupt one can. The source writes this as "if $p_i \in \mathcal{H}$ and $x_i$ has not yet been set then ignore", and the asymmetry is not sloppiness: a corrupt party's activations are the simulator's to spend, and forcing it to supply an input first would let the environment starve the round counter.
+- **Lines 8–13 are the whole mechanism, and the reason they exist is an impossibility result three pages earlier.** The source proves that the immediate-output SFE functionality of Canetti's framework — reprinted on its p. 26 and *not* what this page transcribes — cannot be realized over a network that leaks the fact of a transmission, because the environment can ask for output before the simulator has had the activations a real protocol's messages would consume. The round budget is the fix: line 12 gives the adversary the activation, line 9 charges the party for it, and line 11 advances the clock only when line 10 finds every honest party spent down to its last one.
+- **Line 10 is where "guaranteed" is bought, and it is bought by a quantifier over honest parties only.** The round advances when $\forall Q \in \mathbf{P} \setminus \mathbf{C} : \mathtt{t}[Q] = 1$. A corrupt party that never calls $\mathsf{Output}$ cannot hold the counter back, which is exactly what an adversary would do to stall. Compare [F-syn](/uc/layer-0-idealized-setup/f-syn/index.qmd), whose round switch is an *adversary* interface: that is the defect this paper diagnosed, and this line is the repair.
+- **Line 15 is a message, not a refusal, and the distinction is load-bearing.** A party whose own counter is exhausted but whose round has not arrived is told $\mathsf{early}$. The source is explicit that this is sent *to $p_i$*, unlike the activation at line 12 which goes to the adversary — so a party can distinguish "the protocol is not finished" from "I have been descheduled", and the source's Remark 1 turns that into a language for round-complexity lower bounds: no protocol realizes this box with $\mathit{Rnd}$ smaller than the true round complexity of $f$.
+- **Line 16's guard is the one-shot condition, and it also fixes the input vector.** Output is computed at most once, and the inputs used are whatever the slots hold at that moment. Line 4 lets a party overwrite its own input freely until then, which is the source's behaviour and not an oversight: it is the standard UC concession that a corrupt party chooses its input late.
+- **Line 18 is guaranteed output delivery in one line.** Once the round has arrived and the honest inputs are in, every subsequent $\mathsf{Output}$ call returns the party's own share of $f$'s value, and no path in the box can withhold it. There is no abort interface, no adversarial delivery decision, and no deadline parameter — which is precisely the difference from [F-asyncMPC](/uc/layer-6-secret-sharing-mpc/f-asyncmpc/index.qmd), whose $\mathsf{NoInput}$ lets the adversary discard up to $\lvert \mathbf{C} \rvert$ honest inputs and whose $\mathsf{Delay}$ reschedules delivery.
+
+Where the source needed a decision:
+
+| Source | Box | Why |
+|---|---|---|
+| Three bullets chained by "Else, … Else," | Three separate $\textbf{if}$s, lines 8, 14, 16 | The generator's LaTeX subset has no `else`, so an `else` chain has to be re-expressed. It is not a mechanical rewrite here: the first branch *mutates the very counter* the later branches test, at lines 9 and 11. Writing three independent tests would fall through — a party decremented to $\mathtt{t}=1$ at line 9 would then satisfy line 14 in the same activation. The early $\textbf{return}$ at line 13 is what preserves the source's semantics, and it is why that line exists. |
+| "Send $(\mathtt{activated}, p_i)$ to the adversary" | $\mathcal{A}(\mathit{id}.\mathsf{Output}, \mathit{id}.P)$, line 12 | An unanswered call, not a responsive one. The source's purpose is to give the simulator $\lvert \mathbf{P} \rvert$ activations per round to emulate protocol messages and clock notifications; nothing is read back, so a responsive $\mathcal{A}^{!}$ would strengthen the box for no reason. |
+| The party is told nothing in the first branch | $\bot$, line 13 | Delivery is a pull here, so every operation returns. The source's first branch ends the activation with the adversary holding the token and $p_i$ holding nothing; $\bot$ is that nothing. It is deliberately *not* $\mathsf{early}$ — see line 16. |
+| "send $(\mathtt{early})$ to $p_i$" | $\mathsf{early}$, line 15 | A distinguished non-value, kept distinct from $\bot$ because the source distinguishes them and because a protocol may legitimately loop on it. |
+| No leakage interface at all | $\mathsf{Leak}$, line 19 | Required here; the source is standard UC, where corrupting a party hands the adversary that party's state wholesale. What is returned is the corrupt party's own input and output slots, its counter, and the round number — the counter and round because they are not secret (the adversary is activated once per spend anyway) and the slots because they are that party's. Other parties' inputs are not returned, which is the whole point of the box. |
+| $\mathcal{H}$, the honest set | $\mathbf{P} \setminus \mathbf{C}$ | Direct, but not free of content: Theorem 1 of the source establishes realizability against a **static** adversary, and the source never says what happens to a counter reset when $\mathcal{H}$ shrinks mid-round. Under adaptive corruption line 10 can become satisfiable by a corruption rather than by an activation, which advances the round early. This box does not repair that, and a protocol proved against the source is in the same position. |
+| $\mathit{Rnd}$, a function of the security parameter | A number, line 14 | Everything in this framework is implicitly parameterized by the security parameter, so the function is applied and its value compared. Remark 1's family $\mathcal{F}^{f,r'}_{\textsc{SFE}}$ is this box at a smaller constant. |
+| $R$, the randomness domain | $\mathit{par}$, and line 17 | Made an explicit parameter alongside $f$, the same way [F-asyncMPC](/uc/layer-6-secret-sharing-mpc/f-asyncmpc/index.qmd) does, so the two boxes can be read side by side. |
+
+## Known realizations
+
+- Theorem 1 of the source: any protocol realizing $f$ in the *stand-alone* model with an efficient straight-line black-box simulator, extended by one void synchronization round at the start, UC-realizes this box with guaranteed termination in the $\{\mathcal{F}_{\textsc{clock}}, \mathcal{F}_{\textsc{bd-sec}}\}$-hybrid model against a static adversary. So the classical feasibility results carry over, and the price is one extra round.
+- The two hybrids are not incidental. $\mathcal{F}_{\textsc{clock}}$ is the paper's synchronization functionality — the nearest page here is [G-clock](/uc/layer-0-idealized-setup/g-clock/index.qmd), though the paper's version is local and per-session — and $\mathcal{F}_{\textsc{bd-sec}}$ is its bounded-delay secure channel, closest to [F-net](/uc/layer-1-channels-agreement-ledgers/f-net/index.qmd). Realizability of *this* box is a statement about that pair, not about the network in general.
+- Nothing realizes the immediate-output variant, and the source proves it: over a network with separable rounds, an environment that asks for output straight away cannot be simulated. That variant is printed on the source's p. 26 as $\mathcal{F}^{f}_{\textsc{SFE}}$ and is a different object from this one.
+
+## Properties
+
+- **Guaranteed output delivery, with probability exactly $1$** and no quantifier over the adversary at all: given enough honest $\mathsf{Output}$ calls, lines 10–11 advance the clock, line 14 stops refusing, and line 18 returns. The adversary appears in the box only as the recipient of activations at line 12 and has no interface that could stop this.
+- **Fairness, with probability exactly $1$, and it is *stronger* than what the page's title used to promise.** All outputs are computed in one step at line 17, so no party — corrupt or honest — can obtain its output before another party is entitled to its own. The distinction fairness/guaranteed-output-delivery collapses in this box because there is no abort at all.
+- **Privacy, with probability exactly $0$ of leakage**, quantified over honest parties: the only thing the adversary is told about an honest party's input is *that* it arrived, at line 5, and $\mathsf{Leak}$ returns only a corrupt party's own slot. The output $\mathtt{y}[P]$ is delivered per party, so honest parties' outputs do not leak either.
+- **Round complexity is asserted, not achieved, and that is the intended use.** The box does not make a protocol fast; it makes a *claim* about a protocol falsifiable. A protocol realizes $\mathcal{F}^{f,\mathit{Rnd}}_{\textsc{SFE}}$ only if it finishes within the budget, so "$f$ needs at least $r$ rounds" becomes "no protocol realizes this box with $\mathit{Rnd} < r$". This is the only functionality in this encyclopedia whose parameter is a complexity bound.
+- **The counter is per-party, so the round is a lower bound rather than a barrier.** $\mathtt{l}$ advances only when every honest party has spent down, but it is not reset by the parties' relative progress: a party that calls $\mathsf{Output}$ repeatedly while others are behind sits at $\mathtt{t}=1$ and takes line 14 or 16. So no party can *reach* output before round $\mathit{Rnd}$, and none is forced to wait once it has arrived. Nothing in the box synchronizes them more tightly than that, and a protocol needing a true barrier needs the clock hybrid for it.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Gordon, Liu, and Shi. [*Constant-round MPC with fairness and guarantee of output delivery*](https://eprint.iacr.org/2015/371). In Advances in Cryptology – CRYPTO 2015, volume 9216 of LNCS, pages 63–82, 2015.
-- Goldwasser and Levin. [*Fair computation of general functions in presence of immoral majority*](https://doi.org/10.1007/3-540-38424-3_6). In Advances in Cryptology – CRYPTO 1990, volume 537 of LNCS, 1990.
-- Hirt and Maurer. [*Complete characterization of adversaries tolerable in secure multi-party computation*](https://crypto.ethz.ch/publications/files/HirMau00.pdf). Journal of Cryptology, 13(1):31–60, 2000.
+- Katz, Maurer, Tackmann, and Zikas. [*Universally composable synchronous computation*](https://eprint.iacr.org/2011/310). In 10th Theory of Cryptography Conference (TCC), pages 477–498, 2013. Read at ePrint revision `20131026:194047`, the newer of two postings. The box on p. 12 and Definition 1 beside it — the definition transcribed above; §4.2, p. 11 for the impossibility that motivates the round budget; Remark 1, p. 12 for the round-complexity reading; Theorem 1, p. 12 for the realization; Appendix A.1, p. 26 for the immediate-output variant this page does **not** transcribe. Authors and venue confirmed against the paper's title page; the same posting and revision are recorded on [F-syn](/uc/layer-0-idealized-setup/f-syn/index.qmd), and the file's `sha256_16` matches that entry's manifest.
+- Gordon, Liu, and Shi. [*Constant-round MPC with fairness and guarantee of output delivery*](https://eprint.iacr.org/2015/371). In Advances in Cryptology – CRYPTO 2015, volume 9216 of LNCS, pages 63–82, 2015. **Checked and it prints no functionality box**: its guarantee-of-output-delivery notion is the classical ideal *process*, given as numbered prose in Appendix A ("Send inputs to the trusted functionality … Trusted functionality answers the parties"), and its Theorem 4.2 states UC realization of "the ideal functionality $\mathcal{F}_f$ with guarantee of output delivery" without ever drawing that box. Kept as the origin of the constant-round result.
+- Goldwasser and Levin. [*Fair computation of general functions in presence of immoral majority*](https://doi.org/10.1007/3-540-38424-3_6). In Advances in Cryptology – CRYPTO 1990, volume 537 of LNCS, 1990. The origin of the fairness notion, and predating ideal functionalities by a decade — the same relationship [F-OT](/uc/layer-5-oblivious-transfer/f-ot/index.qmd) has with Rabin 1981. [UNVERIFIED: not obtained; the DOI resolves to a Springer landing page and the paper was not read for this entry, so nothing here rests on it.]
+- Hirt and Maurer. [*Complete characterization of adversaries tolerable in secure multi-party computation*](https://crypto.ethz.ch/publications/files/HirMau00.pdf). Journal of Cryptology, 13(1):31–60, 2000. [UNVERIFIED: not obtained for this entry.]
+- Cohen and Lindell. [*Fairness versus guaranteed output delivery in secure multiparty computation*](https://eprint.iacr.org/2014/668). In Advances in Cryptology – ASIACRYPT 2014, 2014. Added here because it is the paper that separates the two notions the stub's title conflated — and **checked: it prints no functionality either**, working in the stand-alone real/ideal model throughout. Read at ePrint revision `20141024:150524`. Its result is that fairness does not imply guaranteed output delivery in general, which is why this box — where the two coincide — is a strong object rather than a neutral one.

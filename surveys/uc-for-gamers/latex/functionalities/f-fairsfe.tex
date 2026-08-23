@@ -1,0 +1,69 @@
+%% The interface box of f-fairsfe, the one source for both the book
+%% and uc/.../f-fairsfe/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Ffairsfe$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := (f, R, \mathit{Rnd})$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{x}[*] \gets \none$; \ $\V{y}[*] \gets \none$
+  \Comment{inputs and outputs, one slot per party}
+\State $\V{t}[*] \gets |\Ps|$
+  \Comment{activations still owed this round, per party}
+\State $\V{l} \gets 1$
+  \Comment{the round counter}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Input}(v)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $\V{x}[\id.P] \gets v$ \label{ln:fairsfeoverwrite}
+\State $\Adv\bigl(\id.\op{Input},\ \id.P\bigr)$
+  \Comment{that a party gave input, never what}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Output}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P \in \Cs \ \vee\ \V{x}[\id.P] \neq \none$} \label{ln:fairsfeown}
+\If{$\V{t}[\id.P] > 1$}
+  \State $\V{t}[\id.P] \gets \V{t}[\id.P] - 1$ \label{ln:fairsfespend}
+  \If{$\forall Q \in \Ps \setminus \Cs : \V{t}[Q] = 1$}
+    \State $\V{l} \gets \V{l} + 1$; \ $\V{t}[*] \gets |\Ps|$ \label{ln:fairsferound}
+  \EndIf
+  \State $\Adv\bigl(\id.\op{Output},\ \id.P\bigr)$ \label{ln:fairsfeactivate}
+  \State \textbf{return} $\none$
+\EndIf
+\If{$\V{l} < \mathit{Rnd}$}
+  \State \textbf{return} $\op{early}$ \label{ln:fairsfeearly}
+\EndIf
+\If{$\V{y}[*] = \none \ \wedge\ \forall Q \in \Ps \setminus \Cs : \V{x}[Q] \neq \none$}
+  \State $r \gets_{\$} R$; \ $(\V{y}[P])_{P \in \Ps} \gets f\bigl((\V{x}[P])_{P \in \Ps}, r\bigr)$ \label{ln:fairsfeeval}
+\EndIf
+\State \textbf{return} $\V{y}[\id.P]$ \label{ln:fairsfegod}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $\bigl(\V{x}[\id.P],\ \V{y}[\id.P],\ \V{t}[\id.P],\ \V{l}\bigr)$ \label{ln:fairsfeleak}
+  \Comment{a corrupt party's own slots, and the clock}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

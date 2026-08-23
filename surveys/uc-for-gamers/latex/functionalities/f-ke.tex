@@ -1,0 +1,90 @@
+%% The interface box of f-ke, the one source for both the book
+%% and uc/.../f-ke/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fke$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := \kappa$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{Peer} : \Fke.\Ps \to \Fke.\Ps \cup \{\unset\}$
+\State $\V{Peer}[*] \gets \unset$
+  \Comment{who asked to talk to whom}
+\State $\V{Role} : \Fke.\Ps \to \{\op{ini}, \op{res}\} \cup \{\unset\}$
+\State $\V{Role}[*] \gets \unset$
+\State $\V{A} \gets \unset$; \ $\V{B} \gets \unset$
+  \Comment{the matched pair, in the order they asked}
+\State $\V{k} \gets \unset$
+\State $\V{out}[*] \gets 0$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Establish}(Q, r)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{Peer}[\id.P] = \unset \ \wedge\ Q \neq \id.P \ \wedge\ \V{k} = \unset$} \label{ln:keonce}
+  \Comment{one request per party, and only before a key exists}
+\State $\V{Peer}[\id.P] \gets Q$; \ $\V{Role}[\id.P] \gets r$
+\State $\Adv\bigl(\id.\op{Establish},\ \id.P,\ Q,\ r\bigr)$ \label{ln:ketuple}
+  \Comment{the whole tuple, role included}
+\If{$\V{Peer}[Q] \neq \id.P$}
+  \State \textbf{return} $\ok$ \label{ln:kenopartner}
+    \Comment{no matching request yet}
+\EndIf
+\State $\V{A} \gets Q$; \ $\V{B} \gets \id.P$ \label{ln:kematch}
+\If{$\{\V{A}, \V{B}\} \cap \Cs = \emptyset$}
+  \State $\V{k} \gets_{\$} \{0,1\}^{\kappa}$ \label{ln:kedraw}
+  \State $\Adv\bigl(\id.\op{Establish},\ \op{Key},\ \V{A},\ \V{B}\bigr)$ \label{ln:kewho}
+    \Comment{that a key exists, never which}
+\EndIf
+\If{$\{\V{A}, \V{B}\} \cap \Cs \neq \emptyset$}
+  \State $\V{k} \gets \Adv\bigl(\id.\op{Establish},\ \op{Choose},\ \V{A},\ \V{B}\bigr)$ \label{ln:kechoose}
+  \State $\V{k} \gets \San[\Clean_{k}](\V{k})$
+\EndIf
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Fetch}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P \in \{\V{A}, \V{B}\} \ \wedge\ \V{k} \neq \unset \ \wedge\ \V{out}[\id.P] = 0$}
+\State $\V{out}[\id.P] \gets 1$ \label{ln:kesent}
+\State \textbf{return} $\V{k}$ \label{ln:kedeliver}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$\id.P \notin \{\V{A}, \V{B}\}$}
+  \State \textbf{return} $(\V{A},\ \V{B})$ \label{ln:keoutsider}
+    \Comment{an outsider learns who, never the key}
+\EndIf
+\If{$\V{out}[\id.P] = 0$}
+  \State \textbf{return} $(\V{Peer}[\id.P],\ \V{Role}[\id.P],\ \V{k})$ \label{ln:kepfs}
+    \Comment{before delivery, and only then}
+\EndIf
+\State \textbf{return} $(\V{Peer}[\id.P],\ \V{Role}[\id.P])$ \label{ln:keafter}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\Clean_{k}(k)$}:
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $k \in \{0,1\}^{\kappa}$
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

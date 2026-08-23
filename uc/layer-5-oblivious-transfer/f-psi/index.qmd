@@ -1,10 +1,124 @@
 ---
-title: "F-PSI — Private set intersection"
-status: "Emerging"
+title: "F-PSI — Private set intersection, one-sided output"
+status: "Canonical"
 layer: 5
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-PSI* (Private set intersection) is part of *Oblivious Transfer and Correlated Randomness* in the UC functionality encyclopedia. Status: an emerging formulation, still an active area of research.
+*F-PSI* (Private set intersection, one-sided output) is part of *Oblivious Transfer and Correlated Randomness* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
 
-Information about this functionality's precise definition, known realizations, properties, and any formal artifacts has not been added yet.
+Two parties each hold a set; one of them learns the intersection and nothing else, and the other learns only that its peer took part. The box is nine lines, and the interesting one is the set-size bound: a corrupt party is permitted a *larger* set than an honest one, which is a concession the printed definition makes explicitly rather than in a proof.
+
+## Functionality
+
+Reading the box: $\mathbf{C}$ is the corrupted set; $\square$ marks a set never supplied; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it. The parameters are the item length $\sigma$, the honest set-size bound $n$, and the corrupt one $n' > n$. $P_{\mathsf{s}}$ is the party the source calls Alice, $P_{\mathsf{r}}$ the one it calls Bob.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{PSI}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P} := \{P_{\mathsf{s}}, P_{\mathsf{r}}\}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := (\sigma, n, n')\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{X} \gets \square\); &nbsp;\(\mathtt{Y} \gets \square\)<span class="cj-comment">// the sender's set, and the receiver's</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Receive(<span class="cj-id">S</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="2">
+<li>\(\textbf{require}\ \mathit{id}.P = P_{\mathsf{r}} \ \wedge\ \mathtt{Y} = \square \ \wedge\ S \subseteq \{0,1\}^{\sigma}\)</li>
+<li>\(\textbf{require}\ |S| \leq n \ \vee\ (\mathit{id}.P \in \mathbf{C} \ \wedge\ |S| \leq n')\)<span class="cj-comment">// a corrupt party is allowed the larger set</span></li>
+<li>\(\mathtt{Y} \gets S\)</li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Send(<span class="cj-id">S</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="6">
+<li>\(\textbf{require}\ \mathit{id}.P = P_{\mathsf{s}} \ \wedge\ \mathtt{X} = \square \ \wedge\ S \subseteq \{0,1\}^{\sigma}\)</li>
+<li>\(\textbf{require}\ \mathtt{Y} \neq \square\)<span class="cj-comment">// ``thereafter'': the receiver commits first</span></li>
+<li>\(\textbf{require}\ |S| \leq n \ \vee\ (\mathit{id}.P \in \mathbf{C} \ \wedge\ |S| \leq n')\)</li>
+<li>\(\mathtt{X} \gets S\)</li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Ready()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="11">
+<li>\(\textbf{require}\ \mathit{id}.P = P_{\mathsf{s}}\)</li>
+<li>\(\textbf{return}\ \mathtt{Y} \neq \square\)<span class="cj-comment">// that the receiver has input, never what</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Fetch()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="13">
+<li>\(\textbf{require}\ \mathit{id}.P = P_{\mathsf{r}} \ \wedge\ \mathtt{X} \neq \square\)</li>
+<li>\(\textbf{return}\ \mathtt{X} \cap \mathtt{Y}\)<span class="cj-comment">// one-sided: the sender never learns it</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="15">
+<li>\(\textbf{if}\ \mathit{id}.P = P_{\mathsf{s}}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \mathtt{X}\)</span></li>
+<li>\(\textbf{if}\ \mathit{id}.P = P_{\mathsf{r}} \ \wedge\ \mathtt{X} \neq \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ (\mathtt{Y},\ \mathtt{X} \cap \mathtt{Y})\)</span></li>
+<li>\(\textbf{if}\ \mathit{id}.P = P_{\mathsf{r}}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \mathtt{Y}\)</span></li>
+<li>\(\textbf{return}\ \bot\)</li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+The box is transcribed from Rindal and Rosulek, *Malicious-secure private set intersection via dual execution*, ePrint 2017/769, revision `20170812:072921` (its only posting), Figure 1, p. 4 — captioned "Ideal functionality for private set intersection (with one-sided output)" and referred to in the text as $\mathcal{F}_{\mathsf{PSI}}$.
+
+**The stub cited nothing at all, and this is a forward search rather than a harvest.** The reason a citation was missing is worth recording: most of the PSI literature states security against a *functionality it does not print*, or prints a semi-honest variant inline. This paper prints the malicious-model box, names it, and defines UC realization against it in the same section — which is what makes it citable.
+
+Three lines carry the content:
+
+- **Line 3 is the concession, and it is the reason this entry is worth having.** The honest set-size bound is $n$; a corrupt party may submit up to $n' > n$ items. The source states it as part of the functionality, not as a proof artefact, which is the honest way to record it: real PSI protocols pad or hash into a structure of fixed capacity, and a malicious party can usually stuff more items into that structure than the protocol nominally allows. A functionality that insisted on $n$ for both parties would be unrealizable by the protocols people build.
+- **Line 7 is an ordering constraint, not a convenience.** The source writes "Thereafter, on input $(\textsc{Send}, \mathit{sid}, X)$ from Alice", so the receiver's set is fixed before the sender's is accepted. That matters: it stops the sender choosing $X$ adaptively after learning something about $Y$, and it is why the notification at lines 11–12 exists at all.
+- **Line 14 is the one-sidedness.** Only $P_{\mathsf{r}}$ can reach the intersection, and no operation returns it — or anything derived from it — to $P_{\mathsf{s}}$. The source's other output, $(\textsc{bob-input}, \mathit{sid})$ to Alice, carries the session identifier and nothing else.
+
+Where the source needed a decision:
+
+| Source | Box | Why |
+|---|---|---|
+| "Give output $(\textsc{bob-input}, \mathit{sid})$ to Alice" | $\mathsf{Ready}$, lines 11–12 | Delivery is a pull here, and the source's output is a bare notification, so the pull returns a bit. Nothing else about $\mathtt{Y}$ is reachable from it — not its size, which line 3's bound would otherwise have hinted at. |
+| "Give output $(\textsc{ouput}, \mathit{sid}, X \cap Y)$ to Bob" | $\mathsf{Fetch}$, lines 13–14 | Likewise a pull. The source spells the keyword `Ouput`; the object is unambiguous. |
+| No adversary interaction at all | $\mathbf{U}$ names the adversary slot, and no operation calls it | The printed box places no call on the adversary: it does not notify, does not ask for delivery, and does not let the adversary influence the intersection. That is unusually strong for a two-party functionality, and it is the source's, not a simplification — the corrupt party's extra power is expressed entirely through $n'$ at line 3. What a corrupt party's adversary can read is at lines 15–21. |
+| No leakage interface | Lines 15–21 | Required here. A corrupt sender's adversary reads that sender's own set; a corrupt receiver's reads its own set and, once the sender has committed, the intersection — which it would get from $\mathsf{Fetch}$ anyway. Neither reaches the other party's set. |
+| Set-size bounds stated per party in prose | Line 3 and line 8, with $\mathbf{C}$ | The source's condition is on whether that party is corrupt, which is a test the framework can make directly. |
+
+## Known realizations
+
+- The paper's own protocol, a dual-execution PSI proved UC-secure against malicious adversaries in the $\mathcal{F}_{\mathsf{encode}}$-hybrid model, where $\mathcal{F}_{\mathsf{encode}}$ is its *oblivious encoding* functionality (Figure 2, p. 7). Oblivious encoding is "similar in spirit to an oblivious pseudorandom function" — the sender learns a random mapping $F$, the receiver learns $F(y)$ — so the nearest page here is [F-OPRF](/uc/layer-5-oblivious-transfer/f-oprf/index.qmd), and $\mathcal{F}_{\mathsf{encode}}$ itself has no page.
+- The lineage the paper adapts is the Pinkas–Schneider–Zohner paradigm, which is semi-honest; the paper's stated contribution is getting malicious security within it, and the $n'$ bound at line 3 is part of the price.
+
+## Properties
+
+- **Sender privacy**, with probability exactly $0$ of leakage: nothing returns $\mathtt{X}$ or a function of it to $P_{\mathsf{r}}$ except $\mathtt{X} \cap \mathtt{Y}$ at line 14. In particular $\lvert \mathtt{X} \rvert$ does not leak — a real protocol usually does leak it, so this is a place where the box is stronger than the constructions and a reader should check the padding conventions before relying on it.
+- **Receiver privacy**, likewise exactly $0$: no operation returns $\mathtt{Y}$ or its size to $P_{\mathsf{s}}$. Line 12 returns one bit, and that bit is monotone.
+- **Input independence**, with probability exactly $1$: line 7 forbids the sender from committing before the receiver has, and line 6 forbids a second commitment from either. Neither party can revise its set after learning anything.
+- **One-sided, and asymmetric on purpose.** The sender never learns the intersection. A two-sided variant is a different object, and turning this one into it by echoing the output would break sender privacy against a receiver that lied about $\mathtt{Y}$.
+- **The bound $n' > n$ is a genuine weakening, and it is not small.** An adversary submitting $n'$ items learns the intersection of its larger set with the honest party's, which is strictly more information than the functionality's honest interface offers. Any application relying on set-size limits for its security has to reason with $n'$, not $n$.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
+
+*References:*
+
+- Rindal and Rosulek. [*Malicious-secure private set intersection via dual execution*](https://eprint.iacr.org/2017/769). In ACM Conference on Computer and Communications Security (CCS), 2017. Figure 1, p. 4 of revision `20170812:072921`, its only posting — the definition transcribed above; Figure 2, p. 7 for the oblivious-encoding hybrid; §2, p. 4 for the UC realization statement.

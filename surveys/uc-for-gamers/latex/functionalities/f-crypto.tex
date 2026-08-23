@@ -1,0 +1,142 @@
+%% The interface box of f-crypto, the one source for both the book
+%% and uc/.../f-crypto/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fcrypto$ \ (key-management core) \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := \mathcal{T}$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{K} \gets \emptyset$; \ $\V{Known} \gets \emptyset$
+  \Comment{every key ever made, and those the adversary holds}
+\State $\V{Key} : \Fcrypto.\Ps \times \mathbb{N} \to (\mathcal{T} \times \bits) \cup \{\unset\}$
+\State $\V{Key}[*,*] \gets \unset$; \ $\V{Next}[*] \gets 0$
+  \Comment{a party never holds a key, only a pointer}
+\State $\V{PSK} : \mathcal{T} \times \bits \to \bits \cup \{\unset\}$
+\State $\V{PSK}[*,*] \gets \unset$
+  \Comment{pre-shared keys, by type and name}
+\State $\V{Nonce} \gets \emptyset$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{New}(t)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$t \in \mathcal{T}$}
+\State $(\mathit{corr}, k) \gets \Adv\bigl(\id.\op{New}, t\bigr)$ \label{ln:crynewask}
+\Req{$\mathit{corr} \in \{0,1\}$} \label{ln:crynewclean}
+\Req{$(t,k) \notin \V{K} \ \vee\ (\mathit{corr} = 1 \wedge (t,k) \in \V{Known})$}
+  \Comment{a fresh key, unless the adversary already had it}
+\State $\V{K} \gets \V{K} \cup \{(t,k)\}$
+\If{$\mathit{corr} = 1$}
+  \State $\V{Known} \gets \V{Known} \cup \{(t,k)\}$ \label{ln:cryknown}
+\EndIf
+\State $\mathit{ptr} \gets \V{Next}[\id.P]$; \ $\V{Next}[\id.P] \gets \mathit{ptr} + 1$
+\State $\V{Key}[\id.P, \mathit{ptr}] \gets (t,k)$
+\State \textbf{return} $\mathit{ptr}$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{NewNonce}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $x \gets \Adv\bigl(\id.\op{NewNonce}\bigr)$
+\Req{$x \notin \V{Nonce}$} \label{ln:crynonce}
+  \Comment{never repeated, even for a corrupt party}
+\State $\V{Nonce} \gets \V{Nonce} \cup \{x\}$
+\State \textbf{return} $x$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{GetPSK}(t, \mathit{name})$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$t \in \mathcal{T}$}
+\State $(\mathit{corr}, k) \gets \Adv\bigl(\id.\op{GetPSK}, t, \mathit{name}\bigr)$
+\Req{$\mathit{corr} \in \{0,1\}$}
+\If{$\V{PSK}[t, \mathit{name}] \neq \unset$}
+  \Req{$k = \V{PSK}[t, \mathit{name}]$} \label{ln:crypskagree}
+    \Comment{the same name is the same key, for everyone}
+\EndIf
+\If{$\V{PSK}[t, \mathit{name}] = \unset \ \wedge\ \mathit{corr} = 0$}
+  \Req{$(t,k) \notin \V{K}$} \label{ln:crypskfresh}
+\EndIf
+\If{$\mathit{corr} = 1$}
+  \Req{$(t,k) \in \V{Known} \ \vee\ (t,k) \notin \V{K}$} \label{ln:crypskcorrupt}
+  \State $\V{Known} \gets \V{Known} \cup \{(t,k)\}$
+\EndIf
+\State $\V{K} \gets \V{K} \cup \{(t,k)\}$; \ $\V{PSK}[t, \mathit{name}] \gets k$
+\State $\mathit{ptr} \gets \V{Next}[\id.P]$; \ $\V{Next}[\id.P] \gets \mathit{ptr} + 1$
+\State $\V{Key}[\id.P, \mathit{ptr}] \gets (t,k)$
+\State \textbf{return} $\mathit{ptr}$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Store}(t, k)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$t \in \mathcal{T}$}
+\If{$(t,k) \in \V{K} \setminus \V{Known}$}
+  \State \textbf{return} $\none$ \label{ln:cryguess}
+    \Comment{a bare guess of an unknown key is refused}
+\EndIf
+\State $\V{K} \gets \V{K} \cup \{(t,k)\}$; \ $\V{Known} \gets \V{Known} \cup \{(t,k)\}$ \label{ln:crystoreknown}
+  \Comment{storing a bit string admits knowing it}
+\State $\mathit{ptr} \gets \V{Next}[\id.P]$; \ $\V{Next}[\id.P] \gets \mathit{ptr} + 1$
+\State $\V{Key}[\id.P, \mathit{ptr}] \gets (t,k)$
+\State \textbf{return} $\mathit{ptr}$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Retrieve}(\mathit{ptr})$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{Key}[\id.P, \mathit{ptr}] \neq \unset$}
+\State $(t,k) \gets \V{Key}[\id.P, \mathit{ptr}]$
+\State $\V{Known} \gets \V{Known} \cup \{(t,k)\}$ \label{ln:cryretrieve}
+  \Comment{reading a key out gives up its ideality, for good}
+\State \textbf{return} $k$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Equal}(\mathit{ptr}, \mathit{ptr}')$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{Key}[\id.P, \mathit{ptr}] \neq \unset \ \wedge\ \V{Key}[\id.P, \mathit{ptr}'] \neq \unset$}
+\State \textbf{return} $\V{Key}[\id.P, \mathit{ptr}] = \V{Key}[\id.P, \mathit{ptr}']$ \label{ln:cryequal}
+  \Comment{comparison without disclosure}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Corrupted}(\mathit{ptr})$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{Key}[\id.P, \mathit{ptr}] \neq \unset$}
+\State \textbf{return} $\V{Key}[\id.P, \mathit{ptr}] \in \V{Known}$ \label{ln:crycorrupted}
+  \Comment{a party may ask whether its own key is real}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $\bigl(\{(\mathit{ptr}, \V{Key}[\id.P, \mathit{ptr}])\}_{\mathit{ptr} < \V{Next}[\id.P]},\ \V{Nonce}\bigr)$ \label{ln:cryleak}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

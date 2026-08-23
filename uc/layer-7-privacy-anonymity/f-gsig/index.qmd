@@ -1,15 +1,189 @@
 ---
-title: "F-gsig — Group signature"
+title: "F-GSig — Group signature, honest manager"
 status: "Emerging"
 layer: 7
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-gsig* (Group signature) is part of *Privacy and Anonymity* in the UC functionality encyclopedia. Status: an emerging formulation, still an active area of research.
+*F-GSig* (Group signature, honest manager) is part of *Privacy and Anonymity* in the UC functionality encyclopedia. Status: an emerging formulation, still an active area of research.
 
 Every English-language, peer-reviewed treatment of group signatures found (Bellare–Micciancio–Warinschi, Bellare–Shi–Zhang, Kiayias–Yung, Camenisch–Groth, Bootle et al., and Wikström's own thesis below) is game-based, not a UC ideal functionality. The one paper found with a boxed *F-GSIG* is an unreviewed domestic-symposium manuscript (see caveat below) — hence this page's "Emerging" status.
 
+## Functionality
+
+Reading the box: $\mathcal{A}(\cdot)$ is a call on the adversary slot — here its answers are used, and $\mathsf{San}[\mathsf{Clean}_{x}]$ replaces one failing the predicate with $\bot$; $\mathbf{C}$ is the corrupted set; $\square$ marks a table entry never written and $\bot$ a refusal; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it. $\mathit{GM}$, the parameter on the header line, is the group manager.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{GSig}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := \mathit{GM}\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{v} \gets \square\); &nbsp;\(\mathtt{Mem} \gets \varnothing\)<span class="cj-comment">// one group per instance</span></li>
+<li>\(\mathtt{Ver} : \mathcal{M} \times \Sigma \times \mathcal{K} \to \{0,1\} \cup \{\square\}\)</li>
+<li>\(\mathtt{Ver}[*,*,*] \gets \square\)</li>
+<li>\(\mathtt{Who} : \mathcal{M} \times \Sigma \times \mathcal{K} \to \mathbf{P} \cup \{\bot, \square\}\)</li>
+<li>\(\mathtt{Who}[*,*,*] \gets \square\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.KeyGen()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="6">
+<li>\(\textbf{require}\ \mathit{id}.P = \mathit{GM} \ \wedge\ \mathtt{v} = \square\)<span class="cj-comment">// the manager is named in the process id</span></li>
+<li>\(\mathtt{v} \gets \mathcal{A}\bigl(\mathit{id}.\mathsf{KeyGen},\ \mathcal{F}_{\mathsf{GSig}}.\mathbf{P}\bigr)\)</li>
+<li>\(\mathtt{v} \gets \mathsf{San}[\mathsf{Clean}_{v}](\mathtt{v})\)</li>
+<li>\(\textbf{return}\ \mathtt{v}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Join(<span class="cj-id">P</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="10">
+<li>\(\textbf{require}\ \mathit{id}.P = \mathit{GM} \ \wedge\ P \in \mathcal{F}_{\mathsf{GSig}}.\mathbf{P}\)</li>
+<li>\(\mathtt{Mem} \gets \mathtt{Mem} \cup \{P\}\)</li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Join},\ P\bigr)\)<span class="cj-comment">// membership itself is not hidden</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Revoke(<span class="cj-id">P</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="14">
+<li>\(\textbf{require}\ \mathit{id}.P = \mathit{GM}\)</li>
+<li>\(\mathtt{Mem} \gets \mathtt{Mem} \setminus \{P\}\)</li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Revoke},\ P\bigr)\)</li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Sign(<span class="cj-id">msg</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="18">
+<li>\(\textbf{require}\ \mathit{id}.P \in \mathtt{Mem} \ \wedge\ \mathtt{v} \neq \square\)</li>
+<li>\(\sigma \gets \mathsf{San}[\mathsf{Clean}_{\sigma}]\bigl(\mathcal{A}(\mathit{id}.\mathsf{Sign}, \mathit{msg})\bigr)\)<span class="cj-comment">// \(\mathcal{A}\) learns the message, never the signer</span></li>
+<li>\(\textbf{require}\ \neg(\mathtt{Ver}[\mathit{msg}, \sigma, \mathtt{v}] = 0 \ \wedge\ \mathtt{Who}[\mathit{msg}, \sigma, \mathtt{v}] = \bot)\)<span class="cj-comment">// a pair already rejected cannot be minted</span></li>
+<li>\(\mathtt{Ver}[\mathit{msg}, \sigma, \mathtt{v}] \gets 1\); &nbsp;\(\mathtt{Who}[\mathit{msg}, \sigma, \mathtt{v}] \gets \mathit{id}.P\)</li>
+<li>\(\textbf{return}\ \sigma\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Verify(<span class="cj-id">msg</span>, <span class="cj-id">&sigma;</span>, <span class="cj-id">v'</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="23">
+<li>\((\varphi, P_{x}) \gets \mathcal{A}\bigl(\mathit{id}.\mathsf{Verify}, \mathit{msg}, \sigma, v'\bigr)\)</li>
+<li>\(\textbf{if}\ v' = \mathtt{v} \ \wedge\ \mathtt{Ver}[\mathit{msg}, \sigma, \mathtt{v}] = 1\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ 1\)</span><span class="cj-comment">// completeness, and the adversary cannot revoke it</span></li>
+<li>\(\textbf{if}\ v' = \mathtt{v} \ \wedge\ \mathtt{Mem} \cap \mathbf{C} = \varnothing \ \wedge\ \neg\exists\, \sigma' : \mathtt{Ver}[\mathit{msg}, \sigma', \mathtt{v}] = 1\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{Ver}[\mathit{msg}, \sigma, \mathtt{v}] \gets 0\); &nbsp;\(\mathtt{Who}[\mathit{msg}, \sigma, \mathtt{v}] \gets \bot\)</span><span class="cj-comment">// never signed, no member corrupt: a forgery</span></li>
+<li><span class="cj-ind">\(\textbf{return}\ 0\)</span></li>
+<li>\(\textbf{if}\ \mathtt{Who}[\mathit{msg}, \sigma, v'] \in \mathcal{F}_{\mathsf{GSig}}.\mathbf{P}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \mathtt{Ver}[\mathit{msg}, \sigma, v']\)</span><span class="cj-comment">// a verdict once given is repeated</span></li>
+<li>\(\varphi \gets \mathsf{San}[\mathsf{Clean}_{f}](\varphi)\)</li>
+<li>\(\mathtt{Ver}[\mathit{msg}, \sigma, v'] \gets \varphi\); &nbsp;\(\mathtt{Who}[\mathit{msg}, \sigma, v'] \gets P_{x}\)<span class="cj-comment">// otherwise the adversary decides, and is held to it</span></li>
+<li>\(\textbf{return}\ \varphi\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Open(<span class="cj-id">msg</span>, <span class="cj-id">&sigma;</span>, <span class="cj-id">v'</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="34">
+<li>\(\textbf{require}\ \mathit{id}.P = \mathit{GM}\)<span class="cj-comment">// only the manager may de-anonymize</span></li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Open}, \mathit{msg}, \sigma, v'\bigr)\)</li>
+<li>\(f \gets \mathit{id}.\mathsf{Verify}(\mathit{msg}, \sigma, v')\)<span class="cj-comment">// the source verifies before opening</span></li>
+<li>\(\textbf{if}\ f = 1\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \mathtt{Who}[\mathit{msg}, \sigma, v']\)</span></li>
+<li>\(\textbf{return}\ \bot\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="40">
+<li>\(\textbf{if}\ \mathit{id}.P = \mathit{GM}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ (\mathtt{v}, \mathtt{Mem}, \mathtt{Ver}, \mathtt{Who})\)</span><span class="cj-comment">// the source assumes this never happens</span></li>
+<li>\(\textbf{if}\ \mathit{id}.P \in \mathtt{Mem}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \{(\mathit{msg}, \sigma) : \mathtt{Who}[\mathit{msg}, \sigma, \mathtt{v}] = \mathit{id}.P\}\)</span></li>
+<li>\(\textbf{return}\ (\mathtt{v}, \mathtt{Mem})\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig">Clean<sub><span class="cj-id">v</span></sub>(<span class="cj-id">v</span>):</div>
+<ol class="cj-code" start="45">
+<li>\(\textbf{return}\ v \in \mathcal{K}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig">Clean<sub><span class="cj-id">&sigma;</span></sub>(<span class="cj-id">&sigma;</span>):</div>
+<ol class="cj-code" start="46">
+<li>\(\textbf{return}\ \sigma \in \Sigma\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig">Clean<sub><span class="cj-id">f</span></sub>(<span class="cj-id">varphi</span>):</div>
+<ol class="cj-code" start="47">
+<li>\(\textbf{return}\ \varphi \in \{0,1\}\)</li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+The box is transcribed from Makita, Manabe and Okamoto, *On universally composable group signatures* (汎用的結合可能なグループ署名について), SCIS 2005, Figure 1 (図 1), p. 4 — the functionality $\mathcal{F}_{\mathsf{GSIG}}$.
+
+**Two warnings a reader needs before the box.**
+
+- **The source is not peer-reviewed, and says so on its own first page**: "This manuscript have been printed and distributed without reviewing and editing as received from the authors: posting the manuscript to SCIS 2005 does not prevent future submission to any journals or conferences with proceedings." The stub's caveat above stands, and this transcription does not upgrade it. Every English-language peer-reviewed treatment of group signatures located is game-based.
+- **The source is in Japanese, and this box is a translation.** Interface names, the record structure and the four-case verification below are rendered from 図 1; a reader checking the transcription needs the original, and the page number above is where it is. That is a weaker chain of custody than any other entry here has.
+
+**Retitled from "Group signature".** The source's own scope is narrower in two ways it states explicitly, and both are load-bearing: the group manager "is not corrupted by the adversary", and full-anonymity is used in a *weakened* form — the adversary may not corrupt two members of its own choosing — because in the UC setting "parties cannot efficiently erase local data". The honest-manager assumption is not a proof convenience either; see the realization below, where the paper says outright what breaks without it.
+
+Four things the box says:
+
+- **Line 26 is unforgeability, and its condition is stronger than it looks.** The verdict $0$ is forced only when no member is corrupt *and* no signature at all has been issued on that message under the group key — note $\sigma'$, not $\sigma$. So the box does not claim that a *particular* string is unforgeable; it claims that a message never signed by anybody cannot be shown to have been signed, and only while the whole membership is honest. One corrupt member and line 26 stops firing for every message.
+- **Line 24 is completeness against the adversary.** A pair minted at line 21 verifies, and no adversary answer at line 23 can undo that — the adversary's $\varphi$ is only ever consulted in the fall-through at line 32.
+- **Line 29 is the consistency rule, and it is why the adversary's verdicts bind it.** A verdict recorded at line 32 is returned again on the next query, so the adversary cannot answer $1$ and then $0$ for the same triple. The source's record carries the party $P_x$ the adversary blamed, which is what makes line 38 — tracing — answerable at all in the fall-through case.
+- **Line 19 is the anonymity statement.** The adversary is handed the message and returns a signature; the signer's name never crosses. Combined with line 43, a member's own adversary sees that member's own signatures and nobody else's. Anonymity in this box is therefore exactly "the adversary does not learn who signed unless it corrupts them" — the weakened form the source names, and not the strong form where two chosen members are indistinguishable even to an adversary holding one of them.
+
+Where the source needed a decision:
+
+| Source | Box | Why |
+|---|---|---|
+| `KEYGEN` checks that $\mathit{sid} = (\mathit{GM}, \mathit{sid}')$ and ignores the request otherwise | $\mathit{GM}$ on the header line, tested at line 6 | The manager's identity is fixed when the instance is created, which is what the source's session-identifier check enforces. The source flags this as the one place it does *not* suppress $\mathit{sid}$ from its message notation, which is a good sign the reading is right. |
+| Records are 5-tuples $(P, m, \sigma, v, f)$ | Two tables, $\mathtt{Ver}$ and $\mathtt{Who}$, keyed on $(m, \sigma, v)$ | The source's tuples are only ever queried by $(m, \sigma, v)$ with the party and the verdict read off, so a pair of tables is the same object with the lookups made visible. $(\bot, m, \sigma, v, 0)$ becomes $\mathtt{Who} = \bot$ with $\mathtt{Ver} = 0$. |
+| `SIGN` "sends an error message to $P_i$ and halts" if $(\bot, m, \sigma, v, 0)$ is recorded | Line 20, a **require** on exactly that record | The framework answers a refused **require** with $\textsf{rej}$, which is the error message; and the instance stays alive rather than dying, since one group is one instance and killing it on a single collision would take the whole group down. Note the shape of the test: the source names the *specific* rejected record $(\bot, m, \sigma, v, 0)$, so a verdict of $0$ that the adversary supplied at line 32 — which records a party rather than $\bot$ in $\mathtt{Who}$ — does **not** block minting. Testing $\mathtt{Ver} = 0$ alone would have been stricter than the source. |
+| `OPEN` "then $\textsf{VERIFY}$ this signature" | Line 36 calls this box's own $\mathsf{Verify}$ | Written as a call rather than by copying the four cases, which is what the source does and also avoids two copies of a rule drifting apart. Note the consequence, which the source intends: opening a signature *records* a verdict, because $\mathsf{Verify}$ writes to $\mathtt{Ver}$ at lines 27 and 32. |
+| Adaptive corruption, group manager assumed honest | $\mathbf{C}$, and line 40 | Corruption is the framework's here. Line 40 has to define what a corrupt manager's adversary reads, because this framework cannot forbid the corruption the source assumes away — so it returns the whole state, with the comment saying that the source assumes this never happens. Anyone using this box must carry that assumption separately; nothing in the box enforces it. |
+| No leakage interface | Lines 40–44 | Required here. A member gets its own signatures; an outsider gets the group key and the membership, both of which the adversary already learns at lines 12 and 16. |
+| Verification is asked of $\mathcal{S}$ up front, before the case analysis | Line 23 | Kept in the source's order. The consequence is that the adversary is consulted on *every* verification, including the ones whose answer is then discarded at lines 24–30 — which is a leak of verification traffic to the adversary, and the source's, not this box's. |
+
+## Known realizations
+
+- **Theorem 2** (定理 2) in the same paper: the protocol $\pi_{\mathsf{GSIG}}$ securely realizes $\mathcal{F}_{\mathsf{GSIG}}$ in the $(\mathcal{F}^{R}_{\mathsf{SPK}}, \mathcal{F}^{R'}_{\mathsf{ZK}})$-hybrid model — signature of knowledge and zero knowledge as hybrids, built from a public-key encryption scheme with strong secrecy against chosen-ciphertext attacks and a signature scheme existentially unforgeable under chosen-message attack. A group signature is $\sigma = (C, \sigma_{\mathsf{SPK}})$: an encryption of $\langle P_i, \mathit{pk}_i, \mathit{cert}_i, s \rangle$ under the manager's key, plus a signature of knowledge.
+- **What the proof sketch concedes, and it is the reason for this page's title.** The simulator forges group signatures by picking an arbitrary member as the signer. The paper then says: if $\mathit{GM}$ is corrupted, its secret key reaches the environment, and the two worlds become distinguishable — the environment decrypts and sees a signer who never signed. "However, since we assume here that $\mathit{GM}$ is not corrupted, $\mathcal{Z}$ cannot distinguish the two worlds against this $\mathcal{S}$." So the theorem is not a small-print restriction of a general result; the construction has no security at all against a corrupt manager, and the box's honest-manager assumption is doing all of the work.
+- The paper also realizes its signature-of-knowledge hybrid: **Theorem 1** gives $\pi_{\mathsf{SPK}}$ realizing $\mathcal{F}^{R}_{\mathsf{SPK}}$ in the $(\mathcal{F}_{\mathsf{SIG}'}, \mathcal{F}^{R}_{\mathsf{NIZK}})$-hybrid model, and notes why the obvious protocol fails: the environment can mint an acceptable $\sigma$ from a $(v,s)$ pair in the real world, while the ideal world accepts only recorded triples, so the two are distinguishable unless the protocol restricts who may produce a signature.
+
+## Properties
+
+- **Traceability, with probability exactly $1$ on the accepted-and-recorded path**: if line 24 returns $1$ then $\mathtt{Who}$ holds the actual signer, and line 38 returns it. On the fall-through path it returns whatever the adversary named at line 32, which is a weaker guarantee and visibly so.
+- **Unforgeability, with probability exactly $1$ but under a strong hypothesis**: line 26 requires the *entire* membership to be honest. This is much weaker than the full-traceability the source says it wants, and the gap is worth flagging: full-traceability is supposed to hold against colluding corrupt members, and this box concedes every message to a single corrupt member.
+- **Anonymity, with probability exactly $0$ of leakage to a non-corrupt-signer adversary**: no call on the adversary slot names the signer (lines 19 and 23 do not), and the only route to a signer's identity is line 38, which requires the manager, or line 43, which requires corrupting that member.
+- **Revocation is a membership change, not a signature invalidation.** Line 15 removes a party from $\mathtt{Mem}$, which stops it signing at line 18 and does nothing to signatures it has already produced: line 24 still returns $1$ for them. In the protocol, revocation is a *revoked list* consulted during opening, so a revoked member's old signature opens to $\bot$ there — a divergence between box and protocol worth checking before relying on either.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
+
 *References:*
 
-- Makita, Manabe, and Okamoto. [*On Universally Composable Group Signatures*](https://security-kouza.github.io/paper/scis2005_makita.pdf). In SCIS 2005 (The 2005 Symposium on Cryptography and Information Security), 2005. Note: SCIS proceedings are explicitly circulated without peer review — this is the only paper found with a boxed UC functionality for group signatures, but it has not been independently vetted.
+- Makita, Manabe, and Okamoto. [*On Universally Composable Group Signatures*](https://security-kouza.github.io/paper/scis2005_makita.pdf). In SCIS 2005 (The 2005 Symposium on Cryptography and Information Security), 2005. Figure 1 (図 1), p. 4 — the definition transcribed above; §4, p. 3 for the honest-manager and weakened-anonymity assumptions; Theorem 2 (定理 2), p. 6, and the proof sketch that concedes what a corrupt manager would break. Note: SCIS proceedings are explicitly circulated without peer review — its own first page says the manuscript was "printed and distributed without reviewing and editing as received from the authors" — and the paper is in Japanese, so the box above is a translation. This is the only paper found with a boxed UC functionality for group signatures, and it has not been independently vetted.
 - Wikström. [*On the Security of Mix-Nets and Hierarchical Group Signatures*](https://kth.diva-portal.org/smash/get/diva2:14421/FULLTEXT01.pdf). PhD thesis, KTH Royal Institute of Technology, 2005.

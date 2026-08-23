@@ -1,0 +1,162 @@
+%% The interface box of f-phe, the one source for both the book
+%% and uc/.../f-phe/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fphe$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := (S, \mathcal{R}, \mathsf{t})$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{Hist}[*] \gets ()$
+  \Comment{per id, every $(pw, \msg)$ ever stored}
+\State $\V{Rate} : \mathcal{R} \times \mathbb{N} \to \mathbb{N}$; \ $\V{Rate}[*,*] \gets 0$
+\State $\V{Pend}[*] \gets \unset$; \ $\V{Res}[*] \gets \unset$; \ $\V{ctr} \gets 0$
+\State $\V{Tok}[*,*] \gets 0$
+  \Comment{password-guess tokens, per stored ciphertext}
+\State $\V{Cmp}[*] \gets 0$; \ $\V{full} \gets 0$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Store}(j, pw, \msg)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P = S \ \wedge\ (\id'.F \neq \Apid \ \vee\ S \in \Cs)$}
+\State $\V{Hist}[j] \gets \V{Hist}[j] \,\|\, (pw, \msg)$ \label{ln:phestore}
+\State $\V{Cmp}[j] \gets 0$
+\If{$S \in \Cs$}
+  \State $\V{Cmp}[j] \gets 1$ \label{ln:phecmpnow}
+\EndIf
+\State $\Adv\bigl(\id.\op{Store},\ j,\ |\msg|\bigr)$ \label{ln:pheleakstore}
+  \Comment{the position and the length, never $pw$ or $\msg$}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Retrieve}(j, pw')$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P = S \ \wedge\ (\id'.F \neq \Apid \ \vee\ S \in \Cs)$}
+\State $\V{ctr} \gets \V{ctr} + 1$; \ $\V{Pend}[\V{ctr}] \gets (j, pw')$
+\State $\Adv\bigl(\id.\op{Retrieve},\ j,\ \V{ctr}\bigr)$ \label{ln:pheleakret}
+  \Comment{the position and the request, never the guess}
+\State \textbf{return} $\V{ctr}$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Help}(j)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P \in \mathcal{R} \ \wedge\ (\id'.F \neq \Apid \ \vee\ \id.P \in \Cs)$}
+\If{$\id.P \notin \Cs$}
+  \State $\V{Rate}[\id.P, j] \gets \V{Rate}[\id.P, j] + 1$ \label{ln:phequota}
+    \Comment{only an honest ratelimiter accrues quota}
+\EndIf
+\State $\Adv\bigl(\id.\op{Help},\ \id.P,\ j\bigr)$
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Finish}(q, L, b, e, pw_{\Adv}, \msg_{\Adv})$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F = \Apid \ \wedge\ \V{Pend}[q] \neq \unset$}
+\State $(j, pw') \gets \V{Pend}[q]$; \ $\V{Pend}[q] \gets \unset$
+\If{$b = \none$}
+  \State $\V{Res}[q] \gets \none$; \ \textbf{return} $\ok$ \label{ln:phefail}
+    \Comment{the adversary may fail a request outright}
+\EndIf
+\Req{$L \subseteq \mathcal{R} \setminus \Cs \ \wedge\ |L| + |\mathcal{R} \cap \Cs| \geq \mathsf{t}$} \label{ln:phethresh}
+\Req{$\V{Rate}[R, j] \geq 1$ for every $R \in L$} \label{ln:phespend}
+\State $\V{Rate}[R, j] \gets \V{Rate}[R, j] - 1$ \ for each $R \in L$
+\State $(pw, \msg) \gets \op{last}(\V{Hist}[j])$ \label{ln:phemostrecent}
+  \Comment{$(\none, \none)$ when nothing was ever stored}
+\If{$(\V{Cmp}[j] = 1 \ \vee\ \V{Hist}[j] = ()) \ \wedge\ e \neq \none$}
+  \State $(pw, \msg) \gets \V{Hist}[j][e]$ \label{ln:pherollback}
+    \Comment{an older entry, at the adversary's chosen position}
+\EndIf
+\If{$(\V{Cmp}[j] = 1 \ \vee\ \V{Hist}[j] = ()) \ \wedge\ e = \none$}
+  \State $(pw, \msg) \gets (pw_{\Adv}, \msg_{\Adv})$ \label{ln:pheinject}
+\EndIf
+\State $\V{Res}[q] \gets \none$
+\If{$pw' = pw$}
+  \State $\V{Res}[q] \gets \msg$ \label{ln:phecheck}
+    \Comment{the password check, and the whole of it}
+\EndIf
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Fetch}(q)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P = S \ \wedge\ \V{Res}[q] \neq \unset$}
+\State $r \gets \V{Res}[q]$; \ $\V{Res}[q] \gets \unset$
+\State \textbf{return} $r$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{GuessStart}(j, i, L)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F = \Apid \ \wedge\ i \leq |\V{Hist}[j]|$}
+\Req{$\V{full} = 1 \ \vee\ S \in \Cs$} \label{ln:pheguessgate}
+\If{$\V{full} = 0$}
+  \Req{$L \subseteq \mathcal{R} \setminus \Cs \ \wedge\ |L| + |\mathcal{R} \cap \Cs| \geq \mathsf{t}$}
+  \Req{$\V{Rate}[R, j] \geq 1$ for every $R \in L$}
+  \State $\V{Rate}[R, j] \gets \V{Rate}[R, j] - 1$ \ for each $R \in L$ \label{ln:pheguessspend}
+\EndIf
+\State $\V{Tok}[j, i] \gets \V{Tok}[j, i] + 1$ \label{ln:phetokenmint}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{GuessFinish}(j, i, pw_{\Adv})$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F = \Apid \ \wedge\ \V{Tok}[j, i] \geq 1$} \label{ln:phetokenspend}
+\State $\V{Tok}[j, i] \gets \V{Tok}[j, i] - 1$
+\State $(pw, \msg) \gets \V{Hist}[j][i]$
+\If{$pw = pw_{\Adv}$}
+  \State \textbf{return} $\msg$ \label{ln:pheguesswin}
+\EndIf
+\State \textbf{return} $\none$ \label{ln:pheguesslose}
+  \Comment{one token, one guess, one bit}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$\id.P \in \mathcal{R}$}
+  \State $\V{Rate}[\id.P, *] \gets 0$ \label{ln:pherlreset}
+    \Comment{quota accrued while honest does not survive}
+\EndIf
+\If{$S \in \Cs \ \wedge\ |\mathcal{R} \cap \Cs| \geq \mathsf{t}$}
+  \State $\V{full} \gets 1$ \label{ln:phefull}
+    \Comment{server and threshold, at one moment}
+\EndIf
+\If{$\id.P \neq S$}
+  \State \textbf{return} $\none$ \label{ln:pheleakrl}
+\EndIf
+\State $\V{Cmp}[*] \gets 1$ \label{ln:phecmpall}
+\State \textbf{return} $\bigl(\{(j, |\msg|) : (pw, \msg) \in \V{Hist}[j]\},\ \V{Pend}\bigr)$ \label{ln:pheleakserver}
+  \Comment{lengths and pending requests; no $pw$, no $\msg$}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

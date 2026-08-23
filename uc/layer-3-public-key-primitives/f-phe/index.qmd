@@ -1,14 +1,195 @@
 ---
-title: "F-PHE — Password-hardened encryption, threshold, key rotation"
+title: "F-PHE — Threshold password-hardened encryption"
 status: "Canonical"
 layer: 3
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-PHE* (Password-hardened encryption, threshold, key rotation) is part of *Public-Key Primitives, Key Exchange, Messaging* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+*F-PHE* (Threshold password-hardened encryption) is part of *Public-Key Primitives, Key Exchange, Messaging* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+
+A storage server holds password-protected records and cannot open one on its own: every decryption needs $\mathsf{t}$ of $\mathsf{n}$ rate limiters to spend a unit of quota, and quota is tracked per record. Compromising the server buys the adversary lengths and the ability to tamper with the database — not plaintexts. Compromising the server *and* the threshold at one moment buys offline guessing, and the box says so with an explicit token interface rather than leaving it to the proof.
+
+## Functionality
+
+Reading the box: $\mathbf{A}$ is the adversary's role in a caller's id, so $\mathit{id}'.F = \mathbf{A}$ restricts an operation to the adversary and $\mathit{id}'.F \neq \mathbf{A}$ lets a party drive its own; $\mathbf{C}$ is the corrupted set; $\square$ marks a slot never filled and $\bot$ a refusal or a failure; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it. The parameters are the server $S$, the rate-limiter set $\mathcal{R}$, and the threshold $\mathsf{t}$.
 
 A recently introduced category, adjacent to *F-MHF* — the one recent functionality that touches password hashing. The paper introducing it also reports a flaw in the proof of an earlier threshold construction.
 
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{PHE}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := (S, \mathcal{R}, \mathsf{t})\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{Hist}[*] \gets ()\)<span class="cj-comment">// per id, every \((pw, \mathit{msg})\) ever stored</span></li>
+<li>\(\mathtt{Rate} : \mathcal{R} \times \mathbb{N} \to \mathbb{N}\); &nbsp;\(\mathtt{Rate}[*,*] \gets 0\)</li>
+<li>\(\mathtt{Pend}[*] \gets \square\); &nbsp;\(\mathtt{Res}[*] \gets \square\); &nbsp;\(\mathtt{ctr} \gets 0\)</li>
+<li>\(\mathtt{Tok}[*,*] \gets 0\)<span class="cj-comment">// password-guess tokens, per stored ciphertext</span></li>
+<li>\(\mathtt{Cmp}[*] \gets 0\); &nbsp;\(\mathtt{full} \gets 0\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Store(<span class="cj-id">j</span>, <span class="cj-id">pw</span>, <span class="cj-id">msg</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="6">
+<li>\(\textbf{require}\ \mathit{id}.P = S \ \wedge\ (\mathit{id}'.F \neq \mathbf{A} \ \vee\ S \in \mathbf{C})\)</li>
+<li>\(\mathtt{Hist}[j] \gets \mathtt{Hist}[j] \,\|\, (pw, \mathit{msg})\)</li>
+<li>\(\mathtt{Cmp}[j] \gets 0\)</li>
+<li>\(\textbf{if}\ S \in \mathbf{C}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{Cmp}[j] \gets 1\)</span></li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Store},\ j,\ |\mathit{msg}|\bigr)\)<span class="cj-comment">// the position and the length, never \(pw\) or \(\mathit{msg}\)</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Retrieve(<span class="cj-id">j</span>, <span class="cj-id">pw'</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="13">
+<li>\(\textbf{require}\ \mathit{id}.P = S \ \wedge\ (\mathit{id}'.F \neq \mathbf{A} \ \vee\ S \in \mathbf{C})\)</li>
+<li>\(\mathtt{ctr} \gets \mathtt{ctr} + 1\); &nbsp;\(\mathtt{Pend}[\mathtt{ctr}] \gets (j, pw')\)</li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Retrieve},\ j,\ \mathtt{ctr}\bigr)\)<span class="cj-comment">// the position and the request, never the guess</span></li>
+<li>\(\textbf{return}\ \mathtt{ctr}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Help(<span class="cj-id">j</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="17">
+<li>\(\textbf{require}\ \mathit{id}.P \in \mathcal{R} \ \wedge\ (\mathit{id}'.F \neq \mathbf{A} \ \vee\ \mathit{id}.P \in \mathbf{C})\)</li>
+<li>\(\textbf{if}\ \mathit{id}.P \notin \mathbf{C}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{Rate}[\mathit{id}.P, j] \gets \mathtt{Rate}[\mathit{id}.P, j] + 1\)</span><span class="cj-comment">// only an honest ratelimiter accrues quota</span></li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Help},\ \mathit{id}.P,\ j\bigr)\)</li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Finish(<span class="cj-id">q</span>, <span class="cj-id">L</span>, <span class="cj-id">b</span>, <span class="cj-id">e</span>, <span class="cj-id">pw_{\Adv}</span>, <span class="cj-id">msg_{\Adv}</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="22">
+<li>\(\textbf{require}\ \mathit{id}'.F = \mathbf{A} \ \wedge\ \mathtt{Pend}[q] \neq \square\)</li>
+<li>\((j, pw') \gets \mathtt{Pend}[q]\); &nbsp;\(\mathtt{Pend}[q] \gets \square\)</li>
+<li>\(\textbf{if}\ b = \bot\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{Res}[q] \gets \bot\); &nbsp;\(\textbf{return}\) <span class="cj-atom">ok</span></span><span class="cj-comment">// the adversary may fail a request outright</span></li>
+<li>\(\textbf{require}\ L \subseteq \mathcal{R} \setminus \mathbf{C} \ \wedge\ |L| + |\mathcal{R} \cap \mathbf{C}| \geq \mathsf{t}\)</li>
+<li>\(\textbf{require}\ \mathtt{Rate}[R, j] \geq 1\) for every \(R \in L\)</li>
+<li>\(\mathtt{Rate}[R, j] \gets \mathtt{Rate}[R, j] - 1\) &nbsp;for each \(R \in L\)</li>
+<li>\((pw, \mathit{msg}) \gets \mathsf{last}(\mathtt{Hist}[j])\)<span class="cj-comment">// \((\bot, \bot)\) when nothing was ever stored</span></li>
+<li>\(\textbf{if}\ (\mathtt{Cmp}[j] = 1 \ \vee\ \mathtt{Hist}[j] = ()) \ \wedge\ e \neq \bot\ \textbf{then}\)</li>
+<li><span class="cj-ind">\((pw, \mathit{msg}) \gets \mathtt{Hist}[j][e]\)</span><span class="cj-comment">// an older entry, at the adversary's chosen position</span></li>
+<li>\(\textbf{if}\ (\mathtt{Cmp}[j] = 1 \ \vee\ \mathtt{Hist}[j] = ()) \ \wedge\ e = \bot\ \textbf{then}\)</li>
+<li><span class="cj-ind">\((pw, \mathit{msg}) \gets (pw_{\mathcal{A}}, \mathit{msg}_{\mathcal{A}})\)</span></li>
+<li>\(\mathtt{Res}[q] \gets \bot\)</li>
+<li>\(\textbf{if}\ pw' = pw\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{Res}[q] \gets \mathit{msg}\)</span><span class="cj-comment">// the password check, and the whole of it</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Fetch(<span class="cj-id">q</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="38">
+<li>\(\textbf{require}\ \mathit{id}.P = S \ \wedge\ \mathtt{Res}[q] \neq \square\)</li>
+<li>\(r \gets \mathtt{Res}[q]\); &nbsp;\(\mathtt{Res}[q] \gets \square\)</li>
+<li>\(\textbf{return}\ r\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.GuessStart(<span class="cj-id">j</span>, <span class="cj-id">i</span>, <span class="cj-id">L</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="41">
+<li>\(\textbf{require}\ \mathit{id}'.F = \mathbf{A} \ \wedge\ i \leq |\mathtt{Hist}[j]|\)</li>
+<li>\(\textbf{require}\ \mathtt{full} = 1 \ \vee\ S \in \mathbf{C}\)</li>
+<li>\(\textbf{if}\ \mathtt{full} = 0\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{require}\ L \subseteq \mathcal{R} \setminus \mathbf{C} \ \wedge\ |L| + |\mathcal{R} \cap \mathbf{C}| \geq \mathsf{t}\)</span></li>
+<li><span class="cj-ind">\(\textbf{require}\ \mathtt{Rate}[R, j] \geq 1\) for every \(R \in L\)</span></li>
+<li><span class="cj-ind">\(\mathtt{Rate}[R, j] \gets \mathtt{Rate}[R, j] - 1\) &nbsp;for each \(R \in L\)</span></li>
+<li>\(\mathtt{Tok}[j, i] \gets \mathtt{Tok}[j, i] + 1\)</li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.GuessFinish(<span class="cj-id">j</span>, <span class="cj-id">i</span>, <span class="cj-id">pw_{\Adv}</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="49">
+<li>\(\textbf{require}\ \mathit{id}'.F = \mathbf{A} \ \wedge\ \mathtt{Tok}[j, i] \geq 1\)</li>
+<li>\(\mathtt{Tok}[j, i] \gets \mathtt{Tok}[j, i] - 1\)</li>
+<li>\((pw, \mathit{msg}) \gets \mathtt{Hist}[j][i]\)</li>
+<li>\(\textbf{if}\ pw = pw_{\mathcal{A}}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \mathit{msg}\)</span></li>
+<li>\(\textbf{return}\ \bot\)<span class="cj-comment">// one token, one guess, one bit</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="55">
+<li>\(\textbf{if}\ \mathit{id}.P \in \mathcal{R}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{Rate}[\mathit{id}.P, *] \gets 0\)</span><span class="cj-comment">// quota accrued while honest does not survive</span></li>
+<li>\(\textbf{if}\ S \in \mathbf{C} \ \wedge\ |\mathcal{R} \cap \mathbf{C}| \geq \mathsf{t}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{full} \gets 1\)</span><span class="cj-comment">// server and threshold, at one moment</span></li>
+<li>\(\textbf{if}\ \mathit{id}.P \neq S\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \bot\)</span></li>
+<li>\(\mathtt{Cmp}[*] \gets 1\)</li>
+<li>\(\textbf{return}\ \bigl(\{(j, |\mathit{msg}|) : (pw, \mathit{msg}) \in \mathtt{Hist}[j]\},\ \mathtt{Pend}\bigr)\)<span class="cj-comment">// lengths and pending requests; no \(pw\), no \(\mathit{msg}\)</span></li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+The box is transcribed from Abdolmaleki, Baecker, Gerhart, Graf, Khalili, Rausch and Schröder, *Universally composable password-hardened encryption*, ePrint 2025/1647, revision `20250911:181624` (its only posting), Figure 1, p. 9 — "the ideal TPHE Functionality $\mathcal{F}_{\mathsf{PHE}}$".
+
+**Which of the paper's two presentations this is.** The paper prints the object twice: Figure 1 in the main body, and $\mathcal{F}_{\mathsf{TPHE}}$ across Figures 8–10 (pp. 26–28) in Appendix A, written in the iUC framework's own notation. Theorem 1 is stated about the appendix version. Figure 1 is what is transcribed here, for two reasons: it is the presentation the paper explains interface by interface in its §3.2, and the two carry the same seven interfaces — `Store`, `Retrieve`, `HelpRetrieve`, `FinishRetrieve`, `PwGuessStart`, `PwGuessFinish`, `ChangeCorruption` — with the appendix adding iUC's corruption bookkeeping (`CorruptionSet`, `InitialCorruption`, `CorruptionLog`) rather than new behaviour. **A reader checking a proof should read Figures 8–10, not this box.**
+
+**The entry's former title claimed key rotation, and Figure 1 has no rotation interface.** It read *"Password-hardened encryption, threshold, key rotation"*. Rotation is a separate functionality in the same paper — $\mathcal{F}_{\mathsf{init\&rotateKey}}$, Figures 17–19, pp. 39–41 — and this encyclopedia has no page for it. Retitled to what Figure 1 actually defines.
+
+Four lines carry the security content:
+
+- **Line 62 is the point of the whole primitive.** A compromised server's adversary gets record positions, ciphertext lengths and the pending request list. It does not get a password and it does not get a plaintext. The paper's first fundamental property is exactly this: if `Store` ran while the server was honest then $pw$ and $m$ "remain secret, even if all ratelimiters are malicious, the resulting ciphertext leaks, and the server after finishing this operation gets corrupted".
+- **Lines 26–28 are the rate limit, and line 26 is the threshold.** A decryption needs a set $L$ of *honest* rate limiters such that $L$ together with the corrupted ones reaches $\mathsf{t}$, and every member of $L$ must have quota for that record, which is then spent. Quota is per $(\text{rate limiter}, \text{record})$, which the paper notes is deliberate: the mechanism "can be very fine grained and different for each $\mathit{id}$, which itself might encode further information such as a username that this ciphertext 'belongs' to".
+- **Line 36 is the password check, and it happens inside the box.** Neither the server nor the rate limiters nor the adversary sees $pw'$ or the stored $pw$; only the equality's consequence leaves. The paper calls this decryption secrecy, and notes the stronger consequence: a plaintext is unreachable without the right password "not even when server and rate limiters willingly perform a decryption".
+- **Lines 30–33 are a concession, and the paper argues at length that it is forced.** Once the server has been compromised since a record was written — *or* nothing was ever written at that position, which is the second half of the source's condition and easy to miss — the adversary may redirect the decryption to any earlier entry in that record's history, or to a password and plaintext of its own. The paper's reasoning: a corrupted real server "might replace ciphertexts with older ones that were leaked but had since then been deleted", or "insert new adversarially-generated ciphertexts that decrypt to a message that was never stored", and neither can be prevented — so a functionality that checked only the most recent entry, or returned an error, or produced any output "without consulting $\mathcal{A}$" would be "impossible to realize". The price is named too: a simulator must be able to *extract* plaintexts from ciphertexts it did not produce.
+
+And two lines carry the guessing model, which is the part a game-based definition cannot state:
+
+- **Line 42 separates online from offline guessing.** With the server compromised but the threshold not, each guess costs a unit of quota from $\mathsf{t}$ rate limiters (lines 44–46) — that is *online* guessing, and the rate limit is the defence. Once the server and $\mathsf{t}$ rate limiters have been corrupt at one moment, $\mathtt{full}$ is set at line 58 and the quota checks are skipped entirely: guessing becomes free, because at that point the real adversary holds everything needed to decrypt offline.
+- **Lines 47 and 49 make each guess a one-bit oracle.** A token is minted per attempt and spent per attempt, and line 54 returns $\bot$ on a wrong guess. There is no interface returning a password, and none returning a plaintext without a matching guess.
+
+Where the source needed a decision:
+
+| Source | Box | Why |
+|---|---|---|
+| `FinishRetrieve` returns $(\texttt{FinishRetrieve}, m)$ or $\bot$ to $S$ from inside the adversary's own activation | The result is parked in $\mathtt{Res}$, and $S$ collects it with $\mathsf{Fetch}$ (lines 38–40) | Delivery is a pull here. The adversary cannot be given a responsive call instead, because between `Retrieve` and `FinishRetrieve` it has to interact with rate limiters through `HelpRetrieve` — so the two-step shape is the source's, not an artefact. |
+| `ChangeCorruption` is an interface of the functionality | Not an operation; $\mathbf{C}$ and $\mathsf{Leak}$ | Corruption is the framework's here, so the source's own corruption interface has no counterpart. Its two effects are kept: $\mathtt{Cmp}$ is raised at line 61 when the server's state is read off, and $\mathtt{full}$ at line 58. |
+| "If this decorrupts a rate limiter $\mathcal{R}_i$, reset $\mathsf{retrieveRate}(\mathcal{R}_i, \mathit{id}) \gets 0$" | Line 19 accrues quota only while honest, and line 56 zeroes it on compromise | There is no de-corruption event a functionality can observe in this framework, so the reset is moved to the corruption side. The effect at lines 26–28 is the same, since only *honest* rate limiters are ever counted there: quota earned while corrupt is never recorded, and quota earned before a compromise does not survive it. The source's stated goal is met — "a rate limiter $\mathcal{R}_i$ must not be able to influence future rate limiting after losing control over $\mathcal{R}_i$". |
+| Requests identified by a unique $\mathit{rqid}$ | A counter, $\mathtt{ctr}$ | Uniqueness is all the source needs of it, and a counter makes that visible rather than assumed. |
+| No leakage interface for a rate limiter | Line 60 returns $\bot$ | A rate limiter holds no record-specific secret in this box; its whole state is the quota table, which the adversary drives. |
+| "if the server $\mathcal{S}$ has been corrupted at any point since that entry was stored **or no entry was stored yet**" | Lines 30 and 32 test $\mathtt{Cmp}[j] = 1 \vee \mathtt{Hist}[j] = ()$ | Both halves. The second is what lets the adversary answer a `Retrieve` against a position nothing was ever stored at — without it the box would refuse, and a real server holding an adversary-planted ciphertext at an unused position would be distinguishable from the ideal one. |
+| The full password/plaintext history is kept per record | Line 7 appends, and nothing deletes | Kept as the source does, and its own footnote on why is worth repeating: a real protocol "would of course only keep the most recent ciphertext for each $\mathit{id}$", but the functionality needs the history "to define the behavior in cases where previous ciphertexts were leaked". The history is never leaked as plaintext — line 62 projects it to lengths. |
+
+## Known realizations
+
+- **Theorem 1**, in the paper the box is taken from: the `UCPY` protocol $\mathcal{P}_{\mathsf{PHE}}$ realizes $\mathcal{F}_{\mathsf{TPHE}}$ in the $(\mathcal{F}_{\mathsf{auth}}, \mathcal{F}_{\mathsf{nizk}}, \mathcal{F}^{i}_{\mathsf{ro}})_{i \in \{1,2,\mathsf{OTP},\mathsf{MAC},\mathsf{N}\}}$-hybrid world, under the Gap-OM-BCDH assumption. `UCPY` is the paper's UC-secure variant of Pythia, which had been proven only for a game-based notion of one-more unpredictability under OM-BCDH, with "no further security properties … formally proven".
+- The paper exists because of a **gap in an earlier proof**, and it is careful about what it claims: it reports "a gap in the security proof, not necessarily a flaw in the construction itself" of Brost et al.'s threshold PHE scheme, says it has not found an attack exploiting the gap, and concludes that "the absence of a valid security proof means that the security of the TPHE scheme proposed by Brost et al. remains uncertain". That is the honest form of a negative result about a proof rather than a scheme, and worth reading as a model of one.
+
+## Properties
+
+- **Secrecy of encryption**, with probability exactly $0$ of leakage beyond length: no call on the adversary slot carries $pw$ or $\mathit{msg}$ (line 11 carries $\lvert \mathit{msg} \rvert$), and the only route from $\mathtt{Hist}$ to the adversary is line 53, which requires a correct guess against a token.
+- **Secrecy of decryption**, likewise exactly $0$: line 15 tells the adversary which record is being opened and which request it is, never $pw'$. Line 36 compares and discards.
+- **Rate limiting, with a bound the box states rather than assumes.** Between compromises, the number of decryptions and online guesses against record $j$ is bounded by the quota honest rate limiters have accrued for $j$ through line 19 — one $\mathsf{Help}$, one decryption. This is the guarantee no game-based definition of a PHE scheme carries, because it is a statement about the *composition* of server and rate limiters rather than about either.
+- **Correctness only while the server stays honest.** Line 29 uses the most recent entry, but lines 30–33 replace it at the adversary's discretion the moment $\mathtt{Cmp}[j]$ is set — and $\mathtt{Cmp}$ is set for every record as soon as the server's state is read (line 61). So integrity of the database is exactly as strong as the server, and no stronger; the confidentiality guarantees above are the ones that survive its compromise.
+- **Offline guessing is unbounded after a full compromise**, by construction: line 42's second disjunct and line 43's guard mean that once $\mathtt{full} = 1$, tokens are free. A protocol cannot do better — an adversary holding the server's database and $\mathsf{t}$ decryption shares can grind passwords locally — and the box's merit is that it says this in an interface instead of a remark.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
+
 *References:*
 
-- Abdolmaleki et al. [*Universally composable password-hardened encryption*](https://eprint.iacr.org/2025/1647). Cryptology ePrint Archive, Paper 2025/1647, 2025.
+- Abdolmaleki, Baecker, Gerhart, Graf, Khalili, Rausch, and Schröder. [*Universally composable password-hardened encryption*](https://eprint.iacr.org/2025/1647). Cryptology ePrint Archive, Paper 2025/1647, 2025. Figure 1, p. 9 of revision `20250911:181624` (its only posting), the definition transcribed above; Figures 8–10, pp. 26–28 for the formal iUC statement that Theorem 1 is about; Figures 17–19, pp. 39–41 for the separate initialization-and-key-rotation functionality; §2.1, p. 4 for the gap in the earlier proof; §3.1–3.2, pp. 7–10 for the five properties and the design discussion quoted above.

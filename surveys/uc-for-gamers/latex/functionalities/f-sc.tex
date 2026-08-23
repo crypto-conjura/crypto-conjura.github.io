@@ -1,0 +1,94 @@
+%% The interface box of f-sc, the one source for both the book
+%% and uc/.../f-sc/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fsc$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := \none$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{A} \gets \unset$; \ $\V{B} \gets \unset$
+  \Comment{initiator, responder}
+\State $\V{on} \gets 0$; \ $\V{exp} \gets 0$
+\State $\V{Q} : \Fsc.\Ps \times \mathbb{N} \to \Msgs \cup \{\unset\}$
+\State $\V{Q}[*,*] \gets \unset$
+\State $\V{in}[*] \gets 0$; \ $\V{out}[*] \gets 0$
+  \Comment{queued for a party, and taken by it}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Establish}(R, r)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$r \in \{\op{ini}, \op{res}\} \ \wedge\ R \neq \id.P \ \wedge\ \V{on} = 0 \ \wedge\ \V{exp} = 0$}
+\If{$r = \op{ini} \ \wedge\ \V{A} = \unset$}
+  \State $\V{A} \gets \id.P$; \ $\V{B} \gets R$ \label{ln:scini}
+  \State $\Adv\bigl(\id.\op{Establish},\ \V{A},\ \V{B}\bigr)$ \label{ln:scpair}
+    \Comment{the pair, and that is all the adversary is told}
+  \State \textbf{return} $\ok$
+\EndIf
+\Req{$r = \op{res} \ \wedge\ \id.P = \V{B} \ \wedge\ R = \V{A}$} \label{ln:scroles}
+  \Comment{complementary roles, and the peers must agree}
+\State $\V{on} \gets 1$ \label{ln:scactive}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Send}(\msg)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{on} = 1 \ \wedge\ \id.P \in \{\V{A}, \V{B}\} \ \wedge\ \msg \in \Msgs$} \label{ln:scsend}
+\State $R \gets \V{A}$
+\If{$\id.P = \V{A}$}
+  \State $R \gets \V{B}$
+\EndIf
+\State $\V{in}[R] \gets \V{in}[R] + 1$; \ $\V{Q}[R, \V{in}[R]] \gets \msg$
+\State $\Adv\bigl(\id.\op{Send},\ \V{A},\ |\msg|\bigr)$ \label{ln:scleak}
+  \Comment{the initiator's name and the length; not the direction}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Fetch}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{on} = 1 \ \wedge\ \V{out}[\id.P] < \V{in}[\id.P]$} \label{ln:scdeliver}
+  \Comment{an expired session delivers nothing}
+\State $\V{out}[\id.P] \gets \V{out}[\id.P] + 1$
+\State \textbf{return} $\V{Q}[\id.P, \V{out}[\id.P]]$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Expire}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P \in \{\V{A}, \V{B}\} \ \wedge\ \V{on} = 1$}
+\State $\V{on} \gets 0$; \ $\V{exp} \gets 1$ \label{ln:scexpire}
+  \Comment{either partner, both directions}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$\id.P \notin \{\V{A}, \V{B}\}$}
+  \State \textbf{return} $(\V{A},\ \V{B},\ \V{on})$ \label{ln:scoutsider}
+\EndIf
+\State \textbf{return} $\bigl(\V{A},\ \V{B},\ \V{on},\ \{\V{Q}[\id.P, j]\}_{\V{out}[\id.P] < j \leq \V{in}[\id.P]}\bigr)$ \label{ln:scpending}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

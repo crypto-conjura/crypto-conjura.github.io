@@ -1,15 +1,149 @@
 ---
-title: "F-FE — Functional, predicate encryption"
-status: "Open"
+title: "F-ESR — FE for stateful, randomized functionalities"
+status: "Emerging"
 layer: 3
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-FE* (Functional, predicate encryption) is part of *Public-Key Primitives, Key Exchange, Messaging* in the UC functionality encyclopedia. Status: open — no accepted UC formulation exists yet.
+*F-ESR* (FE for stateful, randomized functionalities) is part of *Public-Key Primitives, Key Exchange, Messaging* in the UC functionality encyclopedia. Status: an emerging formulation, still an active area of research.
 
-Simulation-based security for functional encryption is impossible in general once a key holder can make unboundedly many key queries, which is why this functionality remains open despite substantial interest. The closest known UC treatment sidesteps this by assuming trusted hardware rather than realizing FE in the plain model.
+Functional encryption where the authorized function may keep state between calls and may consume fresh randomness — so two decryptions with the same key on the same ciphertext need not agree, and the second may depend on the first. The state lives in the box, one slot per (decryptor, function) pair, and advancing it is what a `Decrypt` does besides answering.
+
+The status was `Open` and is now `Emerging`, which is a change of one degree and not a promotion to canonical: a printed, peer-reviewed functionality does exist, and it is the box below — but it is a *generalisation* of functional encryption, realized only under an attested-execution hardware setup. Composable functional encryption in the plain model is still ruled out, and no plain-model UC formulation of ordinary FE has settled.
+
+## Functionality
+
+Reading the box: $\mathbf{A}$ is the adversary's role in a caller's id, so $\mathit{id}'.F = \mathbf{A}$ marks a call the adversary makes in its own right; $\mathbf{C}$ is the corrupted set; $\mathcal{A}^{!}(\cdot)$ is a *responsive* call, whose answer comes back before anything else runs; $\square$ marks a slot never filled; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it. The parameters are the function class $\mathbb{F}$ and the three party roles: the authority $C$, the encryptors $E$, the decryptors $D$.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{ESR}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := (\mathbb{F}, C, E, D)\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{Set}[*] \gets \mathsf{false}\)<span class="cj-comment">// which parties the authority has initialized</span></li>
+<li>\(\mathtt{M}[*] \gets \square\); &nbsp;\(\mathtt{Own}[*] \gets \square\)<span class="cj-comment">// the plaintext behind a handle, and whose it is</span></li>
+<li>\(\mathtt{St}[*,*] \gets \square\)<span class="cj-comment">// authorized functions, and their running state</span></li>
+<li>\(\mathtt{ctr} \gets 0\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Setup(<span class="cj-id">P</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="5">
+<li>\(\textbf{require}\ P \in E \cup D \ \wedge\ (\mathit{id}.P = C \ \vee\ \mathit{id}'.F = \mathbf{A})\)<span class="cj-comment">// the authority, or the adversary in its own right</span></li>
+<li>\(\mathtt{Set}[P] \gets \mathsf{true}\)</li>
+<li>\(\textbf{if}\ \mathit{id}'.F = \mathbf{A}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{St}[P, \mathtt{F}_0] \gets \varnothing\)</span><span class="cj-comment">// and then only the length function is authorized</span></li>
+<li>\(\textbf{if}\ \mathit{id}.P = C\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Setup},\ P\bigr)\)</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Encrypt(<span class="cj-id">x</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="12">
+<li>\(\textbf{require}\ \mathit{id}.P \in E \cup D \ \wedge\ \mathtt{Set}[\mathit{id}.P] = \mathsf{true} \ \wedge\ x \in \mathcal{X}\)</li>
+<li>\(\mathtt{ctr} \gets \mathtt{ctr} + 1\)</li>
+<li>\(\mathtt{M}[\mathtt{ctr}] \gets x\); &nbsp;\(\mathtt{Own}[\mathtt{ctr}] \gets \mathit{id}.P\)</li>
+<li>\(\textbf{return}\ \mathtt{ctr}\)<span class="cj-comment">// no call on the adversary slot: not even a length</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.KeyGen(<span class="cj-id">mathtt{F}</span>, <span class="cj-id">B</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="16">
+<li>\(\textbf{require}\ \mathit{id}.P = C \ \wedge\ \mathtt{F} \in \mathbb{F}^{+} \ \wedge\ \mathtt{Set}[B] = \mathsf{true}\)</li>
+<li>\(\mathcal{A}^{!}\bigl(\mathit{id}.\mathsf{KeyGen},\ \mathtt{F},\ B\bigr)\)<span class="cj-comment">// the source's \textsc{ack}, read as responsive</span></li>
+<li>\(\mathtt{St}[B, \mathtt{F}] \gets \varnothing\)</li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Decrypt(<span class="cj-id">h</span>, <span class="cj-id">mathtt{F}</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="20">
+<li>\(\textbf{require}\ \mathit{id}.P \in D \ \wedge\ \mathtt{M}[h] \neq \square\)</li>
+<li>\(x \gets \mathtt{M}[h]\)</li>
+<li>\(\textbf{if}\ C \notin \mathbf{C}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{require}\ \mathtt{St}[\mathit{id}.P, \mathtt{F}] \neq \square \ \wedge\ x \in \mathcal{X}\)</span><span class="cj-comment">// an unauthorized function is refused, not answered</span></li>
+<li><span class="cj-ind">\(r \gets_{\$} \mathcal{R}\); &nbsp;\(s \gets \mathtt{St}[\mathit{id}.P, \mathtt{F}]\)</span></li>
+<li><span class="cj-ind">\((y, s) \gets \mathtt{F}(x, s, r)\)</span></li>
+<li><span class="cj-ind">\(\mathtt{St}[\mathit{id}.P, \mathtt{F}] \gets s\)</span><span class="cj-comment">// the state carried to the next call</span></li>
+<li><span class="cj-ind">\(\textbf{return}\ y\)</span></li>
+<li>\(y \gets \mathcal{A}\bigl(\mathit{id}.\mathsf{Decrypt},\ h,\ \mathtt{F},\ x\bigr)\)<span class="cj-comment">// a corrupt authority: \(\mathcal{A}\) sees \(x\) and names \(y\)</span></li>
+<li>\(\textbf{return}\ y\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Status()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="30">
+<li>\(\textbf{return}\ \bigl(\mathtt{Set}[\mathit{id}.P],\ \{\mathtt{F} : \mathtt{St}[\mathit{id}.P, \mathtt{F}] \neq \square\}\bigr)\)<span class="cj-comment">// replaces the source's outbound notifications</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="31">
+<li>\(L \gets \{(h, \mathtt{M}[h]) : \mathtt{Own}[h] = \mathit{id}.P\}\)<span class="cj-comment">// an encryptor's own plaintexts, and no other's</span></li>
+<li>\(\textbf{if}\ \mathit{id}.P \in D\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \bigl(L,\ \{(\mathtt{F}, \mathtt{St}[\mathit{id}.P, \mathtt{F}])\}\bigr)\)</span></li>
+<li>\(\textbf{return}\ L\)</li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+The box is transcribed from Bhatotia, Kohlweiss, Martinico and Tselekounis, *Steel: Composable hardware-based stateful and randomised functional encryption*, ePrint 2021/269, revision `20210924:152101`, the boxed `Functionality FESR[sid, F, A, B, C]` spanning pp. 13–14 (the PDF's numbering and the printed numbering agree). It is boxed but not captioned as a numbered figure, which is why a caption sweep of this paper finds nothing.
+
+**The entry was titled "Functional, predicate encryption" and neither half survives.** Predicate encryption appears nowhere in the source. What it defines is one specific generalisation of functional encryption, named in its own §3: the function class is $\mathtt{F} : \mathcal{X} \times \mathcal{S} \times \mathcal{R} \to \mathcal{Y} \times \mathcal{S}$ rather than $\mathcal{X} \to \mathcal{Y}$, and the two extra components are the point. Retitled to the printed name.
+
+What the box says that ordinary functional encryption does not:
+
+- **Lines 24–26 are the generalisation, in three lines.** Fresh randomness $r$ is drawn per call, the current state $s$ is read, $\mathtt{F}$ returns a value *and* a successor state, and the successor is stored. Two `Decrypt` calls with the same handle and the same function therefore need not agree — which the source contrasts with the existing randomized-FE constructions, "limited in the sense that they require a new functional key for each invocation of the function, i.e., decryptions with the same functional key always return the same output".
+- **Line 15 places no call on the adversary slot at all.** Encryption leaks *nothing* — not a length. That looks impossible for a functionality with realizable ciphertexts, and the source's device for it is line 8: when the adversary sets a party up in its own right, that party is authorized for $\mathtt{F}_0$, "the leakage function returning the length of the message". Length leakage is routed through the function class rather than through an explicit leak, and a reader who misses line 8 will read line 15 as stronger than it is.
+- **Line 22 makes the authority the root of correctness, and only of correctness.** With $C$ honest, the box evaluates for real and an unauthorized function is refused. With $C$ corrupt, the adversary is handed $x$ and names $y$ — the source's reasoning: "If $\mathsf{C}$ is corrupted, we can no longer guarantee the evaluation to be correct, since $\mathsf{C}$ might authorize the adversary to compute any function in $\mathtt{F}$." Note what does *not* change: an encryptor's plaintexts stay unreachable while the encryptor is honest and no decryptor is authorized for a revealing function.
+- **Line 26 is per-pair, not per-function.** Two decryptors authorized for the same $\mathtt{F}$ advance independent states. The source's own example is a lender computing a running total from members' encrypted statements, which only makes sense if the running total belongs to the decryptor.
+
+Where the source needed a decision, and two places it is defective:
+
+| Source | Box | Why |
+|---|---|---|
+| `send SETUP to P`, `send (ENCRYPTED, h) to P`, `send (ASSIGNED, F) to B` | Returns, plus $\mathsf{Status}$ at line 30 | Two of the three are returns to the caller and translate directly. `(ASSIGNED, F)` is an *unsolicited* output to a third party, which a pull framework has no way to deliver, so $\mathsf{Status}$ is added: a party reads its own setup flag and its own authorized functions. This is an operation the source does not have, and it is added rather than dropped because dropping it would leave a decryptor unable to learn what it may decrypt except by trial. It reveals nothing a sequence of $\mathsf{Decrypt}$ attempts would not. |
+| $(y, \mathsf{s}) \gets \mathtt{F}(\mathsf{x}, \mathsf{s}, \mathsf{r})$, then $\mathcal{P}[\mathsf{B}, \mathtt{F}] \gets \mathsf{s}'$ | Line 26 stores $s$ | **$\mathsf{s}'$ is unbound in the source.** No line assigns it, and the only candidate is the state $\mathtt{F}$ has just returned, so it is read as $\mathsf{s}$. The alternatives are worse: storing an unbound value would leave the state undefined, and storing the *old* state would make the functionality stateless and contradict its own name. |
+| `send (KEYGEN, F, B) to A and receive ACK` | $\mathcal{A}^{!}$ at line 17 | **A deliberate strengthening, and it is flagged as one.** The source's idiom is the standard delayed output, under which the adversary may run other machinery before acknowledging; a responsive call does not permit that. It is used here because nothing else in this box is pending at that moment and there is no interface by which the adversary could refuse the acknowledgement — but a protocol proved against the source is not thereby proved against this box. |
+| Party types $\mathsf{A}$ (encryptors), $\mathsf{B}$ (decryptors), $\mathsf{C}$ (authority) | $E$, $D$, $C$ | $\mathbf{A}$ is the adversary's role in this framework's ids, and reusing the letter for the encryptor role would make line 5 unreadable. |
+| No leakage interface; corruption discussed in prose | Lines 31–34 | Required here. An encryptor's adversary gets that encryptor's own plaintexts and handles; a decryptor's gets those plus its authorized functions and their current states. Neither reaches another party's plaintexts, which is the confidentiality the paper says it focuses on: "confidentiality of the encrypted message against malicious decryptors". |
+| $\mathtt{F} \in \mathtt{F}^{+}$ at `KEYGEN` | $\mathbb{F}^{+}$ at line 16 | Kept as written. The $+$ is the function class extended with the length function $\mathtt{F}_0$, which line 8 authorizes and which is therefore assignable. |
+| A `getHandle` subroutine | A counter, line 13 | Uniqueness is all the source requires of a handle. |
+
+## Known realizations
+
+- **Theorem 3** in the same paper: the `Steel` protocol UC-realises $\mathcal{F}_{\mathsf{ESR}}$ in the presence of the global attestation functionality $\mathcal{G}_{\mathsf{att}}$ and local `CRS`, `REP` and `SC` functionalities, with respect to a stated identity bound $\xi$, via the universal composition with global subroutines theorem. The proof is for **static corruption of a single decryptor**; the paper says it "did, however, not encounter any road-blocks to adaptive corruption of multiple decryptors besides increased proof notational complexity", which is a statement about expected difficulty and not a theorem.
+- **The setup is the assumption doing the work.** $\mathcal{G}_{\mathsf{att}}$ is Pass, Shi and Tramèr's attested-execution functionality — a global box in which parties register programs and ask for evaluations, receiving attestation signatures. It is what buys a construction the standard model cannot have, and it has no page in this encyclopedia; nor does the paper's rollback-resistant replacement $\mathcal{G}_{\mathsf{rollback}}$ (p. 23), which substitutes for $\mathcal{G}_{\mathsf{att}}$ to model rollback and forking attacks against enclave storage.
+- **Why no plain-model realization exists.** Matt and Maurer show composable functional encryption is impossible in the standard model, though achievable in the random oracle model. Iron, the earlier SGX-based construction, is proved only in the standalone setting.
+
+## Properties
+
+- **Confidentiality against malicious decryptors**, with probability exactly $0$ of leakage: a plaintext leaves the box only as $\mathtt{F}(x, s, r)$ at line 25, for an $\mathtt{F}$ the honest authority authorized at line 18, or through its own owner's leak at line 31. Line 15 leaks nothing.
+- **Correctness, conditional on an honest authority**, with probability exactly $1$ in that case and *no* guarantee otherwise: line 22 is the whole condition, and line 28 is what replaces the evaluation when it fails.
+- **Statefulness is observable and monotone.** There is no interface resetting $\mathtt{St}[B, \mathtt{F}]$, so a decryptor's state advances with each call and never rewinds. This is exactly what the paper's $\mathcal{G}_{\mathsf{rollback}}$ discussion is about: an enclave whose storage can be rolled back would break it, and the countermeasure belongs to the setup rather than to this box.
+- **Randomized, and the randomness is the box's.** $r$ is drawn at line 24 inside the functionality, so neither the decryptor nor the adversary chooses it while $C$ is honest. That is stronger than the constructions the paper compares against, where a fresh functional key per invocation was the price of randomization.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Bhatotia, Kohlweiss, Martinico, and Tselekounis. [*Steel: Composable hardware-based stateful and randomised functional encryption*](https://eprint.iacr.org/2021/269). In 24th IACR International Conference on Practice and Theory of Public-Key Cryptography (PKC), pages 709–736, 2021. Note: this functionality (F-ESR) relies on a global attested-execution (TEE) hardware assumption to sidestep the impossibility result below — it is not a plain-model FE functionality.
+- Bhatotia, Kohlweiss, Martinico, and Tselekounis. [*Steel: Composable hardware-based stateful and randomised functional encryption*](https://eprint.iacr.org/2021/269). In 24th IACR International Conference on Practice and Theory of Public-Key Cryptography (PKC), pages 709–736, 2021. The boxed `Functionality FESR`, pp. 13–14 of revision `20210924:152101`, the newest of four postings — the definition transcribed above; §2.3, p. 12 for $\mathcal{G}_{\mathsf{att}}$; §3.1, p. 13 for the party roles; Theorem 3, p. 19 for the realization; p. 23 for the rollback-resistant setup. This functionality relies on a global attested-execution (TEE) hardware assumption to sidestep the impossibility result below — it is not a plain-model FE functionality.
 - Boneh, Sahai, and Waters. [*Functional encryption: Definitions and challenges*](https://eprint.iacr.org/2010/543). In 8th Theory of Cryptography Conference (TCC), 2011.

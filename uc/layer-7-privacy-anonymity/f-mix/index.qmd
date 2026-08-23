@@ -1,12 +1,135 @@
 ---
-title: "F-mix — Mix-net, verifiable shuffle"
+title: "F-MN — Mix-net, $G_q$-based"
 status: "Canonical"
 layer: 7
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-mix* (Mix-net, verifiable shuffle) is part of *Privacy and Anonymity* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+*F-MN* (Mix-net, $G_q$-based) is part of *Privacy and Anonymity* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+
+Senders hand in group elements; when a majority of mix-servers says go, the accepted messages come out **sorted**. The sort is the anonymity: it is the only thing the box does to the list, and it is enough, because a sorted multiset carries no information about who submitted which element.
+
+## Functionality
+
+Reading the box: $\mathbf{A}$ is the adversary's role in a caller's id, so $\mathit{id}'.F = \mathbf{A}$ restricts an operation to the adversary; $\square$ marks a slot never filled and $\bot$ is used here as a tag distinguishing a mix-server's `Run` from a sender's submission; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it. The parameters are the message group $G_q$ and the number $k$ of mix-servers.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{MN}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P} := \mathbf{Snd} \cup \mathbf{Mix}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := (G_q, k)\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{L} \gets ()\)<span class="cj-comment">// accepted messages, in acceptance order</span></li>
+<li>\(\mathtt{D}[*] \gets \square\); &nbsp;\(\mathtt{c} \gets 0\)<span class="cj-comment">// registered inputs, indexed by arrival</span></li>
+<li>\(\mathtt{Js} \gets \varnothing\); &nbsp;\(\mathtt{Jm} \gets \varnothing\)<span class="cj-comment">// senders and mix-servers already counted</span></li>
+<li>\(\mathtt{out} \gets \square\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Send(<span class="cj-id">msg</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="5">
+<li>\(\textbf{require}\ \mathit{id}.P \in \mathbf{Snd} \ \wedge\ \mathit{msg} \in G_q \ \wedge\ \mathit{id}.P \notin \mathtt{Js}\)</li>
+<li>\(\textbf{require}\ \mathtt{out} = \square\)<span class="cj-comment">// once the output is fixed, nothing is accepted</span></li>
+<li>\(\mathtt{D}[\mathtt{c}] \gets (\mathit{id}.P, \mathit{msg})\); &nbsp;\(\mathtt{c} \gets \mathtt{c} + 1\)</li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Send},\ \mathit{id}.P,\ \mathtt{c} - 1\bigr)\)<span class="cj-comment">// who registered and where, never what</span></li>
+<li>\(\textbf{return}\ \mathtt{c} - 1\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Run()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="10">
+<li>\(\textbf{require}\ \mathit{id}.P \in \mathbf{Mix} \ \wedge\ \mathtt{out} = \square\)</li>
+<li>\(\mathtt{D}[\mathtt{c}] \gets (\mathit{id}.P, \bot)\); &nbsp;\(\mathtt{c} \gets \mathtt{c} + 1\)</li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Run},\ \mathit{id}.P,\ \mathtt{c} - 1\bigr)\)</li>
+<li>\(\textbf{return}\ \mathtt{c} - 1\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.AcceptInput(<span class="cj-id">t</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="14">
+<li>\(\textbf{require}\ \mathit{id}'.F = \mathbf{A} \ \wedge\ \mathtt{D}[t] \neq \square \ \wedge\ \mathtt{out} = \square\)<span class="cj-comment">// no input counts until the adversary lets it</span></li>
+<li>\((P, \mathit{msg}) \gets \mathtt{D}[t]\)</li>
+<li>\(\textbf{if}\ \mathit{msg} \neq \bot \ \wedge\ P \notin \mathtt{Js}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{L} \gets \mathtt{L} \,\|\, \mathit{msg}\); &nbsp;\(\mathtt{Js} \gets \mathtt{Js} \cup \{P\}\)</span></li>
+<li><span class="cj-ind">\(\mathcal{A}\bigl(\mathit{id}.\mathsf{AcceptInput},\ P\bigr)\)</span></li>
+<li>\(\textbf{if}\ \mathit{msg} = \bot\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{Jm} \gets \mathtt{Jm} \cup \{P\}\)</span></li>
+<li>\(\textbf{if}\ |\mathtt{Jm}| > k/2\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{out} \gets \mathsf{Sort}(\mathtt{L})\)</span><span class="cj-comment">// a majority of mix-servers, and the order is gone</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Fetch()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="24">
+<li>\(\textbf{require}\ \mathit{id}.P \in \mathbf{Mix} \ \wedge\ \mathtt{out} \neq \square\)<span class="cj-comment">// mix-servers receive the output; senders do not</span></li>
+<li>\(\textbf{return}\ \mathtt{out}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="26">
+<li>\(\textbf{if}\ \mathit{id}.P \in \mathbf{Snd}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \bigl(\{\mathit{msg} : \exists\, t\, .\ \mathtt{D}[t] = (\mathit{id}.P, \mathit{msg})\},\ \mathtt{out}\bigr)\)</span><span class="cj-comment">// a sender's own submission, and no other's</span></li>
+<li>\(\textbf{return}\ \mathtt{out}\)<span class="cj-comment">// the output is public the moment it exists</span></li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+The box is transcribed from Wikström, *On the security of mix-nets and hierarchical group signatures*, doctoral thesis, KTH, 2005 — Functionality 7.1 ($G_q$-Based Mix-Net), PDF p. 103 (printed p. 89) — the functionality $\mathcal{F}_{\mathsf{MN}}$. It is stated as a numbered `Functionality` environment in running text rather than a captioned figure, which is why a figure sweep of this thesis finds nothing.
+
+**Retitled from "Mix-net, verifiable shuffle".** A verifiable shuffle is a *proof technique* — the thesis realizes this box using zero-knowledge proofs of correct shuffling, and those live in the protocol, not the functionality. Nothing in the box shuffles verifiably or shuffles at all: line 22 sorts.
+
+Three lines carry the content:
+
+- **Line 22 is the anonymity, and it is the whole of it.** $\mathsf{Sort}$ replaces the acceptance order with lexicographic order, so the output is a multiset. The thesis puts it plainly: the definition "formalizes a trusted party that waits for messages in a group $G_q$ from senders, and then when a majority of the mix-servers request it, outputs these messages but in lexicographical order".
+- **Line 14 is a concession this box makes and its predecessor did not.** No input counts until the adversary approves it: a sender's `Send` merely registers, and only $\mathsf{AcceptInput}$ appends. The thesis says why — "the adversary can prohibit senders and mix-servers to give input to the functionality. This modification is necessary when the bulletin board functionality is defined as in Section 5.3" — so the concession is forced by the *bulletin board* the protocol is built on, not by the mix-net. It is the reason a mix-net cannot promise that every honest sender's vote is counted.
+- **Line 21 is the threshold, and line 24 is who gets the answer.** A strict majority of mix-servers must have had a `Run` accepted. Mix-servers then read the output; senders never do. A sender learns nothing at all from this box — not even that its own message was included, except through line 26.
+
+Where the source needed a decision:
+
+| Source | Box | Why |
+|---|---|---|
+| Every input arrives "from $\mathcal{C}_{\mathcal{I}}$", the thesis's communication interface | $\mathsf{Send}$ and $\mathsf{Run}$ register; $\mathsf{AcceptInput}$ is the adversary's | The thesis routes all traffic through an interface the adversary controls, which is what makes its two-step structure necessary. Split this way, the party-side call and the adversary's approval are separate operations, which is how this framework says the same thing. |
+| Output is "handed to $\mathcal{C}_{\mathcal{I}}$" as $((\mathcal{S}, M_j, \textsf{Output}, L'), \{(M_l, \textsf{Output}, L')\}_{l=1}^{k})$ | $\mathsf{Fetch}$ at lines 24–25, plus line 27 | Delivery is a pull here. The bundling is faithful in effect: the adversary receives the output at the moment it is fixed, and so does every mix-server that asks. Note what that means — line 27 makes the output public to any caller's adversary, which is correct for a mix-net whose output is posted on a bulletin board. |
+| "ignore further messages" after output | $\mathtt{out} \neq \square$, tested at lines 6, 10 and 14 | The one-shot reading, as state rather than as death: the instance stays alive so mix-servers can still fetch. |
+| $D$ is "a database" indexed by a counter; nothing is deleted | The same, and nothing is deleted | A repeat $\mathsf{AcceptInput}$ on the same index is harmless: line 16's $P \notin \mathtt{Js}$ test blocks a second submission from the same sender, and $\mathtt{Jm}$ is a set. |
+| "store this tuple in $D$ under the index $c$, set $c \leftarrow c+1$, and hand $(\mathcal{S}, S_i, \textsf{Input}, c)$ to $\mathcal{C}_{\mathcal{I}}$" | Lines 7–8 hand back the *storage* index | Read strictly left to right the source hands the index *after* the increment, which is one past where the tuple went. Since $\mathsf{AcceptInput}$ then takes "the index $c$ in $D$" under which something is stored, the storage index is the only reading that makes the two interfaces fit, and it is the one transcribed. The same off-by-one is in the `Run` clause. |
+| "Otherwise, hand $\mathcal{C}_{\mathcal{I}}$ the list $(\mathcal{S}, M_j, \textsf{Run})$" when the threshold is not yet met | No call; the adversary learns it from $\mathsf{AcceptInput}$ returning | In the source every message passes through the adversary's interface, so this is how the adversary is told the call happened. Here it *made* the call and gets $\textsf{ok}$ back, which carries the same information. |
+| Sender-side bound $m_i \in G_q$ | Line 5 | Note what this does *not* say: there is no check that a corrupt sender's element is well-formed beyond membership of the group, and no bound on how many distinct senders may submit. |
+| No leakage interface | Lines 26–28 | Required here. A corrupt sender's adversary gets that sender's own submissions; anyone else's gets the output once it exists. Neither reaches another sender's message before the sort, which is the property the box exists to state. |
+
+## Known realizations
+
+- **Theorem 8.6** in the same thesis: $\mathcal{F}_{\mathsf{MN}}$ is securely realized by the protocol $\pi_{\mathsf{MN}}$ in the $(\mathcal{F}_{\mathsf{BB}}, \mathcal{F}_{\mathsf{SKG}}, \mathcal{F}^{\mathsf{RC}}_{\mathsf{ZK}}, \mathcal{F}^{\mathsf{RDP}}_{\mathsf{ZK}})$-hybrid model with respect to $\mathcal{M}_{k/2}$-adversaries, under the DDH assumption in $G_q$. The four hybrids are a bulletin board (Functionality 5.1, PDF p. 83), a distributed key generator, and two zero-knowledge functionalities for specific relations; none has a page here.
+- **The relaxed variant, and why it exists.** Functionality 7.2 (Relaxed Mix-Net, $\mathcal{F}_{\mathsf{RMN}}$, PDF p. 105, printed p. 91) differs in two places: a *corrupt* sender may submit a full $\kappa$-bit string where an honest one is restricted to $\kappa - \kappa_r$ bits, and at output time all strings in $L$ are truncated to $\kappa - \kappa_r$ bits before sorting, with the untruncated sorted list handed to the adversary as well. It is what the thesis uses for the adaptive-adversary treatment in its Chapter 11, and the thesis is candid about the cost: "It is hard to imagine a situation where the relaxation is a real disadvantage, but if it is, it may be possible to eliminate this beauty flaw by an erasure-free proof of membership in the correct interval". This encyclopedia has no page for it.
+- **The thesis is also worth reading on the limits of this whole exercise.** Immediately before Functionality 7.1 it observes that "not all notions are easily cast as ideal functionalities", citing the flawed first signature functionality and calling its two corrected successors "prohibitively complicated" — a judgment from 2005 about the objects this encyclopedia's [F-SIG](/uc/layer-3-public-key-primitives/f-sig/index.qmd) page carries.
+
+## Properties
+
+- **Anonymity, with probability exactly $0$ of leakage from the output**: line 22's output is a function of the *multiset* of accepted messages. No call on the adversary slot carries a message — line 8 carries the sender and the index, line 18 carries the sender alone — so the adversary's view of an honest sender's element is empty until the sorted list appears, and the sorted list is invariant under permuting who sent what.
+- **Delivery is not guaranteed, and this is by construction**: line 14 lets the adversary refuse any registration forever. An honest sender can therefore be excluded from the output. That is the price of the bulletin-board model, stated in the functionality rather than in a proof.
+- **One message per sender, with probability exactly $1$**: line 16's $\mathtt{Js}$ test. A sender may register repeatedly (line 5 only blocks it once it is in $\mathtt{Js}$), but at most one of its registrations is ever appended.
+- **Robustness against a minority of mix-servers**: the output is fixed as soon as more than $k/2$ mix-servers have been accepted, so a minority cannot block it — and cannot influence it either, since no mix-server interface touches $\mathtt{L}$.
+- **No verifiability claim.** There is no operation by which a party checks that the output corresponds to the inputs. Verifiability is a property of $\pi_{\mathsf{MN}}$, obtained from its zero-knowledge hybrids, and a reader who wants it should not look for it here.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Wikström. [*On the Security of Mix-Nets and Hierarchical Group Signatures*](https://kth.diva-portal.org/smash/get/diva2:14421/FULLTEXT01.pdf). PhD thesis, KTH Royal Institute of Technology, 2005.
+- Wikström. [*On the Security of Mix-Nets and Hierarchical Group Signatures*](https://kth.diva-portal.org/smash/get/diva2:14421/FULLTEXT01.pdf). PhD thesis, KTH Royal Institute of Technology, Stockholm, 2005 (TRITA NA 05-38, ISSN 0348-2952). Functionality 7.1, PDF p. 103 (printed p. 89) — the definition transcribed above; Functionality 7.2, PDF p. 105 (printed p. 91) for the relaxed variant; Functionality 5.1, PDF p. 83 for the bulletin board; Theorem 8.6, PDF p. 113 (printed p. 99) for the realization. The thesis notes that its Functionality 7.1 is "essentially taken from" Wikström's own earlier paper, with the adversary's power to withhold inputs added.

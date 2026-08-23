@@ -1,12 +1,147 @@
 ---
-title: "F-onion — Onion routing"
+title: "F-OR — Onion routing"
 status: "Canonical"
 layer: 7
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-onion* (Onion routing) is part of *Privacy and Anonymity* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+*F-OR* (Onion routing) is part of *Privacy and Anonymity* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+
+A sender picks a path and hands over a message; the functionality then reveals to the adversary, one stretch at a time, exactly the corrupt part of the path between two honest hops — and nothing else. The payload is revealed only when no honest hop remains ahead of it. What makes the box worth reading closely is the two things it deliberately *concedes*: the adversary schedules every move, and nothing is ever removed from its list, so it may replay an onion at will.
+
+## Functionality
+
+Reading the box: $\mathbf{A}$ is the adversary's role in a caller's id, so $\mathit{id}'.F = \mathbf{A}$ restricts an operation to the adversary; $\mathbf{C}$ is the corrupted set; $\square$ marks a slot never filled and $\bot$ a payload the sender declined to supply; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it. $\mathsf{Step}$ is an internal routine, not a party interface. The parameters are the network size $N$ and the fixed payload length $\ell_m$.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{OR}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := (N, \ell_m)\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{L}[*] \gets \square\)<span class="cj-comment">// onions in the adversary's hands, by temporary id</span></li>
+<li>\(\mathtt{B}[*] \gets \square\)<span class="cj-comment">// onions held by an honest router, with its name</span></li>
+<li>\(\mathtt{In}[*] \gets ()\)<span class="cj-comment">// messages delivered to a recipient</span></li>
+<li>\(\mathtt{ctr} \gets 0\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.NewOnion(<span class="cj-id">R</span>, <span class="cj-id">msg</span>, <span class="cj-id">n</span>, <span class="cj-id">Q</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="5">
+<li>\(\textbf{require}\ |Q| = n < N \ \wedge\ \mathit{msg} \in \{0,1\}^{\ell_m} \cup \{\bot\}\)<span class="cj-comment">// a path shorter than the network, and a fixed-length payload</span></li>
+<li>\(\mathsf{Step}\bigl((\mathit{id}.P, R, \mathit{msg}, n, Q, 0)\bigr)\)</li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig">Step(<span class="cj-id">O</span>):</div>
+<ol class="cj-code" start="8">
+<li>\((S, R, \mathit{msg}, n, Q, i) \gets O\); &nbsp;\(Q_0 \gets S\); &nbsp;\(Q_{n+1} \gets R\)<span class="cj-comment">// the sender is hop \(0\), the recipient hop \(n+1\)</span></li>
+<li>\(J \gets \{j : i < j \leq n+1 \ \wedge\ Q_j \notin \mathbf{C}\}\)</li>
+<li>\(\textbf{if}\ J = \varnothing\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathcal{A}\bigl(\mathsf{Step}, Q_i, (Q_{i+1}, \ldots, Q_n), R, \mathit{msg}\bigr)\)</span><span class="cj-comment">// no honest hop left, so the message leaks</span></li>
+<li><span class="cj-ind">\(\textbf{return}\)</span></li>
+<li>\(j \gets \min J\); &nbsp;\(\mathtt{ctr} \gets \mathtt{ctr} + 1\)</li>
+<li>\(\mathtt{L}[\mathtt{ctr}] \gets (O, j)\)</li>
+<li>\(\mathcal{A}\bigl(\mathsf{Step}, Q_i, (Q_{i+1}, \ldots, Q_{j-1}), Q_j, \mathtt{ctr}\bigr)\)<span class="cj-comment">// one stretch of corrupt hops, and its two ends</span></li>
+<li>\(\textbf{return}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Deliver(<span class="cj-id">t</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="17">
+<li>\(\textbf{require}\ \mathit{id}'.F = \mathbf{A} \ \wedge\ \mathtt{L}[t] \neq \square\)<span class="cj-comment">// the adversary decides which onion moves, and when</span></li>
+<li>\(\bigl((S, R, \mathit{msg}, n, Q, i), j\bigr) \gets \mathtt{L}[t]\)<span class="cj-comment">// entries are never removed: this is the replay</span></li>
+<li>\(\textbf{if}\ j = n + 1\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{if}\ \mathit{msg} \neq \bot\ \textbf{then}\)</span></li>
+<li><span class="cj-ind">\(\mathtt{In}[R] \gets \mathtt{In}[R] \,\|\, \mathit{msg}\)</span></li>
+<li><span class="cj-ind">\(\textbf{return}\) <span class="cj-atom">ok</span></span></li>
+<li>\(\mathtt{ctr} \gets \mathtt{ctr} + 1\)</li>
+<li>\(\mathtt{B}[\mathtt{ctr}] \gets \bigl((S, R, \mathit{msg}, n, Q, j),\ Q_j\bigr)\)</li>
+<li>\(\textbf{return}\ \mathtt{ctr}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Poll()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="26">
+<li>\(\textbf{return}\ \bigl(\{t : \mathtt{B}[t] = (\cdot, \mathit{id}.P)\},\ \mathtt{In}[\mathit{id}.P]\bigr)\)<span class="cj-comment">// handles only: a router never sees the onion</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Forward(<span class="cj-id">t</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="27">
+<li>\(\textbf{require}\ \mathtt{B}[t] = (\cdot, \mathit{id}.P)\)</li>
+<li>\((O, \cdot) \gets \mathtt{B}[t]\); &nbsp;\(\mathtt{B}[t] \gets \square\)<span class="cj-comment">// an honest router forwards each onion once</span></li>
+<li>\(\mathsf{Step}(O)\)</li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="31">
+<li>\(\textbf{return}\ \bigl(\{t : \mathtt{B}[t] = (\cdot, \mathit{id}.P)\},\ \mathtt{In}[\mathit{id}.P]\bigr)\)<span class="cj-comment">// exactly what the router itself can see</span></li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+The box is transcribed from Camenisch and Lysyanskaya, *A formal treatment of onion routing*, CRYPTO 2005 — §2, "Ideal Onion Routing Functionality", PDF pp. 5–7 (printed pp. 173–175). The source states the functionality as running prose with four named message types rather than as a figure, which is why a figure sweep of this paper finds nothing, and why the box's line structure is a reading rather than a transcription of lines.
+
+**The source does not name the functionality.** It writes "the ideal onion routing functionality" throughout. $\mathcal{F}_{\mathsf{OR}}$ is this encyclopedia's name for it, and that is a naming judgment, recorded here rather than hidden.
+
+Four things the box says, and the first two are the security content:
+
+- **Lines 9 and 13–15 are the anonymity, and the shape is precise.** $\mathsf{Step}$ finds the next hop that is *not* corrupt and tells the adversary three things: which honest router the onion is coming from, the list of corrupt hops it will traverse, and which honest router it will reach. It does not say where in the path that stretch sits, and it does not link one stretch to another — two consecutive stretches of the same onion are separate calls with unrelated temporary ids. The paper's own summary: the environment "learns nothing else than pieces of paths of onions formed by honest senders (i.e., does not learn a sub-path's position or relations among different sub-paths)".
+- **Line 11 is where the payload goes.** The message is handed to the adversary exactly when no honest hop remains ahead of the onion — which includes the case where the recipient itself is corrupt. The paper states the converse as its guarantee: "if the sender and the receiver are both honest, the adversary does not learn the message".
+- **Line 18 is a replay attack, on purpose.** The source is explicit: "Note that entries are never removed from $L$. This models the replay attack: the ideal adversary is allowed to resend an onion." So $\mathsf{Deliver}$ may be called repeatedly on the same temporary id, and each call moves a fresh copy of the onion forward. Line 28, by contrast, *does* remove an honest router's buffer entry — an honest router forwards each onion once.
+- **Lines 26 and 31 are the same expression, and that is the point.** What a corrupt router's adversary reads off this box is exactly what the router itself can see: the handles of onions waiting for it and the messages delivered to it. It never sees the onion $O$ — the source says so twice, once for the adversary's list ("the adversary does not get to see $O$ and $j$") and once for honest buffers ("the honest party does not get to see $O$").
+
+Where the source needed a decision:
+
+| Source | Box | Why |
+|---|---|---|
+| `Process_Next_Step` is a message the functionality sends *to itself* | $\mathsf{Step}$, an internal routine (lines 8–16) | A self-addressed message is a subroutine. Keeping it as one makes visible that it is not an interface: no party and no adversary can invoke it. |
+| Two cases, "honest next" and "adversary next", the second split in two | One computation of $J$ at line 9, then lines 10–11 against 13–15 | The three printed cases are $j = i+1$, $i+1 < j \leq n+1$, and no honest hop at all. The first two differ only in the length of the corrupt stretch — which is empty in the first — so they collapse into line 15. Nothing is lost: with $j = i+1$ the list $(Q_{i+1}, \ldots, Q_{j-1})$ is empty, which is the source's "Onion $\mathit{temp}$ from $P_{o_i}$ to $P_{o_{i+1}}$". |
+| "Sends 'Onion $\mathit{temp}'$ received' to party $P_{o_j}$"; "sends 'Message $m$ received' to router $P_r$" | $\mathsf{Poll}$, lines 26 | Delivery is a pull here. The source's honest router, on receiving that notification, "notifies environment $\mathcal{Z}$ about it and awaits instructions"; the pull is that wait, made explicit. $\mathsf{Poll}$ is an operation the source does not have, and it returns nothing the notifications would not have delivered. |
+| The recipient $P_r$ is treated as a hop, with index $n+1$ | Line 8's $Q_{n+1} \gets R$ | The source's `Deliver_Message` branches on $j < n+1$ against $j = n+1$, and its "last honest router" case notes "in particular, this means that $P_r$ is adversarial as well", so the recipient is on the path. Line 8 also sets $Q_0 \gets S$, following the source's footnote that for $i = 0$, "processed means having originated the onion and submitted it to the ideal process". |
+| Onions are $O = (\mathit{sid}, P_s, P_r, m, n, \mathcal{P}, i)$, with a fresh $\mathit{sid}$ per onion | $(S, R, \mathit{msg}, n, Q, i)$; the session identifier is dropped | The $\mathit{sid}$ is generated by the functionality and never used to decide anything, so it carries no behaviour. Note that this is *not* the framework's session identifier — the source's is per onion, inside one instance. |
+| "If $m \neq \bot$ it sends 'Message $m$ received'; otherwise it does not deliver anything" | Lines 19–21 | Kept, including the $\bot$ payload. The source's footnote explains it: this "is needed to account for the fact that the adversary inserts onions into the network that at some point do not decrypt correctly". |
+| No leakage interface | Line 31 | Required here, and it coincides with $\mathsf{Poll}$ — see above. |
+
+## Known realizations
+
+The paper's construction is an onion-routing scheme built from a CCA2-secure cryptosystem and a pseudorandom permutation, together with a definition of *onion-correctness* and a game-based notion the paper introduces alongside the functionality. Its theorem is that a scheme secure in that game-based sense yields a protocol realizing the functionality above; the paper's stated motivation for giving both is that "there is a good intuitive understanding of what functionality and security" onion routing should provide but no satisfactory prior definition.
+
+Two remarks from the source that a reader of this box needs:
+
+- **The mixing strategy is not in the functionality, and the paper says so.** Its own §2.1 concedes that the adversary here looks too powerful — "it is allowed to route just one onion at a time, and so can trace its entire route" — and argues that a good mixing strategy is what limits this in a deployment. Nothing in the box constrains the schedule, so a protocol proved against it inherits no traffic-analysis resistance.
+- **Wikström's earlier UC treatment is for general mix-nets**, and the paper positions itself against it. This encyclopedia's [F-MN](/uc/layer-7-privacy-anonymity/f-mix/index.qmd) carries that object, which is a different one: a mix-net sorts a batch, an onion router forwards individual onions along chosen paths.
+
+## Properties
+
+- **Sub-path unlinkability**, with probability exactly $0$ of leakage: each call at line 15 carries a fresh $\mathtt{ctr}$ and the two honest endpoints of one corrupt stretch. Two stretches of the same onion are reported in separate calls with no shared identifier, so nothing in the adversary's view links them — beyond what the schedule it chose itself tells it.
+- **Message confidentiality between honest endpoints**, with probability exactly $0$: line 11 is the only call carrying $\mathit{msg}$, and it fires only when every hop from $i+1$ to $n+1$ inclusive is corrupt. With an honest recipient it can never fire.
+- **No delivery guarantee.** Line 17 makes every movement the adversary's decision, and there is no bound and no deadline. An onion can sit in $\mathtt{L}$ forever.
+- **Replay is permitted, and unbounded.** Line 18 never removes an entry, so one $\mathsf{NewOnion}$ can produce arbitrarily many deliveries of the same message. An application needing at-most-once delivery must provide it above this box.
+- **Path length is bounded but not hidden from the hops it passes.** Line 5 caps $n$ below the network size $N$; the corrupt hops named at line 15 learn each other and the two honest ends of their stretch, which is exactly what a real onion's routing information tells them.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Camenisch and Lysyanskaya. [*A formal treatment of onion routing*](https://cs.brown.edu/people/alysyans/projects/cl05.pdf). In Advances in Cryptology – CRYPTO 2005, 2005.
+- Camenisch and Lysyanskaya. [*A formal treatment of onion routing*](https://cs.brown.edu/people/alysyans/papers/cl05.pdf). In Advances in Cryptology – CRYPTO 2005, 2005. §2, "Ideal Onion Routing Functionality", PDF pp. 5–7 (printed pp. 173–175) — the definition transcribed above; §2.1, PDF p. 7 for the mixing-strategy remark. The functionality is stated as prose with four named message types and is never given a symbol in the paper; $\mathcal{F}_{\mathsf{OR}}$ is this encyclopedia's name for it.

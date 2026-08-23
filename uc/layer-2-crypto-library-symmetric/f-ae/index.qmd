@@ -1,12 +1,139 @@
 ---
-title: "F-AE — Authenticated encryption, on-line AE"
+title: "F-AEAD — Authenticated encryption with associated data"
 status: "Canonical"
 layer: 2
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-AE* (Authenticated encryption, on-line AE) is part of *Cryptographic Library and Symmetric Primitives* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+*F-AEAD* (Authenticated encryption with associated data) is part of *Cryptographic Library and Symmetric Primitives* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+
+One key, one message, two peers. The instance encrypts once, and the intended receiver decrypts once; the key comes from a message key-exchange subroutine that may already have deleted it, and the ciphertext is computed by code the adversary uploaded *in advance* and which sees only the plaintext's length. It is the bottom module of a modular UC treatment of secure messaging, and the smallest place to see how that treatment keeps a functionality realizable without giving the adversary a plaintext.
+
+## Functionality
+
+Reading the box: $\mathsf{San}[\mathsf{Clean}_{c}]$ replaces an adversary answer failing the predicate with $\bot$; $\mathit{id}_{\mathcal{F}}.\mathsf{Full}\mathsf{Op}()$ **as** $\mathit{id}$ is a call this functionality makes on another, in the caller's name; $\square$ marks a slot never filled and $\bot$ a refusal or failure; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it. $\mathtt{I}$ is a program, not a value: it is fetched from a code library and run, and its state $\mathtt{st}$ persists across calls.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{AEAD}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P} := \{P_0, P_1\}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves}),\,(\mathcal{F}_{\mathsf{mKE}},\mathsf{serves}),\,(\mathcal{F}_{\mathsf{Lib}},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := \bot\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{k} \gets \square\); &nbsp;\(\mathtt{I} \gets \square\); &nbsp;\(\mathtt{st} \gets \bot\)<span class="cj-comment">// the key, the internal code, and its state</span></li>
+<li>\(\mathtt{c} \gets \square\); &nbsp;\(\mathtt{m} \gets \square\); &nbsp;\(\mathtt{N} \gets \square\)<span class="cj-comment">// one ciphertext per instance, and its plaintext</span></li>
+<li>\(\mathtt{S} \gets \square\); &nbsp;\(\mathtt{rdy} \gets 0\); &nbsp;\(\mathtt{corr} \gets 0\)</li>
+<li>\(\mathtt{Bad} \gets \varnothing\)<span class="cj-comment">// pairs already found not to authenticate</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Encrypt(<span class="cj-id">msg</span>, <span class="cj-id">N</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="5">
+<li>\(\textbf{require}\ \mathit{id}.P \in \mathcal{F}_{\mathsf{AEAD}}.\mathbf{P} \ \wedge\ \mathtt{c} = \square\)<span class="cj-comment">// one encryption per instance, and no second</span></li>
+<li>\(\textbf{if}\ \mathtt{corr} = 1\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{c} \gets \mathsf{San}[\mathsf{Clean}_{c}]\bigl(\mathcal{A}(\mathit{id}.\mathsf{Encrypt}, \mathit{id}.P, \mathit{msg}, N)\bigr)\)</span></li>
+<li>\(\textbf{if}\ \mathtt{corr} = 0\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{k} \gets \mathit{id}_{\mathcal{F}_{\mathsf{mKE}}}.\mathsf{FullRetrieve}() \text{ as } \mathit{id}\)</span></li>
+<li><span class="cj-ind">\(\textbf{require}\ \mathtt{k} \neq \bot\)</span><span class="cj-comment">// a deleted key means no encryption</span></li>
+<li><span class="cj-ind">\(\mathtt{I} \gets \mathit{id}_{\mathcal{F}_{\mathsf{Lib}}}.\mathsf{FullCode}() \text{ as } \mathit{id}\)</span></li>
+<li><span class="cj-ind">\((\mathtt{st}, \mathtt{c}) \gets \mathtt{I}\bigl(\mathtt{st}, \mathsf{Encrypt}, \mathit{id}.P, |\mathit{msg}|, N\bigr)\)</span><span class="cj-comment">// the length only: the code cannot see \(\mathit{msg}\)</span></li>
+<li>\(\mathtt{m} \gets \mathit{msg}\); &nbsp;\(\mathtt{N} \gets N\); &nbsp;\(\mathtt{S} \gets \mathit{id}.P\); &nbsp;\(\mathtt{rdy} \gets 1\)</li>
+<li>\(\textbf{return}\ \mathtt{c}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Decrypt(<span class="cj-id">c</span>, <span class="cj-id">N</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="15">
+<li>\(\textbf{require}\ \mathit{id}.P \in \mathcal{F}_{\mathsf{AEAD}}.\mathbf{P}\)</li>
+<li>\(\textbf{if}\ \mathtt{corr} = 1\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(v \gets \mathcal{A}\bigl(\mathit{id}.\mathsf{Decrypt}, \mathit{id}.P, c, N\bigr)\)</span><span class="cj-comment">// a corrupt endpoint: \(\mathcal{A}\) names the plaintext</span></li>
+<li><span class="cj-ind">\(\textbf{if}\ v = \bot\ \textbf{then}\)</span></li>
+<li><span class="cj-ind">\(\mathtt{Bad} \gets \mathtt{Bad} \cup \{(c, N)\}\)</span></li>
+<li><span class="cj-ind">\(\textbf{return}\ \bot\)</span></li>
+<li><span class="cj-ind">\(\textbf{return}\ v\)</span></li>
+<li>\(\mathtt{k} \gets \mathit{id}_{\mathcal{F}_{\mathsf{mKE}}}.\mathsf{FullRetrieve}() \text{ as } \mathit{id}\)</li>
+<li>\(\textbf{require}\ \mathtt{k} \neq \bot \ \wedge\ \mathtt{c} \neq \square \ \wedge\ \mathit{id}.P \neq \mathtt{S} \ \wedge\ \mathtt{rdy} = 1\)</li>
+<li>\(\textbf{require}\ (c, N) \notin \mathtt{Bad}\)<span class="cj-comment">// the sender does not decrypt its own message</span></li>
+<li>\(\mathtt{rdy} \gets 0\)</li>
+<li>\(\textbf{if}\ (c, N) = (\mathtt{c}, \mathtt{N})\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \mathtt{m}\)</span></li>
+<li>\((\mathtt{st}, v) \gets \mathtt{I}\bigl(\mathtt{st}, \mathsf{Authenticate}, \mathit{id}.P, c, N\bigr)\)</li>
+<li>\(\textbf{if}\ v = \bot\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{Bad} \gets \mathtt{Bad} \cup \{(c, N)\}\)</span></li>
+<li><span class="cj-ind">\(\textbf{return}\ \bot\)</span></li>
+<li>\(\textbf{return}\ \mathtt{m}\)<span class="cj-comment">// a different string, the same plaintext</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="33">
+<li>\(\textbf{require}\ \mathit{id}.P \in \mathcal{F}_{\mathsf{AEAD}}.\mathbf{P}\)</li>
+<li>\(\mathtt{k} \gets \mathit{id}_{\mathcal{F}_{\mathsf{mKE}}}.\mathsf{FullRetrieve}() \text{ as } \mathit{id}\)</li>
+<li>\(\mathtt{corr} \gets 1\)</li>
+<li>\(\mathit{msg}^{*} \gets \bot\)</li>
+<li>\(\textbf{if}\ \mathtt{rdy} = 0 \ \wedge\ \mathtt{m} \neq \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathit{msg}^{*} \gets \mathtt{m}\)</span><span class="cj-comment">// only a plaintext already delivered</span></li>
+<li>\(\textbf{return}\ (\mathtt{st},\ \mathtt{k},\ \mathit{msg}^{*})\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig">Clean<sub><span class="cj-id">c</span></sub>(<span class="cj-id">c</span>):</div>
+<ol class="cj-code" start="40">
+<li>\(\textbf{return}\ c \in \{0,1\}^*\)</li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+The box is transcribed from Canetti, Jain, Swanberg and Varia, *Universally composable end-to-end secure messaging*, ePrint 2022/376, revision `20230519:151937` (the newest of five postings), Figure 29, p. 74 — the functionality $\mathcal{F}_{\mathsf{aead}}$.
+
+**Retitled from "Authenticated encryption, on-line AE".** The printed object is AEAD — the associated data $N$ is an argument of both operations and part of what authentication covers. There is no on-line or incremental interface: line 5 refuses a second encryption, so a single instance handles a single message, and "on-line" would describe a different box. Forward-secure *streams* of these instances are [F-fsAEAD](/uc/layer-2-crypto-library-symmetric/f-fsaead/index.qmd)'s object, one layer up in the same paper.
+
+Four lines carry the design:
+
+- **Line 12 is why this box is realizable without leaking plaintexts.** The honest-case ciphertext is produced by $\mathtt{I}$, a program the adversary uploaded to the paper's code library beforehand, and $\mathtt{I}$ is handed $\lvert \mathit{msg} \rvert$ — never $\mathit{msg}$. Uploading the code in advance is the whole point: an adversary that could answer adaptively would be a simulator with the plaintext in hand, and one that could not answer at all would leave the functionality unable to produce a ciphertext distributed like a real one.
+- **Lines 9–10 are a forward-secrecy statement borrowed from a subroutine.** The key is fetched on demand from the message key-exchange functionality, and if that has deleted it the encryption is refused rather than answered. Nothing in this box stores a key across an instance; $\mathtt{k}$ exists only for as long as the call that fetched it.
+- **Line 23 is the anti-reflection rule.** The party that encrypted may not decrypt: $\mathit{id}.P \neq \mathtt{S}$. Without it a single instance would be a two-way channel, and the paper's stream construction assigns directions to instances.
+- **Line 32 is the source's most surprising clause, and it is deliberate.** If the presented $(c, N)$ is *not* the pair this instance produced, but the uploaded code authenticates it anyway, the box returns the recorded plaintext. So a second string can decrypt to the same message. The paper's companion functionality makes the intent explicit — the corresponding step of $\mathcal{F}_{\mathsf{SM}}$ (Figure 7, p. 23) carries the comment "allow authentication of a message with a different mac in the honest case" — which is what settles the reading; see the register below.
+
+Where the source needed a decision, and one place its text is under-determined:
+
+| Source | Box | Why |
+|---|---|---|
+| Decryption item 4 ends "note $\mathsf{ready2decrypt} = \mathit{false}$, and output $(\texttt{Decrypt}, m)$" | Line 32 returns $\mathtt{m}$, the recorded plaintext | **$m$ is not bound in that branch of the source.** Item 3 has already handled the case where a record for the presented ciphertext exists, so item 4 runs only when none does, and there is no $m$ in scope. The recorded plaintext is the only candidate, and the parallel clause in $\mathcal{F}_{\mathsf{SM}}$ — which sets $m^{*} = m$ from the sender's record and says in a comment that this is meant to permit a different MAC on the same message — confirms it. Reading it as $\bot$ instead would make the uploaded code's `Authenticate` interface unreachable, which cannot be intended since the paper's protocol uses it. |
+| A `Corruption` interface that fetches the key, reports $(\mathsf{state}_{\mathcal{I}}, \mathit{pid}, k, m^{*})$ to $\mathcal{A}$, and then relays $\mathcal{A}$'s simulated state $S$ back to its caller | Lines 33–39, $\mathsf{Leak}$ | Corruption is the framework's here, so the report becomes the leak: the code's state, the key (fetched at line 34, exactly as the source does), and the last plaintext that was actually delivered. The relay half has no counterpart — a corrupted party's protocol state is the adversary's to fabricate directly in this framework, and a functionality that handed it back would be modelling the real protocol's plumbing rather than the ideal object. |
+| "If a message $m$ was successfully decrypted then set $m^{*} = m$, otherwise $m^{*} = \bot$" | Line 37, guarded on $\mathtt{rdy} = 0$ | $\mathtt{rdy}$ is cleared at line 26, which is exactly the point at which a decryption succeeds, so the guard is the source's condition rather than an extra one. The consequence is worth stating: a plaintext that has been encrypted but not yet delivered is **not** leaked by corruption. |
+| Session identifiers threaded as $\mathit{sid}.\mathit{aead} = (\text{“}\mathit{aead}\text{”}, \mathit{sid}.\mathit{fs}, \mathsf{msg\_num})$ | The process id | Clean, and it carries the "one message per instance" reading that line 5 enforces: the message number is part of the identity of the instance. |
+| "Inputs arriving from machines whose identity is neither $\mathit{pid}_0$ nor $\mathit{pid}_1$ are ignored" | $\mathbf{P} := \{P_0, P_1\}$, and the requires at lines 5, 15 and 33 | Kept as an explicit test rather than left to the framework's guard, since the pair is what makes line 22's anti-reflection rule expressible. |
+| $\mathcal{F}_{\mathsf{lib}}$ supplies $\mathcal{I}$; $\mathcal{F}_{\mathsf{mKE}}$ supplies the key | Both on the header line's $\mathbf{U}$ | Neither has a page in this encyclopedia, and both are load-bearing: without the library the box would have to ask the adversary for a ciphertext adaptively, and without the key-exchange module it would have no notion of a key that can go away. |
+
+## Known realizations
+
+- $\Pi_{\mathsf{aead}}$, Figure 36, p. 85 of the same paper, with its simulator in Figure 38, p. 87. The paper's modular structure is the point of the result rather than the individual protocol: $\mathcal{F}_{\mathsf{aead}}$ and $\mathcal{F}_{\mathsf{mKE}}$ realize [F-fsAEAD](/uc/layer-2-crypto-library-symmetric/f-fsaead/index.qmd), which with the epoch key exchange realizes [F-secmsg](/uc/layer-3-public-key-primitives/f-secmsg/index.qmd), and the composition theorems do the rest.
+- **The code library is the assumption to look at.** $\mathcal{F}_{\mathsf{lib}}$ (Figure 2, p. 18) is used as a *global* functionality: the adversary uploads code to it, and every module's honest branch runs that code. A reader who wants to know what this box really assumes should read the library rather than the protocol.
+
+## Properties
+
+- **Confidentiality**, with probability exactly $0$ of leakage while both peers are honest: no call on the adversary slot in the honest branch carries $\mathit{msg}$, and line 12 hands the uploaded code only $\lvert \mathit{msg} \rvert$ and $N$. Two executions differing only in equal-length plaintexts are identical in the adversary's view up to the moment of delivery.
+- **Authenticity, conditionally and with an explicit exception**: line 27 is the only route to a plaintext for an honest receiver, and lines 28–32 are the exception — a string the uploaded code accepts decrypts to the recorded plaintext. So the box guarantees that a receiver never accepts a plaintext that was never sent, and does *not* guarantee that the string it accepted is the string that was sent.
+- **Forward secrecy of the plaintext under corruption**, with probability exactly $0$ of leakage for an undelivered message: line 37's guard. Once delivered, the plaintext is leaked on corruption, which matches a real endpoint holding it.
+- **One message, one direction, no replay.** Line 5 refuses a second encryption, line 25 clears $\mathtt{rdy}$ so a second successful decryption is refused, and $\mathtt{Bad}$ makes a rejection permanent — a rejected $(c, N)$ can never later be accepted.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Küsters and Tuengerthal. [*Universally composable symmetric encryption*](https://eprint.iacr.org/2009/055). In IEEE Computer Security Foundations Symposium (CSF), pages 293–307, 2009.
+- Canetti, Jain, Swanberg, and Varia. [*Universally composable end-to-end secure messaging*](https://eprint.iacr.org/2022/376). In Advances in Cryptology – CRYPTO 2022, volume 13508 of LNCS, 2022. Figure 29, p. 74 of revision `20230519:151937`, the newest of five postings — the definition transcribed above; Figure 2, p. 18 for the code library; Figure 28, p. 73 for the message key exchange; Figure 36, p. 85 for the protocol; Figure 7, p. 23 for the parallel clause that settles the reading of decryption item 4.
+- Küsters and Tuengerthal. [*Universally composable symmetric encryption*](https://eprint.iacr.org/2009/055). In IEEE Computer Security Foundations Symposium (CSF), pages 293–307, 2009. A different lineage for the same primitive: it prints $\mathcal{F}_{\mathsf{ltsenc}}$ (Figure 2), $\mathcal{F}_{\mathsf{keysetup}}$ (Figure 4) and $\mathcal{F}_{\mathsf{senc}}$ (Figures 10–12), the last of which is [F-SE](/uc/layer-2-crypto-library-symmetric/f-se/index.qmd)'s object. Its functionalities carry a key pool and pointers rather than one key per instance, so they are not the same box and could not be blended with it.

@@ -1,12 +1,171 @@
 ---
-title: "F-DH — Ideal Diffie-Hellman exponentiation"
+title: "F-DH — Diffie–Hellman exchange inside F-crypto"
 status: "Canonical"
 layer: 3
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-DH* (Ideal Diffie-Hellman exponentiation) is part of *Public-Key Primitives, Key Exchange, Messaging* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+*F-DH* (Diffie–Hellman exchange inside F-crypto) is part of *Public-Key Primitives, Key Exchange, Messaging* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+
+Not a standalone functionality: this is the Diffie–Hellman extension of the joint-state cryptographic library, and it exists because the library it extends could not express DH at all. A user gets pointers to secret exponents and the group elements they induce, and asks the box to combine an exponent with *any* group element — including one that arrived from outside. The whole design question is what happens in that last case, and the answer is three lines long.
+
+## Functionality
+
+Reading the box: $\mathcal{A}^{!}(\cdot)$ is a **responsive** call, whose answer comes back before anything else can run; $\square$ marks a slot never filled and $\bot$ a refusal; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it. $\mathtt{K}$ and $\mathtt{Known}$ are the shared key pool of [F-crypto](/uc/layer-2-crypto-library-symmetric/f-crypto/index.qmd), whose key-management core this box extends; $\mathsf{PtrTo}$ mints a pointer into it the way that page's $\mathsf{New}$ does.
+
+**This box is a declared fragment**, like [F-MAC](/uc/layer-2-crypto-library-symmetric/f-mac/index.qmd) and [F-KDF](/uc/layer-2-crypto-library-symmetric/f-kdf/index.qmd) before it. What is transcribed is the six commands the source *adds* to $\mathcal{F}_{\mathsf{crypto}}$ — `GetDHGroup`, `GenExp`, `BlockGroupElement`, `RetrieveExp`, `StoreExp`, `GenDHKey` — plus the initialization that generates the group. Everything else in the library is on the sibling pages.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}^{\mathsf{DH}}_{\mathsf{Crypto}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := \mathsf{GroupGen}\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\((G, N, g) \gets \mathsf{GroupGen}(1^{\eta})\)<span class="cj-comment">// one group for the whole instance</span></li>
+<li>\(\mathtt{Exp} \gets \varnothing\); &nbsp;\(\mathtt{EKnown} \gets \varnothing\)<span class="cj-comment">// exponents, and those the adversary really has</span></li>
+<li>\(\mathtt{P} : \mathcal{F}^{\mathsf{DH}}_{\mathsf{Crypto}}.\mathbf{P} \times \mathbb{N} \to \mathtt{Exp} \cup \{\square\}\)</li>
+<li>\(\mathtt{P}[*,*] \gets \square\); &nbsp;\(\mathtt{Next}[*] \gets 0\)</li>
+<li>\(\mathtt{Blk} \gets \varnothing\)<span class="cj-comment">// shares that a fresh exponent may not produce</span></li>
+<li>\(\mathtt{DHK}[*] \gets \square\)<span class="cj-comment">// the key already made from an unordered pair</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.GetGroup()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="7">
+<li>\(\textbf{return}\ (G, N, g)\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.GenExp()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="8">
+<li>\(e \gets \mathcal{A}^{!}\bigl(\mathit{id}.\mathsf{GenExp}\bigr)\)</li>
+<li>\(\textbf{require}\ e \in \{1, \ldots, N\} \ \wedge\ e \notin \mathtt{Exp} \ \wedge\ g^{e} \notin \mathtt{Blk}\)<span class="cj-comment">// no collision, and no blocked share</span></li>
+<li>\(\mathtt{Exp} \gets \mathtt{Exp} \cup \{e\}\)</li>
+<li>\(\mathit{ptr} \gets \mathtt{Next}[\mathit{id}.P]\); &nbsp;\(\mathtt{Next}[\mathit{id}.P] \gets \mathit{ptr} + 1\)</li>
+<li>\(\mathtt{P}[\mathit{id}.P, \mathit{ptr}] \gets e\)</li>
+<li>\(\textbf{return}\ (\mathit{ptr}, g^{e})\)<span class="cj-comment">// the share leaves; the exponent does not</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Block(<span class="cj-id">h</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="14">
+<li>\(\textbf{if}\ h \in G\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{Blk} \gets \mathtt{Blk} \cup \{h\}\)</span><span class="cj-comment">// a share received from outside, claimed</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.RetrieveExp(<span class="cj-id">ptr</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="17">
+<li>\(\textbf{require}\ \mathtt{P}[\mathit{id}.P, \mathit{ptr}] \neq \square\)</li>
+<li>\(e \gets \mathtt{P}[\mathit{id}.P, \mathit{ptr}]\); &nbsp;\(\mathtt{EKnown} \gets \mathtt{EKnown} \cup \{e\}\)<span class="cj-comment">// reading it out makes it known, for good</span></li>
+<li>\(\textbf{return}\ e\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.StoreExp(<span class="cj-id">e</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="20">
+<li>\(\textbf{require}\ e \in \{1, \ldots, N\}\)</li>
+<li>\(\textbf{if}\ e \in \mathtt{Exp} \setminus \mathtt{EKnown}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \bot\)</span><span class="cj-comment">// a guess at an unknown exponent is refused</span></li>
+<li>\(\mathtt{Exp} \gets \mathtt{Exp} \cup \{e\}\); &nbsp;\(\mathtt{EKnown} \gets \mathtt{EKnown} \cup \{e\}\)</li>
+<li>\(\mathit{ptr} \gets \mathtt{Next}[\mathit{id}.P]\); &nbsp;\(\mathtt{Next}[\mathit{id}.P] \gets \mathit{ptr} + 1\)</li>
+<li>\(\mathtt{P}[\mathit{id}.P, \mathit{ptr}] \gets e\)</li>
+<li>\(\textbf{return}\ \mathit{ptr}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.GenDHKey(<span class="cj-id">ptr</span>, <span class="cj-id">h</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="27">
+<li>\(\textbf{require}\ \mathtt{P}[\mathit{id}.P, \mathit{ptr}] \neq \square\)</li>
+<li>\(e \gets \mathtt{P}[\mathit{id}.P, \mathit{ptr}]\)</li>
+<li>\(\textbf{if}\ h \notin G\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \bot\)</span></li>
+<li>\(\mathtt{Blk} \gets \mathtt{Blk} \cup \{h\}\)<span class="cj-comment">// a share used once is never freshly generated</span></li>
+<li>\(\textbf{if}\ h = g^{e}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{EKnown} \gets \mathtt{EKnown} \cup \{e\}\)</span></li>
+<li>\(\textbf{if}\ \mathtt{DHK}[\{g^{e}, h\}] = \square \ \wedge\ e \notin \mathtt{EKnown} \ \wedge\ \exists\, d \in \mathtt{Exp} \setminus \mathtt{EKnown} : h = g^{d}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(k \gets \mathcal{A}^{!}\bigl(\mathsf{ProvideDHKey}, \mathsf{unknown}, e, d\bigr)\)</span></li>
+<li><span class="cj-ind">\(\textbf{require}\ k \in G \ \wedge\ k \notin \mathtt{K}\)</span><span class="cj-comment">// both sides unknown, so the key is ideal</span></li>
+<li><span class="cj-ind">\(\mathtt{DHK}[\{g^{e}, h\}] \gets k\); &nbsp;\(\mathtt{K} \gets \mathtt{K} \cup \{(\mathsf{dh\text{-}key}, k)\}\)</span></li>
+<li>\(\textbf{if}\ \mathtt{DHK}[\{g^{e}, h\}] = \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(k \gets \mathcal{A}^{!}\bigl(\mathsf{ProvideDHKey}, \mathsf{known}, e, h\bigr)\)</span></li>
+<li><span class="cj-ind">\(\textbf{require}\ k \in G \ \wedge\ k \notin \mathtt{K} \setminus \mathtt{Known}\)</span></li>
+<li><span class="cj-ind">\(\mathtt{DHK}[\{g^{e}, h\}] \gets k\); &nbsp;\(\mathtt{K} \gets \mathtt{K} \cup \{(\mathsf{dh\text{-}key}, k)\}\)</span></li>
+<li><span class="cj-ind">\(\mathtt{Known} \gets \mathtt{Known} \cup \{(\mathsf{dh\text{-}key}, k)\}\)</span></li>
+<li><span class="cj-ind">\(\textbf{if}\ \neg\exists\, d \in \mathtt{Exp} : h = g^{d}\ \textbf{then}\)</span></li>
+<li><span class="cj-ind">\(\mathtt{EKnown} \gets \mathtt{EKnown} \cup \{e\}\)</span><span class="cj-comment">// a share from outside the box burns the exponent</span></li>
+<li>\(\textbf{return}\ \mathsf{PtrTo}\bigl(\mathtt{DHK}[\{g^{e}, h\}]\bigr)\)<span class="cj-comment">// the same pair always gives the same key</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="46">
+<li>\(\textbf{return}\ \bigl(\{(\mathit{ptr}, \mathtt{P}[\mathit{id}.P, \mathit{ptr}])\}_{\mathit{ptr} < \mathtt{Next}[\mathit{id}.P]},\ \mathtt{Blk}\bigr)\)</li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+The box is transcribed from Küsters and Rausch, *A framework for universally composable Diffie-Hellman key exchange*, ePrint 2017/256, revision `20170320:171009` (its only posting), §3.2, pp. 8–10 — the extension of $\mathcal{F}_{\mathsf{crypto}}$ supporting Diffie–Hellman key exchange. The commands are stated as prose bullets rather than in a figure, which is why a figure sweep of this paper finds nothing.
+
+**Retitled from "Ideal Diffie–Hellman exponentiation".** The box does not offer exponentiation: there is no operation taking $(h, e)$ to $h^{e}$. What it offers is *key agreement* — $\mathsf{GenDHKey}$ turns an exponent pointer and a group element into a **key**, and the key is a fresh string the adversary supplies, not a group element the box computed. That distinction is the entire content of the extension, and a page titled "exponentiation" would send a reader looking for the wrong thing.
+
+**Why this needs a page at all.** The source's own framing: the earlier library "does not support Diffie-Hellman (DH) key exchange, a prevalent cryptographic primitive for real-world security protocols", and adding it "is non-trivial". So this is not a restatement of the library — it is the piece without which the library could not analyse ISO 9798-3, SIGMA or TLS-style handshakes.
+
+Four lines carry the design:
+
+- **Line 34's guard against line 38's fall-through is the ideal/real boundary, and it is drawn on the *exponents*.** If the caller's exponent is unknown *and* the group element it is combining with is the share of another unknown exponent, the resulting key is ideal — a fresh string in $\mathtt{K} \setminus \mathtt{Known}$, which every other library operation will then treat symbolically. In every other case the key is known. So DH gives an ideal key exactly when both sides are honest, which is the right condition and the reason the extension is stated in terms of $\mathtt{EKnown}$ rather than in terms of corruption.
+- **Lines 43–44 are the sharpest place in the box.** If $h$ is *not* the share of any exponent the box knows about, then combining with it marks the caller's own exponent known — even if it was unknown a moment before. The reason is that the box cannot tell whether $h$ came from an honest party's fresh exponent or was cooked up by the adversary from a known one, so it has to assume the worst; and once it does, every future key made from that exponent is known too. A protocol that accepts an unauthenticated share therefore forfeits ideal reasoning about its own exponent.
+- **Lines 31 and 15 are why $\mathtt{Blk}$ exists.** Every group element used in a key agreement is blocked from ever being produced by a future $\mathsf{GenExp}$ (line 31), and a protocol may block one explicitly (line 15) when it receives a share from the network. Without this, a fresh exponent could collide with a share already in use and the box's "same pair, same key" invariant would become ambiguous — the source discusses this at its §3.3.
+- **Line 45 is the agreement property.** The key is memoized on the *unordered* pair of shares — the source says the box "checks whether a key has already been generated by the group elements $g^{e}$ and $h$" — so the two parties combining $(g^{a}, g^{b})$ from opposite sides get the same key, and repeating the operation is idempotent. Indexing on the ordered pair would have made the box give the two peers different keys, which is the one transcription error that would have destroyed the object.
+
+Where the source needed a decision:
+
+| Source | Box | Why |
+|---|---|---|
+| Every request to the adversary is a *restricting message*, and while an operation is in progress all network messages are restricting | $\mathcal{A}^{!}$ at lines 8, 35 and 39 | A restricting message in the IITM framework is precisely a call whose answer must come back before the environment or adversary may run anything else, which is what a responsive call means here. This is the cleanest correspondence in this encyclopedia between the two frameworks' scheduling devices, and it is the source's own mechanism rather than a strengthening chosen here. |
+| "$\mathcal{F}_{\mathsf{crypto}}$ asks the adversary again for another $e$ until the check succeeds" | Line 9, a **require** | The retry loop and a refusal are observationally the same to everyone but the adversary, which knows what it sent. Written as a **require**, the freshness condition is visible in one place rather than implied by a loop. Same for the key-freshness checks at lines 36 and 40. |
+| Pointers are $(\mathit{pid}, \mathit{lsid}, r)$-indexed | $\mathtt{P}[\mathit{id}.P, \mathit{ptr}]$ | As on the [F-crypto](/uc/layer-2-crypto-library-symmetric/f-crypto/index.qmd) page, and with the same consequence: two local sessions of one party share a pointer space here and do not in the source. |
+| `StoreExp` returns $(\textsf{ExpPointer}, \bot)$ when the guessing check fails | Line 22 returns $\bot$ | Kept as a return rather than a refusal, because the source distinguishes it from an ill-formed request. |
+| "Every time $\mathcal{F}_{\mathsf{crypto}}$ adds a symmetric key $k$ to $\mathsf{Keys}_{\mathsf{known}}$, it sends a restricting message $(\textsf{AddedKnownKey}, k)$ … and waits" | Not in the box | Omitted, and the source says why it can be: the notification "is not necessary for realizing $\mathcal{F}_{\mathsf{crypto}}$" and exists to reduce the burden on simulators of higher-level protocols. Since the adversary supplies every known key at lines 29 and 35 anyway, it learns nothing new. **This box is therefore stronger than the source's on one axis**: a simulator built against the source may rely on being told when a key becomes known, and this box does not tell it. |
+| The source removes the earlier library's ability to corrupt a key made by `New` | Not in this box; noted here | That change belongs to the command it modifies. The [F-crypto](/uc/layer-2-crypto-library-symmetric/f-crypto/index.qmd) page transcribes the *earlier* paper's `New`, which does let the adversary mark a fresh key corrupt at its line 12 — so the two pages differ there, and the difference is a real disagreement between the two papers rather than a transcription error. |
+| Signing keys become adaptively corruptible | Not in this box | Another change to a command outside this fragment. |
+| No leakage interface | Line 46 | Required here. A corrupt party's adversary reads that party's own exponent pointers and the blocked set. It does not read another party's exponent — which is what makes lines 34 and 43 meaningful. |
+
+## Known realizations
+
+- The paper's $\mathcal{P}_{\mathsf{crypto}}$ realizes the extended $\mathcal{F}_{\mathsf{crypto}}$ under the **DDH assumption** in the generated group, alongside the assumptions the unextended library needs. The footnote to $\mathsf{GenDHKey}$ is worth reading for what the simulator actually does: it is told the known/unknown status because "this determines whether our simulator responds with $g^{ed}$ or $g^{c}$, $c \leftarrow \{1, \ldots, n\}$" — the ideal branch is where DDH is used, and the known branch is where the real value has to be produced.
+- The paper applies the framework to **three deployed key-exchange protocols — ISO 9798-3, SIGMA and TLS** — which is the point of having the box: a protocol is analysed once against the library, and the composition theorem does the rest.
+- It also notes what the box buys structurally: "$\mathcal{F}_{\mathsf{crypto}}$ guarantees that only the (honest) owner of a Diffie-Hellman key can get access to keys that" derive from it, which is the property lines 34 and 43 jointly enforce.
+
+## Properties
+
+- **Exponent secrecy**, with probability exactly $0$ of leakage: an exponent leaves the box only through $\mathsf{RetrieveExp}$ at line 19 — which moves it into $\mathtt{EKnown}$ — or through its owner's leak at line 46. $\mathsf{GenExp}$ returns the share, never the exponent.
+- **Key ideality exactly when both sides are unknown**, with probability exactly $1$ as a condition on the box's own state: line 34's guard. This is a stronger statement than "both parties honest", because an honest party that retrieved its own exponent, or combined with a foreign share, has already lost the guarantee.
+- **Guess resistance on two levels, with probability exactly $1$**: line 22 refuses a stored exponent that collides with an unknown one, and line 40 refuses a supplied key that collides with an unknown key. Both are the same device the library uses for symmetric keys.
+- **No forward secrecy in the box.** $\mathtt{EKnown}$ and $\mathtt{Known}$ only grow, and there is no operation deleting an exponent or a key. Forward secrecy of a protocol built on this box is a property of what the protocol deletes, and is invisible here.
+- **Monotone blocking, and it is a real constraint on realizations.** $\mathtt{Blk}$ only grows, and line 9 refuses any fresh exponent whose share is in it. So a realization must be able to keep sampling until it avoids a growing finite set — harmless for a large group, and the reason the source discusses the command separately.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Küsters and Rausch. [*A framework for universally composable diffie-hellman key exchange*](https://eprint.iacr.org/2017/256). In 38th IEEE Symposium on Security and Privacy (S\&P), pages 881–900, 2017.
+- Küsters and Rausch. [*A framework for universally composable Diffie-Hellman key exchange*](https://eprint.iacr.org/2017/256). In 38th IEEE Symposium on Security and Privacy (S\&P), pages 881–900, 2017. §3.2, pp. 8–10 of revision `20170320:171009`, its only posting — the six added commands are the definition transcribed above; §3.1, pp. 6–8 for the library being extended; §3.3 for the discussion of blocked group elements; §4 for the realization under DDH; §5–7 for the ISO 9798-3, SIGMA and TLS case studies.
+- Küsters and Tuengerthal. [*Ideal key derivation and encryption in simulation-based security*](https://eprint.iacr.org/2010/295). In Topics in Cryptology – CT-RSA 2011, volume 6558 of LNCS, pages 161–179, 2011. The library this extends, and [F-crypto](/uc/layer-2-crypto-library-symmetric/f-crypto/index.qmd)'s source.

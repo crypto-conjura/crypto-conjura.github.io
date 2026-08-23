@@ -1,0 +1,104 @@
+---
+id: "0050"
+problem: short-collision-time-space-tradeoffs
+draft: stb-conjecture-md
+title: "The STB Conjecture for Short Collisions in Merkle-Damgård Hashing"
+short_title: "STB conjecture (Merkle-Damgård)"
+areas: [symmetric-key, idealized-models, information-theoretic]
+topics: [collision-finding, time-space-tradeoffs, random-oracle-model, collision-resistant-hashing]
+model: rom
+form: tight-bound
+assumption_class: unconditional
+category: research-open
+revision: 1
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: barrier
+  by: ai
+  note: "The source paper proves that the technique which settled the unbounded-length case cannot settle this one: its Theorem 5 gives a bit-fixing adversary finding length-2 collisions with advantage Omega(PT/N), so the bit-fixing model is blind to collision length and no bound proved there transfers. Its Theorem 8 additionally settles the conjecture against the whole class of zero-walk attacks, which is the shape of every attack currently known, so a refutation cannot come from that class either. The two published routes past the barrier -- compression with a modified Impagliazzo-Kabanets argument (ACDW20), and average-case presampling via high-knowledge-gaining events (AGL22) -- both stall at exactly the regime that remains open."
+status_summary: "Open for non-constant B in the regime ST^2 > 2^n, where the best published security bound and the best published attack are a factor of up to S apart; settled at B=1, B=2, every constant B, B~T, and every 2<B<T with ST^2 <= 2^n."
+status_updated: 2026-08-23
+relations:
+  - {kind: variant-of, target: "0051", note: "same conjecture transported from Merkle-Damgård to sponge, where the primitive is an invertible permutation and the adversary also gets inverse queries"}
+  - {kind: variant-of, target: "0053", note: "same construction and block bound, quantum rather than classical advice and queries"}
+lean:
+  mode: none
+sources:
+  - {cite: "Akshima, Cash, Drucker, Wee, Time-Space Tradeoffs and Short Collisions in Merkle-Damgård Hash Functions, CRYPTO 2020", url: "https://eprint.iacr.org/2020/770"}
+  - {cite: "Akshima, Guo, Liu, Time-Space Lower Bounds for Finding Collisions in Merkle-Damgård Hash Functions, CRYPTO 2022", url: "https://eprint.iacr.org/2022/885"}
+statement_sha: "7fd775374156b416fd9602d272cc77c586a128f2a781b57734bd408d6890d562"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+<!-- topics:start -->
+<div class="cj-tags cj-page-topics"><a class="cj-tag cj-tag-topic" href="/problems/by-topic/collision-finding/">Collision Finding</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/collision-resistant-hashing/">Collision Resistant Hashing</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/random-oracle-model/">Random Oracle Model</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/time-space-tradeoffs/">Time Space Tradeoffs</a></div>
+<!-- topics:end -->
+
+An adversary who preprocesses a compression function into $S$ bits of advice and then makes $T$ online queries against a fresh salt finds Merkle-Damgård collisions with advantage $\tilde\Theta(ST^2/2^n)$ — a factor of $S$ past the birthday bound — but the colliding messages are on the order of $T$ blocks long, which at the parameters that make the attack notable means petabytes. This conjecture is the paper's proposed answer for what happens when the collision is required to be *short*: advantage $\Theta((STB + T^2)/2^n)$ for a bound of $B$ blocks. Its practical content is sharp — if true, then whenever $SB \le T$ preprocessing buys nothing at all over the birthday attack, which would explain why no non-trivial non-uniform attack on a real hash function is known.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [LaTeX source](latex/main.tex) · Formal statement — *not yet formalized*
+
+Let $N = 2^n$ and $M = 2^m$, and let $h : [N] \times [M] \to [N]$ be a compression function. Merkle-Damgård hashing is $\mathrm{MD}_h : [N] \times [M]^{+} \to [N]$, defined by $\mathrm{MD}_h(a, \alpha) = h(a, \alpha)$ for a single block $\alpha \in [M]$ and $\mathrm{MD}_h(a, (\alpha_1, \dots, \alpha_B)) = h(\mathrm{MD}_h(a, (\alpha_1, \dots, \alpha_{B-1})), \alpha_B)$.
+
+A pair $\mathcal{A} = (\mathcal{A}_1, \mathcal{A}_2)$ is an **$(S,T,B)$-AI adversary** if $\mathcal{A}_1$, given the entire function table of $h$, outputs $S$ bits of advice $\sigma$; $\mathcal{A}_2^h(\sigma, a)$ issues $T$ oracle queries; and each of the two messages $\mathcal{A}_2$ outputs consists of $B$ or fewer blocks — all three for every input and every oracle. Its advantage $\mathbf{Adv}^{\mathrm{ai\text{-}cr}}_{\mathrm{MD}}(\mathcal{A})$ is the probability that $\alpha \ne \alpha'$ and $\mathrm{MD}_h(a, \alpha) = \mathrm{MD}_h(a, \alpha')$, over independent uniform $h$ and $a \gets [N]$. Write $\mathbf{Adv}^{\mathrm{ai\text{-}cr}}_{\mathrm{MD}}(S,T,B)$ for the maximum over all such adversaries.
+
+**Conjecture (STB).** For all integers $B$ with $2 \le B \le T$,
+$$\mathbf{Adv}^{\mathrm{ai\text{-}cr}}_{\mathrm{MD}}(S,T,B) = \Theta\!\left(\frac{STB + T^2}{N}\right).$$
+
+The lower half is proved up to a logarithmic factor by the paper's own Theorem 3, which for $B \le T < N/4$, $STB \le N/2$ and $M \ge N$ gives $\mathbf{Adv}^{\mathrm{ai\text{-}cr}}_{\mathrm{MD}}(S,T,B) \ge (STB - 96S)/(48 N \log N)$, together with the birthday attack. So the open content is the **security direction**: that some absolute constant $c$ has $\mathbf{Adv}^{\mathrm{ai\text{-}cr}}_{\mathrm{MD}}(S,T,B) \le c(STB + T^2)/N$ for all $N, M, S, T$ and all $2 \le B \le T$.
+
+**Two readings are supplied rather than quoted, and both matter.** The printed sentence attaches *no range* to $B$; the range $2 \le B \le T$ is added here, its upper end from the paper's own Theorem 3 and its lower end forced, since $B = 1$ is known to be $\tilde\Theta(S/N + T^2/N)$ rather than $\tilde\Theta(ST/N + T^2/N)$. And the printed $\Theta$ carries no tilde, yet is not established even on its lower half — Theorem 3 loses a factor of $\log N$ — so the polylogarithmic reading used by all subsequent treatments is the intended one.
+
+### Sources
+
+- Akshima, Cash, Drucker, and Wee. [*Time-Space Tradeoffs and Short Collisions in Merkle-Damgård Hash Functions*](https://eprint.iacr.org/2020/770). CRYPTO 2020, Part I, LNCS 12170, pp. 157–186. The conjecture is printed and named on p. 2 and introduced on p. 1 ("we put forth and study the following conjecture"); Theorem 3 (p. 9) is the attack; Theorem 5 (p. 9) is the bit-fixing barrier; Theorem 7 (p. 16) is the $B = 2$ upper bound; Theorem 8 (p. 28) is the zero-walk bound (side conditions $B \le T$, $SB \ge T$); p. 5 records how far the technique reaches.
+- Akshima, Guo, and Liu. [*Time-Space Lower Bounds for Finding Collisions in Merkle-Damgård Hash Functions*](https://eprint.iacr.org/2022/885). CRYPTO 2022, Part III, LNCS 13509, pp. 192–221. Confirms the conjecture for every $2 < B < T$ with $ST^2 \le N$, reproves $B = 2$ more simply, and poses the residual $ST^2 > N$ regime as its first open problem.
+
+## Proof
+
+View PDF — *no proof written yet* · LaTeX source — *no proof written yet* · Formal proof — *not yet formalized*
+
+Open, and the source paper takes no position on which way it goes.
+
+**What is known.** Suppressing polylogarithmic factors: $B = 1$ is $\Theta(S/N + T^2/N)$ (Dodis–Guo–Katz, EUROCRYPT 2017, cited as [6] in the source); $B = 2$ is $\Theta(ST/N + T^2/N)$ (the source paper's Theorem 7, reproved more simply as Theorem 2 of Akshima–Guo–Liu); $B \approx T$ is $\Theta(ST^2/N)$ (Coretti–Dodis–Guo–Steinberger, cited as [3]); every constant $B$ is confirmed by Ghoshal–Komargodski (CRYPTO 2022), whose bound $\tilde O(STB^2(\log^2 S)^{B-2}/N + T^2/N)$ goes vacuous once $B > \log N$; and every $2 < B < T$ with $ST^2 \le N$ is confirmed by Akshima–Guo–Liu, whose bound $\tilde O((STB/N)\cdot\max\{1, ST^2/N\} + T^2/N)$ collapses to the conjectured one exactly there.
+
+**What is missing.** Since $T^2 \le N$ may be assumed, the factor $\max\{1, ST^2/N\}$ is at most $S$, so for non-constant $B$ with $ST^2 > N$ the published bound and the published attack are a factor of up to $S$ apart and *neither side is known to be the truth*. It is open both whether the bound improves to $\tilde O(STB/N + T^2/N)$ and whether a better attack exists there. Akshima–Guo–Liu note that the same threshold $ST^2 \le N$ is where Hellman's function-inversion attack is likewise only known to be optimal — the two questions may share an answer.
+
+**What a resolution would need.** Not the pre-sampling route: the source paper's Theorem 5 exhibits a bit-fixing adversary finding *length-2* collisions with advantage $\Omega(PT/N)$, as good as the best bit-fixing attack at unbounded length, so the bit-fixing model cannot see collision length and no bound proved there transfers. Not the zero-walk class either: Theorem 8 already proves the conjectured bound against every zero-walk adversary up to a factor of $\ln(NB)$ — for parameters with $B \le T$ and $SB \ge T$ — and every attack currently known is of that shape. So an affirmative proof must bound adversaries outside the class, and a refutation must exhibit an attack outside it, or one at parameters Theorem 8 does not cover ($SB < T$). The paper's own $B = 2$ proof runs a modified Impagliazzo–Kabanets concentration argument through compression, and its Section 7 proves the modification is *necessary* (a fixed set of salts admits a better attack than the random set the original argument needs). The paper says $B = 3$ and $B = 4$ look possible in principle but too long to write down, and that arbitrary $B$ "seems to be out of reach, but there is no inherent obstruction in applying our technique to the general case with new ideas".
+
+## Discussion
+
+**Why it matters.** The conjecture is the quantitative form of the standard practical objection to studying non-uniform attacks at all — that no non-trivial one on a real hash function is known. As the paper puts it, "[o]ur STB conjecture, if true, would explain the non-existence of these attacks", because in the regime $SB \le T$ it says preprocessing buys nothing over the birthday bound. A refutation would matter more: it would exhibit a preprocessing attack beating the birthday bound while producing collisions short enough for an application to care.
+
+**Where the conjecture came from.** Coretti–Dodis–Guo–Steinberger's $ST^2/N$ attack is real but produces $T$-block collisions; at $S = T \approx 2^{60}$ against a 180-bit digest the colliding messages are several petabytes. The whole point of the length bound is that it separates "technically violates collision resistance" from "damaging in a widely-used application", and the conjecture asserts that the separation is quantitative and total.
+
+**What a reviewer should be suspicious of.** Three things, in order. First, the range of $B$: the printed conjecture gives none, and stated for all $B \ge 1$ it is *false* — the $B = 1$ case is a different formula, which the source paper knows and cites. Second, the $\Theta$: read literally it is not established even on its own lower half. Third, the regime description of what remains open — "non-constant $B$ with $ST^2 > N$" — is assembled from Ghoshal–Komargodski and Akshima–Guo–Liu, both later than the source paper, and neither states the boundary in exactly those terms.
+
+**Checked against the literature, 2026-08-23.** Searched for any post-2023 work proving or refuting the conjecture in the open region. Found none; the most recent relevant items are the *Journal of Cryptology* 37 (2024) version of Akshima–Guo–Liu and Akshima's ITC 2024 paper on Merkle-Damgård multi-collisions, whose own open problems concern a different attack. **This is a targeted check, not an exhaustive sweep** — a reviewer should search for work citing ePrint 2020/770 before relying on "still open".
+
+## Open obligations
+
+- [ ] Prove or refute the security direction for some non-constant $B$ with $2 < B < T$ in the regime $ST^2 > 2^n$ — the whole of what is open.
+- [ ] Settle the reading of the range of $B$. This page states $2 \le B \le T$; the source's printed sentence states none. A reviewer who reads the conjecture differently should say so, since at $B = 1$ the difference is the difference between true and false.
+- [ ] Settle whether the conjectured $\Theta$ is meant literally or up to polylogarithmic factors. This page takes the polylogarithmic reading, on the grounds that the source's own attack loses a $\log N$ and that every later treatment writes $\tilde\Omega$/$\tilde O$.
+- [ ] Confirm that Ghoshal–Komargodski (CRYPTO 2022) is correctly described as confirming exactly $B = O(1)$, and that its bound is vacuous for $B > \log N$. This page takes both from Akshima–Guo–Liu's account rather than from the paper itself, which was not read.
+- [ ] Re-run the forward literature check against work citing ePrint 2020/770 and 2022/885, which is the sweep this page did not do.
+- [ ] Formalize the statement in Lean; nothing here has been formalized.
+
+:::

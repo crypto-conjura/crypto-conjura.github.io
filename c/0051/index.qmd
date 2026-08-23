@@ -1,0 +1,111 @@
+---
+id: "0051"
+problem: short-collision-time-space-tradeoffs
+draft: stb-conjecture-sponge
+title: "The Sponge STB Conjecture"
+short_title: "STB conjecture (sponge)"
+areas: [symmetric-key, idealized-models, information-theoretic]
+topics: [collision-finding, time-space-tradeoffs, collision-resistant-hashing]
+model: prom
+form: tight-bound
+assumption_class: unconditional
+category: research-open
+revision: 1
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: barrier
+  by: ai
+  note: "The source paper's Theorem 3 proves that the only technique that has ever produced a bound here cannot produce this one: it exhibits multi-instance adversaries of advantage (S^2T^4/C^2)^S for B=2 and (ST^2/C)^S for B=3, so routing a bound through the multi-instance reduction cannot beat S^2T^4/C^2 at two blocks and cannot beat ST^2/C at three or more. The paper says outright that 'other novel techniques are required'. The one substitute it names, stateless multi-instance games, is itself unanalyzed."
+status_summary: "Open for every B >= 2 except B ~ T: at B=2 in the regime ST^3 > C, and at B >= 3 with a gap of about T/B. The source asks for a proof or a refutation and takes no position."
+status_updated: 2026-08-23
+relations:
+  - {kind: variant-of, target: "0050", note: "the Merkle-Damgård conjecture this transports; there the primitive is a random compression function, here an invertible permutation the adversary may query backwards"}
+  - {kind: refuted-by, target: "0052", note: "conditional: an affirmative resolution of 0052 refutes this statement in the regime ST^3 > C, since S^2T^4/C^2 exceeds ST/C exactly there. Nothing is refuted yet -- 0052 is open."}
+lean:
+  mode: none
+sources:
+  - {cite: "Akshima, Duan, Guo, Liu, On Time-Space Lower Bounds for Finding Short Collisions in Sponge Hash Functions, TCC 2023", url: "https://eprint.iacr.org/2023/1444"}
+  - {cite: "Freitag, Ghoshal, Komargodski, Time-Space Tradeoffs for Sponge Hashing: Attacks and Limitations for Short Collisions, CRYPTO 2022", url: "https://eprint.iacr.org/2022/1009"}
+statement_sha: "af5d3f6876a67c5a5f53187ab95f7330737330236cbd413caa2d322c5a6f3c0c"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+<!-- topics:start -->
+<div class="cj-tags cj-page-topics"><a class="cj-tag cj-tag-topic" href="/problems/by-topic/collision-finding/">Collision Finding</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/collision-resistant-hashing/">Collision Resistant Hashing</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/time-space-tradeoffs/">Time Space Tradeoffs</a></div>
+<!-- topics:end -->
+
+Sponge hashing is the mode behind SHA-3, and against a preprocessing adversary it is understood at essentially one point. The Merkle-Damgård story — that the advantage of finding a $B$-block collision with $S$ bits of advice and $T$ queries is $\tilde\Theta(STB/2^n + T^2/2^n)$ — is settled across most of its parameter range; the sponge analogue is settled only for collisions long enough that the length bound does not bind. This is the paper's proposal for the rest of the range, together with the reason it is hard: the paper proves that the only technique that has ever produced a bound in this setting cannot produce this one.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [LaTeX source](latex/main.tex) · Formal statement — *not yet formalized*
+
+Let $r$ be the bitrate and $c$ the capacity, $R := 2^r$ and $C := 2^c$, and let $F : [R] \times [C] \to [R] \times [C]$ be a permutation. For a message $m = m_1 \| \cdots \| m_B$ with each $m_i \in [R]$ and a salt $a \in [C]$, sponge hashing sets $(x_0, y_0) := (0, a)$, computes $(x_i, y_i) := F(x_{i-1} \oplus m_i, y_{i-1})$ for $i = 1, \dots, B$, and returns $\mathsf{SP}_F(m,a) := x_B$.
+
+A pair $\mathcal{A} = (\mathcal{A}_1, \mathcal{A}_2)$ is an **$(S,T)$-AI adversary** if $\mathcal{A}_1$ has unbounded access to $F$ and $F^{-1}$ and outputs $S$ bits of advice $\sigma$, and $\mathcal{A}_2$ takes $\sigma$ and a challenge salt $a \in [C]$, makes $T$ queries to $F$ *or* $F^{-1}$, and outputs $m, m'$. The game $B\text{-}\mathsf{AICR}_{F,a}(\mathcal{A})$ returns $0$ if $m$ or $m'$ has more than $B$ blocks, returns $1$ if $m \ne m'$ and $\mathsf{SP}_F(m,a) = \mathsf{SP}_F(m',a)$, and returns $0$ otherwise; $\mathsf{Adv}^{\mathsf{AICR}}_{B\text{-}\mathsf{SP}}(S,T)$ is the maximum of its winning probability over all $(S,T)$-AI adversaries, with $F$ a uniformly random permutation and $a \gets [C]$ uniform and independent.
+
+**Conjecture (sponge STB).** For every $B \ge 2$,
+$$\mathsf{Adv}^{\mathsf{AICR}}_{B\text{-}\mathsf{SP}}(S,T) = \tilde\Theta\!\left(\frac{STB}{C} + \frac{T^2}{\min(R,C)}\right).$$
+
+Here $B$ is a function of $R$ and $C$ rather than a constant, as in the source paper's own definitions — which is what makes the range $B \ge 3$ non-vacuous. The lower half is the attack of Freitag, Ghoshal and Komargodski, which the source paper takes as given; the open content is the matching security bound. The first case the paper asks for is
+$$\mathsf{Adv}^{\mathsf{AICR}}_{2\text{-}\mathsf{SP}}(S,T) = \tilde O\!\left(\frac{ST}{C} + \frac{T^2}{\min(R,C)}\right) \qquad \text{in the regime } ST^3 > C,$$
+and a refutation of that special case refutes the conjecture.
+
+**The conjecture is the source paper's; the bound it names is not.** The attack whose optimality is asserted is Freitag–Ghoshal–Komargodski's, and the Merkle-Damgård conjecture being transported is Akshima–Cash–Drucker–Wee's. What the source contributes is the conjecture itself and the Theorem 3 limitation that makes it hard. **The source also takes no side**: it asks to "either prove or refute" it, and the sibling question it poses in the next paragraph — published here as [c/0052](/c/0052/) — would refute it for $ST^3 > C$ if answered affirmatively. The $\tilde\Theta$ is a reading: the paper prints a bare $\Theta$ for this quantity while every bound and attack it states, including the one whose optimality is conjectured, carries a tilde.
+
+### Sources
+
+- Akshima, Duan, Guo, and Liu. [*On Time-Space Lower Bounds for Finding Short Collisions in Sponge Hash Functions*](https://eprint.iacr.org/2023/1444). TCC 2023. The conjecture is stated in §1.3 (p. 8) under the heading "Is STB-conjecture true for sponge hashing?"; Theorem 1 (informal, p. 3; formally Theorem 8, p. 14) is the $B = 1$ bound, Theorem 2 the $B = 2$ bound, Theorem 3 (informal, p. 5) the multi-instance limitation; p. 4 gives the $ST^3 \le C$ optimality boundary and p. 9 the "prove or refute" framing.
+- Freitag, Ghoshal, and Komargodski. [*Time-Space Tradeoffs for Sponge Hashing: Attacks and Limitations for Short Collisions*](https://eprint.iacr.org/2022/1009). CRYPTO 2022, Part III, LNCS 13509, pp. 131–160. The source of the attack whose optimality is conjectured, and of the finding that sponge is provably less secure than Merkle-Damgård at $B = 1$.
+
+## Proof
+
+View PDF — *no proof written yet* · LaTeX source — *no proof written yet* · Formal proof — *not yet formalized*
+
+Open, in both directions, and the source paper explicitly asks for either.
+
+**What is known.** Suppressing polylogarithmic factors. At $B \approx T$, Coretti–Dodis–Guo prove $\tilde O(ST^2/C + T^2/R)$, matching the known attack — the only $B$ at which the conjecture holds. At $B = 1$ the source paper's Theorem 1 gives $\tilde O(S^2T^2/C^2 + S/C + T/C + T^2/R)$, optimal for $ST^2 \le C$; that case falls *outside* the conjecture, because Freitag–Ghoshal–Komargodski showed sponge is provably less secure at one block than Merkle-Damgård, where $\tilde\Theta(S/C + T^2/R)$ holds. At $B = 2$ the source paper's Theorem 2 gives $\tilde O(ST/C + S^2T^4/C^2 + T^2/\min(C,R))$, which equals the conjectured value precisely when the middle term does not dominate, i.e. when $ST^3 \le C$. For $B \ge 3$ nothing better than the general $\tilde O(ST^2/C + T^2/R)$ is known; the source paper's own Table 1 leaves that cell of its results empty.
+
+**What is missing.** The conjecture is open for every $B \ge 2$ except $B \approx T$. At $B = 2$ with $ST^3 > C$ the bound and the attack are a factor $ST^3/C$ apart. At $B \ge 3$ the gap is about $T/B$, between the conjectured $STB/C$ and the only known bound $ST^2/C$.
+
+**What a resolution would need.** Not the multi-instance route. Every bound above is obtained by reduction to a multi-instance game — if no MI adversary wins with advantage better than $\delta^S$ then no $(S,T)$-AI adversary wins with advantage better than $2\delta$ (the source's Theorem 6, after Akshima–Guo–Liu) — and the source's Theorem 3 exhausts it, exhibiting MI adversaries of advantage $(\tilde\Omega(S^2T^2/C^2))^S$ at $B = 1$, $(\tilde\Omega(S^2T^4/C^2))^S$ at $B = 2$, and $(\tilde\Omega(ST^2/C))^S$ at $B = 3$ when $T^2 < R$. So the $S^2T^2/C^2$ term of Theorem 1 cannot be removed this way, nothing better than $S^2T^4/C^2$ is provable this way at $B = 2$, and nothing better than $ST^2/C$ at all for $B \ge 3$. The paper's conclusion is that "other novel techniques are required"; the substitute it names — stateless multi-instance games, where the adversary keeps no information between rounds — is unanalyzed, and the paper notes only that its own MI attacks do not apply there because they *do* need earlier rounds' queries.
+
+Note the direction of that obstruction: it blocks the reduction, not the conjecture, and it does not block a refutation, since the MI attacks it exhibits are not themselves AI attacks.
+
+## Discussion
+
+**Why it matters.** Sponge is the standardized construction and Merkle-Damgård the legacy one, yet the preprocessing security of short collisions is understood across most of the Merkle-Damgård range and at one point of the sponge range. A proof would give the first tight short-collision bound for SHA-3's mode of operation.
+
+**Why a refutation is equally live.** $S^2T^4/C^2$ exceeds $ST/C$ exactly when $ST^3 > C$, so an AI attack matching the source paper's own $B = 2$ upper bound would refute the conjecture in that whole regime — and would extend to two blocks the message Freitag–Ghoshal–Komargodski established at one, that sponge hashing is strictly weaker than Merkle-Damgård against preprocessing. That attack is exactly what [c/0052](/c/0052/) asks for, which is why these two statements are recorded as separate pages with a conditional `refuted-by` edge rather than merged.
+
+**What makes sponge different, and why the analogy is not automatic.** Two things. The primitive is invertible, so the adversary gets $F^{-1}$ queries, and the known attacks use them: the $B = 1$ attack works by making inverse queries $F^{-1}(0, y)$ and hoping two of them share their first output component. And the sponge story at $B = 1$ is genuinely *worse* than the Merkle-Damgård story at $B = 1$, which is a warning against reading across from one construction to the other on the strength of the shapes matching.
+
+**What a reviewer should be suspicious of.** The direction. The paper asks to prove *or refute*, and this page records the conjecture in the affirmative because that is the form the paper states it in — not because the evidence points that way. Also the tilde: the paper prints $\Theta$, and this page reads it as $\tilde\Theta$.
+
+**Checked against the literature, 2026-08-23.** Searched for any work after TCC 2023 proving or refuting the sponge STB conjecture or improving the $B = 2$ or $B \ge 3$ sponge bounds. Found none. **This is a targeted check, not an exhaustive sweep**; a reviewer should search for work citing ePrint 2023/1444 and 2022/1009.
+
+## Open obligations
+
+- [ ] Prove or refute the $B = 2$ case in the regime $ST^3 > C$ — the case the source paper names as the place to start.
+- [ ] Prove or refute any case with $B \ge 3$, where the gap is about $T/B$ and no bound better than the general one exists.
+- [ ] Settle whether the conjecture is meant as $\Theta$ or $\tilde\Theta$. This page reads it as $\tilde\Theta$; the source prints $\Theta$.
+- [ ] Verify the attack $\tilde\Omega(STB/C + T^2/\min(R,C))$ against Freitag–Ghoshal–Komargodski directly. This page takes it from the source paper's description and from its Table 1, not from the attack paper, which was not read.
+- [ ] Decide whether the $B = 1$ exclusion is stated correctly here. This page places $B = 1$ outside the conjecture on the strength of the source paper's own $B \ge 2$ range and of the sponge-vs-Merkle-Damgård separation at one block.
+- [ ] Re-run the forward literature check against work citing ePrint 2023/1444.
+- [ ] Formalize the statement in Lean; nothing here has been formalized.
+
+:::

@@ -1,0 +1,107 @@
+---
+id: "0052"
+problem: short-collision-time-space-tradeoffs
+draft: sponge-2block-ai-attack
+title: "A Quadratic-Advice Two-Block Sponge Collision Attack with Preprocessing"
+short_title: "Two-block sponge attack, quadratic advice"
+areas: [symmetric-key, idealized-models, information-theoretic]
+topics: [collision-finding, time-space-tradeoffs, collision-resistant-hashing]
+model: prom
+form: lower-bound
+assumption_class: unconditional
+category: research-open
+revision: 1
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: adaptation
+  by: ai
+  note: "The multi-instance half is already a theorem of the source paper (Theorem 3 / Theorem 11), so an attack of the right advantage exists in a closely related model and the route is visible. The obstacle is that the multi-instance attack is stateful by construction -- it spends earlier rounds building the pairs that make later rounds likely, and the source paper says outright that it 'require[s] knowing queries from previous rounds' -- whereas an auxiliary-input adversary must compress that resource into S bits fixed before the salt is known. No general principle turns a multi-instance attack of advantage delta^S into an auxiliary-input attack of advantage delta; the theorem runs the other way, on bounds."
+status_summary: "Open: whether the multi-instance two-block sponge attack of advantage (S^2T^4/C^2)^S lifts to an auxiliary-input attack of advantage S^2T^4/C^2, matching the best proved security bound. Settled in the multi-instance model; no partial result in the auxiliary-input model."
+status_updated: 2026-08-23
+relations:
+  - {kind: refutes, target: "0051", note: "conditional: an affirmative resolution here refutes 0051 in the regime ST^3 > C, since S^2T^4/C^2 exceeds ST/C exactly there. Nothing is refuted yet -- this statement is open."}
+lean:
+  mode: none
+sources:
+  - {cite: "Akshima, Duan, Guo, Liu, On Time-Space Lower Bounds for Finding Short Collisions in Sponge Hash Functions, TCC 2023", url: "https://eprint.iacr.org/2023/1444"}
+  - {cite: "Freitag, Ghoshal, Komargodski, Time-Space Tradeoffs for Sponge Hashing: Attacks and Limitations for Short Collisions, CRYPTO 2022", url: "https://eprint.iacr.org/2022/1009"}
+statement_sha: "acc6ab765e31406f6202b8b0f060b6d03f86af26966d1ccc6c1b2a77c504d225"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+<!-- topics:start -->
+<div class="cj-tags cj-page-topics"><a class="cj-tag cj-tag-topic" href="/problems/by-topic/collision-finding/">Collision Finding</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/collision-resistant-hashing/">Collision Resistant Hashing</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/time-space-tradeoffs/">Time Space Tradeoffs</a></div>
+<!-- topics:end -->
+
+The best proved security bound for two-block sponge collisions against preprocessing carries a term quadratic in the advice length, $S^2T^4/C^2$, that no known attack reaches — the best known attack is only $ST/C$. The same paper proves the term is not an artefact by exhibiting an attack that *does* reach it, but in the multi-instance model, where an adversary carries no advice and instead solves $S$ freshly sampled salts one after another. This asks for the lift: a genuine preprocessing attack of advantage $S^2T^4/C^2$. It is the sharp end of the sponge story, because if the lift succeeds then the sponge analogue of the STB conjecture is false wherever $ST^3 > C$.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [LaTeX source](latex/main.tex) · Formal statement — *not yet formalized*
+
+Let $R := 2^r$, $C := 2^c$ and $F : [R] \times [C] \to [R] \times [C]$. Sponge hashing sets $(x_0, y_0) := (0, a)$, computes $(x_i, y_i) := F(x_{i-1} \oplus m_i, y_{i-1})$ for $i = 1, \dots, B$, and returns $\mathsf{SP}_F(m,a) := x_B$.
+
+Two models are in play. An **$(S,T)$-AI adversary** has a first stage with unbounded access to $F$ and $F^{-1}$ that outputs $S$ bits of advice, and a second stage that takes the advice and a challenge salt $a \in [C]$, makes $T$ queries to $F$ or $F^{-1}$, and outputs $m, m'$; $\mathsf{Adv}^{\mathsf{AICR}}_{2\text{-}\mathsf{SP}}(S,T)$ is the maximum probability that $m \ne m'$ have at most two blocks each and collide on $a$. An **$(S,T)$-MI adversary** is a *stateful* algorithm that carries no advice: for each $i \in [S]$ it receives a salt $a_i$ — sampled uniformly from $[C]$ **without replacement**, and only after it has answered round $i-1$ — makes $T$ queries, and outputs $m_i, m_i'$; it wins only if every round yields a two-block collision, and it keeps the answers to all earlier rounds' queries. $\mathsf{Adv}^{\mathsf{MICR}}_{2\text{-}\mathsf{SP}}(S,T)$ is the maximum of that.
+
+**Theorem (source paper, Theorem 3).** Suppose $S, T, R \ge 16$. Then $\mathsf{Adv}^{\mathsf{MICR}}_{2\text{-}\mathsf{SP}}(S,T) \ge \bigl(\tilde\Omega(S^2T^4/C^2)\bigr)^{S}$.
+
+**Conjecture.** There is an absolute constant $\kappa > 0$ such that for all $R, C, S, T$ with $S, T, R \ge 16$ and $S^2T^4 \le C^2$,
+$$\mathsf{Adv}^{\mathsf{AICR}}_{2\text{-}\mathsf{SP}}(S,T) \;\ge\; \kappa \cdot \frac{S^2T^4}{C^2 \cdot \mathrm{polylog}(R,C)},$$
+that is $\mathsf{Adv}^{\mathsf{AICR}}_{2\text{-}\mathsf{SP}}(S,T) = \tilde\Omega(S^2T^4/C^2)$: some $(S,T)$-AI adversary matches, up to polylogarithmic factors, the source paper's own Theorem 2 security bound.
+
+**Three things here are the page's, not the paper's.** The side condition $S^2T^4 \le C^2$ is a formalization choice — the paper states the target as $\Omega(S^2T^4/C^2)$ with no range, and without a range the claim reads as asserting that a probability exceeds one. The direction is a reading: the paper says its bound "suggests that there may exist" such an attack and then asks a question, and both hedges are reproduced rather than removed. And the lift is asserted only in this one case, not as a principle — the theorem relating the two models runs the *other* way, from an MI *bound* of $\delta^S$ to an AI bound of $2\delta$.
+
+### Sources
+
+- Akshima, Duan, Guo, and Liu. [*On Time-Space Lower Bounds for Finding Short Collisions in Sponge Hash Functions*](https://eprint.iacr.org/2023/1444). TCC 2023. The question is §1.3, p. 9, under "Better attacks for $B = 2$?"; Theorem 2 is the security bound whose middle term is the target; Theorem 3 (p. 5, restated as Theorem 11 in §5) is the multi-instance attack; Table 2 (p. 6) lists it as $(\tilde\Omega(S^2T^4/C^2))^S$; Theorem 6 (p. 13) is the MI-to-AI reduction that runs the other way; Definitions 2, 3 and 5 (pp. 11–12) are the two models.
+- Freitag, Ghoshal, and Komargodski. [*Time-Space Tradeoffs for Sponge Hashing: Attacks and Limitations for Short Collisions*](https://eprint.iacr.org/2022/1009). CRYPTO 2022, Part III, LNCS 13509, pp. 131–160. The source of the $\tilde\Omega(ST/C + T^2/\min(C,R))$ attack this one would beat.
+
+## Proof
+
+View PDF — *no proof written yet* · LaTeX source — *no proof written yet* · Formal proof — *not yet formalized*
+
+Open in the auxiliary-input model; settled in the multi-instance model.
+
+**What is known.** The best known $B = 2$ attack is $\tilde\Omega(ST/C + T^2/\min(C,R))$, due to Freitag–Ghoshal–Komargodski. The best proved security bound is $\tilde O(ST/C + S^2T^4/C^2 + T^2/\min(C,R))$, the source paper's Theorem 2, whose middle term dominates exactly when $ST^3 > C$ — and there the bound and the attack are a factor $ST^3/C$ apart. That middle term is not an artefact of the proof: Theorem 3 exhibits an MI adversary reaching it, so no argument routed through the MI reduction can remove it. The multi-instance side is therefore closed; only the lift is missing, and the source paper reports no partial result on it. Its own Table 1 lists the best known $B = 2$ attack as $ST/C + T^2/\min(C,R)$, so the paper's accounting agrees that the AI attack does not yet exist.
+
+**What is missing, and why it is hard.** The MI attack is stateful across rounds by construction. At $B = 2$ it spends half of each round's queries on inverse queries $F^{-1}(0, \ast)$ and the other half trying to hit two of them from the current challenge salt, and it relies on pairs accumulated in *earlier* rounds to make later ones likely — roughly $\tilde\Omega(iT^2/C)$ useful pairs available at round $i$, built by the $iT$ queries already spent. That is precisely the resource an $S$-bit advice string cannot obviously supply, since the advice is fixed before the salt is known. The source paper states the statefulness as a fact in the adjacent open problem — "our attacks require knowing queries from previous rounds, our attacks don't apply to stateless multi-instance games" — but does not itself connect it to the AI lift; that connection is this page's inference from the paper's sentence.
+
+**What a resolution would need.** Affirmatively, a way to encode the accumulated structure into $S$ bits chosen without knowledge of the challenge salt, or a different attack reaching the same advantage. Negatively, a proof that no such AI attack exists would have to beat the multi-instance technique, which Theorem 3 shows cannot prove a better bound — so it would supply exactly the "other novel techniques" the paper says are needed for the sponge setting.
+
+## Discussion
+
+**Why it matters.** Affirmatively it refutes the sponge STB conjecture ([c/0051](/c/0051/)) throughout $ST^3 > C$, since $S^2T^4/C^2 > ST/C$ exactly there, and extends to two blocks the finding of Freitag–Ghoshal–Komargodski at one block, that sponge hashing is provably less secure against preprocessing than Merkle-Damgård. For Merkle-Damgård the two-block advantage is $\tilde\Theta(ST/N + T^2/N)$ with no $S^2$ term at all, so an $S^2$ term at two blocks in sponge would be a real qualitative separation between the two constructions rather than a constant-factor difference.
+
+**Why it is worth stating separately from [c/0051](/c/0051/).** The two are consecutive, separately posed open problems in the same discussion section, and merging them would produce a single statement with two clauses — which the harvesting rules forbid and which would also lose information, since a *negative* answer here leaves the conjecture open while a positive one kills it in a specific regime. The `refutes` edge between the pages is conditional and is labelled as such.
+
+**What a reviewer should be suspicious of.** First, the side condition. The paper gives no range for $S, T, C$, and the range this page imposes is chosen to make the claim a statement about a probability; a reviewer who prefers $\min\{1, S^2T^4/C^2\}$, or some other normalization, should say so. Second, the hedges: the paper "suggests" that an attack "may" exist and then asks a question, and it is easy for a page like this one to harden that into a prediction. Third, the account of why the lift is hard is assembled from the paper's remark about stateless multi-instance games, which is about a different question.
+
+**A note on reading Theorem 3.** Its statement does not survive PDF text extraction cleanly — the superscripts of its three cases interleave, and read from the text layer alone the two-block case appears to be $(\Omega(ST/C))^S$. The figure used here, $(\tilde\Omega(S^2T^4/C^2))^S$, was taken from the rendered page and cross-checked against Table 2 on p. 6, which lists it against "[Thm 11]" in the $B = 2$ row. Anyone re-deriving this page from `pdftotext` output should be aware of that trap.
+
+**Checked against the literature, 2026-08-23.** Searched for any post-TCC-2023 auxiliary-input attack on two-block sponge collisions and for any improvement to the $B = 2$ sponge bounds. Found none. **This is a targeted check, not an exhaustive sweep**; a reviewer should search for work citing ePrint 2023/1444 and 2022/1009.
+
+## Open obligations
+
+- [ ] Exhibit the attack, or prove that no $(S,T)$-AI adversary achieves $\tilde\Omega(S^2T^4/C^2)$ at two blocks.
+- [ ] Settle the side condition. This page imposes $S^2T^4 \le C^2$ so that the claim concerns a probability; the source paper imposes nothing, and the right normalization is a judgment call a reviewer should make.
+- [ ] Confirm the target advantage against the source paper's Theorem 3 and Table 2 directly, given the text-extraction trap described in the Discussion tab.
+- [ ] Check whether the $\tilde\Omega$ or the bare $\Omega$ is intended. The paper's §1.3 prose writes $\Omega$; its Theorem 3 and Table 2 write $\tilde\Omega$. This page follows the theorem.
+- [ ] Decide whether the account of the difficulty — the MI attack's reliance on accumulated earlier rounds — is a fair reading. The paper states the statefulness only in the adjacent open problem about stateless multi-instance games and does not connect it to this question.
+- [ ] Re-run the forward literature check against work citing ePrint 2023/1444.
+- [ ] Formalize the statement in Lean; nothing here has been formalized.
+
+:::

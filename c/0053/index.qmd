@@ -1,0 +1,102 @@
+---
+id: "0053"
+problem: short-collision-time-space-tradeoffs
+draft: quantum-2block-md-collision
+title: "A Tight Quantum Time-Space Tradeoff for Two-Block Merkle-Damgård Collisions"
+short_title: "Quantum two-block MD collisions"
+areas: [quantum, symmetric-key, idealized-models]
+topics: [collision-finding, time-space-tradeoffs, quantum-random-oracle-model, quantum-query-complexity, collision-resistant-hashing]
+model: qrom
+form: tight-bound
+assumption_class: unconditional
+category: research-open
+revision: 1
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: new-idea
+  by: ai
+  note: "Nothing is known here in either direction: the source paper reports that no matching quantum bounds exist at any block length, and offers no partial quantum result of its own. The classical B=2 proof it offers to leverage works by isolating 'high knowledge gaining' events -- counting statements about a recorded set of offline queries -- and conditioning on the adversary having won every earlier round of a sequential multi-instance game; a quantum offline stage has no transcript to count, and the compressed-oracle machinery that substitutes for one does not obviously support that conditioning. A resolution needs a quantum-specific argument, not a transplant."
+status_summary: "Open, in both directions and with no partial result: whether the best known quantum preprocessing attack, of advantage ST^2/N + T^3/N, is optimal for two-block Merkle-Damgård collisions. The source reports that no matching quantum bounds are known at any block length."
+status_updated: 2026-08-23
+relations:
+  - {kind: variant-of, target: "0050", note: "same construction and block bound; quantum advice and quantum queries rather than classical, and the conjectured value differs in kind -- classically two blocks is strictly easier than unbounded length, and under this statement it would not be"}
+lean:
+  mode: none
+sources:
+  - {cite: "Akshima, Guo, Liu, Time-Space Lower Bounds for Finding Collisions in Merkle-Damgård Hash Functions, CRYPTO 2022", url: "https://eprint.iacr.org/2022/885"}
+statement_sha: "bcbe844cc99b92a02e297585a1d89574c6cf77f0dcb5831520638f1f9d26c8a1"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+<!-- topics:start -->
+<div class="cj-tags cj-page-topics"><a class="cj-tag cj-tag-topic" href="/problems/by-topic/collision-finding/">Collision Finding</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/collision-resistant-hashing/">Collision Resistant Hashing</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/quantum-query-complexity/">Quantum Query Complexity</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/quantum-random-oracle-model/">Quantum Random Oracle Model</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/time-space-tradeoffs/">Time Space Tradeoffs</a></div>
+<!-- topics:end -->
+
+Classically, bounding a collision to two blocks buys real security against preprocessing: the advantage drops from $\tilde\Theta(ST^2/2^n)$ at unbounded length to $\tilde\Theta(ST/2^n + T^2/2^n)$, and both ends are proved. Quantumly, nothing matches at any block length — the best known attack achieves the same $ST^2/2^n + T^3/2^n$ for every block bound from two upwards, and the best proved bound is a factor of about $S$ away. This is the paper's question of whether the attack is the truth at two blocks. Note what an affirmative answer would mean: the classical security jump would have no quantum counterpart.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [LaTeX source](latex/main.tex) · Formal statement — *not yet formalized*
+
+Let $H : [N] \times [M] \to [N]$ with $M > N$, and let $\mathsf{MD}_H(a, m) := H(a, m_1)$ for a one-block message and $\mathsf{MD}_H(a, m) := H(\mathsf{MD}_H(a, (m_1, \dots, m_{\ell-1})), m_\ell)$ for $\ell > 1$.
+
+An **$(S,T)$-quantum-AI adversary** is a pair $(\mathcal{A}_1, \mathcal{A}_2)$ in which $\mathcal{A}_1$ is a computationally unbounded map from the whole function table of $H$ to an $S$-qubit state $\rho_H$, and $\mathcal{A}_2$ is a quantum algorithm that takes $\rho_H$ and a salt $a \in [N]$, makes at most $T$ queries to the standard quantum-accessible oracle $|x, y\rangle \mapsto |x, y \oplus H(x)\rangle$, and outputs messages $m_1, m_2$. The game returns $0$ if $m_1$ or $m_2$ has more than two blocks, and $1$ if $m_1 \ne m_2$ and $\mathsf{MD}_H(a, m_1) = \mathsf{MD}_H(a, m_2)$. Write $\mathsf{Adv}^{\mathsf{qAICR}}_{2\text{-}\mathsf{MD}}(S,T)$ for the maximum of its winning probability, over uniform $H$, uniform independent $a \gets [N]$, and $\mathcal{A}_2$'s measurement outcomes.
+
+**Conjecture.**
+$$\mathsf{Adv}^{\mathsf{qAICR}}_{2\text{-}\mathsf{MD}}(S,T) = \tilde\Theta\!\left(\frac{ST^2}{N} + \frac{T^3}{N}\right).$$
+
+The lower half is the attack the source paper reports as best known for every $2 \le B \le T$; the open content is the matching security bound $\tilde O(ST^2/N + T^3/N)$, which would improve the $ST^3/N$ figure the paper attributes to Guo–Li–Liu–Zhang by a factor of $T$ at two blocks.
+
+**Read the three caveats before using this statement.** *(i) The quantum model is supplied here, not taken from the source.* The source paper is classical throughout; it defines the classical game and describes the quantum setting only as the one "in which the adversary is given $S$-(qu)bit of advice and $T$ quantum oracle queries", citing two other papers. The definition above follows the paper's classical definitions clause for clause on the classical parts and then makes four choices the paper does not: quantum rather than classical advice, a single unbounded preprocessing stage, standard XOR-type superposition queries, and no bound on the online stage beyond the query count. A different reading is a different statement. *(ii) The direction is a reading.* The paper asks whether a tight bound can be proved and does not name the tight value; taking the best known attack to be optimal is the only candidate its own figures make available, and refuting this is as much a resolution of the paper's question as proving it. *(iii) The paper's $O$ and $\Omega$ are unconventional.* It writes the known security bound as $\Omega(ST^3/N)$ and the known attack as $O(ST^2/N + T^3/N)$, the reverse of the usual convention. Both are quoted as printed on the LaTeX page and the conjecture is stated in the conventional direction rather than relying on them.
+
+### Sources
+
+- Akshima, Guo, and Liu. [*Time-Space Lower Bounds for Finding Collisions in Merkle-Damgård Hash Functions*](https://eprint.iacr.org/2022/885). CRYPTO 2022, Part III, LNCS 13509, pp. 192–221; this version dated 6 July 2022. The question is §1.3, p. 10, under "Tight quantum time-space tradeoffs for finding collisions in MD?"; the classical definitions followed here are its Definitions 2 and 3 (p. 12); its Theorem 2 is the classical $B = 2$ result and its §1.2 (pp. 6–7) the "high knowledge gaining" events discussed below.
+
+## Proof
+
+View PDF — *no proof written yet* · LaTeX source — *no proof written yet* · Formal proof — *not yet formalized*
+
+Open, with no partial result on either side, and the source paper takes no position.
+
+**What is known.** The source paper reports two numbers and they are the only two. An attack achieving, in its notation, $O(ST^2/N + T^3/N)$ "for every $2 \le B \le T$" — so the best known quantum attack does not distinguish two blocks from unbounded length at all. And a security bound it attributes to Guo–Li–Liu–Zhang and writes as $\Omega(ST^3/N)$, which it reads as suggesting "that the optimal attack may speed up the trivial quantum collision finding by a factor of $S$". With $T^2 \le N$ the two are a factor of about $S$ apart, and the paper says outright that "unlike the classical setting, no matching bounds are known, even for $B = 2$ and $B = T$".
+
+**What is missing.** Everything: no case of any $B$ is tight, and the source paper contributes no quantum result of its own. For contrast, the classical picture at the same two points is fully settled — $\tilde\Theta(ST/N + T^2/N)$ at $B = 2$ (Akshima–Cash–Drucker–Wee, and the source paper's own Theorem 2) and $\tilde\Theta(ST^2/N)$ at $B \approx T$ (Coretti–Dodis–Guo–Steinberger).
+
+**What a resolution would need.** The paper's suggestion is to "leverage our new proof for $B = 2$", and the specific obstacle is worth naming. That proof reduces auxiliary-input security to *sequential* multi-instance security and then isolates a short list of "high knowledge gaining" events on the offline queries — more than $S$ distinct salts carrying a one-block collision, more than $S^2$ colliding pairs of queries, more than $S$ distinct salts carrying a self-loop — and shows each is unlikely even conditioned on the adversary having won every earlier round. Two things obstruct transplanting it. Those events are counting statements about a *recorded* set of offline queries, and a quantum offline stage has no such transcript; the compressed-oracle machinery that substitutes for one does not obviously support conditioning on having won all previous rounds. And the target would have to be quantum-specific: classically this route recovers $ST^2/N$ for unbounded length, whereas the conjectured two-block quantum answer already *contains* $ST^2/N$, so the same route cannot separate $B = 2$ from $B = T$ the way it does classically. That last observation is this page's, not the paper's.
+
+## Discussion
+
+**Why it matters.** It would be the first tight quantum time-space tradeoff for collision-finding in a real hash-function mode, at any block length. It also decides something structural. The organizing fact of the classical theory is that bounding a collision's length buys real security; if this conjecture holds, that fact has no quantum analogue at two blocks, and post-quantum non-uniform security does not inherit the classical short-collision advantage.
+
+**The security-jump question is a different statement, deliberately.** The paper asks two things in the same paragraph, and the other is whether $\mathsf{Adv}^{\mathsf{qAICR}}_{2\text{-}\mathsf{MD}}(S,T)$ is asymptotically smaller than its unbounded-length counterpart. Granting this conjecture does *not* settle that: a jump would still exist if the unbounded-length quantum advantage turned out to be $\tilde\Theta(ST^3/N)$. Merging the two into one statement with two clauses would have been both against the harvesting rules and mathematically wrong.
+
+**What a reviewer should be suspicious of, in order.** The model, first and above everything else — it is not in the source paper, and this page's Definition of it is the part most in need of checking against Chung–Guo–Liu–Qian (FOCS 2020) and Guo–Li–Liu–Zhang (TCC 2021), neither of which was read. Then the two reported figures, which are quoted from a paper that proves neither and whose $O$/$\Omega$ usage here is inverted. Then the direction, which this page fixes and the source does not.
+
+**Checked against the literature, 2026-08-23.** Searched for any tight quantum time-space tradeoff for Merkle-Damgård collision-finding published after CRYPTO 2022. Found none. Two adjacent items were located and checked far enough to rule out: Carolan–Poremba–Zhandry, *(Quantum) Indifferentiability and Pre-Computation* (arXiv:2410.16595), which concerns indifferentiability under pre-computation and applies it to the one-round sponge rather than to $B$-block Merkle-Damgård collision bounds; and the *Journal of Cryptology* 37 (2024) version of the source paper. **This is a targeted check, not an exhaustive sweep**, and this literature is active — a reviewer should search for work citing ePrint 2022/885 and TCC 2021's *Unifying presampling via concentration bounds*.
+
+## Open obligations
+
+- [ ] **Check the model first.** Confirm against Chung–Guo–Liu–Qian (FOCS 2020) and Guo–Li–Liu–Zhang (TCC 2021) that quantum advice, one unbounded preprocessing stage, standard XOR-type superposition queries and an unbounded-memory online stage is the model in which the two reported figures hold. If any of those four is wrong, this page states a different problem from the one the source paper asks about.
+- [ ] Verify the two figures directly: that the best known quantum attack achieves $\tilde\Omega(ST^2/N + T^3/N)$ for $2 \le B \le T$, and that the best known security bound is $\tilde O(ST^3/N)$. Both are taken from a paper that proves neither, and its $O$/$\Omega$ usage is inverted relative to convention.
+- [ ] Prove or refute the security bound $\tilde O(ST^2/N + T^3/N)$ at two blocks.
+- [ ] Decide whether this page should commit to a direction at all, given that the source poses a question and names no value.
+- [ ] State the security-jump question as its own page, or record a decision not to. It is the paper's other quantum question and is currently unstated anywhere on this site.
+- [ ] Re-run the forward literature check against work citing ePrint 2022/885.
+- [ ] Formalize the statement in Lean; nothing here has been formalized.
+
+:::

@@ -1,0 +1,109 @@
+---
+title: "Short-collision time-space tradeoffs under preprocessing"
+subtitle: "How much does bounding a collision's length buy against an adversary with S bits of advice and T online queries?"
+---
+
+## Motivation
+
+An adversary with unbounded offline access to a hash function's compression
+primitive, who may carry away $S$ bits of advice and then make $T$ online
+queries against a fresh random salt, can find collisions in salted
+Merkle-Damgård hashing with advantage $\tilde\Theta(ST^2/N)$ -- a factor of
+$S$ better than the birthday attack. The catch, observed by Akshima, Cash,
+Drucker and Wee, is that the colliding messages that attack produces are on
+the order of $T$ blocks long. At the parameters that make the attack notable
+($S = T \approx 2^{60}$ against a 180-bit digest) they are petabytes each,
+which breaks collision resistance on paper and nothing in practice.
+
+So the interesting quantity is the advantage subject to a bound $B$ on the
+number of blocks in each colliding message. This hub collects the statements
+about that quantity. The organizing conjecture, for Merkle-Damgård, is that
+the advantage is $\tilde\Theta((STB + T^2)/N)$ -- the *STB conjecture* -- and
+its practical content is sharp: if true, then whenever $SB \le T$,
+preprocessing buys an attacker nothing at all over the birthday bound, which
+would explain why no non-trivial non-uniform attack on a real hash function
+is known.
+
+## Provenance and history
+
+The line starts with Unruh's auxiliary-input random-oracle model
+([CRYPTO 2007](https://eprint.iacr.org/2007/168)) and its pre-sampling
+technique. Dodis, Guo and Katz
+([EUROCRYPT 2017](https://link.springer.com/chapter/10.1007/978-3-319-56614-6_16))
+settled the single-block case at $\tilde\Theta(S/N + T^2/N)$; Coretti, Dodis, Guo and
+Steinberger ([EUROCRYPT 2018](https://eprint.iacr.org/2017/937)) settled the
+unbounded-length case at $\tilde\Theta(ST^2/N)$ and tightened Unruh's
+pre-sampling loss to the optimal $ST/P$.
+
+Akshima, Cash, Drucker and Wee
+([CRYPTO 2020](https://eprint.iacr.org/2020/770)) put the STB conjecture
+forward, proved its attack half, proved the $B = 2$ case, and proved that
+the pre-sampling route cannot prove any of the rest: the bit-fixing model is
+blind to the length of a collision, so no bound proved there can distinguish
+short collisions from long ones. Ghoshal and Komargodski (CRYPTO 2022)
+confirmed every constant $B$; Akshima, Guo and Liu
+([CRYPTO 2022](https://eprint.iacr.org/2022/885)) confirmed every
+$2 < B < T$ in the regime $ST^2 \le N$ and reduced the residual gap to a
+factor of $S$.
+
+The sponge branch is younger and thinner. Freitag, Ghoshal and Komargodski
+([CRYPTO 2022](https://eprint.iacr.org/2022/1009)) gave the attacks and
+showed that at $B = 1$ sponge hashing is provably *less* secure than
+Merkle-Damgård against preprocessing, so the analogy is not automatic.
+Akshima, Duan, Guo and Liu
+([TCC 2023](https://eprint.iacr.org/2023/1444)) proposed the sponge STB
+conjecture and then proved that the multi-instance technique -- the only
+technique that has produced any bound in this setting -- cannot establish it
+for any $B$.
+
+## Parameter lattice
+
+Three axes vary: the construction (Merkle-Damgård over a random compression
+function, or sponge over a random *invertible* permutation, where the
+adversary also gets inverse queries); the block bound $B$; and the
+adversary's computational model (classical, or $S$ qubits of advice with $T$
+quantum queries). Asymptotics suppress polylogarithmic factors throughout;
+$N$ is the Merkle-Damgård digest space, $C = 2^c$ the sponge capacity and
+$R = 2^r$ its bitrate.
+
+### Merkle-Damgård, classical
+
+| $B$ | Best known attack | Best proved bound | Status |
+|---|---|---|---|
+| $B = 1$ | $S/N + T^2/N$ | $S/N + T^2/N$ | tight (Dodis-Guo-Katz; not a leaf here) |
+| $B = 2$ | $ST/N + T^2/N$ | $ST/N + T^2/N$ | tight (Akshima-Cash-Drucker-Wee; not a leaf here) |
+| $B = O(1)$ | $STB/N + T^2/N$ | $STB^2(\log^2 S)^{B-2}/N + T^2/N$ | tight (Ghoshal-Komargodski; not a leaf here) |
+| $2 < B < T$, $ST^2 \le N$ | $STB/N + T^2/N$ | $STB/N + T^2/N$ | tight (Akshima-Guo-Liu; not a leaf here) |
+| $2 < B < T$, $ST^2 > N$, $B = \omega(1)$ | $STB/N + T^2/N$ | $(STB/N)\cdot ST^2/N + T^2/N$ | [c/0050](/c/0050/) -- open, gap of up to $S$ |
+| $B \approx T$ | $ST^2/N$ | $ST^2/N$ | tight (Coretti-Dodis-Guo-Steinberger; not a leaf here) |
+
+### Sponge, classical
+
+| $B$ | Best known attack | Best proved bound | Status |
+|---|---|---|---|
+| $B = 1$ | $\min(S^2T^2/C^2, (S^2T/C^2)^{2/3}) + S/C + T/C + T^2/R$ | $S^2T^2/C^2 + S/C + T/C + T^2/R$ | tight for $ST^2 \le C$ (Akshima-Duan-Guo-Liu Thm 1); outside the conjecture, and *weaker* than Merkle-Damgård here |
+| $B = 2$, $ST^3 \le C$ | $ST/C + T^2/\min(C,R)$ | $ST/C + T^2/\min(C,R)$ | tight (Akshima-Duan-Guo-Liu Thm 2, recovering Freitag-Ghoshal-Komargodski) |
+| $B = 2$, $ST^3 > C$ | $ST/C + T^2/\min(C,R)$ | $ST/C + S^2T^4/C^2 + T^2/\min(C,R)$ | [c/0051](/c/0051/) -- open; and [c/0052](/c/0052/) asks whether the $S^2T^4/C^2$ term is achievable, which would refute it here |
+| $3 \le B < T$ | $STB/C + T^2/\min(C,R)$ | $ST^2/C + T^2/R$ | [c/0051](/c/0051/) -- open, gap of about $T/B$; provably out of reach of the multi-instance technique |
+| $B \approx T$ | $ST^2/C + T^2/R$ | $ST^2/C + T^2/R$ | tight (Coretti-Dodis-Guo; not a leaf here) |
+
+### Merkle-Damgård, quantum ($S$ qubits of advice, $T$ quantum queries)
+
+| $B$ | Best known attack | Best proved bound | Status |
+|---|---|---|---|
+| $B = 2$ | $ST^2/N + T^3/N$ | $ST^3/N$ | [c/0053](/c/0053/) -- open, gap of about $S$ |
+| $2 < B < T$ | $ST^2/N + T^3/N$ | $ST^3/N$ | unstated |
+| $B \approx T$ | $ST^2/N + T^3/N$ | $ST^3/N$ | unstated -- and whether this row differs from the $B = 2$ row is itself open (the "security jump" question), also unstated |
+
+### Sponge, quantum
+
+Entirely unstated. No attack, bound or conjecture for bounded-length sponge
+collisions against a quantum preprocessing adversary appears in any of the
+papers above.
+
+## Statements in this hub
+
+- [The STB conjecture for short collisions in Merkle-Damgård hashing](/c/0050/) -- open
+- [The sponge STB conjecture](/c/0051/) -- open
+- [A quadratic-advice two-block sponge collision attack with preprocessing](/c/0052/) -- open
+- [A tight quantum time-space tradeoff for two-block Merkle-Damgård collisions](/c/0053/) -- open

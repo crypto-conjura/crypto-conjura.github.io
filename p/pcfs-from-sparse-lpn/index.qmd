@@ -1,0 +1,130 @@
+---
+title: "Pseudorandom correlation functions from sparse LPN"
+subtitle: "What it costs to base a fast PCF on an assumption nobody invented for the purpose"
+---
+
+## Motivation
+
+Secure computation protocols run in two phases, and the expensive one is the
+first: generating correlated randomness — oblivious transfers, vector-OLEs,
+Beaver triples — that the online phase then consumes with nothing but
+symmetric-key work. A *pseudorandom correlation function* removes that cost
+almost entirely. After one setup, each party holds a short key, and from then
+on either party can compute the $x$-th correlation locally, on demand, for
+any $x$ it likes, forever. No interaction, no stored material proportional to
+what will be used.
+
+The primitive has existed since 2020 and is still not used. The reason is not
+efficiency in the abstract but a trade nobody wants to make. The fast
+candidates rest on assumptions introduced for the construction —
+variable-density LPN, expand-accumulate LPN, a weak PRF with an
+inner-product-membership structure — and each of those has had its parameters
+revised or broken at least once: Silver's LPN variant was broken, the original
+variable-density analysis was found flawed, expand-accumulate's aggressive
+parameter set rested on a conjecture that was later invalidated, and the
+Goldreich-PRG parameters of another candidate were broken outright. The
+candidates on assumptions people already trust — Paillier's DCR, quadratic
+residuosity — run at one to a hundred correlations per second, against the
+$10^{5}$ to $10^{9}$ that evaluating a circuit needs.
+
+Braun, Couteau, Melissaris, Riahinia and Sadeghi's *Fast Pseudorandom
+Correlation Functions from Sparse LPN* (ASIACRYPT 2025) is the first
+construction that refuses the trade: sparse LPN, introduced by Alekhnovich in
+2003 and cryptanalysed for two decades, at half a million VOLEs per second
+for $2^{30}$ samples. This hub collects the three things it does not settle.
+
+## Provenance and history
+
+Pseudorandom correlation *generators* — one-shot expansion of a seed into a
+bounded amount of correlated randomness — begin with Boyle, Couteau, Gilboa
+and Ishai's *Compressing Vector OLE* (CCS 2018), and are the part of this
+story that worked: they are implemented in several libraries and deployed in
+commercial products. The function version, where the expansion is unbounded
+and indexed rather than materialized, is Boyle, Couteau, Gilboa, Ishai, Kohl
+and Scholl (FOCS 2020), which also introduced variable-density LPN to
+instantiate it; Couteau and Ducros (PKC 2023) found and repaired a flaw in
+that analysis. Boyle et al.'s expand-accumulate codes (CRYPTO 2022) made the
+same template about a thousand times faster. Orlandi, Scholl and Yakoubov
+(EUROCRYPT 2021) took the other road, building PCFs from DCR and QR — mature
+assumptions, unusable speed. Bui, Couteau, Meyer, Passelègue and Riahinia
+(EUROCRYPT 2024) built one from constrained Naor–Reingold, and an attack on
+its Goldreich-PRG parameter range followed.
+
+The source paper's route is to iterate the 2018 primal PCG construction $L$
+times, so that a seed expands through $L$ nested sparse-LPN instances, and to
+sample the code matrices from a random oracle rather than store them, since at
+superpolynomial stretch they cannot be stored. That single design decision is
+what its two open questions are about. Its third open item is not a question
+at all but a belief, and concerns the dual-distance computation the paper
+introduces to justify its concrete parameters — the tightest such computation
+in this literature, and the first to give meaningful numbers at concrete
+dimensions rather than asymptotics.
+
+Downstream, Hasler and Reisert ([ePrint
+2025/2002](https://eprint.iacr.org/2025/2002), December 2025) reuse the
+recursion for OLE and multiparty Beaver triples, reimplement the
+dual-distance script, and inherit both limitations verbatim, which is the main
+external evidence that the two questions below are structural rather than
+artefacts of one write-up.
+
+## Parameter lattice
+
+Two axes for the construction: how many queries the PCF must survive, and
+whether it is allowed an idealized primitive. The third statement here is not
+on this lattice at all — it is about the parameter-selection procedure the
+construction's concrete security rests on.
+
+| | With a random oracle | Standard model |
+|---|---|---|
+| **Superpolynomially many queries** | the source's own result, secure up to $n^{O(\log n / \log \log n)}$ queries (not a leaf here) | [c/0058](/c/0058/) — open, with the obstruction the source names |
+| **Subexponentially many queries** | [c/0057](/c/0057/) — open, and what the earlier candidates from newer assumptions plausibly achieve | *unstated*: the conjunction of both open cells, and nobody has asked for it |
+| **Polynomially many queries** | a pseudorandom correlation generator, known from sparse LPN since 2018 (not a leaf here) | likewise known (not a leaf here) |
+
+The bottom row is why the superpolynomial clause matters in c/0058: drop it
+and the question is already answered.
+
+## Why the two open cells are different problems
+
+They look like two ways of asking for a better construction, and they are
+not. The query ceiling in [c/0057](/c/0057/) is a *counting* constraint: the
+number of queries the construction absorbs is the row count of its outermost
+matrix, which grows with the recursion depth $L$, while evaluating one output
+entry costs $k^{L}$ operations and so caps $L$ at $O(\log n / \log k)$. The
+source names no obstruction beyond its own shortfall, and both directions are
+unattempted.
+
+The oracle in [c/0058](/c/0058/) is a *structural* constraint, and the source
+says why. In every earlier PCF the oracle did one job — hash the input, to
+turn security-on-random-inputs into security-on-chosen-inputs — so settling
+for the weak notion removed it and left a standard-model construction. Here
+the oracle instead *samples the sparse code*, consistently across inputs, via
+a $k$-ary hash tree, and the reduction plants its challenge by programming
+that oracle. The one substitution the source considers, a public-key PRF, buys
+a new "sparse-LPN with pseudorandom matrix" assumption — which is exactly the
+kind of assumption the whole paper exists to avoid.
+
+## The third statement, and why it sits here
+
+[c/0059](/c/0059/) is not about the construction but about the number every
+concrete instantiation of it is priced against. Within the linear test
+framework, an attack must run in time roughly $\exp(\mathsf{dd}(A) \cdot t /
+m)$, where $\mathsf{dd}(A)$ is the dual distance of the code matrix, so
+choosing parameters means bounding $\mathsf{dd}(A)$ from below. The source
+derives the first tight computational bound for that, and can evaluate it only
+over $\mathbb{F}_{2}$; its general-field formulae are at least cubic in the
+dimension and it says so. Instances over larger fields therefore use the
+binary numbers, on the stated expectation that the binary bound is the worst
+case — an expectation the paper does not prove, records that all previous work
+shares, and which every large-field parameter set in this literature depends
+on.
+
+It belongs on this hub rather than a hub of its own because it is the same
+paper's third loose end and because it is what makes the other two matter
+practically: a PCF from sparse LPN is only as trustworthy as the procedure
+that picks its sparsity and noise weight.
+
+## Statements in this hub
+
+- [A Pseudorandom Correlation Function from Sparse LPN Secure Against Subexponentially Many Queries](/c/0057/) — open in both directions, no obstruction named by anyone.
+- [A Weak Pseudorandom Correlation Function from Sparse LPN in the Standard Model](/c/0058/) — open, with an obstruction the source names and an independent construction that hit the same wall.
+- [The Binary Dual-Distance Bound Never Exceeds the Bound Over a Larger Field](/c/0059/) — open, asserted rather than asked, and refutable by one computation if it is false.

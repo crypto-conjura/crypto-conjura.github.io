@@ -1,14 +1,132 @@
 ---
-title: "F-KE — Key exchange, authenticated KE"
+title: "F-KE — Key exchange, strong with forward secrecy"
 status: "Canonical"
 layer: 3
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-KE* (Key exchange, authenticated KE) is part of *Public-Key Primitives, Key Exchange, Messaging* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+*F-KE* (Key exchange, strong with forward secrecy) is part of *Public-Key Primitives, Key Exchange, Messaging* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+
+Two parties name each other, and one uniformly random key comes out — the same key for both, and one the adversary never sees unless it had already corrupted an endpoint. The box is small, and the reason it is interesting is that its own authors show it is *too strong*: the two-move Diffie–Hellman protocol does not realize it, and the paper's main technical contribution is a deliberately weakened sibling that SK-secure protocols do realize.
+
+## Functionality
+
+Reading the box: $\mathcal{A}(\cdot)$ is a call on the adversary slot whose answer is not used, so it is a notification rather than a query; $\mathsf{San}[\mathsf{Clean}_{k}]$ replaces an answer failing the predicate with $\bot$; $\square$ marks a value never set; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it; $\kappa$, the parameter on the header line, is the key length.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{KE}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := \kappa\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{Peer} : \mathcal{F}_{\mathsf{KE}}.\mathbf{P} \to \mathcal{F}_{\mathsf{KE}}.\mathbf{P} \cup \{\square\}\)</li>
+<li>\(\mathtt{Peer}[*] \gets \square\)<span class="cj-comment">// who asked to talk to whom</span></li>
+<li>\(\mathtt{Role} : \mathcal{F}_{\mathsf{KE}}.\mathbf{P} \to \{\mathsf{ini}, \mathsf{res}\} \cup \{\square\}\)</li>
+<li>\(\mathtt{Role}[*] \gets \square\)</li>
+<li>\(\mathtt{A} \gets \square\); &nbsp;\(\mathtt{B} \gets \square\)<span class="cj-comment">// the matched pair, in the order they asked</span></li>
+<li>\(\mathtt{k} \gets \square\)</li>
+<li>\(\mathtt{out}[*] \gets 0\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Establish(<span class="cj-id">Q</span>, <span class="cj-id">r</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="8">
+<li>\(\textbf{require}\ \mathtt{Peer}[\mathit{id}.P] = \square \ \wedge\ Q \neq \mathit{id}.P \ \wedge\ \mathtt{k} = \square\)<span class="cj-comment">// one request per party, and only before a key exists</span></li>
+<li>\(\mathtt{Peer}[\mathit{id}.P] \gets Q\); &nbsp;\(\mathtt{Role}[\mathit{id}.P] \gets r\)</li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Establish},\ \mathit{id}.P,\ Q,\ r\bigr)\)<span class="cj-comment">// the whole tuple, role included</span></li>
+<li>\(\textbf{if}\ \mathtt{Peer}[Q] \neq \mathit{id}.P\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\) <span class="cj-atom">ok</span></span><span class="cj-comment">// no matching request yet</span></li>
+<li>\(\mathtt{A} \gets Q\); &nbsp;\(\mathtt{B} \gets \mathit{id}.P\)</li>
+<li>\(\textbf{if}\ \{\mathtt{A}, \mathtt{B}\} \cap \mathbf{C} = \varnothing\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{k} \gets_{\$} \{0,1\}^{\kappa}\)</span></li>
+<li><span class="cj-ind">\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Establish},\ \mathsf{Key},\ \mathtt{A},\ \mathtt{B}\bigr)\)</span><span class="cj-comment">// that a key exists, never which</span></li>
+<li>\(\textbf{if}\ \{\mathtt{A}, \mathtt{B}\} \cap \mathbf{C} \neq \varnothing\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{k} \gets \mathcal{A}\bigl(\mathit{id}.\mathsf{Establish},\ \mathsf{Choose},\ \mathtt{A},\ \mathtt{B}\bigr)\)</span></li>
+<li><span class="cj-ind">\(\mathtt{k} \gets \mathsf{San}[\mathsf{Clean}_{k}](\mathtt{k})\)</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Fetch()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="21">
+<li>\(\textbf{require}\ \mathit{id}.P \in \{\mathtt{A}, \mathtt{B}\} \ \wedge\ \mathtt{k} \neq \square \ \wedge\ \mathtt{out}[\mathit{id}.P] = 0\)</li>
+<li>\(\mathtt{out}[\mathit{id}.P] \gets 1\)</li>
+<li>\(\textbf{return}\ \mathtt{k}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="24">
+<li>\(\textbf{if}\ \mathit{id}.P \notin \{\mathtt{A}, \mathtt{B}\}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ (\mathtt{A},\ \mathtt{B})\)</span><span class="cj-comment">// an outsider learns who, never the key</span></li>
+<li>\(\textbf{if}\ \mathtt{out}[\mathit{id}.P] = 0\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ (\mathtt{Peer}[\mathit{id}.P],\ \mathtt{Role}[\mathit{id}.P],\ \mathtt{k})\)</span><span class="cj-comment">// before delivery, and only then</span></li>
+<li>\(\textbf{return}\ (\mathtt{Peer}[\mathit{id}.P],\ \mathtt{Role}[\mathit{id}.P])\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig">Clean<sub><span class="cj-id">k</span></sub>(<span class="cj-id">k</span>):</div>
+<ol class="cj-code" start="29">
+<li>\(\textbf{return}\ k \in \{0,1\}^{\kappa}\)</li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+The box is transcribed from Canetti and Krawczyk, *Universally composable notions of key exchange and secure channels*, ePrint 2002/059, revision `20020514:200902`, Figure 7, PDF p. 31 (printed p. 29) — the functionality $\mathcal{F}_{\textsc{ke}}$, "The (Strong) Key Exchange functionality". The posting has exactly one revision and exists only as PostScript; the PDF read here was produced from `2002/059.ps` with Ghostscript, so its page numbering is the PostScript's own.
+
+Three readings the box commits to, each visible in one line:
+
+- **Line 10 reports the role and line 11 ignores it.** The source is explicit on both halves: the tuple sent to the adversary carries $\mathit{role}$, and the matching test fires on a recorded $(\mathit{sid}, P_j, P_i, \mathit{role}')$ "either with $\mathit{role}' \neq \mathit{role}$ or $\mathit{role}' = \mathit{role}$". The paper says why — the field "plays no security role in the definition", and is there only so that a KE protocol's input format matches the one its SK-security definition uses. This is the sharpest single difference from [F-SC](/uc/layer-1-channels-agreement-ledgers/f-sc/index.qmd) in the same paper, which *does* require the roles to be complementary before a session becomes active.
+- **Line 15 against line 18 is the whole corruption model.** With both endpoints honest the key is drawn uniformly and the adversary is told only that a key exists and between whom. With either endpoint corrupt the adversary supplies the key outright. There is no middle case, and no leakage function: the box either hands the adversary full control of the key or none of it.
+- **Line 27 is the forward-secrecy clause, and line 22 is the boundary it turns on.** The source's step 2 provides the adversary with the session key on corruption "if the session key is not yet sent (i.e., it was not yet written on the outgoing communication tape)". Here delivery is a pull, so "sent" is the flag $\mathtt{out}$ set by that party's own $\mathsf{Fetch}$.
+
+Where the source is silent and this box has to decide:
+
+| Source | Box | Why |
+|---|---|---|
+| Sends $(\texttt{key}, \mathit{sid}, \kappa)$ to both parties | $\mathsf{Fetch}$ returns $\mathtt{k}$ to the caller | Delivery is a pull here. The source gives the adversary no say over *when* the key arrives, so $\mathsf{Fetch}$ places no call on the adversary slot — which is exactly what distinguishes this box from the relaxed variant below. |
+| "and halt" after the exchange | Line 8's $\mathtt{k} = \square$ test, and $\mathtt{out}$ | One key per instance, and one delivery per partner. The instance stays alive rather than dying, so a second $\mathsf{Establish}$ is refused rather than lost. |
+| "if the session key is not yet sent" — singular, though the source writes two messages | Per-party: $\mathtt{out}[\mathit{id}.P]$ | The source's two writes are separate activations, so the flag could be global or per-party and the text does not say. Read per-party, a partner who has not yet fetched still leaks the key even after its peer has taken it. Read globally, the first fetch would close the window for both. The per-party reading is the weaker of the two and therefore the safe one to transcribe. |
+| No $\mathsf{Leak}$ | Lines 24–28 | Required on every box here. What an outsider gets is the pair of identities; what a partner gets is its own request, plus the key iff it has not yet fetched. Nothing else in the box's state is secret. |
+| No condition on the named peer | Line 8 adds $Q \neq \mathit{id}.P$ | An addition, and declared as one: the source lets $P_i$ name itself, and the matching test at line 11 would then fire on that single request and produce a one-party "exchange". Nothing in the source suggests that is intended, and no protocol realizes it. |
+| Static corruption, tested once | $\mathtt{C}$ tested at line 14 and line 17 | Corruption after line 15 is handled by $\mathsf{Leak}$, not by re-running the branch — the key is drawn and stays drawn. |
+
+## Known realizations
+
+In the paper the box is taken from:
+
+- **Theorem 9:** if the Decisional Diffie–Hellman assumption holds, protocol `SIG-DH` securely realizes $\mathcal{F}_{\textsc{ke}}$ in the $\mathcal{F}_{\textsc{sig}}$-hybrid model. `SIG-DH` is ISO 9798-3 Diffie–Hellman authenticated with signatures. The paper does not prove this directly; it follows from its Theorem 14 together with `SIG-DH` being SK-secure under DDH and satisfying the paper's ACK property.
+- **Claim 11:** protocol `2DH` — two-move Diffie–Hellman — does *not* securely realize $\mathcal{F}_{\textsc{ke}}$ in the authenticated-links model, even without forward secrecy, despite being SK-secure.
+
+Claim 11 is why this entry has a sibling in the same paper. $\mathcal{F}^{\mathcal{N}}_{\textsc{rke}}$ (Figure 10, PDF p. 38, printed p. 36) is $\mathcal{F}_{\textsc{ke}}$ with two changes: the key is produced by a *non-information oracle* $\mathcal{N}$ whose internal state the adversary gets on early corruption instead of the key itself, and delivery to each party waits for an explicit $(\texttt{ok}, \mathit{sid}, l)$ from the adversary. Both changes weaken the box, and both are needed: under DDH there is a non-information oracle for which `2DH` does realize $\mathcal{F}^{\mathcal{N}}_{\textsc{rke}}$ in the authenticated-links model (Claim 18), and more generally every SK-secure protocol realizes it for *some* non-information oracle (Claim 20), which is the paper's equivalence between relaxed UC security and SK-security.
+
+This encyclopedia has no page for the relaxed variant. That is a gap rather than a decision: $\mathcal{F}^{\mathcal{N}}_{\textsc{rke}}$ is the functionality the key-exchange literature actually realizes, and it is a different object, not a restatement.
+
+## Properties
+
+- **Key secrecy against an outsider**, with probability exactly $0$ of leakage: with both endpoints honest, no return value and no call on the adversary slot is a function of $\mathtt{k}$ except line 27, which requires the caller to be a partner. Line 25 hands over the identities and nothing more.
+- **Agreement**, with probability exactly $1$: there is one $\mathtt{k}$ per instance and $\mathsf{Fetch}$ returns it unmodified, so two partners that both fetch hold the same string. The adversary cannot substitute one endpoint's key for another's, which is the property `2DH` retains and the one an unauthenticated protocol loses.
+- **Forward secrecy**, conditional rather than unconditional: the key survives corruption only *after* the corrupted party has fetched it. Corrupting either endpoint before its $\mathsf{Establish}$ puts the adversary in the line-18 branch, where it names the key; corrupting between line 15 and that party's $\mathsf{Fetch}$ reaches line 27. The paper states the same boundary and notes that dropping the clause — letting the adversary learn the key on corruption at any time — is what it means by strong UC security *without* PFS.
+- **One key, one session.** The parameter set carries no session count, and line 8 refuses a second exchange. The multi-session case is the source's multi-session extension, not this box.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Canetti and Krawczyk. [*Universally composable notions of key exchange and secure channels*](https://eprint.iacr.org/2002/059). In Advances in Cryptology – EUROCRYPT 2002, volume 2332 of LNCS, pages 337–351, 2002.
-- Canetti and Krawczyk. [*Analysis of key-exchange protocols and their use for building secure channels*](https://eprint.iacr.org/2001/040). In Advances in Cryptology – EUROCRYPT 2001, volume 2045 of LNCS, pages 453–474, 2001.
-- Bellare and Rogaway. [*Entity authentication and key distribution*](https://cseweb.ucsd.edu/~mihir/projects/eakd.pdf). In Advances in Cryptology – CRYPTO 1993, volume 773 of LNCS, pages 232–249, 1994.
+- Canetti and Krawczyk. [*Universally composable notions of key exchange and secure channels*](https://eprint.iacr.org/2002/059). In Advances in Cryptology – EUROCRYPT 2002, volume 2332 of LNCS, pages 337–351, 2002. Figure 7, PDF p. 31 (printed p. 29) of revision `20020514:200902`, the definition transcribed above; Figure 10, PDF p. 38 (printed p. 36) for the relaxed variant; Theorem 9 and Claims 11, 18 and 20.
+- Canetti and Krawczyk. [*Analysis of key-exchange protocols and their use for building secure channels*](https://eprint.iacr.org/2001/040). In Advances in Cryptology – EUROCRYPT 2001, volume 2045 of LNCS, pages 453–474, 2001. Where SK-security and the `SIG-DH` and `2DH` protocols come from; it predates the functionality and prints no box for it.
+- Bellare and Rogaway. [*Entity authentication and key distribution*](https://cseweb.ucsd.edu/~mihir/projects/eakd.pdf). In Advances in Cryptology – CRYPTO 1993, volume 773 of LNCS, pages 232–249, 1994. The indistinguishability-based ancestor of SK-security, likewise with no functionality to transcribe.

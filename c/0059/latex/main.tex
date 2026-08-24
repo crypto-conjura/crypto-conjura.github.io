@@ -1,0 +1,283 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  Braun-Couteau-Melissaris-Riahinia-Sadeghi: the dual-distance bound
+%  computed over F_2 lower-bounds the bound over larger fields.
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{DUAL DISTANCE AND FIELD SIZE}
+
+\newcommand{\F}{\mathbb{F}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\dd}{\mathsf{dd}}
+\newcommand{\SparseCodeGen}{\mathsf{SparseCodeGen}}
+\newcommand{\RegularCodeGen}{\mathsf{RegularCodeGen}}
+\newcommand{\wt}{\omega}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{The Binary Dual-Distance Bound Is the Worst Case}
+\cjsubtitle{Sparse-LPN parameters over a large field are chosen using a
+  dual-distance bound computed over the binary field. Is that
+  conservative?}
+\cjstatus{Statement: AI-written from Lennart Braun, Geoffroy Couteau,
+  Kelsey Melissaris, Mahshid Riahinia and Elahe Sadeghi, \emph{Fast
+  Pseudorandom Correlation Functions from Sparse LPN}, IACR ePrint
+  2025/1644; ASIACRYPT 2025. Not yet checked by a human. Open, and
+  unlike this page's two companions it is a claim the source asserts
+  rather than a question it asks: the source writes that it expects the
+  binary bound to lower-bound the bound over larger fields, gives an
+  intuition, notes that all previous work assumes as much, and proves
+  nothing. Both quantities are explicit finite sums, so the statement is
+  falsifiable by computation --- but only where that computation is
+  feasible, which the source says the large-field one is not at the
+  dimensions of interest.}
+\cjcategory{\emph{Information-Theoretic}, \emph{MPC}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+Every concrete parameter set for a sparse-LPN-based construction rests
+on one number: the dual distance of the random sparse matrix, the
+smallest weight of a non-zero vector in its kernel. Nobody computes it.
+What is computed is a lower bound on it, from a union bound over
+low-weight kernel vectors, and the computation is only tractable over
+the binary field, where cancellations are easy to count. Constructions
+over a larger field then use the binary number anyway, on the belief
+that a larger field can only help --- cancellation needs matching
+supports \emph{and} matching values. This conjecture is that belief made
+precise: the bound computed over the binary field never exceeds the
+bound over a larger field, for the same dimensions, sparsity and failure
+probability. It is a statement about two explicit finite sums, and every
+sparse-LPN parameter set over a large field is conservative only if it
+holds.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+\paragraph{Why the dual distance is the number that matters.}
+Concrete parameters for LPN variants are not chosen by reduction; they
+are chosen by a two-step heuristic. First one argues that nothing about
+the special shape of the code matrix helps an attacker, then one prices
+generic LPN attacks. The first step is where the dual distance enters.
+Within the linear test framework of Boyle et al.~\cite{BCGIKS20} and
+Couteau, Rindal and Raghuraman~\cite{CRR21}, an attack that distinguishes
+by a fixed linear test must run in time roughly
+$\exp(\dd(A) \cdot t / m)$, where $\dd(A)$ is the dual distance and $t$
+the noise weight, so $\dd(A) \cdot t / m$ is the quantity a parameter
+set is really targeting. The source paper's contribution here is a
+tighter way to bound $\dd(A)$: rather than the asymptotic estimates of
+Mossel, Shpilka and Trevisan~\cite{MST03} and their successors, it
+derives an explicit recursive formula for the probability that a
+weight-$w$ vector lies in the kernel, sums it against a union bound, and
+computes the resulting $D$ numerically.
+
+\paragraph{The obstacle, and the belief.}
+That computation lives over $\F_{2}$: ``Our analysis above exploits
+properties of F2 (e.g., cancellations are more likely compared to a
+general field and only even-weight vectors matter). This allows us to
+run our implementation to run up to large values of n (see below), but
+makes it incompatible with general fields Fp.'' The source supplies a
+second family of formulae for a general prime field, and then reports
+why they are not used: ``Note that the complexity of the computation is
+at least cubic in the LPN dimension n and quickly becomes infeasible for
+the large dimensions that we are interested in.''
+
+So the binary number is used for instances over larger fields, and the
+source states the belief that licenses this: ``However, we expect the
+bound obtained through our analysis over F2 to provide a lower bound on
+that over larger fields.'' Its intuition: ``Intuitively, as the field
+grows, canceling rows gets harder; it no longer suffices for balls to
+land in the same bins but they must have opposite values.'' And its
+account of the practice: ``All previous works assume that the bound does
+not degrade as the field size grows and a common heuristic is,
+therefore, to use the bounds from the analysis over
+F2''~\cite{ADINZ17,BCGI18}.
+
+\paragraph{What is at stake.}
+If the conjecture holds, every large-field parameter set chosen this way
+is conservative, and the source's Table 2 can be read as a safe floor
+for any $\F_{p}$. If it fails --- at parameters anyone uses --- then
+those parameter sets overstate the dual distance they achieve, and with
+it the linear-test security level $\dd(A) \cdot t / m$ that the whole
+selection procedure targets.
+
+\section{Notation and parameters}\label{sec:notation}
+
+Fix integers $3 \le k \le n$ and $m \ge 1$, a prime $p$, and a
+statistical security parameter $\rho > 0$.
+
+\begin{itemize}[nosep]
+  \item $\wt(v)$ is the Hamming weight of $v$, and
+    $\dd(A) := \min \{ \wt(v) : v \ne 0,\ v^{\top} A = 0 \}$ is the
+    \emph{dual distance} of $A$.
+  \item $\SparseCodeGen(k, m, n, \F_{p})$ outputs a uniformly random
+    matrix in $\F_{p}^{m \times n}$ each of whose rows has exactly $k$
+    non-zero entries (the source's Definition 3).
+  \item $\RegularCodeGen(k, m, n, \F_{2})$, defined when $k \mid n$,
+    outputs a matrix in $\F_{2}^{m \times n}$ each of whose rows is the
+    concatenation of $k$ blocks of length $n/k$, each block a uniformly
+    random unit vector (the source's Definition 4).
+  \item $q_{w}$ is the probability that the sum of $2w$ independent
+    uniformly random unit vectors of length $N := n/k$ over $\F_{2}$ is
+    zero. This is the source's $p_{w,0}$ of its Section 4.3.
+  \item $\pi^{(p)}_{w}$ is the probability that the sum of $w$
+    independent uniformly random weight-$k$ vectors in $\F_{p}^{n}$ is
+    zero. This is the source's $p_{w,0}$ of its Section 4.5.
+\end{itemize}
+
+\begin{definition}[The binary bound, the source's Section 4.3]\label{def:dtwo}
+\[
+  D_{2}(k, m, n, \rho)
+  := \max \Bigl\{ d > 0 \ :\
+     \sum_{w=1}^{\lfloor (d-1)/2 \rfloor} \binom{m}{2w} (q_{w})^{k}
+     \le 2^{-\rho} \Bigr\}.
+\]
+This is the quantity the source computes for
+$A \sample \RegularCodeGen(k, m, n, \F_{2})$ and tabulates in its
+Table 2; it is a lower bound on $\dd(A)$ except with probability
+$2^{-\rho}$.
+\end{definition}
+
+\begin{definition}[The general-field bound, the source's Section 4.5]\label{def:dp}
+\[
+  D_{p}(k, m, n, \rho)
+  := \max \Bigl\{ d > 0 \ :\
+     \sum_{w=1}^{d-1} \binom{m}{w}\, \pi^{(p)}_{w}\, (p-1)^{w}
+     \le 2^{-\rho} \Bigr\}.
+\]
+This is the quantity the source's Section 4.5 defines for
+$A \sample \SparseCodeGen(k, m, n, \F_{p})$, and does not evaluate at
+the dimensions its construction uses.
+\end{definition}
+
+In both definitions, if no $d > 0$ satisfies the constraint then the
+value is $0$, following the source's own convention for its table:
+``D = 0 indicates that we can only guarantee a trivial bound''.
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{conjecture}[The binary bound is the worst case]\label{conj:main}
+For every prime $p > 2$, every $\rho > 0$, and all integers
+$3 \le k \le n$ with $k \mid n$ and $m \ge 1$,
+\[
+  D_{2}(k, m, n, \rho) \ \le \ D_{p}(k, m, n, \rho),
+\]
+with $D_{2}$ as in Definition~\ref{def:dtwo} and $D_{p}$ as in
+Definition~\ref{def:dp}.
+\end{conjecture}
+
+\begin{remark}[The two bounds are computed for different ensembles]
+This is the first thing to check about the statement, and it is a
+feature of the source's sentence rather than of this transcription.
+$D_{2}$ is computed for the \emph{regular} ensemble, one unit vector per
+block; $D_{p}$ for the \emph{sparse} ensemble, an arbitrary weight-$k$
+row. The source gives an extension of its binary analysis to the sparse
+ensemble in one line --- replace $(q_{w})^{k}$ by the probability that
+$2wk$ unit vectors of length $n$ sum to zero --- so a variant of the
+conjecture with both sides on the sparse ensemble is available and is
+arguably the more natural claim. It is not the one the source's sentence
+makes, so it is not the one stated above. Note also the structural
+consequence of the difference: over the regular ensemble an odd number
+of rows can never cancel, so $D_{2}$'s sum runs over even weights only,
+while $D_{p}$'s runs over all weights.
+\end{remark}
+
+\begin{remark}[Two effects pull against each other]
+The source's intuition covers one of them. Raising $p$ shrinks
+$\pi^{(p)}_{w}$, since supports must now match \emph{and} values must
+cancel. But raising $p$ also multiplies the number of candidate kernel
+vectors of each support by $(p-1)^{w}$, and that factor appears in
+$D_{p}$'s summand. The conjecture is the assertion that the first effect
+wins, uniformly in the other parameters, and nothing in the source
+addresses the second.
+\end{remark}
+
+\begin{remark}[What is checkable, and what this page checked]
+Both sides are explicit finite sums of rational numbers, so any instance
+is decidable by computation; the source's own script is public for the
+$\F_{2}$ side. That makes the conjecture falsifiable in the strongest
+sense --- a single parameter triple would do it --- and it is why the
+statement is stated for \emph{all} parameters rather than
+asymptotically. The obstruction is cost, exactly as the source says: the
+$\F_{p}$ side is at least cubic in $n$, so the dimensions where the
+source's construction lives, $n = 2^{15}$ and up, are out of reach of a
+direct check.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem[ADINZ17]{ADINZ17}
+Benny Applebaum, Ivan Damg\aa{}rd, Yuval Ishai, Michael Nielsen and Lior
+Zichron.
+\emph{Secure arithmetic computation with constant computational
+overhead}.
+CRYPTO 2017, Part~I\@.
+Cited by the source as one of the works that use the binary bound for a
+larger field.
+
+\bibitem[BCGI18]{BCGI18}
+Elette Boyle, Geoffroy Couteau, Niv Gilboa and Yuval Ishai.
+\emph{Compressing vector OLE}.
+ACM CCS 2018.
+Likewise.
+
+\bibitem[BCGIKS20]{BCGIKS20}
+Elette Boyle, Geoffroy Couteau, Niv Gilboa, Yuval Ishai, Lisa Kohl and
+Peter Scholl.
+\emph{Correlated pseudorandom functions from variable-density LPN}.
+61st Annual Symposium on Foundations of Computer Science (FOCS), 2020.
+Introduces the linear test framework in which the dual distance is
+priced.
+
+\bibitem[BCM25]{BCM25}
+Dung Bui, Geoffroy Couteau and Nikolas Melissaris.
+\emph{Structured-seed local pseudorandom generators and their
+applications}.
+APPROX/RANDOM 2025.
+Source of the asymptotic large-dual-distance lemma the source
+reproduces, and of a quantified form of the ``high dual distance
+suffices'' conjecture.
+
+\bibitem[BCMRS25]{BCMRS25}
+Lennart Braun, Geoffroy Couteau, Kelsey Melissaris, Mahshid Riahinia and
+Elahe Sadeghi.
+\emph{Fast pseudorandom correlation functions from sparse LPN}.
+IACR ePrint 2025/1644; ASIACRYPT 2025.
+The source: the claim and its intuition are on p.\ 26, the binary bound
+on pp.\ 24--26, Table 2 on p.\ 28, the general-field formulae in
+Section 4.5 on pp.\ 30--32, and the cost remark on p.\ 32.
+
+\bibitem[CRR21]{CRR21}
+Geoffroy Couteau, Peter Rindal and Srinivasan Raghuraman.
+\emph{Silver: silent VOLE and oblivious transfer from hardness of
+decoding structured LDPC codes}.
+CRYPTO 2021, Part~III\@.
+The general heuristic for LPN variants, and asymptotic dual-distance
+bounds for arbitrary fields.
+
+\bibitem[Kha26]{Kha26}
+Majid Khabbazian.
+\emph{Linear distance for fixed-row-weight expand-accumulate codes over
+arbitrary fields}.
+IACR ePrint 2026/1753.
+A different code ensemble, and the nearest available data point on
+whether bounds of this kind are field-uniform: it proves a conjectured
+constant-relative-distance bound for expand-accumulate codes ``in a
+stronger, field-uniform form'', with ``the same constants'' for every
+prime power.
+[UNVERIFIED]
+
+\bibitem[MST03]{MST03}
+Elchanan Mossel, Amir Shpilka and Luca Trevisan.
+\emph{On $\epsilon$-biased generators in NC0}.
+44th Annual Symposium on Foundations of Computer Science (FOCS), 2003.
+The original analysis of the dual distance of random sparse matrices.
+
+\end{conjurabibliography}
+
+\end{document}

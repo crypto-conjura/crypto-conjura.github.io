@@ -1,0 +1,62 @@
+%% The interface box of g-gg, the one source for both the book
+%% and uc/.../g-gg/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Ggg$ \\
+\params{$\PID := (\op{G}\op{GG},0,0)$, \quad $\Ps$, \quad
+$\admits := \Stdpid \cup \Apid \cup \Zpid$, \quad $\uses := \emptyset$, \quad
+$\pars := (p, S_1, S_2, S_{\mathsf{t}})$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{\tau}_i \gets_{\$} \op{Inj}(\mathbb{Z}_p, S_i)$ \ for each $i \in \{1,2,\mathsf{t}\}$ \label{ln:ggenc}
+  \Comment{three random encodings, one per group}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{CanonicalGen}(i)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$i \in \{1,2,\mathsf{t}\}$}
+\State \textbf{return} $\V{\tau}_i(1)$ \label{ln:ggcanon}
+  \Comment{the same generator in every session}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Op}(i, g_1, g_2, a_1, a_2)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$i \in \{1,2,\mathsf{t}\} \ \wedge\ (g_1, g_2) \in S_i^{2} \ \wedge\ (a_1, a_2) \in \mathbb{Z}_p^{2}$} \label{ln:ggopreq}
+\State \textbf{return} $\V{\tau}_i\bigl(a_1 \V{\tau}_i^{-1}(g_1) + a_2 \V{\tau}_i^{-1}(g_2)\bigr)$ \label{ln:ggop}
+  \Comment{an arbitrary linear combination, not just $g_1 + g_2$}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Pair}(g_1, g_2)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$(g_1, g_2) \in S_1 \times S_2$} \label{ln:ggpairreq}
+\State \textbf{return} $\V{\tau}_{\mathsf{t}}\bigl(\V{\tau}_1^{-1}(g_1) \cdot \V{\tau}_2^{-1}(g_2)\bigr)$ \label{ln:ggpair}
+  \Comment{type-3: no map back from $S_2$ to $S_1$}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $\none$ \label{ln:ggleak}
+  \Comment{no per-party state exists to leak}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

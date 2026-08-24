@@ -1,0 +1,144 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  Dodis-Goldin-Hall's open problem on whether their own
+%  Merkle-Damgard random oracle combiner stays secure once its salts
+%  shrink to a constant number of blocks.
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{SECURITY OF THE MD COMBINER UNDER SHORT SALTS}
+
+\newcommand{\Z}{Z}
+\newcommand{\Ctil}{\widetilde{C}}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{Security of the Merkle-Damg\r{a}rd Combiner Under
+  Constant-Length Salts}
+\cjsubtitle{Closing the gap below the source's own $|\Z_{i}| > |M| +
+  \lambda$ requirement}
+\cjstatus{Statement: AI-written from Yevgeniy Dodis, Eli Goldin and
+  Peter Hall, \emph{Random Oracle Combiners: Merkle-Damg\r{a}rd Style},
+  IACR ePrint 2025/609. Not yet checked by a human. Open in both
+  directions: security is proved only for salts longer than the
+  message by at least the security parameter, and the source has
+  neither an attack nor a security proof once the salts shrink to a
+  constant number of blocks.}
+\cjcategory{\emph{Idealized Models \& Non-Uniformity}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+The source's main construction XORs the Merkle-Damg\r{a}rd extensions
+of two salted hash functions together, and proves it is a secure
+random oracle combiner as long as each salt is longer than the message
+being hashed by at least the security parameter. The proof genuinely
+needs that margin to work, but the authors have not found any attack
+that actually exploits shorter salts; in particular they have no
+attack even when the salt length is a small constant number of blocks,
+independent of how long the message is. They explicitly leave open
+which of the two is really true: that short salts really do break the
+construction, or that the construction is secure with much shorter
+salts than its current proof requires.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+The source's main construction is
+$\Ctil^{h_{1},h_{2}}_{\Z_{1},\Z_{2}}(M) := h_{1}^{*}(M, \Z_{1}) \oplus
+h_{2}^{*}(M, \Z_{2})$, where $h_{1}, h_{2} : \{0,1\}^{n+\delta} \to
+\{0,1\}^{n}$ are compression functions and $h_{1}^{*}, h_{2}^{*}$ are
+their Merkle-Damg\r{a}rd extensions. The source's Theorem 3.1 proves
+$\Ctil$ is a secure random oracle combiner (Definition~\ref{def:roc})
+whenever $|\Z_{1}|, |\Z_{2}| > |M| + \lambda$; the proof relies on this
+margin via a compression argument bounding the simulator's recursion.
+No attack against $\Ctil$ is known for shorter salts, including salts
+of constant length, independent of $|M|$.
+
+The source's own conclusion states the position exactly: ``While our
+analysis of $\Ctil$ critically uses the fact that $|\Z_{i}| > |M| +
+\lambda$, we do not have any attacks against this construction, once
+the $|\Z_{i}|$ is a constant number of blocks, independent of $|M|$. In
+particular, it is possible our construction $\Ctil$ provides a
+solution to'' the source's broader, separately-recorded open problem
+about the existence of any combiner with $O(\lambda)$-length,
+message-independent salts. It continues: ``Thus, it would be very
+interesting to either show that $\Ctil$ is insecure unless $|\Z_{i}| >
+|M|$, or find a supporting proof of security for much shorter salts
+(ideally, constant number of blocks).''
+
+This is a narrower and more concrete question than that broader one: it
+is about this one fixed, already-specified construction, not about the
+existence of some combiner in general, so settling it requires only
+exhibiting an attack or a security proof against $\Ctil$, not a new
+construction. A proof of security for $\Ctil$ at constant-length salts
+would answer the broader existence question as well; an attack on
+$\Ctil$ at constant-length salts would not, since some other combiner
+might still achieve short, message-independent salts.
+
+\section{Notation and parameters}\label{sec:notation}
+
+\begin{itemize}[nosep]
+  \item $\lambda$ is the security parameter.
+  \item $M \in \{0,1\}^{*}$ is the combiner's message input.
+  \item $h_{1}, h_{2} : \{0,1\}^{n+\delta} \to \{0,1\}^{n}$ are
+    compression functions, with $h_{1}^{*}, h_{2}^{*}$ their
+    Merkle-Damg\r{a}rd extensions.
+  \item $\Z_{1}, \Z_{2}$ are independent random salts.
+\end{itemize}
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{definition}[Random oracle combiner, informal; source's framing
+  of Dodis-Ferguson-Goldin-Hall-Pietrzak]\label{def:roc}
+A combiner $C^{h_{1},h_{2}}_{\Z} : \{0,1\}^{m} \to \{0,1\}^{n}$ is a
+\emph{secure random oracle combiner} if, for every oracle circuit $g$,
+both $C^{\mathcal{H}, g^{\mathcal{H}}}_{\Z}$ and $C^{g^{\mathcal{H}},
+\mathcal{H}}_{\Z}$ are indifferentiable from a fresh random oracle
+$\mathcal{G} : \{0,1\}^{m} \to \{0,1\}^{n}$, over the random choice of
+the salt $\Z$, against every polynomial-query distinguisher.
+\end{definition}
+
+\begin{conjecture}[Security of $\Ctil$ under short salts]\label{conj:main}
+Let $\Ctil^{h_{1},h_{2}}_{\Z_{1},\Z_{2}}(M) := h_{1}^{*}(M, \Z_{1})
+\oplus h_{2}^{*}(M, \Z_{2})$ be as above, proved a secure random oracle
+combiner (Definition~\ref{def:roc}) whenever $|\Z_{1}|, |\Z_{2}| > |M|
++ \lambda$. Resolve which of the following holds:
+\begin{enumerate}[nosep,label=(\roman*)]
+  \item there is a choice of $|\Z_{1}|, |\Z_{2}| = O(1)$ blocks,
+    independent of $|M|$, together with an efficient adversary breaking
+    the indifferentiability of $\Ctil$ from a random oracle; or
+  \item $\Ctil$ remains a secure random oracle combiner even when
+    $|\Z_{1}|, |\Z_{2}|$ are a constant number of blocks, independent
+    of $|M|$.
+\end{enumerate}
+\end{conjecture}
+
+\begin{remark}[The source's dichotomy is not perfectly symmetric]
+The source phrases the ``insecure'' alternative more broadly, as
+showing $\Ctil$ is insecure unless $|\Z_{i}| > |M|$ --- i.e., over the
+whole sub-threshold range $|\Z_{i}| \le |M|$ --- while it narrows the
+``secure'' alternative specifically to the constant-blocks case, the
+regime where it reports no known attack. Resolving
+Conjecture~\ref{conj:main} at the constant-blocks extreme, in either
+direction, need not by itself settle the source's broader-phrased
+alternative for every $|\Z_{i}|$ strictly between a constant and $|M|$.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem[DGH25]{DGH25}
+Yevgeniy Dodis, Eli Goldin and Peter Hall.
+\emph{Random oracle combiners: Merkle-Damg\r{a}rd style}.
+IACR ePrint 2025/609.
+The source. The construction and its security theorem are Section 3
+(Theorem 3.1); the open problem is Section 4 (``Conclusion and Open
+Problems''), page 27.
+
+\end{conjurabibliography}
+
+\end{document}

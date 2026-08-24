@@ -1,0 +1,68 @@
+---
+title: "Salt length versus call count for Merkle-Damgård random oracle combiners"
+subtitle: "What a length-preserving combiner built from Merkle-Damgård hash functions must pay in salt or in calls"
+---
+
+## Motivation
+
+A random oracle combiner takes two hash functions and builds a new one that is
+provably a fresh random oracle as long as *at least one* of the two inputs is
+itself a random oracle — a hedge against one of the two turning out to be
+broken. Dodis, Ferguson, Goldin, Hall and Pietrzak built the first
+length-preserving combiner of this kind, salting and XORing the two hash
+functions together, treating each as a monolithic random oracle. The source
+paper on this hub instead asks the question a real hash function forces: what
+if the two "hash functions" are really Merkle-Damgård compression functions,
+extended to arbitrary-length inputs the usual way? It answers that question
+completely — a combiner of exactly the same salt-and-XOR shape is secure,
+provided the salts are longer than the message by at least the security
+parameter — but that answer comes at a cost nobody has found how to avoid: the
+salts must grow with the message, and so must the number of Merkle-Damgård
+calls the combiner makes. Two questions about that cost are what this hub
+tracks.
+
+## Provenance and history
+
+Both statements come from Dodis, Goldin and Hall, *Random Oracle Combiners:
+Merkle-Damgård Style* ([IACR ePrint 2025/609](https://eprint.iacr.org/2025/609)),
+which resolves the Dodis-Ferguson-Goldin-Hall-Pietrzak conjecture for the
+Merkle-Damgård-friendly case (its Theorem 3.1) and then, in its own
+"Conclusion and Open Problems" section, records exactly the two questions
+tracked here as unresolved by that theorem.
+
+## The two questions
+
+The two are related but distinct, and the source poses both in the same
+paragraph:
+
+- [Salt Length vs. Merkle-Damgård Call Count in Random Oracle Combiners](/c/0063/)
+  asks about combiners *in general*: does there exist any secure combiner of
+  this shape with $O(\lambda)$-length, message-independent salts and only
+  $O(1)$ Merkle-Damgård calls — or is that combination provably impossible,
+  and if so, what is the true trade-off?
+- [Security of the Merkle-Damgård Combiner Under Constant-Length Salts](/c/0064/)
+  is narrower: it fixes the source's *own* construction $\widetilde C$ and asks
+  only whether that one combiner stays secure, or instead becomes attackable,
+  once its salts shrink to a constant number of blocks.
+
+A proof that $\widetilde C$ itself is secure at constant-length salts would
+answer the first question affirmatively as well as the second; an attack on
+$\widetilde C$ specifically would not touch the first question, since some
+other combiner might still achieve short, message-independent salts by a
+different route. The source is explicit that it has found neither: no attack
+on $\widetilde C$ at constant salts, and no proof of its security there either.
+
+## Parameter lattice
+
+One axis: how much the salt is allowed to shrink. The other: whether the
+achieving construction is fixed to $\widetilde C$ or open to any combiner.
+
+| | Salts $> |M| + \lambda$ | Salts $= O(1)$ blocks, independent of $|M|$ |
+|---|---|---|
+| **Any secure combiner** | Achieved: the source's Theorem 3.1 | [c/0063](/c/0063/) — open, existence vs.\ impossibility-and-trade-off |
+| **The source's own $\widetilde C$** | Achieved: the source's Theorem 3.1 | [c/0064](/c/0064/) — open, attack vs.\ security proof |
+
+## Statements in this hub
+
+- [Salt Length vs. Merkle-Damgård Call Count in Random Oracle Combiners](/c/0063/) — open
+- [Security of the Merkle-Damgård Combiner Under Constant-Length Salts](/c/0064/) — open

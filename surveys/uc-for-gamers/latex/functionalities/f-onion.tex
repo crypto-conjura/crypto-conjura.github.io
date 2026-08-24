@@ -1,0 +1,108 @@
+%% The interface box of f-onion, the one source for both the book
+%% and uc/.../f-onion/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fonion$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := (N, \ell_m)$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{L}[*] \gets \unset$
+  \Comment{onions in the adversary's hands, by temporary id}
+\State $\V{B}[*] \gets \unset$
+  \Comment{onions held by an honest router, with its name}
+\State $\V{In}[*] \gets ()$
+  \Comment{messages delivered to a recipient}
+\State $\V{ctr} \gets 0$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{NewOnion}(R, \msg, n, Q)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$|Q| = n < N \ \wedge\ \msg \in \{0,1\}^{\ell_m} \cup \{\none\}$} \label{ln:orlen}
+  \Comment{a path shorter than the network, and a fixed-length payload}
+\State $\op{Step}\bigl((\id.P, R, \msg, n, Q, 0)\bigr)$ \label{ln:orstart}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\op{Step}(O)$}:
+\begin{algorithmic}[1]
+\algcont
+\State $(S, R, \msg, n, Q, i) \gets O$; \ $Q_0 \gets S$; \ $Q_{n+1} \gets R$ \label{ln:orends}
+  \Comment{the sender is hop $0$, the recipient hop $n+1$}
+\State $J \gets \{j : i < j \leq n+1 \ \wedge\ Q_j \notin \Cs\}$ \label{ln:ornexthonest}
+\If{$J = \emptyset$}
+  \State $\Adv\bigl(\op{Step}, Q_i, (Q_{i+1}, \ldots, Q_n), R, \msg\bigr)$ \label{ln:orallcorrupt}
+    \Comment{no honest hop left, so the message leaks}
+  \State \textbf{return}
+\EndIf
+\State $j \gets \min J$; \ $\V{ctr} \gets \V{ctr} + 1$
+\State $\V{L}[\V{ctr}] \gets (O, j)$ \label{ln:orlist}
+\State $\Adv\bigl(\op{Step}, Q_i, (Q_{i+1}, \ldots, Q_{j-1}), Q_j, \V{ctr}\bigr)$ \label{ln:orsubpath}
+  \Comment{one stretch of corrupt hops, and its two ends}
+\State \textbf{return}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Deliver}(t)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F = \Apid \ \wedge\ \V{L}[t] \neq \unset$} \label{ln:oradvdecides}
+  \Comment{the adversary decides which onion moves, and when}
+\State $\bigl((S, R, \msg, n, Q, i), j\bigr) \gets \V{L}[t]$ \label{ln:ornoremove}
+  \Comment{entries are never removed: this is the replay}
+\If{$j = n + 1$}
+  \If{$\msg \neq \none$}
+    \State $\V{In}[R] \gets \V{In}[R] \,\|\, \msg$ \label{ln:orarrive}
+  \EndIf
+  \State \textbf{return} $\ok$
+\EndIf
+\State $\V{ctr} \gets \V{ctr} + 1$
+\State $\V{B}[\V{ctr}] \gets \bigl((S, R, \msg, n, Q, j),\ Q_j\bigr)$ \label{ln:orhandover}
+\State \textbf{return} $\V{ctr}$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Poll}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $\bigl(\{t : \V{B}[t] = (\cdot, \id.P)\},\ \V{In}[\id.P]\bigr)$ \label{ln:orpoll}
+  \Comment{handles only: a router never sees the onion}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Forward}(t)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{B}[t] = (\cdot, \id.P)$} \label{ln:orowner}
+\State $(O, \cdot) \gets \V{B}[t]$; \ $\V{B}[t] \gets \unset$ \label{ln:orbufdrop}
+  \Comment{an honest router forwards each onion once}
+\State $\op{Step}(O)$
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $\bigl(\{t : \V{B}[t] = (\cdot, \id.P)\},\ \V{In}[\id.P]\bigr)$ \label{ln:orleak}
+  \Comment{exactly what the router itself can see}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

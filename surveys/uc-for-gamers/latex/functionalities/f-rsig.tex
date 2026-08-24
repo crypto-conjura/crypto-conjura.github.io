@@ -1,0 +1,103 @@
+%% The interface box of f-rsig, the one source for both the book
+%% and uc/.../f-rsig/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Frsig$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := (\mathit{uf}, \mathit{anon})$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{RS} \gets \unset$
+  \Comment{one signing algorithm for every ring}
+\State $\V{V} : \Ps \to \bits \cup \{\unset\}$; \ $\V{V}[*] \gets \unset$
+\State $\V{Rec} \gets \emptyset$
+  \Comment{$(\msg, L, \sigma, P)$ quadruples}
+\State $\V{Ring}(L) := \{P \in \Ps : \V{V}[P] \in L\}$
+  \Comment{the ring a key list names}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{KeyGen}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{V}[\id.P] = \unset$} \label{ln:rsigonce}
+\If{$\V{RS} = \unset$}
+  \State $(\V{RS}, v) \gets \Adv\bigl(\id.\op{KeyGen}\bigr)$ \label{ln:rsigfirst}
+\EndIf
+\If{$\V{RS} \neq \unset$}
+  \State $v \gets \Adv\bigl(\id.\op{KeyGen}\bigr)$
+\EndIf
+\State $v \gets \San[\Clean_{v}](v)$ \label{ln:rsigsan}
+\State $\V{V}[\id.P] \gets v$
+\State \textbf{return} $v$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Sign}(\msg, L)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$L \subseteq \V{V}[\Ps] \ \wedge\ \V{V}[\id.P] \in L$} \label{ln:rsigreg}
+\State $\sigma \gets \V{RS}(\msg, L)$ \label{ln:rsignoadv}
+\If{$\bigwedge_{v \in L} v(\msg, L, \sigma) = 0$}
+  \State \textbf{return} $\none$
+    \Comment{the source's ``error message''}
+\EndIf
+\State $\V{Rec} \gets \V{Rec} \cup \{(\msg, L, \sigma, \id.P)\}$
+\State \textbf{return} $\sigma$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Verify}(\msg, L, \sigma)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$L \subseteq \V{V}[\Ps] \ \wedge\ \V{Ring}(L) \cap \Cs = \emptyset$} \label{ln:rsiguf}
+  \If{$\mathit{uf} = \op{eUF} \ \wedge\ (\msg, L, *, *) \notin \V{Rec}$}
+    \State \textbf{return} $0$ \label{ln:rsigeuf}
+  \EndIf
+  \If{$\mathit{uf} = \op{sUF} \ \wedge\ (\msg, L, \sigma, *) \notin \V{Rec}$}
+    \State \textbf{return} $0$ \label{ln:rsigsuf}
+  \EndIf
+\EndIf
+\State \textbf{return} $\bigwedge_{v \in L} v(\msg, L, \sigma)$ \label{ln:rsigdet}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Attribute}(\msg, L, \sigma)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F = \Apid \ \wedge\ (\msg, L, \sigma, P) \in \V{Rec}$} \label{ln:rsigadvonly}
+\If{$\mathit{anon} = \op{fullkey}$}
+  \State \textbf{return} $\none$ \label{ln:rsigfull}
+\EndIf
+\If{$\mathit{anon} = \op{basic} \ \wedge\ P \notin \Cs \ \wedge\ |\V{Ring}(L) \setminus \Cs| \geq 2$}
+  \State \textbf{return} $\none$ \label{ln:rsigbasic}
+\EndIf
+\If{$\mathit{anon} = \op{attribution} \ \wedge\ \V{Ring}(L) \setminus \Cs \neq \emptyset$}
+  \State \textbf{return} $\none$ \label{ln:rsigattr}
+\EndIf
+\State \textbf{return} $P$ \label{ln:rsignoanon}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{V}[\id.P] \neq \unset$} \label{ln:rsigleak}
+\State \textbf{return} $\bigl(\V{RS},\ \V{V}[\id.P],\ \{(\msg, L, \sigma) :$
+\Statex $(\msg, L, \sigma, \id.P) \in \V{Rec}\}\bigr)$
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

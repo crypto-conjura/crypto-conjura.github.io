@@ -1,0 +1,78 @@
+%% The interface box of f-mpc, the one source for both the book
+%% and uc/.../f-mpc/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fmpc$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := (m, \mathbf{f}, \mathbf{Rnd}, R)$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{x}[*,*] \gets \none$; \ $\V{y}[*,*] \gets \none$
+  \Comment{one slot per party per stage $\lambda \in [1,m]$}
+\State $\V{S}[0] \gets (\none, \ldots, \none)$
+  \Comment{the joint state carried between stages}
+\State $\V{t}[*,*] \gets |\Ps|$
+  \Comment{activations owed, per party per stage}
+\State $\V{l} \gets 1$
+  \Comment{one round counter for the whole sequence}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Input}(\lambda, v)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\lambda \in [1,m] \ \wedge\ \V{y}[*,\lambda] = \none$} \label{ln:mpclate}
+  \Comment{no input to a stage already evaluated}
+\State $\V{x}[\id.P, \lambda] \gets v$
+\State $\Adv\bigl(\id.\op{Input},\ \id.P,\ \lambda\bigr)$
+  \Comment{that a party gave input, and to which stage}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Output}(\lambda)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\lambda \in [1,m]$}
+\Req{$\id.P \in \Cs \ \vee\ \forall \rho \in [1,\lambda] : \V{x}[\id.P,\rho] \neq \none$} \label{ln:mpcowninputs}
+\If{$\V{t}[\id.P,\lambda] > 1$}
+  \State $\V{t}[\id.P,\lambda] \gets \V{t}[\id.P,\lambda] - 1$ \label{ln:mpcspend}
+  \If{$\forall Q \in \Ps \setminus \Cs : \V{t}[Q,\lambda] = 1$}
+    \State $\V{l} \gets \V{l} + 1$; \ $\V{t}[*,\lambda] \gets |\Ps|$ \label{ln:mpcround}
+  \EndIf
+  \State $\Adv\bigl(\id.\op{Output},\ \id.P,\ \lambda\bigr)$
+  \State \textbf{return} $\none$
+\EndIf
+\If{$\V{l} < \sum_{\rho = 1}^{\lambda} \mathit{Rnd}_{\rho}$}
+  \State \textbf{return} $\op{early}$ \label{ln:mpcearly}
+\EndIf
+\If{$\V{y}[*,\lambda] = \none \ \wedge\ \forall \rho \in [1,\lambda-1] : \V{y}[*,\rho] \neq \none$} \label{ln:mpcorder}
+  \If{$\forall Q \in \Ps \setminus \Cs : \V{x}[Q,\lambda] \neq \none$}
+    \State $r \gets_{\$} R$; \ $X \gets (\V{x}[P,\lambda])_{P \in \Ps}$
+    \State $(\V{y}[P,\lambda])_{P \in \Ps} \gets f_{\lambda}\bigl(X,\ \V{S}[\lambda-1],\ r\bigr)$ \label{ln:mpceval}
+    \State $\V{S}[\lambda] \gets \bigl(\V{S}[\lambda-1],\ X,\ r\bigr)$ \label{ln:mpcstate}
+  \EndIf
+\EndIf
+\State \textbf{return} $\V{y}[\id.P, \lambda]$ \label{ln:mpcgod}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $\bigl((\V{x}[\id.P,\rho])_{\rho},\ (\V{y}[\id.P,\rho])_{\rho},\ (\V{t}[\id.P,\rho])_{\rho},\ \V{l}\bigr)$ \label{ln:mpcleak}
+  \Comment{a corrupt party's own slots, and the clock}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

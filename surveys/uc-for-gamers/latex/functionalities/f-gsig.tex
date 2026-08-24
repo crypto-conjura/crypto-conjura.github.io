@@ -1,0 +1,155 @@
+%% The interface box of f-gsig, the one source for both the book
+%% and uc/.../f-gsig/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fgsig$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := \mathit{GM}$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{v} \gets \unset$; \ $\V{Mem} \gets \emptyset$
+  \Comment{one group per instance}
+\State $\V{Ver} : \Msgs \times \Sigs \times \Keys \to \{0,1\} \cup \{\unset\}$
+\State $\V{Ver}[*,*,*] \gets \unset$
+\State $\V{Who} : \Msgs \times \Sigs \times \Keys \to \Ps \cup \{\none, \unset\}$
+\State $\V{Who}[*,*,*] \gets \unset$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{KeyGen}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P = \mathit{GM} \ \wedge\ \V{v} = \unset$} \label{ln:gsmanager}
+  \Comment{the manager is named in the process id}
+\State $\V{v} \gets \Adv\bigl(\id.\op{KeyGen},\ \Fgsig.\Ps\bigr)$ \label{ln:gskey}
+\State $\V{v} \gets \San[\Clean_{v}](\V{v})$
+\State \textbf{return} $\V{v}$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Join}(P)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P = \mathit{GM} \ \wedge\ P \in \Fgsig.\Ps$}
+\State $\V{Mem} \gets \V{Mem} \cup \{P\}$
+\State $\Adv\bigl(\id.\op{Join},\ P\bigr)$ \label{ln:gsjoinleak}
+  \Comment{membership itself is not hidden}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Revoke}(P)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P = \mathit{GM}$}
+\State $\V{Mem} \gets \V{Mem} \setminus \{P\}$
+\State $\Adv\bigl(\id.\op{Revoke},\ P\bigr)$
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Sign}(\msg)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P \in \V{Mem} \ \wedge\ \V{v} \neq \unset$} \label{ln:gsmember}
+\State $\sigma \gets \San[\Clean_{\sigma}]\bigl(\Adv(\id.\op{Sign}, \msg)\bigr)$ \label{ln:gssignleak}
+  \Comment{$\Adv$ learns the message, never the signer}
+\Req{$\neg(\V{Ver}[\msg, \sigma, \V{v}] = 0 \ \wedge\ \V{Who}[\msg, \sigma, \V{v}] = \none)$} \label{ln:gsnoreuse}
+  \Comment{a pair already rejected cannot be minted}
+\State $\V{Ver}[\msg, \sigma, \V{v}] \gets 1$; \ $\V{Who}[\msg, \sigma, \V{v}] \gets \id.P$
+\State \textbf{return} $\sigma$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Verify}(\msg, \sigma, v')$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $(\varphi, P_{x}) \gets \Adv\bigl(\id.\op{Verify}, \msg, \sigma, v'\bigr)$ \label{ln:gsverask}
+\If{$v' = \V{v} \ \wedge\ \V{Ver}[\msg, \sigma, \V{v}] = 1$}
+  \State \textbf{return} $1$ \label{ln:gscompleteness}
+    \Comment{completeness, and the adversary cannot revoke it}
+\EndIf
+\If{$v' = \V{v} \ \wedge\ \V{Mem} \cap \Cs = \emptyset \ \wedge\ \neg\exists\, \sigma' : \V{Ver}[\msg, \sigma', \V{v}] = 1$}
+  \State $\V{Ver}[\msg, \sigma, \V{v}] \gets 0$; \ $\V{Who}[\msg, \sigma, \V{v}] \gets \none$ \label{ln:gsunforge}
+    \Comment{never signed, no member corrupt: a forgery}
+  \State \textbf{return} $0$
+\EndIf
+\If{$\V{Who}[\msg, \sigma, v'] \in \Fgsig.\Ps$}
+  \State \textbf{return} $\V{Ver}[\msg, \sigma, v']$ \label{ln:gsconsistent}
+    \Comment{a verdict once given is repeated}
+\EndIf
+\State $\varphi \gets \San[\Clean_{f}](\varphi)$
+\State $\V{Ver}[\msg, \sigma, v'] \gets \varphi$; \ $\V{Who}[\msg, \sigma, v'] \gets P_{x}$ \label{ln:gsadvverdict}
+  \Comment{otherwise the adversary decides, and is held to it}
+\State \textbf{return} $\varphi$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Open}(\msg, \sigma, v')$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P = \mathit{GM}$} \label{ln:gsopengm}
+  \Comment{only the manager may de-anonymize}
+\State $\Adv\bigl(\id.\op{Open}, \msg, \sigma, v'\bigr)$
+\State $f \gets \id.\opl{Verify}(\msg, \sigma, v')$ \label{ln:gsopenverify}
+  \Comment{the source verifies before opening}
+\If{$f = 1$}
+  \State \textbf{return} $\V{Who}[\msg, \sigma, v']$ \label{ln:gstrace}
+\EndIf
+\State \textbf{return} $\none$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$\id.P = \mathit{GM}$}
+  \State \textbf{return} $(\V{v}, \V{Mem}, \V{Ver}, \V{Who})$ \label{ln:gsgmleak}
+    \Comment{the source assumes this never happens}
+\EndIf
+\If{$\id.P \in \V{Mem}$}
+  \State \textbf{return} $\{(\msg, \sigma) : \V{Who}[\msg, \sigma, \V{v}] = \id.P\}$ \label{ln:gsownsigs}
+\EndIf
+\State \textbf{return} $(\V{v}, \V{Mem})$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\Clean_{v}(v)$}:
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $v \in \Keys$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\Clean_{\sigma}(\sigma)$}:
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $\sigma \in \Sigs$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\Clean_{f}(\varphi)$}:
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $\varphi \in \{0,1\}$
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

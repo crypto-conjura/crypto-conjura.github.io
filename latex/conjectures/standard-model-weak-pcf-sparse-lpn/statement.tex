@@ -1,0 +1,270 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  Braun-Couteau-Melissaris-Riahinia-Sadeghi, Open Question (2): a weak
+%  PCF from sparse LPN in the standard model, with no random oracle.
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{STANDARD-MODEL WEAK PCF FROM SPARSE LPN}
+
+\newcommand{\Adv}{\mathcal{A}}
+\newcommand{\Corr}{\mathcal{Y}}
+\newcommand{\F}{\mathbb{F}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Gen}{\mathsf{Gen}}
+\newcommand{\Eval}{\mathsf{Eval}}
+\newcommand{\SparseLPN}{\mathsf{SparseLPN}}
+\newcommand{\SparseCodeGen}{\mathsf{SparseCodeGen}}
+\newcommand{\Reg}{\mathsf{Reg}}
+\newcommand{\bits}{\{0,1\}}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{A Standard-Model Weak PCF from Sparse LPN}
+\cjsubtitle{Every earlier pseudorandom correlation function was already
+  standard-model secure on random inputs. Can one based on sparse LPN
+  be, when the oracle is what samples the code?}
+\cjstatus{Statement: AI-written from Lennart Braun, Geoffroy Couteau,
+  Kelsey Melissaris, Mahshid Riahinia and Elahe Sadeghi, \emph{Fast
+  Pseudorandom Correlation Functions from Sparse LPN}, IACR ePrint
+  2025/1644; ASIACRYPT 2025. Not yet checked by a human. Open: the
+  source poses it as the second of its two open questions, and the
+  direction fixed below is this page's reading rather than the source's
+  claim. Unlike its companion, this one comes with a named obstruction
+  from the source, and an independent follow-up construction reports the
+  random oracle as inherent to the same recursion.}
+\cjcategory{\emph{MPC}, \emph{Idealized Models}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+A pseudorandom correlation function is \emph{weak} if its outputs only
+have to look correlated-random when the parties evaluate it at uniformly
+random inputs, and \emph{strong} if they may evaluate it anywhere. The
+gap between the two is usually free: hash the input first, and a weak
+PCF becomes a strong one in the random oracle model. So every PCF before
+the source paper's was already secure in the standard model in its weak
+form, and used its random oracle only for that final boost. The source's
+construction is the first where the oracle does something the standard
+model cannot obviously imitate --- it is what samples the sparse code
+itself, adaptively, and the security reduction has to program it. This
+conjecture says the standard model can nevertheless supply a weak PCF
+from sparse LPN, closing the one respect in which basing a fast PCF on a
+well-studied assumption made the model worse.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+\paragraph{Weak versus strong, and the free boost.}
+A PCF is graded by which inputs the adversary controls
+(Definition~\ref{def:pcf}): a \emph{strong} PCF must survive queries of
+the adversary's choosing, a \emph{weak} one only uniformly random
+queries. The gap is bridged by the \emph{hash-then-evaluate} paradigm:
+evaluate the weak PCF at $H(x)$ for a random oracle $H$, and arbitrary
+inputs become random ones. Brzuska, Couteau, Egger, Karanko and
+Meyer~\cite{BCEKM24} study exactly when that boost can be instantiated
+without an oracle. The consequence for this line of work is the one the
+source names: ``Intriguingly, all previous PCF candidates were secure in
+the standard model when targeting only weak security, as the random
+oracle was used only as a generic strategy to boost from weak to strong
+by hashing the input''. The oracle was a convenience, and dropping the
+strong/weak distinction dropped it.
+
+\paragraph{Why the source's oracle is not that oracle.}
+The source's construction reaches a superpolynomially long correlation
+by iterating a sparse-LPN expansion $L$ times, and the matrices
+$A^{(1)}, \dots, A^{(L)}$ of that recursion are far too large to write
+down. So they are not written down: the $i$-th row of $A^{(\ell)}$ is
+\emph{defined} as the output of a random oracle on $i$, and the
+outermost matrix has one row per PCF input, sampled from the oracle at
+evaluation time. Consistency across inputs is what this buys --- every
+sampled vector must be a row of the same product of sparse matrices ---
+and it is why the oracle is load-bearing rather than cosmetic. The
+source's own account: ``in our setting, the random oracle is used
+adaptively to sample rows of a product of matrices'' via a $k$-ary hash
+tree, ``and it is unclear how to replace the RO with standard model
+primitives. The reduction from sparse-LPN requires programming the RO,
+and it is unclear how the reduction would work otherwise''. The obvious
+substitution is named and priced: ``for instance, using a PRF instead of
+a RO (with key known to all parties) requires a new `sparse-LPN with
+pseudorandom matrix' assumption, a plausible but non-standard variant
+of LPN''.
+
+\paragraph{The question.}
+Under the heading ``Open Questions. We mention two interesting open
+questions:'', the source asks second: ``Is it possible to get rid of the
+random oracle model by settling for a weak PCF (that is only required to
+be secure on random inputs)?''
+
+\paragraph{What this page fixes and the source does not.}
+The source asks; this page states, and fixes the affirmative direction.
+That choice is this page's. A refutation --- for instance a proof that
+any PCF for VOLE from sparse LPN with superpolynomially many outputs
+requires an idealized object --- would settle the source's question
+equally well, and would be the more surprising outcome. Two further
+readings are this page's own. First, the conjecture asks for
+superpolynomially many outputs (Conjecture~\ref{conj:main}), because a
+weak PCF with only polynomially many outputs is a pseudorandom
+correlation \emph{generator} in disguise and would not answer the
+question the source is asking. Second, ``from sparse LPN'' is read
+strictly, as the assumption of Definition~\ref{def:slpn}: a construction
+whose security rests on the `sparse-LPN with pseudorandom matrix'
+variant the source describes would not settle this, since that variant
+is exactly the cost the source objects to paying.
+
+\section{Notation and parameters}\label{sec:notation}
+
+\begin{itemize}[nosep]
+  \item $\lambda$ is the security parameter, $n$ the LPN dimension, $m$
+    the number of samples, $k$ the row sparsity, $t$ the noise weight.
+  \item $\SparseCodeGen(k, m, n, \F)$ outputs a uniformly random matrix
+    in $\F^{m \times n}$ with exactly $k$ non-zero entries per row.
+  \item $\Reg_{t}(m, \F)$ is the regular noise distribution: $t$
+    concatenated blocks of length $m/t$, each a uniformly random unit
+    vector.
+  \item A \emph{subfield VOLE correlation} of dimension $n$ over
+    $\F_{p^{r}}$ is a tuple $((u, v), (\Delta, w))$ with
+    $u \in \F_{p}^{n}$, $v, w \in \F_{p^{r}}^{n}$,
+    $\Delta \in \F_{p^{r}}$ and $w - v = \Delta \cdot u$.
+  \item \emph{Standard model} means the construction and its security
+    reduction are given no idealized primitive: no random oracle, no
+    generic group, no ideal cipher.
+\end{itemize}
+
+\begin{definition}[Sparse LPN, the source's Definition 5]\label{def:slpn}
+$\SparseLPN(k, n, m, \Reg_{t}, \F)$ is the assumption that
+\[
+  (A, A \cdot s + e) \approx_{c} (A, y),
+\]
+where $A \sample \SparseCodeGen(k, m, n, \F)$, $s \sample \F^{n}$,
+$e \sample \Reg_{t}(m, \F)$ and $y \sample \F^{m}$.
+\end{definition}
+
+\begin{definition}[Weak PCF, the source's Definition 9 read weakly, after~\cite{BCGIKS20}]\label{def:pcf}
+Let $\Corr$ be a reverse-sampleable correlation. A pair $(\Gen, \Eval)$,
+with $\Gen(1^{\lambda})$ PPT outputting keys $(k_{0}, k_{1})$ and
+$\Eval(\sigma, k_{\sigma}, x)$ deterministic polynomial-time on inputs
+$x \in \bits^{n(\lambda)}$, is a \emph{weak} PCF for $\Corr$ if for
+every non-uniform polynomial-size adversary $\Adv$ making at most
+$N(\lambda)$ queries, each answered at a \emph{uniformly random} input
+$x$, and all large enough $\lambda$, both of the following advantages
+are negligible:
+\begin{itemize}[nosep]
+  \item \emph{pseudorandom $\Corr$-correlated outputs}: distinguishing
+    the pairs $(\Eval(0, k_{0}, x), \Eval(1, k_{1}, x))$ from fresh
+    samples of $\Corr$;
+  \item \emph{security}: for each $\sigma \in \bits$, given
+    $k_{\sigma}$, distinguishing $\Eval(1-\sigma, k_{1-\sigma}, x)$ from
+    $\Corr.\mathsf{RSample}(\sigma, \Eval(\sigma, k_{\sigma}, x))$.
+\end{itemize}
+A \emph{strong} PCF is the same with the inputs $x$ chosen by $\Adv$.
+\end{definition}
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{conjecture}[Standard-model weak PCF from sparse LPN]\label{conj:main}
+There exist a field $\F_{p^{r}}$, parameter functions
+$n(\lambda) = \poly(\lambda)$, $m(\lambda)$, $t(\lambda)$ and
+$k(\lambda)$, a superpolynomial function $N(\lambda)$, and a pair of
+algorithms $(\Gen, \Eval)$ with keys of size $\poly(\lambda)$ and
+polynomial-time evaluation, such that $(\Gen, \Eval)$ is a weak PCF
+(Definition~\ref{def:pcf}) for the subfield VOLE correlation over
+$\F_{p^{r}}$ supporting $N(\lambda)$ queries, in the standard model,
+assuming only that $\SparseLPN(k, n, m, \Reg_{t}, \F_{p})$ of
+Definition~\ref{def:slpn} is hard.
+\end{conjecture}
+
+\begin{remark}[Where the strength sits]
+Three clauses carry the content, and dropping any one makes the
+statement either known or uninteresting. First,
+\emph{superpolynomial $N$}: a
+weak PCF for polynomially many queries follows from a pseudorandom
+correlation generator, which sparse LPN already gives~\cite{BCGI18}.
+Second, \emph{standard model}: with a random oracle the source itself
+is the construction. Third,
+\emph{sparse LPN as stated}: the source explains that
+replacing its oracle by a keyed PRF buys a new `sparse-LPN with
+pseudorandom matrix' assumption instead, which does not count.
+\end{remark}
+
+\begin{remark}[The obstruction, as the source states it]
+The difficulty is not that the oracle boosts weak security to strong ---
+that use is what~\cite{BCEKM24} addresses, and is not what is happening
+here. It is that the oracle \emph{samples the code}, adaptively and
+consistently: the row of the product
+$A^{(L)} A^{(L-1)} \cdots A^{(L-r)}$ associated with an input $x$ is
+computed by a $k$-ary hash tree of oracle calls, so that every input's
+row belongs to one and the same product of sparse matrices, chosen on
+the fly. The reduction to sparse LPN then needs to program the oracle in
+order to plant a challenge matrix inside that tree. A standard-model
+substitute has to reproduce both properties at once: public
+reproducibility of the code by both parties, and enough of a handle on
+its distribution to carry a reduction. The source, and this page, know
+of no candidate primitive that does.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem[Ale03]{Ale03}
+Michael Alekhnovich.
+\emph{More on average case vs approximation complexity}.
+44th Annual Symposium on Foundations of Computer Science (FOCS), 2003.
+
+\bibitem[BCEKM24]{BCEKM24}
+Chris Brzuska, Geoffroy Couteau, Christoph Egger, Pihla Karanko and
+Pierre Meyer.
+\emph{Instantiating the hash-then-evaluate paradigm: strengthening PRFs,
+PCFs, and OPRFs}.
+SCN 2024, Part~II\@.
+The study of when the weak-to-strong boost needs an oracle.
+
+\bibitem[BCGI18]{BCGI18}
+Elette Boyle, Geoffroy Couteau, Niv Gilboa and Yuval Ishai.
+\emph{Compressing vector OLE}.
+ACM CCS 2018.
+
+\bibitem[BCGIKS20]{BCGIKS20}
+Elette Boyle, Geoffroy Couteau, Niv Gilboa, Yuval Ishai, Lisa Kohl and
+Peter Scholl.
+\emph{Correlated pseudorandom functions from variable-density LPN}.
+61st Annual Symposium on Foundations of Computer Science (FOCS), 2020.
+Where the weak and strong PCF notions are defined.
+
+\bibitem[BCGIKRS22]{BCGIKRS22}
+Elette Boyle, Geoffroy Couteau, Niv Gilboa, Yuval Ishai, Lisa Kohl,
+Nicolas Resch and Peter Scholl.
+\emph{Correlated pseudorandomness from expand-accumulate codes}.
+CRYPTO 2022, Part~II\@.
+
+\bibitem[BCMRS25]{BCMRS25}
+Lennart Braun, Geoffroy Couteau, Kelsey Melissaris, Mahshid Riahinia and
+Elahe Sadeghi.
+\emph{Fast pseudorandom correlation functions from sparse LPN}.
+IACR ePrint 2025/1644; ASIACRYPT 2025.
+The source: the two open questions are on p.\ 10, the oracle-sampled
+matrices on pp.\ 8--9, and Definitions 5 and 9 on pp.\ 11 and 13.
+
+\bibitem[HR25]{HR25}
+Sebastian Hasler and Pascal Reisert.
+\emph{Pseudorandom correlation functions for multiparty Beaver triples
+from sparse LPN}.
+IACR ePrint 2025/2002, December 2025.
+Reports the same obstruction independently, for the same recursion:
+``The random oracle is inherent to our construction, since the inputs to
+the random oracles can overlap across different PCF queries. Therefore,
+we do not obtain a weak PCF in the standard model''.
+[UNVERIFIED]
+
+\bibitem[OSY21]{OSY21}
+Claudio Orlandi, Peter Scholl and Sophia Yakoubov.
+\emph{The rise of Paillier: homomorphic secret sharing and public-key
+silent OT}.
+EUROCRYPT 2021, Part~I\@.
+
+\end{conjurabibliography}
+
+\end{document}

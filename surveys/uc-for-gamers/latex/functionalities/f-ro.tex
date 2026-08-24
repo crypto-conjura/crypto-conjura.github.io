@@ -1,0 +1,67 @@
+%% The interface box of f-ro, the one source for both the book
+%% and uc/.../f-ro/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fro$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \emptyset$, \quad $\pars := \kappa$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{Reg} \gets \emptyset$
+  \Comment{the party set, empty until parties ask}
+\State $\V{H}[*] \gets \unset$
+  \Comment{the table, drawn lazily}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Register}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F \neq \Apid \ \vee\ \id.P \in \Cs$} \label{ln:frobehalf}
+  \Comment{the adversary may act only for a corrupt party}
+\State $\V{Reg} \gets \V{Reg} \cup \{\id.P\}$
+\State \textbf{return} $\id.P$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Deregister}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P \in \V{Reg} \ \wedge\ (\id'.F \neq \Apid \ \vee\ \id.P \in \Cs)$}
+\State $\V{Reg} \gets \V{Reg} \setminus \{\id.P\}$ \label{ln:frodrop}
+\State \textbf{return} $\id.P$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Eval}(x)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P \in \V{Reg} \ \wedge\ (\id'.F \neq \Apid \ \vee\ \id.P \in \Cs)$} \label{ln:froaccess}
+  \Comment{registration is the whole access control}
+\If{$\V{H}[x] = \unset$}
+  \State $\V{H}[x] \gets_{\$} \{0,1\}^{\kappa}$ \label{ln:frodraw}
+\EndIf
+\State \textbf{return} $\V{H}[x]$ \label{ln:froanswer}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $\V{Reg}$ \label{ln:froleak}
+  \Comment{who is registered, and nothing about $\V{H}$}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

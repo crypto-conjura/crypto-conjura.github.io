@@ -1,0 +1,156 @@
+%% The interface box of f-cred, the one source for both the book
+%% and uc/.../f-cred/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fdaa$ \ (sign, verify, link) \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := (I, l)$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{Alg} = (\V{sig}, \V{ver}, \V{link}, \V{ident}, \V{ukgen})$
+  \Comment{the five algorithms, all chosen by $\Adv$}
+\State $\V{Mem} \ni \langle M, H, \mathit{gsk}\rangle$; \ $\V{DK} \ni \langle M, \mathit{bsn}, \mathit{gsk}\rangle$
+\State $\V{Signed} \ni \langle \sigma, \msg, \mathit{bsn}, M\rangle$; \ $\V{VR} \ni \langle \sigma, \msg, \mathit{bsn}, \mathit{RL}, f\rangle$
+\State $\V{S}[*] \gets \unset$
+  \Comment{sign session records}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{SignRequest}(s, M, \msg, \mathit{bsn})$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{S}[s] = \unset$}
+\Req{$I \in \Cs \ \vee\ \exists\, \langle M, \id.P, *\rangle \in \V{Mem}$} \label{ln:daamember}
+  \Comment{an honest issuer admits only members}
+\State $\V{S}[s] \gets (M, \id.P, \msg, \mathit{bsn}, \op{request})$
+\State $\Adv\bigl(\id.\op{SignStart}, s, l(\msg, \mathit{bsn}), M, \id.P\bigr)$ \label{ln:daasignleak}
+  \Comment{only $l$ of the message and basename}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{SignDeliver}(s)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F = \Apid \ \wedge\ \V{S}[s] = (M, H, \msg, \mathit{bsn}, \op{request})$}
+\State $\V{S}[s] \gets (M, H, \msg, \mathit{bsn}, \op{delivered})$
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{SignProceed}(s)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{S}[s] = (\id.P, H, \msg, \mathit{bsn}, \op{delivered})$} \label{ln:daatpmconsent}
+  \Comment{the TPM consents, having been shown $\msg$}
+\State $\V{S}[s] \gets (\id.P, H, \msg, \mathit{bsn}, \op{complete})$
+\State $\Adv\bigl(\id.\op{SignComplete}, s\bigr)$
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{SignGen}(s, \sigma)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F = \Apid \ \wedge\ \V{S}[s] = (M, H, \msg, \mathit{bsn}, \op{complete})$}
+\If{$M \notin \Cs \ \wedge\ H \notin \Cs$}
+  \State $\mathit{gsk} \gets \unset$
+  \If{$\mathit{bsn} \neq \none \ \wedge\ \langle M, \mathit{bsn}, g\rangle \in \V{DK}$}
+    \State $\mathit{gsk} \gets g$ \label{ln:daareuse}
+      \Comment{one key per basename, so signatures link}
+  \EndIf
+  \If{$\mathit{gsk} = \unset$}
+    \State $\mathit{gsk} \gets \V{Alg}.\V{ukgen}()$
+    \Req{$\op{CheckGskHonest}(\mathit{gsk})$} \label{ln:daav}
+    \State $\V{DK} \gets \V{DK} \cup \{\langle M, \mathit{bsn}, \mathit{gsk}\rangle\}$
+  \EndIf
+  \State $\sigma \gets \V{Alg}.\V{sig}(\mathit{gsk}, \msg, \mathit{bsn})$ \label{ln:daafresh}
+    \Comment{the adversary's $\sigma$ is discarded}
+  \Req{$\V{Alg}.\V{ver}(\sigma, \msg, \mathit{bsn}) = 1$} \label{ln:daavi}
+  \Req{$\V{Alg}.\V{ident}(\sigma, \msg, \mathit{bsn}, \mathit{gsk}) = 1$} \label{ln:daavii}
+  \Req{$\neg\exists\, \langle M', *, g'\rangle \in \V{Mem} \cup \V{DK} : M' \neq M \wedge \V{Alg}.\V{ident}(\sigma, \msg, \mathit{bsn}, g') = 1$} \label{ln:daaviii}
+    \Comment{no second owner}
+\EndIf
+\If{$M \notin \Cs$}
+  \State $\V{Signed} \gets \V{Signed} \cup \{\langle \sigma, \msg, \mathit{bsn}, M\rangle\}$ \label{ln:daarecord}
+    \Comment{recorded for an honest TPM, even a corrupt host's}
+\EndIf
+\State \textbf{return} $\sigma$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Verify}(\msg, \mathit{bsn}, \sigma, \mathit{RL})$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $K \gets \{(g, M) : \langle M,*,g\rangle \in \V{Mem} \cup \V{DK},$
+\Statex \quad\ $\V{Alg}.\V{ident}(\sigma, \msg, \mathit{bsn}, g) = 1\}$ \label{ln:daaowners}
+\State $f \gets \unset$
+\If{$|K| > 1$}
+  \State $f \gets 0$ \label{ln:daaix}
+\EndIf
+\If{$I \notin \Cs \ \wedge\ K = \emptyset$}
+  \State $f \gets 0$ \label{ln:daax}
+    \Comment{no membership, no signature}
+\EndIf
+\If{$\exists\, (g,M) \in K : M \notin \Cs \wedge \neg\exists\, \langle *, \msg, \mathit{bsn}, M\rangle \in \V{Signed}$}
+  \State $f \gets 0$ \label{ln:daaxi}
+    \Comment{unforgeability against an honest TPM}
+\EndIf
+\If{$\exists\, g' \in \mathit{RL} : \V{Alg}.\V{ident}(\sigma, \msg, \mathit{bsn}, g') = 1 \wedge \neg\exists\, (g,M) \in K : M \notin \Cs$}
+  \State $f \gets 0$ \label{ln:daaxii}
+    \Comment{revocation, with honest owners exempt}
+\EndIf
+\If{$f = \unset$}
+  \State $f \gets \V{Alg}.\V{ver}(\sigma, \msg, \mathit{bsn})$ \label{ln:daaxiii}
+\EndIf
+\State $\V{VR} \gets \V{VR} \cup \{\langle \sigma, \msg, \mathit{bsn}, \mathit{RL}, f\rangle\}$ \label{ln:daaverrec}
+\State \textbf{return} $f$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Link}(\sigma, \msg, \sigma', \msg', \mathit{bsn})$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\mathit{bsn} \neq \none$}
+\If{$\id.\opl{Verify}(\msg, \mathit{bsn}, \sigma, \emptyset) \neq 1 \ \vee\ \id.\opl{Verify}(\msg', \mathit{bsn}, \sigma', \emptyset) \neq 1$}
+  \State \textbf{return} $\none$ \label{ln:daaxiv}
+    \Comment{both must verify first}
+\EndIf
+\State $f \gets \unset$
+\If{$\exists\, \langle *,*,g\rangle \in \V{Mem} \cup \V{DK} : \V{Alg}.\V{ident}(\sigma, \msg, \mathit{bsn}, g) \neq \V{Alg}.\V{ident}(\sigma', \msg', \mathit{bsn}, g)$}
+  \State $f \gets 0$ \label{ln:daaxv}
+\EndIf
+\If{$\exists\, \langle *,*,g\rangle \in \V{Mem} \cup \V{DK} : \V{Alg}.\V{ident}(\sigma, \msg, \mathit{bsn}, g) = \V{Alg}.\V{ident}(\sigma', \msg', \mathit{bsn}, g) = 1$}
+  \State $f \gets 1$ \label{ln:daaxvi}
+    \Comment{and this overrides the line above}
+\EndIf
+\If{$f = \unset$}
+  \State $f \gets \V{Alg}.\V{link}(\sigma, \msg, \sigma', \msg', \mathit{bsn})$
+\EndIf
+\State \textbf{return} $f$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $\bigl(\{\langle M,H,g\rangle \in \V{Mem} : \id.P \in \{M,H\}\},$
+\Statex \quad\ $\{\langle M,b,g\rangle \in \V{DK} : \id.P = M\},\ \V{Signed},\ \V{VR}\bigr)$ \label{ln:daaleak}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

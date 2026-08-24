@@ -1,0 +1,97 @@
+%% The interface box of f-mix, the one source for both the book
+%% and uc/.../f-mix/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fmn$ \\
+\params{$\PID$, \quad $\Ps := \mathbf{Snd} \cup \mathbf{Mix}$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := (G_q, k)$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{L} \gets ()$
+  \Comment{accepted messages, in acceptance order}
+\State $\V{D}[*] \gets \unset$; \ $\V{c} \gets 0$
+  \Comment{registered inputs, indexed by arrival}
+\State $\V{Js} \gets \emptyset$; \ $\V{Jm} \gets \emptyset$
+  \Comment{senders and mix-servers already counted}
+\State $\V{out} \gets \unset$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Send}(\msg)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P \in \mathbf{Snd} \ \wedge\ \msg \in G_q \ \wedge\ \id.P \notin \V{Js}$}
+\Req{$\V{out} = \unset$} \label{ln:mnclosed}
+  \Comment{once the output is fixed, nothing is accepted}
+\State $\V{D}[\V{c}] \gets (\id.P, \msg)$; \ $\V{c} \gets \V{c} + 1$
+\State $\Adv\bigl(\id.\op{Send},\ \id.P,\ \V{c} - 1\bigr)$ \label{ln:mnregleak}
+  \Comment{who registered and where, never what}
+\State \textbf{return} $\V{c} - 1$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Run}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P \in \mathbf{Mix} \ \wedge\ \V{out} = \unset$}
+\State $\V{D}[\V{c}] \gets (\id.P, \none)$; \ $\V{c} \gets \V{c} + 1$
+\State $\Adv\bigl(\id.\op{Run},\ \id.P,\ \V{c} - 1\bigr)$
+\State \textbf{return} $\V{c} - 1$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{AcceptInput}(t)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F = \Apid \ \wedge\ \V{D}[t] \neq \unset \ \wedge\ \V{out} = \unset$} \label{ln:mngate}
+  \Comment{no input counts until the adversary lets it}
+\State $(P, \msg) \gets \V{D}[t]$
+\If{$\msg \neq \none \ \wedge\ P \notin \V{Js}$}
+  \State $\V{L} \gets \V{L} \,\|\, \msg$; \ $\V{Js} \gets \V{Js} \cup \{P\}$ \label{ln:mnappend}
+  \State $\Adv\bigl(\id.\op{AcceptInput},\ P\bigr)$
+\EndIf
+\If{$\msg = \none$}
+  \State $\V{Jm} \gets \V{Jm} \cup \{P\}$
+\EndIf
+\If{$|\V{Jm}| > k/2$}
+  \State $\V{out} \gets \op{Sort}(\V{L})$ \label{ln:mnsort}
+    \Comment{a majority of mix-servers, and the order is gone}
+\EndIf
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Fetch}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P \in \mathbf{Mix} \ \wedge\ \V{out} \neq \unset$} \label{ln:mnnosender}
+  \Comment{mix-servers receive the output; senders do not}
+\State \textbf{return} $\V{out}$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$\id.P \in \mathbf{Snd}$}
+  \State \textbf{return} $\bigl(\{\msg : \exists\, t\, .\ \V{D}[t] = (\id.P, \msg)\},\ \V{out}\bigr)$ \label{ln:mnleaksnd}
+    \Comment{a sender's own submission, and no other's}
+\EndIf
+\State \textbf{return} $\V{out}$ \label{ln:mnleakout}
+  \Comment{the output is public the moment it exists}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

@@ -1,13 +1,46 @@
 ---
 title: "F-incoerc — Incoercible, receipt-free computation"
-status: "Canonical"
+status: "Emerging"
 layer: 6
-definition: "Not yet written"
+definition: "No canonical definition"
 ---
 
-*F-incoerc* (Incoercible, receipt-free computation) is part of *Secret Sharing, Threshold Cryptography, MPC* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+*F-incoerc* (Incoercible, receipt-free computation) is part of *Secret Sharing, Threshold Cryptography, MPC* in the UC functionality encyclopedia. Status: an emerging formulation, still an active area of research.
+
+**Both cited papers were read, and neither prints an incoercible-computation functionality — because in both, incoercibility is a *quantifier structure* rather than a box.** One states it as a new realization relation between an ordinary functionality and a protocol; the other states it as a *transformation* applicable to any functionality. Those are two different, both perfectly precise, answers to the question this slot asks, and neither of them is something a page can carry as an interface.
+
+## Why there is no box
+
+**Alwen, Ostrovsky, Zhou and Zikas define a new realization relation, not a functionality.** Their **Definition 1 (UC Incoercibility)** reads: "Let $\pi$ be an $n$-party protocol and for an $n$-party functionality $\mathcal{F}$ let [$\phi$] denote the dummy $\mathcal{F}$-hybrid protocol, and let $\mathcal{C}$ be a coercion. We say that $\pi$ $\mathcal{C}$-IUC realizes $\mathcal{F}$ if for every $i \in [n]$ and every ideal deception strategy $\mathcal{D}_{I}^{i}$ there exists a real deception strategy $\mathcal{D}_{R}^{i}$ with the following property. For every adversary $\mathcal{A}$ there exists a simulator $\mathcal{S}$ such that for any set $\mathcal{D}_{I}^{J}$ and every environment $\mathcal{Z}$" the two executions are indistinguishable. The functionality $\mathcal{F}$ is a *parameter* of this definition — any functionality — and everything that makes the statement about coercion lives in the two new quantifiers over deception strategies and in the coercion transformation $\mathcal{C}$ applied to the protocol.
+
+Their informal statement of the intent makes the same point: "for any (ideal-world) deception strategy that the coerced party would follow in the ideal world — where the functionality takes care of the computation — there exists a corresponding (real-world) deception strategy that he can play in the real world" such that a coercer's distinguishing advantage between deceiving and not deceiving is the same in both worlds. Note where the work is done: **the environment plays the coercer**, and coercion is "a transformation applied on its protocol, which specifies the control the environment/coercer has on a corrupted party". A functionality has no protocol to transform.
+
+**Canetti, Goldwasser and Poburinnaya answer the same question the other way, and their answer is the closest thing to a box.** They call a functionality **incoercible** when its corruption behaviour changes: "Whenever the ideal functionality is asked by the ideal-model adversary to provide the internal information of some participant $P$ … the ideal functionality first asks the environment" whether to reveal the real input or a fake value, and returns whichever the environment names; "a protocol $\pi$ is incoercible if it UC-emulates an incoercible ideal functionality $\mathcal{F}$". That is a *predicate on functionalities* plus a recipe for modifying one — so what a reader wants from this page, if they want anything transcribable, is the recipe. It applies to every functionality in this encyclopedia and belongs to none of them.
+
+**Canetti and Gennaro 1996 predates all of it.** Their paper is the origin of the notion and contains no ideal functionality of any kind: incoercibility there is a property of a protocol whose "public transcript of the communication can be used as an involuntary commitment of the parties to their inputs and outputs", and the technique is deniable encryption — with a candour worth recording, since they note that "current constructions of deniable encryption fail to reduce the probability of successful coercion below" a constant and that this "propagates to our construction".
+
+**The comparison this encyclopedia already has.** [F-eqv](/uc/layer-4-commitments-proofs/f-eqv/index.qmd) and [F-NMCOM](/uc/layer-4-commitments-proofs/f-nmcom/index.qmd) are the two existing pages whose finding is that a property lives in the simulator or in the framework rather than in a box, and [F-NCE](/uc/layer-3-public-key-primitives/f-nce/index.qmd) is a third. Incoercibility is a fourth of the same kind, with one difference that makes it the sharpest of the four: here a paper has actually written down the modification, so the object is *available* — it is just not a functionality.
+
+## What the printed functionalities in these papers are
+
+- **A threshold encryption token** (Alwen et al., Fig. 2, PDF p. 15). Parameterized by an IND-CPA secure encryption scheme, it is a *tool* for their construction, not the object of their theorem. It has no page here.
+- **The incoercible-functionality transformation** (Canetti, Goldwasser and Poburinnaya, §1–§2). Described above; not printed as a numbered box.
+- Alwen et al.'s headline application is **universally composable receipt-free voting**, which is the closest neighbour to [F-vote](/uc/layer-8-time-application/f-vote/index.qmd) — that page's own source prints a self-tallying election functionality, and comparing the two is the natural next piece of work here.
+
+## What would resolve this
+
+1. **Transcribe the transformation rather than a functionality**, and give this encyclopedia a place to put it. The Canetti–Goldwasser–Poburinnaya construction is short, precise, and applies uniformly: given any $\mathcal{F}$, its incoercible version consults the environment before answering a leak. That is a *page about a construction on boxes*, which is a kind of page this site does not currently have — and inventing the category is an editorial decision, not a transcription.
+2. **Find a paper that prints an incoercible SFE functionality concretely** — one specific $\mathcal{F}_{f}$ with the environment-consulting leak written into it. Alwen et al. come closest, writing $\mathcal{F}_{f}$ for "the incoercible ideal functionality that computes $f$", but they do not print its code.
+3. **Retire the slot** if incoercibility is, as both papers effectively argue, a property of the *relation* between protocol and functionality. That would be consistent with how this encyclopedia treats non-malleability on [F-NMCOM](/uc/layer-4-commitments-proofs/f-nmcom/index.qmd).
+
+Until one of those happens, this page's `definition` field reads *No canonical definition*, which `scripts/uc_status.py` treats as a claim a human may write and a script may not.
+
+## Formal artifacts
+
+No machine-checked formalization yet, and none is possible before there is a definition to formalize.
 
 *References:*
 
-- Alwen, Ostrovsky, Zhou, and Zikas. [*Incoercible multi-party computation and universally composable receipt-free voting*](https://web.cs.ucla.edu/~rafail/PUBLIC/182.pdf). In Advances in Cryptology – CRYPTO 2015, volume 9216 of LNCS, pages 763–780, 2015.
-- Canetti and Gennaro. [*Incoercible multiparty computation*](https://eprint.iacr.org/1996/001). In 37th IEEE Symposium on Foundations of Computer Science (FOCS), 1996.
+- Alwen, Ostrovsky, Zhou, and Zikas. [*Incoercible multi-party computation and universally composable receipt-free voting*](https://web.cs.ucla.edu/~rafail/PUBLIC/182.pdf). In Advances in Cryptology – CRYPTO 2015, volume 9216 of LNCS, pages 763–780, 2015. Read at the linked copy. Definition 1 (UC Incoercibility) is the object, and it is a realization relation parameterized by an arbitrary functionality; §2 for the quantifier structure and for coercion as a transformation on protocols; Fig. 1, PDF p. 9 for the four-world diagram; Fig. 2, PDF p. 15 for the threshold encryption token, which is a tool rather than the definition. Prints no incoercible-computation functionality.
+- Canetti, Goldwasser, and Poburinnaya. [*Adaptively secure two-party computation from indistinguishability obfuscation*](https://eprint.iacr.org/2014/845). In 12th Theory of Cryptography Conference (TCC), Part II, pages 557–585, 2015. Read at revision `20160223:012320`, the newer of two postings. Defines what it is for a functionality to *be* incoercible — the environment-consulting leak quoted above — and proves its protocol incoercible in that sense. This is the transformation described above, and the reason this page is not empty. Added for this entry; it was not among the stub's citations. See also [F-obf](/uc/layer-3-public-key-primitives/f-obf/index.qmd), which reads the same paper for the other half of its content.
+- Canetti and Gennaro. [*Incoercible multiparty computation*](https://eprint.iacr.org/1996/001). In 37th IEEE Symposium on Foundations of Computer Science (FOCS), 1996. Read as the PostScript-only posting, dated 7 August 1996 and headed "(Extended Abstract)"; the PDF read here was produced with Ghostscript, 20 pages. Prints no ideal functionality — it predates the framework — and states incoercibility as a property of a protocol built from deniable encryption, with an explicit caveat that the coercion probability its deniable-encryption constructions achieve is not negligible.

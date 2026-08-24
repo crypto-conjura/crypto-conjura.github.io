@@ -1,12 +1,107 @@
 ---
-title: "F-ledger — Transaction ledger"
+title: "F-ledger — Account-balance ledger"
 status: "Canonical"
 layer: 1
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-ledger* (Transaction ledger) is part of *Channels, Agreement, Ledgers* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+*F-ledger* (Account-balance ledger) is part of *Channels, Agreement, Ledgers* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+
+Twelve lines: a vector of non-negative balances, one credit interface, one atomic multi-debit interface, and no way for a party to touch either. It is the minimum a payment-channel construction needs from a blockchain, and it is worth having next to [G-ledger](/uc/layer-1-channels-agreement-ledgers/g-ledger/index.qmd) precisely because it is *not* the same object: this one records money, not a transaction log, and it has no notion of a chain, a validity predicate, or a state that different parties see differently.
+
+## Functionality
+
+Reading the box: $\mathbf{Std}$ is the role of an ordinary party in a caller's id, so $\mathit{id}'.F \neq \mathbf{Std}$ says the caller is not one; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it. $\mathbf{x}^{0}$, the parameter on the header line, is the opening balance vector. $\mathbf{U} := \varnothing$: the box places no calls, and in particular never asks the adversary anything.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\widehat{\mathcal{L}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \varnothing\), &nbsp; \(\mathit{par} := \mathbf{x}^{0}\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{x} : \widehat{\mathcal{L}}.\mathbf{P} \to \mathbb{R}_{\geq 0}\)</li>
+<li>\(\mathtt{x}[P] \gets \mathbf{x}^{0}[P]\) &nbsp;for each \(P \in \widehat{\mathcal{L}}.\mathbf{P}\)<span class="cj-comment">// the opening balances, an input</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Add(<span class="cj-id">P</span>, <span class="cj-id">y</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="3">
+<li>\(\textbf{require}\ \mathit{id}'.F \neq \mathbf{Std} \ \wedge\ P \in \widehat{\mathcal{L}}.\mathbf{P} \ \wedge\ y \in \mathbb{R}_{\geq 0}\)<span class="cj-comment">// no party operates on the ledger itself</span></li>
+<li>\(\mathtt{x}[P] \gets \mathtt{x}[P] + y\)</li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Remove(<span class="cj-id">W</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="6">
+<li>\(\textbf{require}\ \mathit{id}'.F \neq \mathbf{Std} \ \wedge\ W \subseteq \widehat{\mathcal{L}}.\mathbf{P} \times \mathbb{R}_{\geq 0}\)</li>
+<li>\(\textbf{require}\ P \neq P'\) for distinct \((P, y), (P', y') \in W\)<span class="cj-comment">// one debit per account per call</span></li>
+<li>\(\textbf{if}\ \exists\, (P, y) \in W : \mathtt{x}[P] < y\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \mathsf{nofunds}\)</span><span class="cj-comment">// all or nothing: no partial debit</span></li>
+<li>\(\mathtt{x}[P] \gets \mathtt{x}[P] - y\) &nbsp;for each \((P, y) \in W\)</li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="12">
+<li>\(\textbf{return}\ \mathtt{x}\)<span class="cj-comment">// balances on a ledger are public</span></li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+The box is transcribed from Dziembowski, Faust and Hostáková, *General state channel networks*, ePrint 2018/320, revision `20180822:133632`, Figure 4, p. 13 (the PDF's numbering and the printed numbering agree) — the functionality $\widehat{\mathcal{L}}$.
+
+**Retitled from "Transaction ledger".** The printed box has no transactions in it. It stores $(x_1, \ldots, x_n) \in \mathbb{R}^{n}_{\geq 0}$ — "each $x_i$ is the amount of coins that $P_i$ owns" — and the only two things that happen to it are a credit and a set of debits. A transaction log with a validity predicate and per-party views is [G-ledger](/uc/layer-1-channels-agreement-ledgers/g-ledger/index.qmd)'s object, and the two pages exist because the two objects do.
+
+**This box is local as printed and global as used, which is the interesting thing about it.** Figure 4 is headed "Functionality $\widehat{\mathcal{L}}$" and reads like any other functionality: parties $P_1, \ldots, P_n$, an environment, a state. Nothing in it pins a session identifier or admits every caller. Globality arrives one page later, in the source's Definition 1, which quantifies over environments and speaks of "a global ledger $\widehat{\mathcal{L}}(\Delta)$" — so the header line here keeps $\mathit{pid}$ a parameter, as printed, rather than pinning it the way [G-PKI](/uc/layer-0-idealized-setup/g-pki/index.qmd) and [G-RO](/uc/layer-0-idealized-setup/g-ro/index.qmd) do. Whether a box is global is a fact about how a theorem uses it, not a field the box carries, and this is as clean an example as the literature offers.
+
+Three lines carry the content:
+
+- **Line 3 is an access-control statement, and the source states it in prose.** "While parties $P_1, \ldots, P_n$ cannot directly perform operations on $\widehat{\mathcal{L}}$, the ideal functionalities can carry out add and remove operations on the $\widehat{\mathcal{L}}$ (and hence, indirectly, $P_i$'s can also modify $\widehat{\mathcal{L}}$, in a way that is 'controlled' by the functionalities)." A party's money moves only through a functionality that is willing to move it — which is what makes a channel construction meaningful, since the channel functionality is the thing that decides.
+- **Lines 8–10 are atomic, and that is the whole of the `remove` interface's content.** Every debit in the set is checked before any is applied, and a single shortfall aborts the lot with $\mathsf{nofunds}$. A construction that could be left half-debited would leak a failure into a partially-updated state.
+- **There is no read interface, and no `Δ`.** Nothing in the box returns a balance, and nothing in it delays anything. Both omissions are deliberate and both live outside: the delay is a wrapper the source describes in prose — "every time an ideal functionality issues an add or remove command, this command is sent to $\widehat{\mathcal{L}}$ within $\Delta$ rounds", with the exact round "determined by the adversary" — and $\widehat{\mathcal{L}}(\Delta)$ names the wrapped object, not a parameter of Figure 4. So $\Delta$ "models the fact that in cryptocurrencies updates on the ledger are not immediate", and it does so without appearing in the ledger at all.
+
+Where the source needed a decision:
+
+| Source | Box | Why |
+|---|---|---|
+| $\widehat{\mathcal{L}}$ "gets as input $(x_1, \ldots, x_n)$" | $\mathbf{x}^{0}$ on the header line, applied at line 2 | The vector arrives before any operation and never arrives again, which is what a parameter is here. |
+| Parties may not operate; the environment and ideal functionalities may | Line 3 and line 6: $\mathit{id}'.F \neq \mathbf{Std}$ | The source's restriction is exactly "not an ordinary party", and this framework's caller roles express that directly. |
+| No read interface | None added; $\mathsf{Leak}$ returns $\mathtt{x}$ (line 12) | A read interface would be an operation the source does not have, so none is written. $\mathsf{Leak}$ is required here regardless, and returning the whole vector is the conservative reading: balances on a real ledger are public, so a box that hid them from a corrupt party's adversary would claim a secrecy no blockchain provides. |
+| $\Delta$-delayed delivery of commands, adversary-scheduled | Not in the box | Kept out, as the source keeps it out. **A protocol proved against $\widehat{\mathcal{L}}(\Delta)$ is not proved against this box:** this one applies every credit and debit immediately, which is strictly stronger, and the delay is the whole reason the source's channel protocols need dispute timeouts. Anyone using this page for a channel proof needs the wrapper as well. |
+| Finite-precision non-negative reals | $\mathbb{R}_{\geq 0}$ | Kept as the source writes it. The finite-precision qualifier is about representability, not about the arithmetic at lines 4 and 10. |
+| The restricted environment class $\mathcal{E}_{\mathrm{res}}$ | Not in the box | The source's Definition 1 quantifies over a restricted class of environments — for instance forbidding $\mathcal{Z}$ "to instruct one party to start a protocol without instructing the other party to start the protocol as well" — and notes those restrictions "can easily be eliminated by integrating additional checks into the protocols and functionalities". None of them touches this box. |
+
+## Known realizations
+
+None, and none is offered: in the source this is a setup assumption standing for a cryptocurrency, on which the paper's channel constructions rest. What the source does with it is build upwards — the ledger is the bottom of a tower whose next floor is [F-chan](/uc/layer-8-time-application/f-chan/index.qmd), the state-channel functionality (Figure 6, p. 16), realized in the $\widehat{\mathcal{L}}(\Delta)$-hybrid model.
+
+The comparison worth drawing is with [G-ledger](/uc/layer-1-channels-agreement-ledgers/g-ledger/index.qmd)'s source, which goes the other way: it *realizes* a ledger functionality from the Bitcoin backbone protocol. A construction proved against $\widehat{\mathcal{L}}$ therefore assumes rather less than one proved against $\mathcal{G}_{\mathsf{ledger}}$ — it assumes balances, not a chain — and correspondingly says rather less about what an actual blockchain provides.
+
+## Properties
+
+- **Conservation, with probability exactly $1$ within the box:** balances change only at lines 4 and 10, and line 8 forbids a negative balance. There is no interface that mints or destroys money outside those two, and no interface by which the adversary alters a balance at all — the adversary appears nowhere in the box.
+- **Atomicity of a multi-party debit**, with probability exactly $1$: line 8 quantifies over the whole set before line 10 applies any of it.
+- **No confidentiality, and none claimed:** line 12 returns the whole balance vector to any caller's adversary.
+- **No availability guarantee and no ordering guarantee.** With the delay wrapper in place, the adversary chooses when a functionality's command lands, within $\Delta$; with the wrapper stripped away, as here, everything lands at once. Neither version says anything about the *order* in which two functionalities' commands are applied, which is a real gap between this abstraction and a chain.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Badertscher et al. [*Bitcoin as a transaction ledger: A composable treatment*](https://eprint.iacr.org/2017/149). In Advances in Cryptology – CRYPTO 2017, 2017.
+- Dziembowski, Faust, and Hostáková. [*General state channel networks*](https://eprint.iacr.org/2018/320). In ACM Conference on Computer and Communications Security (CCS), pages 949–966, 2018. Figure 4, p. 13 of revision `20180822:133632`, the newest of three postings — the definition transcribed above; §3.2, p. 13 for the $\Delta$-delay wrapper and the access restriction, and Definition 1, p. 13 for the global use.
+- Badertscher, Maurer, Tschudi, and Zikas. [*Bitcoin as a transaction ledger: A composable treatment*](https://eprint.iacr.org/2017/149). In Advances in Cryptology – CRYPTO 2017, Part I, volume 10401 of LNCS, pages 324–356, 2017. Prints $\mathcal{G}_{\mathsf{ledger}}$, a transaction-log ledger with per-party views and a validity predicate — a different object, and [G-ledger](/uc/layer-1-channels-agreement-ledgers/g-ledger/index.qmd)'s.

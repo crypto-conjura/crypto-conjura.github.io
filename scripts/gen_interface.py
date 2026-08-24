@@ -88,6 +88,7 @@ ATOMS = {"ok", "rej", "true", "false", "done"}
 # where the output is HTML rather than math.
 SIG_IDENTS = {
     "vk": "vk", "msg": "msg", "sigma": "&sigma;", "tau": "&tau;",
+    "lambda": "&lambda;", "Gamma": "&Gamma;", "pi": "&pi;",
     "id": "id", "PID": "pid",
 }
 
@@ -476,6 +477,10 @@ def sig_token(tok):
     m = re.fullmatch(r"\\(?:V|op|opl|opdef)\{([A-Za-z]+)\}", tok)
     if m:
         return '<span class="cj-rm">%s</span>' % m.group(1)
+    # `\mathit{pw}` in an argument list is a name, the same as a bare `pw`.
+    m = re.fullmatch(r"\\mathit\{([A-Za-z]+)\}", tok)
+    if m:
+        return '<span class="cj-id">%s</span>' % m.group(1)
     if tok.startswith("\\"):
         name = tok[1:]
         return '<span class="cj-id">%s</span>' % SIG_IDENTS.get(name, name)

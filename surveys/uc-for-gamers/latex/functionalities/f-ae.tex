@@ -1,0 +1,105 @@
+%% The interface box of f-ae, the one source for both the book
+%% and uc/.../f-ae/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Faead$ \\
+\params{$\PID$, \quad $\Ps := \{P_0, P_1\}$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves),\,(\Fmke,\serves),\,(\Flib,\serves)\}$, \quad $\pars := \none$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{k} \gets \unset$; \ $\V{I} \gets \unset$; \ $\V{st} \gets \none$
+  \Comment{the key, the internal code, and its state}
+\State $\V{c} \gets \unset$; \ $\V{m} \gets \unset$; \ $\V{N} \gets \unset$
+  \Comment{one ciphertext per instance, and its plaintext}
+\State $\V{S} \gets \unset$; \ $\V{rdy} \gets 0$; \ $\V{corr} \gets 0$
+\State $\V{Bad} \gets \emptyset$
+  \Comment{pairs already found not to authenticate}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Encrypt}(\msg, N)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P \in \Faead.\Ps \ \wedge\ \V{c} = \unset$} \label{ln:aeonce}
+  \Comment{one encryption per instance, and no second}
+\If{$\V{corr} = 1$}
+  \State $\V{c} \gets \San[\Clean_{c}]\bigl(\Adv(\id.\op{Encrypt}, \id.P, \msg, N)\bigr)$ \label{ln:aecorruptenc}
+\EndIf
+\If{$\V{corr} = 0$}
+  \State $\V{k} \gets \id_{\Fmke}.\fopl{Retrieve}() \text{ as } \id$ \label{ln:aegetkey}
+  \Req{$\V{k} \neq \none$}
+    \Comment{a deleted key means no encryption}
+  \State $\V{I} \gets \id_{\Flib}.\fopl{Code}() \text{ as } \id$ \label{ln:aecode}
+  \State $(\V{st}, \V{c}) \gets \V{I}\bigl(\V{st}, \op{Encrypt}, \id.P, |\msg|, N\bigr)$ \label{ln:aelenonly}
+    \Comment{the length only: the code cannot see $\msg$}
+\EndIf
+\State $\V{m} \gets \msg$; \ $\V{N} \gets N$; \ $\V{S} \gets \id.P$; \ $\V{rdy} \gets 1$
+\State \textbf{return} $\V{c}$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Decrypt}(c, N)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P \in \Faead.\Ps$}
+\If{$\V{corr} = 1$}
+  \State $v \gets \Adv\bigl(\id.\op{Decrypt}, \id.P, c, N\bigr)$ \label{ln:aeinject}
+    \Comment{a corrupt endpoint: $\Adv$ names the plaintext}
+  \If{$v = \none$}
+    \State $\V{Bad} \gets \V{Bad} \cup \{(c, N)\}$
+    \State \textbf{return} $\none$
+  \EndIf
+  \State \textbf{return} $v$
+\EndIf
+\State $\V{k} \gets \id_{\Fmke}.\fopl{Retrieve}() \text{ as } \id$
+\Req{$\V{k} \neq \none \ \wedge\ \V{c} \neq \unset \ \wedge\ \id.P \neq \V{S} \ \wedge\ \V{rdy} = 1$} \label{ln:aenotself}
+\Req{$(c, N) \notin \V{Bad}$} \label{ln:aeoncemore}
+  \Comment{the sender does not decrypt its own message}
+\State $\V{rdy} \gets 0$
+\If{$(c, N) = (\V{c}, \V{N})$}
+  \State \textbf{return} $\V{m}$ \label{ln:aecorrect}
+\EndIf
+\State $(\V{st}, v) \gets \V{I}\bigl(\V{st}, \op{Authenticate}, \id.P, c, N\bigr)$ \label{ln:aeauth}
+\If{$v = \none$}
+  \State $\V{Bad} \gets \V{Bad} \cup \{(c, N)\}$
+  \State \textbf{return} $\none$ \label{ln:aereject}
+\EndIf
+\State \textbf{return} $\V{m}$ \label{ln:aediffmac}
+  \Comment{a different string, the same plaintext}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P \in \Faead.\Ps$}
+\State $\V{k} \gets \id_{\Fmke}.\fopl{Retrieve}() \text{ as } \id$ \label{ln:aeleakkey}
+\State $\V{corr} \gets 1$ \label{ln:aecorrupt}
+\State $\msg^{*} \gets \none$
+\If{$\V{rdy} = 0 \ \wedge\ \V{m} \neq \unset$}
+  \State $\msg^{*} \gets \V{m}$ \label{ln:aelastplain}
+    \Comment{only a plaintext already delivered}
+\EndIf
+\State \textbf{return} $(\V{st},\ \V{k},\ \msg^{*})$ \label{ln:aereport}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\Clean_{c}(c)$}:
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $c \in \bits$
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

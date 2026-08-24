@@ -1,0 +1,381 @@
+      Signed low-entropy reweightings to rank one on the sphere
+           A campaign report: Question 8.1 of Barak–Kothari–Steurer, answered
+
+                  Conjura campaign c/0048            · artifact 0048-RKHS-1-r5
+
+                                         24 August 2026
+
+
+
+    Result. Question 8.1 of Barak–Kothari–Steurer (arXiv:1701.06321v2, p. 19) has an affir-  
+    mative answer, and a much stronger one than it asks for: entropy cost log n(n + 1)/2 =
+    O(log n), Frobenius error exactly 0, and a constant independent of ε. The paper asks
+    whether cost O(nδ ) is achievable for arbitrarily small δ > 0; O(log n) is below every nδ .
+    Verification status. Not certified. Four rounds of five independent blind referee passes (20
+    passes, 3 models, 5 angles) have been run. No pass in any round has faulted a load-bearing
+    step; every substantive defect found has been in the scope commentary, and the load-bearing
+    text is byte-identical across all five revisions. Best round scored 4 clean of 5; the current
+    revision r5 is unverified. Details in §7.
+  Caveat that matters. The passes were run as in-session subagents, not as the isolated
+ --bare processes the harness specifies, because this host has no model backend. One vendor,
+  three models. See §8.
+
+
+
+1      The question
+The source paper’s Question 8.1 reads, verbatim (p. 19):
+
+       Is it the case that for every distribution µ over Sn−1 and every ε, δ > 0 there
+       is a (not necessarily positive) function r : Sn−1 → R such that Ev∼µ |r(v)| = 1,
+       Ev∼µ |r(v)| log |r(v)| ⩽ O(nδ ) and a nonzero rank one L such that ∥Ev∼µ [r(v)vv ⊤ ] −
+       L∥F ⩽ ε∥L∥F ?
+
+The paper adds: “A positive solution for Question 8.1 for any δ < 1/2 would be very interesting.
+It may improve the best known bound for the log rank conjecture to Õ(nδ ) and if appropriately
+extended to pseudo-distributions, improve our algorithm’s running time to exp(Õ(nδ )) as well.
+We do know that the answer to this question is No if one does not allow negative reweighting
+functions.”
+    The formal statement attacked here was transcribed independently from that PDF and then
+checked against it; the transcription is faithful, with no additional hypothesis. Call a Borel
+measurable, µ-integrable r : Sn−1 → R — not required nonnegative — a signed reweighting of
+µ with entropy cost at most K if
+                                                   
+         Ev∼µ |r(v)| = 1,     Ev∼µ |r(v)| log |r(v)| ≤ K,      convention 0 log 0 := 0.
+
+Where the difficulty was expected to lie. Write |r| = w and σ = sign r. Then Eµ |r| = 1
+makes dν = w dµ a probability measure with ∆KL (ν∥µ) = Eµ [w log w], and Eµ [r vv ⊤ ] =
+Eν [σ(v) vv ⊤ ]. So the question asks: tilt µ at entropy price K, then choose signs freely, and
+make the resulting second moment relatively close to rank one. In the nonnegative case σ ≡ 1
+the matrix Eν [vv ⊤ ] is PSD of trace 1, so ∥Eν [vv ⊤ ]∥F ≥ n−1/2 : the target cannot be shrunk,
+                                                               √
+and that floor is what makes the nonnegative problem cost n. Signs remove the floor. The
+proof below removes it completely — it makes the second moment exactly a rank one matrix.
+
+                                                 1
+2    The result
+Theorem 1. For every n ≥ 1 and every Borel probability measure µ on Sn−1 there exist a
+                                                 −1/2
+point v0 ∈ supp µ, a constant c with n(n + 1)/2        ≤ c ≤ 1, and a signed reweighting r of µ
+— indeed the restriction to Sn−1 of a single quadratic form, hence a bounded Borel function —
+such that
+                            Ev∼µ r(v) vv ⊤ = c v0 v0⊤
+                                           
+                                                           exactly,
+and whose entropy cost satisfies
+                                                                   
+                    Eµ |r| log |r| ≤ log K(v0 , v0 ) ≤ log n(n + 1)/2 .
+
+Here L := c v0 v0⊤ is rank one, nonzero and PSD, with ∥L∥F = c.
+
+Corollary 2. Question 8.1 holds with C(ε, δ) := 2/(eδ), a constant independent of ε: for every
+ε > 0, δ > 0, every n and every Borel probability µ on Sn−1 there are a signed reweighting of
+entropy cost at most log(n(n+1)/2) ≤ (2/(eδ)) nδ and a nonzero rank one L with ∥Eµ [r(v)vv ⊤ ]−
+L∥F = 0 ≤ ε∥L∥F .
+
+The mechanism, in one sentence. On the sphere the constant function 1 is a quadratic
+form, namely v 7→ v ⊤ Iv = ∥v∥22 ; so the reproducing kernel of the quadratic forms inside L2 (µ)
+has mean exactly 1, which normalises it for free, and it reproduces every coordinate product
+va vb , which makes its second moment exactly v0 v0⊤ . The entropy price is then the logarithm of
+its squared L2 norm, which averages over µ to the dimension of the space, at most n(n + 1)/2.
+
+
+3    The proof
+Throughout, Sn−1 carries its usual compact, second-countable metric topology; µ is a Borel
+probability measure on it; Symn denotes the real symmetric n × n matrices; and for Q ∈ Symn
+we write qQ (v) = v ⊤ Qv. Two facts about the support are used and recorded now.
+(P1) µ(supp µ) = 1. The complement of the support is a union of open null sets; since Sn−1 is
+second countable that union is a countable union of null sets, hence null.
+(P2) If v ∈ supp µ and U ∋ v is open, then µ(U ) > 0. This is the definition of the support.
+
+Lemma 3 (the quadratic space, evaluation on the support, and its kernel). Let Fµ := { [qQ ] ∈
+L2 (µ) : Q ∈ Symn }, where [·] is the µ-a.e. class, and let d := dim Fµ . Then
+
+  (a) Fµ is a linear subspace of L∞ (µ) ∩ L2 (µ) with d ≤ n(n + 1)/2 and ∥qQ ∥∞ ≤ ∥Q∥F ;
+
+  (b) if qQ = qQ′ holds µ-a.e. then qQ (v) = qQ′ (v) for every v ∈ supp µ; hence for v ∈ supp µ
+      the map evv : Fµ → R, [qQ ] 7→ qQ (v), is well defined and linear;
+
+  (c) for each v ∈ supp µ there is a unique kv ∈ Fµ with ⟨kv , f ⟩L2 (µ) = evv (f ) for all f ∈ Fµ ;
+      set K(v, v) := ∥kv ∥2L2 (µ) = evv (kv );
+
+  (d) [1] = [qI ] ∈ Fµ , and [v 7→ va vb ] = [qEab ] ∈ Fµ where Eab = (ea e⊤       ⊤
+                                                                           b + eb ea )/2.
+
+Proof. (a) Q 7→ qQ is linear, so Fµ is the image of Symn and d ≤ dim Symn = n(n + 1)/2.
+For v ∈ Sn−1 , |v ⊤ Qv| ≤ ∥Q∥op ∥v∥22 = ∥Q∥op ≤ ∥Q∥F . Since µ is a probability measure,
+L∞ (µ) ⊆ L2 (µ).
+   (b) Put h := qQ−Q′ , a polynomial and hence continuous, with µ({h ̸= 0}) = 0. Suppose
+h(v0 ) ̸= 0 for some v0 ∈ supp µ. Then U := {|h| > |h(v0 )|/2} is open and contains v0 , so
+µ(U ) > 0 by (P2); but U ⊆ {h ̸= 0} is null — a contradiction. Hence h ≡ 0 on supp µ.
+Well-definedness of evv follows: evv is defined through quadratic-form representatives only, and
+
+                                                   2
+by the displayed statement any two quadratic-form representatives of the same class of Fµ take
+the same value at every v ∈ supp µ; linearity is inherited from Q 7→ qQ (v).
+   (c) Fµ is a finite-dimensional subspace of L2 (µ), hence complete, hence a Hilbert space;
+evv is a linear functional Pon it, hence bounded, so Riesz representation supplies a unique
+kv ∈ Fµ . Explicitly kv = j evv (fj )fj for any orthonormal basis (fj ). Taking f = kv gives
+K(v, v) = evv (kv ).
+   (d) qI (v) = ∥v∥22 = 1 identically on Sn−1 , and qEab (v) = va vb identically.
+
+Part (b) is the only place where the general Borel case differs from the finitely supported one,
+and it is what removes the need for any approximation argument: for finitely supported µ it is
+trivial, every support point being an atom.
+Lemma 4 (three reproducing identities). Let v0 ∈ supp µ and k := kv0 . Then
+  (i) Eµ [ k(v) vv ⊤ ] = v0 v0⊤ ;
+ (ii) Eµ [k] = 1; hence Eµ |k| ≥ 1, K(v0 , v0 ) ≥ 1, and k ̸= 0;
+(iii) Eµ [k 2 ] = K(v0 , v0 ) and 1 ≤ Eµ |k| ≤ K(v0 , v0 )1/2 < ∞.
+Proof. All integrals converge absolutely: k is bounded by Lemma 3(a), and the other factors
+are bounded by 1 on Sn−1 .
+    (i) Fix a, b. By Lemma 3(d) the class gab := [v 7→ va vb ] lies in Fµ , so the reproducing
+property gives Eµ [k va vb ] = ⟨k, gab ⟩ = evv0 (gab ) = (v0 )a (v0 )b . The (a, b) entries of the two
+matrices agree, for all a, b.
+    (ii) By Lemma 3(d), [1] ∈ Fµ with evv0 ([1]) = qI (v0 ) = 1, so Eµ [k] = ⟨k, [1]⟩ = 1. Then
+Eµ |k| ≥ |Eµ k| = 1 and, by Cauchy–Schwarz, K(v0 , v0 ) = Eµ [k 2 ] ≥ (Eµ |k|)2 ≥ 1. And
+Eµ [k] = 1 ̸= 0 forces k ̸= 0.
+    (iii) K(v0 , v0 ) = ∥k∥2 = Eµ [k 2 ] by definition; finiteness is Lemma 3(a); the upper bound is
+Cauchy–Schwarz against 1.
+
+Statement (ii) is precisely the trace of (i), since tr Eµ [k vv ⊤ ] = Eµ [k∥v∥22 ] = Eµ [k] while
+tr(v0 v0⊤ ) = 1. This locates where the construction gets its normalisation for free: the sphere
+constraint ∥v∥2 = 1 is what makes the constant function a quadratic form. On a domain where
+∥v∥2 were not constant, neither [1] ∈ Fµ nor Eµ [k] = 1 would be available.
+                                           R
+Lemma 5 (a cheap base point exists). K(v, v) dµ(v) = d, and consequently there exists
+v0 ∈ supp µ with K(v0 , v0 ) ≤ d ≤ n(n + 1)/2.
+Proof. Fix an orthonormal basis f1 , . . . , fd of Fµ and
+                                                        Pquadratic-form representatives qj of fj .
+For v ∈ supp µ, Lemma 3(c) and Parseval give kv = j qj (v)fj , hence
+                                    d
+                                    X
+                        K(v, v) =         qj (v)2 =: g(v)    for all v ∈ supp µ.                   (1)
+                                    j=1
+
+Now g is a polynomial, hence Borel, and by (P1) it represents v 7→ K(v, v) up to a null set, so
+the integral is well defined and
+                         Z              XZ             X
+                           K(v, v) dµ =      qj2 dµ =      ∥fj ∥2 = d.                      (2)
+                                               j               j
+
+(For v ∈ supp µ the value g(v) = ∥kv ∥2 is independent of the choice of basis and of representatives,
+by uniqueness in Lemma 3(c); off the support nothing below uses g.)
+R Let A := {g ≤ d}, a Borel set. If µ(A) = 0 then h := g − d satisfies h > 0 µ-a.e. while
+  h dµ = 0 by (2); a nonnegative function with vanishing integral vanishes a.e., so h = 0 µ-a.e.,
+which cannot hold simultaneously with h > 0 µ-a.e. under a probability measure. So µ(A) > 0,
+hence by (P1) A ∩ supp µ ̸= ∅, and any v0 in it satisfies K(v0 , v0 ) = g(v0 ) ≤ d.
+
+                                                    3
+Identity (2) is the statement K(v, v) dµ = tr P for P the orthogonal projection of L2 (µ) onto
+                             R
+
+Fµ — equivalently, that the reciprocal Christoffel function has µ-mean d. It is proved above
+from scratch and depends on no external source.
+Lemma 6 (entropy at most the log of the second moment). If r ∈ L2 (µ) and Eµ |r| = 1, then
+Eµ [ |r| log |r| ] ≤ log Eµ [r2 ].
+Proof. Write φ(t) = t log t for t > 0 and φ(0) = 0. Then φ(t) ≥ −1/e for t ≥ 0, and φ(t) ≤ t2
+for all t ≥ 0 (for t ≥ 1 because log t ≤ t; for t < 1 because φ ≤ 0). Since r ∈ L2 (µ) and µ is a
+probability measure, φ(|r|) ∈ L1 (µ), so the entropy is a finite real number.
+    Let dν := |r| dµ. Then ν(Sn−1 ) = Eµ |r| = 1, so ν is a probability measure, and ν({r = 0}) =
+0, so log |r| is ν-a.e. finite and Eν [log |r|] = Eµ [|r| log |r|], the convention 0 log 0 = 0 matching
+the ν-null set {r = 0}. Also Eν [|r|] = Eµ [r2 ] < ∞. Jensen’s inequality for the concave function
+log against ν gives Eν [log |r|] ≤ log Eν [|r|] = log Eµ [r2 ].
+
+Equality holds exactly when |r| is ν-a.s. constant, i.e. when |r| ∈ {0, c} µ-a.e., in which case
+the bound reads log(1/µ({|r| = c})). So Lemma 6 is tight precisely on the indicator-type
+reweightings — those for which “reweighting” means conditioning on an event — and is lossy
+exactly to the extent that |r| is spread out.
+
+Proof of Theorem 1
+Let n and µ be given. Lemma 5 supplies v0 ∈ supp µ with K(v0 , v0 ) ≤ d ≤ n(n + 1)/2; put
+k := kv0 . By Lemma 4(ii),(iii) we have 1 ≤ Eµ |k| ≤ K(v0 , v0 )1/2 < ∞ and k ̸= 0, so
+                          1
+                                ∈ K(v0 , v0 )−1/2 , 1 ⊆ (n(n + 1)/2)−1/2 , 1
+                                                                          
+                  c :=
+                         Eµ |k|
+is well defined and strictly positive. Put r := c k, with representative the quadratic form
+qcQk ; then r is a bounded Borel function on Sn−1 , hence µ-integrable and in L2 (µ), and
+Eµ |r| = c Eµ |k| = 1. So r is an admissible signed reweighting.
+    Second moment. By Lemma 4(i), Eµ [r(v)vv ⊤ ] = c v0 v0⊤ =: L. Since c > 0 and ∥v0 ∥2 = 1,
+L = (cv0 )v0⊤ is rank one, nonzero and PSD with ∥L∥F = c > 0. The Frobenius error is
+0 ≤ ε∥L∥F for every ε > 0.
+    Entropy. Lemma 6 applies, and with Lemma 4(iii),
+                                                                                   K(v0 , v0 )
+                Eµ [|r| log |r|] ≤ log Eµ [r2 ] = log c2 K(v0 , v0 )
+                                                                       
+                                                                           = log
+                                                                                   (Eµ |k|)2
+                                                         n(n + 1)
+                               ≤ log K(v0 , v0 ) ≤ log            ,
+                                                            2
+using Eµ |k| ≥ 1 from Lemma 4(ii) and Lemma 5.                                                       □
+
+Proof of Corollary 2
+For n = 1, log(n(n+1)/2) = log 1 = 0. For n ≥ 2, n(n+1)/2 ≤ n2 gives log(n(n+1)/2) ≤ 2 log n;
+and maxx>0 (log x)/xδ = 1/(eδ), attained at x = e1/δ , gives 2 log n ≤ (2/(eδ))nδ . Combine with
+Theorem 1.                                                                                    □
+
+
+4    Two supporting statements
+Remark 7 (the conclusion is not obtainable by cancelling to zero). Let M ∈ Symn have
+eigenvalues indexed so that |λ1 | ≥ |λ2 | ≥ · · · , and let ε ∈ (0, 1). If M = 0, no admissible L
+exists, since ∥0 − L∥F = ∥L∥F > ε∥L∥F for  Pevery2 L ̸= 0.    If M ̸= 0, a nonzero rank one L with
+∥M − L∥F ≤ ε∥L∥F exists if and only if                     2        2    2
+                                              i≥2 λi ≤ ε /(1 − ε ) λ1 .
+
+
+                                                   4
+Proof. Write L = t uw⊤ with ∥u∥ = ∥w∥ = 1 and t > 0, so ∥L∥F = t and ∥M − L∥2F =
+∥M ∥2F − 2t u⊤ M w + t2 . The requirement is (1 − ε2 )t2 − 2(u⊤ M w)t + ∥M ∥2F ≤ 0, and increasing
+u⊤ M w only helps, so the optimal choice is u⊤ M w = s1P   (M ) = |λ1 | by the SVD. The quadratic
+in t has a real root iff s1 ≥ (1 − ε )∥M ∥F = (1 − ε ) i λ2i , which rearranges to the stated
+                          2          2     2             2
+
+inequality; and when M ̸= 0 both roots are positive, their product being ∥M ∥2F /(1 − ε2 ) > 0
+and their sum 2s1 /(1 − ε2 ) > 0, so an admissible t > 0 exists exactly then.
+This is not load-bearing. It is recorded because it shows that the relative normalisation
+∥ · ∥F ≤ ε∥L∥F does real work: the conclusion cannot be reached by cancelling the second
+moment to zero, so Theorem 1 is not exploiting a degenerate reading of the question.
+Corollary 8 (the same for rank one matrices of unit Frobenius norm). Let X := {X ∈ Rn×n :
+rank X = 1, ∥X∥F = 1}, equivalently X = ab⊤ with ∥a∥2 = ∥b∥2 = 1 — the normalisation used
+in the source paper’s intended application. For every Borel probability measure µ on X there
+exist X0 ∈ supp µ, c ∈ (0, 1] and a signed reweighting r of µ with Eµ [|r| log |r|] ≤ log(n2 + 1)
+such that EX∼µ [r(X) X] = c X0 , exactly rank one and nonzero.
+Proof. Run Lemmas 3–6 verbatim with Sn−1 replaced by the compact set X and the quadratic
+forms replaced by the affine space G := {X 7→ α + ⟨A, X⟩ : α ∈ R, A ∈ Rn×n }, of dimension at
+most n2 + 1. Only two properties of the function space were ever used: it contains the constant
+1 (here trivially, α = 1, A = 0) and it contains each coordinate function X 7→ Xab (here α = 0,
+A = ea e⊤
+        b ). Continuity of the elements of G gives Lemma 3(b) unchanged, and boundedness on
+X gives Lemma 3(a).
+So the mechanism is not an artefact of specialising to X = vv ⊤ : what it needs is the presence
+of constants and coordinates in one finite-dimensional function space. On the sphere the
+homogeneous quadratic forms suffice because ∥v∥2 = 1 makes the constant a quadratic form,
+and that buys only the sharper bound log(n(n + 1)/2) over log(n2 + 1).
+
+
+5    Scope: what this does and does not establish
+Theorem 1 answers Question 8.1 as literally posed, and nothing more. Three delimitations,
+each checked against the source text.
+
+(i) No conflict with the source’s negative results. The remark that “as stated, Theorem
+2.3 is tight” concerns deficient reweightings, which by the paper’s Definition 2.2 are probability
+distributions and hence nonnegative; and “the answer to this question is No if one does not
+allow negative reweighting functions” is an existential statement over µ. Neither is contradicted
+here. Whenever the construction returns a nonnegative r, that r is itself a nonnegative
+reweighting of cost at most log(n(n + 1)/2) = O(log n) — more precisely, k ≥ 0 forces
+µ({±v0 }) = 1/K(v0 , v0 ) ≥ 2/(n(n + 1)) — so such a µ is not a hard instance for the nonnegative
+question. The same holds on the domain of Corollary 8, where the corresponding bound is the
+single-atom µ({X0 }) = 1/K(X0 , X0 ) ≥ 1/(n2 + 1). What is not addressed is the unnormalised
+domain of the paper’s Theorem 2.3, “any distribution over rank one n × n matrices”; Corollary 8
+treats only the unit-Frobenius slice, and nothing is claimed beyond it.
+
+(ii) No log rank consequence is claimed. The paper’s dictionary from reweightings to
+submatrices is stated only for flat reweightings — “a flat distribution µ′ with ∆KL (µ′ ∥µ) ⩽ k
+corresponds to the uniform distribution over {ui vi⊤ }i∈I where I ⊆ [N ] satisfies |I| ⩾ 2−k N ” —
+and Theorem 1 supplies no flatness guarantee, so that route is unavailable. No other route is
+addressed, and the paper’s dual Theorem 2.4 is untouched. Morally the target c v0 v0⊤ is the
+|I| = 1 answer; the content of Theorem 1 is that cancellation reaches that same matrix at cost
+log(n(n + 1)/2), where conditioning would have cost log(1/µ({v0 })) — infinite for continuous µ.
+
+                                                5
+(iii) The pseudo-distribution version is out of scope, and the obstruction is identi-
+fiable. The inner product used, ⟨qQ , qQ′ ⟩ = Eµ [(v ⊤ Qv)(v ⊤ Q′ v)], is a degree-4 moment and
+does have a pseudo-distribution analogue. What has none is evv0 : a pseudo-distribution has
+no support points, and Lemma 3(b) — the step that makes point evaluation a well-defined
+functional on Fµ — is exactly what fails. Every use of supp µ is therefore load-bearing for the
+honest-distribution case and unavailable in the setting the paper needs for its running-time
+consequence. Footnote 8’s worry about the ε-dependence is moot here in the strongest way:
+there is none.
+
+
+6    Worked example
+An independent check of the three identities on a case where the√kernel is not an√indicator.
+Take n = 2 and µ uniform on v1 = (1, 0), v2 = (0, 1), v3 = (1, 1)/ 2, v4 = (1, −1)/ 2. Then
+Fµ = {x ∈ R4 : x1 + x2 = x3 + x4 } and d = 3. The kernel at v0 = v1 is k = (3, −1, 1, 1), and
+
+        Eµ [k] = 41 (3 − 1 + 1 + 1) = 1,       K(v0 , v0 ) = ∥k∥2 = 41 (9 + 1 + 1 + 1) = 3 = d,
+
+           Eµ [k vv ⊤ ] = 14 3v1 v1⊤ − v2 v2⊤ + v3 v3⊤ + v4 v4⊤ = v1 v1⊤ exactly rank one.
+                                                               
+
+Normalising, Eµ |k| = 3/2, c = 2/3 and r = (2, − 23 , 23 , 23 ) with Eµ |r| = 1; the entropy chain is
+0.14384 ≤ log Eµ [r2 ] = log 34 = 0.28768 ≤ log 3 = 1.09861. Note that r is genuinely signed: it is
+negative at v2 .
+
+
+7    Verification record
+Each round packages the artifact with the problem statement and a source card carrying every
+cited quotation verbatim, strips all provenance, renames it neutrally, and stages it outside
+the repository; five referees then read only that package, in mutually isolated fresh contexts,
+under a fixed referee prompt. Between rounds a handling editor rules every finding UPHELD /
+OVERRULED / PEDANTIC / NEEDS SOURCE, and a reviser is bounded strictly by the
+upheld list.
+
+
+Round    Artifact          Clean    Where every substantive defect landed
+1        0048-RKHS-1       1/5      scope commentary (Remark C)
+2        r2                0/5      scope commentary: a false measure, 1 − o(1) vs 0.683
+3        r3                4/5      scope commentary: a missing argument on the matrix domain
+4        r4                2/5      scope commentary: the text added to repair round 3
+5        r5                —        not run
+
+Twenty passes across four rounds, over five angles — general, statement-drift and scope, measure-
+theoretic, line-by-line recomputation, and refutation-plus-source-fidelity — and three models,
+with the model rotated against the angle between rounds.
+
+What the record shows. No pass in any round has faulted a load-bearing step. Lemmas 3–6,
+Theorem 1, Corollary 2 and Remark 7 are byte-identical across all five revisions, verified by
+hashing those regions at every boundary, and Corollary 8 is identical from r3 onward. The twelve
+clean readings of that text are therefore readings of the same bytes. Four passes attempted
+explicit refutation — on both domains, with degenerate, atomic, discrete and continuous
+measures — and all four failed and said so. Several independently recomputed the kernel
+construction, the trace identity (2), the worked example and the constant 2/(eδ), and found
+them correct.
+
+                                                  6
+What keeps failing. Every substantive defect in four rounds has been in the scope commen-
+tary of §5, never in §3. The failure mode has been stable: a repair to a limiting claim reaches
+slightly wider than the source card supports, and the next round catches it. Round 2’s defect
+was a false number that a previous handling editor certified and instructed the reviser not to
+re-derive — which is the mechanism the multi-round structure exists to catch, working one
+stage later than it should have. Round 4’s defect was the text added to repair round 3. That is
+a prose-calibration loop, not a mathematical one, and r5 accordingly repairs by deletion alone,
+adding no replacement wording.
+
+
+8    Provenance, and what would make this stronger
+ The passes were not blind in the strict sense. The harness specifies each pass as an
+ isolated operating-system process with an empty working directory, so that blindness is a
+ property of the process rather than a promise. This host has no model backend — no CLI
+ binary and no API credentials — so the passes ran instead as in-session subagents. They get
+ genuinely fresh contexts and never see the generator’s reasoning, but they are one vendor and
+ they run with the repository as their working directory. Mitigations applied: the package is
+ staged outside the repository under a name unrelated to the artifact, all provenance and revision
+ history is stripped, the referees are instructed not to read anything else, and every package is
+ checked against a pattern list for leaked campaign machinery before dispatch. Each tally file
+ carries this caveat in its header, and such rows must never be pooled with rows from a true
+--bare run.
+
+Three things would materially raise confidence. First, re-running all five passes as
+isolated processes on a host with a backend, which is a matter of credentials rather than of
+work. Second, at least one pass from a different model family, which the harness recommends
+and which no round here has had: twenty same-vendor passes can share a blind spot that one
+cross-family pass would expose. Third, formalisation — the proof is short, elementary and
+almost entirely finite-dimensional linear algebra plus one Jensen inequality, which makes it an
+unusually good candidate for a proof assistant, and a machine-checked Lemma 3(b) and (2)
+would settle the two steps referees probed hardest.
+
+Status of the record. Five artifacts, twenty referee reports, four editor rulings, a quotation-
+grounding result and the orchestrating script all sit in c/0048/campaign/, uncommitted. The
+orchestrator scripts/verify-loop.sh was written during this campaign because it was absent,
+and its first version returned the wrong termination code: it detected a blocking source defect
+by matching the prose “load-bearing”, a phrase the referee prompt itself contains, so referees
+echoing or denying it tripped the test. It now tests the findings table structurally. That script
+has not itself been reviewed.
+
+
+
+
+                                                7
+

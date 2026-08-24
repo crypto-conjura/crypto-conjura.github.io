@@ -2,11 +2,109 @@
 title: "F-RO — Local random oracle"
 status: "Idealized Setup"
 layer: 0
-definition: "Not yet written"
+definition: "Defined"
 ---
 
 *F-RO* (Local random oracle) is part of *Idealized Setup and Resources* in the UC functionality encyclopedia. Status: an idealized setup assumption or shared resource.
 
+A lazily-sampled table with a registered party set in front of it. What makes the entry worth having is not the table — every treatment writes the same three lines — but the choice the table is *not*: this is the local random oracle, one instance per session, against the shared [G-RO](/uc/layer-0-idealized-setup/g-ro/index.qmd) next to it. The source transcribed here is unusual in arguing that choice out loud rather than assuming it.
+
+## Functionality
+
+Reading the box: $\mathbf{A}$ is the adversary's role in a caller's id, so $\mathit{id}'.F \neq \mathbf{A}$ says the caller is not the adversary; $\mathbf{C}$ is the corrupted set; $\square$ marks a point of the table never drawn; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it; $\kappa$, the parameter on the header line, is the output length. $\mathbf{U} := \varnothing$: this functionality calls nothing, and in particular never calls the adversary.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{RO}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \varnothing\), &nbsp; \(\mathit{par} := \kappa\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{Reg} \gets \varnothing\)<span class="cj-comment">// the party set, empty until parties ask</span></li>
+<li>\(\mathtt{H}[*] \gets \square\)<span class="cj-comment">// the table, drawn lazily</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Register()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="3">
+<li>\(\textbf{require}\ \mathit{id}'.F \neq \mathbf{A} \ \vee\ \mathit{id}.P \in \mathbf{C}\)<span class="cj-comment">// the adversary may act only for a corrupt party</span></li>
+<li>\(\mathtt{Reg} \gets \mathtt{Reg} \cup \{\mathit{id}.P\}\)</li>
+<li>\(\textbf{return}\ \mathit{id}.P\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Deregister()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="6">
+<li>\(\textbf{require}\ \mathit{id}.P \in \mathtt{Reg} \ \wedge\ (\mathit{id}'.F \neq \mathbf{A} \ \vee\ \mathit{id}.P \in \mathbf{C})\)</li>
+<li>\(\mathtt{Reg} \gets \mathtt{Reg} \setminus \{\mathit{id}.P\}\)</li>
+<li>\(\textbf{return}\ \mathit{id}.P\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Eval(<span class="cj-id">x</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="9">
+<li>\(\textbf{require}\ \mathit{id}.P \in \mathtt{Reg} \ \wedge\ (\mathit{id}'.F \neq \mathbf{A} \ \vee\ \mathit{id}.P \in \mathbf{C})\)<span class="cj-comment">// registration is the whole access control</span></li>
+<li>\(\textbf{if}\ \mathtt{H}[x] = \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{H}[x] \gets_{\$} \{0,1\}^{\kappa}\)</span></li>
+<li>\(\textbf{return}\ \mathtt{H}[x]\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="13">
+<li>\(\textbf{return}\ \mathtt{Reg}\)<span class="cj-comment">// who is registered, and nothing about \(\mathtt{H}\)</span></li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+The box is transcribed from Badertscher, Maurer, Tschudi and Zikas, *Bitcoin as a transaction ledger: A composable treatment*, ePrint 2017/149, revision `20240405:081352`, Figure 3, p. 19 (the PDF's numbering and the printed numbering agree) — the functionality $\mathcal{F}^{\kappa}_{\mathsf{RO}}$, whose caption records that it "makes no changes to the standard corruption mode".
+
+Two things in the box are not the random oracle:
+
+- **Lines 3–8 are a party set, and it is doing real work.** Most printed random oracles answer anybody. This one answers only registered parties, and de-registration takes the access away again (line 7). That is what makes $\mathcal{F}_{\mathsf{RO}}$ fit the dynamic-availability model the source needs: a party that has left the protocol stops being able to hash, so the work it can do is bounded by the interval over which it was registered.
+- **Line 3's clause is the framework's own convention, not the source's addition.** The source writes each interface as "from some party $P$ (or from $\mathcal{A}$ on behalf of a corrupted $P$)". Here that is one test: the adversary may drive an operation in a party's name exactly when that party is corrupt.
+
+The rest is the standard construction, and the one line that matters is line 11: a point is drawn once, uniformly, and then never moves. There is no $\mathsf{Program}$ and no $\mathsf{Observe}$ — the two operations that make the global oracle usable — and their absence is the entire difference between this page and [G-RO](/uc/layer-0-idealized-setup/g-ro/index.qmd). A local oracle needs neither: the simulator owns the instance, so it can program by *answering*, and it sees every query because every query comes to it.
+
+Where the source needed a decision:
+
+| Source | Box | Why |
+|---|---|---|
+| `GET-REGISTERED` is an interface, answered to $\mathcal{A}$ | Line 13, $\mathsf{Leak}$ | The registered set is exactly what a corrupt party's adversary — or any outsider — is allowed to read off this box, so the source's adversary-only query is this framework's leakage interface rather than a fourth operation. Nothing about $\mathtt{H}$ is leaked: line 13 does not mention it, and there is no way to learn an undrawn point except by drawing it. |
+| Registration returns $(\textsf{REGISTER}, \mathit{sid}, P)$ | Returns $\mathit{id}.P$ | The session identifier lives in the process id here, so the reply is the party name alone. |
+| No adversary interaction at all | $\mathbf{U} := \varnothing$ | Unusually for a setup functionality, this one places no calls: it neither notifies the adversary of a query nor asks it anything. That is a claim about the box and it is the source's, not a simplification — and it is why the query-rate assumption below has to be imposed from outside rather than written into the box. |
+
+## Known realizations
+
+None, and none is intended: a random oracle is a setup assumption. What the source does instead is *restrict* it, and the mechanism is worth recording here because it is where the locality argument cashes out.
+
+The standard property-based analyses of Bitcoin assume that in each round the adversary cannot make more random-oracle calls than the honest parties collectively can. The source declines to model that by restricting the class of environments — "restricting the environment is not compliant with a general composition theorem" — and wraps the functionality instead. **Figure 4, p. 21** gives the wrapped functionality $\mathcal{W}^{q}(\mathcal{F}^{\kappa}_{\mathsf{RO}})$: in a $\mathcal{G}_{\mathsf{Clock}}$-hybrid world it counts $\mathsf{Eval}$ calls arriving from $\mathcal{A}$ on behalf of each corrupted party, forwards only the first $q$ per clock tick, and relays everything else — including every honest party's query and all registration traffic — unchanged. The bound therefore falls on corrupt parties only, per party, per tick.
+
+This encyclopedia has no page for the wrapper. It is a distinct construct — a functionality that wraps another rather than one that stands alone — and it should not be confused with [F-wrap](/uc/layer-0-idealized-setup/f-wrap/index.qmd), which is a hardware token.
+
+## Properties
+
+- **Unpredictability**, with probability exactly $2^{-\kappa}$ per fresh point: an undrawn $x$ is answered uniformly, and nothing else in the box is a function of $\mathtt{H}$. Since the box makes no calls at all, the only route to a point is $\mathsf{Eval}$, which requires registration.
+- **Consistency**, with probability exactly $1$: line 10 tests before line 11 draws, so two $\mathsf{Eval}$ calls on the same $x$ agree, across parties and across time, for as long as the instance lives.
+- **Not programmable, not observable, and local anyway.** The source's own argument for why that suffices, and why the global alternative is worse here, is at its §3.5: a global oracle would force the simulator to create blocks carrying real work, so it would need a much larger query budget than the real-world adversary — and the simulator's edge in this proof *is* that it can program its own oracle. The paper also notes that a programmable global oracle exists in the literature but "does not appear to offer more insights than a local RO", and that its programmability "comes at the price of a technical condition via which an adversary can always make a protocol abort, which is unrealistic".
+- **One instance per session, and that is the whole content of "local".** The header line leaves $\mathit{pid}$ a parameter and admits the standard callers — against [G-RO](/uc/layer-0-idealized-setup/g-ro/index.qmd), which pins $\mathit{pid}$ to a constant and admits every id. Two sessions of a protocol using this box get two independent tables.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
+
 *References:*
 
-- Nielsen. [*Separating random oracle proofs from complexity theoretic proofs: The non-committing encryption case*](https://iacr.org/archive/crypto2002/24420111/24420111.pdf). In Advances in Cryptology – CRYPTO 2002, pages 111–126, 2002.
+- Badertscher, Maurer, Tschudi, and Zikas. [*Bitcoin as a transaction ledger: A composable treatment*](https://eprint.iacr.org/2017/149). In Advances in Cryptology – CRYPTO 2017, Part I, volume 10401 of LNCS, pages 324–356, 2017. Figure 3, p. 19 of revision `20240405:081352`, the definition transcribed above; Figure 4, p. 21 for the query-rate wrapper; §3.5, pp. 19–20 for the argument that this oracle should be local.
+- Nielsen. [*Separating random oracle proofs from complexity theoretic proofs: The non-committing encryption case*](https://iacr.org/archive/crypto2002/24420111/24420111.pdf). In Advances in Cryptology – CRYPTO 2002, pages 111–126, 2002. Read, and it prints no random-oracle functionality: it formulates the RO as a *model* in which the parties and the environment share access to a random function, and the one ideal functionality it writes down is $\mathcal{F}_{\mathsf{nce}}$ for non-committing encryption. Its result — that no non-interactive protocol in the RO model is adaptively secure — is what makes it the standard citation for the oracle's limits, and the reason it cannot be the citation for the box above.

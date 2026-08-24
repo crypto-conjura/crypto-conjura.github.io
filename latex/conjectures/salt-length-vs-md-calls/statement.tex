@@ -1,0 +1,165 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  Dodis-Goldin-Hall's open problem on the salt length vs. call count
+%  of Merkle-Damgard-friendly random oracle combiners.
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{SALT LENGTH VS.\ MD CALL COUNT}
+
+\newcommand{\Om}{\Omega}
+\newcommand{\Z}{Z}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{Salt Length vs.\ Merkle-Damg\r{a}rd Call Count in Random Oracle Combiners}
+\cjsubtitle{Existence, or impossibility and a trade-off, for
+  message-independent salts and calls}
+\cjstatus{Statement: AI-written from Yevgeniy Dodis, Eli Goldin and
+  Peter Hall, \emph{Random Oracle Combiners: Merkle-Damg\r{a}rd Style},
+  IACR ePrint 2025/609. Not yet checked by a human. Settled only for
+  salts strictly longer than the message; whether $O(\lambda)$-length
+  salts and $O(1)$ Merkle-Damg\r{a}rd calls can coexist, or are
+  provably incompatible, is fully open.}
+\cjcategory{\emph{Idealized Models \& Non-Uniformity}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+A random oracle combiner takes two hash functions and builds a new one
+that is provably a fresh random oracle as long as at least one of the
+two inputs already is one. The source builds such a combiner out of
+Merkle-Damg\r{a}rd hash functions by salting and XORing their outputs,
+but its proof needs the random salts to be strictly longer than the
+message being hashed, and as a result the combiner must make roughly
+one Merkle-Damg\r{a}rd call per message block. The source asks whether
+this is inherent: is there any secure combiner of this kind whose salt
+length no longer needs to grow with the message, while still calling
+the underlying hash functions only a constant number of times? Or, if
+no such combiner can exist, what is the best trade-off achievable
+between how short the salt can be and how many times the underlying
+functions must be called?
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+Dodis, Ferguson, Goldin, Hall and Pietrzak~\cite{DFGHP23} introduced
+\emph{random oracle combiners} (ROCs): given two hash functions
+$h_{1}, h_{2}$, a ROC $C^{h_{1},h_{2}}_{\Z}$ is a new hash function
+guaranteed to be indifferentiable from a fresh random oracle as long as
+at least one of $h_{1}, h_{2}$ is itself a random oracle, while the
+other may depend on it arbitrarily. They built a length-preserving ROC
+$h_{1}(M, \Z_{1}) \oplus h_{2}(M, \Z_{2})$ treating $h_{1}, h_{2}$ as
+monolithic random oracles, with salts $\Z_{1}, \Z_{2}$ strictly longer
+than the message $M$, and left open whether the same holds when
+$h_{1}, h_{2}$ are instead the compression functions of a
+Merkle-Damg\r{a}rd hash.
+
+The source resolves that question: it proves that
+$\widetilde C^{h_{1},h_{2}}_{\Z_{1},\Z_{2}}(M) := h_{1}^{*}(M, \Z_{1})
+\oplus h_{2}^{*}(M, \Z_{2})$, where $h_{1}, h_{2}$ are fixed-length
+compression functions and $h_{1}^{*}, h_{2}^{*}$ their
+Merkle-Damg\r{a}rd extensions, is a secure ROC whenever
+$|\Z_{1}|, |\Z_{2}| > |M| + \lambda$. This closes the
+Dodis-Ferguson-Goldin-Hall-Pietrzak conjecture for this construction,
+but the salts must still grow with $|M|$, and the resulting combiner
+makes on the order of $|M|$ Merkle-Damg\r{a}rd calls to
+$h_{1}^{*}, h_{2}^{*}$. The source's own conclusion records this as the
+main remaining inefficiency and states the question left open: whether
+some secure combiner of this shape can instead use only $O(\lambda)$
+bits of salt while still calling the underlying compression functions a
+constant number of times, independent of the message length --- and if
+not, what trade-off between salt length and call count is the true one.
+
+\section{Notation and parameters}\label{sec:notation}
+
+\begin{itemize}[nosep]
+  \item $\lambda$ is the security parameter.
+  \item $n, \delta$ are the output length and the per-block input
+    length of the compression functions, i.e.\
+    $h_{1}, h_{2} : \{0,1\}^{n+\delta} \to \{0,1\}^{n}$.
+  \item $M \in \{0,1\}^{*}$ is the combiner's message input, of length
+    $m = |M|$.
+  \item $h_{1}^{*}, h_{2}^{*}$ are the Merkle-Damg\r{a}rd extensions of
+    $h_{1}, h_{2}$ to arbitrary-length inputs.
+  \item $\Z_{1}, \Z_{2}$ are independent random salts appended to $M$
+    before hashing.
+\end{itemize}
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{definition}[Random oracle combiner, informal; source's framing
+  of Dodis-Ferguson-Goldin-Hall-Pietrzak~\cite{DFGHP23}]\label{def:roc}
+Let $C^{h_{1},h_{2}}_{\Z} : \{0,1\}^{m} \to \{0,1\}^{n}$ take a message
+$M$, a salt $\Z = (\Z_{1}, \Z_{2})$, and oracle access to $h_{1},
+h_{2}$. Say $C$ is a \emph{secure random oracle combiner} if, for every
+oracle circuit $g$, both $C^{\mathcal{H}, g^{\mathcal{H}}}_{\Z}$ and
+$C^{g^{\mathcal{H}}, \mathcal{H}}_{\Z}$ are indifferentiable, in the
+sense of Maurer, Renner and Holenstein, from a fresh random oracle
+$\mathcal{G} : \{0,1\}^{m} \to \{0,1\}^{n}$, over the random choice of
+$\Z$, against every polynomial-query distinguisher.
+\end{definition}
+
+\begin{definition}[Message-independent salts and calls]\label{def:mi}
+A secure random oracle combiner
+$C^{h_{1},h_{2}}_{\Z_{1},\Z_{2}} : \{0,1\}^{m} \to \{0,1\}^{n}$
+(Definition~\ref{def:roc}) has \emph{message-independent salts and
+calls} if
+\begin{enumerate}[nosep,label=(\alph*)]
+  \item $|\Z_{1}|, |\Z_{2}| = O(\lambda)$, independent of $m = |M|$;
+    and
+  \item $C$ makes only $O(1)$ calls to $h_{1}^{*}$ and $h_{2}^{*}$,
+    independent of $m$.
+\end{enumerate}
+\end{definition}
+
+\begin{conjecture}[Salt length vs.\ call count]\label{conj:main}
+Either exhibit a secure random oracle combiner with message-independent
+salts and calls (Definition~\ref{def:mi}), or prove that no secure
+random oracle combiner can satisfy both (a) and (b) simultaneously and,
+in that case, determine the optimal trade-off between the salt length
+$|\Z_{1}|, |\Z_{2}|$ and the number of calls made to
+$h_{1}^{*}, h_{2}^{*}$.
+\end{conjecture}
+
+\begin{remark}[What is already known]
+The source's own construction $\widetilde C$ shows that
+$|\Z_{1}|, |\Z_{2}| > |M| + \lambda$ suffices for security, at the cost
+of making the number of Merkle-Damg\r{a}rd calls grow with $|M|$; no
+construction achieving both (a) and (b) of Definition~\ref{def:mi} is
+known, and no impossibility result is given either. A closely related,
+narrower question --- whether $\widetilde C$ itself remains secure, or
+is instead attackable, once its own salts shrink to a constant number
+of blocks --- is recorded separately on this site; a security proof for
+$\widetilde C$ in that regime would witness this conjecture's first
+alternative, but resolving this conjecture does not require working
+with $\widetilde C$ specifically.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem[DGH25]{DGH25}
+Yevgeniy Dodis, Eli Goldin and Peter Hall.
+\emph{Random oracle combiners: Merkle-Damg\r{a}rd style}.
+IACR ePrint 2025/609.
+The source. The open problem is Section 4 (``Conclusion and Open
+Problems''), page 27; the main construction and its security theorem
+are Section 3.
+
+\bibitem[DFGHP23]{DFGHP23}
+Yevgeniy Dodis, Niels Ferguson, Eli Goldin, Peter Hall and Krzysztof
+Pietrzak.
+\emph{Random oracle combiners: Breaking the concatenation barrier for
+collision-resistance}.
+CRYPTO 2023, Part II\@.
+Introduces random oracle combiners and the length-preserving
+construction whose Merkle-Damg\r{a}rd-friendly analogue the source
+studies; cited by the source as the origin of the underlying question.
+
+\end{conjurabibliography}
+
+\end{document}

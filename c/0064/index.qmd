@@ -1,0 +1,150 @@
+---
+id: "0064"
+problem: roc-salt-length-vs-call-count
+draft: short-salt-security-mdroc
+title: "Security of the Merkle-Damgård Combiner Under Constant-Length Salts"
+short_title: "Short-Salt MD Combiner Security"
+areas: [idealized-models, symmetric-key]
+topics: [random-oracle-model, indifferentiability]
+model: rom
+form: characterization
+assumption_class: unconditional
+category: research-open
+revision: 1
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: adaptation
+  by: ai
+  note: "The source's own security proof is a compression argument whose recursion depth is bounded using exactly the salt-outgrows-message margin; extending it to constant-length salts, or finding where it breaks, has a visible starting point in that same argument, even though neither the source nor this page can say which of the two outcomes is true. That is a real obstacle sitting on a named route, not an absence of any route at all."
+status_summary: "Open in both directions: the source's Theorem 3.1 proves security only when salts exceed the message by at least the security parameter, and reports neither an attack nor a security proof once the salts shrink to a constant number of blocks."
+status_updated: 2026-08-24
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Dodis, Goldin, Hall, Random Oracle Combiners: Merkle-Damgård Style, IACR ePrint 2025/609", url: "https://eprint.iacr.org/2025/609"}
+statement_sha: "6f8b7b315e30adc8b761d937528be461e9476cef48f733deba9e923d31e1df7c"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+<!-- topics:start -->
+<div class="cj-tags cj-page-topics"><a class="cj-tag cj-tag-topic" href="/problems/by-topic/indifferentiability/">Indifferentiability</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/random-oracle-model/">Random Oracle Model</a></div>
+<!-- topics:end -->
+
+The source's main construction XORs the Merkle-Damgård extensions of two
+salted hash functions together, and proves it a secure random oracle
+combiner as long as each salt is longer than the message by at least the
+security parameter. The proof genuinely needs that margin, but the authors
+have found no attack that exploits shorter salts either — not even at a
+small constant number of blocks, independent of the message length. They
+leave open which of the two is true: that short salts really do break the
+construction, or that it is secure with much shorter salts than its current
+proof requires.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [LaTeX source](latex/main.tex) · Formal statement — *not yet formalized*
+
+**The construction (the source's Theorem 3.1).** For compression functions
+$h_{1}, h_{2} : \{0,1\}^{n+\delta} \to \{0,1\}^{n}$ with Merkle-Damgård
+extensions $h_{1}^{*}, h_{2}^{*}$,
+$$\widetilde C^{h_{1},h_{2}}_{Z_{1},Z_{2}}(M) := h_{1}^{*}(M, Z_{1}) \oplus h_{2}^{*}(M, Z_{2})$$
+is a secure random oracle combiner whenever $|Z_{1}|, |Z_{2}| > |M| +
+\lambda$. No attack against $\widetilde C$ is known for shorter salts,
+including salts of constant length, independent of $|M|$.
+
+**Conjecture.** Resolve which of the following holds: (i) there is a choice
+of $|Z_{1}|, |Z_{2}| = O(1)$ blocks, independent of $|M|$, together with an
+efficient adversary breaking the indifferentiability of $\widetilde C$ from
+a random oracle; or (ii) $\widetilde C$ remains a secure random oracle
+combiner even when $|Z_{1}|, |Z_{2}|$ are a constant number of blocks,
+independent of $|M|$.
+
+**How the source states it.** Its conclusion (page 27) reads: "While our
+analysis of $\widetilde C$ critically uses the fact that $|Z_{i}| > |M| +
+\lambda$, we do not have any attacks against this construction, once the
+$|Z_{i}|$ is a constant number of blocks, independent of $|M|$. In
+particular, it is possible our construction $\widetilde C$ provides a
+solution to" the broader, separately-tracked existence problem (see
+[c/0063](/c/0063/)). It continues: "Thus, it would be very interesting to
+either show that $\widetilde C$ is insecure unless $|Z_{i}| > |M|$, or find
+a supporting proof of security for much shorter salts (ideally, constant
+number of blocks)."
+
+**The source's dichotomy is not perfectly symmetric.** It phrases the
+"insecure" alternative more broadly, as showing $\widetilde C$ is insecure
+unless $|Z_{i}| > |M|$ — over the whole sub-threshold range $|Z_{i}| \le
+|M|$ — while narrowing the "secure" alternative specifically to the
+constant-blocks case, the regime where it reports no known attack. This
+page's statement targets that constant-blocks extreme in both directions;
+resolving it there does not by itself settle the source's broader-phrased
+alternative for every $|Z_{i}|$ strictly between a constant and $|M|$.
+
+### Sources
+
+- Dodis, Goldin and Hall. [*Random Oracle Combiners: Merkle-Damgård Style*](https://eprint.iacr.org/2025/609). IACR ePrint 2025/609. The source. The construction and its security theorem are Section 3 (Theorem 3.1); the open problem is Section 4 ("Conclusion and Open Problems"), page 27.
+
+## Proof
+
+View PDF — *no proof written yet* · LaTeX source — *no proof written yet* · Formal proof — *not yet formalized*
+
+Open, with the source's own proof technique the visible starting point for
+either direction.
+
+**Toward a proof of (ii).** The source's Theorem 3.1 bounds a simulator's
+recursion depth using the $|Z_{i}| > |M| + \lambda$ margin; a security
+proof at constant-length salts would need either a sharper bound on that
+same recursion, or a different simulation strategy entirely, since the
+current argument does not survive the salt shrinking below the message
+length.
+
+**Toward an attack for (i).** An attack would need to exploit exactly what
+the current proof's margin rules out: a way for an adversary to use the
+shortness of the salt relative to the message to distinguish $\widetilde C$
+from a random oracle, most plausibly by finding two messages that collide
+under a much shorter salt in a way the compression-function XOR does not
+mask.
+
+**Checked against the literature, 2026-08-24.** No proof, refutation or
+resolution found in the months since the ePrint. This is a targeted check
+on a very recent paper, not an exhaustive sweep.
+
+## Discussion
+
+**Why this is worth tracking separately from the general question.** A
+proof of (ii) would answer [c/0063](/c/0063/)'s existence question
+affirmatively, by exhibiting $\widetilde C$ itself as the witness. An
+attack under (i) would not: some other combiner might still achieve short,
+message-independent salts by a different construction. So this page is
+strictly easier to attack (it is about one fixed, already-specified
+scheme) but only partially informative about the broader question.
+
+**What a reviewer should be suspicious of.** The source's own dichotomy
+is asymmetric (see the Statement tab); a careful reading should not treat
+a resolution at the constant-blocks extreme as settling the source's
+literal "unless $|Z_{i}| > |M|$" phrasing for every value in between.
+
+**Attackability for an AI proof harness (conjecture-triage, 2026-08-25).** Scored 26/31, verdict GO, difficulty band "routine" — this rates how tractable a bounded multi-agent campaign would find it, not the statement's intrinsic mathematical difficulty. It fixes one already-specified construction rather than asking about combiners in general, which gives a Refuter a genuine, finite-instantiation-testable target: an explicit distinguisher against $\widetilde C$ at constant-block salts is directly search-and-simulate friendly, unlike the sibling question on this hub. Recommended configuration: Refuter-first, attempting an attack in parallel with a Prover extending the source's own simulator argument. Full record: `latex/conjectures/short-salt-security-mdroc/triage.json`.
+
+## Open obligations
+
+- [ ] Either construct an attack on $\widetilde C$ at constant-length, message-independent salts, or prove $\widetilde C$ remains secure there.
+- [ ] If secure, check whether that also answers c/0063's general existence question in the way the source anticipates.
+- [ ] Prove or refute the statement.
+- [ ] Formalize the statement in Lean; nothing here has been formalized.
+
+:::

@@ -1,0 +1,140 @@
+{
+  "id": "c/0064",
+  "title": "Security of the Merkle-Damgard Combiner Under Constant-Length Salts",
+  "statement_paraphrase": "Is the source's specific combiner C-tilde insecure once its two salts shrink to O(1) blocks independent of the message length, or does it remain a secure random oracle combiner even there?",
+  "triaged_at": "2026-08-25",
+  "model": "claude-sonnet-5",
+  "scout": {
+    "status": "OPEN",
+    "evidence": [
+      {
+        "claim": "Source's own conclusion states it has neither an attack nor a security proof at constant-length salts for its own construction.",
+        "citation": "eprint.iacr.org/2025/609",
+        "url": "https://eprint.iacr.org/2025/609",
+        "eprint_version_date": "2025-04 (EUROCRYPT 2025 version)",
+        "retrieval": "READ"
+      },
+      {
+        "claim": "No follow-up attacking or proving security of this specific construction at short salts found.",
+        "retrieval": "READ"
+      }
+    ],
+    "queries_run": [
+      "\"random oracle combiner\" Merkle-Damgard salt length constant blocks 2026",
+      "\"Random Oracle Combiners\" \"Merkle-Damgard\" follow-up citing open problem salt length 2026"
+    ]
+  },
+  "gates": {
+    "G1_barrier": {
+      "fires": false
+    },
+    "G2_statement_not_fixed": {
+      "fires": false
+    },
+    "G3_already_resolved": {
+      "fires": false
+    },
+    "G4_dual_use": {
+      "fires": false,
+      "evidence": "Idealized-model construction, not a deployed system; C-tilde is not in production use."
+    }
+  },
+  "scores": {
+    "P1": {
+      "value": 3,
+      "target_side": "two_sided",
+      "justification": "Attack-finding (construction of an adversary) is machine-friendly; security-proof direction is harder. Two-sided with a strong constructive dual.",
+      "construction_side_dual": "Search for an explicit distinguisher/adversary breaking C-tilde's indifferentiability at O(1)-block salts, e.g. via a linear-cancellation or collision-style attack analogous to the zeroizing attack used elsewhere in this corpus (c/0065's Appendix A) against a structurally similar salted construction."
+    },
+    "P2": {
+      "value": 3,
+      "justification": "Base case settled; next rung well defined; the source's own language ('critically uses') suggests a graded weakening of the margin is a nameable intermediate step even though the target jumps to O(1).",
+      "restriction_axis": "salt length of this one fixed construction",
+      "settled_base_case": "|Z1|,|Z2| > |M|+lambda (Theorem 3.1)",
+      "next_rung": "|Z1|,|Z2| = O(1) blocks, independent of |M|",
+      "generalization_hypothesis": "The recursion-depth bound in Theorem 3.1's simulator argument might extend gracefully to salts of size c*log|M| before failing outright at O(1).",
+      "rungs_to_target": 2,
+      "axis_monotone_in_difficulty": true
+    },
+    "P3": {
+      "value": 3,
+      "justification": "Single fixed construction from one source; the natural attack technique (linear cancellation between two users'/instances' outputs) has a direct analogue elsewhere in this same small corpus, making adaptation plausible rather than requiring a wholly new paradigm.",
+      "candidate_technique": "linear-cancellation / zeroizing-style distinguisher, or extension of the source's own compression-argument simulator",
+      "composition_depth": 1,
+      "ambient_convention_load": "moderate (indifferentiability/simulator conventions)",
+      "new_framework_required": false
+    },
+    "V1": {
+      "value": 6,
+      "justification": "Single fixed construction, precise dichotomy, standard adversary/idealization conventions inherited from the source's own definitions.",
+      "game_pseudocodable": true,
+      "idealization": "ROM (indifferentiability)",
+      "model_variant_risk": "low",
+      "variants_in_play": [
+        "ROM"
+      ],
+      "quantifiers_pinned": true,
+      "vacuous_reading": "An 'attack' that only applies at a degenerate tiny fixed |M| rather than uniformly across the message-length-independent regime the question actually asks about."
+    },
+    "V2": {
+      "value": 3,
+      "justification": "Attack-finding is directly testable at toy parameters: implement small Merkle-Damgard compression functions, fix O(1)-block salts, and search for a statistical distinguisher empirically; the distinguishing advantage is a literal scalar.",
+      "finite_instantiation": "toy compression functions, small n, exhaustive or randomized search for a distinguishing strategy",
+      "predicate_hardenable": true,
+      "scalar_score_or_certificate": true,
+      "implausible_consequence_applies": false
+    },
+    "V3": {
+      "value": 2,
+      "justification": "An explicit attack transcript is a machine-checkable witness and the relevant game is EasyCrypt-representable; full decomposition credit withheld since a security proof at O(1) salts would still need real invention.",
+      "tool": "EasyCrypt/SSProve for the game; direct simulation for the attack search",
+      "decomposition_cost": "low for the attack path, high for the security-proof path",
+      "witness_available": true
+    },
+    "O1": {
+      "value": 4,
+      "justification": "Framed by the source as a secondary, more casual remark ('it would be very interesting to...') immediately after its headlined main open problem, not itself singled out; very recent, essentially zero independent attention.",
+      "provenance_shape": "aside",
+      "attempting_papers_count": 0,
+      "source_year": 2025,
+      "adjacent_solved_likelihood": "low"
+    },
+    "O2": {
+      "value": 3,
+      "justification": "Fully open-access source; bounded compute profile (toy-scale attack search or a focused proof extension); plausibly fits a modest write-up building directly on the existing Theorem 3.1 proof.",
+      "blocked_sources": [],
+      "folklore_dependence": false,
+      "unbounded_solver_risk": false,
+      "proof_length_fits_few_pages": true,
+      "expected_proof_pages": 4
+    }
+  },
+  "risks": {
+    "R1_contamination": 0,
+    "R2_vacuity": 0,
+    "R3_ladder_length": 0,
+    "R4_predicate_exploitability": -1,
+    "R5_expert_scarcity": 0,
+    "reasons": [
+      "R4: a tiny-fixed-|M| 'attack' would technically satisfy a loose reading of (i) without addressing the asymptotic question."
+    ],
+    "total_deduction": -1
+  },
+  "totals": {
+    "P": 9,
+    "V": 11,
+    "O": 7,
+    "TOTAL": 26
+  },
+  "verdict": "GO",
+  "override_applied": null,
+  "configuration": {
+    "entry_rung_latex": "Either an explicit adversary against $\\widetilde C$ at $|Z_i|=O(1)$ blocks, or a security proof there.",
+    "leading_plan_class": "Refuter-first: attempt the attack (adapt the zeroizing/linear-cancellation idea from c/0065's Appendix A to this construction's XOR-of-two-MD-extensions structure) in parallel with a Prover attempting to extend Theorem 3.1's simulator argument past the margin.",
+    "falsifiable_milestone": "A concrete distinguishing strategy with measurable advantage against a toy-parameter instantiation of C-tilde at O(1)-block salts, checkable in under two pages.",
+    "yield_on_failure": "If no attack found and no extended proof, a precise characterization of exactly where the existing simulator argument's recursion bound breaks, useful input to c/0063.",
+    "contract_fields_needing_human_input": [],
+    "estimated_tokens_to_first_freeze": 150000
+  },
+  "source_requests": []
+}

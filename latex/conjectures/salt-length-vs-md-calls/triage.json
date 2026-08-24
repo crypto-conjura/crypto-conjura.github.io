@@ -1,0 +1,147 @@
+{
+  "id": "c/0063",
+  "title": "Salt Length vs. Merkle-Damgard Call Count in Random Oracle Combiners",
+  "statement_paraphrase": "Does a secure Merkle-Damgard-style random oracle combiner exist with O(lambda)-length, message-independent salts and O(1) calls to the underlying hash functions, or is that combination impossible and what is the true salt-length/call-count trade-off?",
+  "triaged_at": "2026-08-25",
+  "model": "claude-sonnet-5",
+  "scout": {
+    "status": "OPEN",
+    "evidence": [
+      {
+        "claim": "Source paper (Dodis, Goldin, Hall, EUROCRYPT 2025) states this as its main open problem in the Conclusion.",
+        "citation": "eprint.iacr.org/2025/609",
+        "url": "https://eprint.iacr.org/2025/609",
+        "eprint_version_date": "2025-04 (EUROCRYPT 2025 version)",
+        "retrieval": "READ"
+      },
+      {
+        "claim": "No follow-up work found resolving the salt-length/call-count trade-off; search results only describe the source's own resolution of the prior DFGHP23 conjecture, not this further question.",
+        "retrieval": "READ",
+        "queries_run": [
+          "placeholder"
+        ]
+      }
+    ],
+    "queries_run": [
+      "\"random oracle combiner\" Merkle-Damgard salt length constant blocks 2026",
+      "\"random oracle combiner\" O(lambda) salt sublinear calls Merkle-Damgard open problem solved",
+      "\"Random Oracle Combiners\" \"Merkle-Damgard\" follow-up citing open problem salt length 2026"
+    ]
+  },
+  "gates": {
+    "G1_barrier": {
+      "fires": false,
+      "evidence": "No barrier language in the source; not identified as implying resolution of a named external open problem."
+    },
+    "G2_statement_not_fixed": {
+      "fires": false
+    },
+    "G3_already_resolved": {
+      "fires": false
+    },
+    "G4_dual_use": {
+      "fires": false,
+      "evidence": "Idealized-model construction/impossibility question, not a concretely instantiable attack on a deployed system."
+    }
+  },
+  "scores": {
+    "P1": {
+      "value": 3,
+      "target_side": "two_sided",
+      "justification": "Either exhibit a combiner (construction-friendly) or prove impossibility plus a trade-off (lower-bound-style); genuinely two-sided.",
+      "construction_side_dual": "Search over combiner constructions -- not necessarily salt-and-XOR -- for one achieving O(lambda) salts and O(1) Merkle-Damgard calls."
+    },
+    "P2": {
+      "value": 2,
+      "justification": "Base case (unbounded salt, works) is settled; next rung (O(lambda) salt) is well defined but the gap to it is asymptotic, not a narrow few-rung ladder, and no specific proof feature is nameable as surviving the shrink.",
+      "restriction_axis": "salt length relative to message length",
+      "settled_base_case": "|Z1|,|Z2| > |M|+lambda (source Theorem 3.1)",
+      "next_rung": "|Z1|,|Z2| = O(lambda), independent of |M|",
+      "generalization_hypothesis": "",
+      "rungs_to_target": 1,
+      "axis_monotone_in_difficulty": true
+    },
+    "P3": {
+      "value": 1,
+      "justification": "Hard cap applied: removing the |M|-dependence entirely plausibly needs a combiner paradigm the source does not sketch, not just a parameter tweak to its own simulator argument.",
+      "candidate_technique": "compression-argument simulator recursion (source Theorem 3.1), if it can be extended at all",
+      "composition_depth": 1,
+      "ambient_convention_load": "moderate (indifferentiability/simulator conventions)",
+      "new_framework_required": true
+    },
+    "V1": {
+      "value": 5,
+      "justification": "Precisely quantified via the source's own indifferentiability definition; one genuine ambiguity is whether calls are counted against the letter (invocations of h1*,h2* as named) or their spirit (any equivalent computation), which is nameable but real.",
+      "game_pseudocodable": true,
+      "idealization": "ROM (indifferentiability, Maurer-Renner-Holenstein sense)",
+      "model_variant_risk": "low",
+      "variants_in_play": [
+        "ROM"
+      ],
+      "quantifiers_pinned": true,
+      "vacuous_reading": "A construction that satisfies the letter of 'O(1) calls to h1*, h2*' by restructuring computation to avoid naming those calls while doing equivalent work elsewhere."
+    },
+    "V2": {
+      "value": 1,
+      "justification": "Indifferentiability's deliverable is a simulator valid against all distinguishers; like Feistel indifferentiability, there is no finite decision procedure or scalar score for the general existence question, only a hardenable but not exhaustively-checkable predicate.",
+      "finite_instantiation": "toy Merkle-Damgard compression functions at tiny parameters, but security still requires a simulator argument, not brute-force decidable",
+      "predicate_hardenable": true,
+      "scalar_score_or_certificate": false,
+      "implausible_consequence_applies": false
+    },
+    "V3": {
+      "value": 1,
+      "justification": "EasyCrypt/SSProve support game-hopping generally, but the decomposition for a genuinely new combiner paradigm's simulator is itself the research content.",
+      "tool": "EasyCrypt/SSProve (game hopping, general indifferentiability reasoning)",
+      "decomposition_cost": "high -- the simulator IS the open question",
+      "witness_available": false
+    },
+    "O1": {
+      "value": 2,
+      "justification": "Explicitly flagged as 'the main open problem' by the source (deliberate, not a passing aside), so no +2; but very recent and low independent attention.",
+      "provenance_shape": "named_with_some_tradition",
+      "attempting_papers_count": 0,
+      "source_year": 2025,
+      "adjacent_solved_likelihood": "low"
+    },
+    "O2": {
+      "value": 2,
+      "justification": "Source and prior art fully open-access; bounded compute profile; but a full novel-paradigm construction plausibly runs long with no clean lemma boundary.",
+      "blocked_sources": [],
+      "folklore_dependence": false,
+      "unbounded_solver_risk": false,
+      "proof_length_fits_few_pages": false,
+      "expected_proof_pages": 12
+    }
+  },
+  "risks": {
+    "R1_contamination": 0,
+    "R2_vacuity": 0,
+    "R3_ladder_length": 0,
+    "R4_predicate_exploitability": -1,
+    "R5_expert_scarcity": 0,
+    "reasons": [
+      "R4: the call-counting predicate is gameable by restructuring computation, as noted under V1's vacuous reading."
+    ],
+    "total_deduction": -1
+  },
+  "totals": {
+    "P": 6,
+    "V": 7,
+    "O": 4,
+    "TOTAL": 16
+  },
+  "verdict": "PROBE",
+  "override_applied": null,
+  "configuration": {
+    "entry_rung_latex": "Does there exist a secure ROC with $|Z_1|,|Z_2|=O(\\lambda)$ and $O(1)$ calls to $h_1^*,h_2^*$?",
+    "leading_plan_class": "Scout plus Refuter (search for a non-salt-and-XOR combiner or a counting-style impossibility argument), Case Planner to name intermediate salt-length rungs between the source's bound and O(lambda).",
+    "falsifiable_milestone": "Either a toy-parameter combiner construction candidate with a plausible (even if not fully proved) simulator sketch achieving sub-linear salt growth, or a concrete counting argument ruling out a wide class of salt-and-XOR variants.",
+    "yield_on_failure": "A barrier note on why salt-and-XOR combiners cannot avoid the |M|-dependence, narrowing the search space for future attempts.",
+    "contract_fields_needing_human_input": [
+      "exact call-counting convention (semantic vs syntactic)"
+    ],
+    "estimated_tokens_to_first_freeze": 400000
+  },
+  "source_requests": []
+}

@@ -100,6 +100,9 @@ TOPIC_DESCRIPTIONS = {
     "discrete-logarithm": "The discrete logarithm problem and its decisional relatives (DDH, square-DDH), and their generic hardness with and without preprocessing.",
     "locality-preserving-hashing": "Hashing a long string to a position so robustly that shifting the input moves the output by exactly the shift, using a sublinear number of queries.",
     "distributed-discrete-logarithm": "Two parties holding group elements that differ by a known small amount must non-interactively output shares differing by that amount -- the share-conversion step group-based homomorphic secret sharing rests on.",
+    "continuous-group-key-agreement": "Protocols letting a dynamic group of users maintain a shared secret across membership changes, and the efficiency and forward-secrecy guarantees each update operation can offer.",
+    "broadcast-encryption": "Encrypting to a chosen subset of registered public keys, and the size and update cost of the keys and ciphertexts a scheme needs.",
+    "locally-computable-hashing": "Hash function families whose evaluation reads only a small, bounded number of key words, and the locality such families can achieve.",
 }
 
 missing_desc = TOPIC_SLUGS - set(TOPIC_DESCRIPTIONS)

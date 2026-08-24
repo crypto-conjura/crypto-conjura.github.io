@@ -1,0 +1,165 @@
+---
+id: "0065"
+problem: sublinear-refresh-updatable-dbe
+draft: sublinear-refresh-forward-secrecy
+title: "Computation-Sublinear Refresh for Forward-Secure CGKA"
+short_title: "Sublinear-Time CGKA Refresh"
+areas: [public-key, foundations]
+topics: [continuous-group-key-agreement, broadcast-encryption]
+model: standard
+form: characterization
+assumption_class: falsifiable
+category: research-open
+revision: 1
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: new-idea
+  by: ai
+  note: "The source's own construction already achieves sublinear communication; closing the remaining computation gap needs a refresh algorithm whose running time does not scale with the group size even though it must still touch enough state to re-randomize every member's key, which the source gives no technique toward. It is also not simply the stronger, input-free variant the source already shows is broken -- that attack does not bear on this question -- so no existing negative result even narrows the search."
+status_summary: "The source achieves worst-case sublinear communication with forward secrecy, but its refresh algorithms still run in time polynomial in the group size, and it leaves open, without committing to a specific target rate, whether sublinear-time refresh is achievable at all."
+status_updated: 2026-08-24
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Bartusek, Bitansky, Dodis, Garg, Wu, Fair-Weather No More: Guaranteed Efficiency in Secure Group Messaging, IACR ePrint 2026/1677", url: "https://eprint.iacr.org/2026/1677"}
+  - {cite: "Alwen, Coretti, Dodis, Tselekounis, Security Analysis and Improvements for the IETF MLS Standard for Group Messaging, IACR ePrint 2019/1189; CRYPTO 2020", url: "https://eprint.iacr.org/2019/1189"}
+  - {cite: "Abram, Malavolta, Roy, Key-Homomorphic Computations for RAM: Fully Succinct Randomised Encodings and More, IACR ePrint 2025/339; CRYPTO 2025", url: "https://eprint.iacr.org/2025/339"}
+statement_sha: "d9021934a969221fcf1aa434cd5836c90c5dbff9c8cc4c276a9017fa8ae20133"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+<!-- topics:start -->
+<div class="cj-tags cj-page-topics"><a class="cj-tag cj-tag-topic" href="/problems/by-topic/broadcast-encryption/">Broadcast Encryption</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/continuous-group-key-agreement/">Continuous Group Key Agreement</a></div>
+<!-- topics:end -->
+
+Continuous group key agreement (CGKA) protocols let a dynamic group of
+users maintain a shared secret, and forward secrecy needs an explicit
+key-rotation ("refresh") step, so that later compromising a user's state
+cannot expose past group keys. The source builds the first CGKA scheme with
+forward secrecy whose communication is worst-case sublinear in the group
+size — via a new primitive, updatable distributed broadcast encryption —
+but its refresh algorithms still take time polynomial in the number of
+users, because they take the whole membership as an explicit input. It
+poses the question directly: is there a scheme with the same guarantees
+whose refresh also runs in time sublinear in the group size, and not merely
+produces a short message?
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [LaTeX source](latex/main.tex) · Formal statement — *not yet formalized*
+
+**The primitive (the source's Section 5).** An updatable distributed
+broadcast encryption scheme lets a set $S$ of users hold an aggregated
+public key $\mathsf{apk}$ and, for each $i \in S$, an aggregated secret key
+$\mathsf{ask}_{i}$, with refresh algorithms $\mathsf{UpdPK}, \mathsf{UpdSK}$
+that jointly re-randomize every active user's keys given only the current
+membership $S$ — after a refresh, a corrupted user's new secret key does
+not help decrypt ciphertexts sent to $\mathsf{apk}$ before that refresh. The
+source's succinctness requirement (Definition 5.6) asks only that
+$\mathsf{apk}$, each $\mathsf{ask}_{i}$, the refreshed keys and the refresh
+ciphertext $\mathsf{ctref}$ have size $\mathrm{poly}(\lambda)$, independent
+of $|S|$ — not that $\mathsf{UpdPK}, \mathsf{UpdSK}$ run in sublinear
+*time*. The source's own Construction 5.10 meets this succinctness
+requirement, built from a lattice-based matrix-commitment scheme under the
+decomposed learning-with-errors assumption in the random oracle model, but
+its refresh algorithms run in time $\mathrm{poly}(\lambda, |S|)$.
+
+**Conjecture.** Does there exist a secure, succinct updatable distributed
+broadcast encryption scheme for up to $2^{\lambda}$ users in which the
+refresh algorithms $\mathsf{UpdPK}, \mathsf{UpdSK}$ also run in time
+sublinear in $|S|$, rather than merely producing succinct output while
+running in time $\mathrm{poly}(\lambda, |S|)$? (The source commits to no
+specific target rate, such as polylogarithmic, for this question.)
+Equivalently: does there exist a CGKA protocol achieving post-compromise
+security and forward secrecy in which *every* operation — including the
+forward-secrecy refresh, and not merely its communication — runs in time
+sublinear in the current group size?
+
+**How the source states it.** Page 6: "We leave it as an open problem to
+achieve a truly (computation-wise!) sublinear CGKA scheme with forward
+secrecy." Remark 5.7 (page 35) restates it: "An important open problem is
+to obtain a scheme where the refresh operation requires sublinear running
+time. An updatable distributed broadcast encryption scheme with this
+property would yield a forward-secure CGKA protocol where computation and
+communication costs are all sublinear in the size of the group."
+
+**A strictly stronger variant, raised separately.** Footnote 8 (page 7)
+asks for $\mathsf{UpdPK}, \mathsf{UpdSK}$ to not take $S$ as an input at
+all, running in time $\mathrm{poly}(\lambda)$ independent of $|S|$. The
+source's Appendix A attacks a natural construction achieving *that*
+stronger property — replacing each user's independent random shift with
+one shared shift — but this attack does not bear on the plain
+sublinear-time question above, which still permits $\mathsf{UpdPK},
+\mathsf{UpdSK}$ to take $S$ as input.
+
+### Sources
+
+- Bartusek, Bitansky, Dodis, Garg and Wu. [*Fair-Weather No More: Guaranteed Efficiency in Secure Group Messaging*](https://eprint.iacr.org/2026/1677). IACR ePrint 2026/1677. The source. The open problem is posed on page 6 and restated as Remark 5.7, page 35; the succinctness requirement is Definition 5.6, page 35; the stronger input-free variant is Footnote 8, page 7; the attack on it is Appendix A, pages 72–74.
+- Alwen, Coretti, Dodis and Tselekounis. [*Security Analysis and Improvements for the IETF MLS Standard for Group Messaging*](https://eprint.iacr.org/2019/1189). IACR ePrint 2019/1189; CRYPTO 2020. RTreeKEM, the only prior CGKA scheme with forward secrecy, cited by the source as not meeting even its weaker, communication-only efficiency requirement.
+- Abram, Malavolta and Roy. [*Key-Homomorphic Computations for RAM: Fully Succinct Randomised Encodings and More*](https://eprint.iacr.org/2025/339). IACR ePrint 2025/339; CRYPTO 2025. Introduces the decomposed learning-with-errors assumption the source's Construction 5.10 relies on.
+
+## Proof
+
+View PDF — *no proof written yet* · LaTeX source — *no proof written yet* · Formal proof — *not yet formalized*
+
+Open, with no partial progress toward either direction recorded by the
+source.
+
+**Why the natural attack does not settle this.** The source's Appendix A
+attack breaks a construction that drops $S$ as an input entirely — the
+strictly stronger footnote-8 variant. It exploits a linear-cancellation
+("zeroizing") argument comparing two users' local openings and ciphertext
+components, which relies specifically on there being no per-user
+information left in the refresh at all. A scheme that still takes $S$ as
+input, and merely processes it faster than linearly, is not touched by
+this attack.
+
+**What a construction would need.** Some way to re-randomize every active
+user's key using $S$ as an input without touching all of it — plausibly a
+data structure supporting sublinear-time updates that still lets each
+user's aggregated secret key be derived correctly, which is not what the
+source's matrix-commitment approach offers as it stands.
+
+**Checked against the literature, 2026-08-24.** No proof, refutation or
+resolution found in the months since the ePrint. This is a targeted check
+on a very recent paper, not an exhaustive sweep.
+
+## Discussion
+
+**Two grades of the same question.** Keep the plain question (this page)
+distinct from the footnote-8 variant of dropping $S$ as an input entirely.
+The source's Appendix A attack is evidence of difficulty only for the
+latter; treating it as evidence against the former overstates what the
+source shows.
+
+**What a reviewer should be suspicious of.** Whether "sublinear" here
+should be read as polylogarithmic or merely asymptotically sub-linear in
+$|S|$ — the source's own phrasing commits only to "sublinear," not to a
+specific rate, and this page's statement preserves that looseness rather
+than sharpening it.
+
+**Attackability for an AI proof harness (conjecture-triage, 2026-08-25).** Scored 19/31, verdict PROBE, difficulty band "stretch" — this rates how tractable a bounded multi-agent campaign would find it, not the statement's intrinsic mathematical difficulty. The source's own second construction (full logarithmic complexity, but no forward secrecy) supplies an unusually clean ladder rung, which helps; what costs it is a crowded, actively-worked subfield (CGKA/MLS efficiency has several concurrent 2026 results), a "sublinear" target the source itself leaves without a fixed rate, and security that is not finite-instance checkable the way running time is. Recommended configuration: Case Planner to attempt recombining the source's two constructions, Scout to re-check for concurrent work before committing, no full Prover wave yet. Full record: `latex/conjectures/sublinear-refresh-forward-secrecy/triage.json`.
+
+## Open obligations
+
+- [ ] Construct an updatable distributed broadcast encryption scheme with sublinear-time refresh, or determine that none exists.
+- [ ] Clarify, if pursuing a construction, what "sublinear" target rate is being aimed for.
+- [ ] Prove or refute the statement.
+- [ ] Formalize the statement in Lean; nothing here has been formalized.
+
+:::

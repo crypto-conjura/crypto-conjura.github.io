@@ -101,6 +101,8 @@ TOPIC_SLUGS = {
     "pseudorandom-correlation-functions", "learning-parity-with-noise",
     "dual-distance", "adaptivity", "discrete-logarithm",
     "locality-preserving-hashing", "distributed-discrete-logarithm",
+    "continuous-group-key-agreement", "broadcast-encryption",
+    "locally-computable-hashing",
 }
 
 MODELS = {"rom", "prom", "icm", "ggm", "qrom", "standard", "other"}

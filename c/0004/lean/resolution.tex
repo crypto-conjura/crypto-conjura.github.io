@@ -1,0 +1,953 @@
+% =====================================================================
+%  SOLUTION DOCUMENT, draft for c/0004 (public seed). Resolves
+%  Conjecture 2 (public seed) of the companion statement.tex in this
+%  folder; Conjecture 1 (secret seed, drafted separately in
+%  ../lhl-secret-seed/) is not addressed and remains open. Along the
+%  way, the naive transposition of Conjecture 1 to the public-seed
+%  game is shown false (Proposition~\ref{prop:false}), which is what
+%  motivates the corrected bound.
+%
+%  The note opens with an unnumbered "The conjecture, as posed"
+%  section reproducing both conjectures of statement.tex verbatim,
+%  with that note's numbering preserved: Conjectures 1 and 2 here ARE
+%  Conjectures 1 and 2 there, so this document's own transposed
+%  variant numbers as Conjecture 3.  Keep the two files in sync -- if
+%  statement.tex changes, that section must be re-copied.
+%
+%  Built on the shared conjura-solution.cls house style (inherits
+%  conjura-conjecture.cls's fonts/colors, widened to a book-trim page)
+%  -- see latex/conjectures/_template/.  `fact` and the unnumbered
+%  `theoremstar` are this document's own environments, layered on top
+%  of the class's theorem/lemma/proposition/corollary (independently
+%  countered, so each --- used exactly once here --- numbers cleanly
+%  as "1").
+% =====================================================================
+\documentclass{conjura-solution}
+
+% ---- document-specific macros
+\newcommand{\Fun}{\mathsf{Fun}}
+\newcommand{\Adv}{\mathbf{Adv}}
+\newcommand{\Gm}{\mathsf{Game}}
+\newcommand{\Pred}{\mathrm{Pred}}
+\newcommand{\Ext}{\mathrm{Ext}}
+\newcommand{\Extp}{\mathrm{Ext}\text{-}\mathrm{pub}}
+\newcommand{\pred}{\mathrm{pred}}
+\newcommand{\ext}{\mathrm{ext}}
+\newcommand{\extp}{\mathrm{ext}\text{-}\mathrm{pub}}
+\newcommand{\sd}{\mathit{sd}}
+\renewcommand{\sample}{\stackrel{{\scriptscriptstyle\$}}{\leftarrow}}
+\newcommand{\SD}{\mathrm{SD}}
+\newcommand{\calK}{\mathcal{K}}
+\newcommand{\calD}{\mathcal{D}}
+\newcommand{\calR}{\mathcal{R}}
+\newcommand{\ret}{\textbf{return}\ }
+\newcommand{\emp}{\mathrm{emp}}
+
+% ---- extra theorem-like environments the class doesn't provide
+\newtheorem*{theoremstar}{Theorem}
+\newtheorem{fact}{Fact}
+
+% ---- authorship/review provenance
+\newcommand{\AIModelsUsed}{Claude Opus 5 (Anthropic)}
+\newcommand{\PromptedBy}{Pooya Farshim}
+\newcommand{\ReviewedBy}{Nobody}
+\newcommand{\PaperDate}{14 August 2026}
+
+\newcommand{\AIDisclosure}{%
+  \begingroup
+  \small\centering
+  \begin{tabular}{@{}rl@{}}
+    \textbf{AI:} & \AIModelsUsed \\
+    \textbf{Prompts:} & \PromptedBy \\
+    \textbf{Reviewers:} & \ReviewedBy \\
+    \textbf{Date:} & \PaperDate \\
+  \end{tabular}
+  \par
+  \endgroup
+}
+
+\runninghead{LHL FOR RANDOM FUNCTIONS: PUBLIC SEED}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} SOLUTION}
+\cjtitle{LHL for Random Functions}
+\cjresolves{Conjecture 2 (public seed) of \emph{Randomness Extraction
+from Unpredictable Random-Oracle Sources: Two Leftover-Hash-Lemma
+Conjectures} (see \texttt{statement.tex} in this folder) --- proven true.
+Conjecture 1 (secret seed) is not addressed and remains open; a
+natural but false transposition of it to the public-seed game is
+also disproven here (Proposition~\ref{prop:false}). Both conjectures
+are reproduced verbatim below.}
+
+\vspace{0.6em}
+\AIDisclosure
+
+\vspace{1em}
+
+\section*{The conjecture, as posed}\label{sec:posed}
+
+The two conjectures below are reproduced verbatim from the statement note
+\emph{Randomness Extraction from Unpredictable Random-Oracle Sources: Two
+Leftover-Hash-Lemma Conjectures} (\texttt{statement.tex} in this folder), whose numbering is
+preserved: Conjectures~\ref{conj:stmt-secret} and~\ref{conj:stmt-pub} here are Conjectures 1
+and 2 there. The setting they are posed in is that note's, summarised first and then given in
+full, in the form used throughout the proof, in Section~\ref{sec:setting}.
+
+\medskip
+\noindent\textbf{Setting.}
+Fix nonempty finite sets $\calK$ (seeds), $\calD$ (inputs), $\calR$ (outputs), and write
+$K := |\calK|$, $D := |\calD|$, $R := |\calR|$. Let $\Fun(\calK \times \calD, \calR)$ be the set of
+all functions $\calK \times \calD \to \calR$, let $\SD(\cdot,\cdot)$ denote statistical distance and
+$U_{\calR}$ the uniform distribution on $\calR$. The source $S$, the predictor $P$ and the
+distinguisher $\mathsf{D}$ are computationally unbounded and receive the \emph{entire} function
+table of $H$ as an explicit input. In the prediction game $\Gm\ \Pred^{S}_{P}$ the predictor is
+to guess the source's output $x$ from $H$ and the source's auxiliary output $z$; in the two
+extraction games a seed $\sd \sample \calK$ is drawn after $S$ has terminated and $\mathsf{D}$ is
+to tell $H(\sd,x)$ from uniform, given $H$ and $z$. The two extraction games differ only in
+whether the seed $\sd$ is kept secret from $\mathsf{D}$ (the game $\Gm\ \Ext$) or given to it
+(the game $\Gm\ \Extp$); $\Gm\ \Pred$ and $\Gm\ \Extp$ are written out in
+Figure~\ref{fig:games} and Definition~\ref{def:games} below.
+
+\medskip
+\noindent\textbf{Advantages.}
+Set $\Adv^{\pred}_{\calK,\calD,\calR,S}(P) := \Pr[\Pred^{S}_{P} \Rightarrow 1]$ and
+\[
+  \Adv^{\ext}_{\calK,\calD,\calR}(S,\mathsf{D}) := 2\Pr[\Ext^{S}_{\mathsf{D}} \Rightarrow 1] - 1 ,
+  \qquad
+  \Adv^{\extp}_{\calK,\calD,\calR}(S,\mathsf{D}) := 2\Pr[\Extp^{S}_{\mathsf{D}} \Rightarrow 1] - 1 .
+\]
+A source $S$ is \emph{$\epsilon$-unpredictable} if
+$\Adv^{\pred}_{\calK,\calD,\calR,S}(P) \le \epsilon$ for every unbounded predictor $P$.
+
+\begin{conjecture}[Secret seed]\label{conj:stmt-secret}
+There is a universal constant $c > 0$, independent of $\calK$, $\calD$, $\calR$ and $\epsilon$, such
+that for all nonempty finite $\calK, \calD, \calR$, all $\epsilon \in (0,1]$, every
+$\epsilon$-unpredictable source $S$ and every unbounded distinguisher $\mathsf{D}$,
+\[
+  \Adv^{\ext}_{\calK,\calD,\calR}(S,\mathsf{D})
+  \;\le\; \delta(\epsilon, K, D, R)
+  \;:=\; c \cdot \sqrt{\frac{\epsilon R + \log_2 D}{K}} \; .
+\]
+\end{conjecture}
+
+\begin{conjecture}[Public seed]\label{conj:stmt-pub}
+There is a universal constant $c > 0$, independent of $\calK$, $\calD$, $\calR$ and $\epsilon$, such
+that for all nonempty finite $\calK, \calD, \calR$, all $\epsilon \in (0,1]$, every
+$\epsilon$-unpredictable source $S$ and every unbounded distinguisher $\mathsf{D}$,
+\[
+  \Adv^{\extp}_{\calK,\calD,\calR}(S,\mathsf{D})
+  \;\le\; \delta_{\mathrm{pub}}(\epsilon, K, D, R)
+  \;:=\; c \cdot \Bigl( \sqrt{\epsilon R} + \sqrt{\frac{\log_2 D}{K}} \,\Bigr) .
+\]
+\end{conjecture}
+
+\noindent
+Conjecture~\ref{conj:stmt-pub} is what this note settles: it holds with $c = 2$
+(Corollary~\ref{cor:pub}), as a consequence of the sharper Theorem~\ref{thm:main}.
+Conjecture~\ref{conj:stmt-secret} is a statement about the hidden-seed game $\Gm\ \Ext$, is not
+addressed here, and remains open.
+
+\section{Introduction}\label{sec:intro}
+
+This note revisits the secret-seed conjecture of the statement note under the one change that the
+seed $\sd$ is given to the distinguisher. That game is written $\Gm\ \Extp$ and its advantage
+$\Adv^{\extp}$, with the suffix carried everywhere, so that no statement here can be mistaken for
+a statement about the hidden-seed game $\Gm\ \Ext$ of the companion notes; both are set out in
+Figure~\ref{fig:games} and Definition~\ref{def:games}. The conjecture below is
+Conjecture~\ref{conj:stmt-secret}, the statement note's secret-seed conjecture, stated there for
+$\Adv^{\ext}$ and transposed verbatim to $\Adv^{\extp}$. It is not
+Conjecture~\ref{conj:stmt-pub}, the separate and weaker conjecture that note poses for the
+public-seed game; that one is treated in Corollary~\ref{cor:pub} and is not refuted.
+
+\begin{conjecture}[Conjecture~\ref{conj:stmt-secret} transposed to the public-seed game]\label{conj:main}
+There is a universal constant $c > 0$, independent of $\calK$, $\calD$, $\calR$ and $\epsilon$, such
+that for all nonempty finite $\calK, \calD, \calR$, all $\epsilon \in (0,1]$, every
+$\epsilon$-unpredictable source $S$ and every unbounded distinguisher $\mathsf{D}$,
+\[
+  \Adv^{\extp}_{\calK,\calD,\calR}(S,\mathsf{D})
+  \;\le\; \delta(\epsilon,K,D,R)
+  \;:=\; c \cdot \sqrt{\frac{\epsilon R + \log_2 D}{K}} \; .
+\]
+\end{conjecture}
+
+\noindent
+Three things happen. Conjecture~\ref{conj:main} becomes \emph{false}, and demonstrably so: a
+maximum-entropy source with no auxiliary output already refutes it
+(Proposition~\ref{prop:false}). The proof technique of the companion proof note, on the other
+hand, survives essentially unchanged, and delivers
+\[
+  \Adv^{\extp}_{\calK,\calD,\calR}(S,\mathsf{D})
+  \;\le\; \frac{1}{\sqrt{2}}\sqrt{\epsilon R}
+  \;+\; \min\Bigl\{\, \frac{6}{5}\sqrt{\frac{1 + \ln D}{K}} \;,\;\;
+        \sqrt{\frac{\ln(2eD\epsilon)}{2K}} + \frac{9}{10\sqrt{K}} \,\Bigr\}
+\]
+(Theorem~\ref{thm:main}): the seed's factor $1/K$ is lost from the deficiency term and retained in
+full by the selection term. The first form inside the brace is the direct transcription of the
+hidden-seed argument; the second is sensitive to the source's entropy and is the better of the two
+whenever $D$ is large or $\epsilon$ is near its minimum $1/D$, where it has no $\log D$ in it at
+all. In the closed form of Conjecture~\ref{conj:main} the correct statement is
+$\Adv^{\extp} \le c\sqrt{\epsilon R + \log_2 D / K}$, with the $1/K$ attached to the selection term
+alone, and $c = 2$ still suffices. Third, Conjecture~\ref{conj:stmt-pub}, the statement note's own
+public-seed conjecture, which already attaches the $1/K$ to the selection term, follows from
+Theorem~\ref{thm:main} with $c = 2$ (Corollary~\ref{cor:pub}); so what
+Proposition~\ref{prop:false} refutes is the transposition, not that conjecture. Sections and lemmas are kept in one-to-one correspondence with
+the hidden-seed note so that the two can be read against each other.
+
+\section{Setting and the two games}\label{sec:setting}
+
+Fix nonempty finite sets $\calK$ (seeds), $\calD$ (inputs) and $\calR$ (outputs), and write
+$K := |\calK|$, $D := |\calD|$, $R := |\calR|$. Let $\Fun(\calK \times \calD, \calR)$ be the set of
+all functions $\calK \times \calD \to \calR$. For distributions $P, Q$ on a countable set $\Omega$,
+\(
+  \SD(P,Q) := \max_{A \subseteq \Omega}\bigl(P(A) - Q(A)\bigr)
+            = \tfrac12 \sum_{\omega \in \Omega} |P(\omega) - Q(\omega)|
+\)
+denotes statistical distance, the maximum being attained at
+$A^{*} = \{\omega : P(\omega) > Q(\omega)\}$ whether $\Omega$ is finite or not, and $U_{\calR}$ is the uniform distribution on $\calR$. A
+\emph{source} $S$ receives a function table $H$ and outputs an input $x \in \calD$ together with an
+auxiliary string $z \in \{0,1\}^{*}$. The source $S$, the predictor $P$ and the distinguisher $\mathsf{D}$ of
+Figure~\ref{fig:games} are all computationally unbounded, and all three receive the \emph{entire}
+table of $H$, all $K \cdot D$ entries, as an explicit input; there is no query budget. The
+distinguisher now also receives the seed $\sd$, so the only object hidden from $\mathsf{D}$ is the
+coins of $S$.
+
+\subsection{Standard facts}\label{sec:facts}
+
+The seven facts below are the whole of what the note borrows from outside itself, apart from the
+one result of the companion note quoted as Fact~\ref{fact:hidden}. They are collected here so
+that the arguments of Sections~\ref{sec:false} and~\ref{sec:proof} rest on nothing that is not
+written down.
+
+\begin{fact}[Optimal distinguishing advantage]\label{fact:sd}
+Let $P_0$ and $P_1$ be distributions on a countable set $\Omega$. Sample $b \sample \{0,1\}$ and
+then $\omega \sample P_b$. For every function $\mathsf{A} \colon \Omega \to \{0,1\}$, possibly
+randomised and subject to no complexity bound,
+\[
+  2\Pr[\mathsf{A}(\omega) = b] - 1 \;\le\; \SD(P_0,P_1) ,
+\]
+with equality for the maximum-a-posteriori test, which returns $1$ exactly when
+$P_1(\omega) > P_0(\omega)$. In particular the maximum over $\mathsf{A}$ is attained.
+\end{fact}
+
+\begin{fact}[Bounded differences; McDiarmid~\cite{McD89}]\label{fact:mcd}
+Let $V_1, \dots, V_N$ be independent random variables, $V_i$ taking values in a set
+$\mathcal{V}_i$, and let the measurable function
+$g \colon \mathcal{V}_1 \times \cdots \times \mathcal{V}_N \to \mathbb{R}$ satisfy
+\[
+  |g(v) - g(v')| \;\le\; c_i
+  \qquad\text{whenever $v$ and $v'$ differ in the $i$th coordinate only.}
+\]
+Then for every $\lambda > 0$,
+\[
+  \Pr\bigl[\, g(V_1,\dots,V_N) \;\ge\; \mathbb{E}\,g(V_1,\dots,V_N) + \lambda \,\bigr]
+  \;\le\; \exp\Bigl(-\frac{2\lambda^{2}}{\sum_{i=1}^{N} c_i^{2}}\Bigr) .
+\]
+\end{fact}
+
+\begin{fact}[Binomial estimate]\label{fact:binom}
+For integers $1 \le t \le D$, \; $\binom{D}{t} \le (eD/t)^{t}$.
+\end{fact}
+
+\begin{fact}[Mean absolute deviation]\label{fact:mad}
+For a real random variable $X$ of finite variance,
+$\mathbb{E}\,|X - \mathbb{E}X| \le \sqrt{\operatorname{Var} X}$.
+\end{fact}
+
+\begin{fact}[Jensen's inequality]\label{fact:jensen}
+Let $I \subseteq \mathbb{R}$ be an interval, $\varphi \colon I \to \mathbb{R}$ concave, and $X$
+an integrable random variable taking values in $I$. Then
+$\mathbb{E}[\varphi(X)] \le \varphi(\mathbb{E}X)$. If $\varphi$ is in addition nondecreasing and
+$\mathbb{E}X \le m$ with $m \in I$, then $\mathbb{E}[\varphi(X)] \le \varphi(m)$.
+\end{fact}
+
+\begin{fact}[Cauchy--Schwarz]\label{fact:cs}
+For reals $\alpha_1,\alpha_2,\beta_1,\beta_2$, \;
+$(\alpha_1\beta_1 + \alpha_2\beta_2)^{2} \le (\alpha_1^{2}+\alpha_2^{2})(\beta_1^{2}+\beta_2^{2})$.
+\end{fact}
+
+\begin{fact}[Coverage of a random row]\label{fact:cover}
+The map $R \mapsto (1-1/R)^{R}$ is increasing on the integers $R \ge 2$, with value $\tfrac14$ at
+$R = 2$ and supremum $e^{-1}$. In particular $(1-1/R)^{R} \ge \tfrac14$ for every integer
+$R \ge 2$.
+\end{fact}
+
+
+\begin{figure}[ht]
+\centering
+\fbox{\begin{minipage}[t]{0.36\textwidth}
+\underline{$\Gm\ \Pred^{S}_{P}$}\\[2pt]
+$H \sample \Fun(\calK \times \calD, \calR)$\\
+$(x,z) \sample S(H)$\\
+$x' \sample P(H,z)$\\
+$\ret (x = x')$
+\end{minipage}}\hfill
+\fbox{\begin{minipage}[t]{0.55\textwidth}
+\underline{$\Gm\ \Extp^{S}_{\mathsf{D}}$}\\[2pt]
+$H \sample \Fun(\calK \times \calD, \calR)$\\
+$(x,z) \sample S(H)$;\quad $\sd \sample \calK$\\
+$y_0 \leftarrow H(\sd,x)$;\quad $y_1 \sample \calR$;\quad $b \sample \{0,1\}$\\
+$b' \sample \mathsf{D}(H, \sd, y_b, z)$\\
+$\ret (b = b')$
+\end{minipage}}
+\caption{Prediction game (left) and extraction game (right). The first argument of $S$, $P$ and
+$\mathsf{D}$ is the \emph{full function table} of $H$; the seed $\sd$ \emph{is} given to
+$\mathsf{D}$, but is sampled only after $S$ has terminated.}
+\label{fig:games}
+\end{figure}
+
+\begin{definition}\label{def:games}
+For the games of Figure~\ref{fig:games}, set
+\[
+  \Adv^{\pred}_{\calK,\calD,\calR,S}(P) := \Pr[\Pred^{S}_{P} \Rightarrow 1] ,
+  \qquad
+  \Adv^{\extp}_{\calK,\calD,\calR}(S,\mathsf{D}) := 2\Pr[\Extp^{S}_{\mathsf{D}} \Rightarrow 1] - 1 .
+\]
+In $\Gm\ \Extp$ the distinguisher is called as $b' \sample \mathsf{D}(H, \sd, y_b, z)$: it is
+given the seed. The suffix
+$\mathrm{pub}$ is carried throughout to distinguish this from the game $\Gm\ \Ext$ of the
+companion notes, which is identical except that $\mathsf{D}$ is called as
+$b' \sample \mathsf{D}(H, y_b, z)$ and the seed is withheld; the two advantages
+$\Adv^{\extp}$ and $\Adv^{\ext}$ are different quantities and no result about one is a result
+about the other. A source $S$ is \emph{$\epsilon$-unpredictable} if
+$\Adv^{\pred}_{\calK,\calD,\calR,S}(P) \le \epsilon$ for every unbounded predictor $P$; this is a
+property of $S$ alone and is the same notion in both models.
+\end{definition}
+
+The hidden-seed game just described is the subject of the companion note, whose bound is quoted
+here for the comparison drawn in Remark~\ref{rem:cost}. Nothing in this note is proved about
+$\Adv^{\ext}$, and Fact~\ref{fact:hidden} is used nowhere in the proofs.
+
+\begin{fact}[Companion note, hidden-seed model]\label{fact:hidden}
+For all nonempty finite $\calK, \calD, \calR$, all $\epsilon \in (0,1]$, every
+$\epsilon$-unpredictable source $S$ and every unbounded distinguisher $\mathsf{D}$ in the game
+$\Gm\ \Ext$ of Definition~\ref{def:games},
+\[
+  \Adv^{\ext}_{\calK,\calD,\calR}(S,\mathsf{D})
+  \;\le\; \frac{1}{\sqrt{2}}\sqrt{\frac{\epsilon R}{K}}
+       \;+\; \frac{6}{5}\sqrt{\frac{1 + \ln D}{K}} .
+\]
+\end{fact}
+
+The prediction game is untouched by the change, and the choice not to hand $\sd$ to $P$ costs
+nothing: $\sd$ is sampled after $S$ terminates and is therefore independent of $(X,H,Z)$, so a
+predictor given $\sd$ has the same optimal success probability. What the change does affect is
+the sampling order in $\Gm\ \Extp$, and that order is now the entire content of the model. The
+source must commit to $x$ before $\sd$ exists; were $S$ allowed to see $\sd$ it could choose $x$
+with $H(\sd,x)$ whatever value it liked and no bound of any shape would hold.
+
+Write $(X,Z)$ for the output distribution of $S$, and for a view $(H,z)$ of positive probability put
+\[
+  p^{H,z}_{x} \;:=\; \Pr[X = x \mid H, z] ,
+  \qquad
+  \epsilon_{H,z} \;:=\; \max_{x \in \calD} p^{H,z}_{x} .
+\]
+For $k \in \calK$ let $\nu^{H,z}_{k}$ denote the conditional law of $H(k, X)$ given $(H,Z) = (H,z)$,
+that is, the pushforward of $p^{H,z}$ along the single row $H(k,\cdot)$, and put
+\[
+  \Delta_{H,z} \;:=\; \frac{1}{K}\sum_{k \in \calK} \SD\bigl(\nu^{H,z}_{k}, U_{\calR}\bigr).
+\]
+
+\begin{lemma}[Analytic forms]\label{lem:analytic}
+It holds that
+$\max_{P} \Adv^{\pred}_{\calK,\calD,\calR,S}(P) = \mathbb{E}_{(H,Z)}[\epsilon_{H,Z}]$, so that
+$S$ is $\epsilon$-unpredictable if and only if $\mathbb{E}_{(H,Z)}[\epsilon_{H,Z}] \le \epsilon$;
+and
+\begin{equation}\label{eq:analytic}
+  \max_{\mathsf{D}}\Adv^{\extp}_{\calK,\calD,\calR}(S,\mathsf{D})
+  \;=\; \mathbb{E}_{(H,Z)}\bigl[\Delta_{H,Z}\bigr] .
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+% BEGIN overview lem:analytic
+Each claim identifies an optimal unbounded adversary with a statistical quantity. For the first,
+the predictor that outputs a mode of $p^{H,z}$ succeeds with probability $\epsilon_{H,z}$ on the
+view $(H,z)$, and its success is averaged over $(H,Z)$. For the second, the argument conditions on
+$(H,Z) = (H,z)$, identifies the optimal advantage with the statistical distance between the two
+view distributions, and expands that distance over the pair $(\sd,y_b)$; since $\sd$ is uniform
+under both hypotheses, the sum factors through the $K$ rows and equals $\Delta_{H,z}$. Averaging
+over $(H,Z)$ gives \eqref{eq:analytic}.
+% END overview lem:analytic
+
+The first claim is unchanged from the hidden-seed setting: given its view $(H,z)$ a predictor
+succeeds with probability at most $\epsilon_{H,z}$, with equality for the (unbounded) predictor
+that outputs a mode of $p^{H,z}$; averaging over $(H,Z)$ gives the claim. (The view space
+$\Fun(\calK \times \calD, \calR) \times \{0,1\}^{*}$ is countably infinite, but the maxima over
+$P$, and below over $\mathsf{D}$, are attained all the same: the mode predictor and the
+maximum-a-posteriori test of Fact~\ref{fact:sd} are defined view by view.)
+
+For the second, condition on $(H,Z) = (H,z)$. The view of $\mathsf{D}$ is $(H, \sd, y_b, z)$, and
+the two hypotheses differ only in the pair $(\sd, y_b)$: under $b = 0$ it is distributed as
+$(\sd, H(\sd,X))$ with $\sd \sample \calK$ independent of $X$, and under $b = 1$ as
+$U_{\calK} \otimes U_{\calR}$. By Fact~\ref{fact:sd} the optimal advantage $2\Pr[b'=b]-1$ equals the
+statistical distance between the two view distributions; since the component $(H,Z)$ has the same
+law under $b=0$ and $b=1$, and the first coordinate $\sd$ is uniform under both hypotheses,
+\begin{align*}
+  \SD\bigl((\sd, H(\sd,X)) \mid (H,z),\; U_{\calK}\otimes U_{\calR}\bigr)
+  &= \tfrac12 \sum_{k,r} \tfrac1K \bigl|\nu^{H,z}_{k}(r) - \tfrac1R\bigr| \\
+  &= \frac1K \sum_{k} \SD\bigl(\nu^{H,z}_{k}, U_{\calR}\bigr)
+  \;=\; \Delta_{H,z},
+\end{align*}
+and averaging over $(H,Z)$ gives \eqref{eq:analytic}.
+\end{proof}
+
+The one structural change is visible in the display above: the average over $k$ now sits
+\emph{outside} the statistical distance. In the hidden-seed model $\mathsf{D}$ sees a mixture of
+the $K$ rows and the mixing itself smooths the distribution; here $\mathsf{D}$ is told which row it
+is looking at, and the $K$ rows are graded separately. Everything below follows from that one
+displacement.
+
+\section{The conjectured bound is false in this model}\label{sec:false}
+
+\begin{proposition}\label{prop:false}
+For every $c > 0$ there are nonempty finite $\calK, \calD, \calR$, a value $\epsilon \in (0,1]$, an
+$\epsilon$-unpredictable source $S$ and a distinguisher $\mathsf{D}$ with
+\[
+  \Adv^{\extp}_{\calK,\calD,\calR}(S,\mathsf{D}) \;\ge\; \tfrac14
+  \;>\; c\,\sqrt{\frac{\epsilon R + \log_2 D}{K}} .
+\]
+The witness has $z = \bot$ and $X$ uniform on all of $\calD$, that is, the largest entropy a
+source over $\calD$ can have.
+\end{proposition}
+
+\begin{proof}
+% BEGIN overview prop:false
+A witness is exhibited and its two sides are computed. The source outputs a uniform $x$ and
+$z = \bot$, and $\calR$ is taken with $R = D$; by Lemma~\ref{lem:analytic} it is
+$(1/D)$-unpredictable, so $\epsilon R = 1$ and the conjectured bound reads
+$c\sqrt{(1+\log_2 D)/K}$. The distinguisher returns $0$ when its challenge lies in the image of the
+row $H(\sd,\cdot)$, which its view determines. Under $b = 0$ this is correct with probability $1$;
+under $b = 1$ it is correct with probability $(1-1/R)^{D}$, computed from the $D$ i.i.d.\ entries
+of the row and bounded below by Fact~\ref{fact:cover}. Combining the two gives advantage at least $\tfrac14$ for every $K$, and $K$ is then
+taken large enough to put the conjectured bound below $\tfrac14$.
+% END overview prop:false
+
+Take $\calD$ and $\calR$ with $R = D \ge 2$, let $S(H)$ output $x \sample \calD$ and
+$z \leftarrow \bot$, and let $\calK$ be arbitrary. For each $(H,z)$ the output $X$ is uniform on
+$\calD$, so $\epsilon_{H,z} = 1/D$ and $S$ is $(1/D)$-unpredictable by
+Lemma~\ref{lem:analytic}; thus $\epsilon = 1/D$ and $\epsilon R = 1$. Let $\mathsf{D}(H,\sd,y,z)$
+return $0$ if $y$ lies in the image of the row $H(\sd,\cdot)$ and $1$ otherwise. The test is
+computable from the view because $\mathsf{D}$ holds both $H$ and $\sd$. If $b = 0$ then
+$y_0 = H(\sd,X)$ is in that image by construction, so $\mathsf{D}$ is correct with probability $1$.
+If $b = 1$ then $y_1 \sample \calR$ is independent of $H$ and $\sd$, and $\mathsf{D}$ is correct
+with probability $\mathbb{E}\bigl[1 - |\mathrm{Im}\,H(\sd,\cdot)|/R\bigr]$; the $D$ entries of the
+row are i.i.d.\ uniform on $\calR$, so a fixed $r$ is missed with probability $(1-1/R)^{D}$ and this
+expectation equals $(1-1/R)^{D} = (1-1/R)^{R}$, which is at least $\tfrac14$ by
+Fact~\ref{fact:cover}. Hence
+$\Adv^{\extp} = 2 \cdot \tfrac12\bigl(1 + (1-1/R)^{R}\bigr) - 1 \ge \tfrac14$, uniformly in $K$.
+Meanwhile $c\sqrt{(\epsilon R + \log_2 D)/K} = c\sqrt{(1+\log_2 D)/K} < \tfrac14$ as soon as
+$K > 16c^{2}(1 + \log_2 D)$, and $K$ is unconstrained.
+\end{proof}
+
+The constant $\tfrac14$ is attained rather than approached: by Fact~\ref{fact:cover} the
+proposition in fact gives
+$\Adv^{\extp} = (1-1/R)^{R} \ge \tfrac14$.
+
+The source of the failure is not the auxiliary output and not adversarial selection: it is that
+once $\sd$ is public, the map $x \mapsto H(\sd,x)$ is known to $\mathsf{D}$ in full, so the only
+randomness available is that of $X$ itself and the seed cannot contribute entropy. Any correct
+bound must therefore contain a term in $\epsilon R$ that does not decrease in $K$. That is the
+only defect: with the $1/K$ moved onto the selection term alone, Conjecture~\ref{conj:main} holds
+with $c = 2$.
+
+\section{The corrected bound}\label{sec:corrected}
+
+\begin{theorem}\label{thm:main}
+For all nonempty finite $\calK, \calD, \calR$, all $\epsilon \in (0,1]$, every $\epsilon$-unpredictable
+source $S$ and every unbounded distinguisher $\mathsf{D}$ in the game of Figure~\ref{fig:games},
+\begin{align}
+  \Adv^{\extp}_{\calK,\calD,\calR}(S,\mathsf{D})
+  &\;\le\; \frac{1}{\sqrt{2}}\sqrt{\epsilon R}
+        \;+\; \frac{6}{5}\sqrt{\frac{1 + \ln D}{K}}
+  \;\le\; 2\sqrt{\epsilon R + \frac{\log_2 D}{K}} \; ,
+  \label{eq:main-plain}\\[2pt]
+  \Adv^{\extp}_{\calK,\calD,\calR}(S,\mathsf{D})
+  &\;\le\; \frac{1}{\sqrt{2}}\sqrt{\epsilon R}
+        \;+\; \sqrt{\frac{\ln(2eD\epsilon)}{2K}} \;+\; \frac{9}{10\sqrt{K}} \; .
+  \label{eq:main-sharp}
+\end{align}
+As in the hidden-seed setting the last inequality of \eqref{eq:main-plain} is not an unconditional
+fact about the parameters: it holds for all $\epsilon \in (0,1]$ whenever $D \ge 2$, and for
+$D = 1$ it holds at $\epsilon = 1$, the only value at which an $\epsilon$-unpredictable source
+exists; it can fail for $D = 1$ and $\epsilon$ small. Neither of
+\eqref{eq:main-plain} and \eqref{eq:main-sharp} implies the other; see Remark~\ref{rem:refine}.
+\end{theorem}
+
+\begin{theoremstar}[Informal; see Theorem~\ref{thm:main}]
+Publishing the seed costs exactly one factor of $K$, and costs it in one summand only. The first
+summand $\tfrac{1}{\sqrt{2}}\sqrt{\epsilon R}$ does not improve as the seed space grows; the
+second, which is what the source can extract by choosing its support after seeing $H$ and signalling
+it through $z$, keeps its $1/K$ in full. The two forms differ only in that second summand:
+\eqref{eq:main-plain} carries $1 + \ln D$ where \eqref{eq:main-sharp} carries the
+entropy-sensitive $\ln(2eD\epsilon)$, and \eqref{eq:main-sharp} pays an additive
+$\tfrac{9}{10\sqrt{K}}$ for the exchange.
+\end{theoremstar}
+
+The statement note poses two conjectures, one for each game, and neither of them is refuted here:
+what Proposition~\ref{prop:false} kills is Conjecture~\ref{conj:main}, the transposition of the
+secret-seed Conjecture~\ref{conj:stmt-secret} to the public-seed game. That note's own
+public-seed conjecture is the weaker Conjecture~\ref{conj:stmt-pub},
+\begin{equation}\label{eq:pubconj}
+  \Adv^{\extp}_{\calK,\calD,\calR}(S,\mathsf{D})
+  \;\le\; c\Bigl(\sqrt{\epsilon R} \;+\; \sqrt{\tfrac{\log_2 D}{K}}\Bigr) ,
+\end{equation}
+which already carries the factor $1/K$ on the selection term alone. That conjecture survives, and
+Theorem~\ref{thm:main} settles it.
+
+\begin{corollary}[The public-seed conjecture of the statement note]\label{cor:pub}
+For all nonempty finite $\calK, \calD, \calR$ with $D \ge 2$, all $\epsilon \in (0,1]$, every
+$\epsilon$-unpredictable source $S$ and every unbounded distinguisher $\mathsf{D}$, the bound
+\eqref{eq:pubconj} holds with $c = \tfrac85$; the smallest constant obtainable by this route is
+$\tfrac65\sqrt{1 + \ln 2} = 1.5615\ldots$, attained at $D = 2$. For $D = 1$, the only case left,
+\eqref{eq:pubconj} holds with $c = \tfrac{1}{\sqrt2} + \tfrac65 < 1.91$. Hence $c = 2$ suffices
+throughout the range in which an $\epsilon$-unpredictable source exists.
+\end{corollary}
+
+\begin{proof}
+% BEGIN overview cor:pub
+For $D \ge 2$ the two summands of \eqref{eq:main-plain} are compared with the two summands of
+\eqref{eq:pubconj} separately: the first comparison asks for $c \ge 1/\sqrt2$, and the second
+reduces to bounding $(1+\ln D)/\log_2 D$, which is decreasing in $D$ and so largest at $D = 2$.
+For $D = 1$ the second summand of \eqref{eq:pubconj} vanishes, so the comparison is made against
+$\sqrt{\epsilon R}$ alone, using that $D = 1$ forces $\epsilon = 1$ and hence $\epsilon R \ge 1$.
+% END overview cor:pub
+
+By \eqref{eq:main-plain} it suffices that $\tfrac{1}{\sqrt2} \le c$ and that
+$\tfrac65\sqrt{(1+\ln D)/K} \le c\sqrt{\log_2 D / K}$ for every $D \ge 2$, that is, that
+$c \ge \tfrac65\sqrt{h(D)}$ where $h(D) := (1+\ln D)/\log_2 D$. Writing
+$\log_2 D = \ln D/\ln 2$ gives $h(D) = (\ln 2)(1 + 1/\ln D)$, which is decreasing on $D \ge 2$;
+so $h(D) \le h(2) = (\ln 2)(1 + 1/\ln 2) = \ln 2 + 1 = 1.6931\ldots$ and
+$\tfrac65\sqrt{h(2)} = 1.5615\ldots$. Since $1.5615 \ge 1/\sqrt2$, both requirements hold at
+$c = 1.5615\ldots$, and a fortiori at $c = \tfrac85$.
+
+For $D = 1$ the second summand of \eqref{eq:pubconj} vanishes, so what is needed is
+$\tfrac{1}{\sqrt2}\sqrt{\epsilon R} + \tfrac65 K^{-1/2} \le c\sqrt{\epsilon R}$. Here $\epsilon = 1$,
+because $\mathbb{E}[\epsilon_{H,Z}] \ge 1/D = 1$ leaves no smaller value admissible, so
+$\epsilon R = R \ge 1$; together with $K \ge 1$ this gives
+$\tfrac{1}{\sqrt2}\sqrt{\epsilon R} + \tfrac65 K^{-1/2} \le
+\bigl(\tfrac{1}{\sqrt2} + \tfrac65\bigr)\sqrt{\epsilon R} < 1.91\sqrt{\epsilon R}$.
+\end{proof}
+
+Proposition~\ref{prop:false} therefore refutes the verbatim transposition of the secret-seed
+conjecture, which is strictly stronger than \eqref{eq:pubconj}, since
+$\sqrt{(\epsilon R + \log_2 D)/K} \le \sqrt{\epsilon R} + \sqrt{\log_2 D/K}$. Both are recorded
+because the transposition is the natural first guess, and locating where it fails is what
+identifies the term that cannot decay in $K$.
+
+The rest of the note proves Theorem~\ref{thm:main}: Section~\ref{sec:setup} fixes the notation,
+Section~\ref{sec:lemmas} establishes the three lemmas the proof rests on, and
+Section~\ref{sec:assemble} puts them together. Section~\ref{sec:disc} discusses what the public
+seed does and does not cost.
+
+\section{Proof of Theorem~\ref{thm:main}}\label{sec:proof}
+
+\subsection{Set-up}\label{sec:setup}
+
+For a function table $H$, a seed $k \in \calK$ and a nonempty $T \subseteq \calD$ let
+$\emp^{H}_{k,T}$ be the empirical distribution of the $|T|$ oracle values in row $k$ over $T$,
+\[
+  \emp^{H}_{k,T}(r) \;:=\; \frac{1}{|T|}\,\bigl|\{x \in T : H(k,x) = r\}\bigr| ,
+\]
+and put
+\[
+  F_{T}(H) \;:=\; \frac{1}{K}\sum_{k \in \calK} \SD\bigl(\emp^{H}_{k,T}, U_{\calR}\bigr),
+  \qquad
+  \Phi_{H}(t) \;:=\; \max_{T \subseteq \calD,\; |T| = t} F_{T}(H) .
+\]
+For a uniform $H$ and each fixed $k$ the $|T|$ values $\{H(k,x)\}_{x \in T}$ are $|T|$ i.i.d.\
+uniform draws from $\calR$; the $K$ rows are independent of one another, but that is not needed for
+the mean, only for the deviation. The pair $(F_{T}, \Phi_{H})$ is the exact point of departure from the hidden-seed proof,
+where the corresponding object $Q_{H,T}$ was a single empirical distribution of $Kt$ draws. Here
+there are $K$ separate empirical distributions of $t$ draws each, and their distances are averaged.
+
+\smallskip
+The proof is four steps, in the same order as before: flatten the source (Lemma~\ref{lem:flat}),
+compute the mean for one fixed support (Lemma~\ref{lem:mean}), control the deviation \emph{uniformly
+over all supports of all sizes} (Lemma~\ref{lem:unif}), and average (Section~\ref{sec:assemble}).
+Lemma~\ref{lem:flat} and part~(i) of Lemma~\ref{lem:unif} carry over from the hidden-seed note with
+$F_{\cdot}(H)$ in place of $\SD(Q_{H,\cdot},U_{\calR})$ and the centering of
+Lemma~\ref{lem:mean} in place of the old one (the deviation argument is untouched, but the
+centering is inherited, so $\tfrac12\sqrt{R/(Kt)}$ becomes $\tfrac12\sqrt{R/t}$ inside $W_{1}$),
+and the convexity step of Lemma~\ref{lem:flat} now has to pass through the average over $k$. Of the
+substance, only Lemma~\ref{lem:mean} changes, and it changes by exactly one factor of $K$.
+Part~(ii) of Lemma~\ref{lem:unif} is new and applies verbatim to the hidden-seed proof as well.
+
+\subsection{The three lemmas}\label{sec:lemmas}
+
+\begin{lemma}[Flattening]\label{lem:flat}
+Fix $H$ and $z$, and let $t := \lfloor 1/\epsilon_{H,z} \rfloor$. Then $1 \le t \le D$ and
+\(
+  \Delta_{H,z} \le \Phi_{H}(t).
+\)
+\end{lemma}
+
+The effect is that the source enters the rest of the argument only through the single integer $t$:
+Lemmas~\ref{lem:mean} and~\ref{lem:unif} are statements about flat supports $T$ with $|T| = t$ and
+about $H$, and the unpredictability hypothesis reappears only when $t$ is averaged over $(H,Z)$ in
+Section~\ref{sec:assemble}.
+
+\begin{proof}
+% BEGIN overview lem:flat
+The floor gives $1 \le t \le D$ and the pointwise cap $\|p^{H,z}\|_{\infty} \le 1/t$. The
+distributions obeying that cap form a hypersimplex, whose vertices are identified as the uniform
+distributions $\tfrac1t\mathbf{1}_{T}$ on $t$-element supports, using that $t$ is an integer; so
+$p^{H,z}$ is a convex combination of them. The map $p \mapsto \Delta_{H,z}$ is then shown to be
+convex, being an average over $k$ of a convex function of a linear pushforward, and its value at
+the vertex $\tfrac1t\mathbf{1}_{T}$ is $F_{T}(H)$. Convexity along the combination bounds
+$\Delta_{H,z}$ by $\Phi_{H}(t)$.
+% END overview lem:flat
+
+Since $\epsilon_{H,z} = \max_x p^{H,z}_x \in [1/D, 1]$ we have $1 \le t \le D$, and $\|p^{H,z}\|_\infty
+\le 1/t$ by definition of the floor. The set $\{p \in \mathbb{R}^{\calD} : p \ge 0,\ \sum_x p_x = 1,\
+p_x \le 1/t\}$ is the hypersimplex, whose vertices are precisely the vectors $\tfrac{1}{t}\mathbf{1}_T$
+with $|T| = t$: a vertex has at most one coordinate strictly inside $(0, 1/t)$, and since $t$ is an
+integer the mass constraint rules that coordinate out. (Integrality of $t$ is essential here; a
+polytope with a non-integral cap has fractional vertices.) Hence $p^{H,z} = \sum_j \alpha_j
+\tfrac{1}{t}\mathbf{1}_{T_j}$ for some convex weights $\alpha_j$ and $t$-sets $T_j$. For each fixed
+$k$ the map $p \mapsto \nu_{k}$ is linear, being a pushforward, and $\SD(\cdot,U_{\calR})$ is convex;
+a nonnegative average over $k$ of convex functions of linear maps is convex, so $p \mapsto
+\Delta_{H,z}$ is convex in $p^{H,z}$. Finally the value of that map at the vertex
+$\tfrac1t\mathbf{1}_{T}$ is $F_{T}(H)$, since the pushforward of $\tfrac1t\mathbf{1}_{T}$ along
+$H(k,\cdot)$ is $\emp^{H}_{k,T}$. Hence
+$\Delta_{H,z} \le \sum_j \alpha_j F_{T_j}(H) \le \Phi_H(t)$.
+\end{proof}
+
+\begin{lemma}[Mean at a fixed support]\label{lem:mean}
+For every fixed $T$ with $|T| = t$, \;
+$\mathbb{E}_{H}\bigl[F_{T}(H)\bigr] \le \tfrac12 \sqrt{R/t}$.
+\end{lemma}
+
+\begin{proof}
+% BEGIN overview lem:mean
+The distance is bounded one row at a time. For fixed $k$, each $\emp^{H}_{k,T}(r)$ is an average of
+$t$ i.i.d.\ Bernoulli$(1/R)$ variables, so its mean absolute deviation from $1/R$ is bounded by its
+standard deviation; summing over the $R$ values of $r$ and halving gives $\tfrac12\sqrt{R/t}$ for
+that row, and the average over the $K$ seeds inherits the bound.
+% END overview lem:mean
+
+Fix $k$. Each $\emp^{H}_{k,T}(r)$ is an average of $t$ i.i.d.\ Bernoulli$(1/R)$
+variables, so Fact~\ref{fact:mad} gives $\mathbb{E}\,|\emp^{H}_{k,T}(r) - 1/R| \le \sqrt{\operatorname{Var}} =
+\sqrt{\tfrac{1}{t}\tfrac1R(1-\tfrac1R)} \le (tR)^{-1/2}$. Summing over the $R$ values of $r$ and
+halving gives $\mathbb{E}\,\SD(\emp^{H}_{k,T},U_{\calR}) \le \tfrac12 R (tR)^{-1/2} =
+\tfrac12\sqrt{R/t}$, and averaging over the $K$ seeds preserves the bound.
+\end{proof}
+
+Lemma~\ref{lem:mean} is the whole of the loss. Its hidden-seed version averages $Kt$ draws and
+yields $\tfrac12\sqrt{R/(Kt)}$; here the count is $t$, because each row is graded on its own $t$
+values and the average over $k$ happens afterwards, outside the distance.
+
+\begin{lemma}[Uniform deviation]\label{lem:unif}
+Let $a := 1 + \ln D$, let $b_{t} := \tfrac1t \ln\binom{D}{t}$ for $1 \le t \le D$, put
+$\psi(u) := e^{-u}/(1-e^{-u})$, and set
+\[
+  W_{1} \;:=\; \max_{1 \le t \le D}\Bigl(\Phi_{H}(t) - \tfrac12\sqrt{\tfrac{R}{t}}\Bigr),
+  \qquad
+  W_{2} \;:=\; \max_{1 \le t \le D}\Bigl(\Phi_{H}(t) - \tfrac12\sqrt{\tfrac{R}{t}}
+                                          - \sqrt{\tfrac{b_{t}}{2K}}\Bigr),
+\]
+with $W_{i,+} := \max\{W_{i}, 0\}$. Then for every $u > 0$,
+\[
+  \text{(i)}\quad \Pr_{H}\Bigl[\, W_{1} > \sqrt{\tfrac{a+u}{2K}} \,\Bigr] \;\le\; \psi(u) ,
+  \qquad\qquad
+  \text{(ii)}\quad \Pr_{H}\Bigl[\, W_{2} > \sqrt{\tfrac{u}{2K}} \,\Bigr] \;\le\; \psi(u) ,
+\]
+and hence
+\[
+  \text{(i)}\quad
+  \mathbb{E}_{H}[W_{1,+}] \;\le\; \sqrt{\frac{a}{2K}} + \frac{\ln 4}{2\sqrt{2Ka}}
+  \;\le\; \frac{6}{5}\sqrt{\frac{a}{K}} ,
+  \qquad
+  \text{(ii)}\quad
+  \mathbb{E}_{H}[W_{2,+}] \;\le\; \frac{3}{2}\sqrt{\frac{\ln 2}{2K}} \;\le\; \frac{9}{10\sqrt{K}} .
+\]
+\end{lemma}
+
+The two parts bound the same quantity twice and differ only in how the union over supports is paid
+for. Part~(i) subtracts from $\Phi_{H}(t)$ a single cost $a = 1 + \ln D$ shared by every size $t$;
+part~(ii) subtracts the size-dependent $b_{t} = \tfrac1t\ln\binom{D}{t}$, which is what
+$\binom{D}{t}$ costs at that size and which is $0$ at $t = D$. Part~(i) is what yields
+\eqref{eq:main-plain} and part~(ii) is what yields \eqref{eq:main-sharp}.
+
+\begin{proof}
+% BEGIN overview lem:unif
+The argument runs in two phases. First, for a fixed $T$ of size $t$, $F_{T}(H)$ is regarded as a
+function of the $Kt$ table entries it depends on; a single entry changes it by at most $1/(Kt)$, so
+Fact~\ref{fact:mcd} bounds $\Pr[F_{T}(H) \ge \mathbb{E}\,F_{T}(H) + \lambda]$ by
+$e^{-2\lambda^{2}Kt}$, and Lemma~\ref{lem:mean} replaces the mean by $\tfrac12\sqrt{R/t}$.
+
+Second, that bound is summed over all $T$ of all sizes under two choices of $\lambda$. Part~(i)
+takes $\lambda = \sqrt{(a+u)/(2K)}$, which does not depend on $t$, and absorbs $\binom{D}{t}$ into
+$e^{ta}$; part~(ii) takes $\lambda_{t} = \sqrt{(b_{t}+u)/(2K)}$, for which that bound
+becomes $\binom{D}{t}^{-1}e^{-tu}$ and the binomial coefficient cancels against the union bound.
+Both leave the geometric sum $\sum_{t \ge 1}e^{-tu} = \psi(u)$. The two expectations then follow by
+integrating $\Pr[W_{i,+} > s]$ over $s$, substituting for $u$ and splitting each integral at
+$\ln 2$, the point where $\psi(u) = 1$.
+% END overview lem:unif
+
+Fix $T$ with $|T| = t$ and regard $F_{T}(H)$ as a function of the $Kt$ independent values
+$\{H(k,x)\}_{k \in \calK, x \in T}$. Changing one of them, say $H(k_0,x_0)$, from $r_1$ to $r_2$
+affects only the summand $k = k_0$: it shifts $\emp^{H}_{k_0,T}(r_1)$ by $-1/t$ and
+$\emp^{H}_{k_0,T}(r_2)$ by $+1/t$ and leaves the other coordinates alone, so it changes
+$\tfrac12\sum_r|\emp^{H}_{k_0,T}(r) - 1/R|$ by at most $1/t$, and changes $F_T(H)$, which carries
+that summand at weight $1/K$, by at most $1/(Kt)$. The bounded-differences constant is therefore
+$1/(Kt)$, exactly as in the hidden-seed setting, and Fact~\ref{fact:mcd} with
+$\sum_i c_i^2 = Kt \cdot (Kt)^{-2} = 1/(Kt)$ gives, for every $\lambda > 0$,
+\[
+  \Pr\bigl[F_{T}(H) \ge \mathbb{E}\,F_{T}(H) + \lambda\bigr]
+  \;\le\; \exp\bigl(-2\lambda^{2} K t\bigr) .
+\]
+The independence hypothesis of Fact~\ref{fact:mcd} is met because $H$ is a uniform \emph{function} table, so its
+$KD$ entries are i.i.d.; were each row $H(k,\cdot)$ a random permutation or injection, the $t$
+values in a row would be sampled without replacement and the inequality would not apply as stated.
+The same proviso governs the hidden-seed note.
+Since Lemma~\ref{lem:mean} gives $\mathbb{E}\,F_{T}(H) \le \tfrac12\sqrt{R/t}$, the event
+$F_{T}(H) > \tfrac12\sqrt{R/t} + \lambda$ is contained in the event bounded above, for every
+$\lambda > 0$ we care to choose. The two parts differ only in that choice.
+
+\emph{(i).} Take $\lambda := \sqrt{(a+u)/(2K)}$, which does \emph{not} depend on $t$; then the
+right-hand side is $e^{-t(a+u)}$. Union bounding over all $T$ of all sizes, using
+Fact~\ref{fact:binom} in the form $\binom{D}{t} \le (eD/t)^{t} \le e^{t(1+\ln D)} = e^{ta}$,
+\[
+  \Pr\Bigl[W_{1} > \lambda\Bigr]
+  \;\le\; \sum_{t=1}^{D} \binom{D}{t} e^{-t(a+u)}
+  \;\le\; \sum_{t \ge 1} e^{ta} e^{-t(a+u)}
+  \;=\; \sum_{t\ge1} e^{-tu}
+  \;=\; \psi(u).
+\]
+For the expectation, substitute $s = \sqrt{(a+u)/(2K)}$ in $\mathbb{E}[W_{1,+}] = \int_0^\infty \Pr[W_{1,+} > s]\,ds$,
+the range $s \le \sqrt{a/(2K)}$ being bounded by $\Pr \le 1$:
+\begin{align*}
+  \mathbb{E}[W_{1,+}] \;&\le\; \sqrt{\tfrac{a}{2K}}
+  + \int_0^\infty \min\{1,\psi(u)\}\,\frac{du}{2\sqrt{2K(a+u)}} \\
+  &\le\; \sqrt{\tfrac{a}{2K}} + \frac{1}{2\sqrt{2Ka}}\int_0^\infty \min\{1,\psi(u)\}\,du .
+\end{align*}
+Since $\psi(u) \ge 1$ exactly for $u \le \ln 2$, the last integral equals
+$\ln 2 + \bigl[\ln(1-e^{-u})\bigr]_{\ln 2}^{\infty} = 2\ln 2 = \ln 4$. Finally $a \ge 1$ gives
+$\sqrt{a/(2K)}\,(1 + \tfrac{\ln 4}{2a}) \le \tfrac{1.6932}{\sqrt2}\sqrt{a/K} \le \tfrac65\sqrt{a/K}$.
+
+\emph{(ii).} The bound $\binom{D}{t} \le e^{ta}$ is lossy for large $t$, and charging each size its
+true cost costs nothing. Take instead $\lambda_{t} := \sqrt{(b_{t}+u)/(2K)}$, which does depend on
+$t$; the right-hand side of the bound of Fact~\ref{fact:mcd} is now
+$e^{-t(b_{t}+u)} = \binom{D}{t}^{-1}e^{-tu}$, so the binomial coefficient cancels against the union
+bound instead of being dominated by it:
+\[
+  \Pr\Bigl[W_{2} > \sqrt{\tfrac{u}{2K}}\Bigr]
+  \;\le\; \sum_{t=1}^{D}\binom{D}{t}\binom{D}{t}^{-1}e^{-tu}
+  \;\le\; \sum_{t\ge1} e^{-tu} \;=\; \psi(u) ,
+\]
+where the first inequality uses that $W_{2} > \sqrt{u/(2K)}$ forces
+$\Phi_{H}(t) - \tfrac12\sqrt{R/t} > \sqrt{b_{t}/(2K)} + \sqrt{u/(2K)} \ge \lambda_{t}$ for some
+$t$, by subadditivity of the square root. For the expectation, substitute $s = \sqrt{u/(2K)}$, so
+that $ds = du/(2\sqrt{2Ku})$ and no range needs separate treatment:
+\[
+  \mathbb{E}[W_{2,+}] \;\le\; \int_{0}^{\infty}\min\{1,\psi(u)\}\,\frac{du}{2\sqrt{2Ku}}
+  \;=\; \frac{1}{2\sqrt{2K}}\int_{0}^{\infty}\frac{\min\{1,\psi(u)\}}{\sqrt u}\,du .
+\]
+Splitting at $\ln 2$ again, the first piece is $\int_{0}^{\ln 2}u^{-1/2}du = 2\sqrt{\ln 2}$ and the
+second is at most $(\ln 2)^{-1/2}\int_{\ln 2}^{\infty}\psi(u)\,du = (\ln 2)^{-1/2}\ln 2 =
+\sqrt{\ln 2}$, so the integral is at most $3\sqrt{\ln 2}$ and
+$\mathbb{E}[W_{2,+}] \le \tfrac32\sqrt{\ln 2/(2K)} \le \tfrac{9}{10}K^{-1/2}$, the last step
+because $\tfrac32\sqrt{\ln 2/2} < 0.8831$.
+\end{proof}
+
+Note that $b_{D} = 0$: at $t = D$ part~(ii) charges no selection cost whatever. The assembling step
+below nevertheless reintroduces a constant there, through the two estimates
+$b_{t} \le \ln(eD/t)$ and $t \ge 1/(2\epsilon_{H,z})$; carrying $b_{t}$ itself further would let
+the selection term vanish at $\epsilon = 1/D$, as Remark~\ref{rem:refine} argues it should.
+
+The point to record is that the concentration is \emph{identical} to the hidden-seed case even
+though the mean is larger by $\sqrt K$. A single table entry moves $Q_{H,T}$, an average of $Kt$
+values, by $1/(Kt)$; it moves $F_T$, an average of $K$ statistics of $t$ values each, by
+$\tfrac1K \cdot \tfrac1t$, which is the same number. Revealing the seed costs the mean and leaves
+the fluctuation alone.
+
+\subsection{Assembling}\label{sec:assemble}
+
+% BEGIN overview thm:main
+Lemma~\ref{lem:flat} and the definitions of $W_{1}$ and $W_{2}$ bound $\Delta_{H,z}$ by
+$\tfrac12\sqrt{R/t}$ plus a deviation, in two forms. The estimate $t \ge 1/(2\epsilon_{H,z})$ turns
+the first summand into $\tfrac12\sqrt{2R\epsilon_{H,z}}$, and the deviations depend on $H$ alone,
+so they average to the constants of Lemma~\ref{lem:unif}. Taking $\mathbb{E}_{(H,Z)}$ and applying
+Fact~\ref{fact:jensen} with $\mathbb{E}[\epsilon_{H,Z}] \le \epsilon$ gives \eqref{eq:main-plain};
+for \eqref{eq:main-sharp}, $b_{t}$ is first bounded by $\ln(2eD\epsilon_{H,z})$ and
+Fact~\ref{fact:jensen} applied a second time, on the range where $s \mapsto \sqrt{\ln(2eDs)}$ is
+concave. The closed form of
+\eqref{eq:main-plain} follows by bounding the ratio of the two bounds, by Fact~\ref{fact:cs} for
+$D \ge 2$ and directly for $D = 1$.
+% END overview thm:main
+
+Write $t := \lfloor 1/\epsilon_{H,z}\rfloor$. By Lemma~\ref{lem:flat} and the definitions of
+$W_{1}$ and $W_{2}$, for every $(H,z)$,
+\[
+  \Delta_{H,z} \;\le\; \tfrac12\sqrt{\tfrac{R}{t}} + W_{1,+} ,
+  \qquad\text{and}\qquad
+  \Delta_{H,z} \;\le\; \tfrac12\sqrt{\tfrac{R}{t}} + \sqrt{\tfrac{b_{t}}{2K}} + W_{2,+} .
+\]
+For $y \ge 1$ one has $\lfloor y \rfloor \ge y/2$, so $t \ge 1/(2\epsilon_{H,z})$ and the first
+summand of each is at most $\tfrac12\sqrt{2 R\,\epsilon_{H,z}}$. Both $W_{1,+}$ and $W_{2,+}$ are
+functions of $H$ alone, and the $H$-marginal of the joint $(H,Z)$ is uniform, $Z$ being computed
+from $H$ and the source's coins, so $\mathbb{E}_{(H,Z)}[W_{i,+}] = \mathbb{E}_{H}[W_{i,+}]$. Taking
+$\mathbb{E}_{(H,Z)}$ in the first inequality, using \eqref{eq:analytic} and Fact~\ref{fact:jensen}
+for the concave nondecreasing $\sqrt{\cdot}$ with $\mathbb{E}[\epsilon_{H,Z}] \le \epsilon$,
+\[
+  \Adv^{\extp}_{\calK,\calD,\calR}(S,\mathsf{D})
+  \;\le\; \frac{1}{\sqrt2}\sqrt{\epsilon R} \;+\; \mathbb{E}_H[W_{1,+}]
+  \;\le\; \frac{1}{\sqrt2}\sqrt{\epsilon R} + \frac{6}{5}\sqrt{\frac{1+\ln D}{K}} ,
+\]
+which is the first inequality of \eqref{eq:main-plain}. For \eqref{eq:main-sharp}, use the second:
+$b_{t} \le \ln(eD/t)$ by Fact~\ref{fact:binom}, and $t \ge 1/(2\epsilon_{H,z})$ gives
+$eD/t \le 2eD\epsilon_{H,z}$, so the middle summand is at most
+$\sqrt{\ln(2eD\epsilon_{H,z})/(2K)}$. The function $g(s) := \sqrt{\ln(2eDs)}$ is concave wherever
+$\ln(2eDs) > 0$, and $\epsilon_{H,z} \ge 1/D$ gives $2eD\epsilon_{H,z} \ge 2e$, so Fact~\ref{fact:jensen}
+applies on the range of $\epsilon_{H,Z}$; being also nondecreasing there, $g$ satisfies
+$\mathbb{E}\,g(\epsilon_{H,Z}) \le g(\mathbb{E}\,\epsilon_{H,Z}) \le g(\epsilon)$, whence
+\[
+  \Adv^{\extp}_{\calK,\calD,\calR}(S,\mathsf{D})
+  \;\le\; \frac{1}{\sqrt2}\sqrt{\epsilon R}
+  \;+\; \sqrt{\frac{\ln(2eD\epsilon)}{2K}} \;+\; \frac{9}{10\sqrt K} .
+\]
+For the closed form of \eqref{eq:main-plain}, note first that an $\epsilon$-unpredictable source exists only for
+$\epsilon \ge 1/D$, since $\max_x p^{H,z}_x \ge 1/D$ pointwise and hence
+$\mathbb{E}[\epsilon_{H,Z}] \ge 1/D$; in particular $D = 1$ forces $\epsilon = 1$. Put
+$P := \epsilon R$, $L := \log_2 D$, and
+$f(P,L) := \bigl(\tfrac{1}{\sqrt2}\sqrt P + \tfrac65\sqrt{(1+(\ln2)L)/K}\bigr)/\sqrt{P+L/K}$, the
+ratio of the two bounds. If $D = 1$ then $L = 0$ and $P = \epsilon R = R \ge 1$, since $\epsilon = 1$,
+so $f = \tfrac{1}{\sqrt2} + \tfrac65 (KP)^{-1/2} \le \tfrac{1}{\sqrt2} + \tfrac65 < 1.91$. If
+$D \ge 2$ then $L \ge 1$, and Fact~\ref{fact:cs} applied to the pairs
+$\bigl(\tfrac{1}{\sqrt2},\, \tfrac65\sqrt{(1+(\ln2)L)/L}\bigr)$ and $(\sqrt P, \sqrt{L/K})$ gives
+\[
+  f \;\le\; \sqrt{\tfrac12 + \tfrac{36}{25}\Bigl(\tfrac1L + \ln 2\Bigr)}
+    \;\le\; \sqrt{\tfrac12 + \tfrac{36}{25}(1+\ln 2)} \;<\; 1.72 .
+\]
+So $f < 1.91$ whenever $D \ge 2$, for every $\epsilon \in (0,1]$, the step of Fact~\ref{fact:cs}
+having used only $P \ge 0$; and $f < 1.91$ for $D = 1$, $\epsilon = 1$. In particular the constant
+$c = 2$ of the corrected conjecture suffices throughout the satisfiable range. (For $D = 1$ the
+restriction to $\epsilon = 1$ is necessary: for $D = R = 1$ and $\epsilon$ small the second
+inequality fails.) This proves both inequalities of \eqref{eq:main-plain} and the inequality
+\eqref{eq:main-sharp}, which together are Theorem~\ref{thm:main}.
+\hfill$\square$
+
+\section{Discussion}\label{sec:disc}
+
+Five things are worth separating: what the public seed costs and what it leaves intact
+(Remark~\ref{rem:cost}); where the shape of the bound comes from, and which part of the hidden-seed
+intuition does not survive the change (Remark~\ref{rem:shape}); how far the two summands are
+matched from below, and which half of that is proved rather than sketched
+(Remark~\ref{rem:tight}); which of \eqref{eq:main-plain} and \eqref{eq:main-sharp} to prefer at
+given $D$ and $\epsilon$ (Remark~\ref{rem:refine}); and, last, which three features of the model
+the proof actually consumes.
+
+\begin{remark}[What the public seed costs, and what it does not]\label{rem:cost}
+Comparing with the hidden-seed bound of Fact~\ref{fact:hidden}, exactly one factor $1/K$ is lost, and it is lost from the first summand only. The reason is
+visible in Lemma~\ref{lem:analytic}: the average over seeds moves from inside the statistical
+distance to outside it. Inside, it mixes $K$ rows into one distribution supported on up to $K/\epsilon$
+values, and the mixture is smooth; outside, each row is judged on its own $1/\epsilon$ values and
+no amount of averaging over rows repairs a row that is individually far from uniform. Accordingly
+the available entropy drops from $\log_2 K + \log_2(1/\epsilon)$ to $\log_2(1/\epsilon)$, and
+$\tfrac{1}{\sqrt2}\sqrt{\epsilon R}$ is the classical leftover-hash shape with an entropy loss of
+$2\log_2(1/\epsilon)$ bits. The selection term keeps its $1/K$ in full, by
+Lemma~\ref{lem:unif}. So the correct summary is not that the seed becomes useless: it becomes
+useless against entropy deficiency, and remains exactly as effective against adversarial selection.
+\end{remark}
+
+\begin{remark}[Where the shape comes from]\label{rem:shape}
+The step that decides the theorem is again the choice of a deviation $\lambda$ \emph{independent of
+$t$} in Lemma~\ref{lem:unif}. The union-bound cost of ranging over supports of size $t$ is
+$\ln\binom{D}{t} \approx t \ln D$, while $F_T(H)$ is sub-Gaussian with variance proxy $1/(4Kt)$.
+In the hidden-seed model that variance proxy came from $Q_{H,T}$ averaging $Kt$ oracle values; here
+it comes from $F_T$ averaging $K$ row-statistics with weight $1/K$ each, a statistic of $t$ values
+having bounded-differences constant $1/t$. The arithmetic is the same and the two factors of $t$
+cancel, so the required deviation is $\sqrt{t \ln D/(Kt)} = \sqrt{\ln D/K}$ for every $t$ at once,
+and the selection term enters additively. What does \emph{not} carry over is the accompanying
+intuition about min-entropy: it is no longer true that a source with more entropy averages away
+more bias, since each row now sees only $t$ values. The cancellation here is between the
+union-bound cost and the $1/K$ from averaging over rows, which is a statement about the seed space
+rather than about the source. Nor does the term enter uniformly in $\epsilon$, as
+\eqref{eq:main-sharp} shows: what cancels exactly is $t$ against $t$, and what survives is the
+per-size cost $\tfrac1t\ln\binom Dt$, which is $\ln D$ only for $t \ll D$ and vanishes at $t = D$.
+The uniform-in-$\epsilon$ reading is an artefact of estimating $\tfrac1t\ln\binom Dt$ by
+$1 + \ln D$.
+\end{remark}
+
+\begin{remark}[Matching lower bounds, sketch]\label{rem:tight}
+The proof gives $O(\sqrt{\epsilon R}) + O(\sqrt{\log D/K})$. About the first summand two different
+things can be said, and it is worth separating them. That it must not decay in $K$ at all is
+\emph{proved}, not sketched: Proposition~\ref{prop:false} exhibits, at the single point
+$\epsilon R = 1$, a source with advantage at least $\tfrac14$ against
+$\tfrac{1}{\sqrt2}\sqrt{\epsilon R} = 0.708$, uniformly in $K$. That the shape $\sqrt{\epsilon R}$
+and the constant are right throughout $\epsilon R \le 1$ is a sketch, and one point cannot
+establish it; the witness is instead the fixed-support flat source ($T$ fixed, $|T| = t = 1/\epsilon$,
+$z = \bot$), for which $\Delta_{H,z} = F_{T}(H)$ exactly, so that
+$\mathbb{E}_{H}[\Delta_{H,z}] = \mathbb{E}\,\SD(\emp^{H}_{k,T},U_{\calR})$ approaches
+$\sqrt{2/\pi}\cdot\tfrac12\sqrt{R/t} = 0.3989\sqrt{\epsilon R}$ for $R \le t$, each
+$|\emp^{H}_{k,T}(r) - 1/R|$ being asymptotically half-normal. Granting that estimate, the constant
+of Lemma~\ref{lem:mean} is tight within $0.5/0.3989 = 1.25$ and the $\tfrac{1}{\sqrt2}$ of
+\eqref{eq:main-plain} within $1.77$, a sharper comparison than the factor
+$0.708/0.25 = 2.83$ that Proposition~\ref{prop:false} gives, but a sketch where the proposition is
+a proof.
+For the second we only sketch. Fix $A \subseteq \calR$ with $|A| = R/2$, let $S$ inspect the whole
+table, let $T$ consist of the $1/\epsilon$ inputs $x$ maximising $|\{k : H(k,x) \in A\}|$, and let
+$S$ output $x \sample T$ with $z \leftarrow T$. Since
+$F_T(H) \ge \bigl|\tfrac{1}{K}\sum_{k}(\emp^{H}_{k,T}(A) - \tfrac12)\bigr|$, extremal-value
+considerations over the $D$ columns give a bias of order $\sqrt{\log(D\epsilon)/K}$, which is of
+order $\sqrt{\log D/K}$ only when $1/\epsilon \le D^{1-\Omega(1)}$: selecting the $t$ most biased of
+$D$ columns buys $\sqrt{\ln(D/t)/K}$, not $\sqrt{\ln D/K}$, and at $t = D$ there is no selection
+freedom at all. That $\sqrt{\log(D\epsilon)/K}$ is the shape \eqref{eq:main-sharp} matches, and it is why we state that
+bound alongside \eqref{eq:main-plain}; whether the constants can be brought together we do not
+settle here.
+\end{remark}
+
+\begin{remark}[Which of the two bounds to use]\label{rem:refine}
+Neither of \eqref{eq:main-plain} and \eqref{eq:main-sharp} implies the other, since the additive
+$\tfrac{9}{10}K^{-1/2}$ of the second is the price of dropping $\ln D$ in favour of
+$\ln(2eD\epsilon)$. Both selection terms are of the form $\gamma/\sqrt K$, so the comparison is
+between the two constants and is independent of $K$ and $R$. At $\epsilon = 1$ the constants are
+$\tfrac65\sqrt{1+\ln D}$ and $\sqrt{\ln(2eD)/2} + \tfrac9{10}$, and the second is smaller from
+$D \ge 26$ onwards (at $D = 25$ they are $2.4648$ against $2.4672$, at $D = 26$ they are $2.4762$
+against $2.4734$); asymptotically it is smaller by a factor $\tfrac65\sqrt2 \approx 1.70$. At
+maximal entropy $\epsilon = 1/D$ the second constant is $\sqrt{\ln(2e)/2} + \tfrac9{10} < 1.83$
+\emph{whatever $D$ is}, while the first grows without bound, and the crossover is already at
+$D = 4$. (Retaining the sharp constant $\tfrac32\sqrt{\ln2/2} = 0.8831$ of
+Lemma~\ref{lem:unif}(ii) in place of $\tfrac9{10}$ moves these two thresholds to $D \ge 23$ and
+$1.81$.) The reason is the one recorded in Remark~\ref{rem:tight}: at $\epsilon = 1/D$ the only
+admissible support is $T = \calD$, there is nothing to select, and a selection term growing in $D$
+is then an artefact of the estimate $\binom{D}{t} \le e^{ta}$ rather than a real cost. Everything
+in this remark and in part~(ii) of Lemma~\ref{lem:unif} applies verbatim to the hidden-seed proof,
+where it likewise replaces $1+\ln D$ by $\ln(2eD\epsilon)$.
+\end{remark}
+
+\begin{remark}[What the proof does and does not use]
+Three features of the model are used, and only these. (a) $\sd$ is sampled after $S$ terminates and
+is therefore independent of $(X,Z,H)$: this is what makes the same $p^{H,z}$ appear in every row's
+pushforward $\nu^{H,z}_{k}$, and it supplies the $1/K$ in the selection term. Secrecy of $\sd$ is
+\emph{not} used anywhere, which is why the argument transfers; independence is used everywhere. (b)
+The unpredictability hypothesis is used only through $\mathbb{E}_{(H,Z)}[\max_x p_x] \le \epsilon$,
+and only via Lemma~\ref{lem:flat} and one application of Fact~\ref{fact:jensen}; no pointwise bound on
+$\epsilon_{H,z}$ is needed. (c) The source's use of $z$ is never analysed: since
+Lemma~\ref{lem:unif} is uniform over \emph{all} subsets of \emph{all} sizes, it covers every
+measurable rule by which $S$ may pick a support from $H$ and signal it through $z$. Consequently the
+theorem holds verbatim for every $S$ whose auxiliary output is an arbitrary function of $H$ and its
+coins, including $z = H$. Lemma~\ref{lem:unif} also yields a high-probability refinement, but only
+for the selection component: with probability $1 - O(e^{-u})$ over $H$ alone, the deviations
+$W_{1}$ and $W_{2}$ are small for all supports, hence all sources, simultaneously. No analogous per-$H$ statement holds for
+the deficiency component: the hypothesis bounds $\epsilon_{H,Z}$ only on average over $(H,Z)$, and
+an $\epsilon$-unpredictable source may concentrate its predictable mass on an arbitrary fixed $H$-event of
+measure $\epsilon$, so the full advantage bound is inherently an average over $H$.
+\end{remark}
+
+\begin{conjurabibliography}{9}
+
+\bibitem{McD89}
+Colin McDiarmid.
+\newblock On the method of bounded differences.
+\newblock In \emph{Surveys in Combinatorics 1989}, London Mathematical Society Lecture Note
+Series 141, pages 148--188. Cambridge University Press, 1989.
+\newblock (Fact~\ref{fact:mcd} is the one-sided form of the \emph{independent bounded differences
+inequality}, Lemma~(1.2) there, which is stated two-sidedly with a factor $2$; the one-sided bound
+with the same constant is Theorem~(6.7), of which Lemma~(1.2) is the independent-coordinate
+specialisation.)
+
+\end{conjurabibliography}
+
+\end{document}

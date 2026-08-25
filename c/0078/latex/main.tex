@@ -1,0 +1,297 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  Applebaum-Ishai-Shechter's open question: is O(n^{1/3}) communication
+%  optimal for two-server information-theoretic arithmetic PIR?
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{OPTIMALITY OF CUBE-ROOT ARITHMETIC TWO-SERVER PIR}
+
+\newcommand{\F}{\mathbb{F}}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\Query}{\mathsf{Query}}
+\newcommand{\Ans}{\mathsf{Ans}}
+\newcommand{\Dec}{\mathsf{Dec}}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{Optimality of Cube-Root Communication for Two-Server
+  Arithmetic PIR}
+\cjsubtitle{Information-theoretic, field-agnostic, two servers}
+\cjstatus{Statement: AI-written from Benny Applebaum, Yuval Ishai and
+  Shahar Shechter, \emph{On Arithmetic Private Information Retrieval:
+  Why Code-Based PIR (Usually) Fails}, IACR ePrint 2026/1224. Not yet
+  checked by a human. $O(n^{1/3})$ is achieved, by arithmetizing the
+  classical two-server schemes; the source states that whether it can be
+  improved --- let alone brought to sub-polynomial --- is unknown, and
+  supplies a linear-algebraic characterization of exactly what an
+  improvement would require.}
+\cjcategory{\emph{Information-Theoretic Cryptography}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+An arithmetic PIR scheme treats the database as a vector of field
+elements and makes only black-box use of the field: query generation,
+answering and decoding are arithmetic circuits that must work for
+whichever field an adversary picks. The source's main result is negative
+--- with one server, arithmetic PIR cannot beat trivial download --- but
+with two servers the classical cube-root schemes do arithmetize, giving
+$O(n^{1/3})$ communication. The best known binary two-server schemes
+achieve $n^{o(1)}$, but they run on matching vectors and rings with zero
+divisors, structures no field-agnostic scheme can appeal to. Whether the
+arithmetic setting is genuinely stuck at the cube root is unknown, and
+the source turns the question into a concrete statement about
+distributions over matrices: $n$ pairs of matrix distributions, each pair
+spanning its own unit vector, each marginal independent of the index.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+The source adapts the arithmetic-cryptography framework of
+Applebaum et al.~\cite{ABDIN24} to PIR: the database is $x \in \F^{n}$
+and all algorithms are arithmetic circuits over a generic field $\F$, so
+the scheme's correctness and privacy must hold for an arbitrary
+adversarial choice of $\F$. The motivation is that all known code-based
+PIR candidates happen to be arithmetic, and the source's headline result
+is that this is fatal for a single server: every single-server arithmetic
+PIR has the server communicating at least $n$ field elements, and the
+recent code-based candidates are broken in minutes for all suggested
+parameters.
+
+Two servers change the picture. The classical
+constructions~\cite{CGKS95,BIK05,WY05} arithmetize, and the source works
+out the Woodruff--Yekhanin scheme in detail: with $m = O(n^{1/3})$
+variables, the degree-$3$ polynomial $F_{x}(z) = \sum_{i<j<k} x_{i,j,k}
+z_{i} z_{j} z_{k}$, queries $e_{i,j,k} + \lambda_{s} v$ and answers
+consisting of $F_{x}$ together with its $m$ partial derivatives, giving
+$O(n^{1/3})$ communication with all algorithms arithmetic and both the
+answer and the decoder linear.
+
+Beyond that it stops. The best binary two-server schemes reach
+$n^{o(1)}$~\cite{DG15,ABL25} via the matching-vectors framework, which
+``does not appear to be field independent'' --- it needs rings with zero
+divisors. So the source records: ``At present, it is unknown whether one
+can improve upon the $O(n^{1/3})$ communication bound, let alone achieve
+sub-polynomial communication, in the arithmetic setting. We view this as
+an intriguing open question.''
+
+It also does the most useful thing available short of settling it: its
+Theorem 5.3 shows arithmetic PIR is equivalent to \emph{linear} PIR, and
+thereby converts the question into a purely linear-algebraic one, stated
+as Conjecture~\ref{conj:main} below. The source notes that two-server
+linear PIR has been studied~\cite{GKST02,DS07}, that ruling out such
+schemes over the binary field with $O(\log n)$ communication is itself
+open, and that the extra field-agnosticism its equivalence delivers
+``may make it more amenable to lower-bound techniques''. A strong
+$\Omega(n^{1/3})$ lower bound is known for \emph{bilinear} two-server
+PIR~\cite{Raz20}, which is a further restriction.
+
+\section{Notation and parameters}\label{sec:notation}
+
+\begin{itemize}[nosep]
+  \item $n$ is the database size; $x \in \F^{n}$ the database; $\F$ a
+    finite field the scheme must work over generically.
+  \item $\ell = \ell(n)$ is the total communication, measured in field
+    elements.
+  \item $e_{i} \in \F^{n}$ is the $i$-th standard basis vector.
+  \item An arithmetic circuit has \emph{black-box access} to $\F$ if it
+    uses only the field operations, with no dependence on the
+    representation, and here without division or zero-check gates
+    (``finite degree'').
+  \item A scheme is \emph{fully linear} if the answer algorithm is linear
+    in the database and the decoder linear in the answers.
+\end{itemize}
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{definition}[Two-server arithmetic PIR, following
+  {\cite[Section 2]{AIS26}}]\label{def:apir}
+A two-server PIR scheme is a triple $(\Query, \Ans, \Dec)$ where
+$\Query^{\F}_{i,n}(r)$ produces a pair of queries $(q_{1}, q_{2})$,
+$\Ans^{\F}_{n}(x, q)$ produces one server's answer, and
+$\Dec^{\F}_{i,n}(r, \mathit{ans}_{1}, \mathit{ans}_{2})$ recovers
+$x_{i}$. It is \emph{arithmetic} if all three are arithmetic circuits
+over a generic field $\F$ with black-box access to $\F$, so that
+correctness and privacy hold for every $\F$; it has \emph{finite degree}
+if it uses no division or zero-check gates. Privacy is
+\emph{information-theoretic}: for each server, the distribution of the
+query it receives is identical for all indices $i$.
+\end{definition}
+
+\begin{conjecture}[Optimality of the cube root]\label{conj:main}
+Determine whether the $O(n^{1/3})$ communication of the arithmetized
+classical two-server schemes is optimal, by resolving either of the
+following.
+\begin{enumerate}[nosep,label=(\alph*)]
+  \item \emph{Improvement.} There is a two-server arithmetic PIR scheme
+    with perfect information-theoretic security and finite degree
+    (Definition~\ref{def:apir}) whose total communication is
+    $o(n^{1/3})$ field elements.
+  \item \emph{Lower bound.} Every two-server arithmetic PIR scheme with
+    perfect information-theoretic security and finite degree has total
+    communication $\Omega(n^{1/3})$ field elements.
+\end{enumerate}
+\end{conjecture}
+
+\begin{proposition}[The equivalent linear-algebraic form,
+  {\cite[Theorem 5.3]{AIS26}}]\label{prop:linear}
+Clause~(a) of Conjecture~\ref{conj:main} holds with communication
+$O(\ell(n))$ if and only if, for every sufficiently large field $\F$,
+there exist $n$ pairs of distributions $(A_{1}, B_{1}), \dots, (A_{n},
+B_{n})$ over $O(\ell(n)) \times n$ matrices such that
+\begin{enumerate}[nosep,label=(\alph*)]
+  \item the rows of $(A_{i}, B_{i})$ jointly span the unit vector
+    $e_{i}$;
+  \item for every $i, j \in [n]$ the marginals $A_{i}$ and $A_{j}$ are
+    identical, and likewise $B_{i}$ and $B_{j}$; and
+  \item $(A_{i}, B_{i})$ can be sampled in two steps: a short
+    description $(q_{1}, q_{2})$ of $O(\ell)$ field elements is sampled
+    by a circuit $S^{\F}_{i}$, and the matrices are then computed from
+    $(q_{1},q_{2})$ by a deterministic extraction procedure $E^{\F}$ that
+    does not depend on $i$ --- both circuits having black-box access to
+    $\F$ and using no division or zero-check gates.
+\end{enumerate}
+\end{proposition}
+
+\begin{remark}[Which direction is the interesting one]
+The source expresses no expectation. What it does say is that the
+field-agnosticism recorded in clause~(c) of
+Proposition~\ref{prop:linear} is additional structure a lower-bound
+argument can use, which is a reason to think clause~(b) of
+Conjecture~\ref{conj:main} is the more approachable half here even though
+the corresponding question for plain two-server linear PIR over $\F_{2}$
+at $O(\log n)$ communication has resisted attack. Any lower bound must
+of course stop short of $\Omega(n)$: the cube-root scheme exists.
+\end{remark}
+
+\begin{remark}[Perfect security and finite degree are load-bearing]
+Proposition~\ref{prop:linear} is stated for perfect correctness and
+perfect privacy with finite degree, which is where the equivalence is
+clean. The source records that it extends: relaxing to statistical
+privacy corresponds to relaxing clause~(b) to statistical
+indistinguishability, relaxing to statistical correctness to letting
+clause~(a) fail with negligible probability, and its Remark 5.4 partially
+handles division and zero-check gates. Conjecture~\ref{conj:main} is
+stated in the clean setting; a scheme beating $n^{1/3}$ only with
+imperfect security would be a resolution of the corresponding relaxed
+statement and should be reported as such.
+\end{remark}
+
+\begin{remark}[Neighbouring results and questions that are not
+  this one]
+Three nearby statements are settled or different. Settled: single-server
+arithmetic PIR needs $n$ field elements of server communication (the
+source's main theorem); two-server \emph{computational} arithmetic PIR
+achieves $O(n^{\eps})$ from an arithmetic PRG, and $\mathrm{polylog}(n)$
+under sub-exponential security (its Informal Theorem 1.2); arithmetic
+secret-key PIR achieves $O(n^{\eps})$ under arithmetic LPN (its Informal
+Theorem 1.3). Different: whether two-server \emph{linear} PIR over the
+binary field can be ruled out at $O(\log n)$ communication, which the
+source notes remains open and which drops field-agnosticism; and the
+$\Omega(n^{1/3})$ lower bound known for \emph{bilinear} two-server PIR,
+a strictly stronger restriction than arithmetic.
+\end{remark}
+
+\begin{remark}[Why a small database alphabet changes the
+  question]\label{rem:alphabet}
+Definition~\ref{def:apir} takes the database to be a vector of field
+elements and linearity over the same field. The source emphasizes that
+if the database is restricted to a subset of the field --- $\{0,1\}$, say
+--- linearity is cheap: the matching-vector scheme of~\cite{DG15} gives a
+two-server PIR whose answer algorithm is linear over a small field such
+as $\F_{3}$ while the database is Boolean, with a non-linear decoder.
+That is not a counterexample to anything here, and a scheme of that shape
+does not resolve Conjecture~\ref{conj:main}.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem[AIS26]{AIS26}
+Benny Applebaum, Yuval Ishai and Shahar Shechter.
+\emph{On arithmetic private information retrieval: why code-based PIR
+(usually) fails}.
+IACR ePrint 2026/1224.
+The source. The open question is on page 5, Informal Theorem 1.4 on
+page 5 and Theorem 5.3 on page 19; the arithmetized
+Woodruff--Yekhanin scheme is Section 5.2, page 20.
+
+\bibitem[AAB17]{ABDIN24}
+Benny Applebaum, Jonathan Avron and Chris Brzuska.
+\emph{Arithmetic cryptography}.
+Journal of the ACM, 64(2):10:1--10:74, 2017.
+The arithmetic-cryptography framework the source adapts to PIR\@.
+
+\bibitem[CGKS98]{CGKS95}
+Benny Chor, Oded Goldreich, Eyal Kushilevitz and Madhu Sudan.
+\emph{Private information retrieval}.
+Journal of the ACM, 45(6):965--981, 1998 (conference version FOCS 1995).
+The original PIR paper; one of the classical two-server schemes the
+source states arithmetize to $O(n^{1/3})$.
+
+\bibitem[BIK05]{BIK05}
+Amos Beimel, Yuval Ishai and Eyal Kushilevitz.
+\emph{General constructions for information-theoretic private
+information retrieval}.
+Journal of Computer and System Sciences, 71(2):213--247, 2005.
+Another of the classical two-server schemes the source states
+arithmetize.
+
+\bibitem[WY05]{WY05}
+David Woodruff and Sergey Yekhanin.
+\emph{A geometric approach to information-theoretic private information
+retrieval}.
+20th Annual IEEE Conference on Computational Complexity (CCC), 2005,
+pages 275--284.
+The scheme the source arithmetizes explicitly, reaching $O(n^{1/3})$
+communication.
+
+\bibitem[DG15]{DG15}
+Zeev Dvir and Sivakanth Gopi.
+\emph{2-server PIR with sub-polynomial communication}.
+47th Annual ACM Symposium on Theory of Computing (STOC), 2015, pages
+577--584.
+The matching-vector scheme achieving $n^{o(1)}$ over the binary field,
+which the source states it does not know how to arithmetize; also the
+source of the small-field-linear, Boolean-database scheme of
+Remark~\ref{rem:alphabet}.
+
+\bibitem[ABL25]{ABL25}
+Bar Alon, Amos Beimel and Or Lasri.
+\emph{Simplified PIR and CDS protocols and improved linear
+secret-sharing schemes}.
+23rd Theory of Cryptography Conference (TCC), 2025, Part II, LNCS 16269,
+pages 365--398.
+The other sub-polynomial binary scheme the source names as
+unarithmetizable.
+
+\bibitem[GKST06]{GKST02}
+Oded Goldreich, Howard J. Karloff, Leonard J. Schulman and Luca Trevisan.
+\emph{Lower bounds for linear locally decodable codes and private
+information retrieval}.
+Computational Complexity, 15(3):263--296, 2006.
+One of the two prior studies of two-server linear PIR the source points
+to.
+
+\bibitem[DS07]{DS07}
+Zeev Dvir and Amir Shpilka.
+\emph{Locally decodable codes with two queries and polynomial identity
+testing for depth 3 circuits}.
+SIAM Journal on Computing, 36(5):1404--1434, 2007.
+The other prior study of two-server linear PIR the source points to.
+
+\bibitem[RY07]{Raz20}
+Alexander A. Razborov and Sergey Yekhanin.
+\emph{An $\Omega(n^{1/3})$ lower bound for bilinear group based private
+information retrieval}.
+Theory of Computing, 3(1):221--238, 2007.
+The lower bound known for the strictly more restricted bilinear
+two-server setting.
+
+\end{conjurabibliography}
+
+\end{document}

@@ -1,0 +1,171 @@
+---
+id: "0077"
+problem: round-by-round-soundness
+draft: rbr-soundness-parallel-repetition
+title: "Round-by-Round Soundness Amplification Under Parallel Repetition"
+short_title: "RBR Soundness Amplification"
+areas: [proof-systems, idealized-models]
+topics: [fiat-shamir, parallel-repetition]
+model: standard
+form: lower-bound
+assumption_class: unconditional
+category: research-open
+revision: 1
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: new-idea
+  by: ai
+  note: "Ordinary soundness amplifies under parallel repetition for public-coin proofs, but round-by-round soundness is a statement about the existence of a doomed set, and the natural candidate for the repeated protocol (doomed if enough copies are doomed) does not obviously satisfy the per-round clause with the claimed error. The one known case is the maximally-separated regime, which is where the claim has the most slack. Either a doomed-set construction that survives correlated escapes across rounds, or a counterexample exploiting exactly that correlation, looks like a new idea."
+status_summary: "Known in the special case of r-round protocols whose standard and round-by-round soundness errors are maximally separated, eps_RBR about eps^{1/r}; open in general, including the eps^{2/r} regime the source's own protocol occupies."
+status_updated: 2026-08-25
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Bitan, DeStefano, Goldwasser, Ishai, Kalai, Thaler, Sum-check Protocol for Approximate Computations, IACR ePrint 2025/2152", url: "https://eprint.iacr.org/2025/2152"}
+  - {cite: "Canetti, Chen, Holmgren, Lombardi, Rothblum, Rothblum, Wichs, Fiat-Shamir: From Practice to Theory, STOC 2019", url: "https://doi.org/10.1145/3313276.3316380"}
+  - {cite: "Holmgren, On Round-by-Round Soundness and State Restoration Attacks, IACR ePrint 2019/1261", url: "https://eprint.iacr.org/2019/1261"}
+  - {cite: "Block, Garreta, Tiwari, Zajac, On Soundness Notions for Interactive Oracle Proofs, Journal of Cryptology 38(1):4, 2025", url: "https://doi.org/10.1007/s00145-024-09525-2"}
+statement_sha: "1705c99b23a978aad49729f26fe31e9101c10216041fab70d873960cbc21c03b"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+<!-- topics:start -->
+<div class="cj-tags cj-page-topics"><a class="cj-tag cj-tag-topic" href="/problems/by-topic/fiat-shamir/">Fiat Shamir</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/parallel-repetition/">Parallel Repetition</a></div>
+<!-- topics:end -->
+
+Round-by-round soundness is the notion that governs how well an interactive proof
+survives the Fiat–Shamir transform: a doomed transcript must stay doomed, round
+after round, except with probability $\varepsilon$ per round. Ordinary soundness
+amplifies under parallel repetition in the familiar way; round-by-round soundness
+is more delicate, because what has to be amplified is a per-round invariant and
+the doomed set of the repeated protocol must be assembled from those of the
+copies. The conjecture is that $k \cdot r$ copies of an $r$-round protocol with
+error $\varepsilon$ give error $\varepsilon^k$ — buying Fiat–Shamir security by
+repetition alone.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [LaTeX source](latex/main.tex) · Formal statement — *not yet formalized*
+
+**The notion (the source's Definition 3, after Canetti et al. and Holmgren).** A
+public-coin interactive proof $\Pi = (P,V)$ for $L$ has round-by-round soundness
+error $\varepsilon_{\mathrm{RBR}}$ if there is a "doomed set" $D$ of partial
+transcripts such that: (1) if $x \notin L$ then $(x, \emptyset) \in D$; (2) for
+every partial transcript $\tau$, prover message $\alpha$ and subsequent verifier
+message $\beta$, if $(x,\tau) \in D$ then $\Pr_\beta[(x, \tau|\alpha|\beta)
+\notin D] \le \varepsilon_{\mathrm{RBR}}$; and (3) for every complete transcript
+$\tau$, if $(x,\tau) \in D$ then $V(x,\tau)$ rejects.
+
+**Conjecture (the source's Remark 3).** Let $\Pi$ be an $r$-round public-coin
+interactive proof with round-by-round soundness error $\varepsilon$. Then for
+every $k \ge 1$, the $(k \cdot r)$-fold parallel repetition of $\Pi$ has
+round-by-round soundness error at most $\varepsilon^k$.
+
+**How the source states it.** Remark 3, directly after its Theorem 4.8: "We
+conjecture the following general amplification property: Let $\Pi$ be an
+$r$-round interactive protocol with round-by-round (RBR) soundness error
+$\epsilon$. Then, $(k \cdot r)$-fold parallel repetition of $\Pi$ results in a
+protocol with RBR soundness error at most $\epsilon^k$." It adds the consequence
+it cares about — that this boosts the Fiat–Shamir security level from $\log
+(1/\varepsilon)$ bits to $k\log(1/\varepsilon)$ bits "without requiring an
+increase in the precision of individual instances" — and names the one case where
+the conjecture is known.
+
+**What is already known.** The maximally-separated case: $r$-round protocols
+whose standard soundness error $\varepsilon$ and round-by-round soundness error
+$\varepsilon_{\mathrm{RBR}}$ satisfy $\varepsilon_{\mathrm{RBR}} \approx
+\varepsilon^{1/r}$, by Canetti et al.'s Corollary 5.7 as cited by the source.
+That is where the claim has the most room: maximal separation is the regime in
+which round-by-round soundness is as weak as it can be relative to standard
+soundness.
+
+**The repetition count is $k \cdot r$, not $k$.** The exponent gained is the
+number of copies divided by the number of rounds. A statement with $k$ copies
+giving $\varepsilon^k$ would be strictly stronger and is not what the source
+conjectures; the factor $r$ is what makes the bound consistent with the known
+maximally-separated case.
+
+### Sources
+
+- Bitan, DeStefano, Goldwasser, Ishai, Kalai and Thaler. [*Sum-check Protocol for Approximate Computations*](https://eprint.iacr.org/2025/2152). IACR ePrint 2025/2152. The source. Definition 3 is on page 7; the conjecture is Remark 3, directly after Theorem 4.8, on page 22.
+- Canetti, Chen, Holmgren, Lombardi, Rothblum, Rothblum and Wichs. [*Fiat–Shamir: From Practice to Theory*](https://doi.org/10.1145/3313276.3316380). STOC 2019. The origin of round-by-round soundness, and of the $d/q$ round-by-round bound for classical sum-check.
+- Holmgren. [*On Round-by-Round Soundness and State Restoration Attacks*](https://eprint.iacr.org/2019/1261). IACR ePrint 2019/1261. The other source of the definition.
+- Block, Garreta, Tiwari and Zajac. [*On Soundness Notions for Interactive Oracle Proofs*](https://doi.org/10.1007/s00145-024-09525-2). Journal of Cryptology 38(1):4, 2025. One of the works the source's Fiat–Shamir transfer theorem follows from.
+
+## Proof
+
+View PDF — *no proof written yet* · LaTeX source — *no proof written yet* · Formal proof — *not yet formalized*
+
+Open, and the difficulty is in the definition rather than in the probability.
+
+**Where the difficulty is not.** For public-coin proofs, ordinary soundness does
+amplify under parallel repetition. So the conjecture is not asking for a
+soundness amplification theorem.
+
+**Where it is.** Round-by-round soundness requires *exhibiting a doomed set* for
+the repeated protocol, satisfying clause (2) with error $\varepsilon^k$. The
+natural candidate — a transcript of the repeated protocol is doomed if enough
+copies are doomed — does not obviously satisfy that clause, because the copies
+share verifier randomness structure across rounds and a prover may escape doom in
+several copies in a correlated way. A counterexample would most plausibly exploit
+exactly that correlation.
+
+**Which regimes are untouched.** The known case is maximal separation. What is
+open includes the regime where the two errors essentially coincide — the
+classical sum-check protocol, at $\varepsilon_{\mathrm{RBR}} = d/q$ against
+standard soundness $vd/q$ — and the intermediate $\varepsilon^{2/r}$ regime the
+source's own approximate sum-check protocol lands in.
+
+**Checked against the literature, 2026-08-25.** No proof, refutation or
+improvement found. Targeted check on a recent ePrint, not an exhaustive sweep.
+
+## Discussion
+
+**Why round-by-round soundness is the relevant notion.** By the standard
+transfer, an $r$-round public-coin proof with round-by-round error
+$\varepsilon_{\mathrm{RBR}}$ Fiat–Shamirs to soundness error
+$O(Q\varepsilon_{\mathrm{RBR}} + Q^2 2^{-\kappa})$ against a prover making $Q$
+random-oracle queries. So the bits of security a non-interactive argument gets
+are governed by $\log(1/\varepsilon_{\mathrm{RBR}})$, not by ordinary soundness —
+which is why amplifying the round-by-round notion, rather than the ordinary one,
+is what would buy security.
+
+**Why the source cares in its own setting.** Its approximate sum-check protocol
+achieves round-by-round soundness roughly $\varepsilon^{2/r}$, an intermediate
+regime it argues is inherent to approximate computation: a cheating prover can
+make an inaccurate answer look slightly less erroneous each round. The
+alternative currency for reaching a target security level there is numerical
+precision, and the conjecture would let repetition be spent instead.
+
+**What a reviewer should be suspicious of, in order.** First, the repetition
+count: $k\cdot r$ copies for $\varepsilon^k$, not $k$ copies. Second, whether a
+claimed proof's doomed set really satisfies clause (2) for *every* partial
+transcript, prover message and subsequent verifier message, including transcripts
+in which the copies are at different stages of doom. Third, whether the claim is
+about round-by-round soundness rather than the state-restoration soundness it is
+equivalent to in some formulations — the source cites Holmgren for exactly that
+correspondence, and a proof in one formulation should say which.
+
+## Open obligations
+
+- [ ] Prove that the $(k\cdot r)$-fold parallel repetition of an $r$-round public-coin proof with round-by-round error $\varepsilon$ has round-by-round error at most $\varepsilon^k$.
+- [ ] Or exhibit a counterexample, i.e. an $r$-round protocol and a $k$ for which the repeated protocol's round-by-round error exceeds $\varepsilon^k$.
+- [ ] Or settle the intermediate $\varepsilon^{2/r}$ regime the source's own protocol occupies, as a partial result beyond the known maximally-separated case.
+- [ ] Formalize the statement in Lean; nothing here has been formalized.
+
+:::

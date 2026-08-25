@@ -103,6 +103,21 @@ TOPIC_DESCRIPTIONS = {
     "continuous-group-key-agreement": "Protocols letting a dynamic group of users maintain a shared secret across membership changes, and the efficiency and forward-secrecy guarantees each update operation can offer.",
     "broadcast-encryption": "Encrypting to a chosen subset of registered public keys, and the size and update cost of the keys and ciphertexts a scheme needs.",
     "locally-computable-hashing": "Hash function families whose evaluation reads only a small, bounded number of key words, and the locality such families can achieve.",
+    "private-information-retrieval": "Protocols letting a client read one item of a database without revealing which, and the communication, computation and storage they need.",
+    "shuffle-model": "Cryptography and privacy in the shuffle model, where many parties send anonymous messages that reach the server in a uniformly random order.",
+    "syndrome-decoding": "The syndrome decoding problem and its structured variants, including the multi-syndrome and disjoint-support settings.",
+    "linear-pcps": "Probabilistically checkable proofs whose verifier may only query linear functions of the proof, including the fully linear and one-query cases.",
+    "leakage-resilient-circuits": "Compilers turning a circuit into one whose wire values reveal nothing, or nothing more than the input and output already do, under a class of leakage functions.",
+    "additive-randomized-encodings": "Encodings in which each party's local encoding is one group element and their sum reveals exactly the function output.",
+    "oblivious-transfer": "Oblivious transfer and its correlations, as a setup for and a target of reductions between secure-computation primitives.",
+    "oblivious-linear-evaluation": "Oblivious linear evaluation: letting a receiver learn one evaluation of a sender's affine line and nothing more.",
+    "threshold-secret-sharing": "Threshold access structures specifically, and the share sizes they need under various privacy notions.",
+    "anonymity": "Hiding who participated, rather than what they held: anonymous reconstruction, share anonymity, and anonymous channels.",
+    "fiat-shamir": "The Fiat-Shamir transform and the soundness notions that control how well an interactive proof survives it.",
+    "parallel-repetition": "How the soundness error of a proof or argument behaves under running independent copies in parallel.",
+    "arithmetic-cryptography": "Constructions whose algorithms are arithmetic circuits making only black-box use of the underlying field or ring.",
+    "non-interactive-secure-computation": "Two-party secure computation in one message each way, and the communication overhead malicious security costs there.",
+    "code-based-cryptography": "Cryptosystems built from error-correcting codes, and the structural cryptanalysis that attacks their hidden algebraic structure.",
 }
 
 missing_desc = TOPIC_SLUGS - set(TOPIC_DESCRIPTIONS)

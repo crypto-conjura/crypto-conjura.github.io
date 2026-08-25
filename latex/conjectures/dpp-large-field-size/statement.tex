@@ -1,0 +1,212 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  Bitansky-Harsha-Ishai-Rothblum-Wu's conjecture that the circuit-size
+%  dependence of the field-size bound for large-field dot-product proofs
+%  can be improved.
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{FIELD SIZE FOR LARGE-FIELD DOT-PRODUCT PROOFS}
+
+\newcommand{\F}{\mathbb{F}}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\Omt}{\widetilde{\Omega}}
+\newcommand{\Om}{\Omega}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{Improving the Field Size of Large-Field Dot-Product Proofs}
+\cjsubtitle{Proof length $O(S \log(S/\eps))$, soundness $\eps$: how
+  small may the prime be?}
+\cjstatus{Statement: AI-written from Nir Bitansky, Prahladh Harsha,
+  Yuval Ishai, Ron D. Rothblum and David J. Wu, \emph{Dot-Product Proofs
+  and Their Applications}, IACR ePrint 2024/1138. Not yet checked by a
+  human. The small-field regime is settled: soundness
+  $\Theta(1/\sqrt{q})$ is achieved and proved optimal. In the large-field
+  regime the source achieves soundness $\eps$ for every prime $p \ge
+  \Omt(S^{9}/\eps^{6})$ and states in as many words that it believes the
+  $S$-dependence is not tight.}
+\cjcategory{\emph{Proof Systems}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+A dot-product proof is the most laconic proof system imaginable: the
+statement $x$ and the proof $\pi$ are vectors over a field, and the
+verifier is allowed exactly one dot product $\langle q, (x \| \pi)
+\rangle$ against both of them at once, after which it accepts or rejects.
+The source constructs such proofs for circuit satisfiability with proof
+length linear in the circuit size $S$, avoiding the PCP theorem. To get
+soundness error $\eps$ it needs the field to be large: any prime $p \ge
+\Omt(S^{9}/\eps^{6})$ works. The ninth power of the circuit size is what
+keeps the resulting laconic arguments a proof of concept rather than a
+usable system --- with a standard $256$-bit group the source can support
+statements of around $2^{10}$ gates at a few bits of soundness. The authors state they
+believe their analysis is loose and conjecture the dependence on $S$ can
+be improved; the corresponding improvement is already known for the
+simpler Hadamard-based linear PCP, by a random-walk argument.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+A dot-product proof (DPP) for a language $L$ over a field $\F$ is a
+one-query fully linear PCP: the verifier samples a query vector $q$ and
+an accepting set $A$, is given oracle access to nothing but the single
+field element $\langle q, (x \| \pi) \rangle$, and accepts iff that
+element lies in $A$. Because the query touches the whole input as well
+as the proof, soundness can be required for every $x \notin L$ rather
+than only for $x$ far from $L$, unlike a PCP of proximity.
+
+The source gives two constructions. Over constant-size fields
+(Theorem 1.2) it achieves proof length $S \cdot \mathrm{poly}(q)$ with
+soundness error $\eps_{q} = O(1/\sqrt{q})$, and proves a matching
+$\Om(1/\sqrt{q})$ lower bound, so that regime is closed. Over large
+fields (Theorem 1.3) it achieves, for a prime $p \ge
+\Omt(S^{9}/\eps^{6})$, a \emph{promise} DPP of proof length $O(S \cdot
+\log(S/\eps))$ and soundness error $\eps$; proof length can be brought
+to $O(S)$ at the cost of a worse polynomial dependence of $p$ on
+$S/\eps$. This large-field construction is what the source's
+applications to laconic arguments run on, since only there can $\eps$ be
+made negligible.
+
+The field size matters concretely because the argument's proof consists
+of group elements whose size is $\log p$: at a fixed group size, the
+$S^{9}$ caps the circuit size that can be supported. The source is
+explicit that the bound is an artefact of its analysis rather than of the
+construction, on two counts. Of the general fully-linear-PCP-to-DPP
+compiler it applies, it says: ``We believe that the analysis of our
+compiler is not tight, and leave open the question of improving the bound
+on $p$ given by Theorem 1.3.'' And of the concrete efficiency of the
+resulting argument, in a footnote: ``In particular, we conjecture that
+the dependence on $S$ (i.e., the circuit size) in our current soundness
+bound can be improved. This was shown in the simpler case of the
+Hadamard-based LPCP using a random walk argument [BIOW20], and while it
+seems to heuristically hold also in our setting, the formal analysis is
+much more challenging.''
+
+That is the named obstruction: the random-walk concentration argument
+that removes the loss for the Hadamard-based linear PCP of Barta et
+al.~\cite{BIOW20} does not obviously transfer to the source's compiler,
+which is applied to a two-query fully linear PCP implicit in
+Danezis et al.~\cite{DFGK14} rather than to the Hadamard LPCP\@.
+
+\section{Notation and parameters}\label{sec:notation}
+
+\begin{itemize}[nosep]
+  \item $C : \{0,1\}^{n} \times \{0,1\}^{m} \to \{0,1\}$ is a Boolean
+    circuit of size $S$, and $L_{C} = \{x \in \{0,1\}^{n} : \exists w
+    \in \{0,1\}^{m},\, C(x,w) = 1\}$.
+  \item $p$ is a prime and $\F_{p}$ the field; $q = |\F|$ in the
+    small-field discussion.
+  \item $\eps \in (0,1)$ is the soundness error, $c$ the completeness
+    parameter ($c = 1$ is perfect completeness).
+  \item $\Omt(\cdot)$ hides polylogarithmic factors, as in the source.
+\end{itemize}
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{definition}[Dot-product proof, {\cite[Section 1.1]{BHIRW24}}]
+  \label{def:dpp}
+A \emph{dot-product proof} for a language $L \subseteq \{0,1\}^{n}$ over
+$\F$, with proof length $m$, is a randomized verifier $V$ outputting a
+pair $(q, A)$ with $q \in \F^{n+m}$ and $A \subseteq \F$, such that
+\begin{itemize}[nosep]
+  \item (completeness) for every $x \in L$ there is $\pi \in \F^{m}$
+    with $\Pr_{(q,A) \sample V}[\langle q, (x \| \pi) \rangle \in A] \ge
+    c$; and
+  \item (soundness) for every $x \notin L$ and every $\pi^{*} \in
+    \F^{m}$, $\Pr_{(q,A) \sample V}[\langle q, (x \| \pi^{*}) \rangle
+    \in A] \le \eps$.
+\end{itemize}
+In a \emph{promise} DPP, soundness is required only for $x \in
+\{0,1\}^{n} \setminus L$, with no promise on $\pi^{*} \in \F^{m}$. The
+proof is \emph{efficient} if prover and verifier run in time polynomial
+in the proof length, including an implicit representation of $A$ when
+$|\F|$ is super-polynomial.
+\end{definition}
+
+\begin{conjecture}[The field size may be reduced]\label{conj:main}
+There are constants $a < 9$ and $b > 0$ such that the following holds.
+For every Boolean circuit $C : \{0,1\}^{n} \times \{0,1\}^{m} \to
+\{0,1\}$ of size $S$, every $\eps > 0$, and every prime $p \ge
+\Omt(S^{a} / \eps^{b})$, the language $L_{C}$ has an efficient promise
+DPP (Definition~\ref{def:dpp}) over $\F_{p}$ with perfect completeness,
+soundness error $\eps$, and proof length $O(S \cdot \log(S/\eps))$.
+\end{conjecture}
+
+\begin{remark}[Why the exponent, and not a limit]
+The source conjectures that ``the dependence on $S$ \dots can be
+improved'', without naming a target exponent, so
+Conjecture~\ref{conj:main} asks only for some $a$ strictly below the
+source's $9$ while leaving the $\eps$-dependence free. This is the
+weakest reading under which the source's own conjecture has content, and
+the honest one: any resolution should be reported with the pair $(a,b)$
+it achieves. Two natural stronger targets, neither claimed by the source,
+are $a$ arbitrarily close to $0$ (field size depending on $S$ only
+polylogarithmically) and the removal of the $S$-dependence entirely.
+\end{remark}
+
+\begin{remark}[The more ambitious question this is not]
+The source separately raises ``the question of closing the big polynomial
+gap between the soundness error we achieve and the optimal
+$O(1/\sqrt{|\F|})$ soundness that we can achieve over small fields'',
+adding that this ``might call for an entirely different approach than the
+one we take here''. That is a different statement:
+Conjecture~\ref{conj:main} keeps the source's construction shape and
+asks for a better analysis of it, whereas closing the gap to
+$O(1/\sqrt{|\F|})$ in the large-field regime is an achievability question
+about a possibly different construction. The conjecture stated here is
+the one the source attaches its own belief to.
+\end{remark}
+
+\begin{remark}[Proof length is held fixed]
+The $O(S \log(S/\eps))$ proof length in Conjecture~\ref{conj:main} is
+Theorem 1.3's, and it matters that it stays: the source notes the proof
+length can be reduced to $O(S)$ \emph{at the cost of} a worse polynomial
+dependence of $p$ on $S/\eps$, so a scheme trading proof length for field
+size in the other direction would not settle this statement. Likewise the
+statement is about the promise DPP; the source's non-promise variant
+costs proof length $O(S + n^{2})$ and again a worse dependence of $p$.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem[BHIRW24]{BHIRW24}
+Nir Bitansky, Prahladh Harsha, Yuval Ishai, Ron D. Rothblum and
+David J. Wu.
+\emph{Dot-product proofs and their applications}.
+IACR ePrint 2024/1138.
+The source. Theorem 1.2 (small fields) is on page 3, Theorem 1.3 (large
+fields) and the open question on page 4, and the conjecture on the
+$S$-dependence is footnote 6, page 7.
+
+\bibitem[BIOW20]{BIOW20}
+Ohad Barta, Yuval Ishai, Rafail Ostrovsky and David J. Wu.
+\emph{On succinct arguments and witness encryption from groups}.
+CRYPTO 2020, Part I, LNCS 12170, pages 776--806.
+The source cites this for the random-walk argument that removes the
+analogous loss for the Hadamard-based linear PCP, and for a laconic
+argument with a quadratic-size CRS\@.
+
+\bibitem[BCIOP22]{BCIOP22}
+Nir Bitansky, Alessandro Chiesa, Yuval Ishai, Rafail Ostrovsky and Omer
+Paneth.
+\emph{Succinct non-interactive arguments via linear interactive proofs}.
+Journal of Cryptology, 35(3):15, 2022 (preliminary version in TCC 2013).
+The linear-only-encryption compiler the source adapts to turn a DPP into
+a succinct argument.
+
+\bibitem[DFGK14]{DFGK14}
+George Danezis, C\'edric Fournet, Jens Groth and Markulf Kohlweiss.
+\emph{Square span programs with applications to succinct NIZK
+arguments}.
+ASIACRYPT 2014, Part I, LNCS 8873, pages 532--550.
+The two-query fully linear PCP the source's compiler is applied to.
+
+\end{conjurabibliography}
+
+\end{document}

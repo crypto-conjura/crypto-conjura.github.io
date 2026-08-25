@@ -1,0 +1,177 @@
+---
+id: "0070"
+problem: dot-product-proof-field-size
+draft: dpp-large-field-size
+title: "Improving the Field Size of Large-Field Dot-Product Proofs"
+short_title: "DPP Field Size"
+areas: [proof-systems]
+topics: [snarks, linear-pcps]
+model: standard
+form: tight-bound
+assumption_class: unconditional
+category: research-open
+revision: 1
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: adaptation
+  by: ai
+  note: "The source says its compiler's analysis is loose and points at the technique that removes the analogous loss elsewhere -- a random-walk concentration bound, applied to the Hadamard-based linear PCP in Barta-Ishai-Ostrovsky-Wu. So the work is to transfer a named argument to a two-query fully linear PCP rather than to invent one, which is adaptation. The source's own hedge -- that the formal analysis is 'much more challenging' -- is what keeps this off the routine band."
+status_summary: "The small-field regime is settled: soundness Theta(1/sqrt q) is achieved and proved optimal. In the large-field regime the source achieves soundness eps for every prime p at least Omega~(S^9/eps^6) and states in as many words that it believes the S-dependence is not tight."
+status_updated: 2026-08-25
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Bitansky, Harsha, Ishai, Rothblum, Wu, Dot-Product Proofs and Their Applications, IACR ePrint 2024/1138", url: "https://eprint.iacr.org/2024/1138"}
+  - {cite: "Barta, Ishai, Ostrovsky, Wu, On Succinct Arguments and Witness Encryption from Groups, CRYPTO 2020", url: "https://doi.org/10.1007/978-3-030-56784-2_26"}
+  - {cite: "Bitansky, Chiesa, Ishai, Ostrovsky, Paneth, Succinct Non-Interactive Arguments via Linear Interactive Proofs, Journal of Cryptology 35(3):15, 2022", url: "https://doi.org/10.1007/s00145-022-09424-4"}
+  - {cite: "Danezis, Fournet, Groth, Kohlweiss, Square Span Programs with Applications to Succinct NIZK Arguments, ASIACRYPT 2014", url: "https://doi.org/10.1007/978-3-662-45611-8_28"}
+statement_sha: "481ce553794915c0642a8655369596da904e6e18c612f00309f80ae8c17231db"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+<!-- topics:start -->
+<div class="cj-tags cj-page-topics"><a class="cj-tag cj-tag-topic" href="/problems/by-topic/linear-pcps/">Linear Pcps</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/snarks/">Snarks</a></div>
+<!-- topics:end -->
+
+A dot-product proof is the most laconic proof system imaginable: statement and
+proof are vectors over a field, and the verifier is allowed exactly one dot
+product against both at once. The source builds them for circuit satisfiability
+with proof length linear in the circuit size $S$, avoiding the PCP theorem
+entirely. To get soundness error $\varepsilon$ it needs the field large — any
+prime $p \ge \widetilde\Omega(S^9/\varepsilon^6)$ — and it says plainly that it
+believes that ninth power is an artefact of its analysis rather than of its
+construction.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [LaTeX source](latex/main.tex) · Formal statement — *not yet formalized*
+
+**The object.** A dot-product proof for $L \subseteq \{0,1\}^n$ over
+$\mathbb{F}$, with proof length $m$, is a randomized verifier outputting $(q,
+A)$ with $q \in \mathbb{F}^{n+m}$ and $A \subseteq \mathbb{F}$: for $x \in L$
+some $\pi$ makes $\langle q, (x \| \pi)\rangle \in A$ with probability at least
+the completeness parameter, and for $x \notin L$ every $\pi^*$ does so with
+probability at most $\varepsilon$. In a *promise* DPP, soundness is required
+only for $x \in \{0,1\}^n \setminus L$, with no promise on $\pi^* \in
+\mathbb{F}^m$. Because the single query touches the input as well as the proof,
+soundness holds for every $x \notin L$ rather than only for $x$ far from $L$.
+
+**What is proved (the source's Theorem 1.3).** For every Boolean circuit of
+size $S$, every $\varepsilon > 0$ and every prime $p \ge
+\widetilde\Omega(S^9/\varepsilon^6)$, circuit satisfiability has an efficient
+promise DPP over $\mathbb{F}_p$ with perfect completeness, soundness error
+$\varepsilon$ and proof length $O(S\log(S/\varepsilon))$. Proof length can be
+brought to $O(S)$ at the cost of a worse polynomial dependence of $p$ on
+$S/\varepsilon$; the non-promise variant costs proof length $O(S+n^2)$ and,
+again, a worse $p$.
+
+**Conjecture.** There are constants $a < 9$ and $b > 0$ such that the same
+holds for every prime $p \ge \widetilde\Omega(S^a/\varepsilon^b)$, at proof
+length $O(S\log(S/\varepsilon))$.
+
+**How the source states it.** Page 4: "We believe that the analysis of our
+compiler is not tight, and leave open the question of improving the bound on
+$p$ given by Theorem 1.3." And footnote 6, page 7: "In particular, we
+conjecture that the dependence on $S$ (i.e., the circuit size) in our current
+soundness bound can be improved. This was shown in the simpler case of the
+Hadamard-based LPCP using a random walk argument [BIOW20], and while it seems
+to heuristically hold also in our setting, the formal analysis is much more
+challenging."
+
+**Why an exponent, not a limit.** The source conjectures the dependence "can be
+improved" without naming a target, so the statement asks only for some $a$
+strictly below $9$, leaving the $\varepsilon$-exponent free. Any resolution
+should be reported with the pair $(a,b)$ it achieves. Two stronger targets,
+neither claimed by the source, are $a$ arbitrarily close to $0$ and removal of
+the $S$-dependence entirely.
+
+**The more ambitious question this is not.** The source separately raises
+"closing the big polynomial gap between the soundness error we achieve and the
+optimal $O(1/\sqrt{|\mathbb{F}|})$ soundness that we can achieve over small
+fields", adding that this "might call for an entirely different approach". That
+is an achievability question about a possibly different construction; the
+statement here keeps the source's construction and asks for a better analysis
+of it, which is the one the source attaches its own belief to.
+
+### Sources
+
+- Bitansky, Harsha, Ishai, Rothblum and Wu. [*Dot-Product Proofs and Their Applications*](https://eprint.iacr.org/2024/1138). IACR ePrint 2024/1138. The source. Theorem 1.2 is on page 3, Theorem 1.3 and the open question on page 4, and the conjecture on the $S$-dependence is footnote 6, page 7.
+- Barta, Ishai, Ostrovsky and Wu. [*On Succinct Arguments and Witness Encryption from Groups*](https://doi.org/10.1007/978-3-030-56784-2_26). CRYPTO 2020. The random-walk argument that removes the analogous loss for the Hadamard-based linear PCP, and the laconic argument with a quadratic-size CRS.
+- Bitansky, Chiesa, Ishai, Ostrovsky and Paneth. [*Succinct Non-Interactive Arguments via Linear Interactive Proofs*](https://doi.org/10.1007/s00145-022-09424-4). Journal of Cryptology 35(3):15, 2022. The linear-only-encryption compiler the source adapts to turn a DPP into a succinct argument.
+- Danezis, Fournet, Groth and Kohlweiss. [*Square Span Programs with Applications to Succinct NIZK Arguments*](https://doi.org/10.1007/978-3-662-45611-8_28). ASIACRYPT 2014. The two-query fully linear PCP the source's compiler is applied to.
+
+## Proof
+
+View PDF — *no proof written yet* · LaTeX source — *no proof written yet* · Formal proof — *not yet formalized*
+
+Open, with a named route and a named reason the route is hard.
+
+**The route.** For the Hadamard-based linear PCP, the loss analogous to the
+$S^9$ is removed by a concentration bound for a random walk: the verifier's
+check is a sum of many independent contributions, and its magnitude
+concentrates far better than the worst-case bound the naive analysis uses. The
+source says this "seems to heuristically hold also in our setting."
+
+**The obstruction.** The source's compiler is applied not to the Hadamard LPCP
+but to a two-query fully linear PCP implicit in Danezis, Fournet, Groth and
+Kohlweiss, and the source states the formal analysis there "is much more
+challenging". So the work is to identify what plays the role of the random walk
+in the square-span-program setting, and to show its concentration survives the
+compiler's own loss.
+
+**What must not move.** The proof length $O(S\log(S/\varepsilon))$ is
+Theorem 1.3's and has to stay: the source can already trade it for a worse
+dependence of $p$, so a scheme trading the other way settles nothing.
+
+**Checked against the literature, 2026-08-25.** No proof, refutation or
+improvement found. Targeted check, not an exhaustive sweep.
+
+## Discussion
+
+**Why the field size is the interesting parameter.** In the source's
+DPP-based laconic argument the proof is a ciphertext for a linear-only
+encryption scheme, so its length is $\log p$ — and at a fixed group size the
+$S^9$ caps the circuit size that can be supported. With a standard $256$-bit
+group the source can handle statements of around $2^{10}$ gates at a few bits
+of soundness, which it describes as a proof of concept rather than a useful end
+result. The conjecture is what would change that.
+
+**The small-field side is closed, and closed tightly.** Over constant-size
+fields the source achieves soundness $O(1/\sqrt q)$ with proof length $S\cdot
+\mathrm{poly}(q)$ and proves a matching $\Omega(1/\sqrt q)$ lower bound. That
+side also gives the paper's hardness-of-approximation application: an ETH-based
+$2^{o(n)}$ inapproximability result for $\mathrm{MAXLIN}$ that avoids the PCP
+theorem.
+
+**What a reviewer should be suspicious of, in order.** First, that any claimed
+improvement is for the *promise* DPP with proof length
+$O(S\log(S/\varepsilon))$ and not for one of the source's other trade-off
+points. Second, that the improvement is in the $S$-exponent specifically — the
+source conjectures that, and leaves the $\varepsilon$-dependence and the gap to
+$O(1/\sqrt{|\mathbb{F}|})$ as separate matters. Third, whether an improvement
+comes from the compiler's analysis or from swapping the underlying fully linear
+PCP, since the latter changes the object rather than tightening it.
+
+## Open obligations
+
+- [ ] Prove Theorem 1.3 with $p \ge \widetilde\Omega(S^a/\varepsilon^b)$ for some $a < 9$, at proof length $O(S\log(S/\varepsilon))$, reporting the pair $(a,b)$.
+- [ ] Or show that the $S^9$ is necessary for this compiler, which would make the source's belief wrong and its conjecture false as stated.
+- [ ] Separately: close the polynomial gap between the achieved large-field soundness and the optimal $O(1/\sqrt{|\mathbb{F}|})$, which the source says may need a different approach.
+- [ ] Formalize the statement in Lean; nothing here has been formalized.
+
+:::

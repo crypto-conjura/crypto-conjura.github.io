@@ -1,0 +1,176 @@
+---
+id: "0069"
+problem: preprocessing-pir-tradeoffs
+draft: balanced-root-n-preprocessing-pir
+title: "A Balanced Square-Root Information-Theoretic Preprocessing PIR"
+short_title: "Balanced Root-n Preprocessing PIR"
+areas: [information-theoretic, privacy]
+topics: [private-information-retrieval, time-space-tradeoffs]
+model: standard
+form: tight-bound
+assumption_class: unconditional
+category: research-open
+revision: 1
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: new-idea
+  by: ai
+  note: "The source's own scheme is at (client space, bandwidth, server computation) = (n^{2/3}, n^{1/3}, n^{2/3}) and its lower bound only constrains the product of the first two. Moving to (n^{1/2}, n^{1/2}, n^{1/2}) is not a matter of retuning: the n^{2/3} client space is what pays for the sublinear server computation in its set-based construction, so the third measure and the first are coupled in a way the current technique does not decouple. The negative direction is harder still -- by the source's own Theorem 1.1 it would have to be unconditional, since a computational separation only yields one-way functions."
+status_summary: "The client-space-times-bandwidth product is settled up to n^{o(1)} by the source's own matching bounds. What is open is whether client space, bandwidth and per-query server computation can all sit at O~(n^{1/2}) simultaneously; the best known point has client space and server computation O~(n^{2/3})."
+status_updated: 2026-08-25
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Ishai, Shi, Wichs, PIR with Client-Side Preprocessing: Information-Theoretic Constructions and Lower Bounds, IACR ePrint 2024/976", url: "https://eprint.iacr.org/2024/976"}
+  - {cite: "Corrigan-Gibbs, Kogan, Private Information Retrieval with Sublinear Online Time, EUROCRYPT 2020", url: "https://doi.org/10.1007/978-3-030-45721-1_3"}
+  - {cite: "Di Crescenzo, Malkin, Ostrovsky, Single Database Private Information Retrieval Implies Oblivious Transfer, EUROCRYPT 2000", url: "https://doi.org/10.1007/3-540-45539-6_10"}
+  - {cite: "Beimel, Ishai, Malkin, Reducing the Servers Computation in Private Information Retrieval: PIR with Preprocessing, CRYPTO 2000", url: "https://doi.org/10.1007/3-540-44598-6_4"}
+statement_sha: "baf613bdaaa063b75595b7f6fd2a36c53afc786ae1e46d6d27269719fe6f06fd"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+<!-- topics:start -->
+<div class="cj-tags cj-page-topics"><a class="cj-tag cj-tag-topic" href="/problems/by-topic/private-information-retrieval/">Private Information Retrieval</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/time-space-tradeoffs/">Time Space Tradeoffs</a></div>
+<!-- topics:end -->
+
+Classical single-server PIR needs public-key cryptography for sublinear
+bandwidth and linear server work per query. Both barriers fall if the client
+first downloads a short hint — and, remarkably, they fall with no cryptographic
+assumption at all, provided the hint is client-specific. The source proves a
+matching lower bound: a $t$-bit hint forces $t$ consecutive queries to consume
+$n/2$ bandwidth between them, so client space times per-query bandwidth is
+essentially $n$. The symmetric point on that curve is $\sqrt n$ of each. The
+source's own scheme reaches it in two of the three cost measures and not the
+third.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [LaTeX source](latex/main.tex) · Formal statement — *not yet formalized*
+
+**The model.** A single-server preprocessing PIR scheme has a preprocessing
+protocol — the server may encode $x \in \{0,1\}^n$ arbitrarily and store the
+encoding; the client interacts and stores a hint — and a query protocol, in
+which the client holds $i \in [n]$, interacts (both parties may update state)
+and outputs a bit. Correctness: that bit is $x_i$ except with negligible
+probability, for every $x$, every $i$ and every history. Security is
+information-theoretic: for every $x$ and any two equal-length query sequences,
+the server's entire view is within negligible statistical distance, against a
+computationally unbounded server.
+
+**The three costs.** *Client space* is the bits the client stores after
+preprocessing. *Bandwidth* per query is all bits exchanged for that query, in
+either direction, across any number of round trips; the source splits it into
+online (on the critical path) and offline (background maintenance). *Server
+computation* per query is the number of bits of the preprocessed database the
+server reads. $\widetilde O$ hides a multiplicative $\log^{\alpha(n)} n$ for
+arbitrary super-constant $\alpha$, as in the source.
+
+**Conjecture.** There is such a scheme in which, after one-time preprocessing,
+client space, per-query bandwidth (online plus offline) and per-query server
+computation are all $\widetilde O(n^{1/2})$, supporting any polynomial number of
+queries.
+
+**How the source states it.** Page 7: "In the sublinear-server-computation
+regime, there is still some gap between our upper bound (Theorem 1.4) and the
+lower bounds (Theorem 1.1, [CK20, Theorem 23]). It is a fascinating open
+problem whether it is possible to close this gap and achieve a scheme where the
+client space, bandwidth and server computation are all bounded by
+$\widetilde O(n^{1/2})$."
+
+**It sits exactly on the known lower bound.** Client space $\widetilde
+O(n^{1/2})$ with bandwidth $\widetilde O(n^{1/2})$ has product $\widetilde O(n)$,
+which the source's Theorem 1.1 permits: with a hint of $t = \widetilde
+O(n^{1/2})$ bits, $t$ consecutive queries may consume about $n$ bandwidth in
+total, i.e. $\widetilde O(n^{1/2})$ each. So this is an achievability question at
+the boundary, not an attempt to beat the bound. The genuinely new demand is the
+third clause.
+
+**What is not being asked.** Not the cost of the preprocessing phase itself —
+the source's Theorem 1.4 spends $O(n)$ bandwidth and server computation and
+$\widetilde O(n)$ client computation there, and the $\widetilde O(n^{1/2})$
+bounds do not refer to it. Not per-query client computation, which the source's
+scheme already has at $\widetilde O(n^{1/2})$. And not the source's separate
+two-server question, which asks for the same efficiency with *adaptive*
+correctness.
+
+### Sources
+
+- Ishai, Shi and Wichs. [*PIR with Client-Side Preprocessing: Information-Theoretic Constructions and Lower Bounds*](https://eprint.iacr.org/2024/976). IACR ePrint 2024/976. The source. Theorem 1.1 is on page 2, Table 1 on page 3, Theorem 1.4 and the open problem on page 7.
+- Corrigan-Gibbs and Kogan. [*Private Information Retrieval with Sublinear Online Time*](https://doi.org/10.1007/978-3-030-45721-1_3). EUROCRYPT 2020. Its Theorem 23 is the second of the two lower bounds bracketing the open region.
+- Di Crescenzo, Malkin and Ostrovsky. [*Single Database Private Information Retrieval Implies Oblivious Transfer*](https://doi.org/10.1007/3-540-45539-6_10). EUROCRYPT 2000. The barrier that forces the source into the client-specific preprocessing model.
+- Beimel, Ishai and Malkin. [*Reducing the Servers Computation in Private Information Retrieval: PIR with Preprocessing*](https://doi.org/10.1007/3-540-44598-6_4). CRYPTO 2000. Two-server information-theoretic preprocessing PIR in the public preprocessing model, whose framework the source explains cannot work for a single server.
+
+## Proof
+
+View PDF — *no proof written yet* · LaTeX source — *no proof written yet* · Formal proof — *not yet formalized*
+
+Open in both directions.
+
+**Toward the construction.** The source's Theorem 1.4 gets sublinear server
+computation from a set-based structure whose hint size is what buys the
+sublinear reads, which is why its client space is $\widetilde O(n^{2/3})$ rather
+than $\widetilde O(n^{1/2})$. Reaching the balanced point means finding a hint
+structure whose size is $\widetilde O(n^{1/2})$ and which still lets the server
+answer by reading $\widetilde O(n^{1/2})$ bits, with the offline bandwidth
+(already $\widetilde O(n^{1/2})$ in Theorem 1.4) held.
+
+**Toward the lower bound.** Theorem 1.1's argument constrains only the initial
+hint, and it is already tight up to $n^{o(1)}$ in the client-space-versus-
+bandwidth plane. Ruling the balanced point out therefore means proving something
+about server computation that neither Theorem 1.1 nor Corrigan-Gibbs–Kogan's
+bound gives — and, by the second half of Theorem 1.1, it would have to be
+unconditional rather than by exhibiting a one-way function.
+
+**Checked against the literature, 2026-08-25.** No proof, refutation or
+improvement found. Targeted check on a recent ePrint, not an exhaustive sweep.
+
+## Discussion
+
+**Why "client-specific" is load-bearing.** In the public preprocessing model
+the client stores nothing, and there Di Crescenzo, Malkin and Ostrovsky's bound
+kills sublinear single-server bandwidth however much the server preprocesses.
+The source's whole result depends on the client keeping a hint, which is also
+why its lower bound is stated as a constraint on that hint's size.
+
+**The lower bound's strength is worth reading twice.** It holds even when the
+server may encode the data arbitrarily with no bound on server space, when both
+parties keep arbitrary dynamic state after preprocessing, and when both spend
+unbounded polynomial computation over any number of round trips. Only the
+initial hint is constrained. That is what makes it a statement about the model
+rather than about a construction, and it also means it applies to truly
+information-theoretic ORAM, where encryption is not treated as free.
+
+**What a reviewer should be suspicious of, in order.** First, whether a
+candidate scheme's bandwidth figure is worst-case or amortized: the source
+notes its own upper bounds can be recast as having no preprocessing phase at
+all, with the cost amortized into the first query, which makes worst-case
+bandwidth large. This statement asks for the per-query bound. Second, whether
+"server computation" is being counted as bits read from the preprocessed
+database, the source's definition, rather than as circuit size. Third, whether
+the negligible correctness and security errors are both intended — the source's
+Theorem 1.1 is stated for information-theoretic schemes and its computational
+half concludes only that one-way functions exist.
+
+## Open obligations
+
+- [ ] Exhibit an information-theoretic single-server preprocessing PIR with client space, per-query bandwidth and per-query server computation all $\widetilde O(n^{1/2})$.
+- [ ] Or prove unconditionally that no such scheme exists, i.e. that the three measures cannot be balanced at $\widetilde O(n^{1/2})$.
+- [ ] Settle the source's separate two-server question: the same efficiency profile with adaptive correctness.
+- [ ] Formalize the statement in Lean; nothing here has been formalized.
+
+:::

@@ -1,0 +1,171 @@
+---
+id: "0074"
+problem: lines-modulo-random-prime
+draft: distance-from-lines-modulo
+title: "Distance from Lines Is Resilient to Reduction Modulo a Random Prime"
+short_title: "Distance from Lines Modulo a Prime"
+areas: [mpc, information-theoretic]
+topics: [oblivious-linear-evaluation, oblivious-transfer]
+model: standard
+form: lower-bound
+assumption_class: unconditional
+category: research-open
+revision: 1
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: new-idea
+  by: ai
+  note: "The statement has no cryptography in it -- two expectations, a minimum over integer pairs, a relative Hamming distance -- but it is not a counting exercise either: the minimising line may be chosen after the prime is drawn, and the domain may be exponentially larger than the modulus, so each residue class holds many domain points. The source offers no partial result and no technique, only the observation that the deterministic case might be easier. The most likely route (bounding, for each candidate line mod p, the number of primes for which a fixed far-from-linear function looks close) needs a counting argument over primes that does not currently exist in the paper."
+status_summary: "Numbered Conjecture 5.37 of the source, described there as a natural but apparently new number-theoretic conjecture whose study may be of independent interest. Nothing is proved about it; the source notes a deterministic variant might be easier to prove and is still useful."
+status_updated: 2026-08-25
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Doerner, Haitner, Ishai, Makriyannis, From OT to OLE with Subquadratic Communication, IACR ePrint 2025/1722", url: "https://eprint.iacr.org/2025/1722"}
+  - {cite: "Gilboa, Two Party RSA Key Generation, CRYPTO 1999", url: "https://doi.org/10.1007/3-540-48405-1_8"}
+statement_sha: "449896abf61f6f74f7b543968e72a49cdde517961f8f7604fa41774f081970ac"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+<!-- topics:start -->
+<div class="cj-tags cj-page-topics"><a class="cj-tag cj-tag-topic" href="/problems/by-topic/oblivious-linear-evaluation/">Oblivious Linear Evaluation</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/oblivious-transfer/">Oblivious Transfer</a></div>
+<!-- topics:end -->
+
+Take a randomized function on a large integer domain and ask how close it is,
+on a chosen set of points, to some line $x \mapsto ax+b$ — measured as the
+fraction of points where the two disagree. Now reduce everything modulo a
+uniformly random $\kappa$-bit prime and ask again. Reduction can only help,
+since values that differ over the integers may collide mod $p$. The conjecture
+is that it barely helps: the expected gain is at most $2^{-c\kappa}$, uniformly
+over the worst function and the worst evaluation set, for domains as large as
+$2^{c'\kappa}$. The source needs exactly this to drop an expensive integer
+commit-and-prove subprotocol from its OLE protocol.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [LaTeX source](latex/main.tex) · Formal statement — *not yet formalized*
+
+**Notation, the source's.** $(n) := \{0,\dots,n\}$; $\mathcal{P}_\kappa$ is the
+set of $\kappa$-bit primes; $\mathrm{Ham}(u,v)$ is the relative Hamming distance
+of two equal-length vectors; for a randomized $f$, $f(\mathcal{S};r) :=
+(f(x;r))_{x \in \mathcal{S}}$ under a fixed ordering, and $f_p(x;r) := f(x;r)
+\bmod p$; $g^{a,b}(x) := ax+b$ for $a,b \in \mathbb{N}$, and $g^{a,b}_p(x) :=
+g^{a,b}(x) \bmod p$.
+
+**The quantity.** For $\kappa, n$, a set $\mathcal{S} \subseteq (n)$ and a
+randomized $f : (n) \mapsto (n)$, put
+$$\alpha := \min_{a,b}\ \mathbb{E}_r[\mathrm{Ham}(f(\mathcal{S};r), g^{a,b}(\mathcal{S}))],
+\qquad
+\widehat\alpha_\kappa := \mathbb{E}_{p \leftarrow \mathcal{P}_\kappa}\Big[\min_{a,b}\ \mathbb{E}_r[\mathrm{Ham}(f_p(\mathcal{S};r), g^{a,b}_p(\mathcal{S}))]\Big],$$
+and $\delta_{\kappa,n} := \max_{\mathcal{S}, f}(\alpha -
+\widehat\alpha_\kappa)$.
+
+**Conjecture (the source's Conjecture 5.37).** There exist $c_\delta, c_n > 0$
+such that $\delta_{\kappa,n} \le 2^{-c_\delta \kappa}$ for all $\kappa \in
+\mathbb{N}$ and all $n \le 2^{c_n \kappa}$.
+
+**The direction of the difference is corrected here.** The source's
+Definition 5.36 prints $\max\{\widehat\alpha_\kappa - \alpha\}$ — the opposite
+order. As printed the quantity is never positive, so the conjecture is vacuous:
+for any fixed $p$ and any fixed $(a,b)$, agreement over $\mathbb{Z}$ implies
+agreement modulo $p$, so the mod-$p$ Hamming distance is at most the integer one
+pointwise in $r$; taking expectations and minimising over $a,b$ (chosen after
+$p$, which only helps) gives $\widehat\alpha_\kappa \le \alpha$ always. The
+direction above is the one the conjecture's title ("distance from lines is
+resilient to modulo"), the source's own gloss ("$\delta_{\kappa,n}$ is the
+distance between the two") and its Theorem 5.39 — which uses $\delta$ as an
+additive security loss — all require. The source also writes the second subscript
+as $\ell$ in Definition 5.36 and as $n$ in the conjecture; it is the domain
+parameter, written $n$ throughout.
+
+**How the source frames it.** Page 3: "The security of this variant reduces to a
+natural but apparently new number-theoretic conjecture (see Conjecture 5.37)
+whose study may be of independent interest."
+
+### Sources
+
+- Doerner, Haitner, Ishai and Makriyannis. [*From OT to OLE with Subquadratic Communication*](https://eprint.iacr.org/2025/1722). IACR ePrint 2025/1722. The source. Definition 5.36 and Conjecture 5.37 are on paper page 39 (PDF page 42); Theorem 5.39 and Remark 5.40 on page 40; the framing quoted above on page 3; the notation $(n)$ and $\mathcal{P}_\kappa$ in Section 3.1, page 10.
+- Gilboa. [*Two Party RSA Key Generation*](https://doi.org/10.1007/3-540-48405-1_8). CRYPTO 1999. The protocol whose communication the source reduces from $O(\ell^2)$ to $\widetilde O(\ell)$ by the Chinese remainder theorem, and whose malicious-sender security is what forces the machinery around the conjecture.
+
+## Proof
+
+View PDF — *no proof written yet* · LaTeX source — *no proof written yet* · Formal proof — *not yet formalized*
+
+Open, with no partial result in the source.
+
+**What makes it more than counting.** Two features. The minimising line may be
+chosen *after* the prime is drawn, so the adversary gets a fresh best line per
+prime. And $n$ may be exponential in $\kappa$, so the domain can be far larger
+than the modulus and each residue class can contain many domain points. A bound
+that holds only for $n \le \mathrm{poly}(\kappa)$, or only when a single line
+must work for all primes at once, does not settle the conjecture.
+
+**The deterministic variant.** The source records that restricting the maximum
+to deterministic $f$ "might be easier to prove" and is "also useful": by its
+Remark 5.40 that variant yields a protocol needing more small primes, still
+preferable to the commit-and-prove protocol for not too large $q$. Settling it is
+a genuine partial result and should be reported as such rather than as a
+resolution.
+
+**The parameters the application needs.** The conjecture is stated with
+unspecified constants. For the source's protocol it is needed at $c_\delta = 1/2$
+and $c_n = \log n/\kappa_s \le 4\log q + 25\kappa_s$; at those settings its
+Protocol 5.38 is as secure as the commit-and-prove Protocol 5.14 up to
+$2^{-\kappa_s}$. A proof with worse constants settles the conjecture but not
+automatically the application.
+
+**Checked against the literature, 2026-08-25.** No proof, refutation or
+improvement found, and the source describes the statement as apparently new.
+Targeted check, not an exhaustive sweep.
+
+## Discussion
+
+**Where it comes from in the protocol.** The source reduces OLE over
+$\mathbb{Z}_q$ to oblivious transfer with subquadratic communication by
+combining the Chinese remainder theorem with Gilboa's protocol. Protecting the
+CRT construction against a malicious sender costs an integer commit-and-prove
+functionality that is "rather costly or requires additional hardness
+assumptions". Its Section 5.3.5 deletes those steps; the entire resulting
+security loss is $\delta_{2\kappa_s,n}$. A cheating sender's behaviour is the
+randomized $f$, the proof knows $f$ is far from every line over the integers,
+and what it needs is that $f$ stays far after reduction — because the protocol
+reveals residues, not integers.
+
+**Independent of the protocol.** Nothing in the statement mentions OLE, OT,
+security or simulation. It is a question about how well the property "far from
+every line" survives reduction modulo a random prime, and the source says as
+much when it calls the study potentially of independent interest.
+
+**What a reviewer should be suspicious of, in order.** First, and above
+everything else, the direction of the difference — see the correction above, and
+check independently that $\widehat\alpha_\kappa \le \alpha$ before believing
+either version. Second, that the minimum over $(a,b)$ in
+$\widehat\alpha_\kappa$ sits *inside* the expectation over $p$, so the line may
+depend on the prime. Third, that $\mathrm{Ham}$ is being applied to vectors over
+$(n)$ although the source defines it for bit vectors — the formula is the same,
+but a proof that quietly assumes a binary alphabet would be wrong.
+
+## Open obligations
+
+- [ ] Prove Conjecture 5.37 in the corrected direction: $\max_{\mathcal{S},f}(\alpha - \widehat\alpha_\kappa) \le 2^{-c_\delta \kappa}$ for all $\kappa$ and all $n \le 2^{c_n\kappa}$.
+- [ ] Or prove the deterministic variant, which the source says may be easier and still yields a usable protocol.
+- [ ] Or refute it, exhibiting a randomized $f$ and a set $\mathcal{S}$ far from every integer line that becomes noticeably closer to a line modulo a random $\kappa$-bit prime.
+- [ ] Confirm or correct the direction of the difference in the source's Definition 5.36 against the published version.
+- [ ] Formalize the statement in Lean; nothing here has been formalized.
+
+:::

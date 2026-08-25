@@ -1,0 +1,169 @@
+---
+id: "0067"
+problem: multi-disjoint-syndrome-decoding
+draft: mdsd-linear-test-bias
+title: "The Linear-Test Bias of Multi-Disjoint Syndrome Decoding"
+short_title: "MDSD Linear-Test Bias"
+areas: [information-theoretic, privacy]
+topics: [learning-parity-with-noise, syndrome-decoding, shuffle-model]
+model: standard
+form: lower-bound
+assumption_class: unconditional
+category: research-open
+revision: 1
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: new-idea
+  by: ai
+  note: "The dual-distance argument that bounds the linear-test bias of LPN and of regular LPN handles one sparse error vector against one fixed test vector. Here c error vectors share a matrix and their supports are forced disjoint, so a test may couple coordinates across syndromes whose errors are negatively correlated -- and that coupling is exactly what the standard argument has no handle on. Either a genuinely new way to account for the conditioning, or a reduction that decouples the syndromes, looks needed; the source names the route and reports it stalls there."
+status_summary: "The source proves a non-tight reduction from standard decisional syndrome decoding and separately conjectures that the DOOM algorithm is the best attack; the linear-test bias is the one quantity it states it cannot bound."
+status_updated: 2026-08-25
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Gascon, Ishai, Kelkar, Li, Ma, Raykova, Computationally Secure Aggregation and Private Information Retrieval in the Shuffle Model, IACR ePrint 2024/870", url: "https://eprint.iacr.org/2024/870"}
+  - {cite: "Boyle, Couteau, Gilboa, Ishai, Kohl, Scholl, Correlated Pseudorandom Functions from Variable-Density LPN, FOCS 2020", url: "https://doi.org/10.1109/FOCS46700.2020.00103"}
+  - {cite: "Sendrier, Decoding One Out of Many, PQCrypto 2011", url: "https://doi.org/10.1007/978-3-642-25405-5_4"}
+  - {cite: "Hazay, Orsini, Scholl, Soria-Vazquez, TinyKeys: A New Approach to Efficient Multi-Party Computation, Journal of Cryptology 35(2):13, 2022", url: "https://doi.org/10.1007/s00145-022-09422-6"}
+statement_sha: "6232133206804adda63bbd780a7115b7d2730474bb1f321d6cfb04863dcb05f9"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+<!-- topics:start -->
+<div class="cj-tags cj-page-topics"><a class="cj-tag cj-tag-topic" href="/problems/by-topic/learning-parity-with-noise/">Learning Parity With Noise</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/shuffle-model/">Shuffle Model</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/syndrome-decoding/">Syndrome Decoding</a></div>
+<!-- topics:end -->
+
+Sample a uniformly random parity-check matrix $H$ and $c$ error vectors of
+Hamming weight $w$ whose supports are pairwise disjoint, and publish $H$
+together with the $c$ syndromes. The source conjectures this is hard to
+distinguish from uniform and sets its secure-aggregation and PIR parameters
+from that conjecture. The standard first evidence for a distribution of this
+shape is a *linear test* — show that no fixed linear function of the samples
+has noticeable bias — and the source states in as many words that it does not
+know how to carry that check out here.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [LaTeX source](latex/main.tex) · Formal statement — *not yet formalized*
+
+**The distribution (the source's Definitions 7 and 8).** Fix a finite field
+$\mathbb{F}$ and parameters $n, m, c, w$. The $(m,c,w)$-*disjoint error set* is
+the set of matrices $E = (e_1 \mid \cdots \mid e_c) \in \mathbb{F}^{m \times
+c}$ in which every column has Hamming weight exactly $w$ and the supports of
+distinct columns are disjoint. The $(n,m,c,w)$-*MDSD distribution* draws $H$
+uniformly from $\mathbb{F}^{n \times m}$ and $E$ uniformly from that set, and
+outputs $(H, H \cdot E)$. The decisional MDSD problem is to tell it from
+uniform on $\mathbb{F}^{n \times m} \times \mathbb{F}^{n \times c}$.
+
+**A linear test.** A nonzero $V \in \mathbb{F}^{n \times c}$, applied to a
+sample as the field element $\langle V, Y\rangle = \sum_{i,j} V_{i,j}Y_{i,j}$.
+Its bias on a fixed $H$ is $\mathrm{bias}_V(H) := \max_{a}\Pr_E[\langle V, HE
+\rangle = a] - 1/|\mathbb{F}|$, over the draw of $E$ alone.
+
+**Conjecture.** There are constants $\alpha, \beta > 0$ such that for every
+finite field and all $n,m,c,w$ with $cw \le m$ and $w \le \alpha n/\log m$,
+with probability at least $1 - 2^{-\beta n}$ over $H$,
+$$\max_{V \ne 0}\ \mathrm{bias}_V(H) \ \le\ 2^{-\beta w}.$$
+
+**How the source states it.** Section 3.3.1, page 17: "One plausible approach
+to study our conjectured hardness of MDSD is to apply the linear test
+framework of [BCG+ 20], by checking if there are noticable bias when applying
+any linear function to the syndrome vectors. We do not know how to bound such
+bias for the MDSD distribution, and we leave it as an open question."
+
+**The rate is not the source's.** The source names the framework and the
+quantity but no target bound, so the exponential rate above is supplied by
+this statement, taking the regular-LPN analogy the source itself appeals to as
+the target. A weaker quantitative bound — say $2^{-\beta w/\log m}$ under the
+same quantifiers — would already be a substantive resolution of the source's
+question, and should be reported with its own exponent rather than folded into
+this one.
+
+**What this is not.** It is not the hardness of MDSD. A linear-test bound
+rules out distinguishers that read only a fixed linear function of the samples
+and says nothing about the rest. A *refutation* — a fixed $V$ with noticeable
+bias for most $H$ in the source's parameter regime — would in contrast be a
+genuine attack, and would bear on the concrete parameters the source's
+protocols are instantiated with.
+
+### Sources
+
+- Gascón, Ishai, Kelkar, Li, Ma and Raykova. [*Computationally Secure Aggregation and Private Information Retrieval in the Shuffle Model*](https://eprint.iacr.org/2024/870). IACR ePrint 2024/870. The source. MDSD is Definitions 7 and 8 (page 12); the open question is Section 3.3.1 (page 17).
+- Boyle, Couteau, Gilboa, Ishai, Kohl and Scholl. [*Correlated Pseudorandom Functions from Variable-Density LPN*](https://doi.org/10.1109/FOCS46700.2020.00103). FOCS 2020. The linear test framework the source names.
+- Sendrier. [*Decoding One Out of Many*](https://doi.org/10.1007/978-3-642-25405-5_4). PQCrypto 2011. The DOOM algorithm the source separately conjectures is optimal against MDSD.
+- Hazay, Orsini, Scholl and Soria-Vazquez. [*TinyKeys: A New Approach to Efficient Multi-Party Computation*](https://doi.org/10.1007/s00145-022-09422-6). Journal of Cryptology 35(2):13, 2022. The regular-LPN analysis the source appeals to for the analogy.
+
+## Proof
+
+View PDF — *no proof written yet* · LaTeX source — *no proof written yet* · Formal proof — *not yet formalized*
+
+Open. The visible route and the visible obstruction are both named by the
+source.
+
+**The route.** For standard LPN and for regular LPN, the bias of a fixed
+linear test is bounded by the dual distance of the code generated by the
+random matrix: a test vector of low weight is unlikely to be orthogonal to a
+random sparse error, and a test vector of high weight is unlikely to survive
+the code at all. The same skeleton is what a proof here would follow.
+
+**The obstruction.** The $c$ error vectors are not independent: conditioning
+on $\mathrm{supp}(e_1)$ removes those coordinates from the supports available
+to $e_2, \dots, e_c$. A linear test may combine coordinates across different
+syndromes, and the dual-distance argument bounds the bias of one sparse vector
+against one fixed test vector — it gives nothing directly about a test that
+couples syndromes whose errors are negatively correlated in this way. A proof
+that treats the $c$ columns as independent is almost certainly wrong, and that
+is the first thing to check in any attempt.
+
+**Checked against the literature, 2026-08-25.** No proof, refutation or
+improvement found. This is a targeted check on the source and on the regular-LPN
+line it appeals to, not an exhaustive sweep.
+
+## Discussion
+
+**Why the shape of the error matters.** MDSD's disjointness is not decoration:
+it is what one client's shuffled additive shares produce in the split-and-mix
+paradigm. So the correlation that blocks the standard argument is also the
+reason the problem exists — one cannot relax it away and still be talking about
+the source's protocols.
+
+**What a reviewer should be suspicious of, in order.** First, the quantifier
+order in the bias definition: the bias is over the error distribution with $H$
+fixed, and the claim is that almost every $H$ is good. A statement that
+averages over $H$ as well is weaker and easier, and is not this one. Second,
+whether the parameter constraint $w \le \alpha n/\log m$ is the right one for
+the source's regime ($w = O(\log m)$, $m \approx cw + \lambda$) or an artifact
+of this statement's phrasing. Third, whether the binary-error variant
+$\mathsf{beMDSD}$ over a large field — which the source also defines, and which
+coincides with MDSD over $\mathbb{F}_2$ — behaves the same way; restricting the
+error alphabet changes which linear combinations can cancel, so it is a
+separate statement.
+
+**Open obligations** below are stated so that a partial result is reportable:
+the source gives no target rate, so any bound at all is progress, and it should
+be recorded with the exponent it achieves.
+
+## Open obligations
+
+- [ ] Prove a bound of the form $\max_{V \ne 0} \mathrm{bias}_V(H) \le 2^{-\beta w}$ for almost every $H$, in the source's parameter regime.
+- [ ] Or prove any weaker quantitative bound (for instance $2^{-\beta w/\log m}$), reported with its own exponent.
+- [ ] Or exhibit a fixed nonzero $V$ whose bias is noticeable for most $H$ at the source's suggested parameters, which would be a distinguishing attack.
+- [ ] Settle the corresponding question for the binary-error variant over a large field, separately.
+- [ ] Formalize the statement in Lean; nothing here has been formalized.
+
+:::

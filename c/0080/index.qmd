@@ -1,0 +1,194 @@
+---
+id: "0080"
+problem: mceliece-holdout-cryptanalysis
+draft: holdout-dirty-coordinate-soundness
+title: "Soundness of the Hold-Out Test on Dirty Ciphertext Coordinates"
+short_title: "Hold-Out Soundness, Dirty Coordinates"
+areas: [public-key, foundations]
+topics: [code-based-cryptography, private-information-retrieval]
+model: standard
+form: characterization
+assumption_class: unconditional
+category: research-open
+revision: 1
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: new-idea
+  by: ai
+  note: "The completeness half is a clean Hermite interpolation argument and is proved. The missing half is a genericity claim about the hold-out kernel at a point off the hidden curve, and the source has only a heuristic dimension count for it plus experiments on families other than binary Goppa. What is needed is a lower bound on the probability that some kernel polynomial fails to vanish at a perturbed column -- a statement about the kernel's dimension and generic behaviour for a structured random matrix, which the paper's own analysis does not reach and which no standard tool obviously supplies."
+status_summary: "The source's distinguishing attack is unconditional and proved. Its decryption attack is heuristic, and this is the unproved step: completeness on clean coordinates is its Claim 6.2, while soundness on dirty ones is supported only by a heuristic dimension count and small-parameter experiments."
+status_updated: 2026-08-25
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Ghoshal, Ishai, Jain, Sun, Quasipolynomial Cryptanalysis of the McEliece Cryptosystem (or: PIR Meets McEliece), IACR ePrint 2026/1630", url: "https://eprint.iacr.org/2026/1630"}
+  - {cite: "McEliece, A Public-Key Cryptosystem Based on Algebraic Coding Theory, DSN Progress Report 42-44, 1978", url: "https://ipnpr.jpl.nasa.gov/progress_report2/42-44/44N.PDF"}
+  - {cite: "Kopparty, Saraf, Yekhanin, High-Rate Codes with Sublinear-Time Decoding, Journal of the ACM 61(5):1-20, 2014", url: "https://doi.org/10.1145/2629416"}
+  - {cite: "Alekhnovich, More on Average Case vs Approximation Complexity, FOCS 2003", url: "https://doi.org/10.1109/SFCS.2003.1238204"}
+statement_sha: "c320866079820099c8690577cb77b00a716d9df0d9d10d2ba67b0ceff9ee3cc0"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+<!-- topics:start -->
+<div class="cj-tags cj-page-topics"><a class="cj-tag cj-tag-topic" href="/problems/by-topic/code-based-cryptography/">Code Based Cryptography</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/private-information-retrieval/">Private Information Retrieval</a></div>
+<!-- topics:end -->
+
+The source gives a classical quasipolynomial-time algorithm that distinguishes a
+Goppa–McEliece public key from a uniformly random matrix in the asymptotic
+Classic McEliece regime, and proves it works. It then extends the idea from
+distinguishing to decryption: append the ciphertext as an extra row and, for each
+coordinate, ask whether a space of low-degree polynomials vanishing to high
+multiplicity at all the other columns also vanishes at this one. Coordinates
+where the error is zero are guaranteed to pass — that half is proved. The attack
+needs the converse, and the source states it has no proof of it.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [LaTeX source](latex/main.tex) · Formal statement — *not yet formalized*
+
+**The test (the source's Algorithm 3).** For $A \in \mathbb{F}_q^{(k+1)\times
+n}$ and $\tau \in [n]$, let
+$$K^{\mathrm{hom}}_\tau(A) := \{H \in \mathcal{P}^{\mathrm{hom}}_{=d} :
+(\partial^{[a]}H)(A_j) = 0 \ \ \forall j \ne \tau,\ \forall a \in
+\mathcal{A}_{<s,k+1}\},$$
+where $\mathcal{P}^{\mathrm{hom}}_{=d}$ is the $(k+1)$-variate polynomials
+homogeneous of degree exactly $d$, $\mathcal{A}_{<s,\ell}$ indexes Hasse
+derivatives of order below $s$, and $A_j$ is the $j$-th column. The test *marks
+$\tau$ clean* if $H(A_\tau) = 0$ for every $H$ in that kernel.
+
+**The instance.** Draw $Y$ from the McEliece public-key distribution for binary
+Goppa parameters $(m,n,t)$ — $Y = SGP$ for a generator matrix $G$ of
+$\mathrm{Goppa}(\alpha,\Gamma)$, uniform full-rank $S$ and uniform permutation
+$P$. Draw a uniform message $u$ and an error $e$, set $c = uY + e$ and $A =
+\binom{Y}{c}$. Write $I_{\mathrm{cl}} = [n]\setminus\mathrm{supp}(e)$ for the
+clean coordinates; a coordinate with $e_\tau \ne 0$ is *dirty*. $D$ is the
+ambient degree bound: $K-1$ for GRS, $n-2t-1$ for binary Goppa.
+
+**Conjecture.** In the asymptotic Classic McEliece regime $m = \Theta(\log n)$,
+$k = \Theta(n)$, $t = \Theta(n/\log n)$, there are attack parameters $s, d =
+\Theta(\log n)$ satisfying the completeness condition
+$s(|I_{\mathrm{cl}}|-1) > dD$ such that, over that instance distribution, with
+probability $1-o(1)$ every dirty coordinate is *not* marked clean: for every
+$\tau$ with $e_\tau \ne 0$ there is $H \in K^{\mathrm{hom}}_\tau(A)$ with
+$H(A_\tau) \ne 0$.
+
+**How the source states it.** Section 1.1.2, page 11: "For a dirty coordinate
+$e_\tau \ne 0$, we do not currently have a proof that the hold-out test rejects
+$\tau$ for either code family." And again after its Claim 6.2, page 39: "To make
+the linear system consistent, we need $\widehat I_{cl}$ to only contain the
+coordinates with $e_\tau = 0$. We currently do not have a proof to lower bound
+the probability of this event."
+
+**What it buys.** Together with Claim 6.2, which is proved, it gives $\widehat
+I_{\mathrm{cl}} = I_{\mathrm{cl}}$ with probability $1-o(1)$, so the linear
+system $uY_{\widehat I_{\mathrm{cl}}} = c_{\widehat I_{\mathrm{cl}}}$ is
+consistent and determines $u$ — making Algorithm 3 an unconditional
+quasipolynomial-time decryption attack on Goppa–McEliece in the stated regime,
+which is what the source's open-problems section asks for. Nothing about the
+*distinguishing* attack depends on this; that one is already proved.
+
+**The one-sided variant does not escape it.** The source's Remark 6.3 gives, for
+binary Goppa, a modified filter — retain $\tau$ when $H(A_\tau + \xi) \ne 0$ for
+some kernel $H$, where $\xi = (0,\dots,0,1)^\top$ — under which no dirty
+coordinate is retained unconditionally, by the same interpolation argument. But
+then enough *clean* coordinates must survive, i.e. for a clean $\tau$ the shifted
+point must behave like a dirty one, and the source says the same Appendix A
+heuristics are what suggest that. The variant relocates the unproved step rather
+than removing it.
+
+### Sources
+
+- Ghoshal, Ishai, Jain and Sun. [*Quasipolynomial Cryptanalysis of the McEliece Cryptosystem (or: PIR Meets McEliece)*](https://eprint.iacr.org/2026/1630). IACR ePrint 2026/1630. The source. Algorithm 1 and Theorem 3.2 are on page 22; the heuristic decryption attack is Section 1.1.2 (page 11) and Algorithm 3 with Claim 6.2 and Remark 6.3 (pages 37–39); the open problems are Section 1.2, pages 11–12; the heuristic analysis is Appendix A.
+- McEliece. [*A Public-Key Cryptosystem Based on Algebraic Coding Theory*](https://ipnpr.jpl.nasa.gov/progress_report2/42-44/44N.PDF). DSN Progress Report 42–44, Jet Propulsion Laboratory, 1978. The cryptosystem under attack.
+- Kopparty, Saraf and Yekhanin. [*High-Rate Codes with Sublinear-Time Decoding*](https://doi.org/10.1145/2629416). Journal of the ACM 61(5):1–20, 2014. The multiplicity codes whose Hasse-jet symbols the hold-out test is built on.
+- Alekhnovich. [*More on Average Case vs Approximation Complexity*](https://doi.org/10.1109/SFCS.2003.1238204). FOCS 2003. The LPN-based public-key encryption whose quadratic ciphertext length is the benchmark the source's conditional conclusion puts Goppa–McEliece alongside.
+
+## Proof
+
+View PDF — *no proof written yet* · LaTeX source — *no proof written yet* · Formal proof — *not yet formalized*
+
+Open. The proved half shows exactly what shape the missing half has.
+
+**What is proved (Claim 6.2).** Let $I_{\mathrm{cl}}$ be the clean coordinates
+and suppose $s(|I_{\mathrm{cl}}|-1) > dD$. For a clean $\tau$, every column
+$A_j$ with $j \in I_{\mathrm{cl}}$ is a clean GRS–McEliece column, so for any
+kernel $H$ the composed univariate $\phi(Z) = H(f_1(Z),\dots,f_k(Z),f'(Z))$ —
+with $f' = \sum_r u_r f_r$ — has a zero of multiplicity at least $s$ at
+$|I_{\mathrm{cl}}|-1$ points and degree at most $dD$, hence vanishes
+identically. So $H(A_\tau) = \lambda^d_{\pi(\tau)}\phi(\alpha_{\pi(\tau)}) = 0$:
+no clean coordinate is ever rejected.
+
+**What is missing.** For a dirty $\tau$, $A_\tau$ is off the hidden curve, and
+what is needed is a *lower* bound on the probability that some kernel polynomial
+fails to vanish there. That is a genericity statement about the kernel — its
+dimension, and whether a generic element of it avoids a particular perturbed
+point — for a structured random matrix. The source's Appendix A supplies
+heuristic dimension and genericity estimates that also prescribe $d$ and $s$, and
+argues no accepting mechanism occurs, but not a proof.
+
+**What the experiments do and do not cover.** Appendix A.4 reports dimension and
+genericity experiments on small GRS, alternant, "wild Goppa" and $q$-ary Goppa
+instances at small extension degree, finding the normalized dirty points behave
+as predicted. It also reports: "We were unable to run the full attack on a binary
+square-free Goppa instance satisfying all of" the required conditions, the
+matrices being too large. So the family Classic McEliece actually uses, at
+parameters where the completeness condition holds, is precisely the case with no
+end-to-end experimental support.
+
+**Checked against the literature, 2026-08-25.** No proof, refutation or
+improvement found. Targeted check on a very recent ePrint, not an exhaustive
+sweep.
+
+## Discussion
+
+**Where the attack comes from.** The source's framing is that a PIR question —
+does one column of a Reed–Muller-encoded matrix lie in the span of the others? —
+becomes a hold-out test sensitive to the algebraic structure of GRS and Goppa
+codes. For a genuine GRS-derived matrix, Hermite interpolation forces the
+composed univariate polynomial to vanish identically, so the kernel polynomials
+must vanish at the held-out column too; for a uniformly random matrix they
+generically do not. That is the distinguisher, and it is unconditional.
+
+**What the conjecture would mean for parameters.** The distinguisher runs in time
+$2^{\widetilde O(n/t)}$ while generic decoding runs in $2^{\widetilde O(t)}$, so
+under the decryption hypothesis resistance to both is governed by $\min\{t,
+n/t\} \le \sqrt n$. Requiring both to be $\widetilde\Omega(\kappa)$ forces $n =
+\widetilde\Omega(\kappa^2)$, i.e. $\widetilde\Omega(\kappa^2)$-bit ciphertexts in
+the constant-rate Goppa regime — putting Goppa–McEliece under the same
+qualitative quadratic tradeoff as Alekhnovich's LPN-based scheme, which had been
+the reason to prefer it. For public-key pseudorandomness that conclusion is
+already unconditional; for decryption it rests on this statement.
+
+**What a reviewer should be suspicious of, in order.** First, whether a claimed
+proof covers *binary Goppa* and not only GRS — the source's own experiments
+stop short of the former, and the two have different ambient degree bounds
+($n-2t-1$ against $K-1$). Second, whether the parameters used still satisfy the
+completeness condition $s(|I_{\mathrm{cl}}|-1) > dD$, since a proof that
+tightens soundness by raising $d$ may break completeness. Third, whether the
+argument is about Algorithm 3's two-sided filter or Remark 6.3's one-sided one,
+since the heuristic sits on opposite sides in the two.
+
+## Open obligations
+
+- [ ] Prove that in the asymptotic Classic McEliece regime the hold-out test rejects every dirty coordinate with probability $1-o(1)$, for binary Goppa codes, at parameters satisfying the completeness condition.
+- [ ] Or prove the corresponding statement for Remark 6.3's one-sided filter: that enough clean coordinates survive for $\mathrm{rank}(Y_{\widehat I'_{\mathrm{cl}}}) = k$.
+- [ ] Or refute it: show that at the source's parameter choices dirty coordinates are marked clean with non-negligible probability, so Algorithm 3 as specified fails.
+- [ ] Run the full attack end to end on a binary square-free Goppa instance satisfying all the source's conditions, which the source reports it could not.
+- [ ] Formalize the statement in Lean; nothing here has been formalized.
+
+:::

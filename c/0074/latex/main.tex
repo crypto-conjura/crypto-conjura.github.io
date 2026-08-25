@@ -1,0 +1,230 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  Doerner-Haitner-Ishai-Makriyannis's Conjecture 5.37: distance from
+%  lines is resilient to reduction modulo a random prime.
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{DISTANCE FROM LINES IS RESILIENT TO MODULO}
+
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Ham}{\mathrm{Ham}}
+\newcommand{\Prm}{\mathcal{P}}
+\newcommand{\Sc}{\mathcal{S}}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{Distance from Lines Is Resilient to Reduction Modulo a Random
+  Prime}
+\cjsubtitle{A function far from every line stays far modulo a uniform
+  $\kappa$-bit prime}
+\cjstatus{Statement: AI-written from Jack Doerner, Iftach Haitner, Yuval
+  Ishai and Nikolaos Makriyannis, \emph{From OT to OLE with Subquadratic
+  Communication}, IACR ePrint 2025/1722. Not yet checked by a human.
+  Numbered Conjecture 5.37 of the source, described there as ``a natural
+  but apparently new number-theoretic conjecture'' whose study ``may be
+  of independent interest''. Nothing is proved about it; the source notes
+  a deterministic variant ``might be easier to prove''. The direction of
+  the difference in the source's Definition 5.36 is corrected here --- see
+  Remark~\ref{rem:sign}.}
+\cjcategory{\emph{Information-Theoretic Cryptography}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+Take a randomized function $f$ on a large integer domain, and ask how
+close it is, on a chosen set of points, to some line $x \mapsto ax + b$
+--- measured as the fraction of points where the two disagree. Now
+reduce everything modulo a uniformly random $\kappa$-bit prime $p$ and
+ask the same question again: how close is $f \bmod p$ to a line mod $p$?
+Reduction can only help the adversary, since values that differ over the
+integers can collide mod $p$. The conjecture is that it barely helps: for
+domains as large as $2^{c \kappa}$, the expected gain in closeness is at
+most $2^{-c' \kappa}$, exponentially small in the prime's bit length,
+uniformly over the worst choice of $f$ and of the evaluation set. The
+source needs exactly this to drop an expensive integer-commitment
+subprotocol from its OLE protocol.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+Oblivious linear evaluation (OLE) over $\mathbb{Z}_{q}$ lets a receiver
+holding $x$ learn $ax + b$ for a sender's line, and nothing else. The
+source reduces OLE to oblivious transfer with subquadratic
+communication, by combining the Chinese remainder theorem with Gilboa's
+protocol~\cite{Gil99} and then protecting the CRT-based construction
+against a malicious sender. Its main protocol pays for that protection
+with a commit-and-prove functionality whose implementation is, in the
+source's words, ``rather costly or requires additional hardness
+assumptions''.
+
+Its Section 5.3.5 removes that functionality. The resulting protocol
+(its Protocol 5.38) is the same protocol with the integer-commitment
+steps deleted, and its Theorem 5.39 shows this variant UC-realizes
+$\mathrm{OLE}_{q}$ with statistical security $2^{-\kappa_{s}} +
+\delta_{2\kappa_{s}, n}$, where $\delta$ is the quantity below. So the
+whole security loss from dropping commit-and-prove is that quantity, and
+the source's summary of the situation is: ``The security of this variant
+reduces to a natural but apparently new number-theoretic conjecture (see
+Conjecture 5.37) whose study may be of independent interest.''
+
+The quantity itself is elementary. A cheating sender's behaviour is
+modelled by a randomized function $f$; the proof knows that $f$ is far,
+in expected relative Hamming distance over a chosen set $\Sc$, from
+every line $ax + b$ with $a, b \in \N$. What it needs is that $f$ stays
+far from every line \emph{after} reduction modulo a random
+$\kappa$-bit prime, because the protocol reveals residues rather than
+integers. Reduction is exactly what could destroy the guarantee: a
+sender's answers can disagree with every line over $\mathbb{Z}$ while
+agreeing with one modulo many primes.
+
+The source states no partial result. It observes only that the
+deterministic variant --- where the worst case is taken over
+deterministic $f$ alone --- ``might be easier to prove'', and remains
+useful: its Remark 5.40 records that this variant yields a slightly less
+efficient protocol which still beats the commit-and-prove one for not too
+large $q$. It also notes, separately from the conjecture, that a better
+analysis of cheating calls to its $\mathsf{Wmult}$ subprotocol could
+improve the protocol ``regardless of whether Conjecture 5.37 holds or
+not''.
+
+\section{Notation and parameters}\label{sec:notation}
+
+\begin{itemize}[nosep]
+  \item For $n \in \N$, $(n) := \{0, \dots, n\}$, following the source's
+    notation section.
+  \item $\Prm_{\kappa}$ is the set of all $\kappa$-bit primes; $p
+    \sample \Prm_{\kappa}$ is uniform on it.
+  \item For equal-length vectors $u, v$ of length $t$ over a common
+    alphabet, $\Ham(u,v) := |\{i \in [t] : u_{i} \ne v_{i}\}| / t$ is
+    the relative Hamming distance. (The source defines $\Ham$ for $u, v
+    \in \{0,1\}^{t}$ and applies it to vectors over $(n)$; the formula is
+    the same.)
+  \item For a randomized function $f$, randomness $r$ and a finite set
+    $\Sc$, $f(\Sc; r)$ is the vector $(f(x;r))_{x \in \Sc}$ under a fixed
+    ordering of $\Sc$, and $f_{p}(x;r) := f(x;r) \bmod p$.
+  \item For $a, b \in \N$, $g^{a,b}(x) := ax + b$, and $g^{a,b}_{p}(x) :=
+    g^{a,b}(x) \bmod p$.
+  \item $\kappa$ is the prime's bit length; $n$ bounds the domain.
+\end{itemize}
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{definition}[Distance from linear functions,
+  after~{\cite[Definition 5.36]{DHIM25}}]\label{def:distance}
+Fix $\kappa, n \in \N$, a set $\Sc \subseteq (n)$ and a randomized
+function $f : (n) \mapsto (n)$. Put
+\[
+  \alpha := \min_{a,b \in \N}\ \mathbb{E}_{r}\bigl[
+    \Ham(f(\Sc;r),\, g^{a,b}(\Sc)) \bigr],
+  \qquad
+  \widehat{\alpha}_{\kappa} := \mathbb{E}_{p \sample \Prm_{\kappa}}
+    \Bigl[ \min_{a,b \in \N}\ \mathbb{E}_{r}\bigl[
+    \Ham(f_{p}(\Sc;r),\, g^{a,b}_{p}(\Sc)) \bigr] \Bigr],
+\]
+and
+\[
+  \delta_{\kappa,n} := \max_{\Sc \subseteq (n),\, f}\
+  \bigl( \alpha - \widehat{\alpha}_{\kappa} \bigr).
+\]
+So $\alpha$ measures how far $f$ is, in expectation, from being linear
+over $\Sc$; $\widehat{\alpha}_{\kappa}$ how far it is from being linear
+modulo a uniform $\kappa$-bit prime; and $\delta_{\kappa,n}$ the
+worst-case gap between the two.
+\end{definition}
+
+\begin{conjecture}[Distance from lines is resilient to modulo,
+  {\cite[Conjecture 5.37]{DHIM25}}]\label{conj:main}
+There exist $c_{\delta}, c_{n} > 0$ such that $\delta_{\kappa,n} \le
+2^{-c_{\delta} \cdot \kappa}$ for all $\kappa \in \N$ and all $n \le
+2^{c_{n} \cdot \kappa}$.
+\end{conjecture}
+
+\begin{remark}[The direction of the difference, corrected]\label{rem:sign}
+The source's Definition 5.36 prints $\delta_{\kappa,\ell} :=
+\max_{\Sc,f}\{\widehat{\alpha}_{\kappa} - \alpha\}$ --- the difference in
+the opposite order to Definition~\ref{def:distance} above. As printed,
+the quantity is never positive, so the conjecture is vacuous: for any
+fixed $p$ and any fixed $a,b$, agreement over $\mathbb{Z}$ implies
+agreement modulo $p$, hence $\Ham(f_{p}(\Sc;r), g^{a,b}_{p}(\Sc)) \le
+\Ham(f(\Sc;r), g^{a,b}(\Sc))$ pointwise in $r$; taking expectations and
+minimising over $a, b$ (with $a,b$ chosen after $p$, which only helps)
+gives $\widehat{\alpha}_{\kappa} \le \alpha$ for every $\Sc$ and $f$, so
+$\max_{\Sc,f}\{\widehat{\alpha}_{\kappa} - \alpha\} \le 0 \le
+2^{-c_{\delta}\kappa}$ trivially.
+
+Definition~\ref{def:distance} therefore takes $\alpha -
+\widehat{\alpha}_{\kappa}$, which is the direction the rest of the source
+needs and asserts. The title of Conjecture 5.37 is that distance from
+lines is \emph{resilient} to modulo, i.e.\ that the mod-$p$ distance does
+not fall far below the integer distance; the source's own gloss is that
+``$\delta_{\kappa,n}$ is the distance between the two''; and its
+Theorem 5.39 uses $\delta$ as an additive security loss, which is only
+meaningful if $\delta$ measures how much closer to a line the sender's
+answers can look after reduction. With the order as printed, Theorem 5.39
+would carry no content. Nothing else about the statement is changed.
+
+The source also writes the second subscript as $\ell$ in
+Definition 5.36 while using $n$ in Conjecture 5.37 and Theorem 5.39; the
+index is the domain parameter, written $n$ throughout here.
+\end{remark}
+
+\begin{remark}[What a proof has to beat]
+Two features make the statement more than a counting exercise. First, the
+minimising line may be chosen \emph{after} the prime is drawn, so the
+adversary gets a fresh best line per prime. Second, $n$ is allowed to be
+exponential in $\kappa$, so the domain can be far larger than the
+modulus and each residue class can contain many domain points. A bound
+that holds only for $n \le \poly(\kappa)$, or only when a single line
+must work for all primes at once, does not settle
+Conjecture~\ref{conj:main}.
+\end{remark}
+
+\begin{remark}[The deterministic variant]
+The source records that the variant of Conjecture~\ref{conj:main} in
+which the maximum in Definition~\ref{def:distance} ranges only over
+deterministic $f$ ``might be easier to prove'' and is ``also useful'':
+by its Remark 5.40 that variant yields a protocol needing more small
+primes, still preferable to the commit-and-prove protocol for not too
+large $q$. Settling the deterministic variant is therefore a genuine
+partial result on this statement, and should be reported as such rather
+than as a resolution.
+\end{remark}
+
+\begin{remark}[The parameters the source's protocol needs]
+Conjecture~\ref{conj:main} is stated with unspecified constants, as in
+the source. For the application, the source needs it at $c_{\delta} =
+1/2$ and $c_{n} = \log n / \kappa_{s} \le 4 \log q + 25 \kappa_{s}$; at
+those settings its Protocol 5.38 is as secure as the commit-and-prove
+Protocol 5.14 up to $2^{-\kappa_{s}}$. A proof with worse constants
+would settle the conjecture but not automatically the application.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem[DHIM25]{DHIM25}
+Jack Doerner, Iftach Haitner, Yuval Ishai and Nikolaos Makriyannis.
+\emph{From OT to OLE with subquadratic communication}.
+IACR ePrint 2025/1722.
+The source. Definition 5.36 and Conjecture 5.37 are on page 39 (PDF page
+42); Theorem 5.39 and Remark 5.40 on page 40; the summary quoted in
+Section~\ref{sec:setting} is on page 3 (PDF page 6). The notation $(n) =
+\{0,\dots,n\}$ and $\Prm_{\kappa}$ are in Section 3.1, page 10.
+
+\bibitem[Gil99]{Gil99}
+Niv Gilboa.
+\emph{Two party RSA key generation}.
+Annual International Cryptology Conference (CRYPTO), 1999, pages
+116--129.
+The protocol whose communication the source reduces from $O(\ell^{2})$
+to $\widetilde{O}(\ell)$ using the Chinese remainder theorem, and whose
+malicious-sender security is what forces the machinery around
+Conjecture~\ref{conj:main}.
+
+\end{conjurabibliography}
+
+\end{document}

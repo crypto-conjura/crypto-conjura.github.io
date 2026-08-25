@@ -103,6 +103,21 @@ TOPIC_SLUGS = {
     "locality-preserving-hashing", "distributed-discrete-logarithm",
     "continuous-group-key-agreement", "broadcast-encryption",
     "locally-computable-hashing",
+    "private-information-retrieval",
+    "shuffle-model",
+    "syndrome-decoding",
+    "linear-pcps",
+    "leakage-resilient-circuits",
+    "additive-randomized-encodings",
+    "oblivious-transfer",
+    "oblivious-linear-evaluation",
+    "threshold-secret-sharing",
+    "anonymity",
+    "fiat-shamir",
+    "parallel-repetition",
+    "arithmetic-cryptography",
+    "non-interactive-secure-computation",
+    "code-based-cryptography",
 }
 
 MODELS = {"rom", "prom", "icm", "ggm", "qrom", "standard", "other"}

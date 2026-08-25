@@ -1,0 +1,183 @@
+---
+id: "0076"
+problem: fully-anonymous-secret-sharing
+draft: perfect-ufass-three-out-of-five
+title: "Perfect Fully Anonymous Secret Sharing for the 3-out-of-5 Threshold"
+short_title: "Perfect FASS at 3-out-of-5"
+areas: [secret-sharing, privacy]
+topics: [threshold-secret-sharing, anonymity]
+model: standard
+form: characterization
+assumption_class: unconditional
+category: research-open
+revision: 1
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: adaptation
+  by: ai
+  note: "A single five-party threshold structure, with a finite share domain, so the object is small enough for exhaustive or SAT-assisted search once the domain size is fixed -- and Con has already shown Shamir's scheme can be instantiated perfectly for gap thresholds, giving a technique to adapt. What keeps it off the routine band is that the known route provably fails here (the gap thresholds it needs are exactly the ones outside 3 <= t <= n-2), so a positive answer needs a different instantiation and a negative answer needs an argument that scales past a single case."
+status_summary: "Statistical and computational FASS are settled by the source and prior work. The perfect version is stated by the source to be open for every reconstruction threshold 3 <= t <= n-2, and open even for the weaker multi-dealer notion, with 3-out-of-5 the smallest open case. Con has settled the perfect case for gap threshold structures."
+status_updated: 2026-08-25
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Bishop, Green, Ishai, Jain, Lou, Fully Anonymous Secret Sharing, IACR ePrint 2025/1984", url: "https://eprint.iacr.org/2025/1984"}
+  - {cite: "Blundo, Stinson, Anonymous Secret Sharing Schemes, Discrete Applied Mathematics 77(1):13-28, 1997", url: "https://doi.org/10.1016/S0166-218X(97)89208-6"}
+  - {cite: "Con, Anonymous Shamir's Secret Sharing via Reed-Solomon Codes against Permutations, Insertions, and Deletions, arXiv 2412.17003, ISIT 2025", url: "https://arxiv.org/abs/2412.17003"}
+  - {cite: "Shamir, How to Share a Secret, Communications of the ACM 22(11):612-613, 1979", url: "https://doi.org/10.1145/359168.359176"}
+statement_sha: "6891115fed6ddc67f867285f965d3bed97aecf7f519098dceeacd49db6915d04"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+<!-- topics:start -->
+<div class="cj-tags cj-page-topics"><a class="cj-tag cj-tag-topic" href="/problems/by-topic/anonymity/">Anonymity</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/threshold-secret-sharing/">Threshold Secret Sharing</a></div>
+<!-- topics:end -->
+
+Ordinary secret sharing hides the secret from unauthorized sets, but not much
+else: the shares may reveal who holds them, and reconstruction may need to know
+which party contributed which share. Fully anonymous secret sharing asks for both
+to go away — unauthorized shares look uniformly random, revealing neither
+identities nor even whether they came from the same dealer, and reconstruction
+works from an unordered bag of shares. Shamir's scheme over a large field with
+random interpolation points almost does it for thresholds, and the "almost" is the
+whole problem.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [LaTeX source](latex/main.tex) · Formal statement — *not yet formalized*
+
+**Anonymous reconstruction (the source's Definition 3.5, after Blundo–Stinson).**
+A scheme $(\mathsf{Share}, \mathsf{Recon})$ where $\mathsf{Recon}$ takes *only* a
+tuple of shares — no party identities. Perfectly correct if every authorized set
+reconstructs with probability $1$.
+
+**Uniformity (the source's Definition 4.1).** The scheme is
+$\mu$-*U-anonymous* if for every unbounded distinguisher, every secret and every
+unauthorized $B$, the shares $sh_B$ are $\mu$-indistinguishable from $|B|$
+independent uniform draws from $\Omega_\lambda$, the efficiently samplable,
+publicly known support of a single share.
+
+**Multi-dealer anonymity (the source's Definition 4.2).** $\mu$-*M-anonymous* if
+no unbounded distinguisher can tell $sh^{(0)}_B$ from $sh^{(0)}_{B'} \|
+sh^{(1)}_{\{a\}}$, where the two sharings are independent and of possibly
+different secrets and $|B'| = |B|-1$. U-anonymity implies M-anonymity.
+
+**Conjecture.** There is a perfect M-FASS scheme for the $3$-out-of-$5$
+threshold access structure with $|\mathcal{S}| \ge 2$, in which the share domain
+— and hence the share size — depends only on the access structure and the secret
+space, not on any security or correctness parameter.
+
+**How the source states it.** The first item of Section 2.4, page 17: "The first
+open question is the possibility of perfect U-FASS for general access structures,
+namely U-FASS with both perfect uniformity and perfect correctness. The question
+is open even for threshold structures with reconstruction threshold $3 \le t \le
+n-2$ and even for the weaker notion of perfect M-FASS. In particular, it is open
+in the 3-out-of-5 threshold case."
+
+**Why the weaker notion.** The source poses the question at U-FASS and adds that
+it is open "even for" M-FASS, which is the notion whose status it flags as
+already unknown — so that is where the statement is posed. A U-FASS construction
+is strictly better than what is asked; an impossibility at M-FASS settles U-FASS
+too.
+
+**What "perfect" rules out.** The constant-share-size clause is the source's own
+reading: "a perfect U-FASS scheme must provide anonymity with 'constant-size'
+shares, depending only on the access structure." It is what excludes the known
+threshold construction, whose share size grows with the security or correctness
+parameter precisely because it must make interpolation-point collisions rare
+rather than impossible. A scheme with zero error whose share size still grows
+with a parameter is not a resolution.
+
+### Sources
+
+- Bishop, Green, Ishai, Jain and Lou. [*Fully Anonymous Secret Sharing*](https://eprint.iacr.org/2025/1984). IACR ePrint 2025/1984. The source. Definitions 3.5, 4.1 and 4.2 are on pages 19 and 23–24; the open question is the first item of Section 2.4, page 17.
+- Blundo and Stinson. [*Anonymous Secret Sharing Schemes*](https://doi.org/10.1016/S0166-218X(97)89208-6). Discrete Applied Mathematics 77(1):13–28, 1997. The anonymous-reconstruction syntax the source's Definition 3.5 adopts.
+- Con. [*Anonymous Shamir's Secret Sharing via Reed–Solomon Codes against Permutations, Insertions, and Deletions*](https://arxiv.org/abs/2412.17003). arXiv 2412.17003, 2024; presented at ISIT 2025. Shows Shamir's original scheme can be instantiated to give perfect U-FASS for gap threshold structures.
+- Shamir. [*How to Share a Secret*](https://doi.org/10.1145/359168.359176). Communications of the ACM 22(11):612–613, 1979. The threshold scheme whose large-field random-interpolation-point variant is the known U-FASS for thresholds.
+
+## Proof
+
+View PDF — *no proof written yet* · LaTeX source — *no proof written yet* · Formal proof — *not yet formalized*
+
+Open in both directions, on a very small instance.
+
+**Why the known route fails.** For threshold structures the route to U-FASS is a
+large-field Shamir variant with random interpolation points. Draw the points
+independently and correctness fails when two coincide; force them distinct and
+the shares are no longer uniform. Either way the share size must grow with the
+parameter that makes the bad event rare. Con's result closes the perfect case
+for *gap* threshold structures — where the reconstruction threshold exceeds the
+secrecy threshold by roughly a factor of two — which is exactly why the open range
+is $3 \le t \le n-2$ and why $3$-out-of-$5$ is the smallest case left.
+
+**Toward a construction.** With $n = 5$, $t = 3$ and a fixed finite share
+domain, the object is small: five share distributions over one domain, exact
+reconstruction from every $3$-subset, and the M-anonymity condition on every
+$2$-subset. That is within reach of exhaustive or SAT-assisted search once a
+domain size is fixed, and a negative search result at small domain sizes is
+itself evidence.
+
+**Toward an impossibility.** The source's own $\Omega(\ell)$ per-party lower
+bound does not apply here: it is for an access structure with many minterms, and
+the source says explicitly it does not cover the single-minterm and
+small-threshold cases. So a negative answer needs a new argument, and one that
+does not merely rule out a single share-domain size.
+
+**Checked against the literature, 2026-08-25.** No proof, refutation or
+improvement found beyond Con's gap-threshold result, which the source already
+records. Targeted check, not an exhaustive sweep.
+
+## Discussion
+
+**Three strengths of anonymity, and why the middle one is the target.**
+U-anonymity asks unauthorized shares to be uniform on the public share domain;
+M-anonymity asks only that a mixture of dealers be undetectable; S-anonymity asks
+only that equal-size unauthorized sets be indistinguishable within one sharing.
+The source treats U-FASS as its main notion because it is strongest, and views
+S-FASS as the least useful, showing a share-size separation between S-FASS and
+M-FASS. M-anonymity is where this question bites because it is the weakest notion
+for which even $3$-out-of-$5$ is unresolved.
+
+**What the source does achieve.** An improved statistical U-FASS for
+DNF-representable structures; a compiler from any secret-sharing scheme to
+computational M-FASS from compute-and-compare obfuscation; a U-FASS for complete
+bipartite graphs under the Decisional Linear assumption; and one for star graphs
+from one-way functions. Its negative results include an $\Omega(\ell)$ per-party
+bound for a family with many minterms, applying to U-FASS and M-FASS alike and
+also under imperfect anonymity, plus a proof that efficient information-theoretic
+U-FASS for CNF does not exist — which is why one-way functions are necessary
+there.
+
+**What a reviewer should be suspicious of, in order.** First, the share-size
+clause: a scheme with exactly zero error but $\lambda$-dependent shares is the
+known construction, not a resolution. Second, whether reconstruction really takes
+no identities, which is the Blundo–Stinson syntax and is easy to violate
+accidentally by ordering the shares. Third, whether the claimed notion is
+M-anonymity as the source defines it — its distinguishing task swaps exactly one
+share for one from an independent sharing, and weaker formulations are
+S-anonymity in disguise.
+
+## Open obligations
+
+- [ ] Exhibit a perfect M-FASS scheme for $3$-out-of-$5$ with parameter-independent share size, or prove none exists.
+- [ ] Report exhaustive-search results at small share-domain sizes as evidence either way.
+- [ ] Settle the same question at perfect U-FASS, which is strictly stronger.
+- [ ] Separately: the source's other open questions — improved information-theoretic FASS for the single-minterm structure, information-theoretic S-FASS for weighted thresholds, and whether one-way functions suffice for computational U-FASS for CNF.
+- [ ] Formalize the statement in Lean; nothing here has been formalized.
+
+:::

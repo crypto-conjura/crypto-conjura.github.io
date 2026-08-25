@@ -1,0 +1,171 @@
+---
+id: "0079"
+problem: nisc-communication-overhead
+draft: nisc-constant-overhead-from-prg
+title: "Malicious NISC with Constant Communication Overhead from a Black-Box PRG"
+short_title: "NISC Overhead from a PRG"
+areas: [mpc, idealized-models]
+topics: [non-interactive-secure-computation, garbled-circuits]
+model: standard
+form: characterization
+assumption_class: falsifiable
+category: research-open
+revision: 1
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: adaptation
+  by: ai
+  note: "The source's own protocol reaches the target in the random oracle model, so a resolution most plausibly de-idealizes a known construction rather than building a new one -- and the two uses of the oracle are localized and named: Fiat-Shamir for the watchlist and the commitments in the Ligero-style proof. Against that: round-optimal watchlists were weakened specifically so they could be instantiated by Fiat-Shamir, and doing without an oracle there is exactly what the round-optimality line has not managed at constant overhead."
+status_summary: "The source poses this question and then answers the variant in which the pseudorandom generator is replaced by a random oracle, which leaves the question as posed unresolved. Each of the four relaxations -- polylogarithmic overhead, correlated-abort security, extra rounds, or programmable OLE correlations -- is already known."
+status_updated: 2026-08-25
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Ishai, Jin, Peter, Srinivasan, Non-Interactive Secure Computation with Constant Communication Overhead, IACR ePrint 2026/1555", url: "https://eprint.iacr.org/2026/1555"}
+  - {cite: "Ishai, Kushilevitz, Ostrovsky, Prabhakaran, Sahai, Efficient Non-Interactive Secure Computation, EUROCRYPT 2011", url: "https://doi.org/10.1007/978-3-642-20465-4_23"}
+  - {cite: "Ishai, Prabhakaran, Sahai, Founding Cryptography on Oblivious Transfer - Efficiently, CRYPTO 2008", url: "https://doi.org/10.1007/978-3-540-85174-5_32"}
+  - {cite: "Hazay, Ishai, Venkitasubramaniam, Actively Secure Garbled Circuits with Constant Communication Overhead in the Plain Model, TCC 2017", url: "https://doi.org/10.1007/978-3-319-70503-3_1"}
+  - {cite: "Dittmer, Ishai, Lu, Ostrovsky, Authenticated Garbling from Simple Correlations, CRYPTO 2022", url: "https://doi.org/10.1007/978-3-031-15985-5_3"}
+statement_sha: "3a3ca6197aece89d5e0ad64376a1ff5e0a8a73b0cbffb38d22c7c6e3a5d5c8f9"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+<!-- topics:start -->
+<div class="cj-tags cj-page-topics"><a class="cj-tag cj-tag-topic" href="/problems/by-topic/garbled-circuits/">Garbled Circuits</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/non-interactive-secure-computation/">Non Interactive Secure Computation</a></div>
+<!-- topics:end -->
+
+Non-interactive secure computation is Yao's protocol at its most rigid: the
+receiver sends one message, the sender replies once, and that is the whole
+interaction. With semi-honest parties, random OT correlations and a pseudorandom
+generator, the cost is $O(|C|\lambda)$ bits — about the best one could hope for
+without homomorphic machinery. Against malicious parties, every route to that
+same constant factor has needed something extra: more rounds, a weaker security
+notion, more expensive correlations, or a random oracle. The source asks whether
+the extra ingredient can be dispensed with, and then proves the version of its
+own question in which the PRG is replaced by a random oracle.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [LaTeX source](latex/main.tex) · Formal statement — *not yet formalized*
+
+**The object.** A NISC protocol for a two-party function consists of one message
+from the receiver to the sender and one message back, both parties additionally
+holding a setup of random bit-OT correlations sampled independently of their
+inputs. It is *malicious-secure* if for every efficient adversary corrupting
+either party there is an efficient simulator making the real and ideal
+executions computationally indistinguishable, in the *standard* sense — not
+"correlated abort", where a corrupted sender can force the receiver to abort
+depending on a sender-chosen predicate of the receiver's input.
+
+**Conjecture.** There is such a protocol for every Boolean circuit $C$ with
+communication $O(|C|\lambda)$ bits, assuming random bit-OT correlations and
+black-box use of a pseudorandom generator, and no idealized primitive.
+
+**How the source states it.** As a display on page 2, introduced by "The above
+state of the art leaves the following natural question open": "Is there a
+malicious-secure NISC protocol with communication cost $O(|C|\lambda)$ assuming
+random OT correlations and black-box use of PRG?" It adds that such a protocol
+"would bridge the asymptotic gap between what is known in a semi-honest setting
+and what is known in a malicious setting."
+
+**The source answers a different hypothesis.** Page 3: "For the question above,
+we show that if we replace a PRG by a random oracle, we can indeed close the
+above gap." Its Theorem 1.1 gives a malicious-secure two-party NISC protocol for
+any Boolean circuit with $O(|C|\lambda)$ communication, from random bit-OT
+correlations and a random oracle, with standard security. A random oracle is a
+*stronger* hypothesis than black-box use of a PRG, so the question as posed is
+untouched by it.
+
+**Every relaxation is already known.** Allow $\mathrm{polylog}(|C|,\sigma)$
+overhead and it is Ishai, Kushilevitz, Ostrovsky, Prabhakaran and Sahai; allow
+correlated-abort security and it is that work and Hazay, Ishai and
+Venkitasubramaniam in the random oracle model; allow more rounds and it is one of
+the constant-round constant-overhead protocols; allow programmable OLE
+correlations in place of OT and it is Dittmer, Ishai, Lu and Ostrovsky. A
+resolution has to hold all four fixed at once.
+
+### Sources
+
+- Ishai, Jin, Peter and Srinivasan. [*Non-Interactive Secure Computation with Constant Communication Overhead*](https://eprint.iacr.org/2026/1555). IACR ePrint 2026/1555. The source. The question is displayed on page 2; Theorem 1.1 and the sentence resolving the random-oracle variant are on page 3; Table 1 compares prior work.
+- Ishai, Kushilevitz, Ostrovsky, Prabhakaran and Sahai. [*Efficient Non-Interactive Secure Computation*](https://doi.org/10.1007/978-3-642-20465-4_23). EUROCRYPT 2011. The first malicious-secure NISC with black-box use of cryptography, at $\mathrm{polylog}(|C|,\sigma)$ overhead from OT correlations and a PRG.
+- Ishai, Prabhakaran and Sahai. [*Founding Cryptography on Oblivious Transfer — Efficiently*](https://doi.org/10.1007/978-3-540-85174-5_32). CRYPTO 2008. The compiler — outer protocol, inner protocol, watchlist — the source's construction builds on.
+- Hazay, Ishai and Venkitasubramaniam. [*Actively Secure Garbled Circuits with Constant Communication Overhead in the Plain Model*](https://doi.org/10.1007/978-3-319-70503-3_1). TCC 2017. Constant-overhead constant-round protocols in the random oracle model, with either extra rounds or correlated-abort security.
+- Dittmer, Ishai, Lu and Ostrovsky. [*Authenticated Garbling from Simple Correlations*](https://doi.org/10.1007/978-3-031-15985-5_3). CRYPTO 2022. Malicious NISC with constant overhead from programmable OLE correlations.
+
+## Proof
+
+View PDF — *no proof written yet* · LaTeX source — *no proof written yet* · Formal proof — *not yet formalized*
+
+Open, and the natural route is de-idealization rather than construction.
+
+**What has to go.** The source's Theorem 1.1 uses the random oracle in two
+places, both identifiable from its technical overview: to instantiate the IPS
+watchlist by Fiat–Shamir, following Ishai, Khurana, Sahai and Srinivasan's
+observation that the watchlist set need not be secret and may be revealed to a
+corrupted client after it commits to its inner-protocol messages; and inside the
+commitments of the Ligero-style sublinear proof system its inner protocol depends
+on to keep proofs short. Removing the oracle means replacing both with
+black-box PRG constructions without paying more than a constant factor.
+
+**Why that is not routine.** The round-optimal watchlist instantiation was
+weakened *in order* to be Fiat–Shamir-able; a two-message watchlist from a PRG
+alone, at constant overhead, is exactly what the line of work has not produced.
+And the sublinear proof system's commitments are what let the inner protocol's
+proofs stay inside the communication budget.
+
+**Toward a negative answer.** It would be a separation of an unusual kind —
+black-box PRG use from random-oracle use, at a fixed communication budget, in a
+fixed round pattern, with a fixed setup. Nothing in the source claims or hints at
+one.
+
+**Checked against the literature, 2026-08-25.** No proof, refutation or
+improvement found. Targeted check on a recent ePrint, not an exhaustive sweep.
+
+## Discussion
+
+**Why $O(|C|\lambda)$ is the target and not something smaller.** In the
+semi-honest setting with OT correlations and a PRG, that is the cost, and the
+source notes that without homomorphic primitives — fully homomorphic encryption
+or homomorphic secret sharing — it is the best one could hope for barring a major
+breakthrough. So the malicious question is precisely whether malicious security
+is free asymptotically, not whether the semi-honest bound can be beaten.
+
+**What "correlated abort" gives away.** Under that weaker notion the sender can
+force the receiver to abort if the receiver's private input satisfies a
+sender-chosen predicate — so an abort leaks a bit about the input, repeatedly if
+the protocol is rerun. It is stronger than what dual-execution protocols give,
+and it is the concession two of the prior constant-overhead results make.
+
+**What a reviewer should be suspicious of, in order.** First, whether a claimed
+protocol uses an idealized primitive anywhere, including inside a subprotocol's
+commitments — the source's own construction is a cautionary example, since the
+oracle is buried in the inner protocol rather than in the top-level design.
+Second, whether the security is standard rather than correlated-abort, since Table
+1 of the source shows the distinction is exactly what separates the known
+constant-overhead results. Third, whether the setup is random *bit*-OT
+correlations rather than OLE-style or batch-committing OT, both of which are
+substantially more expensive to generate.
+
+## Open obligations
+
+- [ ] Exhibit a malicious-secure NISC protocol with $O(|C|\lambda)$ communication from random bit-OT correlations and black-box use of a PRG, with standard security and no idealized primitive.
+- [ ] Or de-idealize the source's Theorem 1.1: replace the Fiat–Shamir watchlist and the Ligero-style commitments with black-box PRG constructions at constant overhead.
+- [ ] Or prove a separation showing black-box PRG use cannot match random-oracle use at this communication budget and round pattern.
+- [ ] Formalize the statement in Lean; nothing here has been formalized.
+
+:::

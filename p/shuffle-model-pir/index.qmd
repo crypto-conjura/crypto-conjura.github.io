@@ -1,0 +1,59 @@
+---
+title: "Private information retrieval in the shuffle model"
+subtitle: "One server, many anonymous clients, and how far information-theoretic security can be pushed"
+---
+
+## Motivation
+
+Single-server private information retrieval is impossible with
+information-theoretic security: if the server sees the whole query and has the
+whole database, the query's distribution has to be independent of the index,
+which forces the answer to carry the database. Every sublinear single-server
+scheme therefore rests on public-key cryptography, and every
+information-theoretic scheme needs at least two non-colluding servers holding
+replicated copies — an assumption that is awkward in practice, since the two
+copies tend to be operated by the same company.
+
+The shuffle model changes the accounting without adding a second database.
+Clients send their sub-queries as anonymous messages, and the server sees the
+whole multiset without knowing who sent what. That is enough for
+information-theoretic single-server PIR — a second "server" that holds no data
+and only shuffles. What it costs is a lower bound on how many honest clients
+must be querying at once, and how good the resulting security error can be.
+
+## Provenance and history
+
+The shuffle model as a cryptographic setting comes from Ishai, Kushilevitz,
+Ostrovsky and Sahai, *Cryptography from Anonymity* (FOCS 2006). PIR in it was
+studied information-theoretically by Ishai, Kelkar, Lee and Ma,
+*Information-Theoretic Single-Server PIR in the Shuffle Model* ([IACR ePrint
+2024/930](https://eprint.iacr.org/2024/930)), which gives the first
+single-server scheme with sublinear communication and information-theoretic
+security — doubly efficient too, with sublinear per-query server computation
+after one-time preprocessing. Its key technique is an inner–outer paradigm
+composing two standard multi-server PIR schemes.
+
+The security error of that construction is inverse-polynomial rather than
+negligible, and the same paper shows this is not an accident of the analysis:
+for inner–outer constructions whose inner layer is a constant-server *additive*
+PIR, with polynomially bounded client and sub-query-vector counts, the error is
+at least inverse-polynomial. Whether a different inner layer escapes the bound
+is what the paper's closing section conjectures and leaves open. A
+computational-security companion line, Gascón, Ishai, Kelkar, Li, Ma and
+Raykova ([IACR ePrint 2024/870](https://eprint.iacr.org/2024/870)), pursues
+concrete efficiency in the same model.
+
+## Parameter lattice
+
+Two axes: per-query communication and the security error, both at the number of
+honest queries the scheme needs.
+
+| | Inverse-polynomial error | Negligible error |
+|---|---|---|
+| **$O(n^{\gamma})$ communication** | Theorem 1.1, $\mathrm{poly}(n)$ queries | *unstated*: not addressed separately from the polylogarithmic case |
+| **$O(n/\log n)$ communication** | implied by the above | Remark 11, super-linearly many queries |
+| **$\mathrm{polylog}(n)$ communication** | $(\log n)$-server CNF inner layer, $n^{O(\log n)}$ queries | [c/0068](/c/0068/) — open at $\mathrm{poly}(n)$ queries; excluded for additive inner layers by Theorem 6.5 |
+
+## Statements in this hub
+
+- [Polylogarithmic Single-Server Shuffle PIR with Negligible Security Error](/c/0068/) — open

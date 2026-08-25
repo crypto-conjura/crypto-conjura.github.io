@@ -1,0 +1,67 @@
+---
+title: "Hold-out cryptanalysis of Goppa-McEliece"
+subtitle: "A PIR-inspired test that distinguishes the public key, and the step that would make it decrypt"
+---
+
+## Motivation
+
+McEliece's cryptosystem, built on binary Goppa codes, is the oldest public-key
+scheme still considered post-quantum secure, and its selling point over
+LPN-based alternatives had been the shape of its cost curve: in the usual regime
+the ciphertext is $\Theta(n)$ bits while generic information-set decoding takes
+time $2^{\widetilde\Theta(n)}$, so $\kappa$-bit security looked compatible with
+$\widetilde O(\kappa)$-bit ciphertexts. Alekhnovich-style schemes, by contrast,
+face an inherent quadratic barrier.
+
+A structural attack that exploits the hidden algebraic structure rather than
+decoding generically changes that accounting. If distinguishing the public key
+from random takes only quasipolynomial time, then the security is governed by a
+different quantity, and the ciphertext-length advantage evaporates. This hub is
+about such an attack — and about the one step in it that is not yet proved.
+
+## Provenance and history
+
+Ghoshal, Ishai, Jain and Sun, *Quasipolynomial Cryptanalysis of the McEliece
+Cryptosystem (or: PIR Meets McEliece)* ([IACR ePrint
+2026/1630](https://eprint.iacr.org/2026/1630)), give a classical
+quasipolynomial-time distinguisher for Goppa–McEliece in the asymptotic Classic
+McEliece regime — code length $n$, extension degree $m = \Theta(\log n)$, Goppa
+degree $t = \Theta(n/\log n)$, dimension $k = \Theta(n)$ — with advantage
+$1-o(1)$. It applies to all Classic McEliece parameter sets considered in the
+NIST process and yields improved, though not yet practical, concrete estimates.
+
+The attack came out of a failed attempt at code-based PIR. Asking whether one
+column of a Reed–Muller-encoded matrix lies in the span of the others turns into
+a *hold-out* test: look for homogeneous degree-$d$ polynomials whose Hasse jets of
+order below $s$ vanish at every column but one, and check whether they also
+vanish at the held-out column. For a matrix derived from a GRS or Goppa code,
+Hermite interpolation forces them to; for a uniform matrix they generically do
+not. That distinguisher is unconditional and proved.
+
+Extending it from distinguishing to decryption — append the ciphertext as an extra
+row, filter the coordinates where the error is zero, solve a linear system — is
+where the paper becomes heuristic. Completeness on clean coordinates is proved;
+soundness on dirty ones is supported by a dimension count in its Appendix A and
+by experiments on small GRS, alternant, wild-Goppa and $q$-ary Goppa instances,
+with the binary square-free Goppa case out of computational reach.
+
+## Parameter lattice
+
+Which half of the filter is established, and for which code family.
+
+| | Clean coordinates accepted | Dirty coordinates rejected |
+|---|---|---|
+| **GRS** | proved (Claim 6.2, under $s(\|I_{\mathrm{cl}}\|-1) > dD$) | heuristic; small-instance experiments |
+| **Binary Goppa** | proved (same claim, $D = n-2t-1$) | [c/0080](/c/0080/) — open; no end-to-end experiment |
+| **Binary Goppa, one-sided filter (Remark 6.3)** | *the heuristic moves here*: enough clean coordinates must survive | unconditional |
+
+Other open problems the source records, and which are not on this hub: improving
+the dependence of the distinguisher's running time on the extension degree;
+characterizing which algebraic structures the PIR-inspired framework captures,
+including Wieschebrink's random-column proposal; and whether any code-based
+encryption from noisy linear algebra over $\mathbb{F}_2$ can beat the apparent
+quadratic ciphertext barrier.
+
+## Statements in this hub
+
+- [Soundness of the Hold-Out Test on Dirty Ciphertext Coordinates](/c/0080/) — open

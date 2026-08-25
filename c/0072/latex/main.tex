@@ -1,0 +1,264 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  Arnon-Dujmovic-Ishai's Conjecture 1.3: a generic-group dv-SNARG whose
+%  proof is one group element plus tau + o(tau) bits.
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{A DV-SNARG WITH ONE GROUP ELEMENT AND TAU BITS}
+
+\newcommand{\G}{\mathbb{G}}
+\newcommand{\bits}{\{0,1\}}
+\newcommand{\Setup}{\mathsf{Setup}}
+\newcommand{\Prov}{\mathsf{P}}
+\newcommand{\Ver}{\mathsf{V}}
+\newcommand{\crs}{\mathsf{crs}}
+\newcommand{\GGM}{\mathsf{GGM}}
+\newcommand{\pf}{\mathsf{pf}}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{A Designated-Verifier SNARG with One Group Element and
+  $\tau + o(\tau)$ Bits}
+\cjsubtitle{Generic group model, soundness error
+  $2^{-\tau + \log\log\lambda}$, linear CRS}
+\cjstatus{Statement: AI-written from Gal Arnon, Jesko Dujmovic and Yuval
+  Ishai, \emph{Designated-Verifier SNARGs with One Group Element}, IACR
+  ePrint 2025/517. Not yet checked by a human. Numbered Conjecture 1.3
+  of the source. Its own theorems achieve one group element plus $O(\tau)$
+  bits, and (with a random oracle) one group element, one hash output and
+  about $2\tau$ bits; the conjecture halves the additive term to
+  $\tau + o(\tau)$ and asks for no random oracle.}
+\cjcategory{\emph{Proof Systems}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+A designated-verifier SNARG lets a prover convince one particular
+verifier, who holds a secret verification state, that a circuit is
+satisfiable --- with a proof far shorter than the witness. In the generic
+group model the source brings the proof down to a single group element
+plus a number of extra bits proportional to the desired soundness level
+$\tau$, and with the help of a random oracle down to one group element,
+one hash output and about $2\tau$ bits: $695$ bits for $2^{-80}$
+soundness at a $128$-bit security level, roughly half the best
+pairing-based SNARG\@. Two of the sources of slack in that count are
+identified but not removed: the analysis of how malleable its packed
+ElGamal encryption really is, and the fact that the linear PCPs it uses
+spend two bits of answer per bit of soundness. Fix both and the additive
+term should fall to $\tau + o(\tau)$ --- about $340$ bits in the same
+concrete setting. That is the source's Conjecture 1.3, and nothing in the
+paper establishes it.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+Barta, Ishai, Ostrovsky and Wu~\cite{BIOW20} constructed
+designated-verifier SNARGs in the generic group model whose proof is two
+group elements, but only with inverse-polynomial soundness; for
+negligible soundness every previous construction needed a super-constant
+number of group elements. The source closes that gap. Its Theorem 1.1
+gives a dv-SNARG for Boolean circuit satisfiability with soundness error
+$2^{-\tau} + O(t^{2} 2^{-\lambda})$ against $t$-query adversaries, proof
+size one $\G$-element plus $O(\tau)$ additional bits, and CRS size
+$O(\tau s)$ group elements; its Theorem 1.2, additionally using a random
+oracle for collision resistance, reduces the additive term to
+$\lceil 2\tau \log p / (\log p - \Theta(1)) \rceil$ bits at the cost of
+one extra hash output and a CRS of $O(\tau s \cdot \poly(p))$ elements.
+
+Both come from extending the compiler of Bitansky et
+al.~\cite{BCIOP22} --- linear-only encryption plus a linear PCP --- to
+\emph{compressible} encryption schemes, instantiated with packed
+ElGamal. The bookkeeping that decides the proof size is how much
+malleability a generic-group adversary has against packed ElGamal, and
+the source says plainly that its bound there is loose: ``we believe that
+our analysis is quite loose, and conjecture that an even a slightly
+simpler construction can achieve a better level of soundness.''
+
+The second slack is in the linear PCP\@. The source's construction is
+insensitive to the number of queries but sensitive to the ratio $\mu$
+between the total bit-length of the LPCP answers and the soundness level
+$\tau$; the LPCPs it uses have $\mu \approx 2$, which is exactly the
+$2\tau$ additive term. LPCPs with $\mu \approx 1$ are known to follow
+from hardness-of-approximation results for
+$\mathrm{MAXLIN}$~\cite{Has01}, but they have non-negligible completeness
+error and, the source judges, ``seem practically infeasible''; the route
+through amortised-query-complexity PCPs and universal factor graphs looks
+practically infeasible too. The source leaves designing practical LPCPs
+with $\mu \approx 1$ open.
+
+Conjecture 1.3 of the source is what both fixes together would buy. It
+is stated as a numbered conjecture, it is not proved anywhere in the
+paper, and the parameters below are its own.
+
+\section{Notation and parameters}\label{sec:notation}
+
+\begin{itemize}[nosep]
+  \item $\lambda$ is the security parameter; $\G = \G_{\lambda}$ is a
+    generic group of order about $2^{\lambda}$ whose elements are
+    described by $\lambda$ bits.
+  \item $\tau$ is the soundness parameter, $t$ the number of generic-group
+    oracle queries an adversary makes, $s$ the size of the Boolean
+    circuit whose satisfiability is proved.
+  \item $R = \{(x,w)\}$ is the relation; $L(R)$ its language.
+  \item Proof size is measured as a number of $\G$-elements plus a number
+    of additional bits; CRS size as a number of $\G$-elements.
+\end{itemize}
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{definition}[Generic group model, Shoup's version,
+  {\cite[Definition 3.2]{ADI25}}]\label{def:ggm}
+For a prime $p'$, the oracle holds a permutation $f$ from the label space
+$L$ --- binary representations of $0, \dots, p'-1$ --- to the group
+$(\mathbb{Z}_{p'}, +)$, sampled uniformly at the start of the security
+game, and all parties are given the label $g \leftarrow f^{-1}(1)$. The
+oracle $G$ takes two labels $\chi_{1}, \chi_{2}$ and returns
+$f^{-1}(f(\chi_{1}) + f(\chi_{2}))$. We write $G \leftarrow \GGM(\lambda)$
+for sampling such an oracle of size at least $2^{\lambda}$.
+\end{definition}
+
+\begin{definition}[dv-SNARG in the generic group model,
+  {\cite[Definition 3.4]{ADI25}}]\label{def:dvsnarg}
+A designated-verifier succinct non-interactive argument for a relation
+$R$, with message length $\ell$, is a triple $(\Setup, \Prov, \Ver)$:
+$\Setup$ on input $1^{n}$ outputs a common reference string $\crs$ and a
+verification state $st$; $\Prov(\crs, x, w)$ outputs $\pf \in
+\bits^{\ell}$; and $\Ver(st, x, \pf)$ outputs a bit. All three have
+access to the generic group oracle. It has \emph{completeness error}
+$\alpha$ if for all $(x,w) \in R$,
+\[
+  \Pr\bigl[ \Ver^{G}(st, x, \pf) = 1 \bigr] \ge 1 - \alpha(\lambda,|x|),
+\]
+over $G \leftarrow \GGM(\lambda)$, $(\crs, st) \leftarrow
+\Setup^{G}(1^{|x|})$ and $\pf \leftarrow \Prov^{G}(\crs, x, w)$. It has
+\emph{adaptive soundness error} $\delta$ if for every prover $\Prov'$
+making at most $t$ oracle queries,
+\[
+  \Pr\bigl[ x \notin L(R) \ \wedge\ \Ver^{G}(st,x,\pf) = 1 \bigr]
+  \le \delta(\lambda, |x|, t),
+\]
+over $G \leftarrow \GGM(\lambda)$, $(\crs, st) \leftarrow
+\Setup^{G}(1^{|x|})$ and $(x, \pf) \leftarrow \Prov'^{G}(\crs)$. It is
+\emph{succinct} if $|\pf| = o(|w|)$.
+\end{definition}
+
+\begin{conjecture}[{\cite[Conjecture 1.3]{ADI25}}]\label{conj:main}
+Let $\G = \G_{\lambda}$ be a generic group and $\tau$ a soundness
+parameter. There exists a dv-SNARG (Definition~\ref{def:dvsnarg}) for
+proving the satisfiability of a Boolean circuit of size $s$ with the
+following features:
+\begin{itemize}[nosep]
+  \item soundness error $2^{-\tau + \log\log\lambda} + O(t^{2}/2^{\lambda})$
+    against $t$-query adversaries;
+  \item proof size $1$ $\G$-element and $\tau + o(\tau)$ additional bits;
+  \item CRS size $O(\tau s)$ $\G$-elements.
+\end{itemize}
+\end{conjecture}
+
+\begin{remark}[No random oracle]
+Conjecture~\ref{conj:main} lives in the generic group model alone. This
+matters, because the source's better concrete bound (Theorem 1.2, one
+$\G$-element, one random-oracle output and about $2\tau$ bits) buys its
+tighter malleability analysis with a random oracle, and its
+random-oracle-free theorem (Theorem 1.1) pays $O(\tau)$ bits with a large
+hidden constant --- $56\tau$ bits once the CRS is allowed to be
+$O(\tau s^{2})$. The conjecture asks for $\tau + o(\tau)$ bits with a
+\emph{linear} CRS and no oracle beyond the generic group.
+\end{remark}
+
+\begin{remark}[The two ingredients the source names]
+The source presents Conjecture~\ref{conj:main} as what its two identified
+improvements ``could lead to''. Neither is established: a tighter
+malleability analysis of packed ElGamal in the generic group model, for
+which the source gives an explicit candidate construction it conjectures
+achieves soundness $2^{-\tau}$ with one group element and about $2\tau$
+bits; and a practical linear PCP with answer-to-soundness ratio $\mu
+\approx 1$, which the source leaves open. A resolution of
+Conjecture~\ref{conj:main} need not go through either, but a resolution
+of neither ingredient plus a proof of the conjecture would be a
+surprise.
+\end{remark}
+
+\begin{remark}[The soundness term is unusual and is the source's]
+The $\log\log\lambda$ in the exponent is written as in the source: the
+conjectured soundness error is $2^{-\tau + \log\log\lambda} + O(t^{2} /
+2^{\lambda})$, so the conjecture allows a $\log\lambda$ multiplicative
+loss over $2^{-\tau}$. It is not a typographical slip introduced here,
+and a construction achieving $2^{-\tau}$ exactly would be stronger than
+what is asked.
+\end{remark}
+
+\begin{remark}[Neighbouring open problems, not this one]
+The source lists two further directions that are not part of
+Conjecture~\ref{conj:main}: reducing prover and verifier runtimes ---
+where it conjectures separately (its Conjecture 3.11) that its LPCP is
+$O(\lambda p^{2} s)$-bounded, which would let a random-walk concentration
+bound cut verification time --- and achieving full CRS reusability
+against a prover who observes every accept/reject decision. Both are
+distinct statements.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem[ADI25]{ADI25}
+Gal Arnon, Jesko Dujmovic and Yuval Ishai.
+\emph{Designated-verifier SNARGs with one group element}.
+IACR ePrint 2025/517.
+The source. Conjecture 1.3 is on page 6; Theorem 1.1 on page 4,
+Theorem 1.2 on page 5; Definitions 3.2 and 3.4 on pages 14--15.
+
+\bibitem[BIOW20]{BIOW20}
+Ohad Barta, Yuval Ishai, Rafail Ostrovsky and David J. Wu.
+\emph{On succinct arguments and witness encryption from groups}.
+CRYPTO 2020.
+The two-group-element dv-SNARG with inverse-polynomial soundness the
+source improves on, and the source of one of the linear PCPs it uses.
+
+\bibitem[BCI+13]{BCIOP22}
+Nir Bitansky, Alessandro Chiesa, Yuval Ishai, Rafail Ostrovsky and Omer
+Paneth.
+\emph{Succinct non-interactive arguments via linear interactive proofs}.
+TCC 2013, LNCS 7785, pages 315--333.
+The linear-only-encryption compiler the source extends to compressible
+encryption.
+
+\bibitem[BHI+24]{BHI+24}
+Nir Bitansky, Prahladh Harsha, Yuval Ishai, Ron D. Rothblum and
+David J. Wu.
+\emph{Dot-product proofs and their applications}.
+65th Annual Symposium on Foundations of Computer Science (FOCS), 2024,
+pages 806--825.
+The 1-query linear PCP the source uses for a linear-size CRS, and the
+work that observes that hardness-of-approximation for $\mathrm{MAXLIN}$
+yields LPCPs with $\mu \approx 1$.
+
+\bibitem[Gro16]{Gro16}
+Jens Groth.
+\emph{On the size of pairing-based non-interactive arguments}.
+EUROCRYPT 2016, Part II, LNCS 9666, pages 305--326.
+The pairing-based SNARG whose proof size the source's concrete count is
+compared against.
+
+\bibitem[Has01]{Has01}
+Johan H\aa{}stad.
+\emph{Some optimal inapproximability results}.
+Journal of the ACM, 48(4):798--859, 2001.
+The optimal $\mathrm{MAXLIN}$ inapproximability the $\mu \approx 1$ LPCPs
+come from.
+
+\bibitem[BGI17]{BGI17}
+Elette Boyle, Niv Gilboa and Yuval Ishai.
+\emph{Group-based secure computation: optimizing rounds, communication,
+and computation}.
+EUROCRYPT 2017, Part II, LNCS 10211, pages 163--193.
+The distributed discrete logarithm algorithm the source's packed ElGamal
+decryption uses, which is what gives it perfect completeness.
+
+\end{conjurabibliography}
+
+\end{document}

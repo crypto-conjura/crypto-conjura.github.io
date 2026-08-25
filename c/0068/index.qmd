@@ -1,0 +1,181 @@
+---
+id: "0068"
+problem: shuffle-model-pir
+draft: polylog-shuffle-pir-negligible
+title: "Polylogarithmic Single-Server Shuffle PIR with Negligible Security Error"
+short_title: "Polylog Shuffle PIR, Negligible Error"
+areas: [information-theoretic, privacy]
+topics: [private-information-retrieval, shuffle-model]
+model: standard
+form: characterization
+assumption_class: unconditional
+category: research-open
+revision: 1
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: adaptation
+  by: ai
+  note: "The source names the construction it believes works -- Reed-Muller PIR in both layers of its own inner-outer paradigm -- and its Theorem 6.5 says only that the additive inner layers are excluded, which Reed-Muller is not. So the positive direction is an analysis of a named composition rather than a search for a construction, which is adaptation rather than a new idea. The negative direction is harder: it would mean extending Theorem 6.5 past additive inner PIR, and the source flags the Reed-Muller instantiation as the case its bound says nothing about."
+status_summary: "Settled in three neighbouring corners: O(n^gamma) communication with inverse-polynomial error and polynomially many queries; polylogarithmic communication with n^{O(log n)} queries; and negligible error with O(n/log n) communication. The polylogarithmic-and-negligible corner with polynomially many queries is open, and is ruled out for inner-outer constructions with an additive inner layer by the source's own Theorem 6.5."
+status_updated: 2026-08-25
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Ishai, Kelkar, Lee, Ma, Information-Theoretic Single-Server PIR in the Shuffle Model, IACR ePrint 2024/930", url: "https://eprint.iacr.org/2024/930"}
+  - {cite: "Ishai, Kushilevitz, Ostrovsky, Sahai, Cryptography from Anonymity, FOCS 2006", url: "https://doi.org/10.1109/FOCS.2006.25"}
+  - {cite: "Dvir, Gopi, 2-Server PIR with Sub-Polynomial Communication, STOC 2015", url: "https://doi.org/10.1145/2746539.2746546"}
+  - {cite: "Lin, Mook, Wichs, Doubly Efficient Private Information Retrieval and Fully Homomorphic RAM Computation from Ring LWE, STOC 2023", url: "https://doi.org/10.1145/3564246.3585175"}
+statement_sha: "3bd5031e58b2930b703a07ac590d99ebf463cbb38679143d45aea5a6b49bc0ad"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+<!-- topics:start -->
+<div class="cj-tags cj-page-topics"><a class="cj-tag cj-tag-topic" href="/problems/by-topic/private-information-retrieval/">Private Information Retrieval</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/shuffle-model/">Shuffle Model</a></div>
+<!-- topics:end -->
+
+In the shuffle model many clients send their PIR queries to a single server
+through an anonymous channel, so the server sees the whole multiset of queries
+but not who sent which. That alone buys something impossible in the standard
+model: a single-server PIR with sublinear communication and no computational
+assumption anywhere. The source's security error, though, is only
+inverse-polynomial, and its own lower bound says that for a broad class of
+constructions it has to be. Whether polylogarithmic communication and
+negligible error can be had together, with only polynomially many honest
+queries, is the question it leaves open.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [LaTeX source](latex/main.tex) · Formal statement — *not yet formalized*
+
+**The model (the source's Definition 5.1).** A single-server shuffle-model PIR
+over an alphabet $\Sigma$ is a tuple $(\mathsf{Setup}, \mathsf{Query},
+\mathsf{Answer}, \mathsf{Recon})$: the server deterministically encodes $x \in
+\Sigma^n$ as $P_x$; a client turns an index $i$ into $k$ sub-queries $q_1,
+\dots, q_k$, each sent as its own anonymous message; the server answers each
+sub-query with the *same* algorithm; and the client reconstructs $x_i$ from the
+$k$ answers, with probability $1$. For a shuffler $\Pi = \{\Pi_c\}$ and a query
+count $C^*$, let $\widetilde D_{n,\Pi,C^*}(I)$ be the distribution of the
+shuffled concatenation of $C^*$ clients' sub-queries on index vector $I$. The
+scheme is $(\Pi, C, \varepsilon)$-secure if for every $n$, every $C^* \ge C(n)$
+and all $I, I'$, the statistical distance between $\widetilde
+D_{n,\Pi,C^*}(I)$ and $\widetilde D_{n,\Pi,C^*}(I')$ is at most
+$\varepsilon(n)$.
+
+**Conjecture.** There is such a protocol over $\Sigma = \{0,1\}$, a polynomial
+$C$, a negligible $\varepsilon$ and a constant $d$ with per-query
+communication at most $(\log n)^d$ that is $(\Pi, C, \varepsilon)$-secure for
+the perfect shuffler.
+
+**How the source states it.** Section 7, page 30: "The main technical question
+we leave open in this work is the possibility of obtaining similar results with
+negligible security error"; and, in the same paragraph, "We conjecture that
+polylogarithmic communication per client with negligible security can be
+achieved by instantiating both OPIR and IPIR with the Reed-Muller PIR
+construction with a polylogarithmic security threshold and a polylogarithmic
+communication complexity." The restriction to polynomially many clients is the
+introduction's, page 3: the paper discusses "whether negligible security is
+possible (with polynomially many clients) by using other protocols in the inner
+layer."
+
+**The statement above is the existence claim, not the named route.** The
+source's own conjecture is stronger: it asserts that a *specific*
+instantiation works. Settling the existence claim by any construction resolves
+the open question the source poses; settling it via Reed--Muller in both layers
+additionally confirms the authors' guess at how.
+
+**Why the polynomial query bound is the crux.** Drop it and the statement is
+already known — the source reaches polylogarithmic communication with a $(\log
+n)$-server CNF-based inner layer once the number of clients is $n^{O(\log
+n)}$. Drop the polylogarithmic communication instead and it is known too, by
+the source's Remark 11, at $O(n/\log n)$ communication with super-linearly many
+clients.
+
+### Sources
+
+- Ishai, Kelkar, Lee and Ma. [*Information-Theoretic Single-Server PIR in the Shuffle Model*](https://eprint.iacr.org/2024/930). IACR ePrint 2024/930. The source. Definition 5.1 is on page 15, Theorem 1.1 on page 2, Theorem 6.5 and the Reed–Muller remark on page 29, the open question in Section 7 on page 30.
+- Ishai, Kushilevitz, Ostrovsky and Sahai. [*Cryptography from Anonymity*](https://doi.org/10.1109/FOCS.2006.25). FOCS 2006. Introduces cryptography in the shuffle model.
+- Dvir and Gopi. [*2-Server PIR with Sub-Polynomial Communication*](https://doi.org/10.1145/2746539.2746546). STOC 2015. The standard-model constant-server benchmark the source's polylogarithmic variant is compared against.
+- Lin, Mook and Wichs. [*Doubly Efficient Private Information Retrieval and Fully Homomorphic RAM Computation from Ring LWE*](https://doi.org/10.1145/3564246.3585175). STOC 2023. The standard-model doubly efficient PIR the source contrasts itself with; inherently computational.
+
+## Proof
+
+View PDF — *no proof written yet* · LaTeX source — *no proof written yet* · Formal proof — *not yet formalized*
+
+Open, with the positive direction better signposted than the negative one.
+
+**Toward the construction.** The source's inner–outer paradigm composes two
+standard multi-server PIR schemes: the outer scheme's sub-queries are spread
+across the shuffled messages and the inner scheme answers each. What has to be
+shown is that instantiating both layers with Reed–Muller PIR, at a
+polylogarithmic security threshold and polylogarithmic communication, gives
+negligible error at polynomially many queries. The two things to watch are
+whether the threshold can be kept polylogarithmic while the error goes
+negligible, and whether the message complexity stays inside the communication
+budget — the source counts anonymous messages separately from communication
+precisely because sending $s$ one-bit messages is not the same as one $s$-bit
+message.
+
+**Toward the lower bound.** Theorem 6.5 rules out negligible error for
+inner–outer constructions $\mathsf{ShPIR}(\Phi, \Psi)$ in which $\Psi$ is a
+constant-server *additive* PIR and the client count together with the numbers
+$K_\Phi, K_\Psi$ of possible sub-query vectors are all polynomially bounded. A
+refutation would have to push that argument past additive inner layers — and
+the source explicitly flags instantiating the inner PIR with Reed–Muller as
+"an interesting open problem to consider", because its bound says nothing
+there.
+
+**Checked against the literature, 2026-08-25.** No proof, refutation or
+improvement found in the months since the ePrint. Targeted check, not an
+exhaustive sweep.
+
+## Discussion
+
+**What the shuffler is doing.** The source's own framing is that shuffle-model
+PIR is a hybrid between the single- and multi-server models: the shuffler is a
+second "server" trusted not to collude, which holds no copy of the database and
+performs only database-irrelevant computation. That is why the model escapes
+the standard-model impossibility while remaining a plausible deployment — two
+servers holding the same database are hard to keep independent, one server plus
+a shuffler much less so.
+
+**Adversarial clients are free.** The source's model tolerates any number of
+clients colluding with the server, provided the honest-query bound is met; and
+because queries are anonymous, security depends on the total number of queries
+rather than the number of clients, so a fixed set of clients can pad with dummy
+queries to reach the bound. So the polynomial $C$ in the statement is a bound
+on honest queries, not on distinct participants.
+
+**What a reviewer should be suspicious of, in order.** First, whether the
+statement's "per-query communication" is the source's (client query plus server
+response for one query) and not an amortized figure — the source's Remark 11
+result is explicitly amortizable and this one is not stated that way. Second,
+whether the perfect shuffler is the right setting: the source handles imperfect
+shufflers in its Appendix B, and a construction that needs a perfect one is
+weaker than it looks. Third, whether Theorem 6.5's hypotheses really are all
+four separate conditions, since a proof of the conjecture must violate at least
+one of them.
+
+## Open obligations
+
+- [ ] Prove that instantiating both layers of the inner–outer paradigm with Reed–Muller PIR gives polylogarithmic per-query communication with negligible error at polynomially many queries — the source's own conjectured route.
+- [ ] Or exhibit any single-server shuffle-model PIR with polylogarithmic per-query communication, negligible error and polynomially many honest queries.
+- [ ] Or extend Theorem 6.5 beyond constant-server additive inner PIR, ruling the target out.
+- [ ] Settle the same question for imperfect shufflers, in the source's Appendix B sense.
+- [ ] Formalize the statement in Lean; nothing here has been formalized.
+
+:::

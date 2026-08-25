@@ -1,0 +1,230 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  Beimel-Ishai-Kushilevitz-Li's open problem: a weakly private
+%  (n-1)-out-of-n threshold secret-sharing scheme with share size
+%  o(log n).
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{WEAKLY PRIVATE THRESHOLD SHARE SIZE}
+
+\newcommand{\Sh}{\mathcal{S}}
+\newcommand{\Recon}{\mathsf{Recon}}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{Weakly Private $(n-1)$-out-of-$n$ Secret Sharing Below
+  Logarithmic Share Size}
+\cjsubtitle{Perfect correctness, deniability instead of secrecy, a
+  one-bit secret}
+\cjstatus{Statement: AI-written from Amos Beimel, Yuval Ishai, Eyal
+  Kushilevitz and Hanjun Li, \emph{Cryptography with Weak Privacy}, IACR
+  ePrint 2025/1978. Not yet checked by a human. The $2$-out-of-$n$ case
+  is settled: Beimel and Franklin give $1/n$-weakly-private schemes with
+  share size $2$, against $\Theta(\log n)$ for perfect privacy. Large
+  thresholds are stated by the source to be open, and it asks
+  specifically about $(n-1)$-out-of-$n$ at share size $o(\log n)$.}
+\cjcategory{\emph{Secret Sharing}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+Weak privacy asks far less of a secret-sharing scheme than secrecy does:
+not that an unauthorized set learn nothing, only that it cannot
+\emph{rule out} any secret --- formally, that the probability of any view
+under one secret is at least $p$ times its probability under any other.
+The point of the relaxation is that it is combinatorial, so lower bounds
+for it are usually easy, and strong upper bounds for it therefore rule
+out combinatorial routes to the notoriously stuck lower bounds for
+perfect secret sharing. Beimel and Franklin showed the relaxation buys a
+lot at the low end: $2$-out-of-$n$ threshold sharing of a bit needs
+$\Theta(\log n)$ bits per share with perfect privacy, but only $2$ bits
+with weak privacy. The source asks what happens at the other end of the
+threshold range: can $(n-1)$-out-of-$n$ weakly private sharing of a bit
+be done with share size $o(\log n)$?
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+For a monotone access structure, the gap between the best known lower
+bound on share size, $\Omega(n / \log n)$~\cite{Csirmaz94}, and the best
+known upper bounds is exponential, and has stayed so through recent
+progress. The source proposes weak privacy as a tractable toy version of
+the same questions: keep perfect correctness, replace secrecy by the
+requirement that no admissible secret be ruled out, and see whether the
+exponential gaps close.
+
+Its definition is a reparameterized pure differential privacy. A scheme
+is \emph{$p$-weakly private} ($p$-WP) if for every unauthorized set $A$,
+every pair of secrets and every vector of shares for $A$, the
+probability of those shares under the first secret is at least $p$ times
+their probability under the second; $p$-WP with $p = 1$ is perfect
+privacy, and $p$-WP corresponds to $\varepsilon$-differential privacy
+with $\varepsilon = \ln(1/p)$. Unlike in differential privacy, the
+interesting regime here is small $p$, and unlike in differential
+privacy, the comparison is over \emph{all} pairs of secrets rather than
+neighbouring ones.
+
+The relaxation is known to be powerful at the low end of the threshold
+range. Beimel and Franklin~\cite{BF07} construct $1/n$-WP
+$2$-out-of-$n$ threshold schemes with share size $2$ for a one-bit
+secret, against the $\Theta(\log n)$ share size that perfect privacy
+requires for the same access structure~\cite{Shamir79,Blakley79,KN90,CCX13}.
+The source's own positive results are for general access structures and
+for various restricted families, and its negative results transfer a
+known lower-bound technique to the WP setting for decomposable
+randomized encodings.
+
+What it does not settle is large thresholds. Its ``Open Problems'' list
+reads: ``Beimel and Franklin [9] constructed $1/n$-WP $2$-out-of-$n$
+threshold secret-sharing schemes with share size $2$, leaving the case of
+large thresholds open. Is there a WP $(n-1)$-out-of-$n$ threshold
+secret-sharing scheme with share size $o(\log n)$?''
+
+\section{Notation and parameters}\label{sec:notation}
+
+\begin{itemize}[nosep]
+  \item $P = \{p_{1}, \dots, p_{n}\}$ is the party set. For $1 \le t \le
+    n$, the \emph{$t$-out-of-$n$ threshold} access structure has
+    $\Gamma_{\mathrm{yes}} = \{A \subseteq P : |A| \ge t\}$ and
+    $\Gamma_{\mathrm{no}} = \{A \subseteq P : |A| < t\}$.
+  \item $\Sh$ is the domain of secrets, with $|\Sh| \ge 2$; $\Sh_{1},
+    \dots, \Sh_{n}$ the domains of shares.
+  \item The \emph{size of the secret} is $\log|\Sh|$, the \emph{share
+    size of party $p_{j}$} is $\log|\Sh_{j}|$, and the \emph{max share
+    size} is $\max_{j} \log|\Sh_{j}|$. Share size below means max share
+    size.
+  \item $p \in (0,1]$ is the weak-privacy parameter, and may depend on
+    $n$.
+\end{itemize}
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{definition}[Weakly private secret sharing,
+  {\cite[Definition 2.2]{BIKL25}}]\label{def:wp}
+A secret-sharing scheme is a randomized mapping $\Pi$ taking a secret $s
+\in \Sh$ to a tuple $\langle sh_{1}, \dots, sh_{n} \rangle \in \Sh_{1}
+\times \cdots \times \Sh_{n}$; for $A \subseteq P$, $\Pi_{A}(s)$ is its
+restriction to the entries of $A$. For $0 < p \le 1$, $\Pi$ is a
+\emph{$p$-WP secret-sharing scheme realizing} $\Gamma =
+(\Gamma_{\mathrm{no}}, \Gamma_{\mathrm{yes}})$ if
+\begin{itemize}[nosep]
+  \item \emph{perfect correctness}: for every $B = \{p_{i_{1}}, \dots,
+    p_{i_{|B|}}\} \in \Gamma_{\mathrm{yes}}$ there is a reconstruction
+    function $\Recon_{B} : \Sh_{i_{1}} \times \cdots \times
+    \Sh_{i_{|B|}} \to \Sh$ with $\Recon_{B}(\Pi_{B}(s)) = s$ for every $s
+    \in \Sh$ and every choice of $\Pi$'s randomness; and
+  \item \emph{$p$-weak privacy}: for every $A \in \Gamma_{\mathrm{no}}$,
+    all $s_{1}, s_{2} \in \Sh$ and every share vector $\langle sh_{j}
+    \rangle_{p_{j} \in A}$,
+    \[
+      \Pr\bigl[ \Pi_{A}(s_{1}) = \langle sh_{j} \rangle_{p_{j} \in A}
+      \bigr] \;\ge\; p \cdot \Pr\bigl[ \Pi_{A}(s_{2}) = \langle sh_{j}
+      \rangle_{p_{j} \in A} \bigr].
+    \]
+\end{itemize}
+A scheme is \emph{weakly private} if it is $p$-WP for some $p > 0$.
+\end{definition}
+
+\begin{conjecture}[Sub-logarithmic weakly private sharing at threshold
+  $n-1$]\label{conj:main}
+There is a family of weakly private secret-sharing schemes
+(Definition~\ref{def:wp}), one for each $n$, realizing the
+$(n-1)$-out-of-$n$ threshold access structure with a one-bit secret
+($|\Sh| = 2$) and max share size $o(\log n)$.
+\end{conjecture}
+
+\begin{remark}[Both directions are open]
+The source states this as a question. A resolution is either such a
+family --- for some $p = p(n) > 0$, with no requirement that $p$ be
+inverse-polynomial --- or a proof that every weakly private
+$(n-1)$-out-of-$n$ scheme for a one-bit secret has max share size
+$\Omega(\log n)$. The second direction would be a lower bound in the weak
+model, which is precisely where the source expects lower bounds to be
+easier than in the perfect model, and where an obstruction found would
+be informative about the perfect case too.
+\end{remark}
+
+\begin{remark}[Where the privacy parameter sits]
+Definition~\ref{def:wp} quantifies over a fixed $p$, and the source's
+$2$-out-of-$n$ benchmark is $1/n$-WP with share size $2$. The question as
+the source poses it asks for weak privacy without pinning $p$, so
+Conjecture~\ref{conj:main} does likewise: any $p > 0$ counts, and a
+resolution should state the $p$ it achieves. Note that a scheme is only
+interesting here if $p$ does not itself smuggle in the share size ---
+Definition~\ref{def:wp} allows $p$ to be exponentially small, but perfect
+correctness with max share size $o(\log n)$ is the binding constraint.
+\end{remark}
+
+\begin{remark}[Why the threshold matters, not just the gap]
+At threshold $2$ an unauthorized set is a single party, and weak privacy
+need only be maintained against one share. At threshold $n-1$ an
+unauthorized set is any $n-2$ parties, so almost all shares are seen at
+once while perfect correctness must still hold for every set of $n-1$.
+That is what makes the case qualitatively different from Beimel and
+Franklin's, and it is why the source records the large-threshold case as
+open rather than as a variant of the small one. The source's separate
+question about \emph{general} access structures --- whether weakly
+private schemes with share size $o(n)$ exist for arbitrary access
+structures --- is not this statement.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem[BIKL25]{BIKL25}
+Amos Beimel, Yuval Ishai, Eyal Kushilevitz and Hanjun Li.
+\emph{Cryptography with weak privacy}.
+IACR ePrint 2025/1978.
+The source. Definition 2.2 is on page 12; the open problem is the last
+item of the ``Open Problems'' list, page 7.
+
+\bibitem[BF07]{BF07}
+Amos Beimel and Matthew K. Franklin.
+\emph{Weakly-private secret sharing schemes}.
+Fourth Theory of Cryptography Conference (TCC), 2007, LNCS 4392, pages
+253--272.
+The $1/n$-WP $2$-out-of-$n$ scheme with share size $2$, and the case the
+source's question generalizes away from.
+
+\bibitem[Csirmaz94]{Csirmaz94}
+L\'aszl\'o Csirmaz.
+\emph{The size of a share must be large}.
+EUROCRYPT 1994, LNCS 950, pages 13--22.
+The $\Omega(n/\log n)$ lower bound on share size for perfect secret
+sharing, the bound whose distance from the upper bounds motivates the
+source's programme.
+
+\bibitem[Shamir79]{Shamir79}
+Adi Shamir.
+\emph{How to share a secret}.
+Communications of the ACM, 22:612--613, 1979.
+Threshold secret sharing with perfect privacy.
+
+\bibitem[Blakley79]{Blakley79}
+George Robert Blakley.
+\emph{Safeguarding cryptographic keys}.
+1979 AFIPS National Computer Conference, AFIPS Conference Proceedings
+volume 48, pages 313--317.
+The other original threshold construction.
+
+\bibitem[KN90]{KN90}
+Joe Kilian and Noam Nisan.
+Private communication, 1990.
+One of the sources the paper credits for the $\Theta(\log n)$ share size
+required by perfectly private $2$-out-of-$n$ sharing.
+
+\bibitem[CCX13]{CCX13}
+Ignacio Cascudo, Ronald Cramer and Chaoping Xing.
+\emph{Bounds on the threshold gap in secret sharing and its
+applications}.
+IEEE Transactions on Information Theory, 59(9):5600--5612, 2013.
+Threshold-gap bounds, cited by the source alongside the above for the
+perfect-privacy share size.
+
+\end{conjurabibliography}
+
+\end{document}

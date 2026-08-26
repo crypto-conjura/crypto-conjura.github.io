@@ -229,12 +229,44 @@ why each fails.
   $\Pr[E]\cdot1=P\delta$ — the term being eliminated. The $E$-branch has to be shown *small*,
   not merely bounded.
 
-**The one unexplored lever.** Card `S1` records a second, multiplicative conclusion of
-[CDGS, Claim 3] that this campaign has never used:
-$\Pr[D^{X'}=1]\le M^{T\delta}\cdot\Pr[D^{Y'}=1]$. A multiplicative comparison survives
-conditioning on a low-probability event where an additive one does not, and the $E$-branch is
-exactly a low-probability event. Whether the reweighting of (a) can be absorbed into it is the
-concrete next question. Not answered here.
+**Lead L1 (the cost of conditioning on $\mathbf x$ is exactly the $2\log N$ inside $\sigma'$).**
+Route (a) fails because conditioning on $\mathbf x$ reweights $X_j$ by
+$\Pi_{H,\mathbf z}(\mathbf x)$. But the *size* of that reweighting is bounded, and by exactly
+the right amount. Write $p(\mathbf u):=\Pr[\mathbf x=\mathbf u\mid\mathbf z=\zeta,J=j]$ for the
+marginal under $X_j$, and $S_j:=N^{2}\log M-H_\infty(X_j)$. Since
+$$\Pr[H=f\mid\mathbf z=\zeta,J=j,\mathbf x=\mathbf u]=\frac{X_j(f)\,\Pi_{f,\zeta}(\mathbf u)}{p(\mathbf u)}\ \le\ \frac{X_j(f)}{p(\mathbf u)},$$
+the conditioned deficiency
+$S(\mathbf u):=N^{2}\log M-H_\infty(H\mid\mathbf z=\zeta,J=j,\mathbf x=\mathbf u)$ satisfies
+$S(\mathbf u)\le S_j+\log(1/p(\mathbf u))$. Two bounds on that penalty:
+
+- *On average.* $\mathbb E_{\mathbf u}[\log(1/p(\mathbf u))]=H(\mathbf x\mid\mathbf z=\zeta,J=j)\le\log N^{2}=2\log N$.
+- *With slack.* $\sum_{\mathbf u:\,p(\mathbf u)<\gamma/N^{2}}p(\mathbf u)\le\gamma$, so off an event
+  of probability at most $\gamma$, $\log(1/p(\mathbf u))\le2\log N+\log\gamma^{-1}$.
+
+Checked over 400 random instances with arbitrary per-$f$ product measures $\Pi_f$, degenerate
+ones included: both bounds hold, the first tight to $0.9998$.
+
+So conditioning on the challenge point costs $2\log N+\log\gamma^{-1}$ bits of deficiency — and
+$\sigma':=\sigma+2\log N$ is *defined* as "the leakage length together with the number of bits
+needed to name a point of the domain". The penalty is already budgeted for in the target's own
+first term $c(\sigma'+\log\gamma^{-1})q^{+}/P$. Nothing in the constants has to move to pay it.
+
+**Why L1 does not yet close (b).** [CDGS, Claim 3] needs $X_j$ *dense*, not merely of bounded
+deficiency. Re-applying [CDGS, Claim 2] to the conditioned law converts deficiency back into
+density, but at a *new* fixed set — one depending on $\mathbf x$ — and Contract Remark
+`rem:index` forbids exactly that: "It may not be chosen using $\mathbf x$, which is why the
+index set is $\mathsf{Fun}\times(\{0,1\}^{*})^{2}$ and not anything larger." So the
+re-decomposition cannot be the family; it can only be an analysis device, and then Claim 3
+compares the conditioned law to *its own* bit-fixing companion rather than to $Y_j$, and the
+chain does not close. What would close it is a form of Claim 3 tolerating a
+bounded-deficiency perturbation of a dense source against the **original** companion. That is
+the sharp question this document leaves.
+
+**On the multiplicative form, recorded so it is not tried twice.** Card `S1` also records
+$\Pr[D^{X'}=1]\le M^{T\delta}\cdot\Pr[D^{Y'}=1]$, never used in this campaign, and a
+multiplicative comparison does survive conditioning on a low-probability event where an
+additive one does not. It does not help here: both forms of Claim 3 require $X'$ dense, and
+route (a)'s failure is the loss of density, not the additivity of the conclusion.
 
 Until **(G-b)** is settled nothing here improves **(H1)**. (G-a) and (G-b) are the whole of the
 remaining obstruction, and (G-b) is the harder of the two: it asks for a presampling bound
@@ -259,8 +291,10 @@ to route around once.
   route is stated, not proved, and Theorem E″ does not use it. (G-c) is closed against card
   `S1`. Obstruction O1 records why (G-b) is not a bookkeeping gap: the $E$-branch is a pure
   oracle swap, but every route to [CDGS, Claim 3] on it either destroys the density Claim 3
-  needs or costs unbounded queries. The multiplicative form of Claim 3, recorded on card `S1`
-  and never used in this campaign, is the one lever not yet tried.
+  needs or costs unbounded queries. Lead L1 quantifies the density loss — conditioning on
+  $\mathbf x$ costs $2\log N+\log\gamma^{-1}$ bits of deficiency, exactly the $2\log N$ that
+  $\sigma'$ is defined to carry — and names what would close it: a form of Claim 3 tolerating a
+  bounded-deficiency perturbation of a dense source against the original bit-fixing companion.
 - No `[GAP]` occurs in §§1–3.
 
 ## 6. External results used

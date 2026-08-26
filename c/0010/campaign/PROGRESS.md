@@ -1,6 +1,6 @@
 # c/0010 — split-decomposition campaign: what is proved, and what is left
 
-State as of 27 August 2026, at `61a79f0` plus the r3 revision landing with this file.
+State as of 27 August 2026, at `7e8a347` plus the `kappa-3-r4` revision landing with this file.
 Assembled from a six-lens repo-wide audit (55 items, each adversarially re-checked against the
 files, plus 8 from a completeness critic) and from the three blind-verification passes on record.
 Every quantitative claim below was machine-checked or is quoted from a named artifact.
@@ -28,7 +28,7 @@ intersection over `q` of Theorem E″'s hypotheses (H1) and (H2) — (H1) binds 
 observer and therefore one `q` — and Corollary G1 shows it now reaches `thm:main`'s own
 `P = ⌈t⌉`, where the original Theorem E fell a factor `√q⁺` short. But it is **not** the region
 on which `conj:main` holds, and the `√q⁺` relaxation buys nothing there. See
-`split-decomp-kappa-3-r3` §2, finding A2.
+`split-decomp-kappa-3-r4` §2, findings A2 and A3.
 
 **Also proved, and trivially so — recorded because no artifact had noticed it:** `conj:main`
 holds for `P ≥ N²`, via the point-mass family `Y_{f,ζ} = δ_f`, which is `P`-bit-fixing,
@@ -56,14 +56,28 @@ the `q`-free bound to within `8√2` on that diagonal alone.
 `conj:main` is unproved on the window
 
 ```
-√(σ'q⁺/δ) + 1  <  P  <  N²
+√(σ'/δ) + 1  <  P  <  N²
 ```
 
-non-empty in every non-vacuous instance (`8√(σ'q⁺δ) < 1` and `δ ≥ 1/N` force `t < N/8`), and it
-is where every application lives.
+non-empty in every non-vacuous instance (`8√(σ'q⁺δ) < 1` and `δ ≥ 1/N` force `t < N/8`), and
+**every application with `q ≥ 1` lives in it**.
+
+The lower endpoint is `q`-free, and this matters. It is (H1) *intersected over `q`*, which binds
+at `q = 0` — not (H1)'s own per-`q` `√(σ'q⁺/δ) + 1`. `kappa-3-r3` wrote the per-`q` endpoint here
+and kept the "every application" clause, which cannot both hold: `thm:main` instantiates at
+`P = ⌈t_q⌉ ≤ t_q + 1`, so against the per-`q` endpoint the application point is outside the
+window by construction — that being exactly what Corollary G1 proves. Repaired in
+`split-decomp-kappa-3-r4` as finding A3; the corrected window is **wider** than r3 claimed, by
+`[t₀+1, t_q+1]`, so r3 understated this gap. Against the `q`-free endpoint the applications are
+interior with room: non-vacuity forces `t₀ := √(σ'/δ) > 8σ'√q⁺ ≥ 16`, and `t_q = t₀√(q+1)`, so
+`⌈t_q⌉ ≥ t₀√2 > t₀ + 1` for `q ≥ 1` — worst margin `129.5` over the 1261-point grid of
+`checks/rem-window-r4.py`. At `q = 0` the endpoints coincide and the point is covered, which is
+"`q = 0` is done" restated. So applications fall outside the proved region not because `⌈t⌉`
+overshoots (H1) — G1 settled that — but because `conj:main` needs one family good at every `q`
+and is pinned at `q = 0`, where the `√q⁺` relaxation buys nothing.
 
 `Pδ` enters the chain at **exactly one step** — `|G₂ − G₃| ≤ Pδ + qδ` in r3's Theorem C, i.e.
-the Contract's `lem:hit` bound `Pr[x ∈ I_J] ≤ Pδ`. `kappa-3-r3` §4 argues this is a defect of the
+the Contract's `lem:hit` bound `Pr[x ∈ I_J] ≤ Pδ`. `kappa-3-r4` §4 argues this is a defect of the
 *route*, not of the statement: on `{x ∈ I_J}` consistency forces `H*(x) = H(x)`, the challenge
 `Real` supplies, so the route pays for the event on which `Dec`'s challenge is *correct*. The
 Contract concedes the mechanism — `rem:uses` records that consistency "is **not** used anywhere
@@ -98,7 +112,7 @@ i.e. whether the first arm can be made `M`-free.
 Contract `rem:reduces` states that the implication runs backwards too, and that "the directions
 hold at values of `P` separated by `Θ(√q⁺)`, and closing that is a second open problem, distinct
 from bounding `κ(q)`." **No artifact in this campaign cites `rem:reduces`**, and a search for its
-converse construction across all artifacts returns nothing. Flagged in `kappa-3-r3` §4
+converse construction across all artifacts returns nothing. Flagged in `kappa-3-r4` §4
 (`rem:second`), including the caution that the `√q⁺` there may or may not be the same `√q⁺` that
 (H1) relaxes.
 
@@ -129,7 +143,7 @@ The lineage standard is **five independent verification angles per artifact**. N
 | `kappa-2-r2` | **0 of 5** | — | never reviewed; its tally reviews the *pre-revision* `kappa-2` at `8c68c62` and says so |
 | `kappa-3` | 1 (superseded) | DEFECTS, F1 upheld | tally does not carry to r2 |
 | `kappa-3-r2` | 1 (superseded) | DEFECTS, 4 upheld | tally does not carry to r3 |
-| `kappa-3-r3` | **0 of 5** | — | lands with this file |
+| `kappa-3-r4` | **0 of 5** | — | r3 never refereed; r4 repairs A3 and inherits the unreviewed lineage |
 
 **The weakest link.** Corollary D″ is load-bearing for Theorem E″ and sits in `kappa-2-r2`, which
 has zero passes — and the triage of the earlier `kappa-2` pass **overruled** the referee on D″'s
@@ -141,20 +155,22 @@ the next pass here.
 - The Contract's own `lem:hit` and `lem:query`, load-bearing inside r3's Theorem C at exactly the
   step where the `P`-cap enters. They appear in no artifact's external-results register, and the
   referee prompt hands the Contract over as the *yardstick*, so no pass has ever examined them.
-- The **chain** `r3 → kappa-2-r2 → kappa-3-r3` end to end. Each link was refereed in isolation
+- The **chain** `r3 → kappa-2-r2 → kappa-3-r4` end to end. Each link was refereed in isolation
   with its dependencies handed over as unchecked givens.
 - Any **source card against the paper it summarises**. All passes were package-only. The kappa
   chain rests on three consequences of CDGS Claim 2 that the *published* claim does not state,
   taken on trust from a card transcribed from a local PDF.
-- Two card quotations in `kappa-3-r3` §4 — the r2 pass could not open the package's `cards/`
+- Two card quotations in `kappa-3-r4` §4 (§4 is byte-identical to r3's) — the r2 pass could not open the package's `cards/`
   directory, a packaging error on the requester's side, recorded in the findings file.
 
 **Passes never run, of kinds the harness provides:**
 
 - **No scout pass, ever.** No prior-art record of any kind. Theorem D and Corollary D′ are
   unconditional results whose novelty has never been checked against the literature.
-- **No refuter pass, ever**, against any current artifact, and no search code in the repo — the
-  computational evidence base is unreproducible prose in the task log.
+- **No refuter pass, ever**, against any current artifact, and no counterexample-search code in
+  the repo. `checks/rem-window-r4.py` is the first executable artifact committed here, but it
+  verifies arithmetic in a remark; it searches for nothing. Every *refutation* claim in the
+  campaign remains unreproducible prose in the task log.
 - **No Lean formalisation** of anything in this campaign.
 
 **Unadjudicated debt:** `c/0010/revision/concerns.md` holds ten suspected errors and six
@@ -198,4 +214,5 @@ None of these is a mathematical error; all of them will mislead a reader.
 
 `LEDGER.md` and `REPORT.md` do not exist for this campaign; this file is the first of the three
 status files the harness convention expects. Present: `CONTRACT.md`, `intermediates/` (artifacts,
-findings, triage, tallies), `sources/` (cards S1, S2).
+findings, triage, tallies), `sources/` (cards S1, S2), and `checks/` (executable verification of
+numeric claims — one file so far, `rem-window-r4.py`, which prints its own grid size and margins).

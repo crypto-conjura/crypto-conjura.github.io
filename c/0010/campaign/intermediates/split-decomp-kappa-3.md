@@ -33,8 +33,9 @@ D″ in place of Corollary D′. At $q=0$ that condition is **vacuous**, since $
 exactly, so at $q=0$ the conjecture holds for **every** $M$ and every observer under the single
 hypothesis $P\le3\sqrt{\sigma'/\delta}$.
 
-The conjecture in full is still **not** proved. §4 states what the residual $P$-cap is and why
-it is a defect of the proof route rather than of the statement; §5 is the gap register.
+The conjecture in full is still **not** proved. §4 states what the residual $P$-cap is, why it
+is a defect of the proof route rather than of the statement, and — in Obstruction O1 — why the
+obvious repair needs a new idea rather than more care. §5 is the gap register.
 
 ## 1. The third hypothesis is free
 
@@ -189,8 +190,8 @@ decreasing in $P$ where $P\delta$ increases. If this route closes, the $P$-cap g
   predictor formulation reaches it.
 - **(G-b)** $|\mathsf{Real}-\mathsf{Mid}|$ has no bound yet. The observer there receives
   $H(\mathbf x)$, a value correlated with the very oracle it is distinguishing, whereas Lemma P
-  bounds only the case of an independent uniform challenge. This is the load-bearing hop and it
-  is where a $q$-dependence could re-enter.
+  bounds only the case of an independent uniform challenge. This is the load-bearing hop.
+  **Obstruction O1 below shows it is not a bookkeeping gap.**
 - **(G-c)** *Closed.* The density-to-statistical-distance step needs $(P,1-\delta)$-density at
   $|T|=1$. Source card `S1` records [CDGS, Definition 1] verbatim in substance: a source is
   $(1-\delta)$-dense if "for every subset $I\subseteq[N]$,
@@ -199,6 +200,41 @@ decreasing in $P$ where $P\delta$ increases. If this route closes, the $P$-cap g
   the fixed coordinates are excluded, which is exactly the event $\mathbf x\notin I_J$ the step
   is applied on. So $\Pr[H(\mathbf u)=v]\le M^{-(1-\delta_\zeta)}$ for $\mathbf u\notin I_J$ is
   licensed as used.
+
+**Obstruction O1 (why (G-b) needs a new idea).** Split on $E:=\{\mathbf x\in I_J\}$, an event
+determined by $(H,\mathbf z,\mathbf x)$ before either experiment diverges, so of equal
+probability in both. On $E$, consistency makes the challenge *literally identical*, not merely
+equal in law: conditioning on $(H,\mathbf z,\mathbf x,J=j)$, $\mathsf{Real}$ runs
+$D^{H}(v,\mathbf z)$ and $\mathsf{Dec}$ runs $D^{H^{*}}(v,\mathbf z)$ with the same
+$v=H(\mathbf x)=H^{*}(\mathbf x)$. So the $E$-branch is a pure oracle swap, $X_j$ against
+$Y_j$ — exactly what [CDGS, Claim 3] bounds — *except for the conditioning*. Three routes and
+why each fails.
+
+- **(a) Apply Claim 3 conditioned on $(\mathbf x,v)$.** The conditional law of $H$ given
+  $(\mathbf z,J=j,\mathbf x,v)$ is $X_j$ reweighted by
+  $\Pi_{H,\mathbf z}(\mathbf x)\cdot\mathbb 1[H(\mathbf x)=v]$. The indicator is harmless: it
+  fixes one further coordinate, and a $(P,1-\delta)$-dense source conditioned on one coordinate
+  off its fixed set is $(P+1,1-\delta)$-dense. The factor $\Pi_{H,\mathbf z}(\mathbf x)$ is
+  not. r3's Lemma 1 controls $\Pi_{f,\zeta}$ only through $\mathbb E[m_1m_2]\le\delta$, and its
+  own counterexample there — $m_1m_2=1$ on an event of probability $\delta$, from which
+  "$\mathbb E[m_1m_2]\le\delta^{2}$ is false" — is a case where the reweighting concentrates the
+  posterior on a single $f$, destroying density outright.
+- **(b) Let the distinguisher sample $\mathbf x$ itself.** Given $(\mathbf z,j)$ and oracle
+  access to $g$, a distinguisher can run $S_1^{g},S_2^{g}$ and condition on the leakage matching
+  $\mathbf z$, which restores the right law at $g=H$. But Definition `def:sources` gives the
+  sources unbounded query count — they "may read all of $H$" — so the resulting $T$ is unbounded
+  and Claim 3's $T\delta\log M$ is vacuous. This is the same wall that forced Lemma P through a
+  uniform independent challenge to begin with.
+- **(c) Bound the $E$-branch trivially.** $\Pr[E]\le P\delta$ by `lem:hit`, so
+  $\Pr[E]\cdot1=P\delta$ — the term being eliminated. The $E$-branch has to be shown *small*,
+  not merely bounded.
+
+**The one unexplored lever.** Card `S1` records a second, multiplicative conclusion of
+[CDGS, Claim 3] that this campaign has never used:
+$\Pr[D^{X'}=1]\le M^{T\delta}\cdot\Pr[D^{Y'}=1]$. A multiplicative comparison survives
+conditioning on a low-probability event where an additive one does not, and the $E$-branch is
+exactly a low-probability event. Whether the reweighting of (a) can be absorbed into it is the
+concrete next question. Not answered here.
 
 Until **(G-b)** is settled nothing here improves **(H1)**. (G-a) and (G-b) are the whole of the
 remaining obstruction, and (G-b) is the harder of the two: it asks for a presampling bound
@@ -219,8 +255,12 @@ to route around once.
   `split-decomp-kappa-2-r2` has been through blind review at r1 and r2; the triage of its
   findings overruled the referee on Corollary D″'s constant, which is the one place in this
   document's dependency chain where a referee objection was rejected rather than upheld.
-- **[GAP: §4, items (G-a), (G-b), (G-c)]** — not load-bearing for anything asserted. §4's
-  candidate route is stated, not proved, and Theorem E″ does not use it.
+- **[GAP: §4, items (G-a) and (G-b)]** — not load-bearing for anything asserted. §4's candidate
+  route is stated, not proved, and Theorem E″ does not use it. (G-c) is closed against card
+  `S1`. Obstruction O1 records why (G-b) is not a bookkeeping gap: the $E$-branch is a pure
+  oracle swap, but every route to [CDGS, Claim 3] on it either destroys the density Claim 3
+  needs or costs unbounded queries. The multiplicative form of Claim 3, recorded on card `S1`
+  and never used in this campaign, is the one lever not yet tried.
 - No `[GAP]` occurs in §§1–3.
 
 ## 6. External results used

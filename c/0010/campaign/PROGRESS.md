@@ -1,6 +1,6 @@
 # c/0010 — split-decomposition campaign: what is proved, and what is left
 
-State as of 27 August 2026, at `7e8a347` plus the `kappa-3-r4` revision landing with this file.
+State as of 27 August 2026, at `e50629a` plus the `kappa-4` arm landing with this file.
 Assembled from a six-lens repo-wide audit (55 items, each adversarially re-checked against the
 files, plus 8 from a completeness critic) and from the three blind-verification passes on record.
 Every quantitative claim below was machine-checked or is quoted from a named artifact.
@@ -30,6 +30,19 @@ observer and therefore one `q` — and Corollary G1 shows it now reaches `thm:ma
 on which `conj:main` holds, and the `√q⁺` relaxation buys nothing there. See
 `split-decomp-kappa-3-r4` §2, findings A2 and A3.
 
+**The `P`-axis, at fixed `q`, in full** (`kappa-4` Theorem H): on region (H2), `conj:main`
+holds at **every** `P ∈ ℕ` with `c = 2`, `C = 13`, if the family may depend on `q`. The
+construction is one line — cap the fixed set at `P₀ := min(P, ⌈t_q⌉)` and clamp the slack at
+`γ₀ := max(γ, N⁻²)`, then apply Theorem E″ at `(P₀, γ₀)` — and it is legal because `def:bf` asks
+`|I| ≤ P`, so a `P₀`-mixture with `P₀ ≤ P` *is* a `P`-mixture. No `P`-hypothesis survives.
+
+**And with the family `q`-free, every `P` at a cost of `√q⁺`** (`kappa-4` Theorem H′): capping at
+the `q`-free `⌈t₀⌉` instead gives `conj:main` on the whole axis with `C(q) = 4√q⁺ + 9`. So the
+`P`-window is **not blank**: it is proved with `C` degraded by exactly `Θ(√q⁺)`, and Theorem H
+identifies that factor as the price of `q`-independence and nothing else. This is the Contract's
+`rem:reduces` made uniform in `P` — the first thing the campaign has said about a remark
+`PROGRESS.md` §2.3 records as cited by no artifact.
+
 **Also proved, and trivially so — recorded because no artifact had noticed it:** `conj:main`
 holds for `P ≥ N²`, via the point-mass family `Y_{f,ζ} = δ_f`, which is `P`-bit-fixing,
 consistent, and gives `Adv = 0`. So the uncovered `P` set is a **bounded window**, not a
@@ -51,9 +64,16 @@ the `q`-free bound to within `8√2` on that diagonal alone.
 
 ## 2. What is left to prove
 
-### 2.1 The `P`-cap — blocking, and blocked on a named missing input
+### 2.1 The `P`-cap — no longer blocking at fixed `q`; a `√q⁺` in `C` under `q`-free families
 
-`conj:main` is unproved on the window
+**Superseded in part by `kappa-4`.** Read §1's two new entries first. On region (H2) the
+`P`-axis is closed outright at fixed `q` (Theorem H), and under `q`-free families the whole axis
+is covered with `C(q) = 4√q⁺ + 9` (Theorem H′). What remains on this axis is therefore **a factor
+`√q⁺` in the constant, under `q`-free families only** — not an uncovered region. The `Pδ` analysis
+below stands as written and remains the account of *why* the `q`-free cap cannot move past `t₀`;
+it is no longer the campaign's blocking item at fixed `q`.
+
+With `C` required absolute and the family `q`-free, `conj:main` is unproved on the window
 
 ```
 √(σ'/δ) + 1  <  P  <  N²
@@ -94,6 +114,13 @@ density puts a fixed set depending on `x`, which `rem:index` forbids.
 > **The missing input, stated sharply:** a form of CDGS Claim 3 tolerating a bounded-deficiency
 > perturbation of a dense source against the **original** bit-fixing companion.
 
+**And a redirection, from `kappa-4` §4.** This entire programme buys the ability to afford a
+*large* fixed set. Theorem H shows that at fixed `q` one never needs one: `P₀ = ⌈t_q⌉` always
+suffices, so `Pδ` never needs to exceed `S`. §4 of `kappa-3-r4` is therefore aimed squarely and
+solely at the `q`-free statement, where the cap must sit at `t₀`. Anyone resuming it should know
+they are working on `rem:reduces`'s second open problem (§2.3), not on the `P`-cap as this section
+used to describe it.
+
 Ruled out as a way in, so it is not tried twice: the multiplicative form of Claim 3 on card `S1`.
 Both forms require density.
 
@@ -112,9 +139,16 @@ i.e. whether the first arm can be made `M`-free.
 Contract `rem:reduces` states that the implication runs backwards too, and that "the directions
 hold at values of `P` separated by `Θ(√q⁺)`, and closing that is a second open problem, distinct
 from bounding `κ(q)`." **No artifact in this campaign cites `rem:reduces`**, and a search for its
-converse construction across all artifacts returns nothing. Flagged in `kappa-3-r4` §4
+converse construction across all artifacts returned nothing. Flagged in `kappa-3-r4` §4
 (`rem:second`), including the caution that the `√q⁺` there may or may not be the same `√q⁺` that
 (H1) relaxes.
+
+**Now engaged, by `kappa-4` §3.** Theorem H′ reproduces `rem:reduces`'s capping uniformly in `P`,
+and Theorem H answers the caution: the two `√q⁺` are **the same one**. It is the price of
+`q`-independence — capping at `t_q` rather than `t₀` removes it and changes nothing else. The
+second open problem is thereby sharpened to: find a `q`-free family achieving what the `q`-aware
+cap achieves, or show none exists. It is now the *only* thing standing between the campaign and
+`conj:main` on the whole `P`-axis, on region (H2).
 
 ### 2.4 Smaller mathematical debts
 
@@ -144,6 +178,7 @@ The lineage standard is **five independent verification angles per artifact**. N
 | `kappa-3` | 1 (superseded) | DEFECTS, F1 upheld | tally does not carry to r2 |
 | `kappa-3-r2` | 1 (superseded) | DEFECTS, 4 upheld | tally does not carry to r3 |
 | `kappa-3-r4` | **0 of 5** | — | r3 never refereed; r4 repairs A3 and inherits the unreviewed lineage |
+| `kappa-4` | **0 of 5** | — | lands with this revision; Theorems H, H′ rest entirely on E″ and D″, both at zero passes |
 
 **The weakest link.** Corollary D″ is load-bearing for Theorem E″ and sits in `kappa-2-r2`, which
 has zero passes — and the triage of the earlier `kappa-2` pass **overruled** the referee on D″'s
@@ -215,4 +250,5 @@ None of these is a mathematical error; all of them will mislead a reader.
 `LEDGER.md` and `REPORT.md` do not exist for this campaign; this file is the first of the three
 status files the harness convention expects. Present: `CONTRACT.md`, `intermediates/` (artifacts,
 findings, triage, tallies), `sources/` (cards S1, S2), and `checks/` (executable verification of
-numeric claims — one file so far, `rem-window-r4.py`, which prints its own grid size and margins).
+numeric claims — `rem-window-r4.py` and `cap-fixed-q.py`, each printing its own grid size and
+worst margins).

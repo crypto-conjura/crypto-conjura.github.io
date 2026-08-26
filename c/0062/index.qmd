@@ -1,0 +1,111 @@
+---
+id: "0062"
+problem: multidimensional-lphs
+draft: two-dimensional-lphs-random-walk
+title: "An Optimal Two-Dimensional Locality-Preserving Hash for Shifts"
+short_title: "Optimal 2D LPHS"
+areas: [foundations, information-theoretic, mpc]
+topics: [locality-preserving-hashing, distributed-discrete-logarithm, generic-group-model]
+model: standard
+form: tight-bound
+assumption_class: unconditional
+category: research-open
+revision: 1
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: adaptation
+  by: ai
+  note: "The source writes out the whole intended analysis and reduces it to two unproved facts about meeting times of random walks on Z^2 plus one modelling assumption -- that the walk's steps are independent. The algorithm's loop-breaking rule is what violates it, and the source says the fix it would want, a walk monotone along one axis, is one it does not know how to design at this performance. So the route is visible and blocked at a named place, which is what separates this from a problem with no route at all."
+status_summary: "Open, and asserted rather than asked: the source prints the algorithm, conjectures the error rate, reports experiments consistent with it, states it could not analyse it, and leaves settling it to future work. The matching lower bound is the source's own theorem, so a proof would close the two-dimensional case exactly."
+status_updated: 2026-08-23
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Boyle, Dinur, Gilboa, Ishai, Keller, Klein, Locality-Preserving Hashing for Shifts with Connections to Cryptography, IACR ePrint 2022/028; ITCS 2022, LIPIcs 215, art. 27", url: "https://eprint.iacr.org/2022/028"}
+  - {cite: "Dinur, Keller, Klein, An Optimal Distributed Discrete Log Protocol with Applications to Homomorphic Secret Sharing, CRYPTO 2018, Part III, pp. 213-242", url: "https://eprint.iacr.org/2018/731"}
+statement_sha: "23e6dcfc2b013d7c72f7a60bc974d5f4599e447b44cb8ab6794123434ec6cf97"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+<!-- topics:start -->
+<div class="cj-tags cj-page-topics"><a class="cj-tag cj-tag-topic" href="/problems/by-topic/distributed-discrete-logarithm/">Distributed Discrete Logarithm</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/generic-group-model/">Generic Group Model</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/locality-preserving-hashing/">Locality Preserving Hashing</a></div>
+<!-- topics:end -->
+
+Two parties hold the same enormous random array, except that one of them holds it shifted by a single step along one axis. They may each read $d$ entries, they may not talk, and each must name a position such that the two positions differ by exactly the shift. In one dimension this is a solved problem, and the optimal error probability is about $1/d^{2}$. In two it is not: the source paper proves nothing can beat $1/d$, achieves $d^{-7/8}$, and then prints a fourth algorithm — symmetric in the two axes, a chain of deterministic random walks with geometrically growing steps — whose measured error rate is $1/d$ exactly. It could not prove it. Everything about this conjecture is on the page: the algorithm, the matching lower bound, the intended analysis, and the one assumption that analysis needs and the algorithm breaks.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [LaTeX source](latex/main.tex) · Formal statement — *not yet formalized*
+
+**The object.** For an alphabet $\Sigma_{b}$ of $b$-bit symbols, a function $h : \Sigma_{b}^{\mathbb{Z}_{n}^{2}} \to \mathbb{Z}_{n}^{2}$ is a **2-dimensional $(d,\delta)$-LPHS** if $h$ can be computed with $d$ adaptive queries of the form $x[i,j]$ and, for each unit vector $e_{i}$,
+$$\Pr_{x}\bigl[\,h(x) \ne h(x \lll e_{i}) + e_{i}\,\bigr] \le \delta,$$
+where $x$ is uniform, $\lll$ is the cyclic shift, and the same randomness of $h$ is used in both invocations. (The source's Definition 2.1.)
+
+**The matching lower bound (the source's Theorem 1.4 at $k=2$).** For $n = \Omega(d)$, every 2-dimensional $(d,\delta)$-LPHS satisfies $\delta = \Omega(d^{-1})$.
+
+**The algorithm (the source's Algorithms 1, 7, 8).** $\textsc{Min-Hash}(x,d)$ returns $\arg\min_{i,j \in [0,\sqrt{d}]}\{x[i,j]\}$. $\textsc{rw-stage}(z,d,L,i,j)$ fixes independent random functions $\psi_{1},\psi_{2} : \Sigma_{b} \to \{-L,\dots,L\}$, then walks: for $s = 0,\dots,d-1$ it records $P[s] \leftarrow (i,j)$, reads $v \leftarrow z[i,j]$ and sets $(i,j) \leftarrow (i+\psi_{1}(v),\, j+\psi_{2}(v))$; if the new point is already in $P$ it jumps back to the minimum-valued point of the loop and then increments $j$ until the point is fresh. It returns $\arg\min_{(i',j') \in P}\{z[i',j']\}$. $\textsc{Random-Walk-Hash}(z,d)$ sets $I \leftarrow \lg\lg d$ and $d' \leftarrow d/I$, runs $\textsc{Min-Hash}(z,d')$, and then $I$ successive $\textsc{rw-stage}$ calls with step sizes $d'^{1/4}, d'^{3/8}, d'^{7/16}, \dots, \sqrt{d'/2}$ — that is, $d'^{\,1/2 - 2^{-(\ell+1)}}$ at stage $\ell$ — each starting where the last finished, and returns the final point. The full listing is in the [LaTeX source](latex/main.tex).
+
+**Conjecture.** There is a function $c(\cdot)$, polylogarithmic in its argument, such that for all large enough $n$ and $b$, $\textsc{Random-Walk-Hash}(\cdot, d)$ is a 2-dimensional $(d,\delta)$-LPHS with
+$$\delta \ \le \ \frac{c(d)}{d}.$$
+
+**How the source states it.** Section 4.1.4 is titled "Conjectured optimal algorithm" and says: "We conjecture that the following symmetric algorithm ($\textsc{Random-Walk-Hash}$) has the optimal performance of $\delta = \widetilde{O}(1/d)$. However, we were not able to rigorously analyze it." The introduction adds the status: "we present another 2-dimensional LPHS algorithm, which seems harder to analyze, but for which we conjecture that the error rate is at most $\widetilde{O}(d^{-1})$", that "Our experiments suggest that the error rate of this algorithm is indeed" that, that "This bound is essentially the best one can hope for given the lower bound discussed below", and that "the analysis (and especially deterministic resolution of cycles in the random walk) is quite involved, and settling our conjecture is left open for future work".
+
+**Two readings this page fixes.** It is a claim about *this algorithm*, not about the existence of some $\widetilde{O}(1/d)$ scheme — the existence version is weaker, is the more natural thing to want, and is not what the source conjectures. And the hypotheses on $n$ and $b$ are left as "large enough" because the source's own statement names none, while its neighbouring lemmas assume things of the shape $n = \Omega(d)$ and $2^{b} \ge d^{4}$.
+
+### Sources
+
+- Boyle, Dinur, Gilboa, Ishai, Keller and Klein. [*Locality-Preserving Hashing for Shifts with Connections to Cryptography*](https://eprint.iacr.org/2022/028). IACR ePrint 2022/028; ITCS 2022, LIPIcs 215, article 27. The conjecture and the algorithm are §4.1.4, PDF pp. 24–25; the introduction's statement of it and the remark that settling it is left open are PDF p. 7; the LPHS definition is Definition 2.1, PDF p. 9; the lower bound is Theorem 1.4, PDF p. 7, proved for $k=2$ in §4.2; $\textsc{Min-Hash}$ is Algorithm 1, PDF p. 17.
+- Dinur, Keller and Klein. [*An Optimal Distributed Discrete Log Protocol with Applications to Homomorphic Secret Sharing*](https://eprint.iacr.org/2018/731). CRYPTO 2018, Part III. The Iterated Random Walk algorithm whose LPHS translation gives the optimal one-dimensional bound $\widetilde{O}(d^{-2})$, and the negative results the one-dimensional lower bound comes from.
+
+## Proof
+
+View PDF — *no proof written yet* · LaTeX source — *no proof written yet* · Formal proof — *not yet formalized*
+
+Open, with the intended proof written out in the source and one named gap in it.
+
+**The analysis the source would like to run.** Assume each $\textsc{rw-stage}$ behaves like a random walk on $\mathbb{Z}^{2}$ with independent steps uniform in $\{-L,\dots,L\}$ per axis, and that once the two parties' walks collide they stay collided. Then, granting two facts about such walks that the source states and does not prove — writing $T$ for the meeting time of two walks started at $\ell_{1}$ distance $D$, that $\mathbb{E}[\min(d',T)] = O(\sqrt{d'}(L + D/L))$, and that the expected displacement after $d'$ steps is $O(L\sqrt{d'})$ — the stages fail with probability $O(d'^{-1/2}), O(d'^{-1/4}), O(d'^{-1/8}), \dots$, and the product over the $\lg\lg d$ stages is $2^{O(I)}/d' = \widetilde{O}(1/d)$. The geometric step sizes are chosen exactly so that each stage's starting distance and step size line up to give the next halving of the exponent.
+
+**The gap, named by the source.** The steps are not independent: "In practice we cannot guarantee independence, since the random walk occasionally runs into loops." A walk whose step at each point is a deterministic function of the symbol read there must revisit a point eventually, and lines 8–15 of $\textsc{rw-stage}$ are the canonical rule for breaking out — jump back to the minimum-valued point of the loop, then increment $j$ until fresh. That rule is what both parties must agree on for the scheme to work at all, and it is what correlates the steps. The source names the fix it would want and cannot have: "If the algorithm would make monotone queries along (at least) one axis (as the one-dimensional algorithm), then it would avoid loops and its analysis would be much simpler. Unfortunately, we do not know how to design such an algorithm with similar performance."
+
+**So there are three ways in.** Prove the two random-walk facts and then handle the loop-correlation directly, presumably by showing the loop-breaking rule perturbs the meeting-time estimates by at most a polylogarithmic factor. Or find a coupling that compares the real walk to the idealized one. Or design the monotone algorithm the source wants, which would settle the *existence* question at $\widetilde{O}(1/d)$ and leave this page's statement about $\textsc{Random-Walk-Hash}$ formally open but uninteresting.
+
+**Refuting it is a different kind of work.** The lower bound already forbids anything below $\Omega(1/d)$, so a refutation cannot come from a better general lower bound — it must be a lower bound on *this* algorithm, showing that the loop-breaking rule or the inter-stage correlation costs a power of $d$. The source's experiments are evidence against that, but the paper does not report their scale, which is worth establishing before trusting the direction.
+
+**Why anyone outside sublinear algorithms should care.** The source proves a two-way connection, in the generic group model, between LPHS and the *distributed discrete logarithm* problem: two parties holding $v$ and $g \cdot v$ must non-interactively output shares differing by the known amount. DDL is the share-conversion step that group-based homomorphic secret sharing is built on, and its error probability is the dominant cost. The two-dimensional case is what packed HSS needs, so the conjecture is a statement about how cheaply several HSS instances can share one conversion.
+
+**Checked against the literature, 2026-08-23.** No proof, refutation or improvement found in the four and a half years since the ePrint. Searches for follow-up work on multidimensional LPHS and on DDL with preprocessing return the source, its ITCS proceedings version, and the 2022 line on DDL with preprocessing, none of which addresses the algorithm. The one-dimensional case remains as the source describes it. **This is a targeted check, not an exhaustive sweep, and four years of silence in a niche area is weak evidence either way.**
+
+## Discussion
+
+**The unusual thing about this conjecture is how little is missing.** The algorithm is printed and implementable in a few dozen lines; the target is proved to be optimal; the intended proof is sketched in full; the failure of the sketch is identified precisely, at a specific loop-breaking rule in a specific procedure. Most open problems on this site are missing an idea. This one is missing a lemma about random walks that break their own loops, and the reason nobody has supplied it is presumably that the required care is high and the payoff is one constant in a niche primitive — which is exactly the sort of thing worth writing down and leaving out for someone.
+
+**What the conjecture is not.** It is not the source's "main question", which is optimal parameters for $k$-dimensional LPHS at general $k$: that has no committed value, since the source's $\Omega(d^{-2/k})$ lower bound is not claimed to be optimal for $k \ge 3$, and it is recorded on the [hub](/p/multidimensional-lphs/) as a direction rather than a statement. The $k = 2$ case is the one the source commits to.
+
+**What a reviewer should be suspicious of, in order.** First, the transcription of the three algorithms, and in particular the last step size, which is $\sqrt{d'/2}$ and not $\sqrt{d'}/2$ — the PDF's text layer flattens the radical, and reading it from there gives the wrong algorithm. Second, the "large enough $n$ and $b$" hypotheses, which the source's statement omits and its neighbouring lemmas supply in three different forms. Third, the claim that the two random-walk facts plus independence suffice: the source says the analysis "would follow from the following two claims", and that phrase is doing work — it should be checked that nothing else is being assumed silently.
+
+## Open obligations
+
+- [ ] Pin down the hypotheses on $n$ and $b$ under which the conjecture is meant to hold.
+- [ ] Prove the two random-walk facts the source states without proof — meeting time and expected displacement for bounded-step walks on $\mathbb{Z}^{2}$ — as a self-contained step.
+- [ ] Quantify what the loop-breaking rule costs, either by a coupling to the idealized walk or by a direct estimate on the number of loops encountered.
+- [ ] Reproduce the source's experiments, and record their scale; the paper does not.
+- [ ] Ask whether a monotone-along-one-axis two-dimensional algorithm with the same performance exists, which would settle the existence question and reduce this page to a curiosity about one algorithm.
+- [ ] Prove or refute the statement.
+- [ ] Formalize the statement in Lean; nothing here has been formalized.
+
+:::

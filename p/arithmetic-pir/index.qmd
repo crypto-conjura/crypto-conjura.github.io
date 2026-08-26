@@ -1,0 +1,59 @@
+---
+title: "Arithmetic private information retrieval"
+subtitle: "PIR whose algorithms make only black-box use of the field, and what that costs"
+---
+
+## Motivation
+
+A cryptographic construction is *arithmetic*, or field-agnostic, when its
+algorithms are arithmetic circuits that use only the field operations and must
+work for whichever field they are handed. The property is worth having: an
+arithmetic PIR scheme can post-process numerical answers directly, or be
+distributed among several clients using arithmetic secure computation, without
+leaving the field the data lives in.
+
+It is also, empirically, what every code-based PIR candidate happens to be.
+Code-based PIR is pursued to diversify the assumptions underlying private
+retrieval away from lattices and groups, and it has an unhappy history of
+constructions broken shortly after publication. Asking what the arithmetic
+restriction costs turns that history into a theorem rather than a sequence of
+accidents — and, in the two-server information-theoretic case, into a clean
+linear-algebraic question.
+
+## Provenance and history
+
+The arithmetic-cryptography framework is Applebaum, Avron and Brzuska's (J. ACM
+2017). Applebaum, Ishai and Shechter, *On Arithmetic Private Information
+Retrieval: Why Code-Based PIR (Usually) Fails* ([IACR ePrint
+2026/1224](https://eprint.iacr.org/2026/1224)), adapt it to PIR and prove the
+central negative result: in every single-server arithmetic PIR the server
+communicates at least $n$ field elements, so there is no non-trivial scheme at
+all. They then break the recent code-based candidates of Holzbaur et al. and
+Verma–Hollanti within minutes on a workstation for all suggested parameters, and
+argue the insecurity is structural — security in this space needs
+"non-arithmetic" operations whose degree scales with the field.
+
+Two relaxations escape. With two servers and computational security, the
+distributed-point-function construction arithmetizes, giving $O(n^\varepsilon)$
+communication from an arithmetic PRG. With one server and a client secret key,
+arithmetic LPN gives an arithmetic sk-PIR at $O(n^\varepsilon)$. The remaining
+case — two servers, information-theoretic security — is where the classical
+cube-root constructions arithmetize and stop, and where the paper's equivalence
+between arithmetic PIR and *linear* PIR turns the optimality question into one
+about distributions over matrices.
+
+## Parameter lattice
+
+Servers against security, in the arithmetic model.
+
+| | Information-theoretic | Computational |
+|---|---|---|
+| **One server** | impossible: server communicates $\ge n$ field elements | impossible in the same sense (the negative result holds under a weaker notion) |
+| **One server + client secret key** | *unstated* | $O(n^\varepsilon)$ under arithmetic LPN; encoded database $(1+\varepsilon)n$ under LSN |
+| **Two servers** | $O(n^{1/3})$ achieved; optimality — [c/0078](/c/0078/) — open | $O(n^\varepsilon)$ from an arithmetic PRG, $\mathrm{polylog}(n)$ under sub-exponential security |
+| **Two servers, bilinear (more restricted)** | $\Omega(n^{1/3})$ lower bound known (Razborov–Yekhanin) | — |
+| **Two servers, non-arithmetic** | $n^{o(1)}$ via matching vectors, which the source cannot arithmetize | — |
+
+## Statements in this hub
+
+- [Optimality of Cube-Root Communication for Two-Server Arithmetic PIR](/c/0078/) — open

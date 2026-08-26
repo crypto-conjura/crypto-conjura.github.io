@@ -1,14 +1,132 @@
 ---
-title: "F-asyncMPC — Asynchronous MPC"
+title: "F-A-SFE — Asynchronous SFE with eventual delivery"
 status: "Canonical"
 layer: 6
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-asyncMPC* (Asynchronous MPC) is part of *Secret Sharing, Threshold Cryptography, MPC* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+*F-A-SFE* (Asynchronous SFE with eventual delivery) is part of *Secret Sharing, Threshold Cryptography, MPC* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+
+Secure function evaluation with the one guarantee asynchrony makes impossible removed. In an asynchronous network no protocol can both terminate and take every party's input into account, because honest parties cannot tell a delayed sender from a silent one — so the box hands the adversary an explicit interface for discarding up to $t$ honest inputs, and the function is then evaluated on what is left. Everything else is the standard fetch-and-delay accounting.
+
+## Functionality
+
+Reading the box: $\mathbf{A}$ is the adversary's role in a caller's id, so $\mathit{id}'.F = \mathbf{A}$ restricts an operation to the adversary; $\mathbf{C}$ is the corrupted set, which shrinks $\mathbf{P} \setminus \mathbf{C}$ as corruptions happen; $\bot$ is a slot never filled; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it. The parameters are the function $f$ and the randomness space $R$ it draws from.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{A\text{-}SFE}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := (f, R)\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{x}[*] \gets \bot\); &nbsp;\(\mathtt{y}[*] \gets \bot\)<span class="cj-comment">// inputs and outputs, one slot per party</span></li>
+<li>\(\mathtt{Drop} \gets \varnothing\)<span class="cj-comment">// honest parties whose input is discarded</span></li>
+<li>\(\mathtt{D}[*] \gets 1\)<span class="cj-comment">// delay budget, per party</span></li>
+<li>\(\mathtt{seen} \gets 0\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.NoInput(<span class="cj-id">Q</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="5">
+<li>\(\textbf{require}\ \mathit{id}'.F = \mathbf{A} \ \wedge\ \mathtt{seen} = 0 \ \wedge\ |Q| \leq |\mathbf{C}|\)<span class="cj-comment">// at most as many dropped as corrupted</span></li>
+<li>\(\mathtt{Drop} \gets Q\)</li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Input(<span class="cj-id">v</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="8">
+<li>\(\textbf{require}\ \mathtt{seen} = 0 \ \wedge\ (\mathit{id}'.F \neq \mathbf{A} \ \vee\ \mathit{id}.P \in \mathbf{C})\)<span class="cj-comment">// no input once an output has been taken</span></li>
+<li>\(\mathtt{x}[\mathit{id}.P] \gets v\)</li>
+<li>\(I \gets (\mathbf{P} \setminus \mathbf{C}) \setminus \mathtt{Drop}\)</li>
+<li>\(\textbf{if}\ \forall P \in I : \mathtt{x}[P] \neq \bot\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{x}'[P] \gets \mathtt{x}[P]\) for \(P \in I \cup \mathbf{C}\); &nbsp;\(\mathtt{x}'[P] \gets \bot\) otherwise</span></li>
+<li><span class="cj-ind">\(r \gets_{\$} R\); &nbsp;\((\mathtt{y}[P])_{P \in \mathbf{P}} \gets f\bigl((\mathtt{x}'[P])_{P \in \mathbf{P}}, r\bigr)\)</span></li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Input},\ \mathit{id}.P\bigr)\)<span class="cj-comment">// that a party gave input, never what</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Delay(<span class="cj-id">P</span>, <span class="cj-id">T</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="16">
+<li>\(\textbf{require}\ \mathit{id}'.F = \mathbf{A} \ \wedge\ T \in \mathbb{Z}\)</li>
+<li>\(\mathtt{D}[P] \gets \max(1, \mathtt{D}[P] + T)\)<span class="cj-comment">// scheduling, but never a refusal to deliver</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Fetch()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="19">
+<li>\(\textbf{require}\ \mathtt{y}[\mathit{id}.P] \neq \bot\)</li>
+<li>\(\mathtt{D}[\mathit{id}.P] \gets \mathtt{D}[\mathit{id}.P] - 1\)</li>
+<li>\(\textbf{require}\ \mathtt{D}[\mathit{id}.P] = 0\)</li>
+<li>\(\mathtt{seen} \gets 1\)</li>
+<li>\(\textbf{return}\ \mathtt{y}[\mathit{id}.P]\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="24">
+<li>\(\textbf{return}\ \bigl(\mathtt{x}[\mathit{id}.P],\ \mathtt{y}[\mathit{id}.P],\ \mathtt{D}[\mathit{id}.P],\ \mathtt{Drop}\bigr)\)<span class="cj-comment">// a corrupt party's own slots, and the drop set</span></li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+The box is transcribed from Coretti, Garay, Hirt and Zikas, *Constant-round asynchronous multi-party computation based on one-way functions*, ePrint 2016/208, revision `20161123:015031`, Figure 2, PDF p. 7 (printed p. 6) — the functionality $\mathcal{F}^{f}_{\textsc{a-sfe}}(\mathcal{P})$, "Asynchronous SFE with eventual delivery".
+
+**The entry was titled "Asynchronous MPC" and the printed box is narrower than that.** It evaluates one function on one input per party and produces one output per party. There is no reactive state, no round structure, and no way to feed an output back in — so this is asynchronous *SFE*, and the difference from an arithmetic-black-box-style reactive object is the difference between this page and [F-ABB](/uc/layer-6-secret-sharing-mpc/f-abb/index.qmd). Retitled accordingly.
+
+Three lines carry the asynchrony:
+
+- **Lines 5–6 are the whole concession, and the bound at line 5 is what keeps it from being fatal.** The adversary names a set of honest parties whose inputs are thrown away, and may name at most as many as it has corrupted. The source's reasoning is worth having in full: to terminate, "the parties cannot afford to wait for input from more than $n - t$ parties, as the $t$ remaining parties might be the corrupted ones", and since the adversary schedules honest parties' messages it "can (in worst-case scenarios) choose exactly the set $\mathcal{P}'$" — so the functionality has to let it. The paper notes the consequence as a requirement on the derived set: $\lvert \mathcal{I} \rvert \geq n - 2t$.
+- **Line 12 is where corrupt parties' inputs re-enter.** The vector fed to $f$ carries a real value for every party in $I$ *and* for every corrupted party, and $\bot$ for the rest. A corrupt party is not silenced by being corrupt; only an honest party the adversary has named at line 6 is.
+- **Line 20 against line 17 is the eventual-delivery statement.** Output arrives when the recipient's own $\mathsf{Fetch}$ has ticked its counter down, and line 17's clamp is what stops the adversary from pushing the counter out of reach. Because $T$ must be given in unary in the source, the delay is bounded by the adversary's own running time, so "a polynomial environment will be able to observe the transmission through its completion" — that is the sense in which delivery is guaranteed, and it is the same device the paper's asynchronous channel uses.
+
+Where the source needed a decision, and one place it appears to be wrong:
+
+| Source | Box | Why |
+|---|---|---|
+| $\mathcal{I} := \mathcal{H}$ at initialization, and $\mathcal{I} = \mathcal{H} \setminus \mathcal{P}'$ on `no-input` | $\mathtt{Drop}$, with $I$ derived at line 10 | Read as a snapshot, $\mathcal{I} := \mathcal{H}$ would fix $\mathcal{I} = \mathbf{P}$ before any corruption, and line 11 would then wait for *every* party's input — precisely the input completeness the paper proves unachievable. So $\mathcal{I}$ is stored the other way round, as the discarded set, and the honest core is recomputed on each call as $\mathcal{H}$ shrinks. The source itself notes that "$\mathcal{H}$ is dynamically updated as the adversary corrupts new parties", which is the reading this implements. |
+| $D_i := 0$ at initialization; `fetch` sets $D_i := D_i - 1$ and delivers if $D_i = 0$; `delay` sets $D_i := D_i + T$ | $\mathtt{D}[*] \gets 1$ at line 3, and $\max(1, \cdot)$ at line 17 | Taken literally the printed accounting never delivers: the first $\mathsf{Fetch}$ takes $D_i$ from $0$ to $-1$, the equality test fails, and every later $\mathsf{Fetch}$ takes it further away. Nothing in the box raises $D_i$ when the output is computed, and with no clamp the adversary can push it negative on purpose. Both are fixed here in the way the same paper's own asynchronous channel does it — $\mathcal{F}_{\textsc{a-smt}}$ (Figure 1, p. 6) raises $D$ by one on each `send` and clamps its `delay` with $\max\{1, D + T\}$ — which is also this framework's convention for a delayed pull. **A protocol proved against the printed box is therefore not automatically proved against this one:** the printed box's delivery condition is unsatisfiable without adversary cooperation, and this one's is not. |
+| "Send $(\texttt{input}, i)$ to the adversary", listed after the evaluation bullet | Line 14, after lines 11–13 | Order preserved. The notification carries the party, never $v$, and it fires whether or not that input completed the vector — so the adversary learns that someone provided input and must work out from its own bookkeeping whether the evaluation has happened. |
+| No leakage interface | Line 24 | Required here. A corrupt party's adversary reads that party's own input and output slots, its delay counter, and the drop set — which it chose. Nothing about another party's input is reachable. |
+| Delays given in unary | $T \in \mathbb{Z}$ at line 16 | The unary encoding is a statement about the *environment's* ability to outlast the delay, not about the functionality's state, and it survives as line 17's clamp plus the framework's own polynomial bounds. Negative $T$ stays legal, which the source's channel explicitly wants: "if the adversary wants to deliver the message in the next activation, all he needs to do is submit a negative delay". |
+
+## Known realizations
+
+From the paper the box is taken from, and the resilience bound is not a proof artefact:
+
+- The paper gives "a generic description of the functionality for an arbitrary number $t$ of corruptions; however, and as implied by classical impossibility results, we are only able to realize it for $t < n/3$". That threshold is Ben-Or, Canetti and Goldreich's, and it is a property of asynchronous computation rather than of this construction.
+- The paper's contribution is the round complexity: constant-round asynchronous MPC from one-way functions, in the $\mathcal{F}_{\textsc{a-smt}}$-hybrid model — i.e. assuming a per-pair asynchronous secure channel with eventual delivery, which is Figure 1 of the same paper and has no page here.
+
+## Properties
+
+- **Privacy**, with probability exactly $0$ of leakage: no call on the adversary slot carries an input value (line 14 carries a name), and no return value other than line 23 carries an output. A corrupt party reaches its own slots at line 24 and no other party's.
+- **Correctness relative to the surviving inputs**, with probability exactly $1$: line 13 evaluates $f$ once, on the vector line 12 assembled, and every party's output comes from that one evaluation. The adversary has no interface that touches $\mathtt{y}$ after line 13 — so it chooses *what is computed*, at line 6, and never *what comes out*.
+- **Input completeness fails by construction**, and the failure is bounded: at most $\lvert \mathbf{C} \rvert$ honest inputs are lost, and $f$ sees $\bot$ in their place. This is the one place where an asynchronous SFE functionality cannot be a drop-in replacement for a synchronous one, and a protocol that needs every input needs a synchronous network rather than a better protocol.
+- **Eventual delivery, not timely delivery.** There is no $\Delta$ on the header line, so nothing bounds *when* an output arrives — only that a fetch-happy party eventually gets it. The comparison is [F-AC](/uc/layer-1-channels-agreement-ledgers/f-ac/index.qmd), whose bounded delay is a different and stronger guarantee, and [F-ABA](/uc/layer-1-channels-agreement-ledgers/f-aba/index.qmd), which does the same accounting for agreement rather than evaluation.
+- **One shot.** Line 8's $\mathtt{seen}$ test closes input as soon as any party takes an output, so a party that has not yet supplied one has lost its chance. The source states this as "if some party (or the adversary) has received an output, then ignore this message".
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Canetti, Lindell, Ostrovsky, and Sahai. [*Universally composable two-party and multi-party secure computation*](https://eprint.iacr.org/2002/140). In 34th ACM Symposium on Theory of Computing (STOC), pages 494–503, 2002.
+- Coretti, Garay, Hirt, and Zikas. [*Constant-round asynchronous multi-party computation based on one-way functions*](https://eprint.iacr.org/2016/208). In Advances in Cryptology – ASIACRYPT 2016, Part II, volume 10032 of LNCS, pages 998–1021, 2016. Figure 2, PDF p. 7 (printed p. 6) of revision `20161123:015031`, the newest of five postings — the definition transcribed above; Figure 1, p. 6 for the asynchronous channel whose delay accounting this box borrows; §3, p. 6 for the impossibility of input completeness and the $t < n/3$ bound.
+- Canetti, Lindell, Ostrovsky, and Sahai. [*Universally composable two-party and multi-party secure computation*](https://eprint.iacr.org/2002/140). In 34th ACM Symposium on Theory of Computing (STOC), pages 494–503, 2002. The synchronous UC treatment this specialises against; it prints $\mathcal{F}_{\mathsf{OT}}$, $\mathcal{F}_{\mathsf{ZK}}$, $\mathcal{F}_{\mathsf{MCom}}$, $\mathcal{F}_{\mathsf{CP}}$ and $\mathcal{F}_{\mathsf{BC}}$, and no asynchronous evaluation functionality.
 - Ben-Or, Canetti, and Goldreich. [*Asynchronous secure computation*](https://doi.org/10.1145/167088.167109). In 25th ACM Symposium on Theory of Computing (STOC), pages 52–61, 1993.
 - Ben-Or, Kelmer, and Rabin. [*Asynchronous secure computations with optimal resilience*](https://doi.org/10.1145/197917.198088). In 13th ACM Symposium on Principles of Distributed Computing (PODC), pages 183–192, 1994.

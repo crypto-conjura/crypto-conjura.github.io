@@ -1,0 +1,166 @@
+---
+id: "0072"
+problem: minimal-dv-snarg-proof-size
+draft: dv-snarg-one-group-element
+title: "A Designated-Verifier SNARG with One Group Element and tau + o(tau) Bits"
+short_title: "dv-SNARG, One Group Element"
+areas: [proof-systems, idealized-models]
+topics: [snarks, generic-group-model, proof-size-lower-bounds]
+model: ggm
+form: characterization
+assumption_class: unconditional
+category: research-open
+revision: 1
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: new-idea
+  by: ai
+  note: "The source decomposes its own conjecture into two ingredients and leaves both open. The first, a tighter malleability analysis of packed ElGamal in the generic group model, is plausibly an adaptation -- it even names a candidate simpler construction. The second is not: a practical linear PCP with answer-to-soundness ratio about one is known to follow from optimal MAXLIN inapproximability but with non-negligible completeness error, and the source judges both that route and the amortized-query-complexity route practically infeasible. Reaching tau + o(tau) with a linear CRS and no oracle needs something not currently on the table."
+status_summary: "Numbered Conjecture 1.3 of the source. Its own theorems achieve one group element plus O(tau) bits, and (with a random oracle) one group element, one hash output and about 2 tau bits; the conjecture halves the additive term to tau + o(tau) and asks for no random oracle."
+status_updated: 2026-08-25
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Arnon, Dujmovic, Ishai, Designated-Verifier SNARGs with One Group Element, IACR ePrint 2025/517", url: "https://eprint.iacr.org/2025/517"}
+  - {cite: "Barta, Ishai, Ostrovsky, Wu, On Succinct Arguments and Witness Encryption from Groups, CRYPTO 2020", url: "https://doi.org/10.1007/978-3-030-56784-2_26"}
+  - {cite: "Bitansky, Chiesa, Ishai, Ostrovsky, Paneth, Succinct Non-Interactive Arguments via Linear Interactive Proofs, TCC 2013", url: "https://doi.org/10.1007/978-3-642-36594-2_18"}
+  - {cite: "Bitansky, Harsha, Ishai, Rothblum, Wu, Dot-Product Proofs and Their Applications, FOCS 2024", url: "https://doi.org/10.1109/FOCS61266.2024.00056"}
+  - {cite: "Groth, On the Size of Pairing-Based Non-Interactive Arguments, EUROCRYPT 2016", url: "https://doi.org/10.1007/978-3-662-49896-5_11"}
+statement_sha: "a0c90059f5d3c0cc4aec3591960bffd75a575c42bae8cfa681b4169f0e99808e"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+<!-- topics:start -->
+<div class="cj-tags cj-page-topics"><a class="cj-tag cj-tag-topic" href="/problems/by-topic/generic-group-model/">Generic Group Model</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/proof-size-lower-bounds/">Proof Size Lower Bounds</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/snarks/">Snarks</a></div>
+<!-- topics:end -->
+
+A designated-verifier SNARG lets a prover convince one particular verifier,
+holding a secret verification state, that a circuit is satisfiable — with a
+proof far shorter than the witness. In the generic group model the source brings
+the proof down to a single group element plus a number of bits proportional to
+the soundness level, and with a random oracle down to $695$ bits for $2^{-80}$
+soundness at $128$-bit security, roughly half the best pairing-based SNARG. Two
+sources of slack in that count are identified and not removed. Fix both and the
+additive term should fall to about $340$ bits — which is the source's numbered
+Conjecture 1.3.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [LaTeX source](latex/main.tex) · Formal statement — *not yet formalized*
+
+**The model (the source's Definitions 3.2 and 3.4).** Shoup's generic group
+model: the oracle holds a random bijection from a label space to
+$(\mathbb{Z}_{p'},+)$, all parties get the label of $1$, and the oracle adds two
+labels. A dv-SNARG for a relation $R$ is $(\mathsf{Setup}, \mathsf{P},
+\mathsf{V})$ with oracle access, where $\mathsf{Setup}(1^n)$ outputs a CRS and a
+secret verification state, $\mathsf{P}$ outputs a proof of length $\ell$, and
+$\mathsf{V}$ outputs a bit; completeness and adaptive soundness are as usual,
+soundness quantified over provers making at most $t$ oracle queries, and
+succinctness asks $|\mathsf{pf}| = o(|w|)$.
+
+**Conjecture (the source's Conjecture 1.3, verbatim).** Let $\mathbb{G} =
+\mathbb{G}_\lambda$ be a generic group and $\tau$ a soundness parameter. There
+exists a dv-SNARG for proving the satisfiability of a Boolean circuit of size
+$s$ with soundness error $2^{-\tau + \log\log\lambda} + O(t^2/2^\lambda)$
+against $t$-query adversaries, proof size $1$ $\mathbb{G}$-element and $\tau +
+o(\tau)$ additional bits, and CRS size $O(\tau s)$ $\mathbb{G}$-elements.
+
+**What the source's own theorems give.** Theorem 1.1: soundness $2^{-\tau} +
+O(t^2 2^{-\lambda})$, proof one $\mathbb{G}$-element plus $O(\tau)$ bits with a
+large hidden constant ($56\tau$ bits if the CRS is allowed to be $O(\tau
+s^2)$), CRS $O(\tau s)$. Theorem 1.2, additionally using a random oracle for
+collision resistance: proof one $\mathbb{G}$-element, one hash output and
+$\lceil 2\tau\log p/(\log p - \Theta(1))\rceil$ bits, CRS $O(\tau s \cdot
+\mathrm{poly}(p))$.
+
+**No random oracle.** The conjecture lives in the generic group model alone,
+with a *linear* CRS. That is what separates it from both theorems: the better
+concrete bound buys its tighter malleability analysis with a random oracle, and
+the oracle-free theorem pays $O(\tau)$ bits with a large constant.
+
+**The soundness term is unusual and is the source's.** The $\log\log\lambda$ in
+the exponent is printed in the paper; the conjecture therefore allows a
+$\log\lambda$ multiplicative loss over $2^{-\tau}$, and a construction achieving
+$2^{-\tau}$ exactly would be stronger than what is asked.
+
+### Sources
+
+- Arnon, Dujmovic and Ishai. [*Designated-Verifier SNARGs with One Group Element*](https://eprint.iacr.org/2025/517). IACR ePrint 2025/517. The source. Conjecture 1.3 is on page 6, Theorem 1.1 on page 4, Theorem 1.2 on page 5, Definitions 3.2 and 3.4 on pages 14–15.
+- Barta, Ishai, Ostrovsky and Wu. [*On Succinct Arguments and Witness Encryption from Groups*](https://doi.org/10.1007/978-3-030-56784-2_26). CRYPTO 2020. The two-group-element dv-SNARG with inverse-polynomial soundness the source improves on, and one of the linear PCPs it uses.
+- Bitansky, Chiesa, Ishai, Ostrovsky and Paneth. [*Succinct Non-Interactive Arguments via Linear Interactive Proofs*](https://doi.org/10.1007/978-3-642-36594-2_18). TCC 2013. The linear-only-encryption compiler the source extends to compressible encryption.
+- Bitansky, Harsha, Ishai, Rothblum and Wu. [*Dot-Product Proofs and Their Applications*](https://doi.org/10.1109/FOCS61266.2024.00056). FOCS 2024. The one-query linear PCP the source uses for a linear-size CRS, and the observation that $\mathrm{MAXLIN}$ inapproximability yields LPCPs with answer-to-soundness ratio about one.
+- Groth. [*On the Size of Pairing-Based Non-Interactive Arguments*](https://doi.org/10.1007/978-3-662-49896-5_11). EUROCRYPT 2016. The pairing-based SNARG the source's concrete proof size is compared against.
+
+## Proof
+
+View PDF — *no proof written yet* · LaTeX source — *no proof written yet* · Formal proof — *not yet formalized*
+
+Open. The source decomposes the conjecture into two ingredients and leaves both
+open, presenting Conjecture 1.3 as what they would jointly buy.
+
+**Ingredient one: a tighter malleability analysis.** The proof size is decided
+by how much malleability a generic-group adversary has against packed ElGamal,
+and the source says "we believe that our analysis is quite loose, and conjecture
+that an even a slightly simpler construction can achieve a better level of
+soundness", giving an explicit candidate it conjectures reaches $2^{-\tau}$ with
+one group element and about $2\tau$ bits.
+
+**Ingredient two: a practical linear PCP with $\mu \approx 1$.** The source's
+construction is insensitive to the number of LPCP queries but sensitive to the
+ratio $\mu$ between the total bit-length of the answers and $\tau$; its LPCPs
+have $\mu \approx 2$, which *is* the $2\tau$ term. LPCPs with $\mu \approx 1$
+follow from optimal $\mathrm{MAXLIN}$ inapproximability, but have
+non-negligible completeness error and, the source judges, "seem practically
+infeasible"; eliminating that error via amortized-query-complexity PCPs and
+universal factor graphs looks practically infeasible too. The source leaves
+designing practical LPCPs with $\mu \approx 1$ open.
+
+**Checked against the literature, 2026-08-25.** No proof, refutation or
+improvement found. Targeted check, not an exhaustive sweep.
+
+## Discussion
+
+**Why designated verification is the right frame.** In every dv-SNARG the CRS
+can be reused indefinitely as long as the prover does not learn (too often)
+whether the verifier accepted a badly formed proof, which is good enough for
+long-lived prover–verifier relationships. The source's schemes are *not*
+reusable in the strong sense where the prover sees every accept/reject
+decision, and achieving that is a separate open question it records.
+
+**Neighbouring open problems, not this one.** The source lists two more:
+runtimes, where it conjectures separately (its Conjecture 3.11) that its LPCP is
+$O(\lambda p^2 s)$-bounded, which would let a random-walk concentration bound
+cut verification time to grow with $s^{1/4}$; and full CRS reusability. Both are
+distinct statements.
+
+**What a reviewer should be suspicious of, in order.** First, whether a claimed
+construction really avoids the random oracle — Theorem 1.2's improvement is
+entirely the oracle's doing, so an oracle-using scheme at $\tau + o(\tau)$ bits
+does not settle this. Second, whether the CRS stays $O(\tau s)$ group elements:
+the source can already reach $56\tau$ bits by letting the CRS go quadratic.
+Third, the $\log\log\lambda$ term, which a reader may take for a typo and
+inadvertently prove a stronger statement — worth reporting as such if so.
+
+## Open obligations
+
+- [ ] Prove the source's Conjecture 1.3: a generic-group dv-SNARG with one group element and $\tau + o(\tau)$ bits, soundness $2^{-\tau + \log\log\lambda} + O(t^2/2^\lambda)$, CRS $O(\tau s)$.
+- [ ] Or establish either ingredient alone: a tighter packed-ElGamal malleability analysis reaching $2^{-\tau}$ with about $2\tau$ bits, or a practical linear PCP with answer-to-soundness ratio about one.
+- [ ] Or prove a proof-size lower bound in the generic group model that rules the conjecture out.
+- [ ] Formalize the statement in Lean; nothing here has been formalized.
+
+:::

@@ -1,0 +1,489 @@
+\documentclass[11pt]{article}
+\usepackage[a4paper,margin=2.6cm]{geometry}
+\usepackage{amsmath,amssymb,amsthm,booktabs,microtype}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{framed}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{lemma}[theorem]{Lemma}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+\newcommand{\Sph}{\mathbb{S}^{n-1}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Ex}{\mathbb{E}}
+\newcommand{\Sym}{\mathrm{Sym}_n}
+\newcommand{\Fm}{F_\mu}
+\newcommand{\supp}{\operatorname{supp}}
+\newcommand{\ev}{\mathrm{ev}}
+\newcommand{\FF}{\|\cdot\|_F}
+\DeclareMathOperator{\tr}{tr}
+
+\title{\vspace{-1.5cm}Signed low-entropy reweightings to rank one on the sphere\\[0.3em]
+\large A campaign report: Question 8.1 of Barak--Kothari--Steurer, answered}
+\author{Conjura campaign \texttt{c/0048} \quad$\cdot$\quad artifact \texttt{0048-RKHS-1-r5}}
+\date{24 August 2026}
+
+\begin{document}
+\maketitle
+
+\begin{framed}
+\noindent\textbf{Result.} Question 8.1 of Barak--Kothari--Steurer (arXiv:1701.06321v2,
+p.~19) has an affirmative answer, and a much stronger one than it asks for: entropy cost
+$\log\!\big(n(n+1)/2\big) = O(\log n)$, Frobenius error exactly $0$, and a constant
+independent of $\varepsilon$. The paper asks whether cost $O(n^{\delta})$ is achievable for
+arbitrarily small $\delta>0$; $O(\log n)$ is below every $n^{\delta}$.
+
+\smallskip
+\noindent\textbf{Verification status.} Not certified. Four rounds of five independent blind
+referee passes (20 passes, 3 models, 5 angles) have been run. No pass in any round has
+faulted a load-bearing step; every substantive defect found has been in the scope
+commentary, and the load-bearing text is byte-identical across all five revisions. Best
+round scored 4 clean of 5; the current revision \texttt{r5} is unverified. Details in \S7.
+
+\smallskip
+\noindent\textbf{Caveat that matters.} The passes were run as in-session subagents, not as
+the isolated \texttt{--bare} processes the harness specifies, because this host has no model
+backend. One vendor, three models. See \S8.
+\end{framed}
+
+\section{The question}
+
+The source paper's Question 8.1 reads, verbatim (p.~19):
+
+\begin{quote}\itshape
+Is it the case that for every distribution $\mu$ over $\Sph$ and every $\varepsilon,\delta>0$
+there is a (not necessarily positive) function $r:\Sph\to\R$ such that
+$\Ex_{v\sim\mu}|r(v)|=1$, $\Ex_{v\sim\mu}|r(v)|\log|r(v)|\leqslant O(n^{\delta})$ and a
+nonzero rank one $L$ such that $\|\Ex_{v\sim\mu}[r(v)vv^{\top}]-L\|_F\leqslant
+\varepsilon\|L\|_F$?
+\end{quote}
+
+\noindent The paper adds: \emph{``A positive solution for Question 8.1 for any $\delta<1/2$
+would be very interesting. It may improve the best known bound for the log rank conjecture
+to $\tilde O(n^{\delta})$ and if appropriately extended to pseudo-distributions, improve our
+algorithm's running time to $\exp(\tilde O(n^{\delta}))$ as well. We do know that the answer
+to this question is No if one does not allow negative reweighting functions.''}
+
+The formal statement attacked here was transcribed independently from that PDF and then
+checked against it; the transcription is faithful, with no additional hypothesis. Call a
+Borel measurable, $\mu$-integrable $r:\Sph\to\R$ --- \emph{not} required nonnegative --- a
+\emph{signed reweighting of $\mu$ with entropy cost at most $K$} if
+\[
+  \Ex_{v\sim\mu}|r(v)| = 1, \qquad
+  \Ex_{v\sim\mu}\big[\,|r(v)|\log|r(v)|\,\big] \leq K,
+  \qquad\text{convention } 0\log 0 := 0 .
+\]
+
+\paragraph{Where the difficulty was expected to lie.} Write $|r|=w$ and $\sigma=\operatorname{sign} r$.
+Then $\Ex_\mu|r|=1$ makes $d\nu = w\,d\mu$ a probability measure with
+$\Delta_{\mathrm{KL}}(\nu\|\mu)=\Ex_\mu[w\log w]$, and
+$\Ex_\mu[r\,vv^{\top}] = \Ex_\nu[\sigma(v)\,vv^{\top}]$. So the question asks: tilt $\mu$ at
+entropy price $K$, then choose signs freely, and make the resulting second moment relatively
+close to rank one. In the nonnegative case $\sigma\equiv 1$ the matrix $\Ex_\nu[vv^{\top}]$ is
+PSD of trace $1$, so $\|\Ex_\nu[vv^{\top}]\|_F \geq n^{-1/2}$: the target cannot be shrunk,
+and that floor is what makes the nonnegative problem cost $\sqrt n$. Signs remove the floor.
+The proof below removes it completely --- it makes the second moment \emph{exactly} a rank
+one matrix.
+
+\section{The result}
+
+\begin{theorem}\label{thm:main}
+For every $n\geq 1$ and every Borel probability measure $\mu$ on $\Sph$ there exist a point
+$v_0\in\supp\mu$, a constant $c$ with $\big(n(n+1)/2\big)^{-1/2}\leq c\leq 1$, and a signed
+reweighting $r$ of $\mu$ --- indeed the restriction to $\Sph$ of a single quadratic form,
+hence a bounded Borel function --- such that
+\[
+  \Ex_{v\sim\mu}\big[\,r(v)\,vv^{\top}\,\big] \;=\; c\,v_0v_0^{\top}
+  \qquad\text{\emph{exactly},}
+\]
+and whose entropy cost satisfies
+\[
+  \Ex_\mu\big[\,|r|\log|r|\,\big] \;\leq\; \log K(v_0,v_0) \;\leq\; \log\!\big(n(n+1)/2\big).
+\]
+Here $L := c\,v_0v_0^{\top}$ is rank one, nonzero and PSD, with $\|L\|_F=c$.
+\end{theorem}
+
+\begin{corollary}\label{cor:contract}
+Question 8.1 holds with $C(\varepsilon,\delta) := 2/(e\delta)$, a constant independent of
+$\varepsilon$: for every $\varepsilon>0$, $\delta>0$, every $n$ and every Borel probability
+$\mu$ on $\Sph$ there are a signed reweighting of entropy cost at most
+$\log(n(n+1)/2) \leq (2/(e\delta))\,n^{\delta}$ and a nonzero rank one $L$ with
+$\|\Ex_\mu[r(v)vv^{\top}]-L\|_F = 0 \leq \varepsilon\|L\|_F$.
+\end{corollary}
+
+\paragraph{The mechanism, in one sentence.} On the sphere the constant function $1$ \emph{is}
+a quadratic form, namely $v\mapsto v^{\top}Iv=\|v\|_2^2$; so the reproducing kernel of the
+quadratic forms inside $L^2(\mu)$ has mean exactly $1$, which normalises it for free, and it
+reproduces every coordinate product $v_av_b$, which makes its second moment exactly
+$v_0v_0^{\top}$. The entropy price is then the logarithm of its squared $L^2$ norm, which
+averages over $\mu$ to the dimension of the space, at most $n(n+1)/2$.
+
+\section{The proof}
+
+Throughout, $\Sph$ carries its usual compact, second-countable metric topology; $\mu$ is a
+Borel probability measure on it; $\Sym$ denotes the real symmetric $n\times n$ matrices; and
+for $Q\in\Sym$ we write $q_Q(v) = v^{\top}Qv$. Two facts about the support are used and
+recorded now.
+
+\smallskip
+\noindent\textbf{(P1)} $\mu(\supp\mu)=1$. The complement of the support is a union of open
+null sets; since $\Sph$ is second countable that union is a countable union of null sets,
+hence null.
+
+\noindent\textbf{(P2)} If $v\in\supp\mu$ and $U\ni v$ is open, then $\mu(U)>0$. This is the
+definition of the support.
+
+\begin{lemma}[the quadratic space, evaluation on the support, and its kernel]\label{lem:1}
+Let $\Fm := \{\,[q_Q]\in L^2(\mu) : Q\in\Sym\,\}$, where $[\cdot]$ is the $\mu$-a.e.\ class,
+and let $d := \dim\Fm$. Then
+\begin{enumerate}
+\item[(a)] $\Fm$ is a linear subspace of $L^{\infty}(\mu)\cap L^2(\mu)$ with $d\leq n(n+1)/2$
+and $\|q_Q\|_{\infty}\leq\|Q\|_F$;
+\item[(b)] if $q_Q = q_{Q'}$ holds $\mu$-a.e.\ then $q_Q(v)=q_{Q'}(v)$ for \emph{every}
+$v\in\supp\mu$; hence for $v\in\supp\mu$ the map $\ev_v:\Fm\to\R$, $[q_Q]\mapsto q_Q(v)$, is
+well defined and linear;
+\item[(c)] for each $v\in\supp\mu$ there is a unique $k_v\in\Fm$ with
+$\langle k_v,f\rangle_{L^2(\mu)} = \ev_v(f)$ for all $f\in\Fm$; set
+$K(v,v) := \|k_v\|^2_{L^2(\mu)} = \ev_v(k_v)$;
+\item[(d)] $[1]=[q_I]\in\Fm$, and $[v\mapsto v_av_b]=[q_{E_{ab}}]\in\Fm$ where
+$E_{ab}=(e_ae_b^{\top}+e_be_a^{\top})/2$.
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+(a) $Q\mapsto q_Q$ is linear, so $\Fm$ is the image of $\Sym$ and $d\leq\dim\Sym=n(n+1)/2$.
+For $v\in\Sph$, $|v^{\top}Qv|\leq\|Q\|_{\mathrm{op}}\|v\|_2^2=\|Q\|_{\mathrm{op}}\leq\|Q\|_F$.
+Since $\mu$ is a probability measure, $L^{\infty}(\mu)\subseteq L^2(\mu)$.
+
+(b) Put $h:=q_{Q-Q'}$, a polynomial and hence continuous, with $\mu(\{h\neq 0\})=0$. Suppose
+$h(v_0)\neq 0$ for some $v_0\in\supp\mu$. Then $U:=\{|h|>|h(v_0)|/2\}$ is open and contains
+$v_0$, so $\mu(U)>0$ by (P2); but $U\subseteq\{h\neq 0\}$ is null --- a contradiction. Hence
+$h\equiv 0$ on $\supp\mu$. Well-definedness of $\ev_v$ follows: $\ev_v$ is defined through
+quadratic-form representatives only, and by the displayed statement any two quadratic-form
+representatives of the same class of $\Fm$ take the same value at every $v\in\supp\mu$;
+linearity is inherited from $Q\mapsto q_Q(v)$.
+
+(c) $\Fm$ is a finite-dimensional subspace of $L^2(\mu)$, hence complete, hence a Hilbert
+space; $\ev_v$ is a linear functional on it, hence bounded, so Riesz representation supplies a
+unique $k_v\in\Fm$. Explicitly $k_v=\sum_j \ev_v(f_j)f_j$ for any orthonormal basis $(f_j)$.
+Taking $f=k_v$ gives $K(v,v)=\ev_v(k_v)$.
+
+(d) $q_I(v)=\|v\|_2^2=1$ identically on $\Sph$, and $q_{E_{ab}}(v)=v_av_b$ identically.
+\end{proof}
+
+\noindent Part (b) is the only place where the general Borel case differs from the finitely
+supported one, and it is what removes the need for any approximation argument: for finitely
+supported $\mu$ it is trivial, every support point being an atom.
+
+\begin{lemma}[three reproducing identities]\label{lem:2}
+Let $v_0\in\supp\mu$ and $k:=k_{v_0}$. Then
+\begin{enumerate}
+\item[(i)] $\Ex_\mu[\,k(v)\,vv^{\top}\,] = v_0v_0^{\top}$;
+\item[(ii)] $\Ex_\mu[k]=1$; hence $\Ex_\mu|k|\geq 1$, $K(v_0,v_0)\geq 1$, and $k\neq 0$;
+\item[(iii)] $\Ex_\mu[k^2]=K(v_0,v_0)$ and $1\leq\Ex_\mu|k|\leq K(v_0,v_0)^{1/2}<\infty$.
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+All integrals converge absolutely: $k$ is bounded by Lemma~\ref{lem:1}(a), and the other
+factors are bounded by $1$ on $\Sph$.
+
+(i) Fix $a,b$. By Lemma~\ref{lem:1}(d) the class $g_{ab}:=[v\mapsto v_av_b]$ lies in $\Fm$, so
+the reproducing property gives
+$\Ex_\mu[k\,v_av_b]=\langle k,g_{ab}\rangle=\ev_{v_0}(g_{ab})=(v_0)_a(v_0)_b$. The $(a,b)$
+entries of the two matrices agree, for all $a,b$.
+
+(ii) By Lemma~\ref{lem:1}(d), $[1]\in\Fm$ with $\ev_{v_0}([1])=q_I(v_0)=1$, so
+$\Ex_\mu[k]=\langle k,[1]\rangle=1$. Then $\Ex_\mu|k|\geq|\Ex_\mu k|=1$ and, by
+Cauchy--Schwarz, $K(v_0,v_0)=\Ex_\mu[k^2]\geq(\Ex_\mu|k|)^2\geq 1$. And $\Ex_\mu[k]=1\neq 0$
+forces $k\neq 0$.
+
+(iii) $K(v_0,v_0)=\|k\|^2=\Ex_\mu[k^2]$ by definition; finiteness is Lemma~\ref{lem:1}(a); the
+upper bound is Cauchy--Schwarz against $1$.
+\end{proof}
+
+\noindent Statement (ii) is precisely the trace of (i), since
+$\tr \Ex_\mu[k\,vv^{\top}]=\Ex_\mu[k\|v\|_2^2]=\Ex_\mu[k]$ while $\tr(v_0v_0^{\top})=1$. This
+locates where the construction gets its normalisation for free: the sphere constraint
+$\|v\|_2=1$ is what makes the constant function a quadratic form. On a domain where $\|v\|_2$
+were not constant, neither $[1]\in\Fm$ nor $\Ex_\mu[k]=1$ would be available.
+
+\begin{lemma}[a cheap base point exists]\label{lem:3}
+$\int K(v,v)\,d\mu(v) = d$, and consequently there exists $v_0\in\supp\mu$ with
+$K(v_0,v_0)\leq d\leq n(n+1)/2$.
+\end{lemma}
+
+\begin{proof}
+Fix an orthonormal basis $f_1,\dots,f_d$ of $\Fm$ and quadratic-form representatives $q_j$ of
+$f_j$. For $v\in\supp\mu$, Lemma~\ref{lem:1}(c) and Parseval give $k_v=\sum_j q_j(v)f_j$, hence
+\begin{equation}
+  K(v,v) \;=\; \sum_{j=1}^{d} q_j(v)^2 \;=:\; g(v)
+  \qquad\text{for all } v\in\supp\mu. \label{eq:pointwise}
+\end{equation}
+Now $g$ is a polynomial, hence Borel, and by (P1) it represents $v\mapsto K(v,v)$ up to a null
+set, so the integral is well defined and
+\begin{equation}
+  \int K(v,v)\,d\mu \;=\; \sum_j \int q_j^2\,d\mu \;=\; \sum_j\|f_j\|^2 \;=\; d.
+  \label{eq:trace}
+\end{equation}
+(For $v\in\supp\mu$ the value $g(v)=\|k_v\|^2$ is independent of the choice of basis and of
+representatives, by uniqueness in Lemma~\ref{lem:1}(c); off the support nothing below uses $g$.)
+
+Let $A:=\{g\leq d\}$, a Borel set. If $\mu(A)=0$ then $h:=g-d$ satisfies $h>0$ $\mu$-a.e.\
+while $\int h\,d\mu=0$ by \eqref{eq:trace}; a nonnegative function with vanishing integral
+vanishes a.e., so $h=0$ $\mu$-a.e., which cannot hold simultaneously with $h>0$ $\mu$-a.e.\
+under a probability measure. So $\mu(A)>0$, hence by (P1) $A\cap\supp\mu\neq\emptyset$, and any
+$v_0$ in it satisfies $K(v_0,v_0)=g(v_0)\leq d$.
+\end{proof}
+
+\noindent Identity \eqref{eq:trace} is the statement $\int K(v,v)\,d\mu = \tr P$ for $P$ the
+orthogonal projection of $L^2(\mu)$ onto $\Fm$ --- equivalently, that the reciprocal
+Christoffel function has $\mu$-mean $d$. It is proved above from scratch and depends on no
+external source.
+
+\begin{lemma}[entropy at most the log of the second moment]\label{lem:4}
+If $r\in L^2(\mu)$ and $\Ex_\mu|r|=1$, then
+$\Ex_\mu[\,|r|\log|r|\,]\leq\log\Ex_\mu[r^2]$.
+\end{lemma}
+
+\begin{proof}
+Write $\varphi(t)=t\log t$ for $t>0$ and $\varphi(0)=0$. Then $\varphi(t)\geq -1/e$ for
+$t\geq 0$, and $\varphi(t)\leq t^2$ for all $t\geq 0$ (for $t\geq 1$ because $\log t\leq t$;
+for $t<1$ because $\varphi\leq 0$). Since $r\in L^2(\mu)$ and $\mu$ is a probability measure,
+$\varphi(|r|)\in L^1(\mu)$, so the entropy is a finite real number.
+
+Let $d\nu:=|r|\,d\mu$. Then $\nu(\Sph)=\Ex_\mu|r|=1$, so $\nu$ is a probability measure, and
+$\nu(\{r=0\})=0$, so $\log|r|$ is $\nu$-a.e.\ finite and
+$\Ex_\nu[\log|r|]=\Ex_\mu[|r|\log|r|]$, the convention $0\log 0=0$ matching the $\nu$-null set
+$\{r=0\}$. Also $\Ex_\nu[|r|]=\Ex_\mu[r^2]<\infty$. Jensen's inequality for the concave
+function $\log$ against $\nu$ gives
+$\Ex_\nu[\log|r|]\leq\log\Ex_\nu[|r|]=\log\Ex_\mu[r^2]$.
+\end{proof}
+
+\noindent Equality holds exactly when $|r|$ is $\nu$-a.s.\ constant, i.e.\ when
+$|r|\in\{0,c\}$ $\mu$-a.e., in which case the bound reads $\log(1/\mu(\{|r|=c\}))$. So
+Lemma~\ref{lem:4} is tight precisely on the indicator-type reweightings --- those for which
+``reweighting'' means conditioning on an event --- and is lossy exactly to the extent that
+$|r|$ is spread out.
+
+\subsection*{Proof of Theorem \ref{thm:main}}
+
+Let $n$ and $\mu$ be given. Lemma~\ref{lem:3} supplies $v_0\in\supp\mu$ with
+$K(v_0,v_0)\leq d\leq n(n+1)/2$; put $k:=k_{v_0}$. By Lemma~\ref{lem:2}(ii),(iii) we have
+$1\leq\Ex_\mu|k|\leq K(v_0,v_0)^{1/2}<\infty$ and $k\neq 0$, so
+\[
+  c \;:=\; \frac{1}{\Ex_\mu|k|} \;\in\; \big[\,K(v_0,v_0)^{-1/2},\,1\,\big]
+  \;\subseteq\; \big[\,(n(n+1)/2)^{-1/2},\,1\,\big]
+\]
+is well defined and strictly positive. Put $r:=c\,k$, with representative the quadratic form
+$q_{cQ_k}$; then $r$ is a bounded Borel function on $\Sph$, hence $\mu$-integrable and in
+$L^2(\mu)$, and $\Ex_\mu|r|=c\,\Ex_\mu|k|=1$. So $r$ is an admissible signed reweighting.
+
+\emph{Second moment.} By Lemma~\ref{lem:2}(i),
+$\Ex_\mu[r(v)vv^{\top}]=c\,v_0v_0^{\top}=:L$. Since $c>0$ and $\|v_0\|_2=1$,
+$L=(cv_0)v_0^{\top}$ is rank one, nonzero and PSD with $\|L\|_F=c>0$. The Frobenius error is
+$0\leq\varepsilon\|L\|_F$ for every $\varepsilon>0$.
+
+\emph{Entropy.} Lemma~\ref{lem:4} applies, and with Lemma~\ref{lem:2}(iii),
+\[
+\begin{aligned}
+  \Ex_\mu[|r|\log|r|] \;&\leq\; \log\Ex_\mu[r^2] \;=\; \log\big(c^2K(v_0,v_0)\big)
+  \;=\; \log\frac{K(v_0,v_0)}{(\Ex_\mu|k|)^2} \\
+  &\leq\; \log K(v_0,v_0) \;\leq\; \log\frac{n(n+1)}{2},
+\end{aligned}
+\]
+using $\Ex_\mu|k|\geq 1$ from Lemma~\ref{lem:2}(ii) and Lemma~\ref{lem:3}. \hfill$\square$
+
+\subsection*{Proof of Corollary \ref{cor:contract}}
+
+For $n=1$, $\log(n(n+1)/2)=\log 1 = 0$. For $n\geq 2$, $n(n+1)/2\leq n^2$ gives
+$\log(n(n+1)/2)\leq 2\log n$; and $\max_{x>0}(\log x)/x^{\delta}=1/(e\delta)$, attained at
+$x=e^{1/\delta}$, gives $2\log n\leq (2/(e\delta))n^{\delta}$. Combine with
+Theorem~\ref{thm:main}. \hfill$\square$
+
+\section{Two supporting statements}
+
+\begin{remark}[the conclusion is not obtainable by cancelling to zero]\label{rem:A}
+Let $M\in\Sym$ have eigenvalues indexed so that $|\lambda_1|\geq|\lambda_2|\geq\cdots$, and let
+$\varepsilon\in(0,1)$. If $M=0$, no admissible $L$ exists, since
+$\|0-L\|_F=\|L\|_F>\varepsilon\|L\|_F$ for every $L\neq 0$. If $M\neq 0$, a nonzero rank one
+$L$ with $\|M-L\|_F\leq\varepsilon\|L\|_F$ exists \emph{if and only if}
+$\sum_{i\geq 2}\lambda_i^2 \leq \big(\varepsilon^2/(1-\varepsilon^2)\big)\lambda_1^2$.
+\end{remark}
+
+\begin{proof}
+Write $L=t\,uw^{\top}$ with $\|u\|=\|w\|=1$ and $t>0$, so $\|L\|_F=t$ and
+$\|M-L\|_F^2=\|M\|_F^2-2t\,u^{\top}Mw+t^2$. The requirement is
+$(1-\varepsilon^2)t^2-2(u^{\top}Mw)t+\|M\|_F^2\leq 0$, and increasing $u^{\top}Mw$ only helps,
+so the optimal choice is $u^{\top}Mw=s_1(M)=|\lambda_1|$ by the SVD. The quadratic in $t$ has a
+real root iff $s_1^2\geq(1-\varepsilon^2)\|M\|_F^2=(1-\varepsilon^2)\sum_i\lambda_i^2$, which
+rearranges to the stated inequality; and when $M\neq 0$ both roots are positive, their product
+being $\|M\|_F^2/(1-\varepsilon^2)>0$ and their sum $2s_1/(1-\varepsilon^2)>0$, so an
+admissible $t>0$ exists exactly then.
+\end{proof}
+
+\noindent This is not load-bearing. It is recorded because it shows that the relative
+normalisation $\|\cdot\|_F\leq\varepsilon\|L\|_F$ does real work: the conclusion cannot be
+reached by cancelling the second moment to zero, so Theorem~\ref{thm:main} is not exploiting a
+degenerate reading of the question.
+
+\begin{corollary}[the same for rank one matrices of unit Frobenius norm]\label{cor:B}
+Let $\mathcal{X}:=\{X\in\R^{n\times n} : \operatorname{rank}X=1,\ \|X\|_F=1\}$, equivalently
+$X=ab^{\top}$ with $\|a\|_2=\|b\|_2=1$ --- the normalisation used in the source paper's
+intended application. For every Borel probability measure $\mu$ on $\mathcal{X}$ there exist
+$X_0\in\supp\mu$, $c\in(0,1]$ and a signed reweighting $r$ of $\mu$ with
+$\Ex_\mu[|r|\log|r|]\leq\log(n^2+1)$ such that $\Ex_{X\sim\mu}[r(X)\,X]=c\,X_0$, exactly rank
+one and nonzero.
+\end{corollary}
+
+\begin{proof}
+Run Lemmas~\ref{lem:1}--\ref{lem:4} verbatim with $\Sph$ replaced by the compact set
+$\mathcal{X}$ and the quadratic forms replaced by the affine space
+$G:=\{X\mapsto \alpha+\langle A,X\rangle : \alpha\in\R,\ A\in\R^{n\times n}\}$, of dimension at
+most $n^2+1$. Only two properties of the function space were ever used: it contains the
+constant $1$ (here trivially, $\alpha=1$, $A=0$) and it contains each coordinate function
+$X\mapsto X_{ab}$ (here $\alpha=0$, $A=e_ae_b^{\top}$). Continuity of the elements of $G$ gives
+Lemma~\ref{lem:1}(b) unchanged, and boundedness on $\mathcal{X}$ gives Lemma~\ref{lem:1}(a).
+\end{proof}
+
+\noindent So the mechanism is not an artefact of specialising to $X=vv^{\top}$: what it needs
+is the presence of constants and coordinates in one finite-dimensional function space. On the
+sphere the homogeneous quadratic forms suffice because $\|v\|_2=1$ makes the constant a
+quadratic form, and that buys only the sharper bound $\log(n(n+1)/2)$ over $\log(n^2+1)$.
+
+\section{Scope: what this does and does not establish}
+
+Theorem~\ref{thm:main} answers Question 8.1 as literally posed, and nothing more. Three
+delimitations, each checked against the source text.
+
+\paragraph{(i) No conflict with the source's negative results.} The remark that
+\emph{``as stated, Theorem 2.3 is tight''} concerns \emph{deficient} reweightings, which by the
+paper's Definition 2.2 are probability distributions and hence nonnegative; and \emph{``the
+answer to this question is No if one does not allow negative reweighting functions''} is an
+existential statement over $\mu$. Neither is contradicted here. Whenever the construction
+returns a nonnegative $r$, that $r$ is itself a nonnegative reweighting of cost at most
+$\log(n(n+1)/2)=O(\log n)$ --- more precisely, $k\geq 0$ forces
+$\mu(\{\pm v_0\})=1/K(v_0,v_0)\geq 2/(n(n+1))$ --- so such a $\mu$ is not a hard instance for
+the nonnegative question. The same holds on the domain of
+Corollary~\ref{cor:B}, where the corresponding bound is the single-atom
+$\mu(\{X_0\})=1/K(X_0,X_0)\geq 1/(n^2+1)$. What is \emph{not} addressed is the unnormalised
+domain of the paper's Theorem 2.3, ``any distribution over rank one $n\times n$ matrices'';
+Corollary~\ref{cor:B} treats only the unit-Frobenius slice, and nothing is claimed beyond it.
+
+\paragraph{(ii) No log rank consequence is claimed.} The paper's dictionary from reweightings
+to submatrices is stated only for \emph{flat} reweightings --- \emph{``a flat distribution
+$\mu'$ with $\Delta_{\mathrm{KL}}(\mu'\|\mu)\leqslant k$ corresponds to the uniform distribution
+over $\{u_iv_i^{\top}\}_{i\in I}$ where $I\subseteq[N]$ satisfies $|I|\geqslant 2^{-k}N$''} ---
+and Theorem~\ref{thm:main} supplies no flatness guarantee, so that route is unavailable. No
+other route is addressed, and the paper's dual Theorem 2.4 is untouched. Morally the target
+$c\,v_0v_0^{\top}$ is the $|I|=1$ answer; the content of Theorem~\ref{thm:main} is that
+cancellation reaches \emph{that same matrix} at cost $\log(n(n+1)/2)$, where conditioning would
+have cost $\log(1/\mu(\{v_0\}))$ --- infinite for continuous $\mu$.
+
+\paragraph{(iii) The pseudo-distribution version is out of scope, and the obstruction is
+identifiable.} The inner product used, $\langle q_Q,q_{Q'}\rangle=\Ex_\mu[(v^{\top}Qv)(v^{\top}Q'v)]$,
+is a degree-4 moment and does have a pseudo-distribution analogue. What has none is $\ev_{v_0}$:
+a pseudo-distribution has no support points, and Lemma~\ref{lem:1}(b) --- the step that makes
+point evaluation a well-defined functional on $\Fm$ --- is exactly what fails. Every use of
+$\supp\mu$ is therefore load-bearing for the honest-distribution case and unavailable in the
+setting the paper needs for its running-time consequence. Footnote 8's worry about the
+$\varepsilon$-dependence is moot here in the strongest way: there is none.
+
+\section{Worked example}
+
+An independent check of the three identities on a case where the kernel is not an indicator.
+Take $n=2$ and $\mu$ uniform on $v_1=(1,0)$, $v_2=(0,1)$, $v_3=(1,1)/\sqrt2$,
+$v_4=(1,-1)/\sqrt2$. Then $\Fm=\{x\in\R^4 : x_1+x_2=x_3+x_4\}$ and $d=3$. The kernel at
+$v_0=v_1$ is $k=(3,-1,1,1)$, and
+\[
+  \Ex_\mu[k]=\tfrac14(3-1+1+1)=1, \qquad K(v_0,v_0)=\|k\|^2=\tfrac14(9+1+1+1)=3=d,
+\]
+\[
+  \Ex_\mu[k\,vv^{\top}] = \tfrac14\big(3v_1v_1^{\top}-v_2v_2^{\top}+v_3v_3^{\top}+v_4v_4^{\top}\big)
+  = v_1v_1^{\top} \quad\text{exactly rank one.}
+\]
+Normalising, $\Ex_\mu|k|=3/2$, $c=2/3$ and $r=(2,-\tfrac23,\tfrac23,\tfrac23)$ with
+$\Ex_\mu|r|=1$; the entropy chain is
+$0.14384 \leq \log\Ex_\mu[r^2]=\log\tfrac43=0.28768 \leq \log 3 = 1.09861$. Note that $r$ is
+genuinely signed: it is negative at $v_2$.
+
+\section{Verification record}
+
+Each round packages the artifact with the problem statement and a source card carrying every
+cited quotation verbatim, strips all provenance, renames it neutrally, and stages it outside
+the repository; five referees then read only that package, in mutually isolated fresh contexts,
+under a fixed referee prompt. Between rounds a handling editor rules every finding
+UPHELD / OVERRULED / PEDANTIC / NEEDS SOURCE, and a reviser is bounded strictly by the upheld
+list.
+
+\begin{center}
+\begin{tabular}{@{}llll@{}}
+\toprule
+Round & Artifact & Clean & Where every substantive defect landed \\
+\midrule
+1 & \texttt{0048-RKHS-1}    & 1 / 5 & scope commentary (Remark C) \\
+2 & \texttt{r2}             & 0 / 5 & scope commentary: a false measure, $1-o(1)$ vs $0.683$ \\
+3 & \texttt{r3}             & 4 / 5 & scope commentary: a missing argument on the matrix domain \\
+4 & \texttt{r4}             & 2 / 5 & scope commentary: the text added to repair round 3 \\
+5 & \texttt{r5}             & --- & not run \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent Twenty passes across four rounds, over five angles --- general, statement-drift and
+scope, measure-theoretic, line-by-line recomputation, and refutation-plus-source-fidelity ---
+and three models, with the model rotated against the angle between rounds.
+
+\paragraph{What the record shows.} No pass in any round has faulted a load-bearing step.
+Lemmas~\ref{lem:1}--\ref{lem:4}, Theorem~\ref{thm:main}, Corollary~\ref{cor:contract} and
+Remark~\ref{rem:A} are byte-identical across all five revisions, verified by hashing those
+regions at every boundary, and Corollary~\ref{cor:B} is identical from \texttt{r3} onward. The
+twelve clean readings of that text are therefore readings of the same bytes. Four passes
+attempted explicit refutation --- on both domains, with degenerate, atomic, discrete and
+continuous measures --- and all four failed and said so. Several independently recomputed the
+kernel construction, the trace identity \eqref{eq:trace}, the worked example and the constant
+$2/(e\delta)$, and found them correct.
+
+\paragraph{What keeps failing.} Every substantive defect in four rounds has been in the scope
+commentary of \S5, never in \S3. The failure mode has been stable: a repair to a limiting claim
+reaches slightly wider than the source card supports, and the next round catches it. Round 2's
+defect was a false number that a previous handling editor certified and instructed the reviser
+not to re-derive --- which is the mechanism the multi-round structure exists to catch, working
+one stage later than it should have. Round 4's defect was the text added to repair round 3.
+That is a prose-calibration loop, not a mathematical one, and \texttt{r5} accordingly repairs
+by deletion alone, adding no replacement wording.
+
+\section{Provenance, and what would make this stronger}
+
+\paragraph{The passes were not blind in the strict sense.} The harness specifies each pass as
+an isolated operating-system process with an empty working directory, so that blindness is a
+property of the process rather than a promise. This host has no model backend --- no CLI binary
+and no API credentials --- so the passes ran instead as in-session subagents. They get genuinely
+fresh contexts and never see the generator's reasoning, but they are one vendor and they run
+with the repository as their working directory. Mitigations applied: the package is staged
+outside the repository under a name unrelated to the artifact, all provenance and revision
+history is stripped, the referees are instructed not to read anything else, and every package
+is checked against a pattern list for leaked campaign machinery before dispatch. Each tally
+file carries this caveat in its header, and such rows must never be pooled with rows from a
+true \texttt{--bare} run.
+
+\paragraph{Three things would materially raise confidence.} First, re-running all five passes
+as isolated processes on a host with a backend, which is a matter of credentials rather than of
+work. Second, at least one pass from a different model family, which the harness recommends and
+which no round here has had: twenty same-vendor passes can share a blind spot that one
+cross-family pass would expose. Third, formalisation --- the proof is short, elementary and
+almost entirely finite-dimensional linear algebra plus one Jensen inequality, which makes it an
+unusually good candidate for a proof assistant, and a machine-checked Lemma~\ref{lem:1}(b) and
+\eqref{eq:trace} would settle the two steps referees probed hardest.
+
+\paragraph{Status of the record.} Five artifacts, twenty referee reports, four editor rulings, a
+quotation-grounding result and the orchestrating script all sit in
+\texttt{c/0048/campaign/}, uncommitted. The orchestrator \texttt{scripts/verify-loop.sh} was
+written during this campaign because it was absent, and its first version returned the wrong
+termination code: it detected a blocking source defect by matching the prose ``load-bearing'',
+a phrase the referee prompt itself contains, so referees echoing or denying it tripped the
+test. It now tests the findings table structurally. That script has not itself been reviewed.
+
+\end{document}

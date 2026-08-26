@@ -1,0 +1,63 @@
+---
+title: "The communication overhead of malicious NISC"
+subtitle: "One message each way, and what active security costs asymptotically"
+---
+
+## Motivation
+
+Non-interactive secure computation is the tightest round pattern secure
+computation admits: the receiver publishes one message, the sender replies once,
+and the receiver learns the output. With semi-honest parties the cost is
+essentially Yao's — $O(|C|\lambda)$ bits given random OT correlations and a
+pseudorandom generator — and without homomorphic machinery that is about the
+best anyone expects.
+
+Malicious security in this pattern has never been free. Every construction that
+reaches the same constant factor has bought it with something: a weaker security
+notion under which an abort can leak a bit about the receiver's input, extra
+rounds, correlations far more expensive to generate than OT, or a random oracle.
+Whether the constant factor is achievable with none of those is the question this
+hub tracks, and it is the last asymptotic gap between semi-honest and malicious
+NISC.
+
+## Provenance and history
+
+Malicious-secure NISC with black-box use of cryptography begins with Ishai,
+Kushilevitz, Ostrovsky, Prabhakaran and Sahai (EUROCRYPT 2011), at
+$\mathrm{polylog}(|C|,\sigma)$ multiplicative overhead from OT correlations and a
+PRG; that work also implicitly gives a constant-overhead protocol with correlated
+abort. Afshar, Mohassel, Pinkas and Riva (EUROCRYPT 2014) achieved overhead
+$\sigma$, worse asymptotically but better concretely at realistic parameters.
+Hazay, Ishai and Venkitasubramaniam (TCC 2017) achieved constant overhead in the
+random oracle model, with either extra rounds or correlated-abort security.
+Dittmer, Ishai, Lu and Ostrovsky (CRYPTO 2022) achieved constant overhead with
+standard security, but from programmable OLE correlations.
+
+Ishai, Jin, Peter and Srinivasan, *Non-Interactive Secure Computation with
+Constant Communication Overhead* ([IACR ePrint
+2026/1555](https://eprint.iacr.org/2026/1555)), close the gap in the random
+oracle model: $O(|C|\lambda)$ from random bit-OT correlations and a random
+oracle, with standard security. Their technique is a new combination of packed
+secret sharing with sublinear proof systems inside the IPS compiler — in
+particular a black-box way to combine Ligero proofs with the watchlist
+mechanism. The oracle enters twice: Fiat–Shamir for the watchlist, and the
+commitments in the Ligero-style proof. The question they display before proving
+that theorem asks for a PRG instead, and it stands.
+
+## Parameter lattice
+
+Assumption against communication cost, at the same two-message pattern.
+
+| Work | Setup and assumption | Communication | Security |
+|---|---|---|---|
+| **Semi-honest Yao** | OT correlations + PRG | $O(\|C\|\lambda)$ | semi-honest |
+| **IKO+11** | OT correlations + PRG | $O(\|C\|\lambda \cdot \mathrm{polylog}(\|C\|,\sigma))$ | standard |
+| **AMPR14** | 2-round batch-committing OT | $O(\|C\| \cdot \lambda\sigma)$ | standard |
+| **IKO+11, HIV17** | OT correlations + random oracle | $O(\|C\|\lambda)$ | correlated abort |
+| **DILO22** | programmable OLE + random oracle | $O(\|C\|\lambda)$ | standard |
+| **IJPS26 (the source)** | OT correlations + random oracle | $O(\|C\|\lambda)$ | standard |
+| **The open case** | OT correlations + black-box PRG | $O(\|C\|\lambda)$ | standard — [c/0079](/c/0079/), open |
+
+## Statements in this hub
+
+- [Malicious NISC with Constant Communication Overhead from a Black-Box PRG](/c/0079/) — open

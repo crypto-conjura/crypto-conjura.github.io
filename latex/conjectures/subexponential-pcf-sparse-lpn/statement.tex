@@ -1,0 +1,312 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  Braun-Couteau-Melissaris-Riahinia-Sadeghi, Open Question (1): a PCF
+%  from sparse LPN secure against subexponentially many queries.
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{SUBEXPONENTIAL-QUERY PCF FROM SPARSE LPN}
+
+\newcommand{\Adv}{\mathcal{A}}
+\newcommand{\Corr}{\mathcal{Y}}
+\newcommand{\F}{\mathbb{F}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Gen}{\mathsf{Gen}}
+\newcommand{\Eval}{\mathsf{Eval}}
+\newcommand{\SparseLPN}{\mathsf{SparseLPN}}
+\newcommand{\SparseCodeGen}{\mathsf{SparseCodeGen}}
+\newcommand{\Reg}{\mathsf{Reg}}
+\newcommand{\bits}{\{0,1\}}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{A Subexponential-Query PCF from Sparse LPN}
+\cjsubtitle{Can a pseudorandom correlation function based on sparse LPN
+  stay secure against an adversary that asks for subexponentially many
+  correlations, rather than only superpolynomially many?}
+\cjstatus{Statement: AI-written from Lennart Braun, Geoffroy Couteau,
+  Kelsey Melissaris, Mahshid Riahinia and Elahe Sadeghi, \emph{Fast
+  Pseudorandom Correlation Functions from Sparse LPN}, IACR ePrint
+  2025/1644; ASIACRYPT 2025. Not yet checked by a human. Open: the
+  source poses it as the first of its two open questions and takes no
+  position on the answer, so the direction fixed below is this page's
+  reading and not the source's claim. Nothing is settled in either
+  direction; the one follow-up construction from sparse LPN inherits
+  the same superpolynomial ceiling.}
+\cjcategory{\emph{MPC}, \emph{Foundations}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+A pseudorandom correlation function lets two parties turn a pair of
+short keys into as much correlated randomness --- oblivious transfers,
+vector-OLEs, Beaver triples --- as they will ever need, with no further
+interaction. The source paper gives the first such construction that is
+both fast and based on a well-studied assumption, sparse LPN, but pays
+for it in the one place asymptotics can see: its security survives an
+adversary that runs for subexponential time only as long as that
+adversary asks for at most superpolynomially many correlations, where
+the earlier candidates from newer assumptions plausibly tolerated
+subexponentially many. This conjecture says the gap is an artefact of
+the construction rather than of the assumption: some PCF based on
+sparse LPN is secure against subexponentially many queries as well as
+subexponential time.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+A \emph{pseudorandom correlation function} (PCF) for a correlation
+$\Corr$ is a pair of algorithms $(\Gen, \Eval)$: $\Gen(1^{\lambda})$
+outputs two keys, and $\Eval(\sigma, k_{\sigma}, x)$ is deterministic,
+so that on any common input $x$ the two parties' outputs look like a
+fresh sample from $\Corr$, and each party's output looks random given
+the other's key~\cite{BCGIKS20}. The quantitative version, which is the
+one this page is about, is Definition~\ref{def:pcf}: security is graded
+by three functions, a bound $B$ on the adversary's size, a bound $N$ on
+how many inputs it may query, and the advantage $\varepsilon$ it is
+allowed.
+
+Every construction in this line is parameterized by an LPN-style
+assumption, and the source paper's is \emph{sparse} LPN\@: the code matrix
+is sampled with $k$ non-zero entries per row, an assumption introduced
+by Alekhnovich~\cite{Ale03} whose cryptanalysis has been studied for two
+decades. That is what makes the paper's construction the first efficient
+PCF from an assumption nobody had to invent for the purpose. Its
+predecessors bought their efficiency with new assumptions --- variable-density
+LPN~\cite{BCGIKS20,CD23} and expand-accumulate LPN~\cite{BCGIKRS22} ---
+or their standardness with unusable speed, one OT per second from
+quadratic residuosity~\cite{OSY21}.
+
+\paragraph{What the source achieves, and where it stops.}
+The construction iterates the primal PCG of Boyle et
+al.~\cite{BCGI18} $L$ times, so that a short seed expands through
+intermediate sparse-LPN instances
+$s^{(\ell)} = A^{(\ell)} s^{(\ell-1)} + e^{(\ell)}$, with the rows of
+each $A^{(\ell)}$ sampled on the fly from a random oracle. Two
+constraints fight each other in the choice of $L$. Evaluating one output
+entry costs $k^{L}$ operations, and the paper's first parameter
+constraint is that this stay polynomial, since ``evaluation must run in
+polynomial time''; meanwhile the number of queries the top-level matrix
+can absorb is the number of its rows. With the parameters the paper
+settles on, it reports that the PCF is secure for up to
+$m^{(L)} = n^{O(\log n / \log\log n)}$ queries, and summarizes: ``these
+parameters achieve security with inverse-superpolynomial advantage
+against subexponential-time adversaries making at most
+superpolynomially-many queries to the PCF''.
+
+The source states the resulting gap as a limitation of its own result:
+``Compared with previous constructions from VDLPN, EALPN, DCR, or QR,
+our PCF comes with a theoretical limitation: while previous
+constructions were plausibly secure against a (subexponential-time)
+adversary requesting a subexponential number of PCF evaluations,'' its
+own is not. It then asks, under the heading ``Open Questions. We mention
+two interesting open questions:'', the question this page records:
+``Is it possible to build a PCF with fully-subexponential security (in
+runtime and queries) from sparse LPN\@? Our PCF only achieves
+subexponential security up to superpolynomially-many queries, a lower
+asymptotic security level compared to previous candidates.''
+
+\paragraph{What this page fixes and the source does not.}
+The source asks a question; a page here has to state a proposition, so
+Conjecture~\ref{conj:main} fixes the affirmative direction. That choice
+is this page's, not the source's, and a refutation --- a proof that no
+PCF based on sparse LPN can tolerate subexponentially many queries ---
+would settle the source's question just as well. Three further readings
+are this page's own and are the first things a reviewer should
+challenge: that ``from sparse LPN'' means the assumption of
+Definition~\ref{def:slpn} with a standard noise distribution and no new
+variant; that the random oracle model remains available, since removing
+it is the source's \emph{second} open question and not this one; and
+that ``fully-subexponential in runtime and queries'' is the reading in
+Conjecture~\ref{conj:main}, namely that a single exponent $\delta$
+serves for the adversary's size, its query count and its advantage.
+
+\section{Notation and parameters}\label{sec:notation}
+
+\begin{itemize}[nosep]
+  \item $\lambda$ is the security parameter; $n$ is the LPN dimension,
+    $m$ the number of samples, $k$ the row sparsity of the code matrix
+    and $t$ the noise weight. All are functions of $\lambda$.
+  \item $\F_{p}$ is a finite field and $\F_{p^{r}}$ an extension of it.
+  \item $\SparseCodeGen(k, m, n, \F)$ outputs a uniformly random
+    matrix in $\F^{m \times n}$ whose every row has exactly $k$
+    non-zero entries.
+  \item $\Reg_{t}(m, \F)$ is the regular noise distribution: a vector in
+    $\F^{m}$ formed by concatenating $t$ blocks of length $m/t$, each a
+    uniformly random unit vector.
+  \item A \emph{subfield VOLE correlation} of dimension $n$ over
+    $\F_{p^{r}}$ is a tuple $((u, v), (\Delta, w))$ with
+    $u \in \F_{p}^{n}$, $v, w \in \F_{p^{r}}^{n}$,
+    $\Delta \in \F_{p^{r}}$ and $w - v = \Delta \cdot u$.
+  \item $\poly$, $\mathrm{negl}$ and $\mathrm{polylog}$ have their usual
+    meanings.
+\end{itemize}
+
+\begin{definition}[Sparse LPN, the source's Definition 5]\label{def:slpn}
+$\SparseLPN(k, n, m, \Reg_{t}, \F)$ is the assumption that
+\[
+  (A, A \cdot s + e) \approx_{c} (A, y),
+\]
+where $A \sample \SparseCodeGen(k, m, n, \F)$, $s \sample \F^{n}$,
+$e \sample \Reg_{t}(m, \F)$ and $y \sample \F^{m}$. For a bound
+$B : \N \to \N$ and $\varepsilon : \N \to [0,1]$, say the assumption is
+$(B, \varepsilon)$-hard if every adversary of size $B(\lambda)$
+distinguishes the two distributions with advantage at most
+$\varepsilon(\lambda)$.
+\end{definition}
+
+\begin{definition}[PCF, the source's Definition 9, after~\cite{BCGIKS20}]\label{def:pcf}
+Let $\Corr$ be a reverse-sampleable correlation with output lengths
+$\ell_{0}, \ell_{1}$ and input length $n(\lambda)$. A pair
+$(\Gen, \Eval)$, with $\Gen(1^{\lambda})$ a PPT algorithm outputting
+keys $(k_{0}, k_{1})$ and $\Eval(\sigma, k_{\sigma}, x)$ a
+deterministic polynomial-time algorithm on inputs
+$x \in \bits^{n(\lambda)}$, is an $(N, B, \varepsilon)$-secure
+\emph{strong} PCF for $\Corr$ if for every non-uniform adversary $\Adv$
+of size $B(\lambda)$ making at most $N(\lambda)$ oracle queries, and all
+large enough $\lambda$:
+\begin{itemize}[nosep]
+  \item \emph{pseudorandom $\Corr$-correlated outputs}: $\Adv$
+    distinguishes an oracle answering each fresh query $x$ with
+    $(\Eval(0, k_{0}, x), \Eval(1, k_{1}, x))$ from one answering with a
+    fresh sample of $\Corr$, with advantage at most
+    $\varepsilon(\lambda)$;
+  \item \emph{security}: for each $\sigma \in \bits$, given
+    $k_{\sigma}$, $\Adv$ distinguishes
+    $\Eval(1 - \sigma, k_{1-\sigma}, x)$ from
+    $\Corr.\mathsf{RSample}(\sigma, \Eval(\sigma, k_{\sigma}, x))$ with
+    advantage at most $\varepsilon(\lambda)$.
+\end{itemize}
+A \emph{weak} PCF is the same with both oracles queried at uniformly
+random inputs rather than at inputs of $\Adv$'s choosing.
+\end{definition}
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{conjecture}[Subexponential-query PCF from sparse LPN]\label{conj:main}
+There exist a constant $\delta > 0$, a field $\F_{p^{r}}$, parameter
+functions $n(\lambda) = \poly(\lambda)$, $m(\lambda)$, $t(\lambda)$ and
+$k(\lambda)$ with $3 \le k(\lambda) \le n(\lambda)$, and a pair
+of algorithms $(\Gen, \Eval)$ with keys of size $\poly(\lambda)$, such
+that $(\Gen, \Eval)$ is an $(N, B, \varepsilon)$-secure strong PCF for
+the subfield VOLE correlation over $\F_{p^{r}}$
+(Definition~\ref{def:pcf}) with
+\[
+  N(\lambda) = B(\lambda) = 2^{\lambda^{\delta}},
+  \qquad
+  \varepsilon(\lambda) = 2^{-\lambda^{\delta}},
+\]
+assuming only that
+$\SparseLPN(k, n, m, \Reg_{t}, \F_{p})$ of
+Definition~\ref{def:slpn} is $(2^{\lambda^{\delta'}},
+2^{-\lambda^{\delta'}})$-hard for some constant $\delta' > 0$, together
+with a random oracle.
+\end{conjecture}
+
+\begin{remark}[What the quantifiers are doing]
+$\delta$ is existentially quantified, so the conjecture asks for
+\emph{some} subexponential query bound and not for a particular
+exponent; this is the weakest reading of ``fully-subexponential'' that
+still separates the statement from what the source proves, where
+$N(\lambda)$ is capped at $n^{O(\log n / \log\log n)}$ for a
+polynomially-bounded $n$ and is therefore superpolynomial but not
+$2^{\lambda^{\delta}}$ for any $\delta > 0$. The correlation is fixed to
+subfield VOLE because that is the source's headline correlation; the OT
+correlation, which the source also achieves, would be an equally
+faithful reading and is not a different problem.
+
+Two further choices are worth arguing with. First, the source's phrase
+constrains \emph{runtime and queries}, and says nothing about the
+advantage; its own construction achieves ``inverse-superpolynomial
+advantage'', not $2^{-\lambda^{\delta}}$. The statement above asks for a
+single exponent to serve all three, which is the symmetric reading; a
+reader who wants only what the source's phrase demands should replace
+$\varepsilon$ by an arbitrary negligible function, giving a weaker
+conjecture that this one implies. Second, the sparsity $k$ is left free
+within Definition~\ref{def:slpn}'s range rather than pinned to
+$\mathrm{polylog}(n)$. The source's own conservative flavour of the
+assumption does take $k = \mathrm{polylog}(n)$, so a construction that
+needed a much larger sparsity would answer this statement while
+answering the source's question less well; pinning it here would instead
+make the conjecture strictly harder than the question asked.
+\end{remark}
+
+\begin{remark}[Why the obvious route stalls]
+Neither the source nor this page knows an obstruction, and this is the
+weakest point of the problem as posed: the source names no barrier, only
+its own shortfall. What can be said is where the parameters bind. In the
+source's recursion the query bound is the row count $m^{(L)}$ of the
+outermost matrix, which grows with the number of levels $L$, while
+evaluation of a single output costs $k^{L}$ operations, so polynomial
+evaluation time forces $k^{L} = \poly(n)$ and hence
+$L = O(\log n / \log k)$. With $k = \mathrm{polylog}(n)$ that ceiling on
+$L$ is what makes $m^{(L)}$ superpolynomial rather than subexponential.
+Escaping it means either evaluating an entry of a subexponentially long
+pseudorandom correlation in polynomial time without a
+subexponential-depth recursion, or a route to a PCF from sparse LPN that
+is not this recursion at all.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem[Ale03]{Ale03}
+Michael Alekhnovich.
+\emph{More on average case vs approximation complexity}.
+44th Annual Symposium on Foundations of Computer Science (FOCS), 2003.
+
+\bibitem[BCGI18]{BCGI18}
+Elette Boyle, Geoffroy Couteau, Niv Gilboa and Yuval Ishai.
+\emph{Compressing vector OLE}.
+ACM CCS 2018.
+
+\bibitem[BCGIKS20]{BCGIKS20}
+Elette Boyle, Geoffroy Couteau, Niv Gilboa, Yuval Ishai, Lisa Kohl and
+Peter Scholl.
+\emph{Correlated pseudorandom functions from variable-density LPN}.
+61st Annual Symposium on Foundations of Computer Science (FOCS), 2020.
+The PCF notion and the template every later candidate follows.
+
+\bibitem[BCGIKRS22]{BCGIKRS22}
+Elette Boyle, Geoffroy Couteau, Niv Gilboa, Yuval Ishai, Lisa Kohl,
+Nicolas Resch and Peter Scholl.
+\emph{Correlated pseudorandomness from expand-accumulate codes}.
+CRYPTO 2022, Part~II\@.
+
+\bibitem[BCMRS25]{BCMRS25}
+Lennart Braun, Geoffroy Couteau, Kelsey Melissaris, Mahshid Riahinia and
+Elahe Sadeghi.
+\emph{Fast pseudorandom correlation functions from sparse LPN}.
+IACR ePrint 2025/1644; ASIACRYPT 2025.
+The source of this conjecture: the two open questions are on p.\ 10, the
+limitation on p.\ 5, the parameter constraints and the resulting query
+bound on p.\ 16, and Definitions 5 and 9 on pp.\ 11 and 13.
+
+\bibitem[CD23]{CD23}
+Geoffroy Couteau and Cl\'ement Ducros.
+\emph{Pseudorandom correlation functions from variable-density LPN,
+revisited}.
+PKC 2023, Part~II\@.
+
+\bibitem[HR25]{HR25}
+Sebastian Hasler and Pascal Reisert.
+\emph{Pseudorandom correlation functions for multiparty Beaver triples
+from sparse LPN}.
+IACR ePrint 2025/2002, December 2025.
+The one follow-up that reuses the source's recursion, and records the
+same ceiling: ``the expansion is still asymptotically smaller than the
+subexponential expansion of previous PCFs for Beaver triples''.
+[UNVERIFIED]
+
+\bibitem[OSY21]{OSY21}
+Claudio Orlandi, Peter Scholl and Sophia Yakoubov.
+\emph{The rise of Paillier: homomorphic secret sharing and public-key
+silent OT}.
+EUROCRYPT 2021, Part~I\@.
+
+\end{conjurabibliography}
+
+\end{document}

@@ -1,0 +1,243 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  Gascon-Ishai-Kelkar-Li-Ma-Raykova's open question on bounding the
+%  linear-test bias of the multi-disjoint syndrome decoding distribution.
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{LINEAR-TEST BIAS OF MULTI-DISJOINT SYNDROME DECODING}
+
+\newcommand{\F}{\mathbb{F}}
+\newcommand{\bias}{\mathrm{bias}}
+\newcommand{\supp}{\mathrm{supp}}
+\newcommand{\DisErr}{\mathsf{DisError}}
+\newcommand{\MDSD}{\mathsf{MDSD}}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{The Linear-Test Bias of Multi-Disjoint Syndrome Decoding}
+\cjsubtitle{$c$ sparse error vectors with pairwise disjoint supports,
+  one shared random parity-check matrix}
+\cjstatus{Statement: AI-written from Adri\`a Gasc\'on, Yuval Ishai,
+  Mahimna Kelkar, Baiyu Li, Yiping Ma and Mariana Raykova,
+  \emph{Computationally Secure Aggregation and Private Information
+  Retrieval in the Shuffle Model}, IACR ePrint 2024/870. Not yet
+  checked by a human. The source proves a (non-tight) reduction from
+  standard syndrome decoding, and conjectures separately that a known
+  generic attack is optimal; the linear-test bias below is the one
+  quantity it states it cannot bound.}
+\cjcategory{\emph{Information-Theoretic Cryptography}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+Sample one uniformly random $n \times m$ parity-check matrix $H$ over a
+finite field and $c$ error vectors of Hamming weight $w$ whose supports
+are pairwise disjoint, and publish $H$ together with the $c$ syndromes
+$H e_{1}, \dots, H e_{c}$. The source conjectures this is hard to
+distinguish from uniform, and it is the assumption its secure-aggregation
+and PIR protocols rest on. The standard first evidence for a
+distribution of this shape is a \emph{linear test}: show that no fixed
+linear function of the syndromes has noticeable bias. The source
+identifies this as the natural route and states it does not know how to
+carry it out. The conjecture below is that the route closes --- that
+every nonzero linear test against this distribution has bias
+exponentially small in the code's dual distance, exactly as for standard
+(and regular) LPN\@.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+Gasc\'on et al.\ study the ``split-and-mix'' paradigm for secure
+aggregation in the shuffle model, where each of many clients splits its
+input into additive shares and the shares of all clients are delivered
+to the server in a uniformly random order. Their contribution is to
+replace the information-theoretic analysis of this
+paradigm~\cite{IKOS06,BBGN20,GMPV20} with a computational one, which
+lets each client send far fewer shares. The computational problem the
+reduction lands on is new to that work: multi-disjoint syndrome decoding
+(MDSD, Definition~\ref{def:mdsd}), the syndrome-decoding problem in
+which several error vectors share one parity-check matrix and their
+supports are constrained to be pairwise disjoint --- the disjointness
+being exactly what the shuffling of one client's shares produces.
+
+The source gives two kinds of evidence for hardness. First, a reduction
+from standard decisional syndrome decoding (dual LPN), which it states
+is not tight and does not correspond to an efficient distinguisher.
+Second, a conjecture that the DOOM algorithm of Sendrier~\cite{Sen11},
+a generic information-set-decoding extension exploiting multiple
+syndromes, is the best attack; the concrete parameters of the source's
+protocols are set from that conjecture.
+
+What is missing is the check that the community treats as the entry fee
+for a new LPN-style assumption: the \emph{linear test} framework of
+Boyle et al.~\cite{BCG+20}, under which one bounds, for every fixed
+nonzero linear functional applied to the samples, the bias of the
+resulting bit (or field element). For standard LPN and for regular LPN
+this bound follows from the dual distance of the underlying code, and it
+rules out the whole class of attacks that only take linear combinations
+of samples. The source names this route and records that it stalls:
+``We do not know how to bound such bias for the MDSD distribution, and
+we leave it as an open question.''
+
+The obstruction it points at is structural. In the MDSD distribution the
+$c$ error vectors are \emph{not} independent: conditioning on the
+support of $e_{1}$ removes those coordinates from the supports available
+to $e_{2}, \dots, e_{c}$. A linear test may combine coordinates across
+different syndromes, and the standard dual-distance argument --- which
+bounds the bias of a single sparse error vector against a single fixed
+test vector --- gives nothing directly about a test that couples the
+syndromes whose errors are correlated in this way.
+
+\section{Notation and parameters}\label{sec:notation}
+
+\begin{itemize}[nosep]
+  \item $\F$ is a finite field; $q = |\F|$. The source's default is
+    $\F = \F_{2}$ for its PIR protocol and a large prime field for
+    aggregation.
+  \item $n$ is the number of parity-check rows (the syndrome length),
+    $m$ the code length, so $H \in \F^{n \times m}$.
+  \item $c \ge 1$ is the number of error vectors sharing $H$; $w \ge 1$
+    is the Hamming weight of each. The source's regime is
+    $w = O(\log m)$ and $m \approx cw + \lambda$.
+  \item $\Delta(e)$ is the Hamming weight of $e \in \F^{m}$, and
+    $\supp(e) \subseteq [m]$ its support.
+  \item For a random variable $X$ over $\F$, $\bias(X) := \max_{a \in
+    \F} \Pr[X = a] - 1/q$.
+\end{itemize}
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{definition}[Disjoint error set,
+  {\cite[Definition 7]{GIKLMR24}}]\label{def:disjoint}
+For $m, c, w > 0$, the $(m,c,w)$-\emph{disjoint error set} over $\F$ is
+\[
+  \DisErr_{m,c,w} = \bigl\{ E = (e_{1} \mid \cdots \mid e_{c}) \in
+  \F^{m \times c} \;:\; \supp(e_{i}) \cap \supp(e_{j}) = \emptyset
+  \ \forall i \ne j, \ \Delta(e_{i}) = w \ \forall i \bigr\}.
+\]
+\end{definition}
+
+\begin{definition}[Multi-disjoint syndrome decoding,
+  {\cite[Definition 8]{GIKLMR24}}]\label{def:mdsd}
+The $(n,m,c,w)$-\emph{MDSD distribution} over $\F$ is
+\[
+  \MDSD_{n,m,c,w} = \bigl\{ (H, H \cdot E) \;:\; H \sample \F^{n \times
+  m}, \ E \sample \DisErr_{m,c,w} \bigr\},
+\]
+both draws uniform. The decisional $(n,m,c,w)$-MDSD problem is to
+distinguish $\MDSD_{n,m,c,w}$ from the uniform distribution over
+$\F^{n \times m} \times \F^{n \times c}$.
+\end{definition}
+
+\begin{definition}[Linear test against MDSD]\label{def:lineartest}
+A \emph{linear test} is a nonzero matrix $V \in \F^{n \times c}$, applied
+to a sample $(H, Y) \leftarrow \MDSD_{n,m,c,w}$ as the field element
+$\langle V, Y \rangle := \sum_{i \in [n]} \sum_{j \in [c]} V_{i,j}
+Y_{i,j}$. Its \emph{bias on $H$} is
+\[
+  \bias_{V}(H) := \bias\bigl( \langle V, H \cdot E \rangle \bigr),
+  \qquad E \sample \DisErr_{m,c,w},
+\]
+the probability being over $E$ alone, with $H$ fixed.
+\end{definition}
+
+\begin{conjecture}[Linear-test bias of MDSD]\label{conj:main}
+There exist constants $\alpha, \beta > 0$ such that the following holds
+for every finite field $\F$ and all $n, m, c, w$ with $cw \le m$ and
+$w \le \alpha n / \log m$. With probability at least $1 - 2^{-\beta n}$
+over the choice of $H \sample \F^{n \times m}$,
+\[
+  \max_{V \in \F^{n \times c} \setminus \{0\}} \bias_{V}(H)
+  \;\le\; 2^{-\beta w}.
+\]
+\end{conjecture}
+
+\begin{remark}[What the conjecture is and is not]
+Conjecture~\ref{conj:main} is not the hardness of MDSD, and proving it
+would not establish that hardness: a linear-test bound rules out one
+attack class (distinguishers that read only a fixed linear function of
+the samples) and says nothing about the rest. It is the step the source
+names as the natural route to studying the assumption and reports it
+cannot take. Refuting it --- exhibiting a fixed $V$ with noticeable bias
+for most $H$, in the source's parameter regime --- would in contrast be
+a genuine distinguishing attack, and would bear directly on the concrete
+parameters the source's protocols are instantiated with.
+\end{remark}
+
+\begin{remark}[The exponent is the object of interest]
+The two constants are stated as a single pair because the source gives
+no target rate: it names the framework and the quantity, not a bound to
+aim at. A proof that matches what is known for regular
+LPN~\cite{HOSS22} --- bias exponentially small in the error weight $w$,
+for all but an exponentially small fraction of $H$ --- is the natural
+target, and is what Conjecture~\ref{conj:main} asserts. A weaker
+quantitative bound, e.g.\ $\bias \le 2^{-\beta w / \log m}$ under the
+same quantifiers, would already be a substantive resolution of the
+source's open question, and any such result should be reported with its
+own exponent rather than folded into this statement.
+\end{remark}
+
+\begin{remark}[The binary-error variant]
+The source also defines $\mathsf{beMDSD}$, in which the error entries
+are restricted to $\{0,1\}$ inside a large field, and states that over
+$\F_{2}$ the two problems coincide. Conjecture~\ref{conj:main} is
+stated for MDSD; the corresponding question for $\mathsf{beMDSD}$ over a
+large field is a separate statement, since the error alphabet changes
+which linear combinations can cancel.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem[GIKLMR24]{GIKLMR24}
+Adri\`a Gasc\'on, Yuval Ishai, Mahimna Kelkar, Baiyu Li, Yiping Ma and
+Mariana Raykova.
+\emph{Computationally secure aggregation and private information
+retrieval in the shuffle model}.
+IACR ePrint 2024/870.
+The source. MDSD is Definitions 7 and 8, page 12; the linear-test open
+question is in Section 3.3.1, page 17.
+
+\bibitem[BCG+20]{BCG+20}
+Elette Boyle, Geoffroy Couteau, Niv Gilboa, Yuval Ishai, Lisa Kohl and
+Peter Scholl.
+\emph{Correlated pseudorandom functions from variable-density LPN}.
+61st Annual Symposium on Foundations of Computer Science (FOCS), 2020,
+pages 1069--1080.
+The linear test framework the source names.
+
+\bibitem[Sen11]{Sen11}
+Nicolas Sendrier.
+\emph{Decoding one out of many}.
+PQCrypto 2011.
+The DOOM algorithm the source conjectures to be optimal against MDSD\@.
+
+\bibitem[HOSS22]{HOSS22}
+Carmit Hazay, Emmanuela Orsini, Peter Scholl and Eduardo Soria-Vazquez.
+\emph{TinyKeys: a new approach to efficient multi-party computation}.
+Journal of Cryptology, 35(2):13, April 2022.
+The regular-LPN analysis the source appeals to for the analogy.
+
+\bibitem[IKOS06]{IKOS06}
+Yuval Ishai, Eyal Kushilevitz, Rafail Ostrovsky and Amit Sahai.
+\emph{Cryptography from anonymity}.
+FOCS 2006.
+Introduces the split-and-mix paradigm the source makes computational.
+
+\bibitem[BBGN20]{BBGN20}
+Borja Balle, James Bell, Adri\`a Gasc\'on and Kobbi Nissim.
+\emph{Private summation in the multi-message shuffle model}.
+ACM CCS 2020, pages 657--676.
+
+\bibitem[GMPV20]{GMPV20}
+Badih Ghazi, Pasin Manurangsi, Rasmus Pagh and Ameya Velingker.
+\emph{Private aggregation from fewer anonymous messages}.
+EUROCRYPT 2020, Part II, LNCS 12106, pages 798--827.
+
+\end{conjurabibliography}
+
+\end{document}

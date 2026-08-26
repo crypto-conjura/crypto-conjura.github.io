@@ -3,34 +3,35 @@
 and the tag-cloud/browse page at projects/proposals/by-topic/index.qmd.
 
 Proposals aren't individual files with their own frontmatter the way a
-problem statement (c/*/index.qmd) is -- they're all `#### `-level sections on
-one page. So unlike scripts/gen_topics.py, there's no per-page frontmatter to
-read `topics:` from; the PROPOSALS list below *is* the source of truth,
-hand-maintained in the same document order the headings appear in the page.
-Run this after adding, removing, or reordering a proposal direction; `--check`
-reports drift without writing anything.
+problem statement (c/*/index.qmd) is -- they're all `[**Title**]{#anchor}`
+bracketed-span entries on one page, each with an explicit id rather than a
+real heading (so they don't clutter the page's own table of contents). So
+unlike scripts/gen_topics.py, there's no per-page frontmatter to read
+`topics:` from; the PROPOSALS list below *is* the source of truth, matched
+against the page by anchor id, not by document order. Run this after adding,
+removing, or reordering a proposal direction; `--check` reports drift
+without writing anything.
 
 Two things are generated, both from PROPOSALS/TOPIC_DESCRIPTIONS below:
 
   - the managed `<!-- topics:start -->...<!-- topics:end -->` block right
-    after every `#### ` heading in projects/proposals/index.qmd: clickable
-    chips for that direction's own topics.
+    after every `[**...**]{#anchor}` entry in projects/proposals/index.qmd:
+    clickable chips for that direction's own topics.
   - projects/proposals/by-topic/index.qmd: a single page carrying both the
     tag cloud (sized by count) and, below it, one group per topic listing
     every direction that carries it -- there's no per-topic subpage the way
-    problems/by-topic/<slug>/ has one, since 48 short entries don't need 46
-    separate listing pages to stay browsable.
+    problems/by-topic/<slug>/ has one, since a few dozen short entries don't
+    need that many separate listing pages to stay browsable.
 
     python3 scripts/gen_proposal_topics.py           # write everything
     python3 scripts/gen_proposal_topics.py --check   # report drift, exit 1
 
-The anchor for each entry is pandoc's auto-generated heading id, verified by
-actually running `quarto render projects/proposals/index.qmd --to html` and
-reading the `data-anchor-id` attributes back out -- not re-derived here,
-since pandoc's slugification has edge cases (a leading "3-" in "3-party
-NIKE..." is dropped rather than transliterated) that aren't worth
-reimplementing. If a heading's wording changes, re-render and re-check the
-anchor before re-running this script.
+The anchor for each entry is the literal `{#anchor}` id written into the
+page's own bracketed span, not a pandoc-derived heading id -- since it's an
+explicit span rather than a real heading, both the page and PROPOSALS below
+are hand-authored with the same id, and there is nothing to re-derive from a
+render. If a heading's wording changes, the anchor does not need to change
+with it; only add a new anchor when adding a genuinely new direction.
 """
 from __future__ import annotations
 
@@ -241,6 +242,58 @@ PROPOSALS = [
      "title": "Modeling monetary stakes and a game-theoretic incentive analysis",
      "paper": "Beyond Blockchain Ballots: UC-Secure Layer-2 Voting and Governance",
      "topics": ["voting-and-governance", "game-theory"]},
+    {"anchor": "grand-unification-of-mpc-in-the-head-and-vole-in-the-head",
+     "title": "Grand unification of MPC-in-the-Head and VOLE-in-the-Head",
+     "paper": "On Threshold Signatures from MPC-in-the-Head",
+     "topics": ["mpc-in-the-head", "threshold-signatures"]},
+    {"anchor": "rescaling-before-truncation-for-bgv-bfv-and-ckks",
+     "title": "Rescaling before truncation for BGV, BFV, and CKKS",
+     "paper": "Downlink (T)FHE Ciphertexts Compression",
+     "topics": ["homomorphic-encryption"]},
+    {"anchor": "compression-for-partially-filled-rlwe-ciphertexts",
+     "title": "Compression for partially-filled RLWE ciphertexts",
+     "paper": "Downlink (T)FHE Ciphertexts Compression",
+     "topics": ["homomorphic-encryption"]},
+    {"anchor": "bit-dropping-on-the-encapsulation-key",
+     "title": "Bit-dropping on the encapsulation key",
+     "paper": "Triple Ratchet: A Bandwidth Efficient Hybrid-Secure Signal Protocol",
+     "topics": ["secure-messaging", "learning-with-errors"]},
+    {"anchor": "a-subversion-resilient-post-quantum-x3dh",
+     "title": "A subversion-resilient post-quantum X3DH",
+     "paper": "Guarding the Signal: Secure Messaging with Reverse Firewalls",
+     "topics": ["secure-messaging", "subversion-resistance"]},
+    {"anchor": "firewall-rerandomization-under-an-additional-encryption-layer",
+     "title": "Firewall rerandomization under an additional encryption layer",
+     "paper": "Guarding the Signal: Secure Messaging with Reverse Firewalls",
+     "topics": ["secure-messaging", "subversion-resistance"]},
+    {"anchor": "modifying-the-double-ratchet-directly-for-anonymity",
+     "title": "Modifying the Double Ratchet directly for anonymity",
+     "paper": "Generic Anonymity Wrapper for Messaging Protocols",
+     "topics": ["secure-messaging", "anonymity"]},
+    {"anchor": "anonymity-guarantees-beyond-message-content",
+     "title": "Anonymity guarantees beyond message content",
+     "paper": "Generic Anonymity Wrapper for Messaging Protocols",
+     "topics": ["secure-messaging", "anonymity"]},
+    {"anchor": "session-handling-in-the-vulnerable-message-set-methodology",
+     "title": "Session-handling in the vulnerable-message-set methodology",
+     "paper": "How to Compare Bandwidth Constrained Two-Party Secure Messaging Protocols",
+     "topics": ["secure-messaging"]},
+    {"anchor": "capturing-root-key-forward-secrecy-in-the-vulnerable-message-set-metric",
+     "title": "Capturing root-key forward secrecy in the vulnerable-message-set metric",
+     "paper": "How to Compare Bandwidth Constrained Two-Party Secure Messaging Protocols",
+     "topics": ["secure-messaging"]},
+    {"anchor": "cgka-security-against-fully-active-adversaries",
+     "title": "CGKA security against fully active adversaries",
+     "paper": "Fair-Weather No More: Guaranteed Efficiency in Secure Group Messaging",
+     "topics": ["secure-messaging"]},
+    {"anchor": "per-party-storage-independent-of-group-size",
+     "title": "Per-party storage independent of group size",
+     "paper": "Fair-Weather No More: Guaranteed Efficiency in Secure Group Messaging",
+     "topics": ["secure-messaging"]},
+    {"anchor": "unifying-bit-local-and-word-local-hash-constructions",
+     "title": "Unifying bit-local and word-local hash constructions",
+     "paper": "Locally Computable High Independence Hashing",
+     "topics": ["k-wise-independent-hashing"]},
 ]
 
 # One sentence each: the tag-wiki text shown above a topic's group on the
@@ -294,6 +347,11 @@ TOPIC_DESCRIPTIONS = {
     "signature-schemes": "Digital signature constructions and the tightness of their security reductions.",
     "tight-reductions": "Security reductions whose loss is a constant rather than growing with the adversary's resources.",
     "voting-and-governance": "Protocols for casting, tallying, or governing collective decisions with strong composable security guarantees.",
+    "mpc-in-the-head": "Signature and proof constructions built by simulating a multi-party protocol's execution in one's head, and the frameworks unifying them.",
+    "homomorphic-encryption": "Computing on encrypted data, and the compression, packing, and bootstrapping techniques that make it practical.",
+    "secure-messaging": "Protocols for asynchronous end-to-end secure communication, and the forward-secrecy, post-compromise, and metadata-privacy guarantees they offer.",
+    "anonymity": "Hiding a message's, party's, or transaction's identity or relationships, beyond hiding its content alone.",
+    "k-wise-independent-hashing": "Hash function families whose outputs on any k inputs look independent, and the key-size and locality trade-offs such families admit.",
 }
 
 
@@ -305,8 +363,8 @@ def humanize(slug):
 
 
 HEADING_RE = re.compile(
-    r'^#### (?P<title>[^\n]+)\n'
-    r'(?:<!-- topics:start -->\n<div class="cj-tags cj-page-topics">.*?</div>\n<!-- topics:end -->\n)?',
+    r'^\[\*\*(?P<title>[^\n]+?)\*\*\]\{#(?P<anchor>[a-z0-9-]+)\}\n'
+    r'(?:\n?<!-- topics:start -->\n(?:<div class="cj-tags cj-page-topics">.*?</div>\n)?<!-- topics:end -->\n)?',
     re.MULTILINE,
 )
 
@@ -320,25 +378,30 @@ def chip_block(topics):
 
 
 def update_proposals_page(text):
-    counter = {"i": 0}
+    by_anchor = {p["anchor"]: p for p in PROPOSALS}
+    seen = set()
 
     def repl(m):
-        i = counter["i"]
-        if i >= len(PROPOSALS):
+        anchor = m.group("anchor")
+        if anchor not in by_anchor:
             raise ValueError(
-                f"projects/proposals/index.qmd has more '#### ' headings than "
-                f"PROPOSALS has entries ({len(PROPOSALS)}) -- add the new "
-                f"direction(s) to scripts/gen_proposal_topics.py"
+                f"projects/proposals/index.qmd has a heading anchored "
+                f"'{anchor}' with no matching entry in PROPOSALS -- add it "
+                f"to scripts/gen_proposal_topics.py"
             )
-        counter["i"] += 1
-        return f'#### {m.group("title")}\n{chip_block(PROPOSALS[i]["topics"])}'
+        seen.add(anchor)
+        return (
+            f'[**{m.group("title")}**]{{#{anchor}}}\n\n'
+            f'{chip_block(by_anchor[anchor]["topics"])}'
+        )
 
     new_text = HEADING_RE.sub(repl, text)
-    if counter["i"] != len(PROPOSALS):
+    missing = set(by_anchor) - seen
+    if missing:
         raise ValueError(
-            f"PROPOSALS has {len(PROPOSALS)} entries but only "
-            f"{counter['i']} '#### ' heading(s) were found in "
-            f"projects/proposals/index.qmd -- they've drifted out of sync"
+            f"PROPOSALS has {len(missing)} entrie(s) with no matching "
+            f"'[**...**]{{#anchor}}' heading in projects/proposals/index.qmd "
+            f"-- they've drifted out of sync: {sorted(missing)}"
         )
     return new_text
 

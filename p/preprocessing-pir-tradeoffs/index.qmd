@@ -1,0 +1,60 @@
+---
+title: "Cost tradeoffs for preprocessing PIR"
+subtitle: "Client space against bandwidth against server computation, with no cryptographic assumption"
+---
+
+## Motivation
+
+Private information retrieval without preprocessing is stuck twice over: the
+server must read the whole database per query, and a single server with
+sublinear bandwidth needs public-key cryptography. A preprocessing phase in
+which the client downloads a short hint escapes both — the Piano line of work
+showed that with client-side preprocessing one can have sublinear bandwidth
+*and* sublinear server computation from symmetric-key cryptography alone.
+
+Pushing the assumption to zero is the natural next question, and it turns out
+to be possible: with a client-specific hint, single-server preprocessing PIR
+exists with information-theoretic security and non-trivial efficiency. What
+then matters is the shape of the trade-off between the three costs — how much
+the client must store, how much is exchanged per query, and how much of the
+preprocessed database the server must read. This hub is about where that
+surface actually sits.
+
+## Provenance and history
+
+Two-server information-theoretic preprocessing PIR was studied by Beimel, Ishai
+and Malkin (CRYPTO 2000) and Woodruff and Yekhanin (CCC 2005), both in the
+*public* preprocessing model where the client keeps no state. That model cannot
+work for a single server: Di Crescenzo, Malkin and Ostrovsky's bound rules out
+sublinear bandwidth there however much the server preprocesses.
+
+Ishai, Shi and Wichs, *PIR with Client-Side Preprocessing:
+Information-Theoretic Constructions and Lower Bounds* ([IACR ePrint
+2024/976](https://eprint.iacr.org/2024/976)), work instead in the
+client-specific model and give both directions. Their lower bound (Theorem 1.1)
+says a $t$-bit client hint forces any $t$ consecutive queries to consume $n/2$
+bandwidth in total — and it holds against arbitrary server encoding, unbounded
+server space, arbitrary dynamic state on both sides, unbounded polynomial
+computation and any number of round trips, constraining only the hint. It is
+tight up to $n^{o(1)}$ if one ignores server computation. Their constructions
+sit at several points on the curve; the best in the sublinear-server-computation
+regime has client space and server computation $\widetilde O(n^{2/3})$. The gap
+between the two in that regime is what the paper records as open.
+
+## Parameter lattice
+
+Client space against per-query bandwidth against per-query server computation.
+$\widetilde O$ hides $\log^{\alpha(n)} n$ for arbitrary super-constant
+$\alpha$, as in the source.
+
+| | Client space | Bandwidth | Server computation |
+|---|---|---|---|
+| **Lower bound (Theorem 1.1)** | $O(t)$ | $\Omega(n/t)$ | any |
+| **Lower bound (Corrigan-Gibbs–Kogan)** | $O(t)$ | any | $\Omega(n/t)$ |
+| **Theorem 3.1** | $n^{1/2+o(1)}$ | $n^{o(1)}$ online, $O(n^{1/2})$ offline | $n^{1+o(1)}$ |
+| **Theorem 1.4** | $\widetilde O(n^{2/3})$ | $\widetilde O(n^{1/3})$ online, $\widetilde O(n^{1/2})$ offline | $\widetilde O(n^{2/3})$ |
+| **The balanced point** | $\widetilde O(n^{1/2})$ | $\widetilde O(n^{1/2})$ | $\widetilde O(n^{1/2})$ — [c/0069](/c/0069/), open |
+
+## Statements in this hub
+
+- [A Balanced Square-Root Information-Theoretic Preprocessing PIR](/c/0069/) — open

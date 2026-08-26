@@ -1,0 +1,261 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  Bitansky-Erabelli-Garg-Ishai's open question: does every function
+%  admit a perfectly correct, statistically secure additive randomized
+%  encoding?
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{PERFECTLY CORRECT STATISTICAL ARE}
+
+\newcommand{\bits}{\{0,1\}}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\Enc}{\mathsf{Enc}}
+\newcommand{\Dec}{\mathsf{Dec}}
+\newcommand{\Sim}{\mathsf{Sim}}
+\newcommand{\Gr}{\mathbb{G}}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{A Perfectly Correct Statistically Secure Additive Randomized
+  Encoding}
+\cjsubtitle{Statistical security is now known for every function; can
+  the correctness error be removed?}
+\cjstatus{Statement: AI-written from Nir Bitansky, Saroja Erabelli,
+  Rachit Garg and Yuval Ishai, \emph{Shuffling is Universal: Statistical
+  Additive Randomized Encodings for All Functions}, IACR ePrint
+  2025/1442. Not yet checked by a human. Statistical security with
+  statistical correctness is settled by the source for every finite
+  function; perfect correctness is known in the computational setting
+  and, in the statistical setting, only in a relaxed ``Las Vegas'' form
+  where the evaluator may declare failure.}
+\cjcategory{\emph{Information-Theoretic Cryptography}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+In an additive randomized encoding, each of $k$ parties locally encodes
+its input as one element of an abelian group; the group sum of the
+encodings must reveal the value of a fixed function $f$ on the inputs and
+nothing else. It is the algebraic heart of non-interactive secure
+computation in the shuffle model, since shuffling gives secure addition
+for free. The prevailing belief was that statistically secure such
+encodings do not exist even for equality on a small domain; the source
+refutes that belief and builds them for every finite function. Its
+encodings, however, are only statistically \emph{correct}: with small
+probability the evaluator gets the wrong answer, or --- in the sharper
+``Las Vegas'' variant --- announces failure. In the computational
+setting, perfect correctness is known. The source asks whether every
+function admits an additive randomized encoding that is at once
+statistically secure and perfectly correct.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+An additive randomized encoding (ARE) for a $k$-party function $f$,
+introduced by Halevi, Ishai, Kushilevitz and Rabin~\cite{HIKR23}, lets
+each party $i$ map its input $x_{i}$ to $\hat{x}_{i}$ in an abelian
+group $\Gr$; the evaluator sees only $\hat{w} = \hat{x}_{1} + \cdots +
+\hat{x}_{k}$, from which it should decode $f(x_{1}, \dots, x_{k})$ and
+learn nothing else. Any $f$ with an ARE can be securely computed
+non-interactively in the shuffle model, because shuffling suffices for
+secure addition~\cite{IKOS06}.
+
+The feasibility landscape splits by how accurately the sum encoding must
+be simulatable. With \emph{computational} security, every efficient
+function has an ARE, under a Diffie--Hellman-type assumption in bilinear
+groups~\cite{HIKR23}, later reduced to any public-key encryption
+scheme~\cite{BEG25}. With \emph{perfect} security, AREs exist only for
+degenerate functions --- essentially OR and XOR with local pre- and
+post-processing~\cite{HIKR23,Hiw25}. The statistical middle was the open
+case, and the expectation ran the other way: the authors
+of~\cite{HIKR23} conjectured that statistical AREs do not exist even for
+equality over a small domain, a conjecture implied by the (still open)
+conjecture that shuffle privacy is weaker than central privacy.
+
+The source refutes that conjecture. Its Theorem 1.1 states that for any
+multi-party $f : D^{k} \to D$ over a finite domain and any $\eps > 0$
+there is an ARE for $f$ with statistical correctness and security errors
+at most $\eps$; its Theorem 1.2 relates ARE size to garbling size,
+yielding efficient statistical AREs for $NL/\poly$, and computational
+ones for $P/\poly$ from any one-way function with black-box use only.
+
+What its constructions do not give is perfect correctness. The source
+records, in its ``Open Questions'': ``\emph{Perfect correctness.} Does
+every $f$ admit a perfectly correct and statistically secure ARE\@? For
+computationally secure ARE, perfect correctness is possible
+[HIKR23, BEG25]. For ARE with statistical security, we are only able to
+achieve a relaxed \emph{Las Vegas} notion of correctness, where the
+evaluator is never wrong but may declare failure with a small
+probability (see Appendix A).'' So the gap is narrow and precisely
+located: the failure probability, not a wrong answer, is what is left to
+remove.
+
+\section{Notation and parameters}\label{sec:notation}
+
+\begin{itemize}[nosep]
+  \item $k$ is the number of parties; $f : (\bits^{n})^{k} \to
+    \bits^{m}$ the function; $D$ a finite domain where the source states
+    $f : D^{k} \to D$.
+  \item $(\Gr, +)$ is a finite abelian group, assumed \emph{efficient}:
+    representation size $c \log |\Gr|$ and operations in time
+    $|\Gr|^{c}$ for a universal constant $c$.
+  \item $\eps$ is the correctness error and $\delta$ the security error,
+    both statistical.
+  \item $\Delta(X,Y)$ is statistical distance and $X \approx_{\delta} Y$
+    means $\Delta(X,Y) \le \delta$.
+  \item Where an ARE is viewed as a family, $\tau$ is the security
+    parameter and all costs, including group operations, are polynomial
+    in $\tau$.
+\end{itemize}
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{definition}[Additive randomized encoding,
+  {\cite[Definition 2.1]{BEGI25}}, after~{\cite{HIKR23}}]\label{def:are}
+Let $f : (\bits^{n})^{k} \to \bits^{m}$ be a $k$-party function. An ARE
+for $f$ over an abelian group $(\Gr,+)$ is a pair $\Pi = (\Enc, \Dec)$
+where $\hat{x}_{i} \leftarrow \Enc(x_{i}, i) \in \Gr$ is randomized and
+$w \leftarrow \Dec(\hat{w})$ is deterministic, satisfying
+\begin{itemize}[nosep]
+  \item \emph{$\eps$-correctness}: for all $x_{1}, \dots, x_{k} \in
+    \bits^{n}$,
+    \[
+      \Pr\Bigl[ \Dec\Bigl( \textstyle\sum_{i=1}^{k} \Enc(x_{i}, i)
+      \Bigr) = f(x_{1}, \dots, x_{k}) \Bigr] \ge 1 - \eps;
+    \]
+  \item \emph{$\delta$-security}: there is a simulator $\Sim$ with
+    $\sum_{i=1}^{k} \Enc(x_{i}, i) \approx_{\delta}
+    \Sim(f(x_{1},\dots,x_{k}))$ for all $x_{1}, \dots, x_{k} \in
+    \bits^{n}$.
+\end{itemize}
+The ARE is \emph{perfectly correct} if it is $0$-correct.
+\end{definition}
+
+\begin{conjecture}[Perfect correctness with statistical
+  security]\label{conj:main}
+For every $k$, every finite domain $D$, every $k$-party function $f :
+D^{k} \to D$ and every $\delta > 0$ there is an efficient abelian group
+$\Gr$ and an ARE for $f$ over $\Gr$ (Definition~\ref{def:are}) that is
+perfectly correct ($\eps = 0$) and $\delta$-secure.
+\end{conjecture}
+
+\begin{remark}[Both directions are open, and the source picks
+  neither]\label{rem:direction}
+The source poses this as a question, not as a prediction. A resolution is
+either a construction as in Conjecture~\ref{conj:main} or a proof that
+some finite $f$ --- equality over a small domain being the natural
+candidate, since it is the function the earlier
+conjecture~\cite{HIKR23} singled out --- admits no perfectly correct
+$\delta$-secure ARE for small enough $\delta$. Note that the negative
+direction is not excluded by the source's Theorem 1.1: that theorem
+gives statistical correctness, and the whole content of this statement is
+whether the correctness error can be driven to exactly zero.
+\end{remark}
+
+\begin{remark}[Las Vegas correctness is what is already
+  known]\label{rem:lasvegas}
+The source's Appendix A achieves a relaxation in which the decoder
+outputs either $f(x)$ or a distinguished failure symbol, never a wrong
+value, with failure probability at most $\eps$. Under
+Definition~\ref{def:are} that is a $\eps$-correct ARE and not a perfectly
+correct one, and Conjecture~\ref{conj:main} is not settled by it. A
+construction whose decoder may output $\bot$ therefore does not resolve
+this statement, however small the failure probability.
+\end{remark}
+
+\begin{remark}[Efficiency is not part of the question]
+Conjecture~\ref{conj:main} is a feasibility statement over finite
+domains, matching the source's Theorem 1.1, and imposes no bound on the
+ARE's size beyond the group being efficient in the sense of
+Section~\ref{sec:notation}. The source's separate size question --- how
+close the ARE size of $f$ can come to its garbling size, and whether
+efficient information-theoretic AREs extend from $NL/\poly$ to all of
+$P/\poly$, which it notes would settle a long-standing open problem
+of~\cite{FKN94} --- is a different statement.
+\end{remark}
+
+\begin{remark}[Two other open questions in the same list]
+The source's ``Open Questions'' section also asks whether
+information-theoretic feasibility extends to the \emph{robust} ARE
+notion of~\cite{HIKR23} for finite functions --- where a positive answer
+even for finite $3$-party functions would settle the main open question
+on multi-party randomized encodings~\cite{ABT21}, and for all finite
+functions the main open question on best-possible information-theoretic
+MPC~\cite{HIKR18} --- and whether a $2$-party PSM protocol for $f$ on
+$n$-bit inputs implies an ARE for $f$ of similar cost. Neither is this
+statement.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem[BEGI25]{BEGI25}
+Nir Bitansky, Saroja Erabelli, Rachit Garg and Yuval Ishai.
+\emph{Shuffling is universal: statistical additive randomized encodings
+for all functions}.
+IACR ePrint 2025/1442.
+The source. Definition 2.1 is on page 7, Theorem 1.1 on page 2, and the
+open question is the first item of Section 1.4 (``Open Questions''),
+page 7.
+
+\bibitem[HIKR23]{HIKR23}
+Shai Halevi, Yuval Ishai, Eyal Kushilevitz and Tal Rabin.
+\emph{Additive randomized encodings and their applications}.
+CRYPTO 2023, Part I, LNCS 14081.
+Introduces ARE and robust ARE, gives the computational construction from
+bilinear groups, and conjectures statistical AREs do not exist --- the
+conjecture the source refutes.
+
+\bibitem[BEG25]{BEG25}
+Nir Bitansky, Saroja Erabelli and Rachit Garg.
+\emph{Additive randomized encodings from public key encryption}.
+IACR ePrint 2025/104, to appear in CRYPTO 2025.
+Reduces computational ARE to any public-key encryption scheme, with
+perfect correctness.
+
+\bibitem[Hiw25]{Hiw25}
+Keitaro Hiwatashi.
+\emph{Negative results on information-theoretic additive randomized
+encodings}.
+Applied Cryptography and Network Security (ACNS), 2025, pages 136--157.
+Characterizes which Boolean functions admit AREs with security and
+correctness measured in the $\ell_{2}$ norm; cited by the source
+alongside~\cite{HIKR23} for the perfect-security impossibility.
+
+\bibitem[ABT21]{ABT21}
+Benny Applebaum, Zvika Brakerski and Rotem Tsabary.
+\emph{Perfect secure computation in two rounds}.
+SIAM Journal on Computing, 50(1):68--97, 2021.
+The multi-party randomized encoding question a robust-ARE feasibility
+result would settle.
+
+\bibitem[HIKR18]{HIKR18}
+Shai Halevi, Yuval Ishai, Eyal Kushilevitz and Tal Rabin.
+\emph{Best possible information-theoretic MPC}.
+TCC 2018, Part II, LNCS 11240, pages 255--281.
+The best-possible-MPC question a robust-ARE feasibility result for all
+finite functions would settle.
+
+\bibitem[IKOS06]{IKOS06}
+Yuval Ishai, Eyal Kushilevitz, Rafail Ostrovsky and Amit Sahai.
+\emph{Cryptography from anonymity}.
+47th Annual IEEE Symposium on Foundations of Computer Science (FOCS),
+2006, pages 239--248.
+Shuffling suffices for secure addition, which is what links ARE to the
+shuffle model.
+
+\bibitem[FKN94]{FKN94}
+Uriel Feige, Joe Kilian and Moni Naor.
+\emph{A minimal model for secure computation}.
+26th Annual ACM Symposium on Theory of Computing (STOC), 1994, pages
+554--563.
+Introduces private simultaneous messages; the long-standing open problem
+the source's efficiency question would settle.
+
+\end{conjurabibliography}
+
+\end{document}

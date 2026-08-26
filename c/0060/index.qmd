@@ -1,0 +1,109 @@
+---
+id: "0060"
+problem: adaptivity-in-preprocessing-tradeoffs
+draft: r-round-adaptive-dlog-preprocessing
+title: "Discrete Logarithm with Preprocessing and r Rounds of Adaptivity"
+short_title: "r-round DLOG tradeoff"
+areas: [idealized-models, public-key, foundations]
+topics: [time-space-tradeoffs, generic-group-model, discrete-logarithm, adaptivity]
+model: ggm
+form: tight-bound
+assumption_class: unconditional
+category: research-open
+revision: 1
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: new-idea
+  by: ai
+  note: "The source's proof runs through a Shearer-like inequality that controls the information a random permutation reveals on a set of query points fixed independently of it, and a second round of adaptivity destroys exactly that structure -- the composed input f(d + f(d)) is not of the form the inequality handles. The source says extending it 'would require new Shearer-type inequalities or alternative techniques', and the one inequality in the literature allowing some dependence is too weak. The refuting direction needs only an attack and has no barrier."
+status_summary: "Open for every intermediate r: the r = 1 endpoint is the source's own theorem and r = T is Corrigan-Gibbs--Kogan, with nothing proved in between. The source conjectures the interpolating formula and says a matching attack exists at every r, so the missing half is the lower bound."
+status_updated: 2026-08-23
+relations:
+  - {kind: variant-of, target: "0061", note: "Same paper, same model, different problem and different axis: this page varies the number of adaptivity rounds for DLOG, c/0061 fixes one round and asks for the right constant-free bound for DDH."}
+lean:
+  mode: none
+sources:
+  - {cite: "Dinur, Keller, Marmor, Non-Adaptive Cryptanalytic Time-Space Lower Bounds via a Shearer-like Inequality for Permutations, IACR ePrint 2025/783; STOC 2026", url: "https://eprint.iacr.org/2025/783"}
+  - {cite: "Corrigan-Gibbs, Kogan, The Discrete-Logarithm Problem with Preprocessing, EUROCRYPT 2018, LNCS 10821, pp. 415-447", url: "https://eprint.iacr.org/2017/1113"}
+  - {cite: "Corrigan-Gibbs, Kogan, The Function-Inversion Problem: Barriers and Opportunities, TCC 2019, LNCS 11891, pp. 393-421", url: "https://eprint.iacr.org/2019/1046"}
+statement_sha: "b7bf2020727e56ff7a60dddadd56587075e0bf9097f99e6653e6f9989b064f88"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+<!-- topics:start -->
+<div class="cj-tags cj-page-topics"><a class="cj-tag cj-tag-topic" href="/problems/by-topic/adaptivity/">Adaptivity</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/discrete-logarithm/">Discrete Logarithm</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/generic-group-model/">Generic Group Model</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/time-space-tradeoffs/">Time Space Tradeoffs</a></div>
+<!-- topics:end -->
+
+Pollard's Rho algorithm is nearly fifty years old and every step of it depends on the answer to the last. Nobody had a theorem saying that was necessary. The source paper supplies one, in the preprocessing model and the generic group model: strip adaptivity away entirely and unlimited precomputation buys an attacker on discrete logarithm nothing at all beyond the 1971 baby-step giant-step bound, where a fully adaptive attacker gets a cube-root speedup. This page is the formula the source conjectures for the middle — what $r$ rounds of adaptivity are worth — and it is the rare conjecture whose two endpoints are both already theorems.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [LaTeX source](latex/main.tex) · Formal statement — *not yet formalized*
+
+**The model.** $N$ prime, $G$ a group of order $N$, and $\sigma : \mathbb{Z}_{N} \to [N]$ a uniformly random bijection presenting $g^{j}$ as $\sigma(j)$ — Shoup's generic group model. The secret is $d \leftarrow \mathbb{Z}_{N}$; the algorithm receives $\sigma(1), \sigma(d)$ and must output $d$. An **outer query** is a pair $(a,b) \in \mathbb{Z}_{N}^{2}$, answered with $\sigma(a \cdot d + b \bmod N)$; an **inner query** is a direct $\sigma(i)$. An **$(S,T)$-algorithm** is a pair $(\mathcal{A}_{0}, \mathcal{A}_{1})$: an unbounded $\mathcal{A}_{0}$ sees $\sigma$ and writes $S$ bits of advice, and $\mathcal{A}_{1}$ receives the advice and the encodings and makes at most $T$ queries.
+
+**$r$ rounds of adaptivity — *this page's definition*.** For $1 \le r \le T$, an $(S,T)$-algorithm has $r$ rounds of adaptivity if $\mathcal{A}_{1}$'s queries are partitioned into $r$ batches issued in order, where the queries in batch $i$ are a function of the advice, the encodings $\sigma(1), \sigma(d)$, and the answers to batches $1, \dots, i-1$ only. Batch sizes may be arbitrary. At $r = 1$ this is exactly the source's non-adaptive notion — "$\mathcal{A}_{1}$ is non-adaptive if given any $z$, its queries are fixed and do not (further) depend on $\sigma$" — and at $r = T$ it is no restriction at all.
+
+**What is proved at the endpoints.** At $r = 1$, the source's Theorem 1.1: any non-adaptive $(S,T)$-algorithm succeeds with probability at most $3T^{2}/N + 4\log_{e}(2)ST/N$. At $r = T$, Corrigan-Gibbs and Kogan: $\widetilde{\Theta}(ST^{2}/N)$, attained by the Mihalcik / Bernstein–Lange / Corrigan-Gibbs–Kogan algorithm.
+
+**Conjecture.** There is a function $c(\cdot)$, polylogarithmic in $N$, such that for every prime $N$, every $1 \le r \le T$ and every $(S,T)$-algorithm for DLOG in the generic group model over a group of order $N$ having $r$ rounds of adaptivity, the success probability is at most
+$$c(N) \cdot \left( \frac{T^{2}}{N} + \frac{r\,S\,T}{N} \right).$$
+
+**How the source states it, and what this page supplies.** The source, in a paragraph headed "Open problems": "For the DLOG problem, we conjecture that the success probability of an $(S,T)$-algorithm with $r$ rounds of adaptivity is at most $\widetilde{O}(T^{2}/N + rST/N)$", adding that "This matches our result for non-adaptive algorithms (i.e., 1 round of adaptivity), as well as the bounds of [CK18] for adaptive algorithms (i.e., $T$ rounds of adaptivity)" and that "it would be sharp, as for any $1 \le r \le T$, it is matched by a variant of the adaptive algorithm of [BL13, CK18, Mih10], in which instead of constructing one chain of length $T$ one constructs multiple chains of length $r$". **The phrase "$r$ rounds of adaptivity" occurs once in the paper and is never defined**, so the batching definition above is this page's. It is pinned at both ends by the source's own parenthetical readings, which is why it is offered rather than the question left unstated — but it is the first thing to check.
+
+### Sources
+
+- Dinur, Keller and Marmor. [*Non-Adaptive Cryptanalytic Time-Space Lower Bounds via a Shearer-like Inequality for Permutations*](https://eprint.iacr.org/2025/783). IACR ePrint 2025/783; STOC 2026. The conjecture is in the "Open problems" paragraph, printed p. 10 = PDF p. 11 of the ePrint; Theorem 1.1 is printed p. 4 (PDF p. 6), reproved in §5.1; the model and the non-adaptivity definition are §3, printed pp. 14–15 (PDF pp. 16–17). **Printed and PDF page numbers differ by one throughout**; both are given here.
+- Corrigan-Gibbs and Kogan. [*The Discrete-Logarithm Problem with Preprocessing*](https://eprint.iacr.org/2017/1113). EUROCRYPT 2018. The $r = T$ endpoint: $ST^{2} = \widetilde{O}(N)$, proved optimal.
+- Corrigan-Gibbs and Kogan. [*The Function-Inversion Problem: Barriers and Opportunities*](https://eprint.iacr.org/2019/1046). TCC 2019. Where the power-of-adaptivity question was first posed, for function inversion, together with the circuit-lower-bound barrier that explains why nobody has answered it there.
+
+## Proof
+
+View PDF — *no proof written yet* · LaTeX source — *no proof written yet* · Formal proof — *not yet formalized*
+
+Open for every $1 < r < T$. Both endpoints are theorems and nothing in between is known.
+
+**Why the shape is credible.** Read as an equality up to polylogarithmic factors, the conjecture says each extra round of adaptivity buys the attacker a factor in the advice term $ST/N$ and nothing in the query term $T^{2}/N$. At $r=1$ that gives the source's theorem; at $r=T$ it gives $\widetilde{O}(ST^{2}/N)$, the known adaptive optimum. And the upper bound is matched all the way along by an attack the source describes in one line: run the standard adaptive algorithm but build $T/r$ chains of length $r$ rather than one chain of length $T$. So this is a conjectured *lower* bound with its matching algorithm already in hand — the unusual and pleasant situation where only one direction is missing.
+
+**Where the source's technique stops, precisely.** The proof of Theorem 1.1 goes through a Shearer-like inequality for permutations: it controls how much information a random bijection $\sigma$ can reveal about itself on a set of input–output pairs $\{(a, \sigma(a)) : a \in A\}$ for a set $A$ **fixed independently of $\sigma$**. Non-adaptivity is exactly what makes $A$ have that form — the pre-translated pairs $(a,b)$ are chosen before the challenge, and although the actual queries $\sigma(ad+b)$ do depend on the secret $d$, they depend on it through a fixed low-degree map. Allow the second batch to depend on the first batch's answers and the queried set contains points like $f(d + f(d))$, which is not a fixed set at all. The source's own assessment: "The independence of the queries from the challenge appears inherent to our proof strategy", and extending it "would require new Shearer-type inequalities or alternative techniques that can handle such challenge-dependent queries". Rao and Sinha's inequality, which does allow some dependence, is cited as too weak here.
+
+**So a proof needs one of two new things.** Either a Shearer-type inequality that tolerates $r$ levels of composition with a loss linear in $r$ — which is what the conjectured formula is really asserting exists — or a different route to $r$-round lower bounds entirely. The specialized techniques developed for non-adaptive function inversion — Chawin–Haitner–Mazor (TCC 2020), Golovnev–Guo–Peters–Stephens-Davidowitz (CRYPTO 2023) and Gajulapalli–Golovnev–King (ITC 2024) — are, in the source's words, inapplicable to its setting.
+
+**What a refutation would look like, and why it is not obviously hopeless.** An algorithm with few rounds beating the formula. The natural target is the term the conjecture claims is $r$-independent: if some $O(1)$-round algorithm achieved, say, $\widetilde{\Omega}(ST^{2}/N)$ success for $S$ in a middle range, the linear-in-$r$ shape is wrong. Nothing rules this out — the only data points are $r = 1$ and $r = T$ — and the space of few-round chain-building strategies has not been systematically explored. A refutation would be more interesting than a proof, because it would say that adaptivity's value is not a smooth function of how much of it you have.
+
+**Checked against the literature, 2026-08-23.** The source's ePrint was last revised 2026-05-26 (a major revision, for STOC 2026) and the copy read here is that revision; it carries the acknowledgement to a reviewer who found an error in the proof of Theorem 4.9 in an earlier version. No work found that proves or refutes the $r$-round formula, for DLOG or for the paper's other problems. Adjacent results that do **not** settle it: Akshima, Besselman, Guo, Xie and Ye (STOC 2024) settle the *adaptive* DDH tradeoff at $\tfrac{1}{2} + \widetilde{\Theta}(ST^{2}/N)$, which is the $r = T$ endpoint of the neighbouring problem; the function-inversion line of work concerns a model where challenge-independent queries trivialize the problem, so it does not transfer. **This is a targeted check, not an exhaustive sweep.**
+
+## Discussion
+
+**What the conjecture is really about.** Not discrete logarithm — the generic bounds there are settled at both extremes — but the exchange rate between adaptivity and advice. Preprocessing and adaptivity are the two resources that make non-uniform cryptanalysis powerful, and every classical algorithm bundles them together. The formula $T^{2}/N + rST/N$ separates them and prices the second: one round of adaptivity is worth one factor of the advice term. If that is right, the reason Pollard's Rho needs sequentiality is quantitative and mild, and an attacker with a modestly parallel machine loses only a proportional amount.
+
+**Why the definitional gap is the main risk, and why the page states it anyway.** A conjecture whose central notion is supplied by the reader is a conjecture that can be got wrong in a way no amount of care about the formula would catch. Two readings that both satisfy the source's endpoints but differ in between: whether the *batch sizes* may depend on earlier answers (this page says yes), and whether the challenge encoding $\sigma(d)$ counts as available in round 1 (this page says yes, since baby-step giant-step needs it). The alternative to guessing was to publish nothing, and the endpoints constrain the notion tightly enough that the guess is worth recording and arguing with.
+
+**The status classification.** `form: tight-bound` because the source asserts sharpness and names the matching attack, not merely an upper bound; `assumption_class: unconditional` because nothing here rests on a cryptographic assumption — it is a statement about a query model.
+
+**What a reviewer should be suspicious of, in order.** First, Definition 3 in the LaTeX statement, for the reasons above. Second, whether the source's $\widetilde{O}$ is meant to hide factors in $N$ only, or in $r$ as well; the page reads it as $N$ only, which is the stronger and, from the matching-attack sentence, the intended reading. Third, the claim that the endpoints are exactly recovered: at $r = T$ the formula gives $\widetilde{O}(ST^{2}/N)$, which matches [CK18], but [CK18]'s bound is usually written for constant success probability, and the translation between the two forms should be checked before relying on it.
+
+## Open obligations
+
+- [ ] Settle the definition of "$r$ rounds of adaptivity" — ideally by asking the authors, since the paper does not define it and the intermediate content of the conjecture depends on the choice.
+- [ ] Check the $r = T$ endpoint against [CK18] in its own normalization, rather than through the informal $ST^{2} = \widetilde{O}(N)$ form.
+- [ ] Look for a few-round algorithm beating the formula. The refuting direction has no barrier and, as far as this page can tell, no attempt.
+- [ ] Ask whether the conjecture should have companions for square-DDH and Even-Mansour, which the source's $r$-round goal covers but for which it names no formula.
+- [ ] Prove or refute the statement.
+- [ ] Formalize the statement in Lean; nothing here has been formalized.
+
+:::

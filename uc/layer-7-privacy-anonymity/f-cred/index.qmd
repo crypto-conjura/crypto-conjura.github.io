@@ -1,12 +1,187 @@
 ---
-title: "F-cred — Anonymous credential, DAA"
+title: "F-DAA — Direct anonymous attestation"
 status: "Canonical"
 layer: 7
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-cred* (Anonymous credential, DAA) is part of *Privacy and Anonymity* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+*F-DAA* (Direct anonymous attestation) is part of *Privacy and Anonymity* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+
+A hardware root of trust (a TPM) and the host it sits in jointly produce signatures that an issuer authorized but cannot trace; two signatures under the same *basename* are linkable and under different basenames are not. The box's distinctive feature is that it hands every cryptographic algorithm to the adversary and then *audits* the results with sixteen labelled checks — so the guarantees are stated as conditions the adversary's own algorithms must satisfy, not as things the functionality computes.
+
+## Functionality
+
+Reading the box: $\mathbf{A}$ is the adversary's role in a caller's id, so $\mathit{id}'.F = \mathbf{A}$ restricts an operation to the adversary; $\mathbf{C}$ is the corrupted set; $\square$ marks a value not yet decided and $\bot$ a refusal or an absent basename; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it. The parameters are the issuer $I$ and the leakage function $l$. $M$ is a TPM, $H$ a host, $\mathit{gsk}$ a TPM key, $\mathit{bsn}$ a basename, $\mathit{RL}$ a revocation list.
+
+**This box is a declared fragment.** The source prints the functionality as two figures — Setup and Join in Figure 1, Sign, Verify and Link in Figure 2 — and what is transcribed here is Figure 2, together with the state Figure 1 populates. Figure 1's six interfaces are described in prose below rather than dropped: they are where membership comes from, and one of their checks is load-bearing for everything in the box.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}^{l}_{\mathsf{DAA}}\) &nbsp;(sign, verify, link)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := (I, l)\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{Alg} = (\mathtt{sig}, \mathtt{ver}, \mathtt{link}, \mathtt{ident}, \mathtt{ukgen})\)<span class="cj-comment">// the five algorithms, all chosen by \(\mathcal{A}\)</span></li>
+<li>\(\mathtt{Mem} \ni \langle M, H, \mathit{gsk}\rangle\); &nbsp;\(\mathtt{DK} \ni \langle M, \mathit{bsn}, \mathit{gsk}\rangle\)</li>
+<li>\(\mathtt{Signed} \ni \langle \sigma, \mathit{msg}, \mathit{bsn}, M\rangle\); &nbsp;\(\mathtt{VR} \ni \langle \sigma, \mathit{msg}, \mathit{bsn}, \mathit{RL}, f\rangle\)</li>
+<li>\(\mathtt{S}[*] \gets \square\)<span class="cj-comment">// sign session records</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.SignRequest(<span class="cj-id">s</span>, <span class="cj-id">M</span>, <span class="cj-id">msg</span>, <span class="cj-id">bsn</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="5">
+<li>\(\textbf{require}\ \mathtt{S}[s] = \square\)</li>
+<li>\(\textbf{require}\ I \in \mathbf{C} \ \vee\ \exists\, \langle M, \mathit{id}.P, *\rangle \in \mathtt{Mem}\)<span class="cj-comment">// an honest issuer admits only members</span></li>
+<li>\(\mathtt{S}[s] \gets (M, \mathit{id}.P, \mathit{msg}, \mathit{bsn}, \mathsf{request})\)</li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{SignStart}, s, l(\mathit{msg}, \mathit{bsn}), M, \mathit{id}.P\bigr)\)<span class="cj-comment">// only \(l\) of the message and basename</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.SignDeliver(<span class="cj-id">s</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="10">
+<li>\(\textbf{require}\ \mathit{id}'.F = \mathbf{A} \ \wedge\ \mathtt{S}[s] = (M, H, \mathit{msg}, \mathit{bsn}, \mathsf{request})\)</li>
+<li>\(\mathtt{S}[s] \gets (M, H, \mathit{msg}, \mathit{bsn}, \mathsf{delivered})\)</li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.SignProceed(<span class="cj-id">s</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="13">
+<li>\(\textbf{require}\ \mathtt{S}[s] = (\mathit{id}.P, H, \mathit{msg}, \mathit{bsn}, \mathsf{delivered})\)<span class="cj-comment">// the TPM consents, having been shown \(\mathit{msg}\)</span></li>
+<li>\(\mathtt{S}[s] \gets (\mathit{id}.P, H, \mathit{msg}, \mathit{bsn}, \mathsf{complete})\)</li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{SignComplete}, s\bigr)\)</li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.SignGen(<span class="cj-id">s</span>, <span class="cj-id">&sigma;</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="17">
+<li>\(\textbf{require}\ \mathit{id}'.F = \mathbf{A} \ \wedge\ \mathtt{S}[s] = (M, H, \mathit{msg}, \mathit{bsn}, \mathsf{complete})\)</li>
+<li>\(\textbf{if}\ M \notin \mathbf{C} \ \wedge\ H \notin \mathbf{C}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathit{gsk} \gets \square\)</span></li>
+<li><span class="cj-ind">\(\textbf{if}\ \mathit{bsn} \neq \bot \ \wedge\ \langle M, \mathit{bsn}, g\rangle \in \mathtt{DK}\ \textbf{then}\)</span></li>
+<li><span class="cj-ind">\(\mathit{gsk} \gets g\)</span><span class="cj-comment">// one key per basename, so signatures link</span></li>
+<li><span class="cj-ind">\(\textbf{if}\ \mathit{gsk} = \square\ \textbf{then}\)</span></li>
+<li><span class="cj-ind">\(\mathit{gsk} \gets \mathtt{Alg}.\mathtt{ukgen}()\)</span></li>
+<li><span class="cj-ind">\(\textbf{require}\ \mathsf{CheckGskHonest}(\mathit{gsk})\)</span></li>
+<li><span class="cj-ind">\(\mathtt{DK} \gets \mathtt{DK} \cup \{\langle M, \mathit{bsn}, \mathit{gsk}\rangle\}\)</span></li>
+<li><span class="cj-ind">\(\sigma \gets \mathtt{Alg}.\mathtt{sig}(\mathit{gsk}, \mathit{msg}, \mathit{bsn})\)</span><span class="cj-comment">// the adversary's \(\sigma\) is discarded</span></li>
+<li><span class="cj-ind">\(\textbf{require}\ \mathtt{Alg}.\mathtt{ver}(\sigma, \mathit{msg}, \mathit{bsn}) = 1\)</span></li>
+<li><span class="cj-ind">\(\textbf{require}\ \mathtt{Alg}.\mathtt{ident}(\sigma, \mathit{msg}, \mathit{bsn}, \mathit{gsk}) = 1\)</span></li>
+<li><span class="cj-ind">\(\textbf{require}\ \neg\exists\, \langle M', *, g'\rangle \in \mathtt{Mem} \cup \mathtt{DK} : M' \neq M \wedge \mathtt{Alg}.\mathtt{ident}(\sigma, \mathit{msg}, \mathit{bsn}, g') = 1\)</span><span class="cj-comment">// no second owner</span></li>
+<li>\(\textbf{if}\ M \notin \mathbf{C}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{Signed} \gets \mathtt{Signed} \cup \{\langle \sigma, \mathit{msg}, \mathit{bsn}, M\rangle\}\)</span><span class="cj-comment">// recorded for an honest TPM, even a corrupt host's</span></li>
+<li>\(\textbf{return}\ \sigma\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Verify(<span class="cj-id">msg</span>, <span class="cj-id">bsn</span>, <span class="cj-id">&sigma;</span>, <span class="cj-id">RL</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="33">
+<li>\(K \gets \{(g, M) : \langle M,*,g\rangle \in \mathtt{Mem} \cup \mathtt{DK}, \mathtt{Alg}.\mathtt{ident}(\sigma, \mathit{msg}, \mathit{bsn}, g) = 1\}\)</li>
+<li>\(f \gets \square\)</li>
+<li>\(\textbf{if}\ |K| > 1\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(f \gets 0\)</span></li>
+<li>\(\textbf{if}\ I \notin \mathbf{C} \ \wedge\ K = \varnothing\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(f \gets 0\)</span><span class="cj-comment">// no membership, no signature</span></li>
+<li>\(\textbf{if}\ \exists\, (g,M) \in K : M \notin \mathbf{C} \wedge \neg\exists\, \langle *, \mathit{msg}, \mathit{bsn}, M\rangle \in \mathtt{Signed}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(f \gets 0\)</span><span class="cj-comment">// unforgeability against an honest TPM</span></li>
+<li>\(\textbf{if}\ \exists\, g' \in \mathit{RL} : \mathtt{Alg}.\mathtt{ident}(\sigma, \mathit{msg}, \mathit{bsn}, g') = 1 \wedge \neg\exists\, (g,M) \in K : M \notin \mathbf{C}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(f \gets 0\)</span><span class="cj-comment">// revocation, with honest owners exempt</span></li>
+<li>\(\textbf{if}\ f = \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(f \gets \mathtt{Alg}.\mathtt{ver}(\sigma, \mathit{msg}, \mathit{bsn})\)</span></li>
+<li>\(\mathtt{VR} \gets \mathtt{VR} \cup \{\langle \sigma, \mathit{msg}, \mathit{bsn}, \mathit{RL}, f\rangle\}\)</li>
+<li>\(\textbf{return}\ f\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Link(<span class="cj-id">&sigma;</span>, <span class="cj-id">msg</span>, <span class="cj-id">sigma'</span>, <span class="cj-id">msg'</span>, <span class="cj-id">bsn</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="47">
+<li>\(\textbf{require}\ \mathit{bsn} \neq \bot\)</li>
+<li>\(\textbf{if}\ \mathit{id}.\mathsf{Verify}(\mathit{msg}, \mathit{bsn}, \sigma, \varnothing) \neq 1 \ \vee\ \mathit{id}.\mathsf{Verify}(\mathit{msg}', \mathit{bsn}, \sigma', \varnothing) \neq 1\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \bot\)</span><span class="cj-comment">// both must verify first</span></li>
+<li>\(f \gets \square\)</li>
+<li>\(\textbf{if}\ \exists\, \langle *,*,g\rangle \in \mathtt{Mem} \cup \mathtt{DK} : \mathtt{Alg}.\mathtt{ident}(\sigma, \mathit{msg}, \mathit{bsn}, g) \neq \mathtt{Alg}.\mathtt{ident}(\sigma', \mathit{msg}', \mathit{bsn}, g)\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(f \gets 0\)</span></li>
+<li>\(\textbf{if}\ \exists\, \langle *,*,g\rangle \in \mathtt{Mem} \cup \mathtt{DK} : \mathtt{Alg}.\mathtt{ident}(\sigma, \mathit{msg}, \mathit{bsn}, g) = \mathtt{Alg}.\mathtt{ident}(\sigma', \mathit{msg}', \mathit{bsn}, g) = 1\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(f \gets 1\)</span><span class="cj-comment">// and this overrides the line above</span></li>
+<li>\(\textbf{if}\ f = \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(f \gets \mathtt{Alg}.\mathtt{link}(\sigma, \mathit{msg}, \sigma', \mathit{msg}', \mathit{bsn})\)</span></li>
+<li>\(\textbf{return}\ f\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="58">
+<li>\(\textbf{return}\ \bigl(\{\langle M,H,g\rangle \in \mathtt{Mem} : \mathit{id}.P \in \{M,H\}\}, \{\langle M,b,g\rangle \in \mathtt{DK} : \mathit{id}.P = M\},\ \mathtt{Signed},\ \mathtt{VR}\bigr)\)</li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+The box is transcribed from Camenisch, Drijvers and Lehmann, *Universally composable direct anonymous attestation*, ePrint 2015/1246, revision `20160610:115818` (the newer of two postings), Figure 2, p. 13 — the Sign, Verify and Link interfaces of $\mathcal{F}^{l}_{\mathsf{daa}}$. The roman numerals in the source label its checks and are used as references in its own §3.2 analysis; they are carried into the comments here so the two can be read side by side.
+
+**Retitled from "Anonymous credential, DAA".** The printed object is direct anonymous attestation, and DAA is not an anonymous credential system: a credential scheme's holder shows attributes selectively to a verifier, while this box signs messages and offers exactly one relation between signatures — same-basename linkability. The stub's own reference list already named DAA, and this is the naming judgment TASKS flagged as pending.
+
+**What Figure 1 does, since the box above presupposes it.** `Setup` fixes the issuer, which the source enforces by requiring $\mathit{sid} = (\mathcal{I}, \mathit{sid}')$; `SetAlgorithms` lets the adversary supply $(\mathsf{sig}, \mathsf{ver}, \mathsf{link}, \mathsf{identify}, \mathsf{ukgen})$, subject to check **(i)** that $\mathsf{ver}$, $\mathsf{link}$ and $\mathsf{identify}$ are deterministic — without which a verdict could depend on coins and no consistency claim would hold. Joining is a four-step handshake: a host requests, the adversary delivers, the issuer consents, the adversary supplies the key. Three checks sit in it:
+
+- **(ii), at delivery:** the join aborts if $\mathcal{I}$ or $\mathcal{M}_i$ is honest and $\langle \mathcal{M}_i, *, *\rangle$ is already in $\mathsf{Members}$. **One membership per TPM.** This is what makes check (xi) below meaningful — without it a TPM could hold two keys and a signature under the second would have no honest record to match against.
+- **(iii) and (iv), at key insertion:** if the platform is entirely honest the stored key is $\bot$ — the functionality holds no key at all, which is the strongest form of the anonymity claim. If the host is corrupt but the TPM honest, $\mathsf{CheckGskHonest}(\mathit{gsk})$ must hold: no existing signature in $\mathsf{Signed}$, and no pair already verified as valid, may be identified as belonging to this new key. If the TPM is corrupt, $\mathsf{CheckGskCorrupt}(\mathit{gsk})$ must hold: there is no signature and no second known key $\mathit{gsk}' \neq \mathit{gsk}$ such that both identify as its owner. The two are the *non-frameability* and *identifiability* halves of the same idea, and both are conditions on the adversary's `identify` algorithm rather than on the functionality.
+
+Now the box. Five lines carry its content:
+
+- **Lines 6 and 15 are the two consents, and they are the architecture of DAA.** The host may only start a signature for a TPM it is jointly a member with (line 6, and only while the issuer is honest); the TPM must then consent *after having been shown the message* (line 13). Neither party can sign alone. That is the whole point of splitting a platform into a small trusted chip and a large untrusted host, and it is visible here as two separate interfaces held by two separate parties.
+- **Line 26 discards the adversary's signature.** With both TPM and host honest, the functionality generates the signature itself from $\mathsf{sig}$, and lines 27–29 then audit it: it must verify (**vi**), it must identify as belonging to the key that made it (**vii**), and no *other* known key may also identify as its owner (**viii**). An adversary that supplies algorithms failing any of these has its call refused, which is how the box turns "the scheme must be correct" into a statement about the ideal world.
+- **Line 21 is the linkability mechanism, and it is the only one.** A TPM reuses one key per basename, so two signatures under the same basename share a key and check (xvi) at line 54 will report them linked. With $\mathit{bsn} = \bot$ a fresh key is drawn every time, so nothing links. Unlinkability is therefore not asserted anywhere — it is a *consequence* of there being no shared key to find.
+- **Line 40 is unforgeability, and its shape is worth dwelling on.** A signature that identifies as belonging to an *honest* TPM but which that TPM never produced is rejected. Note what is not claimed: nothing is said about a signature identifying as a corrupt TPM's, because a corrupt TPM may sign whatever it likes; and nothing is said when no key is found at all unless the issuer is honest (line 38, check **x**).
+- **Line 42 is revocation with an escape clause.** A signature matching a key on the revocation list is rejected *unless* an honest TPM is among its identified owners. The clause exists so that a corrupt issuer or verifier cannot revoke an honest platform by putting a guessed key on the list.
+
+Where the source needed a decision, and two places its text is ambiguous:
+
+| Source | Box | Why |
+|---|---|---|
+| `Sign Request`, `Sign Request Delivery`, `Sign Proceed`, `Signature Generation` — outputs pushed to $\mathcal{S}$, $\mathcal{M}_i$ and $\mathcal{H}_j$ in turn | Four operations, lines 5–32, alternating between the parties and the adversary | Delivery is a pull here, so each push to a party becomes that party's own call. The four-step structure is the source's and is preserved exactly: the adversary schedules twice, and each of the two honest roles consents once. |
+| "Set $f \leftarrow 0$ if at least one of the following conditions hold", then "If $f \neq 0$, set $f \leftarrow \mathsf{ver}(\sigma, m, \mathsf{bsn})$" | $f \gets \square$ at line 34, tested at line 43 | The source's $f$ is undefined until a condition fires, and "$f \neq 0$" is then true both for $f$ undefined and — vacuously — for nothing else, since $0$ is the only value assigned. Written with $\square$, the three-way distinction is explicit. |
+| `Link`: "Set $f \leftarrow 0$ if $b_i \neq b'_i$ for some $i$ **(xv)**. Set $f \leftarrow 1$ if $b_i = b'_i = 1$ for some $i$ **(xvi)**." | Lines 51–54, in the source's order, so (xvi) wins | **Both conditions can fire.** Taken as written, the later assignment overwrites the earlier, so a pair that is *distinguished* by one key and *matched* by another links. Check (ix) at line 36 makes that hard to reach — a valid signature has at most one identified owner — but it is not impossible for keys that are in $\mathsf{Members} \cup \mathsf{DomainKeys}$ without matching either signature. The source's order is preserved and the overriding is called out in the comment rather than silently resolved. |
+| `Link` calls the verify interface with $\mathit{RL} = \emptyset$ **(xiv)** | Line 48 calls this box's own $\mathsf{Verify}$ | Faithful, and with a side effect the source intends: verifying inside $\mathsf{Link}$ *records* two entries in $\mathsf{VerResults}$ at line 45, which feeds $\mathsf{CheckGskHonest}$ later. A reader who treats $\mathsf{Link}$ as read-only will get the join checks wrong. |
+| $\mathsf{CheckGskHonest}$ and $\mathsf{CheckGskCorrupt}$ are macros over $\mathsf{Signed}$ and $\mathsf{VerResults}$ | Named, used at line 24, defined in prose above | Inlining them would have doubled the length of two lines for no gain; their definitions are quoted above in full. |
+| Static corruption; the issuer may be corrupt | $\mathbf{C}$, tested at lines 6, 18, 30, 37, 39 and 41 | The source states its analysis for static corruption. Every use of corruption in this box is a test at the moment of the call, so an adaptive corruption changes later verdicts and not earlier ones — which is a strictly weaker reading than the source's and is the safe one. |
+| No leakage interface | Line 58 | Required here. A corrupt TPM's or host's adversary reads that platform's own membership and domain keys, plus the two public ledgers $\mathsf{Signed}$ and $\mathsf{VerResults}$ — which are already reconstructible from the verification results the adversary can obtain by calling $\mathsf{Verify}$ itself. It does not read another platform's key, which is what lines 40 and 55 rest on. |
+| A `join`-side leakage function is absent; `SignStart` leaks $l(m, \mathsf{bsn})$ | Line 8 | The leakage function is a parameter, and the source leaves its choice open. Note that the TPM and host identities *are* leaked in full at line 8 — anonymity here is against a *verifier*, not against a network adversary watching the platform sign. |
+
+## Known realizations
+
+The paper's motivation is that the DAA schemes standardised in TPM 1.2 and TPM 2.0 had game-based security definitions that it argues are insufficient, and its contribution is this functionality together with a scheme proven to realize it. It uses three hybrids, all of which have pages here or nearby: a special authenticated channel $\mathcal{F}_{\mathsf{auth}^{*}}$ (Figure 3, p. 19), a certification authority $\mathcal{F}_{\mathsf{ca}}$ (Figure 7, p. 32), secure message transmission $\mathcal{F}_{\mathsf{smt}}$ (Figure 8, p. 32), and a common reference string $\mathcal{F}_{\mathsf{crs}}$ (Figure 9, p. 33) — the last three reproduced from earlier work.
+
+The paper's own §3.2, pp. 13–18, is an interface-by-interface argument that the sixteen checks deliver unforgeability, anonymity and non-frameability, plus three properties it flags as needing explicit treatment in a simulation-based setting where they are free in a game-based one: **consistency of verify, consistency of link, and symmetry of link**. Its reason is exactly the reason this encyclopedia exists — "in a simulation-based definition, however, the behavior of a functionality may depend on its state, which is why we explicitly show that we achieve these properties".
+
+## Properties
+
+- **Anonymity against a verifier**, with probability exactly $0$ of leakage from a signature: with both TPM and host honest the stored key is $\bot$ and the only key in play is a per-basename one drawn at line 23. Nothing returned by $\mathsf{Verify}$ or $\mathsf{Link}$ names a TPM. Against a *network* adversary the claim is much weaker — line 8 names both platform components on every signature request.
+- **Unlinkability across basenames, with probability exactly $1$ as a property of the box's state**: distinct basenames get distinct entries in $\mathtt{DK}$, so no key is shared and neither (xv) nor (xvi) can fire on a cross-basename pair. Whether two such signatures are linkable then falls through to the adversary's own $\mathsf{link}$ algorithm at line 56 — so unlinkability is *not* guaranteed by the box; it is guaranteed only for pairs the checks decide, and conceded to the algorithm otherwise.
+- **Linkability within a basename, with probability exactly $1$**: line 54.
+- **Unforgeability against an honest TPM**, with probability exactly $1$: line 40, resting on check (ii) from the join interfaces for its meaning.
+- **Non-frameability**, with probability exactly $1$ under checks (iii) and (iv): a newly inserted key may not be one that already identifies as the owner of an existing signature, so a corrupt issuer cannot mint a key that retroactively attributes a signature to an honest platform.
+- **No revocation of honest platforms**, with probability exactly $1$: line 41's second conjunct.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Camenisch, Drijvers, and Lehmann. [*Universally composable direct anonymous attestation*](https://eprint.iacr.org/2015/1246). In Public-Key Cryptography (PKC), 2016.
+- Camenisch, Drijvers, and Lehmann. [*Universally composable direct anonymous attestation*](https://eprint.iacr.org/2015/1246). In Public-Key Cryptography (PKC), 2016. Figure 2, p. 13 of revision `20160610:115818`, the newer of two postings — the definition transcribed above; Figure 1, p. 12 for the setup and join interfaces described in prose above; §3.1, p. 11 for the $\mathsf{CheckGskHonest}$ and $\mathsf{CheckGskCorrupt}$ macros; §3.2, pp. 13–18 for the check-by-check analysis; Figures 3 and 7–9, pp. 19 and 32–33 for the hybrid functionalities.

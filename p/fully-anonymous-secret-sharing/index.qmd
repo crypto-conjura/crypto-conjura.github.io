@@ -1,0 +1,64 @@
+---
+title: "Fully anonymous secret sharing"
+subtitle: "Shares that hide who holds them, and reconstruction that does not ask"
+---
+
+## Motivation
+
+A secret-sharing scheme is normally judged on one thing: whether an unauthorized
+set of parties learns anything about the secret. But shares carry more than the
+secret. Their size and structure can identify which party holds which, whether
+two shares came from the same dealer, or how many dealers are in play — and
+reconstruction routinely needs to know which party contributed what. In any
+setting where the point of sharing is that nobody knows who the shareholders are
+— threshold custody with anonymous participants, dead-man switches, escrow among
+mutually unknown parties — those leaks are the whole problem.
+
+Fully anonymous secret sharing closes both: unauthorized shares are
+indistinguishable from uniformly random strings, and reconstruction takes an
+unordered bag of shares. The interesting question is what that costs, and in
+particular whether it can be had with no error at all — which forces the share
+size to depend on the access structure alone, with no security parameter to hide
+behind.
+
+## Provenance and history
+
+Anonymous reconstruction goes back to Blundo and Stinson (1997). Bishop, Green,
+Ishai, Jain and Lou, *Fully Anonymous Secret Sharing* ([IACR ePrint
+2025/1984](https://eprint.iacr.org/2025/1984)), define three strengths of share
+anonymity on top of it — uniformity (U), multi-dealer (M) and single-dealer (S),
+in decreasing order — and map what each costs.
+
+Their positive results are statistical or computational: an improved statistical
+U-FASS for DNF-representable structures; a compiler from any secret-sharing
+scheme to computational M-FASS from compute-and-compare obfuscation; U-FASS for
+complete bipartite graphs under the Decisional Linear assumption, and for star
+graphs from one-way functions. Their negative results include an $\Omega(\ell)$
+per-party lower bound for a family with many minterms, holding for U-FASS and
+M-FASS alike and even under imperfect anonymity, and a proof that efficient
+information-theoretic U-FASS for CNF does not exist — so one-way functions are
+necessary there.
+
+The *perfect* case is what they record as their first open question. The known
+route for thresholds is a large-field Shamir variant with random interpolation
+points, which sacrifices either perfect correctness (if the points may coincide)
+or perfect uniformity (if they are forced distinct), and in both cases needs
+share size growing with a parameter. Con has since shown Shamir's original
+scheme can be instantiated perfectly for *gap* threshold structures, where the
+reconstruction threshold exceeds the secrecy threshold by roughly a factor of
+two — which is precisely why the open range is $3 \le t \le n-2$.
+
+## Parameter lattice
+
+Anonymity notion against error, for threshold structures.
+
+| | Perfect | Statistical | Computational |
+|---|---|---|---|
+| **U-FASS, gap thresholds** | known (Con) | known | known |
+| **U-FASS, $3 \le t \le n-2$** | open, and stronger than the statement below | known (large-field Shamir variant) | known |
+| **M-FASS, $3 \le t \le n-2$** | [c/0076](/c/0076/) — open; $3$-out-of-$5$ is the smallest case | known | known, from any scheme via compute-and-compare obfuscation |
+| **S-FASS, weighted thresholds** | *unstated* | open in the source's list, at Shamir-like efficiency | known via obfuscation |
+
+## Statements in this hub
+
+- [Perfect Fully Anonymous Secret Sharing for the $3$-out-of-$5$ Threshold](/c/0076/) — open

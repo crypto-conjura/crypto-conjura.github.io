@@ -1,0 +1,255 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  Bishop-Green-Ishai-Jain-Lou's open question: does perfect uniform
+%  fully anonymous secret sharing exist for 3-out-of-5?
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{PERFECT FULLY ANONYMOUS SECRET SHARING AT 3-OUT-OF-5}
+
+\newcommand{\Sh}{\mathcal{S}}
+\newcommand{\Om}{\Omega}
+\newcommand{\Share}{\mathsf{Share}}
+\newcommand{\Recon}{\mathsf{Recon}}
+\newcommand{\Unif}{\mathsf{Unif}}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{Perfect Fully Anonymous Secret Sharing for the
+  $3$-out-of-$5$ Threshold}
+\cjsubtitle{Uniform unauthorized shares, identity-free reconstruction,
+  no error at all}
+\cjstatus{Statement: AI-written from Allison Bishop, Matthew Green, Yuval
+  Ishai, Abhishek Jain and Paul Lou, \emph{Fully Anonymous Secret
+  Sharing}, IACR ePrint 2025/1984. Not yet checked by a human. The
+  statistical and computational versions are settled by the source and by
+  prior work; the perfect version is stated by the source to be open for
+  every reconstruction threshold $3 \le t \le n-2$, and open even for the
+  weaker multi-dealer notion, with $3$-out-of-$5$ singled out as the
+  smallest open case. Con has settled the perfect case for gap threshold
+  structures, where the reconstruction threshold exceeds the secrecy
+  threshold by roughly a factor of two.}
+\cjcategory{\emph{Secret Sharing}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+Ordinary secret sharing hides the secret from unauthorized sets of
+parties, but not much else: the shares may reveal who holds them, and
+reconstruction may need to know which party contributed which share.
+Fully anonymous secret sharing asks for both to go away --- shares of any
+unauthorized set look like uniformly random strings, revealing neither
+party identities nor even whether they came from the same dealer, and
+reconstruction works from an unordered bag of shares. Shamir's scheme
+over a large field with random interpolation points almost does this for
+thresholds, but only almost: it either loses perfect correctness (if the
+points may repeat) or perfect uniformity (if they are forced distinct),
+and either way the share size has to grow with the security parameter. A
+truly perfect scheme would have shares whose size depends on the access
+structure alone. The source asks whether one exists, and observes that
+the question is open already for $3$-out-of-$5$.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+The source defines three strengths of anonymity for the shares of an
+unauthorized set, on top of the requirement (going back to Blundo and
+Stinson~\cite{BS97}) that reconstruction not take party identities as
+input. \emph{U-anonymity}, the strongest, asks that the shares of any
+unauthorized set be uniform on the publicly known share domain.
+\emph{M-anonymity} asks only that a set of unauthorized shares drawn from
+one sharing be indistinguishable from one where a single share comes from
+an independent sharing of a possibly different secret --- so a mixture of
+dealers cannot be detected. \emph{S-anonymity}, the weakest, asks only
+that unauthorized sets of equal size be indistinguishable within one
+sharing. U-anonymity implies M-anonymity implies S-anonymity, and a
+scheme with anonymous reconstruction satisfying the respective notion is
+called U-FASS, M-FASS or S-FASS\@.
+
+For threshold structures the known route to U-FASS is a large-field
+variant of Shamir's scheme with random interpolation points, and the
+source spells out why it is not perfect: if the points are drawn
+independently, correctness fails when two coincide; if they are forced
+distinct, the shares are no longer uniform. Either way the share size has
+to grow with the security or correctness parameter, whereas a perfect
+U-FASS scheme must achieve anonymity with share size depending only on
+the access structure.
+
+The source's positive results are statistical or computational: an
+improved statistical U-FASS for DNF-representable structures, a
+compiler from any secret-sharing scheme to computational M-FASS from
+compute-and-compare obfuscation, a U-FASS for complete bipartite graphs
+from the Decisional Linear assumption, and one for star graphs from
+one-way functions. Its negative results include an $\Om(\ell)$ per-party
+lower bound for a family with many minterms, applying to U-FASS and
+M-FASS alike and also under imperfect anonymity.
+
+The perfect case is what it records as its first open question: ``The
+first open question is the possibility of perfect U-FASS for general
+access structures, namely U-FASS with both perfect uniformity and perfect
+correctness. The question is open even for threshold structures with
+reconstruction threshold $3 \le t \le n-2$ and even for the weaker notion
+of perfect M-FASS\@. In particular, it is open in the 3-out-of-5 threshold
+case.'' It also names the state of progress: Con~\cite{Con24} shows
+Shamir's original scheme can be instantiated to give perfect U-FASS for
+\emph{gap} threshold structures, where the reconstruction threshold
+exceeds the secrecy threshold by roughly a factor of two --- which is
+exactly why the interesting range is $3 \le t \le n-2$ and why
+$3$-out-of-$5$ is the smallest case left.
+
+\section{Notation and parameters}\label{sec:notation}
+
+\begin{itemize}[nosep]
+  \item $[n] = \{1, \dots, n\}$ is the party set; $\Gamma \subseteq
+    2^{[n]}$ a monotone access structure. The $t$-out-of-$n$ threshold
+    structure is $\Gamma = \{A : |A| \ge t\}$.
+  \item $\Sh$ is the secret space, $\lambda$ the security parameter.
+  \item $\Omega_{\lambda}$ is the efficiently samplable, publicly known
+    support of a single share over all choices of secret --- the domain
+    the uniformity requirement compares against.
+  \item $sh \leftarrow \Share(1^{\lambda}, s)$ produces the share vector;
+    $sh_{A} = (sh_{i})_{i \in A}$; $\Recon(1^{\lambda}, sh)$ takes shares
+    with no party identities.
+  \item $\mu$ is the anonymity error. \emph{Perfect} means $\mu = 0$ and,
+    for correctness, error exactly $0$.
+\end{itemize}
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{definition}[Anonymous reconstruction,
+  {\cite[Definition 3.5]{BGIJL25}}, after~{\cite{BS97}}]\label{def:anonrec}
+A secret-sharing scheme with anonymous reconstruction for $\Gamma$ and
+secret space $\Sh$ is a pair $(\Share, \Recon)$ where
+$\Share(1^{\lambda}, s)$ is randomized and $\Recon(1^{\lambda}, sh)$ is
+deterministic and takes \emph{only} a tuple of shares --- no party
+identities. It is \emph{perfectly correct} if for every $\lambda$, every
+$s \in \Sh_{\lambda}$ and every $A \in \Gamma$,
+$\Recon(1^{\lambda}, sh_{A}) = s$ with probability $1$ over $sh
+\leftarrow \Share(1^{\lambda}, s)$.
+\end{definition}
+
+\begin{definition}[Uniformity, {\cite[Definition 4.1]{BGIJL25}}]
+  \label{def:uanon}
+A scheme $(\Share, \Recon)$ for $\Gamma$ is \emph{$\mu$-U-anonymous}
+(statistically) if for every computationally unbounded $\mathcal{A}$, all
+large enough $\lambda$, every secret $s \in \Sh_{\lambda}$ and every
+unauthorized $B \in 2^{[n]} \setminus \Gamma_{\lambda}$,
+\[
+  \Bigl| \Pr_{sh \leftarrow \Share(1^{\lambda},s)}\bigl[
+  \mathcal{A}(1^{\lambda}, s, B, sh_{B}) = 1 \bigr]
+  - \Pr_{U \sim \Unif(\Omega_{\lambda})^{|B|}}\bigl[
+  \mathcal{A}(1^{\lambda}, s, B, U) = 1 \bigr] \Bigr| \le \mu(\lambda),
+\]
+where $\Omega_{\lambda}$ is the publicly known support of a single share.
+A scheme satisfying Definition~\ref{def:anonrec} together with
+U-anonymity is a \emph{U-FASS} scheme; it is \emph{perfect} if it is
+perfectly correct and $0$-U-anonymous.
+\end{definition}
+
+\begin{definition}[Multi-dealer anonymity,
+  {\cite[Definition 4.2]{BGIJL25}}]\label{def:manon}
+A scheme is \emph{$\mu$-M-anonymous} if for every computationally
+unbounded $\mathcal{A}$, all large enough $\lambda$, every unauthorized
+$B$, every $B' \subset B$ with $|B'| = |B| - 1$, every singleton
+unauthorized $\{a\}$ and all $s_{0}, s_{1} \in \Sh_{\lambda}$, the
+distinguishing advantage between $sh^{(0)}_{B}$ and $sh^{(0)}_{B'} \|
+sh^{(1)}_{\{a\}}$ --- where $sh^{(0)} \leftarrow
+\Share(1^{\lambda},s_{0})$ and $sh^{(1)} \leftarrow
+\Share(1^{\lambda},s_{1})$ independently --- is at most $\mu(\lambda)$.
+An M-FASS scheme is \emph{perfect} if it is perfectly correct and
+$0$-M-anonymous. Perfect U-FASS implies perfect M-FASS\@.
+\end{definition}
+
+\begin{conjecture}[Perfect FASS at $3$-out-of-$5$]\label{conj:main}
+There is a perfect M-FASS scheme (Definitions~\ref{def:anonrec}
+and~\ref{def:manon}) for the $3$-out-of-$5$ threshold access structure
+with $|\Sh| \ge 2$, in which the share domain $\Omega$ and hence the
+share size depend only on the access structure and the secret space, not
+on any security or correctness parameter.
+\end{conjecture}
+
+\begin{remark}[Why the weaker notion, and what a positive answer at the
+  stronger one would mean]
+The source states the question for perfect U-FASS and adds that it is
+open ``even for the weaker notion of perfect M-FASS''.
+Conjecture~\ref{conj:main} is therefore stated at the weaker notion,
+which is the easier target and the one whose resolution the source flags
+as already unknown: a perfect M-FASS scheme for $3$-out-of-$5$ settles
+the weaker question, and a proof that none exists settles the stronger
+one too, since perfect U-FASS implies perfect M-FASS\@. A construction
+achieving perfect U-FASS is strictly better than what is asked here and
+should be reported as such.
+\end{remark}
+
+\begin{remark}[Both directions are open]
+Nothing in the source predicts an answer. A resolution is either such a
+scheme or a proof that no perfect M-FASS scheme for $3$-out-of-$5$ exists
+with parameter-independent share size. The source's own $\Om(\ell)$ lower
+bound does not apply: it is for an access structure with many minterms,
+and it explicitly does not cover the single-minterm and small-threshold
+cases.
+\end{remark}
+
+\begin{remark}[What ``perfect'' rules out]
+The constant-share-size clause in Conjecture~\ref{conj:main} is the
+source's own reading of what perfect means here: ``a perfect U-FASS
+scheme must provide anonymity with \emph{constant-size} shares, depending
+only on the access structure.'' It is what excludes the known
+threshold construction, whose share size grows with the security or
+correctness parameter precisely because it must make interpolation-point
+collisions rare rather than impossible. A scheme with $0$ error whose
+share size still grows with a parameter $\lambda$ would not be a
+resolution.
+\end{remark}
+
+\begin{remark}[Neighbouring questions in the same list]
+The source's open-questions section also asks for improved
+information-theoretic FASS for the single-minterm access structure
+(better than its $\widetilde{O}(t\lambda)$ per-party upper bound, and
+with efficient reconstruction for a one-bit secret), for
+information-theoretic S-FASS for weighted threshold structures matching
+the efficiency of virtualized Shamir, and whether one-way functions
+suffice for computational U-FASS for CNF --- or whether such a scheme
+implies public-key encryption. None of those is this statement.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem[BGIJL25]{BGIJL25}
+Allison Bishop, Matthew Green, Yuval Ishai, Abhishek Jain and Paul Lou.
+\emph{Fully anonymous secret sharing}.
+IACR ePrint 2025/1984.
+The source. Definitions 3.5, 4.1 and 4.2 are on pages 19, 23--24; the
+open question is the first item of Section 2.4 (``Open Questions and
+Future Directions''), page 17.
+
+\bibitem[BS97]{BS97}
+Carlo Blundo and Douglas R. Stinson.
+\emph{Anonymous secret sharing schemes}.
+Discrete Applied Mathematics, 77(1):13--28, 1997.
+The anonymous-reconstruction syntax the source's Definition 3.5 adopts.
+
+\bibitem[Con24]{Con24}
+Roni Con.
+\emph{Anonymous Shamir's secret sharing via Reed--Solomon codes against
+permutations, insertions, and deletions}.
+arXiv 2412.17003, 2024; presented at ISIT 2025.
+The recent progress the source credits: Shamir's original scheme can be
+instantiated to give a perfect U-FASS scheme for gap threshold
+structures, where the reconstruction threshold is bigger than the secrecy
+threshold by roughly a factor of $2$.
+
+\bibitem[Sha79]{Sha79}
+Adi Shamir.
+\emph{How to share a secret}.
+Communications of the ACM, 22(11):612--613, November 1979.
+The threshold scheme whose large-field random-interpolation-point variant
+is the known U-FASS for thresholds.
+
+\end{conjurabibliography}
+
+\end{document}

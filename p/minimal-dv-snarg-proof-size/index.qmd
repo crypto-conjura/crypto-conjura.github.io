@@ -1,0 +1,56 @@
+---
+title: "How short can a designated-verifier SNARG be?"
+subtitle: "One group element plus a soundness-dependent tail, in the generic group model"
+---
+
+## Motivation
+
+Succinct arguments are usually measured in group elements, and for
+publicly-verifiable pairing-based SNARGs the record has stood at three, then
+two, then a little under two. Designated verification — where only the party
+holding a secret verification state can check the proof — relaxes the problem
+enough that the count can go lower still, and the natural floor is one group
+element plus however many extra bits the soundness level demands.
+
+The reason to care is not aesthetics. Where verification happens on very
+constrained hardware, or where every transmitted bit is expensive, the whole
+cost is the proof length and the single exponentiation that checks it. Getting
+from about $1280$ bits to about $700$, and possibly to about $340$, is the
+difference between a scheme that is a curiosity and one that fits a budget.
+
+## Provenance and history
+
+Barta, Ishai, Ostrovsky and Wu (CRYPTO 2020) constructed generic-group
+dv-SNARGs with two group elements, but only with inverse-polynomial soundness;
+for negligible soundness every earlier construction needed super-constantly many
+group elements. Arnon, Dujmovic and Ishai, *Designated-Verifier SNARGs with One
+Group Element* ([IACR ePrint 2025/517](https://eprint.iacr.org/2025/517)), close
+that gap by extending the linear-only-encryption compiler of Bitansky, Chiesa,
+Ishai, Ostrovsky and Paneth to *compressible* encryption, instantiated with
+packed ElGamal, and combining it with linear PCPs — the one-query LPCP of
+Bitansky, Harsha, Ishai, Rothblum and Wu for a linear CRS, or the Hadamard-based
+two-query LPCP of Barta et al. for better concrete succinctness at quadratic CRS
+size.
+
+Two theorems come out: one group element plus $O(\tau)$ bits in the generic
+group model alone, and one group element, one random-oracle output and about
+$2\tau$ bits when a random oracle is available to restrict the adversary's
+malleability. The paper then states, as a numbered conjecture, what two
+identified-but-unproved improvements would give: one group element and $\tau +
+o(\tau)$ bits, with a linear CRS and no oracle.
+
+## Parameter lattice
+
+Proof size against what the construction assumes, at soundness parameter $\tau$
+and security parameter $\lambda$.
+
+| | Assumption | Proof size | CRS size | Concrete, $\tau=80$, $\lambda=128$ |
+|---|---|---|---|---|
+| **Barta et al.** | generic group | 2 $\mathbb{G}$-elements, inverse-poly soundness only | — | *unstated*: negligible soundness not achieved |
+| **Theorem 1.1** | generic group | 1 $\mathbb{G}$ + $O(\tau)$ bits | $O(\tau s)$ | large constant; $56\tau$ bits at CRS $O(\tau s^2)$ |
+| **Theorem 1.2** | generic group + random oracle | 1 $\mathbb{G}$ + 1 hash + $\approx 2\tau$ bits | $O(\tau s\,\mathrm{poly}(p))$ | $695$ bits |
+| **Conjecture 1.3** | generic group | 1 $\mathbb{G}$ + $\tau + o(\tau)$ bits | $O(\tau s)$ | $\approx 340$ bits — [c/0072](/c/0072/), open |
+
+## Statements in this hub
+
+- [A Designated-Verifier SNARG with One Group Element and $\tau + o(\tau)$ Bits](/c/0072/) — open

@@ -1,0 +1,227 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  Bartusek-Bitansky-Dodis-Garg-Wu's open problem on computation-
+%  sublinear refresh for forward-secure continuous group key agreement.
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{COMPUTATION-SUBLINEAR FORWARD-SECURE CGKA}
+
+\newcommand{\lam}{\lambda}
+\newcommand{\UpdPK}{\mathsf{UpdPK}}
+\newcommand{\UpdSK}{\mathsf{UpdSK}}
+\newcommand{\apk}{\mathsf{apk}}
+\newcommand{\ask}{\mathsf{ask}}
+\newcommand{\pk}{\mathsf{pk}}
+\newcommand{\sk}{\mathsf{sk}}
+\newcommand{\ctref}{\mathsf{ctref}}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{Computation-Sublinear Refresh for Forward-Secure CGKA}
+\cjsubtitle{Sublinear-time key refresh for updatable distributed
+  broadcast encryption}
+\cjstatus{Statement: AI-written from James Bartusek, Nir Bitansky,
+  Yevgeniy Dodis, Rachit Garg and David J. Wu, \emph{Fair-Weather No
+  More: Guaranteed Efficiency in Secure Group Messaging}, IACR ePrint
+  2026/1677. Not yet checked by a human. Open: the source achieves
+  sublinear \emph{communication} with forward secrecy, but leaves
+  sublinear refresh \emph{time} unresolved, and shows only that a
+  natural way of pushing further --- dropping the membership set as an
+  input entirely --- is insecure for one specific construction.}
+\cjcategory{\emph{Secure Group Messaging \& Key Agreement}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+Continuous group key agreement (CGKA) protocols let a dynamic group of
+users maintain a shared secret, and forward secrecy requires an
+explicit key-rotation (``refresh'') step, so that later compromising a
+user's state cannot expose past group keys. The source builds the
+first CGKA scheme with forward secrecy whose communication cost is
+worst-case sublinear, in fact essentially independent of the group
+size, using a new primitive it calls updatable distributed broadcast
+encryption. But the scheme's refresh algorithms still take time
+polynomial in the number of users, because they take the group's whole
+membership as an explicit input. The source poses the question of
+whether this can be avoided: is there a scheme with the same security
+guarantees whose refresh operation also runs in time sublinear in the
+group size, and not merely produces a short message? The source
+commits to no specific target rate, such as polylogarithmic, for this
+question. A strictly stronger version, raised separately, asks for
+refresh algorithms that do not depend on the membership set at all; the
+source shows a natural way of achieving that stronger property is
+completely insecure, by an attack that cancels out the encryption
+randomness between two users' ciphertext components --- but this
+attack targets only the stronger variant, not the plain sublinear-time
+question stated here.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+An \emph{updatable distributed broadcast encryption} (updatable DBE)
+scheme is the cryptographic core of the source's forward-secure CGKA
+construction. Users are identified by indices; each user $i$ holds a
+key pair $(\pk_{i}, \sk_{i})$, and a set $S$ of currently active users
+has an aggregated public key $\apk$ together with, for each $i \in S$,
+an aggregated secret key $\ask_{i}$. A sender encrypts a single message
+to $\apk$, and every $i \in S$ decrypts it with $\ask_{i}$. Two update
+mechanisms are required: \emph{incremental} updates that add or remove
+one user from $S$, and a \emph{refresh} mechanism, run via algorithms
+$\UpdPK$ and $\UpdSK$, that re-randomizes every active user's keys at
+once. The refresh mechanism is what supplies forward secrecy: after a
+refresh, compromising a user's new secret key does not help decrypt
+ciphertexts sent before the refresh.
+
+The source's succinctness requirement (its Definition 5.6) asks only
+that the \emph{sizes} of $\apk$, of each $\ask_{i}$, of the refreshed
+public/secret keys, and of the refresh ciphertext $\ctref$ produced by
+$\UpdPK$ be $\poly(\lam)$, independent of $|S|$. It explicitly does
+\emph{not} require the \emph{running time} of $\UpdPK$ and $\UpdSK$ to
+be sublinear in $|S|$: both algorithms take the entire membership
+mapping $S$ as an explicit input and are allowed to touch every entry
+of it. The source's own construction (its Construction 5.10) achieves
+compact keys and compact communication this way, built from a
+lattice-based matrix-commitment scheme under the decomposed
+learning-with-errors assumption~\cite{AMR25} in the random oracle
+model, but its refresh algorithms run in time $\poly(\lam, |S|)$. When
+used to build a CGKA protocol, the resulting protocol inherits this
+asymmetry: its Add, Remove and post-compromise-refresh operations all
+run in time independent of the group size, but its forward-secrecy
+refresh operation runs in time polynomial in the group size, even
+though the message it broadcasts stays short. The only prior CGKA
+scheme achieving forward secrecy at all, RTreeKEM~\cite{ACDT20}, does
+not meet even the source's weaker, communication-only efficiency
+requirement, so no scheme --- prior or from this source --- achieves
+forward secrecy together with a sublinear-time refresh.
+
+The source's own Remark 5.7 records the gap and poses the question
+without committing to a specific target rate: ``An important open
+problem is to obtain a scheme where the refresh operation requires
+sublinear running time.'' A separate, strictly stronger question is
+raised only in a footnote: dropping $S$ as an explicit input to
+$\UpdPK$ and $\UpdSK$ entirely, so that they run in time $\poly(\lam)$
+with no dependence on $|S|$ whatsoever. The source's Appendix A gives
+an attack on a natural construction achieving that stronger property
+--- replacing each user's independent random shift with one shared
+shift --- but this attack does not bear on the plain sublinear-refresh
+question below, which still permits $\UpdPK$ and $\UpdSK$ to take $S$
+as input.
+
+\section{Notation and parameters}\label{sec:notation}
+
+\begin{itemize}[nosep]
+  \item $\lam$ is the security parameter.
+  \item $S$ is a finite set of currently active group members,
+    represented as a map from user indices to public keys; $|S|$ is
+    the group size.
+  \item $\apk$ is the aggregated public key associated with $S$;
+    $\ask_{i}$ is user $i$'s aggregated secret key.
+  \item $\ctref$ is the refresh ciphertext produced by $\UpdPK$ and
+    consumed by $\UpdSK$.
+\end{itemize}
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{definition}[Updatable distributed broadcast encryption,
+  source's Section 5]\label{def:updbe}
+An updatable distributed broadcast encryption scheme for up to
+$2^{\lam}$ users is a tuple
+$\Pi = (\mathsf{Setup}, \mathsf{KeyGen}, \mathsf{IncPK}, \mathsf{IncSK},
+\mathsf{Enc}, \mathsf{Dec}, \UpdPK, \UpdSK)$. $\mathsf{Setup}(1^{\lam})$
+outputs public parameters $\mathsf{pp}$, and $\mathsf{KeyGen}(\mathsf{pp}, i)$
+outputs a key pair $(\pk_{i}, \sk_{i})$ for user $i$. Writing $S$ for a
+finite set of active users, $\mathsf{IncPK}$ and $\mathsf{IncSK}$
+update $\apk$ and $\ask_{i}$ whenever a user joins or leaves $S$;
+$\mathsf{Enc}(\mathsf{pp}, \apk, \mu)$ and
+$\mathsf{Dec}(\mathsf{pp}, \ask_{i}, \mathsf{ct})$ encrypt to, and
+decrypt for, the current group; and the refresh pair
+$\UpdPK(\mathsf{pp}, \apk, S) \to (\ctref, \apk', S')$,
+$\UpdSK(\mathsf{pp}, \ask_{i}, \ctref, S, \pk_{i}, \sk_{i}) \to
+(\ask_{i}', \pk_{i}', \sk_{i}', S')$ jointly re-randomize every active
+user's keys given only the current membership $S$, so that after a
+refresh a corrupted user's new secret key does not help decrypt
+ciphertexts encrypted to $\apk$ before that refresh. $\Pi$ is
+\emph{secure} (statically or adaptively) if no efficient adversary can
+distinguish an encryption of a chosen bit from an encryption of a
+uniform bit, given the view produced by any admissible sequence of
+key-generation, corruption, add/remove and refresh queries, provided no
+user in the group at the time of the challenge was ever corrupted while
+still in the group. $\Pi$ is \emph{succinct} if $|\apk|$, each
+$|\ask_{i}|$, each refreshed key, and $|\ctref|$ are all bounded by a
+fixed polynomial in $\lam$, independent of $|S|$.
+\end{definition}
+
+\begin{conjecture}[Sublinear-time refresh]\label{conj:main}
+Fix the syntax and security notion of Definition~\ref{def:updbe}
+together with its succinctness requirement. Does there exist a secure,
+succinct updatable distributed broadcast encryption scheme $\Pi$ for up
+to $2^{\lam}$ users such that, for every set $S$ of active users with
+$|S| \le 2^{\lam}$, both refresh algorithms $\UpdPK(\mathsf{pp}, \apk,
+S)$ and $\UpdSK(\mathsf{pp}, \ask_{i}, \ctref, S, \pk_{i}, \sk_{i})$ run
+in time sublinear in $|S|$ --- rather than merely producing output of
+size $\poly(\lam)$ while running in time $\poly(\lam, |S|)$, as in the
+source's own Construction 5.10? (The source does not commit to a
+specific target rate, such as polylogarithmic, for the refresh running
+time itself.)
+
+Equivalently, at the level of secure group messaging: does there exist
+a continuous group key agreement protocol that simultaneously achieves
+post-compromise security and forward secrecy while \emph{every} one of
+its operations --- including the forward-secrecy refresh operation, and
+not merely its communication --- runs in time sublinear in the current
+group size?
+\end{conjecture}
+
+\begin{remark}[A strictly stronger, separately-posed variant]
+The source's Footnote 8 (printed page 7) raises a strictly stronger
+question: dropping $S$ as an explicit input to $\UpdPK$ and $\UpdSK$
+entirely, so that they run in time $\poly(\lam)$ independent of $|S|$.
+The source's Appendix A gives an attack --- a linear-cancellation
+(``zeroizing'') argument comparing two users' local openings and
+ciphertext components --- against a natural construction achieving
+\emph{that} stronger property, obtained by replacing each user's
+independent per-user random shift with one shared shift. This attack is
+evidence of difficulty for the stronger, input-free variant; it does
+not attack, and is not offered by the source as evidence against, the
+plain sublinear-time question of Conjecture~\ref{conj:main}, which
+still permits $\UpdPK$ and $\UpdSK$ to take $S$ as input.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem[BBDGW26]{BBDGW26}
+James Bartusek, Nir Bitansky, Yevgeniy Dodis, Rachit Garg and David J.
+Wu.
+\emph{Fair-weather no more: Guaranteed efficiency in secure group
+messaging}.
+IACR ePrint 2026/1677.
+The source. The open problem is posed on printed page 6 and restated as
+Remark 5.7, page 35; the succinctness requirement is Definition 5.6,
+page 35; the stronger input-free variant is Footnote 8, page 7; the
+attack on it is Appendix A, pages 72--74.
+
+\bibitem[ACDT20]{ACDT20}
+Jo\"{e}l Alwen, Sandro Coretti, Yevgeniy Dodis and Yiannis Tselekounis.
+\emph{Security analysis and improvements for the IETF MLS standard for
+group messaging}.
+CRYPTO 2020.
+RTreeKEM, the only prior CGKA scheme with forward secrecy, cited by the
+source as not meeting even its weaker, communication-only efficiency
+requirement.
+
+\bibitem[AMR25]{AMR25}
+Damiano Abram, Giulio Malavolta and Lawrence Roy.
+\emph{Key-homomorphic computations for RAM: Fully succinct randomised
+encodings and more}.
+CRYPTO 2025.
+Introduces the decomposed learning-with-errors assumption the source's
+Construction 5.10 relies on.
+
+\end{conjurabibliography}
+
+\end{document}

@@ -1,15 +1,147 @@
 ---
-title: "F-rsig — Ring signature"
+title: "F-rsig — Ring signature, six security levels in one box"
 status: "Canonical"
 layer: 7
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-rsig* (Ring signature) is part of *Privacy and Anonymity* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+*F-rsig* (Ring signature, six security levels in one box) is part of *Privacy and Anonymity* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
 
-Long lacked a settled UC formulation; two papers (2007 and 2022) now anchor it, though the earlier one has not been independently verified here.
+A signer picks any set of parties whose verification keys are public, signs on that set's behalf, and a verifier learns that *someone* in the set signed and nothing more. The printed box is one functionality parameterized by two independent security levels — two grades of unforgeability and three of anonymity — so a single object stands for six notions, and the parameters are the only difference between them.
+
+## Functionality
+
+Reading the box: $\mathbf{C}$ is the corrupted set; $\square$ marks a table entry never set and $\bot$ a refusal or a withheld answer; $\mathcal{A}(\cdot)$ is a call on the adversary slot and $\mathsf{San}[\mathsf{Clean}_{v}]$ the sanitizer applied to what comes back. $\mathtt{V}$ maps a party to its verification algorithm, so $\mathtt{V}[\mathbf{P}]$ is the source's list $L_{\mathsf{all}}$ of every registered key and $\mathtt{Ring}(L)$ is the source's ring $G$ — the parties a key list $L$ names. Entries of $\mathtt{V}$ and $\mathtt{RS}$ are *descriptions of machines*, which is why they are applied: $v(\mathit{msg}, L, \sigma)$ runs the verification algorithm $v$. **require** refuses the call and the framework answers $\textsf{rej}$.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}^{(\mathit{uf},\mathit{anon})}_{\mathsf{rSIG}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := (\mathit{uf}, \mathit{anon})\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{RS} \gets \square\)<span class="cj-comment">// one signing algorithm for every ring</span></li>
+<li>\(\mathtt{V} : \mathbf{P} \to \{0,1\}^* \cup \{\square\}\); &nbsp;\(\mathtt{V}[*] \gets \square\)</li>
+<li>\(\mathtt{Rec} \gets \varnothing\)<span class="cj-comment">// \((\mathit{msg}, L, \sigma, P)\) quadruples</span></li>
+<li>\(\mathtt{Ring}(L) := \{P \in \mathbf{P} : \mathtt{V}[P] \in L\}\)<span class="cj-comment">// the ring a key list names</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.KeyGen()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="5">
+<li>\(\textbf{require}\ \mathtt{V}[\mathit{id}.P] = \square\)</li>
+<li>\(\textbf{if}\ \mathtt{RS} = \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\((\mathtt{RS}, v) \gets \mathcal{A}\bigl(\mathit{id}.\mathsf{KeyGen}\bigr)\)</span></li>
+<li>\(\textbf{if}\ \mathtt{RS} \neq \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(v \gets \mathcal{A}\bigl(\mathit{id}.\mathsf{KeyGen}\bigr)\)</span></li>
+<li>\(v \gets \mathsf{San}[\mathsf{Clean}_{v}](v)\)</li>
+<li>\(\mathtt{V}[\mathit{id}.P] \gets v\)</li>
+<li>\(\textbf{return}\ v\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Sign(<span class="cj-id">msg</span>, <span class="cj-id">L</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="13">
+<li>\(\textbf{require}\ L \subseteq \mathtt{V}[\mathbf{P}] \ \wedge\ \mathtt{V}[\mathit{id}.P] \in L\)</li>
+<li>\(\sigma \gets \mathtt{RS}(\mathit{msg}, L)\)</li>
+<li>\(\textbf{if}\ \bigwedge_{v \in L} v(\mathit{msg}, L, \sigma) = 0\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \bot\)</span><span class="cj-comment">// the source's ``error message''</span></li>
+<li>\(\mathtt{Rec} \gets \mathtt{Rec} \cup \{(\mathit{msg}, L, \sigma, \mathit{id}.P)\}\)</li>
+<li>\(\textbf{return}\ \sigma\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Verify(<span class="cj-id">msg</span>, <span class="cj-id">L</span>, <span class="cj-id">&sigma;</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="19">
+<li>\(\textbf{if}\ L \subseteq \mathtt{V}[\mathbf{P}] \ \wedge\ \mathtt{Ring}(L) \cap \mathbf{C} = \varnothing\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{if}\ \mathit{uf} = \mathsf{eUF} \ \wedge\ (\mathit{msg}, L, *, *) \notin \mathtt{Rec}\ \textbf{then}\)</span></li>
+<li><span class="cj-ind">\(\textbf{return}\ 0\)</span></li>
+<li><span class="cj-ind">\(\textbf{if}\ \mathit{uf} = \mathsf{sUF} \ \wedge\ (\mathit{msg}, L, \sigma, *) \notin \mathtt{Rec}\ \textbf{then}\)</span></li>
+<li><span class="cj-ind">\(\textbf{return}\ 0\)</span></li>
+<li>\(\textbf{return}\ \bigwedge_{v \in L} v(\mathit{msg}, L, \sigma)\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Attribute(<span class="cj-id">msg</span>, <span class="cj-id">L</span>, <span class="cj-id">&sigma;</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="25">
+<li>\(\textbf{require}\ \mathit{id}'.F = \mathbf{A} \ \wedge\ (\mathit{msg}, L, \sigma, P) \in \mathtt{Rec}\)</li>
+<li>\(\textbf{if}\ \mathit{anon} = \mathsf{fullkey}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \bot\)</span></li>
+<li>\(\textbf{if}\ \mathit{anon} = \mathsf{basic} \ \wedge\ P \notin \mathbf{C} \ \wedge\ |\mathtt{Ring}(L) \setminus \mathbf{C}| \geq 2\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \bot\)</span></li>
+<li>\(\textbf{if}\ \mathit{anon} = \mathsf{attribution} \ \wedge\ \mathtt{Ring}(L) \setminus \mathbf{C} \neq \varnothing\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \bot\)</span></li>
+<li>\(\textbf{return}\ P\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="33">
+<li>\(\textbf{require}\ \mathtt{V}[\mathit{id}.P] \neq \square\)</li>
+<li>\(\textbf{return}\ \bigl(\mathtt{RS},\ \mathtt{V}[\mathit{id}.P],\ \{(\mathit{msg}, L, \sigma) : (\mathit{msg}, L, \sigma, \mathit{id}.P) \in \mathtt{Rec}\}\bigr)\)</li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+The box is transcribed from Yoneyama and Ohta, *Ring signatures: universally composable definitions and constructions*, Information and Media Technologies 2(4):1038–1051, 2007 — reprinted from IPSJ Digital Courier 3:571–584 — Figure 1, p. 1043 (PDF page 6 of the J-STAGE posting), captioned "Ring signature functionality $\mathcal{F}^{(\mathit{uf},\mathit{anon})}_{\mathsf{rSIG}}$".
+
+**The two parameters are the entry.** $\mathit{uf} \in \{\mathsf{eUF}, \mathsf{sUF}\}$ and $\mathit{anon} \in \{\mathsf{basic}, \mathsf{attribution}, \mathsf{fullkey}\}$, and the paper's claim is that the six combinations correspond exactly to six game-based notions. Everything else in the box is shared. That is unusual: most functionalities in this encyclopedia fix their security level in the code and leave a variant to a different paper.
+
+What the code does not say:
+
+- **Line 14 is the anonymity guarantee, and it is a guarantee about what is *absent*.** The signature is produced by running $\mathtt{RS}$ inside the functionality, with no call on the adversary slot anywhere in $\mathsf{Sign}$. The adversary therefore learns nothing at signing time — not the ring, not the message, not that a signature happened. Compare [F-gsig](/uc/layer-7-privacy-anonymity/f-gsig/index.qmd), where the group manager's `Join` explicitly notifies the adversary: there, membership is not hidden; here, even the act of signing is not leaked. The paper makes this argument in exactly those terms — "$\mathcal{F}_{\mathsf{rSIG}}$ generates the signature by using the signing algorithm $\mathbf{RS}$ without any interaction with the adversary".
+- **Line 19 is where unforgeability is bought, and it is bought only for rings of honest parties.** The whole unforgeability clause sits under $\mathtt{Ring}(L) \cap \mathbf{C} = \varnothing$: once one ring member is corrupt, the box stops overriding the algorithm and a verifier gets whatever $\bigwedge_{v \in L} v(\cdot)$ says. This is right rather than weak — a corrupt ring member can sign legitimately, so no functionality can call its output a forgery.
+- **Lines 20 and 22 differ in one wildcard, and that wildcard is the whole eUF/sUF distinction.** Under $\mathsf{eUF}$ the test is whether *any* signature on $\mathit{msg}$ for $L$ was recorded, so a fresh signature on an already-signed message verifies; under $\mathsf{sUF}$ the test names $\sigma$, so it does not. Written as code the difference is a single argument position, which is a better description of the two notions than the prose definitions it replaces.
+- **Line 24 is why the box needs the algorithms at all.** A functionality that simply answered "recorded, therefore 1" would be unrealizable: a real verifier runs $\mathsf{RVer}$ and the functionality has to agree with it whenever it is not overriding. Determinism of the $\mathtt{V}$ entries — which the source demands of the adversary's answer — is what makes repeated $\mathsf{Verify}$ calls consistent, and the source says so.
+- **Line 25 restricts $\mathsf{Attribute}$ to the adversary, and the operation is not a leak of state but a *challenge*.** It is the box's model of an attribution attack: the adversary names a signature it has seen and asks who signed. Anonymity is then exactly the answer $\bot$. This is the one place where the corruption model enters the anonymity guarantee directly rather than through $\mathsf{Leak}$.
+- **Line 28 needs two honest parties, not one, and that is the definition of *basic* anonymity.** With $\mathit{anon} = \mathsf{basic}$ the box hides the signer only when the signer is honest *and* some other ring member is honest too. One honest party in the ring is not enough, because with everyone else corrupt the signer is identified by elimination — the paper's own reading, spelled out in the paragraph beside the figure.
+- **Line 30 drops the condition on the signer, and that is the strengthening.** Under $\mathsf{attribution}$ a single honest ring member suffices and the signer may itself be corrupt; under $\mathsf{fullkey}$ (line 26) the answer is $\bot$ unconditionally, so even a ring of entirely corrupt parties gets anonymity. Line 32 is reached only in the two weaker modes, and reaching it is the failure of anonymity rather than an error.
+
+Where the source needed a decision:
+
+| Source | Box | Why |
+|---|---|---|
+| "any party in $G$ is not corrupted" | $\mathtt{Ring}(L) \cap \mathbf{C} = \varnothing$, line 19 | The English is ambiguous between "some party is uncorrupted" and "no party is corrupted". The universal reading is the only one that makes the clause an unforgeability guarantee — under the existential reading a single honest member would let the box declare a corrupt ring member's genuine signature a forgery, and the paper's equivalence theorem would fail. Recorded because the ambiguity is in the source, not in the translation. |
+| "there is the other one honest party in $G$" | $\lvert\mathtt{Ring}(L) \setminus \mathbf{C}\rvert \geq 2$, line 28 | Likewise non-native English. The paper's own gloss decides it: "if there aren't at least two uncorrupted parties in the ring, then Event 2 … occurs, i.e., the anonymity isn't guaranteed." |
+| No `Initialize`; state assumed empty | Lines 1–4 | House convention. $\mathtt{Ring}$ is introduced as an abbreviation for the source's $G$, which the source defines in prose ("let $G$ be a subset of $G_{\mathsf{all}}$ and let $L$ be the list of $G$'s verification keys") and then uses inside the box without ever tying it to the $L$ the box was handed. Naming it is the one piece of notation added here. |
+| No re-entrance guard on `KeyGen` | Line 5 | The source records $L_{\mathsf{all}} \gets L_{\mathsf{all}} \cup \{\mathbf{RV}_i\}$ and never forbids a second `KeyGen` from the same party, which would leave two keys for one party in $L_{\mathsf{all}}$ and make $\mathtt{Ring}(L)$ — the source's $G$ — ill-defined. The guard is added, and a protocol whose parties re-key is not covered by this box. |
+| "obtain a (Algorithms, $\mathit{sid}$, $\mathbf{RV}_i$) from the adversary, where $\mathbf{RV}_i$ is a description of a deterministic polytime ITM" | Line 10 | The source constrains the *type* of the adversary's answer and nothing else. $\mathsf{Clean}_{v}$ carries that type condition and adds one the source omits: $v \notin \mathtt{V}[\mathbf{P}]$. Without it the adversary may hand two parties the same verification algorithm, and then $\mathtt{Ring}(L)$ contains both — which silently weakens attribution at line 33 and unforgeability at line 19. This is an addition, and it is the one place this box is stronger than what is printed. |
+| "output an error message" | $\bot$, line 16 | The source's failure value is unnamed. $\bot$ rather than a refusal, because the call is well-formed and the functionality has done work: the completeness check on the adversary-supplied algorithms is what failed. |
+| The `Attribution` interface takes input "from the adversary" | $\mathsf{Attribute}$ with $\mathit{id}'.F = \mathbf{A}$, line 25 | An adversary-only interface, the same shape [F-aPAKE](/uc/layer-3-public-key-primitives/f-apake/index.qmd) uses for its online-guess operations. It is not folded into $\mathsf{Leak}$ because it is parameterized by a signature the adversary chooses, and because its answer depends on $\mathit{anon}$ rather than on who is corrupt. |
+| "If the adversary corrupts some party $P_j$ and $P_j$ finished Key Generation request, then $\mathcal{F}_{\mathsf{rSIG}}$ outputs all internal state of $P_j$ to the adversary" | $\mathsf{Leak}$, lines 33–34 | The source states corruption in one sentence and never says what the state *is*. What this box returns is everything the functionality holds that belongs to that party: the shared signing algorithm, the party's own verification algorithm, and the party's own signature records. It deliberately does not return other parties' records, which would break line 28 outright. |
+| $\mathit{sid}$ threaded through every message | The process id | Clean here: no clause is conditional on $\mathit{sid}$, and the source's own "for the first time" conditions are per-instance. |
+
+## Known realizations
+
+- The paper's own results are *equivalences* rather than a single construction: realizing $\mathcal{F}^{(\mathit{uf},\mathit{anon})}_{\mathsf{rSIG}}$ is proved equivalent to the corresponding pair of game-based properties, level by level, so a ring signature scheme secure in the $(\mathit{uf}, \mathit{anon})$ sense yields a protocol realizing the box at those parameters and conversely.
+- Concretely, it adapts Bender, Katz and Morselli's schemes: the paper states that its versions of those constructions realize the functionality at the levels it identifies. The strongest level, $\mathsf{fullkey}$, is the one their random-oracle-free construction was designed for.
+- No setup is needed beyond what the underlying scheme needs, which is what makes the equivalence direction possible at all: with no `Initialize`-time trusted material and no adversary call in `Sign`, the simulator's only job is to supply the algorithms at `KeyGen`.
+
+## Properties
+
+- **Anonymity, with probability exactly $0$ of leakage in the $\mathsf{fullkey}$ mode**, unconditionally: line 26 returns $\bot$ for every query, so no adversary interaction reveals a signer, and $\mathsf{Leak}$ returns only the corrupted party's own records. In the two weaker modes the bound is not probabilistic either — it is *conditional*, and the condition is a count of honest ring members (lines 28 and 30).
+- **Unforgeability, with probability exactly $0$**, quantified over rings with no corrupt member: for such a ring, line 20 or 22 forces $0$ on every unrecorded pair, so no adversary forges with any probability at all. Outside that quantifier there is no guarantee whatever, and the box says so by falling through to line 24.
+- **Completeness, with probability exactly $1$**: a signature that leaves `Sign` passed $\bigwedge_{v \in L} v(\mathit{msg}, L, \sigma) = 1$ at line 15 before being recorded, and the $\mathtt{V}$ entries are deterministic, so the same triple verifies at line 24 forever after. The source calls this "completeness and statefulness" and gives the same argument.
+- **The six levels are ordered in two independent chains, and the box makes the order visible.** $\mathsf{sUF}$ implies $\mathsf{eUF}$ because line 22's condition is weaker than line 20's; $\mathsf{fullkey}$ implies $\mathsf{attribution}$ implies $\mathsf{basic}$ because line 26's guard is vacuous, line 30's is weaker than line 28's, and each returns $\bot$. Nothing in the box couples the two, which is the paper's point in offering all six.
+- **Adaptively chosen verification-key attacks come for free.** Because the adversary supplies every $\mathtt{V}$ entry at line 7 or 9, a corrupt party's key is adversarially chosen by construction, and the unforgeability clause still holds for rings of honest parties. The paper argues this explicitly; it is a consequence of where the sanitizer sits rather than of an extra clause.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Yoneyama and Ohta. [*Ring signatures: Universally composable definitions and constructions*](https://dl.acm.org/doi/pdf/10.1145/1229285.1229332). Information and Media Technologies, 2(4):1038–1051, 2007.
-- Branco, Döttling, and Wohnig. [*Universal ring signatures in the standard model*](https://eprint.iacr.org/2022/1265). In Advances in Cryptology – ASIACRYPT 2022, Part IV, volume 13794 of LNCS, pages 249–278, 2022.
+- Yoneyama and Ohta. [*Ring signatures: universally composable definitions and constructions*](https://www.jstage.jst.go.jp/article/imt/2/4/2_4_1038/_article/-char/en). Information and Media Technologies, 2(4):1038–1051, 2007; reprinted from IPSJ Digital Courier, 3:571–584, 2007. Figure 1, p. 1043 (PDF page 6) — the definition transcribed above; §2, pp. 1039–1041 for the six game-based notions and the definition of the ring $G$; §3.1, p. 1042 for the corruption rule and the completeness argument; §3.2, pp. 1043–1046 for the equivalences; §4 for the adapted Bender–Katz–Morselli constructions. Authors, journal, volume, issue, pages and year read off the paper's own running header; there is no ePrint posting and therefore no revision stamp — the J-STAGE PDF carries a 2007 creation date and is the version read.
+- Branco, Döttling, and Wohnig. [*Universal ring signatures in the standard model*](https://eprint.iacr.org/2022/1265). In Advances in Cryptology – ASIACRYPT 2022, Part IV, volume 13794 of LNCS, pages 249–278, 2022. **Checked and it prints no functionality**: "universal" here means a ring signature verifiable against arbitrarily chosen key formats, not universal composability, and the word "functionality" does not occur in the paper. Kept on the page because the stub cited it, and recorded so that no one re-checks it.

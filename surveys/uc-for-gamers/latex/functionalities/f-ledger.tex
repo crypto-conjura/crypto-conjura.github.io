@@ -1,0 +1,59 @@
+%% The interface box of f-ledger, the one source for both the book
+%% and uc/.../f-ledger/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fledger$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \emptyset$, \quad $\pars := \mathbf{x}^{0}$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{x} : \Fledger.\Ps \to \mathbb{R}_{\geq 0}$
+\State $\V{x}[P] \gets \mathbf{x}^{0}[P]$ \ for each $P \in \Fledger.\Ps$ \label{ln:ledinit}
+  \Comment{the opening balances, an input}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Add}(P, y)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F \neq \Stdpid \ \wedge\ P \in \Fledger.\Ps \ \wedge\ y \in \mathbb{R}_{\geq 0}$} \label{ln:lednoparty}
+  \Comment{no party operates on the ledger itself}
+\State $\V{x}[P] \gets \V{x}[P] + y$ \label{ln:ledadd}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Remove}(W)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F \neq \Stdpid \ \wedge\ W \subseteq \Fledger.\Ps \times \mathbb{R}_{\geq 0}$}
+\Req{$P \neq P'$ for distinct $(P, y), (P', y') \in W$} \label{ln:ledonce}
+  \Comment{one debit per account per call}
+\If{$\exists\, (P, y) \in W : \V{x}[P] < y$}
+  \State \textbf{return} $\atom{nofunds}$ \label{ln:ledatomic}
+    \Comment{all or nothing: no partial debit}
+\EndIf
+\State $\V{x}[P] \gets \V{x}[P] - y$ \ for each $(P, y) \in W$ \label{ln:ledremove}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $\V{x}$ \label{ln:ledpublic}
+  \Comment{balances on a ledger are public}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

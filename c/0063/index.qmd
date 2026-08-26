@@ -1,0 +1,159 @@
+---
+id: "0063"
+problem: roc-salt-length-vs-call-count
+draft: salt-length-vs-md-calls
+title: "Salt Length vs. Merkle-Damgård Call Count in Random Oracle Combiners"
+short_title: "Salt Length vs. Call Count"
+areas: [idealized-models, symmetric-key]
+topics: [random-oracle-model, indifferentiability]
+model: rom
+form: characterization
+assumption_class: unconditional
+category: research-open
+revision: 1
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: new-idea
+  by: ai
+  note: "The source's own construction is the state of the art in both directions it could be pushed -- shorter salts or fewer calls -- and gives no partial technique toward either an $O(\\lambda)$-salt construction or an impossibility argument ruling one out. Nothing in the paper points a direction; both a matching construction and a lower bound would need machinery this source does not sketch."
+status_summary: "Fully open in both directions: no construction with $O(\\lambda)$-length, message-independent salts and $O(1)$ Merkle-Damgård calls is known, and no proof that none can exist, nor any trade-off between the two, has been given either."
+status_updated: 2026-08-24
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Dodis, Goldin, Hall, Random Oracle Combiners: Merkle-Damgård Style, IACR ePrint 2025/609", url: "https://eprint.iacr.org/2025/609"}
+  - {cite: "Dodis, Ferguson, Goldin, Hall, Pietrzak, Random Oracle Combiners: Breaking the Concatenation Barrier for Collision-Resistance, CRYPTO 2023, Part II", url: "https://eprint.iacr.org/2023/1041"}
+statement_sha: "5357fb8c996f81be3b4e4647b60ed903d13769dbecdfdbd321e29353cf2a0317"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+<!-- topics:start -->
+<div class="cj-tags cj-page-topics"><a class="cj-tag cj-tag-topic" href="/problems/by-topic/indifferentiability/">Indifferentiability</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/random-oracle-model/">Random Oracle Model</a></div>
+<!-- topics:end -->
+
+Random oracle combiners hedge against one of two hash functions turning out
+to be broken: a combiner is provably a fresh random oracle as long as at
+least one of its two inputs already is one. The source builds a
+Merkle-Damgård-friendly combiner of this kind — two salted, extended
+compression functions XORed together — and proves it secure, but only when
+the salts are longer than the message by at least the security parameter,
+which forces the combiner to make roughly one call per message block. It
+asks directly whether that cost is unavoidable: is there a secure combiner of
+this shape whose salts stay $O(\lambda)$ regardless of the message, while
+still calling the underlying hash functions only a constant number of times
+— or is that combination impossible, and if so, what trade-off between salt
+length and call count is the true one?
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [LaTeX source](latex/main.tex) · Formal statement — *not yet formalized*
+
+**The combiner (the source's construction, resolving a conjecture of Dodis,
+Ferguson, Goldin, Hall and Pietrzak).** For compression functions
+$h_{1}, h_{2} : \{0,1\}^{n+\delta} \to \{0,1\}^{n}$ with Merkle-Damgård
+extensions $h_{1}^{*}, h_{2}^{*}$, and independent random salts
+$Z_{1}, Z_{2}$,
+$$\widetilde C^{h_{1},h_{2}}_{Z_{1},Z_{2}}(M) := h_{1}^{*}(M, Z_{1}) \oplus h_{2}^{*}(M, Z_{2})$$
+is a secure random oracle combiner — indifferentiable from a fresh random
+oracle as long as at least one of $h_{1}, h_{2}$ is a random oracle —
+whenever $|Z_{1}|, |Z_{2}| > |M| + \lambda$ (the source's Theorem 3.1). The
+salts must grow with the message, and $\widetilde C$ makes on the order of
+$|M|$ calls to $h_{1}^{*}, h_{2}^{*}$.
+
+**Message-independent salts and calls.** Say a secure combiner
+$C^{h_{1},h_{2}}_{Z_{1},Z_{2}} : \{0,1\}^{m} \to \{0,1\}^{n}$ has this
+property if (a) $|Z_{1}|, |Z_{2}| = O(\lambda)$, independent of $m = |M|$,
+and (b) $C$ makes only $O(1)$ calls to $h_{1}^{*}, h_{2}^{*}$, independent
+of $m$.
+
+**Conjecture.** Either exhibit a secure random oracle combiner with
+message-independent salts and calls, or prove that no secure combiner can
+satisfy both (a) and (b) simultaneously and, in that case, determine the
+optimal trade-off between the salt length and the number of calls made.
+
+**How the source states it.** Its "Conclusion and Open Problems" section
+(page 27) reads: "This leaves the following main open problem: Is there a
+secure random oracle combiner that (a) has $O(\lambda)$ length salts and (b)
+makes a constant number of calls to $h_{1}^{*}$ and $h_{2}^{*}$, independent
+of message length? Conversely, show that such a combiner satisfying (a)+(b)
+cannot exist; in this case, it would be great to find the trade-off in salt
+length vs.\ number of 'Merkle-Damgård-calls'."
+
+**A related, narrower question, tracked separately.** The same paragraph asks
+whether the source's own $\widetilde C$ specifically stays secure, or instead
+becomes attackable, once its salts shrink to a constant number of blocks — a
+proof of security for $\widetilde C$ there would witness this conjecture's
+first alternative, but this conjecture does not require working with
+$\widetilde C$. See [c/0064](/c/0064/).
+
+### Sources
+
+- Dodis, Goldin and Hall. [*Random Oracle Combiners: Merkle-Damgård Style*](https://eprint.iacr.org/2025/609). IACR ePrint 2025/609. The source. The open problem is Section 4 ("Conclusion and Open Problems"), page 27; the main construction and its security theorem are Section 3 (Theorem 3.1).
+- Dodis, Ferguson, Goldin, Hall and Pietrzak. [*Random Oracle Combiners: Breaking the Concatenation Barrier for Collision-Resistance*](https://eprint.iacr.org/2023/1041). CRYPTO 2023, Part II. Introduces random oracle combiners and the length-preserving construction whose Merkle-Damgård-friendly analogue the source studies.
+
+## Proof
+
+View PDF — *no proof written yet* · LaTeX source — *no proof written yet* · Formal proof — *not yet formalized*
+
+Open, with no partial progress recorded by the source in either direction.
+
+**What a construction would need.** A combiner with $O(\lambda)$-length
+salts making only $O(1)$ Merkle-Damgård calls would have to break the
+dependence the source's own proof has on the salt outgrowing the message —
+the source's simulator argument bounds its own recursion depth using exactly
+that margin, so a shorter salt needs either a different simulation strategy
+or a different combiner shape entirely (not necessarily salt-and-XOR).
+
+**What an impossibility proof would need.** The converse direction — showing
+no such combiner can exist — would need an argument that works against
+*every* secure combiner meeting (a), not just the source's own construction,
+which is a considerably more demanding claim than an attack on one fixed
+scheme (compare [c/0064](/c/0064/), which only asks about $\widetilde C$
+itself).
+
+**Checked against the literature, 2026-08-24.** No proof, refutation or
+resolution found in the months since the ePrint. This is a targeted check on
+a very recent paper, not an exhaustive sweep.
+
+## Discussion
+
+**What distinguishes this from the narrower question.** [c/0064](/c/0064/)
+fixes the source's specific construction $\widetilde C$ and asks only
+whether *it* remains secure or becomes attackable at constant-length salts.
+This page is about the existence of *any* secure combiner with those
+properties, constructed however one likes. A negative answer to c/0064 (an
+attack on $\widetilde C$) says nothing about this page; a positive answer to
+c/0064 (a security proof for $\widetilde C$ at constant salts) would settle
+this page in the affirmative.
+
+**What a reviewer should be suspicious of.** Whether "independent of message
+length" in the source's phrasing is meant asymptotically in $|M|$ alone, with
+$\lambda$'s own dependence tracked separately — that is the reading this page
+takes, matching the source's own notation, but it is worth checking against
+any follow-up work.
+
+**Attackability for an AI proof harness (conjecture-triage, 2026-08-25).** Scored 16/31, verdict PROBE, difficulty band "hard" — this rates how tractable a bounded multi-agent campaign would find it, not the statement's intrinsic mathematical difficulty. The general-existence framing costs it: neither the construction side nor the impossibility side has a technique in the source to start from, so a genuinely new combiner paradigm looks necessary (the hard technique-proximity cap applies), and an indifferentiability deliverable gives a Refuter little to test against short of a full simulator. Recommended configuration: Scout plus Refuter plus Case Planner only, not a full Prover wave. Full record: `latex/conjectures/salt-length-vs-md-calls/triage.json`.
+
+## Open obligations
+
+- [ ] Construct a secure random oracle combiner with $O(\lambda)$-length salts and $O(1)$ Merkle-Damgård calls, or prove no such combiner exists.
+- [ ] If no such combiner exists, determine the optimal trade-off between salt length and call count.
+- [ ] Prove or refute the statement.
+- [ ] Formalize the statement in Lean; nothing here has been formalized.
+
+:::

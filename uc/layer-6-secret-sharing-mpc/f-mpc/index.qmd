@@ -1,13 +1,132 @@
 ---
-title: "F-MPC — $n$-party secure computation"
+title: "F-MPC — Reactive $n$-party computation with guaranteed termination"
 status: "Canonical"
 layer: 6
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-MPC* ($n$-party secure computation) is part of *Secret Sharing, Threshold Cryptography, MPC* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+*F-MPC* (Reactive $n$-party computation with guaranteed termination) is part of *Secret Sharing, Threshold Cryptography, MPC* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+
+A sequence of $m$ function evaluations sharing a joint state: every party gives an input to each stage, every party gets its output from each stage, and the state built by the earlier stages is available to the later ones and to nobody else. This is what distinguishes MPC from secure function evaluation, and the printed box makes the distinction concrete — it is [F-fairSFE](/uc/layer-6-secret-sharing-mpc/f-fairsfe/index.qmd)'s box with a stage index threaded through it and a state vector added.
+
+## Functionality
+
+Reading the box: $\mathbf{C}$ is the corrupted set, so $\mathbf{P} \setminus \mathbf{C}$ is the source's honest set $\mathcal{H}$; $\bot$ marks a slot not yet filled, and $\mathtt{y}[*,\lambda] = \bot$ says no party's output for stage $\lambda$ has been computed; $\mathcal{A}(\cdot)$ is a call on the adversary slot, used here as an activation with nothing read back. $\lambda$ is the stage index, $\mathtt{t}$ the source's per-party per-stage delay, $\mathtt{l}$ its one global round counter, and $\mathit{Rnd}_{\rho}$ the number of rounds stage $\rho$ is allotted. **require** refuses the call, and the framework answers $\textsf{rej}$.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}^{\mathbf{f},\mathbf{Rnd}}_{\mathsf{MPC}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := (m, \mathbf{f}, \mathbf{Rnd}, R)\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{x}[*,*] \gets \bot\); &nbsp;\(\mathtt{y}[*,*] \gets \bot\)<span class="cj-comment">// one slot per party per stage \(\lambda \in [1,m]\)</span></li>
+<li>\(\mathtt{S}[0] \gets (\bot, \ldots, \bot)\)<span class="cj-comment">// the joint state carried between stages</span></li>
+<li>\(\mathtt{t}[*,*] \gets |\mathbf{P}|\)<span class="cj-comment">// activations owed, per party per stage</span></li>
+<li>\(\mathtt{l} \gets 1\)<span class="cj-comment">// one round counter for the whole sequence</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Input(<span class="cj-id">&lambda;</span>, <span class="cj-id">v</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="5">
+<li>\(\textbf{require}\ \lambda \in [1,m] \ \wedge\ \mathtt{y}[*,\lambda] = \bot\)<span class="cj-comment">// no input to a stage already evaluated</span></li>
+<li>\(\mathtt{x}[\mathit{id}.P, \lambda] \gets v\)</li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Input},\ \mathit{id}.P,\ \lambda\bigr)\)<span class="cj-comment">// that a party gave input, and to which stage</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Output(<span class="cj-id">&lambda;</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="9">
+<li>\(\textbf{require}\ \lambda \in [1,m]\)</li>
+<li>\(\textbf{require}\ \mathit{id}.P \in \mathbf{C} \ \vee\ \forall \rho \in [1,\lambda] : \mathtt{x}[\mathit{id}.P,\rho] \neq \bot\)</li>
+<li>\(\textbf{if}\ \mathtt{t}[\mathit{id}.P,\lambda] > 1\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{t}[\mathit{id}.P,\lambda] \gets \mathtt{t}[\mathit{id}.P,\lambda] - 1\)</span></li>
+<li><span class="cj-ind">\(\textbf{if}\ \forall Q \in \mathbf{P} \setminus \mathbf{C} : \mathtt{t}[Q,\lambda] = 1\ \textbf{then}\)</span></li>
+<li><span class="cj-ind">\(\mathtt{l} \gets \mathtt{l} + 1\); &nbsp;\(\mathtt{t}[*,\lambda] \gets |\mathbf{P}|\)</span></li>
+<li><span class="cj-ind">\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Output},\ \mathit{id}.P,\ \lambda\bigr)\)</span></li>
+<li><span class="cj-ind">\(\textbf{return}\ \bot\)</span></li>
+<li>\(\textbf{if}\ \mathtt{l} < \sum_{\rho = 1}^{\lambda} \mathit{Rnd}_{\rho}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \mathsf{early}\)</span></li>
+<li>\(\textbf{if}\ \mathtt{y}[*,\lambda] = \bot \ \wedge\ \forall \rho \in [1,\lambda-1] : \mathtt{y}[*,\rho] \neq \bot\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{if}\ \forall Q \in \mathbf{P} \setminus \mathbf{C} : \mathtt{x}[Q,\lambda] \neq \bot\ \textbf{then}\)</span></li>
+<li><span class="cj-ind">\(r \gets_{\$} R\); &nbsp;\(X \gets (\mathtt{x}[P,\lambda])_{P \in \mathbf{P}}\)</span></li>
+<li><span class="cj-ind">\((\mathtt{y}[P,\lambda])_{P \in \mathbf{P}} \gets f_{\lambda}\bigl(X,\ \mathtt{S}[\lambda-1],\ r\bigr)\)</span></li>
+<li><span class="cj-ind">\(\mathtt{S}[\lambda] \gets \bigl(\mathtt{S}[\lambda-1],\ X,\ r\bigr)\)</span></li>
+<li>\(\textbf{return}\ \mathtt{y}[\mathit{id}.P, \lambda]\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="25">
+<li>\(\textbf{return}\ \bigl((\mathtt{x}[\mathit{id}.P,\rho])_{\rho},\ (\mathtt{y}[\mathit{id}.P,\rho])_{\rho},\ (\mathtt{t}[\mathit{id}.P,\rho])_{\rho},\ \mathtt{l}\bigr)\)<span class="cj-comment">// a corrupt party's own slots, and the clock</span></li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+The box is transcribed from Katz, Maurer, Tackmann and Zikas, *Universally composable synchronous computation*, ePrint 2011/310, revision `20131026:194047`, the box titled `Functionality F^{f,Rnd}_MPC(P)` on p. 28 — the PDF's numbering and the printed numbering agree. It is the second of two MPC boxes in the paper's Appendix A.2; the first, on p. 27, is the immediate-output version the paper itself calls unrealizable.
+
+**The stub cited a paper that prints no such box, and this is the fourth time that has happened here.** The page cited Canetti, Lindell, Ostrovsky and Sahai, whose five printed functionalities are $\mathcal{F}_{\mathsf{bc}}$, $\mathcal{F}_{\mathsf{cp}}$, $\mathcal{F}_{\mathsf{mcom}}$, $\mathcal{F}_{\mathsf{ot}}$ and $\mathcal{F}_{\mathsf{zk}}$ — the same finding [F-SFE](/uc/layer-6-secret-sharing-mpc/f-sfe/index.qmd) records, checked again here for Figures 10–16 and confirmed. Their general result is a compiler theorem quantified over well-formed functionalities, so there is no box to take. The box on this page comes from a paper the stub did not cite.
+
+**Two defects in the printed box, and one of them would have gone into the transcription.**
+
+- The box is titled $\mathcal{F}^{\boldsymbol{f},\boldsymbol{Rnd}}_{\textsc{MPC}}(\mathcal{P})$ and its first line reads "$\mathcal{F}^{\boldsymbol{f},\boldsymbol{Rnd}}_{\textsc{SFE}}$ proceeds as follows". The body names the wrong functionality. Harmless, and visible only if you read the box rather than its caption.
+- The evaluation step reads $(y_{1,\lambda}, \ldots, y_{n,\lambda}) := f(\boldsymbol{x}_{\lambda}, \boldsymbol{S}_{\lambda-1}, r_{\lambda})$, applying **$f$** — which in this box is the *vector* $\boldsymbol{f} = (f_1, \ldots, f_m)$ and is not a function of that signature. The intended object is $f_{\lambda}$, as the parameter list's typing of $f_{\lambda}$ makes unambiguous. Line 22 writes $f_{\lambda}$. The same slip appears in the p. 27 box. A transcription that copied the symbol would have produced a type error.
+
+What the code does not say:
+
+- **Line 5 is the input deadline, and it is per stage rather than global.** A party may still supply input to stage 7 after stage 3 has produced output, but not after stage 7 has. So the object is genuinely reactive: later inputs may depend on earlier outputs, which is the whole reason to have this box rather than a single large [F-fairSFE](/uc/layer-6-secret-sharing-mpc/f-fairsfe/index.qmd).
+- **Line 10 asks for *all* of a party's earlier inputs, not just this stage's.** An honest party must have supplied input to every stage up to and including $\lambda$ before it may ask for stage $\lambda$'s output. That is stronger than the SFE box's condition and it is the source's: it keeps a party from skipping a stage and then demanding a result that stage's state feeds.
+- **Line 14 advances one counter for the whole sequence while resetting only this stage's budget.** $\mathtt{l}$ is global; $\mathtt{t}[*,\lambda]$ is per stage. The consequence is that rounds spent on stage 3 count towards the threshold at line 17 for stage 7 — the round budgets are *cumulative*, which is why line 17 compares against $\sum_{\rho \leq \lambda} \mathit{Rnd}_{\rho}$ rather than $\mathit{Rnd}_{\lambda}$. A reactive computation's stages are consecutive in time, and the box says so arithmetically.
+- **Line 19 is the ordering constraint, and it is separate from the round threshold on purpose.** Stage $\lambda$ is evaluated only once every earlier stage has been, which line 17's arithmetic makes likely but does not guarantee: the round counter can run ahead if parties pump $\mathsf{Output}$ on a stage whose inputs are not all in. Both tests are needed, and the source has both.
+- **Line 23 is where the state is built, and the state is exactly the transcript of inputs and coins.** $\mathtt{S}[\lambda]$ accumulates every stage's input vector and every stage's randomness. Nothing reads it but line 22, and no interface returns it — so the joint state is *secret* in the strong sense that not even a corrupt party's leak exposes another party's contribution to it. This is what makes reactive MPC more than a sequence of independent evaluations, and it is one line.
+- **Line 24 is guaranteed output delivery, per stage.** There is no abort, no adversarial delivery decision and no deadline. Once the round threshold is met and the honest inputs are in, every call returns.
+
+Where the source needed a decision:
+
+| Source | Box | Why |
+|---|---|---|
+| $f(\boldsymbol{x}_{\lambda}, \boldsymbol{S}_{\lambda-1}, r_{\lambda})$ | $f_{\lambda}(X, \mathtt{S}[\lambda-1], r)$, line 22 | The printed symbol is the function vector, which cannot be applied to a single stage's arguments. Corrected to $f_{\lambda}$, which the parameter list's typing forces. Recorded rather than silently fixed because the same slip is in both of the paper's MPC boxes. |
+| $\boldsymbol{S}_{\lambda} := (\boldsymbol{x}_1, \ldots, \boldsymbol{x}_{\lambda}, r_1, \ldots, r_{\lambda})$ | $(\mathtt{S}[\lambda-1], X, r)$, line 23 | Written as an append rather than as a re-listing. Equivalent up to the ordering of the components, and the ordering is not read anywhere — only $f_{\lambda}$ consumes it, and $f_{\lambda}$'s type is given as $(\{0,1\}^* \cup \{\bot\})^n \times ((\{0,1\}^* \cup \{\bot\})^n \times R)^{(\lambda-1)} \times R$, which is the pairwise grouping this line produces. |
+| Three bullets chained by "Else, … Else," | Three $\textbf{if}$s at lines 11, 17, 19 | No `else` in the generator's LaTeX subset — and here, as in [F-fairSFE](/uc/layer-6-secret-sharing-mpc/f-fairsfe/index.qmd), the rewrite is not mechanical: the first branch mutates $\mathtt{t}$ and $\mathtt{l}$, which the second and third read. The $\textbf{return}$ at line 16 is what stops the fall-through. |
+| "Send $(\mathtt{activated}, p_i, \lambda)$ to the adversary" | $\mathcal{A}(\mathit{id}.\mathsf{Output}, \mathit{id}.P, \lambda)$, line 15 | An unanswered activation, not a responsive call. The stage index is passed because the source passes it, and it matters: the adversary learns which stage a party is working on. |
+| "$\boldsymbol{x}_{\lambda}$ has been set", defined in the prose above the box as "all the honest parties have handed $\mathcal{F}_{\mathsf{mpc}}$ their input for $f_{\lambda}$" | $\forall Q \in \mathbf{P} \setminus \mathbf{C} : \mathtt{x}[Q,\lambda] \neq \bot$, line 20 | The definition is in running text and not in the box. Inlining it is what makes the box self-contained; without it the box's third branch has an undefined condition. |
+| "$\boldsymbol{y}_{\lambda}$ has (not) been set" | $\mathtt{y}[*,\lambda] \neq \bot$ | A predicate on the whole stage rather than per party, because the box computes all $n$ outputs in one step. Written with the $*$ wildcard the table notation already uses. |
+| $m$, the number of stages, implicit in $\boldsymbol{f}$'s length | An explicit parameter, and the range test at lines 5 and 9 | The source never says what happens on $\lambda > m$; $f_{\lambda}$ would simply not exist. Made a refusal. |
+| No leakage interface | $\mathsf{Leak}$, line 25 | Required here. Returns the corrupt party's own input and output slots across all stages, its own counters, and the round number. It deliberately does **not** return $\mathtt{S}$: the joint state contains every party's inputs, and returning it would collapse the box's privacy guarantee. The source, being standard UC, says only that corruption hands the adversary the party's state and never says what that is. |
+| $\mathcal{H}$, the honest set | $\mathbf{P} \setminus \mathbf{C}$ | As in the SFE box, and with the same caveat: the paper's realizability theorems are for a **static** adversary, and a corruption that arrives mid-stage can satisfy line 13 by shrinking the quantifier rather than by an activation. |
+
+## Known realizations
+
+- The source states that everything it proves for the SFE box carries over: "All the results of Section 4.2 that are stated for $\mathcal{F}^{f}_{\mathsf{sfe}}$ and for $\mathcal{F}^{f,\mathit{Rnd}}_{\mathsf{sfe}}$, i.e. Lemma 4 and Theorem 1, apply also to $\mathcal{F}^{\boldsymbol{f}}_{\mathsf{mpc}}$ and $\mathcal{F}^{\boldsymbol{f},\boldsymbol{Rnd}}_{\mathsf{mpc}}$, respectively." So a stand-alone-secure reactive protocol with an efficient straight-line black-box simulator, plus one void synchronization round, realizes this box in the $\{\mathcal{F}_{\textsc{clock}}, \mathcal{F}_{\textsc{bd-sec}}\}$-hybrid model against a static adversary.
+- **The immediate-output variant is unrealizable, and the source proves it by reduction to its own SFE result**: $\mathcal{F}^{f}_{\mathsf{sfe}}$ is the special case $\mathcal{F}^{\boldsymbol{f}^0}_{\mathsf{mpc}}$ with $\boldsymbol{f}^0 = (f)$, so the impossibility for one transfers to the other immediately. That one-line argument is why the paper prints two MPC boxes rather than one.
+- No realization is claimed for a *dynamic* stage count. $m$ and the round vector are fixed at initialization, so a computation whose length depends on intermediate results is outside this box.
+
+## Properties
+
+- **Guaranteed output delivery per stage, with probability exactly $1$**: given enough honest $\mathsf{Output}$ calls, lines 13–14 advance the counter, line 17 stops refusing, lines 19–20 evaluate, and line 24 returns. The adversary has no interface that could prevent it — it appears in the box only at lines 7 and 15, as the recipient of notifications.
+- **Privacy of inputs, with probability exactly $0$ of leakage**, quantified over honest parties and over all stages: the adversary is told *that* a party gave input to a stage (line 7) and never what. $\mathsf{Leak}$ returns only a corrupt party's own slots.
+- **Privacy of the joint state, with probability exactly $0$**, and this is the property the reactive setting adds: $\mathtt{S}$ is written at line 23, read at line 22, and returned by nothing. A corrupt party learns its own contributions to it and the outputs it was entitled to, and no more.
+- **Stage ordering, with probability exactly $1$**: line 19 makes stage $\lambda$'s evaluation conditional on every earlier stage having been evaluated, so the state $f_{\lambda}$ reads is always complete. Nothing can evaluate stages out of order or twice.
+- **Round budgets compose additively, and the bound is a claim about the protocol.** As with [F-fairSFE](/uc/layer-6-secret-sharing-mpc/f-fairsfe/index.qmd), the parameter is a complexity assertion: a protocol realizes this box only if stage $\lambda$'s output arrives within $\sum_{\rho \leq \lambda} \mathit{Rnd}_{\rho}$ rounds of the start. Because the sum is cumulative rather than per stage, a protocol may borrow slack from an early cheap stage to pay for a later expensive one — which is a real modelling choice and, as far as this entry can tell, an unremarked one.
+- **Corrupt parties are exempt from the input requirement, honest ones are not** (line 10). The asymmetry is the same concession the SFE box makes, and it is what allows a simulator to spend a corrupt party's activations without first committing to an input.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Canetti et al. [*Universally composable two-party and multi-party secure computation*](https://eprint.iacr.org/2002/140). In 34th ACM Symposium on Theory of Computing (STOC), pages 494–503, 2002.
-- Ben-Or, Goldwasser, and Wigderson. [*Completeness theorems for non-cryptographic fault-tolerant distributed computation*](https://mit6875.github.io/PAPERS/BGW.pdf). In 20th ACM Symposium on Theory of Computing (STOC), pages 1–10, 1988.
+- Katz, Maurer, Tackmann, and Zikas. [*Universally composable synchronous computation*](https://eprint.iacr.org/2011/310). In 10th Theory of Cryptography Conference (TCC), pages 477–498, 2013. Read at ePrint revision `20131026:194047`, the newer of two postings. The box on p. 28 — the definition transcribed above, including the $\mathcal{F}_{\textsc{SFE}}$ mis-naming in its opening line and the $f$-for-$f_{\lambda}$ slip in its evaluation step; §A.2, pp. 26–27 for the prose definitions of "$\boldsymbol{x}_{\lambda}$ has been set" and of the state vector, and for the immediate-output box; the closing paragraph of §A.2, p. 27, for the transfer of Lemma 4 and Theorem 1. Authors and venue confirmed against the paper's title page; the same posting is recorded on [F-syn](/uc/layer-0-idealized-setup/f-syn/index.qmd) and [F-fairSFE](/uc/layer-6-secret-sharing-mpc/f-fairsfe/index.qmd), and the `sha256_16` agrees with both.
+- Canetti, Lindell, Ostrovsky, and Sahai. [*Universally composable two-party and multi-party secure computation*](https://eprint.iacr.org/2002/140). In 34th ACM Symposium on Theory of Computing (STOC), pages 494–503, 2002. **Checked again for this entry and it prints no MPC or SFE functionality.** Its boxed figures are Figure 1 ($\mathcal{F}_{\mathsf{ot}}$), Figure 4 (commitment), Figures 6–7 ($\mathcal{F}_{\mathsf{zk}}$, single- and multi-session), Figure 8 ($\mathcal{F}_{\mathsf{cp}}$), Figure 12 ($\mathcal{F}_{\mathsf{bc}}$), Figure 13 (one-to-many multi-session commitment), Figure 14 (one-to-many zero knowledge) and Figure 15 (one-to-many commit-and-prove); its general theorem, Claim 9.2, quantifies over "adaptively well-formed multi-party functionalities" instead of naming one. Kept as the origin of the feasibility result, and recorded so the check is not repeated a fifth time.
+- Ben-Or, Goldwasser, and Wigderson. [*Completeness theorems for non-cryptographic fault-tolerant distributed computation*](https://mit6875.github.io/PAPERS/BGW.pdf). In 20th ACM Symposium on Theory of Computing (STOC), pages 1–10, 1988. Predates ideal functionalities; the origin of the honest-majority feasibility result the source's Theorem 1 lifts into UC. [UNVERIFIED: not re-read for this entry; nothing on this page rests on it.]

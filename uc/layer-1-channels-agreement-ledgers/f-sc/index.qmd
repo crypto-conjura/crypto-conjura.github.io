@@ -1,12 +1,133 @@
 ---
-title: "F-sc — Session secure channel"
+title: "F-SC — Session secure channel, strong"
 status: "Canonical"
 layer: 1
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-sc* (Session secure channel) is part of *Channels, Agreement, Ledgers* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+*F-SC* (Session secure channel, strong) is part of *Channels, Agreement, Ledgers* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+
+Two parties establish a session, exchange as many messages as they like in both directions, and either of them can close it. Unlike [F-smt](/uc/layer-1-channels-agreement-ledgers/f-smt/index.qmd), which carries one message and hands the adversary a delivery decision, this box is a standing channel and the adversary decides nothing at all: delivery is immediate, and the only thing it learns per message is the length.
+
+## Functionality
+
+Reading the box: $\mathcal{A}(\cdot)$ is a call on the adversary slot whose answer is not used, so it is a notification rather than a query; $\square$ marks a value never set; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it. $\mathtt{in}$ and $\mathtt{out}$ are per-party counters into one queue, so the channel is two independent directions sharing one $\mathtt{on}$ flag.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{SC}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := \bot\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{A} \gets \square\); &nbsp;\(\mathtt{B} \gets \square\)<span class="cj-comment">// initiator, responder</span></li>
+<li>\(\mathtt{on} \gets 0\); &nbsp;\(\mathtt{exp} \gets 0\)</li>
+<li>\(\mathtt{Q} : \mathcal{F}_{\mathsf{SC}}.\mathbf{P} \times \mathbb{N} \to \mathcal{M} \cup \{\square\}\)</li>
+<li>\(\mathtt{Q}[*,*] \gets \square\)</li>
+<li>\(\mathtt{in}[*] \gets 0\); &nbsp;\(\mathtt{out}[*] \gets 0\)<span class="cj-comment">// queued for a party, and taken by it</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Establish(<span class="cj-id">R</span>, <span class="cj-id">r</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="6">
+<li>\(\textbf{require}\ r \in \{\mathsf{ini}, \mathsf{res}\} \ \wedge\ R \neq \mathit{id}.P \ \wedge\ \mathtt{on} = 0 \ \wedge\ \mathtt{exp} = 0\)</li>
+<li>\(\textbf{if}\ r = \mathsf{ini} \ \wedge\ \mathtt{A} = \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{A} \gets \mathit{id}.P\); &nbsp;\(\mathtt{B} \gets R\)</span></li>
+<li><span class="cj-ind">\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Establish},\ \mathtt{A},\ \mathtt{B}\bigr)\)</span><span class="cj-comment">// the pair, and that is all the adversary is told</span></li>
+<li><span class="cj-ind">\(\textbf{return}\) <span class="cj-atom">ok</span></span></li>
+<li>\(\textbf{require}\ r = \mathsf{res} \ \wedge\ \mathit{id}.P = \mathtt{B} \ \wedge\ R = \mathtt{A}\)<span class="cj-comment">// complementary roles, and the peers must agree</span></li>
+<li>\(\mathtt{on} \gets 1\)</li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Send(<span class="cj-id">msg</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="14">
+<li>\(\textbf{require}\ \mathtt{on} = 1 \ \wedge\ \mathit{id}.P \in \{\mathtt{A}, \mathtt{B}\} \ \wedge\ \mathit{msg} \in \mathcal{M}\)</li>
+<li>\(R \gets \mathtt{A}\)</li>
+<li>\(\textbf{if}\ \mathit{id}.P = \mathtt{A}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(R \gets \mathtt{B}\)</span></li>
+<li>\(\mathtt{in}[R] \gets \mathtt{in}[R] + 1\); &nbsp;\(\mathtt{Q}[R, \mathtt{in}[R]] \gets \mathit{msg}\)</li>
+<li>\(\mathcal{A}\bigl(\mathit{id}.\mathsf{Send},\ \mathtt{A},\ |\mathit{msg}|\bigr)\)<span class="cj-comment">// the initiator's name and the length; not the direction</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Fetch()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="21">
+<li>\(\textbf{require}\ \mathtt{on} = 1 \ \wedge\ \mathtt{out}[\mathit{id}.P] < \mathtt{in}[\mathit{id}.P]\)<span class="cj-comment">// an expired session delivers nothing</span></li>
+<li>\(\mathtt{out}[\mathit{id}.P] \gets \mathtt{out}[\mathit{id}.P] + 1\)</li>
+<li>\(\textbf{return}\ \mathtt{Q}[\mathit{id}.P, \mathtt{out}[\mathit{id}.P]]\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Expire()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="24">
+<li>\(\textbf{require}\ \mathit{id}.P \in \{\mathtt{A}, \mathtt{B}\} \ \wedge\ \mathtt{on} = 1\)</li>
+<li>\(\mathtt{on} \gets 0\); &nbsp;\(\mathtt{exp} \gets 1\)<span class="cj-comment">// either partner, both directions</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="27">
+<li>\(\textbf{if}\ \mathit{id}.P \notin \{\mathtt{A}, \mathtt{B}\}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ (\mathtt{A},\ \mathtt{B},\ \mathtt{on})\)</span></li>
+<li>\(\textbf{return}\ \bigl(\mathtt{A},\ \mathtt{B},\ \mathtt{on},\ \{\mathtt{Q}[\mathit{id}.P, j]\}_{\mathtt{out}[\mathit{id}.P] < j \leq \mathtt{in}[\mathit{id}.P]}\bigr)\)</li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+The box is transcribed from Canetti and Krawczyk, *Universally composable notions of key exchange and secure channels*, ePrint 2002/059, revision `20020514:200902`, Figure 11, PDF p. 42 (printed p. 40) — the functionality $\mathcal{F}_{\textsc{sc}}$, "The Secure Channels functionality". The posting has one revision and exists only as PostScript; the PDF read here was produced from `2002/059.ps` with Ghostscript, so its page numbering is the PostScript's own.
+
+Three lines carry the content:
+
+- **Line 11 is where this box differs from [F-KE](/uc/layer-3-public-key-primitives/f-ke/index.qmd) in the same paper.** The session becomes active only on a `res` request from the party the `ini` request named, naming that initiator back. The paper says why it did this and is candid that it did not have to: incorporating roles "is not essential, it simplifies the design and analysis of protocols". Its key-exchange functionality, three sections earlier, records the role and then explicitly matches regardless of it.
+- **Line 19 is the confidentiality statement, and it is the whole of it.** The adversary is handed the length and nothing else. There is no leakage function to parameterize, no delivery decision, and no per-message adversary answer — which makes this box strictly stronger than $\mathcal{F}_{\mathsf{SMT}}$, where the adversary gates every $\mathsf{Fetch}$ and can substitute the message outright when an endpoint is corrupt.
+- **Line 25 stops both directions at once**, which the source states as prose rather than code: "once the functionality receives a request to expire the session from one of the parties, it stops delivering messages in *both* directions", because a real endpoint that expires a session stops both sending and receiving. Line 21 is where that bites: messages already queued but not yet taken are never delivered.
+
+Where the source is silent or ambiguous, and what this box does about it:
+
+| Source | Box | Why |
+|---|---|---|
+| Item 2 sends the adversary $(\mathit{sid}, P_i, \lvert m \rvert)$, though the sender is bound as $P_e$, $e \in \{i,j\}$ | Line 19 reports $\mathtt{A}$, the initiator, for either direction | Transcribed literally. $P_i$ is bound in item 1 to the initiator, so the name in the leak is a constant and the *direction* of each message is hidden from the adversary. The alternative reading — that $P_i$ is a slip for $P_e$ — is supported by the relaxed variant below, whose item 2 binds $P_i$ to the sender and leaks it. Both readings give the adversary a name it already has from item 1; they differ only in whether direction leaks, and the literal one is the stronger box, so it is the one transcribed. |
+| "send $(\texttt{Received}, \mathit{sid}, m)$ to the other partner" | A queue plus $\mathsf{Fetch}$ | Delivery is a pull here. The source gives the adversary no delivery decision, so $\mathsf{Fetch}$ places no call on the adversary slot — this is the one place where turning a push into a pull could have quietly weakened the box, and it does not. Order is preserved by the counters. |
+| Nothing about re-establishing after expiry | $\mathtt{exp}$, tested at line 6 | The source un-sets `active` and stops there. Letting a second $\mathsf{Establish}$ set it again would make the box a session *factory*, which is the multi-session extension's job and not this instance's. |
+| No corruption clause at all | Lines 27–29 | Required here, and entirely added: item 3 is the last item in the source. A corrupt partner's adversary gets the messages queued for it and not yet taken (line 29); an outsider gets the two identities and whether the session is live (line 28). Note what is *not* leaked: a message the partner has already fetched, and a message that partner sent. In the real protocol a corrupt endpoint holds the session key and can read both, so this is a place where the box is stronger than anything realizing it — which is the gap the relaxed variant closes. |
+
+## Known realizations
+
+The paper's own generic construction does **not** realize this box. `GSC`$_{\textsc{mac},\textsc{e}}$ — key exchange, then MAC-and-encrypt with a semantically secure symmetric scheme — is presented immediately after the figure, and the paper says plainly that the claim it would like to make "does not hold". Its counterexample is small and instructive: modify the protocol so the encryption key is erased only at the *end* of the session rather than at once, and it stops realizing $\mathcal{F}_{\textsc{sc}}$.
+
+What does realize it is a restricted protocol:
+
+- **Claim 21:** let `MAC` be a secure message authentication function and $G$ a pseudorandom generator. Then for *any* non-information oracle for exchanged keys $\mathcal{N}$, protocol `GSC`$'_{\textsc{mac},G}$ securely realizes $\mathcal{F}_{\textsc{sc}}$ in the $\mathcal{F}^{\mathcal{N}}_{\textsc{rke}}$-hybrid model. `GSC`$'$ stretches the exchanged key into two one-time pads, one per direction, and **erases the key immediately**; encryption is one-time pad with the pad index carried in the ciphertext. The paper notes the claim holds in the $\mathcal{F}_{\textsc{ke}}$-hybrid model too.
+
+The relaxed sibling is $\mathcal{F}^{\mathcal{N}}_{\textsc{rsc}}$ (Figure 12, PDF p. 45, printed p. 43), parameterized by a *non-information oracle for encryption* — an oracle whose outgoing messages are computationally independent of its incoming ones (Definition 22). It differs from the box above in three places: each $\mathsf{Send}$ passes the plaintext to $\mathcal{N}$ and hands the adversary $\mathcal{N}$'s response in place of the length; the leak names the sender; and it has a corruption clause, item 4, giving the adversary $\mathcal{N}$'s current state if the corrupted partner has not yet expired the session. **Theorem 24** then gives the general result the strong box cannot support: with a semantically secure symmetric encryption scheme and a secure MAC, `GSC`$_{\textsc{e},\textsc{mac}}$ is a relaxed UC-secure channels protocol in the $\mathcal{F}_{\textsc{rke}}$-hybrid model. As with key exchange, this encyclopedia has no page for the relaxed form, and that is a gap rather than a decision.
+
+## Properties
+
+- **Confidentiality**, with probability exactly $0$ of leakage beyond length: the only call on the adversary slot mentioning a message is line 19, and it mentions $\lvert \mathit{msg} \rvert$. Two executions differing only in message contents of equal length are identical in the adversary's view, unless a partner is corrupt and line 29 fires.
+- **Authenticity and order**, with probability exactly $1$: $\mathsf{Fetch}$ returns queue entries in the order $\mathsf{Send}$ wrote them, and there is no operation by which the adversary can inject, reorder, drop or replay one. $\mathcal{F}_{\mathsf{SMT}}$ concedes all four to a corrupt endpoint; this box concedes none.
+- **No availability guarantee, and no deadline.** Nothing forces a queued message to be fetched, and the parameter set carries no $\Delta$. Adding one would make this a different object — the comparison is [F-AC](/uc/layer-1-channels-agreement-ledgers/f-ac/index.qmd), whose delay bound is the point of it.
+- **Session-scoped forward secrecy**, and it is why the realization is so restricted. Once a message is fetched and once the session is expired, nothing in the box's state can produce that message again. A protocol keeping a decryption key alive across the session cannot match this, which is exactly the counterexample the paper gives.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Canetti and Krawczyk. [*Universally composable notions of key exchange and secure channels*](https://eprint.iacr.org/2002/059). In Advances in Cryptology – EUROCRYPT 2002, volume 2332 of LNCS, pages 337–351, 2002.
+- Canetti and Krawczyk. [*Universally composable notions of key exchange and secure channels*](https://eprint.iacr.org/2002/059). In Advances in Cryptology – EUROCRYPT 2002, volume 2332 of LNCS, pages 337–351, 2002. Figure 11, PDF p. 42 (printed p. 40) of revision `20020514:200902`, the definition transcribed above; Figure 12, PDF p. 45 (printed p. 43) for the relaxed variant; Definition 22, Claim 21 and Theorem 24.

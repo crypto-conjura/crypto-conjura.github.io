@@ -1,0 +1,253 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  Ishai-Song's open question: is there a t-parity-tolerant circuit with
+%  a poly(t)-time simulator?
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{AN EFFICIENTLY SIMULATABLE PARITY-TOLERANT CIRCUIT}
+
+\newcommand{\bits}{\{0,1\}}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\Lc}{\mathcal{L}}
+\newcommand{\Sim}{\mathsf{Sim}}
+\newcommand{\Om}{\Omega}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{An Efficiently Simulatable Parity-Tolerant Circuit}
+\cjsubtitle{$t$ parities of the wires, simulated from $t$ parities of
+  the input and output, in time $\poly(t)$}
+\cjstatus{Statement: AI-written from Yuval Ishai and Yifan Song,
+  \emph{Leakage-Tolerant Circuits}, IACR ePrint 2024/332. Not yet
+  checked by a human. Feasibility is settled: every circuit can be
+  compiled into a $t$-parity-tolerant one. What is open is the running
+  time of the simulator, which in the source's construction is
+  $2^{O(t)}$; the source gives partial evidence, under LPN, that
+  inefficient simulation may be inherent for a related relaxed notion.}
+\cjcategory{\emph{Side-Channel Countermeasures}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+A leakage-\emph{resilient} circuit protects a computation by encoding
+its input and output, so that leakage on the internal wires reveals
+nothing. A leakage-\emph{tolerant} circuit has no such luxury: the input
+and output sit in the clear, so leakage on the wires necessarily reveals
+something, and the requirement instead is that whatever it reveals could
+have been obtained by leaking on the input and output alone. The source
+shows every circuit can be made tolerant against $t$ parities of its
+wires. But its simulator --- the algorithm translating a wire-leakage
+query into an input/output-leakage query --- runs in time $2^{O(t)}$,
+which makes the guarantee vacuous for the security-parameter-sized $t$
+that applications want. The source asks whether a $t$-parity-tolerant
+circuit with a $\poly(t)$-time simulator exists, and reports what stands
+in the way: its simulator has to find a short vector in a linear code
+determined by the parity queries.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+Leakage-resilient circuits, following Ishai, Sahai and
+Wagner~\cite{ISW03} and, for global leakage classes, Goyal et
+al.~\cite{GIM+16}, come as a triple $(I, C, O)$: a randomized input
+encoder, a randomized circuit on encoded values, and an output decoder.
+Because $x$ and $y$ are protected by the encoding, one can ask for the
+strong guarantee that leakage on $C$'s wires be statistically
+independent of $x$. Leakage \emph{tolerance}, generalizing $t$-probing
+tolerance~\cite{ISW03,AIS18,GIS22}, drops the encoders: $C$ maps a
+cleartext input to a cleartext output, so leakage on the wires can
+always be answered by leakage on $(x,y)$ --- and the definition demands
+exactly that, via a simulator.
+
+The source's main positive result is that every circuit $C_{f}$ can be
+compiled into an $\Lc$-tolerant circuit for the class $\Lc$ of leakage
+functions outputting $t$ parities, or $t$ disjunctions (equivalently
+conjunctions) of any number of wires or their negations. Concretely, its
+Corollary 2 gives, for every $f : \bits^{n} \to \bits^{m}$ with a
+circuit of size $s$ and depth $h$, a $t$-parity-tolerant circuit of size
+$\widetilde{O}(s) + \poly(n,m,h,t,\kappa)$, with error negligible in the
+statistical security parameter $\kappa$.
+
+For the parity class, however, the source's simulator runs in time
+exponential in $t$. The reason is visible in its analysis: to answer $t$
+wire-parity queries $W_{1}, \dots, W_{t}$ jointly, it is not enough to
+handle each separately, because a subset-XOR $\bigoplus_{i \in S} W_{i}$
+may touch few enough small-bias encodings to be informative even when
+each $W_{i}$ individually does not. The simulator therefore computes
+$\bigcup_{S \subseteq [t]} V(\bigoplus_{i \in S} W_{i})$, a union over
+all $2^{t}$ subsets --- equivalently, as the source's own summary puts
+it, it must find a short vector in the linear code the queries span. The
+resulting set is small (the source bounds $|V| \le kt$); it is finding it
+that costs $2^{O(t)}$.
+
+The source is explicit that it does not know whether this is necessary.
+In its ``Future directions'' it asks: ``Is there a
+$t$-parity-tolerant circuit with a $\poly(t)$-time simulator? Our
+simulator needs to find a short vector in a linear code defined by the
+parity queries, and we are only able to show that this is inherent for a
+related encoding problem.'' The related problem is the relaxed notion of
+$(t,t')$-parity-tolerant \emph{functions} it studies in its
+Appendix H, where any $t$ parities of the function's output must be
+simulatable from $t'$ parities of its input; there it exhibits, under
+standard LPN, an instance requiring super-polynomial simulation time.
+That is evidence and not a proof for circuits, and the source says so.
+
+The question is not idle bookkeeping. The source's own application ---
+compiling leakage-tolerant circuits into \emph{stateful}
+leakage-resilient circuits that withstand continuous parity leakage ---
+gets a $\poly(t)$-time simulator by a trick specific to the stateful
+setting (a control bit in the initial state that lets the simulator
+substitute an encoding of the public output), and works ``regardless of
+the efficiency of the LTC simulator''. So the stateful application is
+already saved; the open question is about the stateless primitive
+itself, where efficiency of simulation is what decides whether
+$t = \Om(\lambda)$ is meaningful.
+
+\section{Notation and parameters}\label{sec:notation}
+
+\begin{itemize}[nosep]
+  \item $f : \bits^{n_{i}} \to \bits^{n_{o}}$ is the (possibly
+    randomized) function being implemented; $C$ is a randomized circuit
+    computing it.
+  \item $\tau(C, x)$ denotes the vector of wire values of $C$ on input
+    $x$, a random variable over $C$'s randomness; $|C|$ is its number of
+    wires.
+  \item $\Lc$ is a class of leakage functions, assumed closed under
+    restrictions. $(\Lc')^{\otimes t}$ is the $t$-fold class: all $L(x)
+    = (L'_{1}(x), \dots, L'_{t}(x))$ with $L'_{j} \in \Lc'$.
+  \item The \emph{parity} class contains, for each $S \subseteq [n]$,
+    the function $L(x) = \bigoplus_{i \in S} x_{i}$; the $t$-parity
+    class is its $t$-fold version.
+  \item $\eps$ is the simulation error in statistical distance; $t$ is
+    the number of leakage queries; $\kappa$ is a statistical security
+    parameter, and $\eps$ negligible in $\kappa$ is what the source's
+    compiler achieves (at $k = O(t(t+\kappa))$ probes in its intermediate
+    parity-to-probing step).
+\end{itemize}
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{definition}[Leakage-tolerant circuit,
+  {\cite[Definition 2]{IS24}}]\label{def:ltc}
+For a possibly randomized $f : \bits^{n_{i}} \to \bits^{n_{o}}$, a
+randomized circuit $C$ mapping $x \in \bits^{n_{i}}$ to $y \in
+\bits^{n_{o}}$ is an \emph{$(\Lc, \eps)$-leakage-tolerant
+implementation} of $f$ if
+\begin{itemize}[nosep]
+  \item (correctness) for every $x$, the distributions $f(x)$ and $C(x)$
+    are identical; and
+  \item (leakage tolerance) there is a simulator $\Sim = (\Sim_{1},
+    \Sim_{2})$, where $\Sim_{1}$ takes $L \in \Lc$ of input size $|C|$
+    and outputs a state $st$ together with $L' \in \Lc$ of input size
+    $n_{i} + n_{o}$, and $\Sim_{2}$ takes $st$ and the value of $L'$ on
+    the input and output of $f$, such that for every $x \in
+    \bits^{n_{i}}$ and every $L \in \Lc$,
+    \[
+      \bigl( L(\tau(C,x)),\, C(x) \bigr) \;\approx_{\eps}\;
+      \bigl( \Sim_{2}(st, L'(x,y)),\, y \bigr),
+    \]
+    where $y \sample f(x)$ and $(st, L') \sample \Sim_{1}(L)$.
+\end{itemize}
+We write \emph{$(t,\eps)$-parity tolerance} for $(\Lc,\eps)$-leakage
+tolerance where $\Lc$ is the $t$-parity class.
+\end{definition}
+
+\begin{conjecture}[An efficiently simulatable parity-tolerant
+  circuit]\label{conj:main}
+There is a polynomial $\poly(\cdot)$ and a compiler that, given any
+Boolean circuit $C_{f}$ for $f : \bits^{n_{i}} \to \bits^{n_{o}}$ and
+any $t$ and any statistical security parameter $\kappa$, outputs a
+randomized circuit $C$ that is $(t, \eps)$-parity-tolerant
+(Definition~\ref{def:ltc}) with $\eps$ negligible in $\kappa$ and of size
+polynomial in $|C_{f}|, t$ and $\kappa$, together with a simulator
+$(\Sim_{1}, \Sim_{2})$ for it whose running time is $\poly(|C_{f}|, t,
+\kappa)$ --- in particular polynomial, not exponential, in $t$.
+\end{conjecture}
+
+\begin{remark}[Both directions are open]
+The source poses this as a question, and either answer resolves it:
+a construction with a $\poly(t)$-time simulator, or a proof that no
+$t$-parity-tolerant circuit admits one. For the negative direction, the
+source's Appendix H already supplies the shape of an argument --- a
+$(t,t')$-parity-tolerant \emph{function} whose simulation is
+super-polynomial under LPN --- and what is missing is the step from that
+relaxed notion to circuits. A conditional negative answer (under LPN or
+another standard assumption) would count.
+\end{remark}
+
+\begin{remark}[What may not be changed to make it easier]
+Three parts of the statement are load-bearing and are the source's, not
+this statement's choices. First, the leakage class is $t$ \emph{parities}
+of arbitrarily many wires, not $t$ probes: for probing leakage,
+efficient simulation is classical~\cite{ISW03}. Second, tolerance, not
+resilience: with an input encoder and output decoder the source can
+already do better, and its own compiler to stateful leakage-\emph{resilient}
+circuits achieves $\poly(t)$-time simulation whatever the tolerant
+circuit's simulator costs. Third, the simulator must be efficient in
+$t$ for a single stateless evaluation; efficiency amortized over a
+stateful sequence of invocations is the case the source has settled.
+\end{remark}
+
+\begin{remark}[The neighbouring question about leakage classes]
+The source's other stated open direction --- obtaining leakage-tolerant
+circuits for classes beyond depth-1 $\mathsf{AC}^{0}$ and parity, in
+particular for functions returning the Hamming weight of a subset of
+wires, or for depth-2 $\mathsf{AC}^{0}$ --- is a separate statement about
+which classes are achievable at all, not about the cost of simulation
+within the parity class, and is not covered here.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem[IS24]{IS24}
+Yuval Ishai and Yifan Song.
+\emph{Leakage-tolerant circuits}.
+IACR ePrint 2024/332.
+The source. Definition 2 is on page 14; the open question is in the
+``Future directions'' list, page 3; the LPN-based evidence is
+Appendix H, discussed on page 13.
+
+\bibitem[ISW03]{ISW03}
+Yuval Ishai, Amit Sahai and David Wagner.
+\emph{Private circuits: securing hardware against probing attacks}.
+CRYPTO 2003.
+The probing model and the additive-sharing compiler the source's
+counterexample is stated against.
+
+\bibitem[GIM+16]{GIM+16}
+Vipul Goyal, Yuval Ishai, Hemanta K. Maji, Amit Sahai and Alexander A.
+Sherstov.
+\emph{Bounded-communication leakage resilience via parity-resilient
+circuits}.
+57th Annual Symposium on Foundations of Computer Science (FOCS), 2016,
+pages 1--10.
+The leakage-resilient-circuit definition the source borrows, and the
+parity-resilient construction its parity-to-probing analysis builds on.
+
+\bibitem[AIS18]{AIS18}
+Prabhanjan Ananth, Yuval Ishai and Amit Sahai.
+\emph{Private circuits: a modular approach}.
+CRYPTO 2018.
+One of the probing-tolerance notions the source generalizes.
+
+\bibitem[GIS22]{GIS22}
+Vipul Goyal, Yuval Ishai and Yifan Song.
+\emph{Private circuits with quasilinear randomness}.
+EUROCRYPT 2022, pages 192--221.
+The other probing-tolerance notion the source generalizes.
+
+\bibitem[GR15]{GR15}
+Shafi Goldwasser and Guy N. Rothblum.
+\emph{How to compute in the presence of leakage}.
+SIAM Journal on Computing, 2015.
+Implies the stateful leakage-resilient circuits the source's application
+reproves, as its own erratum notes.
+
+\end{conjurabibliography}
+
+\end{document}

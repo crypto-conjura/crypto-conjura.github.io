@@ -2,13 +2,44 @@
 title: "F-NCE — Non-committing encryption"
 status: "Canonical"
 layer: 3
-definition: "Not yet written"
+definition: "No canonical definition"
 ---
 
 *F-NCE* (Non-committing encryption) is part of *Public-Key Primitives, Key Exchange, Messaging* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
 
+**No box is printed for this, and the reason is structural rather than accidental: non-committing encryption is a property of a *protocol*, and the functionality it is a property with respect to is secure message transmission.** All three papers cited below were read for this entry. One of them prints an ideal functionality, and that functionality is not a non-committing-encryption functionality — it is [F-smt](/uc/layer-1-channels-agreement-ledgers/f-smt/index.qmd)'s object with a message identifier in front of it.
+
+## Why there is no box
+
+**What Nielsen 2002 actually prints, quoted in full because it is one sentence:** "For the NCE problem the ideal functionality $\mathcal{F}_{\mathsf{nce}}$ works as follows: On input $(\mathit{mid}, j, m)$ from $P_i$ deliver $(\mathit{mid}, i, m)$ to $P_j$, and reveal $(\mathit{mid}, i, j, \lvert m \rvert)$ to the adversary." That is a secure channel. It carries a message, leaks its length and its endpoints, and says nothing about encryption, keys, ciphertexts, adaptivity or commitment. Transcribing it onto this page would produce a duplicate of [F-smt](/uc/layer-1-channels-agreement-ledgers/f-smt/index.qmd) under a misleading title — the name $\mathcal{F}_{\mathsf{nce}}$ notwithstanding, since a functionality's name is the author's shorthand for the *problem*, not a claim about what the box contains.
+
+**What Canetti, Feige, Goldreich and Naor 1996 prints is a definition of a protocol.** Non-committing encryption is introduced there as a comparison with ordinary encryption: "Traditional encryption schemes have the extra property that the ciphertext can be used to commit … In a non-committing encryption scheme the ciphertext cannot be used to commit the sender (or the receiver) to the transmitted data. That is, a non-committing encryption protocol allows a simulator to" produce ciphertexts it can later open either way. The paper is explicit that the property is *relative to a simulator*, and it observes in the same paragraph that "communication over absolutely secure channels is trivially non-committing, since the third party sees no ciphertexts at all". A functionality cannot express any of this: it has no ciphertexts to be non-committing about.
+
+**And that is exactly why the property exists.** The whole point of non-committing encryption is to let a protocol realize a *secure-channel* functionality against an **adaptive** adversary over open channels — which is the direction Canetti, Feige, Goldreich and Naor need it for, replacing "every bit transmission" of an information-theoretically secure protocol "by an invocation of the non-committing" scheme. So the object here is a realization statement, not a box: $\pi$ realizes $\mathcal{F}_{\mathsf{SMT}}$ (or $\mathcal{F}_{\mathsf{nce}}$, the same thing under another name) against adaptive corruptions. The adaptivity lives in the quantifier over adversaries, and no functionality carries a quantifier over adversaries.
+
+**A functionality cannot express commitment to a ciphertext, for the same reason [F-eqv](/uc/layer-4-commitments-proofs/f-eqv/index.qmd) cannot express equivocability.** That page records the identical shape of argument for commitments: a box stores the value directly and has no ciphertext to reinterpret, so equivocation is what the *simulator* does. Non-committing encryption is the encryption-side twin of that observation, and the two pages should be read together.
+
+## What each citation yielded
+
+- **Nielsen 2002** — read at the linked IACR archive copy. Prints $\mathcal{F}_{\mathsf{nce}}$ as the one sentence quoted above, in its §1, printed p. 112. Its actual result is a *separation*: no non-interactive protocol in the non-programmable random-oracle model is an adaptively secure (i.e. non-committing) encryption, which is why it is the standard citation for the primitive's limits. The paper contains no other ideal functionality.
+- **Canetti, Feige, Goldreich and Naor 1996** — read at the linked copy, which is dated 8 November 1995 and is a preprint of the STOC 1996 paper; the stub cited it as "Canetti et al." and the four authors are named here. Prints no ideal functionality of any kind: it defines non-committing encryption as a property of a transmission protocol and uses it as a compiler step.
+- **Beaver 1997, "Plug and play encryption"** — [UNVERIFIED: not obtained. The stub's URL is a Google Drive download link, which did not resolve to a file for this entry, and no other copy was fetched. The claim that it prints no non-committing-encryption functionality therefore rests on the other two readings and on the primitive's shape, not on a scan of this paper.]
+
+## What would resolve this
+
+Two routes, and they are different pieces of work:
+
+1. **Find a paper that prints a genuine NCE functionality** — one with a key-generation interface, ciphertexts as values, and an interface by which a ciphertext is opened. If such a box exists, this page becomes an ordinary entry. Note what it would have to overcome: the argument above says the interesting content would sit in the simulator, so a box that merely stored plaintexts and returned adversary-supplied ciphertexts would be [F-PKE](/uc/layer-3-public-key-primitives/f-pke/index.qmd) or [F-rPKE](/uc/layer-3-public-key-primitives/f-rpke/index.qmd) with a different name.
+2. **Retire the slot and record the property where it belongs.** Non-committing encryption is a *realization* result about [F-smt](/uc/layer-1-channels-agreement-ledgers/f-smt/index.qmd) and [F-aPKE](/uc/layer-3-public-key-primitives/f-apke/index.qmd) — the latter is already this encyclopedia's page for adaptively secure forward-secure encryption, and is the closest thing here to a printed box in the neighbourhood. Moving the content there and deleting this page is an editorial decision, not a transcription.
+
+Until one of those happens, this page's `definition` field reads *No canonical definition*, which `scripts/uc_status.py` treats as a claim a human may write and a script may not.
+
+## Formal artifacts
+
+No machine-checked formalization yet, and none is possible before there is a definition to formalize.
+
 *References:*
 
-- Canetti et al. [*Adaptively secure multi-party computation*](https://www.wisdom.weizmann.ac.il/~oded/PSX/dynamic.pdf). In 28th ACM Symposium on Theory of Computing (STOC), 1996.
-- Beaver. [*Plug and play encryption*](https://drive.google.com/uc?export=download&id=1TncG-y279wPJuWpJsDRmKrcjkiy-JtBY). In Advances in Cryptology – CRYPTO 1997, 1997.
-- Nielsen. [*Separating random oracle proofs from complexity theoretic proofs: The non-committing encryption case*](https://iacr.org/archive/crypto2002/24420111/24420111.pdf). In Advances in Cryptology – CRYPTO 2002, pages 111–126, 2002.
+- Nielsen. [*Separating random oracle proofs from complexity theoretic proofs: The non-committing encryption case*](https://iacr.org/archive/crypto2002/24420111/24420111.pdf). In Advances in Cryptology – CRYPTO 2002, pages 111–126, 2002. §1, printed p. 112, prints $\mathcal{F}_{\mathsf{nce}}$ as the single sentence quoted above — a secure channel, not an encryption functionality. Also the source of [F-RO](/uc/layer-0-idealized-setup/f-ro/index.qmd)'s former citation, and read again for that entry with the same conclusion: it defines the random oracle as a *model*, not a box.
+- Canetti, Feige, Goldreich, and Naor. [*Adaptively secure multi-party computation*](https://www.wisdom.weizmann.ac.il/~oded/PSX/dynamic.pdf). In 28th ACM Symposium on Theory of Computing (STOC), 1996. The paper that introduces non-committing encryption, as a property of a transmission protocol; the linked copy is a 28-page preprint dated 8 November 1995. Prints no ideal functionality.
+- Beaver. [*Plug and play encryption*](https://drive.google.com/uc?export=download&id=1TncG-y279wPJuWpJsDRmKrcjkiy-JtBY). In Advances in Cryptology – CRYPTO 1997, 1997. [UNVERIFIED: not obtained — the Google Drive link did not resolve to a file, and no alternative copy was fetched.]

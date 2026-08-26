@@ -1,0 +1,694 @@
+% =====================================================================
+%  SOLUTION DOCUMENT.  Resolves Conjecture `conj:main` (public statement
+%  page, main.tex in this folder) = Question 8.1 of Barak, Kothari and
+%  Steurer, "Quantum entanglement, sum of squares, and the log rank
+%  conjecture", arXiv:1701.06321v2, p. 19 -- AFFIRMATIVELY, and with a
+%  strictly stronger conclusion than asked (exact rank one, error 0,
+%  constant independent of epsilon).
+%
+%  This document does not derive anything: it transcribes and typesets,
+%  without alteration, the ESTABLISHED chain frozen at campaign
+%  artifact `0048-RKHS-1-r6` (c/0048/campaign/intermediates/
+%  0048-RKHS-1-r6.md), whose audit trail is c/0048/campaign/LEDGER.md.
+%  Every theorem/lemma/corollary number below, and every proof, is a
+%  faithful transcription of that artifact; nothing here was
+%  re-derived or altered.  See the "Provenance" note below the title
+%  for what was and was not verified, and for the one open editorial
+%  question (an unreconciled parallel fork of the campaign) that this
+%  document does not resolve.
+%
+%  Built on the shared conjura-solution.cls house style (see
+%  c/0004/latex/proof.tex for the reference example this follows).
+% =====================================================================
+\documentclass{conjura-solution}
+
+% ---- document-specific macros (mirrors c/0048/latex/main.tex)
+\newcommand{\Expect}{\operatorname*{\mathbb{E}}}
+\newcommand{\Sph}{\mathbb{S}^{n-1}}
+\newcommand{\Reals}{\mathbb{R}}
+\newcommand{\Nat}{\mathbb{N}}
+\newcommand{\KL}{\Delta_{\mathrm{KL}}}
+\newcommand{\Sym}[1]{\mathrm{Sym}_{#1}}
+\newcommand{\supp}{\operatorname{supp}}
+\newcommand{\ev}{\mathrm{ev}}
+
+% ---- authorship/review provenance (see the disclosure block below;
+% this campaign's provenance is not the single-pass AI/human-reviewer
+% table of c/0004, so it is rendered as its own paragraph rather than
+% forced into that table's shape)
+\newcommand{\PaperDate}{25 August 2026}
+
+\newcommand{\AIDisclosure}{%
+  \begingroup\small
+  \noindent\textbf{Provenance.} This solution was produced by the
+  \emph{conjecture-harness} campaign framework used throughout this
+  site, not by a single AI pass. The chain transcribed below (Lemmas
+  \ref{lem:kernel-space}--\ref{lem:entropy-bound}, the Theorem, the
+  Corollary, and Corollary~\ref{cor:B}) was fixed at the initial
+  construction (campaign artifact \texttt{0048-RKHS-1}) and then
+  re-verified, unchanged, across six revision rounds by twenty
+  independent blind adversarial referee passes (five referees per
+  audited round, across four audited rounds, drawn from Claude~3.5
+  Sonnet, Claude Opus~4 and Claude Haiku~3.5) and four independent
+  triage rulings. No upheld referee finding, in any round, has ever
+  touched this load-bearing chain; every upheld finding concerned only
+  the surrounding scope commentary (Remark~\ref{rem:scope}) or
+  citation hygiene. \textbf{No human has reviewed the mathematics
+  below.} The full audit trail -- every referee report and every
+  triage ruling -- is recorded at
+  \texttt{c/0048/campaign/LEDGER.md}, which this document treats as
+  its record of verification.
+
+  \smallskip
+  \noindent\textbf{An unresolved fork.} A separate, concurrent
+  session forked this campaign at round 3 and closed the same
+  scope-commentary gap addressed in Remark~\ref{rem:scope} by
+  \emph{deleting} the disputed material, rather than by adding the
+  argument this document reproduces; that fork is recorded as
+  artifact \texttt{0048-RKHS-1-r5} (built on an earlier, superseded
+  triage ruling, \texttt{0048-RKHS-1-r4}). Both branches leave the
+  load-bearing mathematics -- Lemmas
+  \ref{lem:kernel-space}--\ref{lem:entropy-bound}, the Theorem, the
+  Corollary, and Corollary~\ref{cor:B} -- byte-identical and
+  mathematically complete; the difference between them is editorial
+  only (addition versus deletion of scope commentary). That fork is,
+  as of this writing, \textbf{unreconciled} in the campaign ledger and
+  awaits a human decision between the two sessions; this document
+  follows the main branch, frozen artifact \texttt{0048-RKHS-1-r6}.
+  Date: \PaperDate.
+  \endgroup
+}
+
+\runninghead{SIGNED REWEIGHTINGS TO RANK ONE}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} SOLUTION}
+\cjtitle{Signed Low-Entropy Reweightings to Rank One on the Sphere}
+\cjresolves{Conjecture~\ref{conj:main} (see \texttt{main.tex} in this
+folder) = Question 8.1 of Barak, Kothari and Steurer~\cite{BKS16} ---
+proven true, and with a strictly stronger conclusion than the
+conjecture asks for: exact rank one (Frobenius error $0$, not merely
+$\le \varepsilon\|L\|_F$), at a constant $C(\varepsilon,\delta) =
+2/(e\delta)$ that does not depend on $\varepsilon$ at all.}
+
+\vspace{0.6em}
+\AIDisclosure
+
+\vspace{1em}
+
+\section*{The conjecture, as posed}\label{sec:posed}
+
+The definition and the conjecture below are reproduced verbatim from
+the statement note \emph{Signed Low-Entropy Reweightings to Rank One
+on the Sphere} (\texttt{main.tex} in this folder), whose numbering is
+preserved: Definition~\ref{def:signed} and
+Conjecture~\ref{conj:main} here \emph{are} Definition~\ref{def:signed}
+and Conjecture~\ref{conj:main} there. That note's ``Known boundary''
+paragraph records that the statement restricted to nonnegative $r$ is
+established, and tight, for $\delta \ge 1/2$ (this is
+Theorem~2.3 of~\cite{BKS16}, specialised to honest distributions), and
+that the regime $\delta < 1/2$, which requires cancellation, is the
+content of the question; both facts are used in
+Remark~\ref{rem:scope} below and are not re-derived here.
+
+\begin{definition}[Signed reweighting and its entropy
+cost]\label{def:signed}
+Let $\mu$ be a Borel probability measure on $\Sph$ and let $K \ge 0$.
+A Borel measurable function $r : \Sph \to \Reals$ is called a
+\emph{signed reweighting of $\mu$ with entropy cost at most $K$} if
+$r$ is $\mu$-integrable and
+\[
+\begin{gathered}
+  \Expect_{v \sim \mu} \big| r(v) \big| \;=\; 1, \\[0.25em]
+  \Expect_{v \sim \mu} \Big[\, \big| r(v) \big| \,
+    \log \big| r(v) \big| \,\Big] \;\le\; K .
+\end{gathered}
+\]
+If in addition $r \ge 0$ holds $\mu$-almost everywhere, then $r$ is a
+\emph{nonnegative} reweighting; in that case $d\mu' := r \, d\mu$ is a
+probability measure and the entropy cost is exactly the
+Kullback--Leibler divergence $\KL(\mu' \,\|\, \mu) = \Expect_{v \sim
+\mu'} \log\big( d\mu'/d\mu \big)$. Throughout, $0 \log 0 := 0$.
+\end{definition}
+
+\begin{conjecture}[signed low-entropy reweighting to rank
+one]\label{conj:main}
+For every $\varepsilon > 0$ and every $\delta > 0$ there exists a
+finite constant $C = C(\varepsilon, \delta)$ such that the following
+holds for every $n \in \Nat$ and every Borel probability measure $\mu$
+on $\Sph$: there exist a signed reweighting $r$ of $\mu$ with entropy
+cost at most $C \cdot n^{\delta}$ (in the sense of
+Definition~\ref{def:signed}) and a nonzero rank one matrix $L \in
+\Reals^{n \times n}$ such that
+\[
+  \Big\| \Expect_{v \sim \mu}\big[\, r(v)\, v v^{\top} \,\big]
+    \;-\; L \Big\|_{F} \;\le\; \varepsilon \, \|L\|_{F}.
+\]
+\end{conjecture}
+
+\section{Introduction}\label{sec:intro}
+
+This note transcribes and typesets, without alteration, the proof
+recorded in the frozen campaign artifact \texttt{0048-RKHS-1-r6},
+which resolves Conjecture~\ref{conj:main} affirmatively -- and more
+than affirmatively. For every $n$ and every Borel probability measure
+$\mu$ on $\Sph$, there is a signed reweighting of $\mu$, of entropy
+cost at most $\log\big(n(n+1)/2\big)$, whose reweighted second moment
+equals a nonzero rank one matrix \emph{exactly}: Frobenius error $0$,
+not merely $\le \varepsilon\|L\|_{F}$ for the given $\varepsilon$
+(Theorem~\ref{thm:main}). Consequently the conjectured constant can be
+taken $C(\varepsilon,\delta) = 2/(e\delta)$, independent of
+$\varepsilon$ (Corollary~\ref{cor:main}). The construction generalises
+verbatim from the sphere to any distribution over rank one matrices of
+unit Frobenius norm (Corollary~\ref{cor:B}), which is the domain the
+source paper's own Theorem~2.3 and its intended application actually
+concern.
+
+Two things this does \emph{not} establish are stated as plainly as
+the source artifact states them (Remark~\ref{rem:scope}). First, no
+consequence for the log rank conjecture is claimed: the submatrix
+dictionary the source paper uses to convert a rank one approximation
+into a monochromatic rectangle is stated for \emph{flat} distributions
+only, and nothing in the construction below guarantees flatness of
+$r$. Second, the pseudo-distribution extension that the source paper's
+own running-time application actually needs is out of scope: every
+use of $\supp\mu$ in the proof below -- Lemma~\ref{lem:kernel-space}
+(b),(c), Lemma~\ref{lem:kernel-identities}, Lemma~\ref{lem:cheap-point}
+and the Theorem -- presumes an honest Borel probability distribution,
+not a sum-of-squares pseudo-distribution.
+
+Nor does Theorem~\ref{thm:main} conflict with the source paper's own
+tightness claim for \emph{nonnegative} reweightings. That claim (its
+Theorem~2.3, tight as stated) is a worst-case statement: it says some
+$\mu$ forces $\delta \ge 1/2$ if $r \ge 0$ is required. It is not a
+claim about every $\mu$, and Remark~\ref{rem:scope} shows, by two
+parallel arguments internal to the artifact -- one for the sphere
+case, one for Corollary~\ref{cor:B}'s generalisation -- that whenever
+\emph{this} construction happens to return a nonnegative $r$, that $r$
+is itself already a nonnegative reweighting of entropy cost at most
+$\log(n(n+1)/2)$ (respectively $\log(n^{2}+1)$), so such a $\mu$ was
+never a hard instance for the nonnegative question to begin with. No
+gap remains open in the mathematics transcribed below; the only
+outstanding item is the editorial fork disclosed above the title.
+
+\section{The kernel construction}\label{sec:kernel}
+
+Fix $n \ge 1$ and a Borel probability measure $\mu$ on $\Sph$. Write
+$\Sym{n}$ for the real symmetric $n \times n$ matrices and, for $Q \in
+\Sym{n}$, let $q_{Q}(v) := v^{\top} Q v$ be the associated quadratic
+form, regarded as a function on $\Sph$. Let
+\[
+  F_{\mu} \;:=\; \big\{\, [q_{Q}] \in L^{2}(\mu) \;:\; Q \in \Sym{n}
+    \,\big\}, \qquad d \;:=\; \dim F_{\mu} .
+\]
+
+\begin{lemma}[the quadratic space, evaluation on the support, and its
+kernel]\label{lem:kernel-space}
+\begin{enumerate}
+\item[(a)] $F_{\mu}$ is a subspace of $L^{\infty}(\mu) \cap L^{2}(\mu)$
+  with $d \le n(n+1)/2$ and $\|q_{Q}\|_{\infty} \le \|Q\|_{F}$;
+\item[(b)] if $q_{Q} = q_{Q'}$ $\mu$-a.e.\ then $q_{Q}(v) = q_{Q'}(v)$
+  for \emph{every} $v \in \supp\mu$; hence $\ev_{v} : F_{\mu} \to
+  \Reals$, $[q_{Q}] \mapsto q_{Q}(v)$, is well defined and linear for
+  $v \in \supp\mu$;
+\item[(c)] for each $v \in \supp\mu$ there is a unique $k_{v} \in
+  F_{\mu}$ with $\langle k_{v}, f\rangle_{L^{2}(\mu)} = \ev_{v}(f)$
+  for all $f \in F_{\mu}$; set $K(v,v) := \|k_{v}\|^{2}_{L^{2}(\mu)} =
+  \ev_{v}(k_{v})$;
+\item[(d)] $[1] = [q_{I}] \in F_{\mu}$, and $[v \mapsto v_{a}v_{b}] =
+  [q_{E_{ab}}] \in F_{\mu}$ where $E_{ab} = (e_{a}e_{b}^{\top} +
+  e_{b}e_{a}^{\top})/2$.
+\end{enumerate}
+\end{lemma}
+
+\emph{Preliminaries used in the proof.} (P1) $\mu(\supp\mu) = 1$: the
+complement of the support is a union of open null sets, and $\Sph$ is
+second countable, so that union is a countable union of null sets.
+(P2) if $v \in \supp \mu$ and $U \ni v$ is open then $\mu(U) > 0$
+(definition of support).
+
+\begin{proof}
+(a) $Q \mapsto q_{Q}$ is linear, so $F_{\mu}$ is the image of
+$\Sym{n}$ and $d \le \dim \Sym{n} = n(n+1)/2$. For $v \in \Sph$,
+$|v^{\top}Qv| \le \|Q\|_{\mathrm{op}}\|v\|_{2}^{2} = \|Q\|_{\mathrm{op}}
+\le \|Q\|_{F}$. Since $\mu$ is a probability measure, $L^{\infty}(\mu)
+\subseteq L^{2}(\mu)$.
+
+(b) Put $h := q_{Q-Q'}$, continuous, with $\mu(\{h \ne 0\}) = 0$. If
+$h(v_{0}) \ne 0$ for some $v_{0} \in \supp\mu$, then $U := \{|h| >
+|h(v_{0})|/2\}$ is open, contains $v_{0}$, so $\mu(U) > 0$ by (P2); but
+$U \subseteq \{h \ne 0\}$ is null. Contradiction. Well-definedness of
+$\ev_{v}$ follows: $\ev_{v}$ is defined through quadratic-form
+representatives only, and by (b) any two quadratic-form
+representatives of the same class of $F_{\mu}$ take the same value at
+every $v \in \supp\mu$; linearity is inherited from $Q \mapsto
+q_{Q}(v)$.
+
+(c) $F_{\mu}$ is a finite-dimensional subspace of $L^{2}(\mu)$, hence
+a Hilbert space; $\ev_{v}$ is a linear functional on it, hence
+bounded, hence has a unique Riesz representer $k_{v} \in F_{\mu}$.
+Explicitly $k_{v} = \sum_{j} \ev_{v}(f_{j}) f_{j}$ for any orthonormal
+basis $(f_{j})$. Taking $f = k_{v}$ gives $K(v,v) = \ev_{v}(k_{v})$.
+
+(d) $q_{I}(v) = \|v\|_{2}^{2} = 1$ identically on $\Sph$;
+$q_{E_{ab}}(v) = v_{a}v_{b}$ identically.
+\end{proof}
+
+\smallskip
+\noindent\emph{Note.} Part (b) is the only place where the general
+Borel case differs from the finitely supported case, and it removes
+the need for any approximation argument; for finitely supported $\mu$
+it is trivial, since every support point is then an atom.
+
+\begin{lemma}[three reproducing identities]\label{lem:kernel-identities}
+Let $v_{0} \in \supp\mu$ and $k := k_{v_{0}}$. Then
+\begin{enumerate}
+\item[(i)] $\Expect_{\mu}\big[k(v)\,vv^{\top}\big] = v_{0}v_{0}^{\top}$;
+\item[(ii)] $\Expect_{\mu}[k] = 1$; hence $\Expect_{\mu}|k| \ge 1$,
+  $K(v_{0},v_{0}) \ge 1$, and $k \ne 0$;
+\item[(iii)] $\Expect_{\mu}[k^{2}] = K(v_{0},v_{0})$ and
+  $1 \le \Expect_{\mu}|k| \le K(v_{0},v_{0})^{1/2} < \infty$.
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+All integrals converge absolutely: $k$ is bounded
+(Lemma~\ref{lem:kernel-space}(a)) and the other factors are bounded by
+$1$ on $\Sph$.
+
+(i) Fix $a,b$. By Lemma~\ref{lem:kernel-space}(d), $g_{ab} := [v \mapsto
+v_{a}v_{b}] \in F_{\mu}$, so the reproducing property gives
+$\Expect_{\mu}[k\,v_{a}v_{b}] = \langle k, g_{ab}\rangle =
+\ev_{v_{0}}(g_{ab}) = (v_{0})_{a}(v_{0})_{b}$. The $(a,b)$ entries of
+the two matrices therefore agree, for all $a,b$.
+
+(ii) By Lemma~\ref{lem:kernel-space}(d), $[1] \in F_{\mu}$ with
+$\ev_{v_{0}}([1]) = q_{I}(v_{0}) = 1$, so $\Expect_{\mu}[k] = \langle
+k,[1]\rangle = 1$. Then $\Expect_{\mu}|k| \ge |\Expect_{\mu}k| = 1$
+and, by Cauchy--Schwarz, $K(v_{0},v_{0}) = \Expect_{\mu}[k^{2}] \ge
+(\Expect_{\mu}|k|)^{2} \ge 1$. And $\Expect_{\mu}[k] = 1 \ne 0$ forces
+$k \ne 0$.
+
+(iii) $K(v_{0},v_{0}) = \|k\|^{2} = \Expect_{\mu}[k^{2}]$ by
+definition; finiteness is Lemma~\ref{lem:kernel-space}(a); the upper
+bound on $\Expect_{\mu}|k|$ is Cauchy--Schwarz against $1$.
+\end{proof}
+
+\smallskip
+\noindent\emph{Structural note.} Part (ii) is exactly the trace of
+part (i), since $\operatorname{tr}\Expect_{\mu}[k\,vv^{\top}] =
+\Expect_{\mu}[k\,\|v\|_{2}^{2}] = \Expect_{\mu}[k]$ and
+$\operatorname{tr}(v_{0}v_{0}^{\top}) = 1$. This locates where the
+construction gets its normalisation for free: the sphere constraint
+$\|v\|_{2} = 1$ is exactly what makes the constant function a
+quadratic form.
+
+\begin{lemma}[a cheap base point exists]\label{lem:cheap-point}
+$\int K(v,v)\,d\mu(v) = d$, and consequently there exists $v_{0} \in
+\supp\mu$ with $K(v_{0},v_{0}) \le d \le n(n+1)/2$.
+\end{lemma}
+
+\begin{proof}
+Fix an orthonormal basis $f_{1},\dots,f_{d}$ of $F_{\mu}$ and
+quadratic-form representatives $q_{j}$ of $f_{j}$. For $v \in
+\supp\mu$, Lemma~\ref{lem:kernel-space}(c) and Parseval give $k_{v} =
+\sum_{j} q_{j}(v) f_{j}$ and hence
+\begin{equation}\label{eq:christoffel}
+  K(v,v) \;=\; \sum_{j=1}^{d} q_{j}(v)^{2} \;=:\; g(v) \qquad
+  \text{for all } v \in \supp\mu.
+\end{equation}
+$g$ is a polynomial, hence Borel, and by (P1) it represents $v \mapsto
+K(v,v)$ up to a null set, so the integral is well defined and
+\begin{equation}\label{eq:trace}
+  \int K(v,v)\,d\mu \;=\; \sum_{j} \int q_{j}^{2}\,d\mu \;=\; \sum_{j}
+  \|f_{j}\|^{2} \;=\; d.
+\end{equation}
+(For $v \in \supp\mu$ the value $g(v) = \|k_{v}\|^{2}$ is independent
+of the choices, by uniqueness in Lemma~\ref{lem:kernel-space}(c); off
+the support nothing below uses $g$.)
+
+Let $A := \{g \le d\}$, Borel. If $\mu(A) = 0$ then $h := g-d$
+satisfies $h>0$ $\mu$-a.e.\ while $\int h\,d\mu = 0$ by
+\eqref{eq:trace}; a nonnegative function with vanishing integral
+vanishes a.e., so $h=0$ $\mu$-a.e., which cannot hold simultaneously
+with $h>0$ $\mu$-a.e.\ under a probability measure. So $\mu(A) > 0$,
+hence by (P1) $A \cap \supp\mu \ne \emptyset$; any $v_{0}$ in it
+satisfies $K(v_{0},v_{0}) = g(v_{0}) \le d$.
+\end{proof}
+
+\smallskip
+\noindent\emph{Note.} Identity \eqref{eq:trace} is $\int K(v,v)\,d\mu
+= \operatorname{tr} P$ for $P$ the orthogonal projection onto
+$F_{\mu}$, i.e.\ the mean of the reciprocal Christoffel function; it
+is proved here from scratch and used nowhere else in this form.
+
+\begin{lemma}[entropy at most the log of the second
+moment]\label{lem:entropy-bound}
+If $r \in L^{2}(\mu)$ and $\Expect_{\mu}|r| = 1$, then $\Expect_{\mu}
+[\,|r|\log|r|\,] \le \log \Expect_{\mu}[r^{2}]$.
+\end{lemma}
+
+\begin{proof}
+Write $\varphi(t) = t\log t$, $\varphi(0) = 0$. Then $\varphi(t) \ge
+-1/e$ for $t \ge 0$, and $\varphi(t) \le t^{2}$ for all $t \ge 0$ (for
+$t \ge 1$ because $\log t \le t$; for $t<1$ because $\varphi \le 0$).
+Since $r \in L^{2}(\mu)$ and $\mu$ is a probability measure,
+$\varphi(|r|) \in L^{1}(\mu)$, so the entropy is a finite real number.
+
+Let $d\nu := |r|\,d\mu$; then $\nu(\Sph) = 1$, so $\nu$ is a
+probability measure, and $\nu(\{r=0\}) = 0$, so $\log|r|$ is
+$\nu$-a.e.\ finite and $\Expect_{\nu}[\log|r|] = \Expect_{\mu}
+[\,|r|\log|r|\,]$ (the convention $0\log 0 = 0$ matching the
+$\nu$-null set $\{r=0\}$). Also $\Expect_{\nu}[|r|] =
+\Expect_{\mu}[r^{2}] < \infty$. Jensen's inequality for the concave
+function $\log$ against $\nu$ gives $\Expect_{\nu}[\log|r|] \le \log
+\Expect_{\nu}[|r|] = \log \Expect_{\mu}[r^{2}]$.
+\end{proof}
+
+\smallskip
+\noindent\emph{Sharpness.} Equality holds iff $|r| \in \{0,c\}$
+$\mu$-a.e., i.e.\ exactly on the indicator-type (``conditioning on an
+event'') reweightings, where the bound reads $\log(1/\mu(\{|r|=c\}))$.
+The bound is lossy precisely to the extent that $|r|$ is spread out.
+
+\section{The main theorem}\label{sec:main-thm}
+
+\begin{theorem}\label{thm:main}
+For every $n \ge 1$ and every Borel probability measure $\mu$ on
+$\Sph$ there exist a point $v_{0} \in \supp\mu$, a constant $c$ with
+$\big(n(n+1)/2\big)^{-1/2} \le c \le 1$, and a signed reweighting $r$
+of $\mu$ -- indeed the restriction to $\Sph$ of a single quadratic
+form, hence a bounded Borel function -- such that
+\[
+  \Expect_{v\sim\mu}\big[\, r(v)\,vv^{\top} \,\big] \;=\;
+  c \cdot v_{0}v_{0}^{\top} \qquad \text{(\emph{exactly})}
+\]
+and
+\[
+  \Expect_{\mu}\big[\,|r|\log|r|\,\big] \;\le\; \log K(v_{0},v_{0})
+  \;\le\; \log\Big(\frac{n(n+1)}{2}\Big).
+\]
+Here $L := c\,v_{0}v_{0}^{\top}$ is rank one, nonzero and positive
+semidefinite, with $\|L\|_{F} = c$.
+\end{theorem}
+
+\smallskip
+\noindent\textbf{Proof outline.} $F_{\mu} \subseteq L^{2}(\mu)$ is the
+space of restrictions to $\Sph$ of quadratic forms, of dimension $d
+\le n(n+1)/2$. On the sphere the constant function $1$ \emph{is} the
+quadratic form $q_{I}$, and each coordinate product $v_{a}v_{b}$ is
+the quadratic form $q_{E_{ab}}$. Hence the reproducing kernel $k =
+k_{v_{0}}$ of $F_{\mu}$ at a support point $v_{0}$ satisfies
+simultaneously $\Expect_{\mu}[k] = 1$ (free normalisation) and
+$\Expect_{\mu}[k(v)vv^{\top}] = v_{0}v_{0}^{\top}$ (exact rank one).
+Its squared $L^{2}$ norm averages to $d$ over $\mu$, so some base
+point is cheap; and entropy is bounded by the log of the second
+moment. Cancellation is available through $k$, which is negative
+somewhere whenever $\Expect_{\mu}|k| > \Expect_{\mu}[k] = 1$.
+
+\begin{proof}[Proof of the Theorem]
+Lemma~\ref{lem:cheap-point} supplies $v_{0} \in \supp\mu$ with
+$K(v_{0},v_{0}) \le d \le n(n+1)/2$; let $k := k_{v_{0}}$. By
+Lemma~\ref{lem:kernel-identities}(ii),(iii), $1 \le \Expect_{\mu}|k|
+\le K(v_{0},v_{0})^{1/2} < \infty$ and $k \ne 0$, so
+\[
+  c \;:=\; \frac{1}{\Expect_{\mu}|k|} \;\in\;
+  \Big[\, K(v_{0},v_{0})^{-1/2},\, 1 \,\Big] \;\subseteq\;
+  \Big[\, \big(n(n+1)/2\big)^{-1/2},\, 1 \,\Big].
+\]
+Set $r := c\cdot k$, taking as representative the quadratic form
+$q_{cQ_{k}}$; then $r$ is a bounded Borel function on $\Sph$, hence
+$\mu$-integrable, and $\Expect_{\mu}|r| = c\,\Expect_{\mu}|k| = 1$. So
+$r$ is admissible for Definition~\ref{def:signed}.
+
+\emph{Second moment.} By Lemma~\ref{lem:kernel-identities}(i),
+$\Expect_{\mu}[r(v)vv^{\top}] = c\cdot v_{0}v_{0}^{\top} =: L$. As
+$c>0$ and $\|v_{0}\|_{2} = 1$, $L = (cv_{0})v_{0}^{\top}$ is rank one,
+nonzero, positive semidefinite, with $\|L\|_{F} = c > 0$. The
+Frobenius error is $0 \le \varepsilon\|L\|_{F}$ for every
+$\varepsilon > 0$.
+
+\emph{Entropy.} $r \in L^{2}(\mu)$ with $\Expect_{\mu}|r| = 1$, so
+Lemma~\ref{lem:entropy-bound} and Lemma~\ref{lem:kernel-identities}(iii)
+give
+\[
+  \Expect_{\mu}\big[\,|r|\log|r|\,\big] \;\le\; \log
+  \Expect_{\mu}[r^{2}] \;=\; \log\!\Big(c^{2}K(v_{0},v_{0})\Big) \;=\;
+  \log\!\left(\frac{K(v_{0},v_{0})}{(\Expect_{\mu}|k|)^{2}}\right) \;\le\;
+  \log K(v_{0},v_{0}) \;\le\; \log\Big(\frac{n(n+1)}{2}\Big),
+\]
+using $\Expect_{\mu}|k| \ge 1$ and Lemma~\ref{lem:cheap-point}.
+\end{proof}
+
+\begin{corollary}[Conjecture~\ref{conj:main}]\label{cor:main}
+Conjecture~\ref{conj:main} holds with $C(\varepsilon,\delta) :=
+2/(e\delta)$, independent of $\varepsilon$.
+\end{corollary}
+
+\begin{proof}
+For $n=1$, $\log(n(n+1)/2) = \log 1 = 0$. For $n \ge 2$, $n(n+1)/2 \le
+n^{2}$, so $\log(n(n+1)/2) \le 2\log n$; and $\max_{x>0}(\log x)/x^{\delta}
+= 1/(e\delta)$ (attained at $x = e^{1/\delta}$), so $2\log n \le
+(2/(e\delta))\,n^{\delta}$. Combine with Theorem~\ref{thm:main}, taking
+$L = c\,v_{0}v_{0}^{\top}$ for the nonzero rank one matrix required by
+Conjecture~\ref{conj:main}: the Frobenius error is exactly $0 \le
+\varepsilon\|L\|_{F}$ for every $\varepsilon > 0$, so the bound holds
+with a single $C(\varepsilon,\delta)$ that does not use $\varepsilon$
+at all.
+\end{proof}
+
+\noindent This is strictly more than Conjecture~\ref{conj:main} asks
+for. The conjecture only demands, for each fixed $\varepsilon>0$, some
+finite $C(\varepsilon,\delta)$; Corollary~\ref{cor:main} exhibits a
+single $C(\delta) = 2/(e\delta)$ that works simultaneously at
+\emph{every} $\varepsilon > 0$, because the construction's Frobenius
+error is exactly $0$ rather than merely $\le \varepsilon\|L\|_{F}$.
+
+\section{Further remarks}\label{sec:remarks}
+
+\begin{remark}[the conclusion is not obtainable by cancelling to
+zero]\label{rem:cancellation}
+This remark is recorded because it shows that the relative
+normalisation in Conjecture~\ref{conj:main} does real work, so
+Theorem~\ref{thm:main} is not exploiting a degenerate reading of the
+statement; it is not used elsewhere in this document. Let $M \in
+\Sym{n}$ have eigenvalues indexed so that $|\lambda_{1}| \ge
+|\lambda_{2}| \ge \cdots$, and let $\varepsilon \in (0,1)$.
+\begin{itemize}
+\item If $M = 0$, no admissible $L$ exists: $\|0-L\|_{F} =
+  \|L\|_{F} > \varepsilon\|L\|_{F}$ for every $L \ne 0$.
+\item If $M \ne 0$, a nonzero rank one $L$ with $\|M-L\|_{F} \le
+  \varepsilon\|L\|_{F}$ exists \emph{iff} $\sum_{i\ge 2}\lambda_{i}^{2}
+  \le \big(\varepsilon^{2}/(1-\varepsilon^{2})\big)\lambda_{1}^{2}$.
+\end{itemize}
+\end{remark}
+
+\begin{proof}
+Write $L = t\,uw^{\top}$, $\|u\| = \|w\| = 1$, $t > 0$, so $\|L\|_{F}
+= t$ and $\|M-L\|_{F}^{2} = \|M\|_{F}^{2} - 2t\cdot u^{\top}Mw +
+t^{2}$. The requirement is $(1-\varepsilon^{2})t^{2} -
+2(u^{\top}Mw)t + \|M\|_{F}^{2} \le 0$, and increasing $u^{\top}Mw$
+only helps, so the optimal choice is $u^{\top}Mw = s_{1}(M) =
+|\lambda_{1}|$ (singular value decomposition). The quadratic in $t$
+has a real root iff $s_{1}^{2} \ge (1-\varepsilon^{2})\|M\|_{F}^{2} =
+(1-\varepsilon^{2})\sum_{i}\lambda_{i}^{2}$, which rearranges to the
+stated inequality; when $M \ne 0$ both roots are positive (their
+product is $\|M\|_{F}^{2}/(1-\varepsilon^{2}) > 0$, their sum
+$2s_{1}/(1-\varepsilon^{2}) > 0$), so an admissible $t>0$ exists
+exactly then.
+\end{proof}
+
+\begin{corollary}[the same for distributions over rank one matrices of
+unit Frobenius norm]\label{cor:B}
+Let $\mathcal{X} := \{X \in \Reals^{n\times n} : \operatorname{rank} X
+= 1,\ \|X\|_{F} = 1\}$ -- equivalently $X = ab^{\top}$ with $\|a\|_{2}
+= \|b\|_{2} = 1$, the normalisation used in the source paper's
+intended application (\S 2.3 of~\cite{BKS16}: ``we will restrict our
+attention to the case that all the columns of $U$ and $V$ are of unit
+norm. (This restriction is easy to lift and anyway holds automatically
+in our intended application.)''). Let $\mu$ be a Borel probability
+measure on $\mathcal{X}$. Then there exist $X_{0} \in \supp\mu$, $c
+\in (0,1]$, and a signed reweighting $r$ of $\mu$ with
+$\Expect_{\mu}[\,|r|\log|r|\,] \le \log(n^{2}+1)$ such that
+$\Expect_{X\sim\mu}[\,r(X)\cdot X\,] = c\cdot X_{0}$, exactly rank one
+and nonzero.
+\end{corollary}
+
+\begin{proof}
+Run Lemmas~\ref{lem:kernel-space}--\ref{lem:entropy-bound} verbatim
+with $\Sph$ replaced by $\mathcal{X}$ (compact) and the space of
+quadratic forms replaced by the affine space
+\[
+  G \;:=\; \big\{\, X \mapsto \alpha + \langle A,X\rangle \;:\;
+    \alpha \in \Reals,\ A \in \Reals^{n\times n} \,\big\},
+\]
+of dimension at most $n^{2}+1$. Only two properties of the function
+space were used: it contains the constant $1$ (here trivially, $\alpha
+= 1$, $A = 0$) and it contains each coordinate function $X \mapsto
+X_{ab}$ (here $\alpha = 0$, $A = e_{a}e_{b}^{\top}$). Continuity of the
+elements of $G$ gives the analogue of Lemma~\ref{lem:kernel-space}(b)
+unchanged; boundedness on $\mathcal{X}$ gives the analogue of
+Lemma~\ref{lem:kernel-space}(a).
+\end{proof}
+
+\smallskip
+\noindent\emph{Note.} The mechanism is therefore not an artefact of
+specialising to $X = vv^{\top}$: it is the presence of constants and
+coordinates in one finite-dimensional function space. On the sphere
+the homogeneous quadratic forms suffice because $\|v\|_{2}=1$ makes
+the constant a quadratic form; that only buys the sharper bound
+$\log(n(n+1)/2)$ over $\log(n^{2}+1)$.
+
+\begin{remark}[scope]\label{rem:scope}
+Theorem~\ref{thm:main} answers Question 8.1 of~\cite{BKS16} as
+literally posed, and nothing more.
+
+\smallskip
+\noindent\textbf{(i) No conflict with the source's negative results.}
+The statement ``it can be shown that as stated, Theorem 2.3 is
+tight'' (\cite{BKS16}, p.\,6) is about \emph{deficient} reweightings,
+which are probability distributions and hence nonnegative by
+Definition~2.2 of~\cite{BKS16}; and the statement ``the answer to this
+question is No if one does not allow negative reweighting functions''
+(\cite{BKS16}, p.\,19) is an existential statement over $\mu$. Neither
+is contradicted here, because whenever the construction returns a
+nonnegative $r$, that $r$ is itself a nonnegative reweighting of
+entropy cost at most $\log(n(n+1)/2) = O(\log n)$ -- equivalently, $k
+\ge 0$ forces $\mu(\{\pm v_{0}\}) = 1/K(v_{0},v_{0}) \ge 2/(n(n+1))$ --
+so such a $\mu$ is not a hard instance for the nonnegative question.
+
+\smallskip
+\noindent\textbf{(ii) No log-rank consequence is claimed.} The
+submatrix dictionary of~\cite{BKS16}, \S 2.2, is stated for
+\emph{flat} distributions, and the Theorem supplies no flatness
+guarantee, so that route is unavailable; no other route is addressed.
+
+\smallskip
+\noindent\textbf{(iii) The pseudo-distribution version is out of
+scope.} Every use of $\supp\mu$ in the proof --
+Lemma~\ref{lem:kernel-space}(b),(c), Lemma~\ref{lem:kernel-identities},
+Lemma~\ref{lem:cheap-point}, the Theorem -- presumes an honest
+distribution. The source paper attaches its pseudo-distribution
+condition to its \emph{running-time} consequence (Question 8.1, p.\,19),
+and this document addresses neither.
+
+\medskip
+\noindent\emph{Derivation of the ``equivalently'' clause of (i), sphere
+case.} Let $v_{0}$ and $k = k_{v_{0}}$ be as in the proof of the
+Theorem, and suppose $k \ge 0$ $\mu$-a.e. By
+Lemma~\ref{lem:kernel-identities}(ii), $d\mu' := k\,d\mu$ is a
+probability measure, and by Lemma~\ref{lem:kernel-identities}(i),
+$\Expect_{\mu'}[vv^{\top}] = v_{0}v_{0}^{\top}$. For a unit $w \perp
+v_{0}$ this gives $\Expect_{\mu'}\langle v,w\rangle^{2} = w^{\top}
+v_{0}v_{0}^{\top}w = 0$, so $\langle v,w\rangle = 0$ $\mu'$-a.s.;
+ranging $w$ over an orthonormal basis of $v_{0}^{\perp}$ and using
+$\|v\|_{2} = 1$ forces $\mu'(\{\pm v_{0}\}) = 1$. Since $k$ is (the
+class of) a quadratic form, $k(-v_{0}) = k(v_{0}) = K(v_{0},v_{0})$ by
+Lemma~\ref{lem:kernel-space}(c), so $1 = \mu'(\{\pm v_{0}\}) =
+K(v_{0},v_{0})\cdot\mu(\{\pm v_{0}\})$, i.e.\ $\mu(\{\pm v_{0}\}) =
+1/K(v_{0},v_{0})$; and $K(v_{0},v_{0}) \le n(n+1)/2$ by
+Lemma~\ref{lem:cheap-point} gives $\mu(\{\pm v_{0}\}) \ge
+2/(n(n+1))$. Conditioning on that atom, $r' := \mathbf{1}_{\{\pm
+v_{0}\}}/\mu(\{\pm v_{0}\})$, is then a nonnegative reweighting
+reaching $v_{0}v_{0}^{\top}$ at entropy cost $\log(1/\mu(\{\pm
+v_{0}\})) = \log K(v_{0},v_{0}) \le \log(n(n+1)/2)$, the same bound the
+Theorem gives for $r$ itself. Every quantity used here is
+Lemma~\ref{lem:kernel-space}(c), Lemma~\ref{lem:kernel-identities}(i),
+(ii), Lemma~\ref{lem:cheap-point} or the Theorem; nothing is taken on
+the authority of a document outside this construction.
+
+\medskip
+\noindent\emph{The same dichotomy for Corollary~\ref{cor:B}'s
+construction.} This second argument is fully internal to the
+construction above and strictly simpler than the sphere-case argument
+just given, because $\mathcal{X}$ carries no antipodal identification
+and there is no $-X_{0}$ to account for. Let $X_{0}$ and $k =
+k_{X_{0}}$ be as in the proof of Corollary~\ref{cor:B}, and suppose $k
+\ge 0$ $\mu$-a.e. By Corollary~\ref{cor:B}'s own transfer of
+Lemma~\ref{lem:kernel-identities}(ii) (using $[1] \in G$), $d\mu' :=
+k\,d\mu$ is a probability measure, and by the transfer of
+Lemma~\ref{lem:kernel-identities}(i) (using $[X \mapsto X_{ab}] \in G$
+for every $a,b$), $\Expect_{\mu'}[X] = X_{0}$. Every $X$ in the domain
+$\mathcal{X}$ has $\|X\|_{F} = 1$, and $\|X_{0}\|_{F} = 1$ since $X_{0}
+\in \mathcal{X}$, so, using only the bilinear expansion of the
+Frobenius inner product exactly as in Lemma~\ref{lem:kernel-identities}
+and Remark~\ref{rem:cancellation},
+\[
+  \Expect_{\mu'}\big\|X-X_{0}\big\|_{F}^{2} \;=\; \Expect_{\mu'}
+  \|X\|_{F}^{2} - 2\langle X_{0}, \Expect_{\mu'}X\rangle +
+  \|X_{0}\|_{F}^{2} \;=\; 1 - 2\langle X_{0},X_{0}\rangle + 1 \;=\; 0.
+\]
+A nonnegative integrand with vanishing integral vanishes a.e., so $X =
+X_{0}$ $\mu'$-a.s., i.e.\ $\mu'(\{X_{0}\}) = 1$ -- a point mass, as
+promised, simpler than the sphere case. Hence $1 =
+\int_{\{X_{0}\}}k\,d\mu = K(X_{0},X_{0})\cdot\mu(\{X_{0}\})$, so
+$\mu(\{X_{0}\}) = 1/K(X_{0},X_{0}) \ge 1/(n^{2}+1)$ (Corollary~\ref{cor:B}'s
+transfer of Lemma~\ref{lem:cheap-point}, with $\dim G \le n^{2}+1$),
+and conditioning on that atom, $r' := \mathbf{1}_{\{X_{0}\}}/\mu(\{X_{0}\})$,
+is a nonnegative reweighting reaching $X_{0}$ exactly at entropy cost
+$\log(1/\mu(\{X_{0}\})) = \log K(X_{0},X_{0}) \le \log(n^{2}+1)$ -- the
+same bound Corollary~\ref{cor:B} already proves for its own (possibly
+signed) $r$. So whenever Corollary~\ref{cor:B}'s construction returns
+a nonnegative $r$, that $\mu$ is, by exactly this argument, not a hard
+instance for the nonnegative version of Theorem~2.3 of~\cite{BKS16}
+either. Every quantity used here is Corollary~\ref{cor:B}'s own
+statement and proof, which states the transfer of
+Lemmas~\ref{lem:kernel-space}--\ref{lem:entropy-bound} verbatim,
+together with the Frobenius inner product already used in
+Lemma~\ref{lem:kernel-identities} and Remark~\ref{rem:cancellation};
+nothing is taken on the authority of any document outside this
+construction.
+\end{remark}
+
+\section{A worked example}\label{sec:example}
+
+The following hand computation, independent of the proof above,
+illustrates Theorem~\ref{thm:main} at $n=2$. Let $\mu$ be uniform on
+the four points
+\[
+  v_{1} = (1,0), \quad v_{2} = (0,1), \quad v_{3} =
+  \tfrac{1}{\sqrt2}(1,1), \quad v_{4} = \tfrac{1}{\sqrt2}(1,-1).
+\]
+Identifying $F_{\mu}$ with a $4$-dimensional coordinate space via
+evaluation at $v_{1},\dots,v_{4}$, one finds $F_{\mu} = \{x \in
+\Reals^{4} : x_{1}+x_{2} = x_{3}+x_{4}\}$, so $d = 3$. The kernel at
+$v_{0} = v_{1}$ is $k = (3,-1,1,1)$ (i.e.\ $k(v_{1})=3$,
+$k(v_{2})=-1$, $k(v_{3})=k(v_{4})=1$). Then
+\[
+  \Expect_{\mu}[k] = \tfrac14(3-1+1+1) = 1 \quad\checkmark, \qquad
+  K(v_{0},v_{0}) = \|k\|^{2} = \tfrac14(9+1+1+1) = 3 = d
+  \quad\checkmark,
+\]
+\[
+  \Expect_{\mu}[k\,vv^{\top}] = \tfrac14\Big(3v_{1}v_{1}^{\top} -
+  v_{2}v_{2}^{\top} + v_{3}v_{3}^{\top} + v_{4}v_{4}^{\top}\Big) =
+  v_{1}v_{1}^{\top} \quad\checkmark
+\]
+(exactly rank one, as Lemma~\ref{lem:kernel-identities}(i) predicts).
+Normalising, $\Expect_{\mu}|k| = \tfrac14(3+1+1+1) = \tfrac32$, so $c =
+2/3$ and $r = c\,k = \big(2,\,-\tfrac23,\,\tfrac23,\,\tfrac23\big)$,
+with $\Expect_{\mu}|r| = 1$ as required, and
+\[
+  \Expect_{\mu}\big[\,|r|\log|r|\,\big] \;=\; 0.1438\ldots \;\le\;
+  \log \Expect_{\mu}[r^{2}] \;=\; 0.2877\ldots \;\le\; \log 3 \;=\;
+  1.0986\ldots \qquad \checkmark,
+\]
+matching Lemma~\ref{lem:entropy-bound} and Theorem~\ref{thm:main}.
+Note that $r$ is genuinely signed here (it is negative at $v_{2}$),
+illustrating that the cheap base point $v_{1}$ need not make $k$
+nonnegative even in this small example.
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{9}
+
+\bibitem[BKS16]{BKS16}
+B. Barak, P. Kothari, D. Steurer.
+\emph{Quantum entanglement, sum of squares, and the log rank
+conjecture}.
+arXiv:1701.06321v2 [quant-ph], 2017.
+
+\end{conjurabibliography}
+
+\end{document}

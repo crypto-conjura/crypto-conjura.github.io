@@ -1,0 +1,121 @@
+%% The interface box of f-fsaead, the one source for both the book
+%% and uc/.../f-fsaead/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Ffsaead$ \\
+\params{$\PID$, \quad $\Ps := \{P_0, P_1\}$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves),\,(\Flib,\serves)\}$, \quad $\pars := \none$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{I} \gets \unset$; \ $\V{st} \gets \none$
+  \Comment{the uploaded code, and its running state}
+\State $\V{S} \gets \unset$; \ $\V{n} \gets 0$
+  \Comment{the sender for this epoch, and its counter}
+\State $\V{Rec}[*] \gets \unset$
+  \Comment{$(\msg, c, N)$ per message number}
+\State $\V{Bad} \gets \emptyset$; \ $\V{Off} \gets \emptyset$
+  \Comment{triples that failed; numbers no longer readable}
+\State $\V{stop} \gets 0$; \ $\V{got} \gets 0$; \ $\V{corr} \gets 0$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Encrypt}(\msg, N)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P \in \Ffsaead.\Ps \ \wedge\ \V{stop} = 0$} \label{ln:fsstopped}
+  \Comment{a sender that has deleted cannot encrypt}
+\If{$\V{S} = \unset$}
+  \State $\V{S} \gets \id.P$ \label{ln:fsfixsender}
+    \Comment{the first activation fixes the direction}
+  \State $\V{I} \gets \id_{\Flib}.\fopl{Code}() \text{ as } \id$
+\EndIf
+\Req{$\id.P = \V{S}$}
+\State $\V{n} \gets \V{n} + 1$
+\If{$\V{corr} = 0$}
+  \State $(\V{st}, c) \gets \V{I}\bigl(\V{st}, \op{Encrypt}, \id.P, N, |\msg|\bigr)$ \label{ln:fslenonly}
+    \Comment{the length only, and no message number}
+\EndIf
+\If{$\V{corr} = 1$}
+  \State $(\V{st}, c) \gets \Adv\bigl(\id.\op{Encrypt}, \id.P, \V{n}, N, \msg\bigr)$ \label{ln:fscorruptenc}
+\EndIf
+\State $\V{Rec}[\V{n}] \gets (\msg, c, N)$
+\State \textbf{return} $c$ \label{ln:fsnonum}
+  \Comment{the number travels in the protocol's header}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{StopEncrypting}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{S} \neq \unset \ \wedge\ \id.P = \V{S}$}
+\State $\V{stop} \gets 1$ \label{ln:fsdeletesend}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Decrypt}(c, j, N)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P \in \Ffsaead.\Ps \ \wedge\ \V{S} \neq \unset \ \wedge\ \id.P \neq \V{S}$} \label{ln:fsreceiver}
+\If{$j \in \V{Off} \ \vee\ (c, j, N) \in \V{Bad}$}
+  \State \textbf{return} $\none$ \label{ln:fsdead}
+    \Comment{deleted, or already found unauthentic}
+\EndIf
+\If{$\V{corr} = 0$}
+  \State $(\V{st}, v) \gets \V{I}\bigl(\V{st}, \op{Authenticate}, \id.P, c, j, N\bigr)$ \label{ln:fsauth}
+\EndIf
+\If{$\V{corr} = 1$}
+  \State $(\V{st}, v) \gets \Adv\bigl(\id.\op{Decrypt}, \op{Inject}, \id.P, c, j, N\bigr)$ \label{ln:fsinject}
+\EndIf
+\If{$v = \none$}
+  \State $\V{Bad} \gets \V{Bad} \cup \{(c, j, N)\}$
+  \State \textbf{return} $\none$
+\EndIf
+\State $\V{Off} \gets \V{Off} \cup \{j\}$; \ $\V{got} \gets 1$ \label{ln:fsonce}
+  \Comment{read once, then gone}
+\If{$\V{corr} = 1$}
+  \State \textbf{return} $v$
+\EndIf
+\Req{$\V{Rec}[j] \neq \unset$} \label{ln:fsnorecord}
+\State $(\msg, \cdot, \cdot) \gets \V{Rec}[j]$
+\State \textbf{return} $\msg$ \label{ln:fsplain}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{StopDecrypting}(j^{*})$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{S} \neq \unset \ \wedge\ \id.P \neq \V{S} \ \wedge\ \V{got} = 1$} \label{ln:fsstopdecreq}
+\State $\V{Off} \gets \V{Off} \cup \{j : j > j^{*}\}$ \label{ln:fstrim}
+  \Comment{everything above the mark, at once}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P \in \Ffsaead.\Ps$}
+\State $\V{corr} \gets 1$; \ $L \gets \emptyset$
+\If{$\V{S} \neq \unset \ \wedge\ \id.P \neq \V{S}$}
+  \State $L \gets \{(j, \V{Rec}[j]) : \V{Rec}[j] \neq \unset \wedge j \notin \V{Off}\}$ \label{ln:fsleakrecv}
+    \Comment{a receiver's unread messages, and only those}
+\EndIf
+\State \textbf{return} $(\V{st},\ L)$ \label{ln:fsleaksend}
+  \Comment{a sender leaks no message at all}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

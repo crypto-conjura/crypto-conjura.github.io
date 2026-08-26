@@ -1,0 +1,84 @@
+%% The interface box of f-psi, the one source for both the book
+%% and uc/.../f-psi/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fpsi$ \\
+\params{$\PID$, \quad $\Ps := \{P_{\mathsf{s}}, P_{\mathsf{r}}\}$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := (\sigma, n, n')$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{X} \gets \unset$; \ $\V{Y} \gets \unset$
+  \Comment{the sender's set, and the receiver's}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Receive}(S)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P = P_{\mathsf{r}} \ \wedge\ \V{Y} = \unset \ \wedge\ S \subseteq \{0,1\}^{\sigma}$}
+\Req{$|S| \leq n \ \vee\ (\id.P \in \Cs \ \wedge\ |S| \leq n')$} \label{ln:psibigger}
+  \Comment{a corrupt party is allowed the larger set}
+\State $\V{Y} \gets S$
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Send}(S)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P = P_{\mathsf{s}} \ \wedge\ \V{X} = \unset \ \wedge\ S \subseteq \{0,1\}^{\sigma}$}
+\Req{$\V{Y} \neq \unset$} \label{ln:psiorder}
+  \Comment{``thereafter'': the receiver commits first}
+\Req{$|S| \leq n \ \vee\ (\id.P \in \Cs \ \wedge\ |S| \leq n')$}
+\State $\V{X} \gets S$
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Ready}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P = P_{\mathsf{s}}$}
+\State \textbf{return} $\V{Y} \neq \unset$ \label{ln:psinotify}
+  \Comment{that the receiver has input, never what}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Fetch}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P = P_{\mathsf{r}} \ \wedge\ \V{X} \neq \unset$}
+\State \textbf{return} $\V{X} \cap \V{Y}$ \label{ln:psione}
+  \Comment{one-sided: the sender never learns it}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$\id.P = P_{\mathsf{s}}$}
+  \State \textbf{return} $\V{X}$ \label{ln:psileaks}
+\EndIf
+\If{$\id.P = P_{\mathsf{r}} \ \wedge\ \V{X} \neq \unset$}
+  \State \textbf{return} $(\V{Y},\ \V{X} \cap \V{Y})$ \label{ln:psileakr}
+\EndIf
+\If{$\id.P = P_{\mathsf{r}}$}
+  \State \textbf{return} $\V{Y}$
+\EndIf
+\State \textbf{return} $\none$
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

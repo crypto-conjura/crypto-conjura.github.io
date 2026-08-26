@@ -1,0 +1,59 @@
+---
+title: "Leakage-tolerant circuits"
+subtitle: "Cleartext input and output, global leakage on the wires, and what simulation costs"
+---
+
+## Motivation
+
+Leakage-resilient circuits assume the input arrives encoded and the output
+leaves encoded, and ask that leakage on the internal wires reveal nothing at
+all about the input. That is a clean guarantee, but the encoder and decoder are
+themselves circuits running on cleartext, so somewhere the assumption has to be
+discharged. Leakage *tolerance* discharges it: the circuit takes a cleartext
+input and produces a cleartext output, and the requirement is relative — leakage
+on the wires must be simulatable from leakage on the input and output alone.
+
+For probing leakage — the adversary names $t$ wires and learns their values —
+tolerance has been understood since the original private-circuits work. For
+*global* leakage classes, where a single query may depend on arbitrarily many
+wires at once, tolerance is much harder, and the interesting question turns out
+not to be whether it is achievable but what the simulation costs.
+
+## Provenance and history
+
+Leakage-resilient circuits for global leakage classes were developed by Goyal,
+Ishai, Maji, Sahai and Sherstov (FOCS 2016) for bounded-communication leakage,
+following the probing model of Ishai, Sahai and Wagner (CRYPTO 2003). Ishai and
+Song, *Leakage-Tolerant Circuits* ([IACR ePrint
+2024/332](https://eprint.iacr.org/2024/332)), initiate the systematic study of
+leakage *tolerance* for natural global classes. They compile every circuit into
+one tolerant against $t$ parities, or $t$ disjunctions or conjunctions, of any
+number of wires or their negations, at size $\widetilde O(s) +
+\mathrm{poly}(n,m,h,t,\kappa)$; and they give a general transformation from
+stateless tolerant circuits to stateful *resilient* circuits withstanding
+continuous leakage, whose size grows sub-quadratically in $t$.
+
+The gap they leave is in the simulator. For the parity class theirs runs in time
+exponential in $t$, because answering $t$ parity queries jointly requires
+locating a low-weight subset-XOR among $2^t$ candidates — a short-vector problem
+in the code the queries span. Their Appendix H shows, under standard LPN, that
+super-polynomial simulation is necessary for a related relaxed notion, which is
+evidence but not a proof for circuits. Their own stateful application sidesteps
+the issue entirely.
+
+## Parameter lattice
+
+Leakage class against what is known, in the stateless tolerant setting.
+
+| Leakage class | Tolerant circuit | Simulator cost |
+|---|---|---|
+| **$t$ probes** | classical | $\mathrm{poly}(t)$ |
+| **$t$ disjunctions / conjunctions (depth-1 $\mathsf{AC}^0$)** | Corollary 2 | efficient |
+| **$t$ parities** | Corollary 2 | $2^{O(t)}$ — [c/0071](/c/0071/), open whether $\mathrm{poly}(t)$ is possible |
+| **Hamming weight of a wire subset** | *unstated*: the source reports its parity-to-probing technique does not extend, so no construction is given | — |
+| **Depth-2 $\mathsf{AC}^0$ (CNF/DNF)** | *unstated*: open even though leakage-*resilient* circuits are known | — |
+| **Bounded-communication leakage** | *unstated*: open, and the source notes its compiler needs a decomposable class, which BCL is not | — |
+
+## Statements in this hub
+
+- [An Efficiently Simulatable Parity-Tolerant Circuit](/c/0071/) — open

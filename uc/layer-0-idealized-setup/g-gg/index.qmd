@@ -1,14 +1,111 @@
 ---
-title: "G-GG — Generic group, global observable variant; bilinear types 1–3"
+title: "G-GG — Global generic group, type-3 bilinear"
 status: "Idealized Setup"
 layer: 0
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*G-GG* (Generic group, global observable variant; bilinear types 1–3) is part of *Idealized Setup and Resources* in the UC functionality encyclopedia. Status: an idealized setup assumption or shared resource.
+*G-GG* (Global generic group, type-3 bilinear) is part of *Idealized Setup and Resources* in the UC functionality encyclopedia. Status: an idealized setup assumption or shared resource.
 
-This functionality had no reference at all until a 2024 paper on the global, restricted-observable generic group model — it stands to the plain generic group exactly as *G-RO* stands to *F-RO*, and establishes UC security of a deployed zero-knowledge proof system without asymptotic overhead. Bilinear-group models are treated as folding into this functionality, since a bilinear group is a generic group with a pairing and the observable global functionality generalizes both.
+Three random encodings of $\mathbb{Z}_p$, shared by every session at once, with a group operation and a pairing on top. The whole box is eight lines and it is the *unobservable* one — the paper that prints it calls it "the generic-group equivalent of the 'strict' global random-oracle functionality", and says in the next section that as defined it "has limited applicability, because it does not offer the UC simulator any 'cheating power'".
+
+## Functionality
+
+Reading the box: **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it — it is the source's `assert`; $\bot$ is nothing to report. The header line is what makes this a *global* setup and not a local one: $\mathit{pid}$ is pinned to a constant rather than left a parameter, and $\mathbf{N}$ admits every id, so one instance serves every session. $\mathbf{U} := \varnothing$: the box places no calls, on the adversary or anyone else.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{G}_{\mathsf{GG}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid} := (\mathsf{GGG},0,0)\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N} := \mathbf{Std} \cup \mathbf{A} \cup \mathbf{Z}\), &nbsp; \(\mathbf{U} := \varnothing\), &nbsp; \(\mathit{par} := (p, S_1, S_2, S_{\mathsf{t}})\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{\tau}_i \gets_{\$} \mathsf{Inj}(\mathbb{Z}_p, S_i)\) &nbsp;for each \(i \in \{1,2,\mathsf{t}\}\)<span class="cj-comment">// three random encodings, one per group</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.CanonicalGen(<span class="cj-id">i</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="2">
+<li>\(\textbf{require}\ i \in \{1,2,\mathsf{t}\}\)</li>
+<li>\(\textbf{return}\ \mathtt{\tau}_i(1)\)<span class="cj-comment">// the same generator in every session</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Op(<span class="cj-id">i</span>, <span class="cj-id">g_1</span>, <span class="cj-id">g_2</span>, <span class="cj-id">a_1</span>, <span class="cj-id">a_2</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="4">
+<li>\(\textbf{require}\ i \in \{1,2,\mathsf{t}\} \ \wedge\ (g_1, g_2) \in S_i^{2} \ \wedge\ (a_1, a_2) \in \mathbb{Z}_p^{2}\)</li>
+<li>\(\textbf{return}\ \mathtt{\tau}_i\bigl(a_1 \mathtt{\tau}_i^{-1}(g_1) + a_2 \mathtt{\tau}_i^{-1}(g_2)\bigr)\)<span class="cj-comment">// an arbitrary linear combination, not just \(g_1 + g_2\)</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Pair(<span class="cj-id">g_1</span>, <span class="cj-id">g_2</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="6">
+<li>\(\textbf{require}\ (g_1, g_2) \in S_1 \times S_2\)</li>
+<li>\(\textbf{return}\ \mathtt{\tau}_{\mathsf{t}}\bigl(\mathtt{\tau}_1^{-1}(g_1) \cdot \mathtt{\tau}_2^{-1}(g_2)\bigr)\)<span class="cj-comment">// type-3: no map back from \(S_2\) to \(S_1\)</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="8">
+<li>\(\textbf{return}\ \bot\)<span class="cj-comment">// no per-party state exists to leak</span></li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+The box is transcribed from Bobolz, Farshim, Kohlweiss and Takahashi, *The brave new world of global generic groups and UC-secure zero-overhead SNARKs*, ePrint 2024/818, revision `20241209:155308`, Functionality 2, p. 14 (the PDF's numbering and the printed numbering agree) — $\mathcal{G}\text{-}\mathtt{GG}$. It is stated as a numbered `Functionality` environment rather than a captioned figure, which is why a caption-based sweep of this paper reports nothing.
+
+**Two of the three claims in this entry's former title were wrong, and the page is retitled.** It read *"Generic group, global observable variant; bilinear types 1–3"*. The printed $\mathcal{G}\text{-}\mathtt{GG}$ is neither observable nor type-1/2:
+
+- **Not observable.** Observability is the paper's *next* functionality. $\mathcal{G}\text{-}\mathtt{oGG}$ (Functionality 3, p. 16) "contains all interfaces of $\mathcal{G}\text{-}\mathtt{GG}$, together with two additional ones, $\textsc{Observe}$ and $\textsc{Touch}$", and the paper is explicit that "if $\textsc{Observe}$ and $\textsc{Touch}$ are never called, then $\mathcal{G}\text{-}\mathtt{oGG}$ behaves identically to $\mathcal{G}\text{-}\mathtt{GG}$". It is a strictly larger object, and a substantially harder one: to restrict observation it has to decide which group elements *belong to* which session, in a group that is "shared equally among all sessions, with no algebraic differentiation between any two group elements", and it does so by tracking a set of polynomial representations $R_i[h]$ per element over per-session formal variables. Nothing of that machinery is in the box above.
+- **Type-3 only.** "We focus on type-3 bilinear groups and Shoup's style of generic groups with random encodings." Line 7 is where that shows: the pairing takes $S_1 \times S_2$ and there is no operation mapping $S_2$ back into $S_1$, which is exactly what distinguishes type 3 from types 1 and 2. A types-1–3 functionality would need a different signature, not a different parameter.
+- **Global is right**, and it is the one part of the old title the box bears out: $\mathsf{Initialize}$ carries no session identifier while all three interfaces do, so the three encodings are drawn once and every session indexes into the same ones.
+
+Three readings worth stating:
+
+- **Line 5 is deliberately more than a group operation.** The source computes $a_1 g_1 + a_2 g_2$ for arbitrary scalars rather than $g_1 + g_2$, and says why: it "is without loss of generality and is used to spare algorithms from implementing double and add". A faithful box keeps the scalars, because a protocol written against this interface makes one call where the narrower interface would make $O(\log p)$.
+- **$|S_i| = p$ is load-bearing, not incidental.** Because the carrier sets are public and exactly the size of the group, "protocols (and adversaries) can (obliviously) sample group elements of their choice" — via an algorithm whose output distribution is unspecified. The paper notes that formalizations allowing $S_i$ much larger than $\mathbb{Z}_p$ *prevent* that power, and chooses against them on the grounds that fixed, publicly known carrier sets are what real bilinear groups have. The same feature is what lets a protocol hash into the group through an external random oracle, which is why there is no hash-into-group interface here.
+- **Line 8 is empty because the box has no per-party state.** The three encodings are the entire state, they are shared, and every party can query every point of them through lines 3, 5 and 7. There is nothing a corruption could reveal that an honest call could not.
+
+Where the framework needed a decision:
+
+| Source | Box | Why |
+|---|---|---|
+| `assert` on malformed inputs | **require** | The source's `assert` aborts the call; **require** refuses it and the framework answers $\textsf{rej}$, which is the same observable behaviour. |
+| $\textsc{Init}()$ has no $\mathit{sid}$; the three interfaces are subscripted $\mathit{sid}$ | Global header line | This is the source's own encoding of globality and it survives intact: one $\mathsf{Initialize}$, every caller admitted. The subscripts carry no behaviour in $\mathcal{G}\text{-}\mathtt{GG}$ — they start to matter only in $\mathcal{G}\text{-}\mathtt{oGG}$, where the session decides what may be observed. |
+| No leakage interface | Line 8 | Required here, and vacuous: $\bot$. |
+| $\tau_i$ drawn as a random injection $\mathbb{Z}_p \to S_i$ | The same, at line 1 | The source notes the draw "can be made efficient in the standard way, via lazy sampling"; that is an implementation remark about the functionality, not a change to it, so line 1 keeps the eager form the source writes. |
+
+## Known realizations
+
+None, and none is possible: a generic group is a setup assumption about how algorithms may access a group, not a task a protocol can accomplish. What the paper does with it is the reverse direction — using it to *prove* things — and the box above is explicitly not enough for the headline result.
+
+- With $\mathcal{G}\text{-}\mathtt{GG}$: the paper offers it for analysing "the UC security [of] algebraic schemes like ElGamal when they share a generic group".
+- With $\mathcal{G}\text{-}\mathtt{oGG}$: the observable variant is what the Groth16 result needs, because a UC simulator with no observation power has no way to extract a witness from a proof it did not produce. The paper's own summary of the gap — that $\mathcal{G}\text{-}\mathtt{GG}$ "does not offer the UC simulator any 'cheating power'", in contrast to a *local* group model where the simulator takes over the group — is the cleanest available statement of why a global setup costs something.
+
+This encyclopedia has no page for $\mathcal{G}\text{-}\mathtt{oGG}$, and it should: it is a distinct functionality, it is the one the paper's theorems use, and its restriction mechanism (per-session formal variables, and the $\mathsf{Legal}_{\mathit{sid}}$ set of polynomials with zero constant term over only that session's variables) has no counterpart on any page here.
+
+## Properties
+
+- **Generic access, with probability exactly $0$ of algebraic leakage:** the only way to learn anything about $\tau_i^{-1}$ is to call line 5 or line 7, and both return an encoding rather than a discrete logarithm. Two encodings drawn from the same injection are indistinguishable to a caller that has not computed one from the other.
+- **Consistency across sessions, with probability exactly $1$**: the encodings are drawn once at line 1, so the same $g$ denotes the same $\mathbb{Z}_p$ element in every session — which is the point of the global form, and simultaneously the reason observability has to be restricted before it can be granted.
+- **No observability and no programmability.** The comparison is [G-RO](/uc/layer-0-idealized-setup/g-ro/index.qmd), which carries $\mathsf{Observe}$, $\mathsf{Program}$ and $\mathsf{IsProgrammed}$ and gates each of them on the caller's role and session. This box carries none of the three, and the paper's analogy is exact: it is the *strict* global random oracle's counterpart, not the restricted-observable one.
+- **Type-3 pairing, asymmetric by construction.** No operation maps $S_2 \to S_1$, and none maps $S_{\mathsf{t}}$ anywhere. A protocol needing a type-1 or type-2 group cannot be analysed against this box by restricting a parameter; it needs a different functionality.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Bobolz et al. [*The brave new world of global generic groups and UC-secure zero-overhead SNARKs*](https://eprint.iacr.org/2024/818). In 22nd Theory of Cryptography Conference (TCC), Part I, volume 15364 of LNCS, pages 90–124, 2024.
+- Bobolz, Farshim, Kohlweiss, and Takahashi. [*The brave new world of global generic groups and UC-secure zero-overhead SNARKs*](https://eprint.iacr.org/2024/818). In 22nd Theory of Cryptography Conference (TCC), Part I, volume 15364 of LNCS, pages 90–124, 2024. Functionality 2, p. 14 of revision `20241209:155308`, the definition transcribed above; Functionality 1, p. 14 prints a weak-NIZK box on the same page, whose maul line matches the weakening [F-SNARK](/uc/layer-4-commitments-proofs/f-snark/index.qmd) transcribes from Kosba et al. — that one belongs to that page, not this one; Functionality 3, p. 16 and §3.2, pp. 15–16 for the restricted-observable variant.

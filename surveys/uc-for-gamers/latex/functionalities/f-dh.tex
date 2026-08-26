@@ -1,0 +1,135 @@
+%% The interface box of f-dh, the one source for both the book
+%% and uc/.../f-dh/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fdh$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := \op{GroupGen}$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $(G, N, g) \gets \op{GroupGen}(1^{\eta})$ \label{ln:dhgroup}
+  \Comment{one group for the whole instance}
+\State $\V{Exp} \gets \emptyset$; \ $\V{EKnown} \gets \emptyset$
+  \Comment{exponents, and those the adversary really has}
+\State $\V{P} : \Fdh.\Ps \times \mathbb{N} \to \V{Exp} \cup \{\unset\}$
+\State $\V{P}[*,*] \gets \unset$; \ $\V{Next}[*] \gets 0$
+\State $\V{Blk} \gets \emptyset$
+  \Comment{shares that a fresh exponent may not produce}
+\State $\V{DHK}[*] \gets \unset$
+  \Comment{the key already made from an unordered pair}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{GetGroup}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $(G, N, g)$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{GenExp}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $e \gets \Adv^{!}\bigl(\id.\op{GenExp}\bigr)$ \label{ln:dhaskexp}
+\Req{$e \in \{1, \ldots, N\} \ \wedge\ e \notin \V{Exp} \ \wedge\ g^{e} \notin \V{Blk}$} \label{ln:dhfresh}
+  \Comment{no collision, and no blocked share}
+\State $\V{Exp} \gets \V{Exp} \cup \{e\}$
+\State $\mathit{ptr} \gets \V{Next}[\id.P]$; \ $\V{Next}[\id.P] \gets \mathit{ptr} + 1$
+\State $\V{P}[\id.P, \mathit{ptr}] \gets e$
+\State \textbf{return} $(\mathit{ptr}, g^{e})$ \label{ln:dhshare}
+  \Comment{the share leaves; the exponent does not}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Block}(h)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$h \in G$}
+  \State $\V{Blk} \gets \V{Blk} \cup \{h\}$ \label{ln:dhblock}
+    \Comment{a share received from outside, claimed}
+\EndIf
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{RetrieveExp}(\mathit{ptr})$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{P}[\id.P, \mathit{ptr}] \neq \unset$}
+\State $e \gets \V{P}[\id.P, \mathit{ptr}]$; \ $\V{EKnown} \gets \V{EKnown} \cup \{e\}$ \label{ln:dhretrieve}
+  \Comment{reading it out makes it known, for good}
+\State \textbf{return} $e$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{StoreExp}(e)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$e \in \{1, \ldots, N\}$}
+\If{$e \in \V{Exp} \setminus \V{EKnown}$}
+  \State \textbf{return} $\none$ \label{ln:dhexpguess}
+    \Comment{a guess at an unknown exponent is refused}
+\EndIf
+\State $\V{Exp} \gets \V{Exp} \cup \{e\}$; \ $\V{EKnown} \gets \V{EKnown} \cup \{e\}$
+\State $\mathit{ptr} \gets \V{Next}[\id.P]$; \ $\V{Next}[\id.P] \gets \mathit{ptr} + 1$
+\State $\V{P}[\id.P, \mathit{ptr}] \gets e$
+\State \textbf{return} $\mathit{ptr}$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{GenDHKey}(\mathit{ptr}, h)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{P}[\id.P, \mathit{ptr}] \neq \unset$}
+\State $e \gets \V{P}[\id.P, \mathit{ptr}]$
+\If{$h \notin G$}
+  \State \textbf{return} $\none$
+\EndIf
+\State $\V{Blk} \gets \V{Blk} \cup \{h\}$ \label{ln:dhblockused}
+  \Comment{a share used once is never freshly generated}
+\If{$h = g^{e}$}
+  \State $\V{EKnown} \gets \V{EKnown} \cup \{e\}$ \label{ln:dhselfpair}
+\EndIf
+\If{$\V{DHK}[\{g^{e}, h\}] = \unset \ \wedge\ e \notin \V{EKnown} \ \wedge\ \exists\, d \in \V{Exp} \setminus \V{EKnown} : h = g^{d}$}
+  \State $k \gets \Adv^{!}\bigl(\op{ProvideDHKey}, \op{unknown}, e, d\bigr)$ \label{ln:dhunknown}
+  \Req{$k \in G \ \wedge\ k \notin \V{K}$}
+    \Comment{both sides unknown, so the key is ideal}
+  \State $\V{DHK}[\{g^{e}, h\}] \gets k$; \ $\V{K} \gets \V{K} \cup \{(\op{dh\text{-}key}, k)\}$
+\EndIf
+\If{$\V{DHK}[\{g^{e}, h\}] = \unset$}
+  \State $k \gets \Adv^{!}\bigl(\op{ProvideDHKey}, \op{known}, e, h\bigr)$ \label{ln:dhknown}
+  \Req{$k \in G \ \wedge\ k \notin \V{K} \setminus \V{Known}$} \label{ln:dhkeyguess}
+  \State $\V{DHK}[\{g^{e}, h\}] \gets k$; \ $\V{K} \gets \V{K} \cup \{(\op{dh\text{-}key}, k)\}$
+  \State $\V{Known} \gets \V{Known} \cup \{(\op{dh\text{-}key}, k)\}$
+  \If{$\neg\exists\, d \in \V{Exp} : h = g^{d}$}
+    \State $\V{EKnown} \gets \V{EKnown} \cup \{e\}$ \label{ln:dhforeign}
+      \Comment{a share from outside the box burns the exponent}
+  \EndIf
+\EndIf
+\State \textbf{return} $\op{PtrTo}\bigl(\V{DHK}[\{g^{e}, h\}]\bigr)$ \label{ln:dhsamepair}
+  \Comment{the same pair always gives the same key}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $\bigl(\{(\mathit{ptr}, \V{P}[\id.P, \mathit{ptr}])\}_{\mathit{ptr} < \V{Next}[\id.P]},\ \V{Blk}\bigr)$ \label{ln:dhleak}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

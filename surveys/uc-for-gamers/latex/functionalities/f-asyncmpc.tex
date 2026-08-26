@@ -1,0 +1,88 @@
+%% The interface box of f-asyncmpc, the one source for both the book
+%% and uc/.../f-asyncmpc/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fasfe$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := (f, R)$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{x}[*] \gets \none$; \ $\V{y}[*] \gets \none$
+  \Comment{inputs and outputs, one slot per party}
+\State $\V{Drop} \gets \emptyset$
+  \Comment{honest parties whose input is discarded}
+\State $\V{D}[*] \gets 1$
+  \Comment{delay budget, per party}
+\State $\V{seen} \gets 0$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{NoInput}(Q)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F = \Apid \ \wedge\ \V{seen} = 0 \ \wedge\ |Q| \leq |\Cs|$} \label{ln:asfedropbound}
+  \Comment{at most as many dropped as corrupted}
+\State $\V{Drop} \gets Q$ \label{ln:asfedrop}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Input}(v)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{seen} = 0 \ \wedge\ (\id'.F \neq \Apid \ \vee\ \id.P \in \Cs)$} \label{ln:asfelate}
+  \Comment{no input once an output has been taken}
+\State $\V{x}[\id.P] \gets v$
+\State $I \gets (\Ps \setminus \Cs) \setminus \V{Drop}$ \label{ln:asfecore}
+\If{$\forall P \in I : \V{x}[P] \neq \none$}
+  \State $\V{x}'[P] \gets \V{x}[P]$ for $P \in I \cup \Cs$; \ $\V{x}'[P] \gets \none$ otherwise \label{ln:asfevector}
+  \State $r \gets_{\$} R$; \ $(\V{y}[P])_{P \in \Ps} \gets f\bigl((\V{x}'[P])_{P \in \Ps}, r\bigr)$ \label{ln:asfeeval}
+\EndIf
+\State $\Adv\bigl(\id.\op{Input},\ \id.P\bigr)$ \label{ln:asfeleak}
+  \Comment{that a party gave input, never what}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Delay}(P, T)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F = \Apid \ \wedge\ T \in \mathbb{Z}$}
+\State $\V{D}[P] \gets \max(1, \V{D}[P] + T)$ \label{ln:asfedelay}
+  \Comment{scheduling, but never a refusal to deliver}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Fetch}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{y}[\id.P] \neq \none$} \label{ln:asfeready}
+\State $\V{D}[\id.P] \gets \V{D}[\id.P] - 1$ \label{ln:asfetick}
+\Req{$\V{D}[\id.P] = 0$}
+\State $\V{seen} \gets 1$ \label{ln:asfeseen}
+\State \textbf{return} $\V{y}[\id.P]$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $\bigl(\V{x}[\id.P],\ \V{y}[\id.P],\ \V{D}[\id.P],\ \V{Drop}\bigr)$ \label{ln:asfeleakown}
+  \Comment{a corrupt party's own slots, and the drop set}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

@@ -1,0 +1,150 @@
+{
+  "id": "c/0065",
+  "title": "Computation-Sublinear Refresh for Forward-Secure CGKA",
+  "statement_paraphrase": "Does there exist an updatable distributed broadcast encryption scheme, hence a forward-secure CGKA protocol, whose refresh algorithms run in time sublinear in the group size (not merely producing succinct output), given the source already has a scheme with sublinear communication but polynomial-time refresh, and a separate scheme with fully sublinear complexity but no forward secrecy?",
+  "triaged_at": "2026-08-25",
+  "model": "claude-sonnet-5",
+  "scout": {
+    "status": "OPEN",
+    "evidence": [
+      {
+        "claim": "Source (Bartusek, Bitansky, Dodis, Garg, Wu, ePrint 2026/1677) poses this directly on page 6 and as Remark 5.7.",
+        "citation": "eprint.iacr.org/2026/1677",
+        "url": "https://eprint.iacr.org/2026/1677",
+        "eprint_version_date": "2026 (as harvested)",
+        "retrieval": "READ"
+      },
+      {
+        "claim": "The source's own second construction achieves full logarithmic complexity but explicitly without forward secrecy; this is progress on an easier sibling question, not a resolution of the stated open problem.",
+        "retrieval": "READ"
+      },
+      {
+        "claim": "No independent resolution found; adjacent concurrent works (Auditable CGKA 2026/1710, BeeKEM 2026/1434, Updatable PKE variants) address related but distinct efficiency/audit questions, not this exact one.",
+        "retrieval": "READ"
+      }
+    ],
+    "queries_run": [
+      "updatable distributed broadcast encryption sublinear refresh CGKA forward secrecy 2026",
+      "\"CGKA\" \"logarithmic complexity\" decomposed LWE post-compromise security not forward secure eprint 2026"
+    ]
+  },
+  "gates": {
+    "G1_barrier": {
+      "fires": false,
+      "evidence": "No named external barrier or transferred open problem asserted by the source."
+    },
+    "G2_statement_not_fixed": {
+      "fires": false,
+      "definitions_needing_repair": []
+    },
+    "G3_already_resolved": {
+      "fires": false
+    },
+    "G4_dual_use": {
+      "fires": false,
+      "evidence": "A positive resolution is a constructive efficiency improvement, not an attack; a negative resolution yields no instantiable attack on deployed MLS/Signal-style systems."
+    }
+  },
+  "scores": {
+    "P1": {
+      "value": 4,
+      "target_side": "construction",
+      "justification": "Phrased and pursued as a pure existence/construction question; no impossibility direction is emphasized by the source.",
+      "construction_side_dual": "Design an updatable DBE whose refresh algorithms avoid touching all of S, e.g. via a tree-structured or incrementally-updatable key-encoding that still supports the forward-secrecy re-randomization guarantee."
+    },
+    "P2": {
+      "value": 4,
+      "justification": "The source's own second construction (logarithmic complexity, no forward secrecy) is a settled, easier sibling that isolates exactly the missing ingredient; a crisp generalization hypothesis follows directly from it.",
+      "restriction_axis": "presence of the forward-secrecy refresh requirement",
+      "settled_base_case": "source's log-complexity construction achieving PCS with no forward secrecy",
+      "next_rung": "add a forward-secrecy-providing refresh while keeping sublinear time",
+      "generalization_hypothesis": "Does the log-complexity (no-FS) construction's structure survive once a refresh operation providing forward secrecy is layered on top, or does FS's re-randomization requirement inherently force touching all of S?",
+      "rungs_to_target": 1,
+      "axis_monotone_in_difficulty": true
+    },
+    "P3": {
+      "value": 2,
+      "justification": "Recombining two distinct technique lines from the same paper (the log-complexity PCS-only structure and the FS-providing refresh mechanism) is a real synthesis task with substantial ambient convention load from matrix commitments and decomposed LWE.",
+      "candidate_technique": "recombination of the source's two constructions (log-complexity aggregation structure + FS refresh mechanism)",
+      "composition_depth": 2,
+      "ambient_convention_load": "high (matrix commitments, decomposed LWE, CGKA security games)",
+      "new_framework_required": false
+    },
+    "V1": {
+      "value": 5,
+      "justification": "Existence question is precise as an existential over o(|S|)-time algorithms, adversary/corruption model inherited cleanly from the source's own definitions; the source does not pin down which model (ROM vs standard) the sought scheme should live in, and 'sublinear' names no specific target rate.",
+      "game_pseudocodable": true,
+      "idealization": "unspecified for the open question itself (source's own constructions mix ROM and standard-model variants)",
+      "model_variant_risk": "moderate",
+      "variants_in_play": [
+        "standard",
+        "rom"
+      ],
+      "quantifiers_pinned": true,
+      "vacuous_reading": "A scheme whose refresh runs in time O(|S|/log|S|) or similarly trivially-sublinear-but-not-meaningfully-faster time would formally satisfy 'sublinear' without resolving the practical question."
+    },
+    "V2": {
+      "value": 1,
+      "justification": "Running time of a candidate algorithm is mechanically profileable, but full security (the actual crux) rests on computational hardness assumptions over large structures and is not finite-instance decidable the way the running-time predicate is.",
+      "finite_instantiation": "running-time profiling of a candidate refresh algorithm is checkable; security is not brute-force verifiable at small scale",
+      "predicate_hardenable": true,
+      "scalar_score_or_certificate": false,
+      "implausible_consequence_applies": false
+    },
+    "V3": {
+      "value": 2,
+      "justification": "CGKA/broadcast-encryption security games are within EasyCrypt's usual scope and a recombination-style decomposition is plausible to sketch, but no cheap machine-checkable witness short of the full construction exists.",
+      "tool": "EasyCrypt/CryptHOL for the security game",
+      "decomposition_cost": "moderate, contingent on the recombination succeeding",
+      "witness_available": false
+    },
+    "O1": {
+      "value": 0,
+      "justification": "CGKA/secure-group-messaging efficiency is an active, well-resourced subfield (MLS standardization, multiple concurrent 2026 works on adjacent questions found in Scout), so neither the provenance-as-aside nor the low-attention nor the narrow-subarea bonus applies.",
+      "provenance_shape": "named_with_some_tradition",
+      "attempting_papers_count": 0,
+      "source_year": 2026,
+      "adjacent_solved_likelihood": "moderate (adjacent efficiency questions are being actively solved by several groups)"
+    },
+    "O2": {
+      "value": 2,
+      "justification": "Fully open-access source and bounded compute profile, but the likely proof, if a recombination succeeds, runs long given the machinery involved and lacks clean a priori lemma boundaries.",
+      "blocked_sources": [],
+      "folklore_dependence": false,
+      "unbounded_solver_risk": false,
+      "proof_length_fits_few_pages": false,
+      "expected_proof_pages": 20
+    }
+  },
+  "risks": {
+    "R1_contamination": 0,
+    "R2_vacuity": 0,
+    "R3_ladder_length": 0,
+    "R4_predicate_exploitability": -1,
+    "R5_expert_scarcity": 0,
+    "reasons": [
+      "R4: 'sublinear' names no fixed rate, so a trivially-sublinear construction could satisfy the letter without the spirit of the question."
+    ],
+    "total_deduction": -1
+  },
+  "totals": {
+    "P": 10,
+    "V": 8,
+    "O": 2,
+    "TOTAL": 19
+  },
+  "verdict": "PROBE",
+  "override_applied": null,
+  "configuration": {
+    "entry_rung_latex": "Does there exist a succinct updatable DBE scheme whose UpdPK, UpdSK run in time sublinear in $|S|$?",
+    "leading_plan_class": "Case Planner to attempt recombining the source's two constructions; Scout to check for the newest concurrent CGKA-efficiency work before committing; Refuter limited to profiling candidate running times, not security.",
+    "falsifiable_milestone": "A candidate refresh algorithm with a clearly sublinear running-time profile on toy parameters, plus a sketched (not necessarily complete) security argument reduction to the source's existing assumptions.",
+    "yield_on_failure": "A precise account of which structural feature of the forward-secrecy refresh forces touching all of S in every attempted recombination, as a candidate barrier note.",
+    "contract_fields_needing_human_input": [
+      "target asymptotic rate for 'sublinear' (polylog vs merely o(|S|))",
+      "whether the sought scheme may use a random oracle"
+    ],
+    "estimated_tokens_to_first_freeze": 600000
+  },
+  "source_requests": []
+}

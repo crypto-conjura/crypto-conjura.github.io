@@ -1,0 +1,112 @@
+%% The interface box of f-fe, the one source for both the book
+%% and uc/.../f-fe/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Fesr$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := (\mathbb{F}, C, E, D)$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{Set}[*] \gets \false$
+  \Comment{which parties the authority has initialized}
+\State $\V{M}[*] \gets \unset$; \ $\V{Own}[*] \gets \unset$
+  \Comment{the plaintext behind a handle, and whose it is}
+\State $\V{St}[*,*] \gets \unset$
+  \Comment{authorized functions, and their running state}
+\State $\V{ctr} \gets 0$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Setup}(P)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$P \in E \cup D \ \wedge\ (\id.P = C \ \vee\ \id'.F = \Apid)$} \label{ln:esrsetup}
+  \Comment{the authority, or the adversary in its own right}
+\State $\V{Set}[P] \gets \true$
+\If{$\id'.F = \Apid$}
+  \State $\V{St}[P, \mathtt{F}_0] \gets \emptyset$ \label{ln:esrlengthfn}
+    \Comment{and then only the length function is authorized}
+\EndIf
+\If{$\id.P = C$}
+  \State $\Adv\bigl(\id.\op{Setup},\ P\bigr)$ \label{ln:esrsetupleak}
+\EndIf
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Encrypt}(x)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P \in E \cup D \ \wedge\ \V{Set}[\id.P] = \true \ \wedge\ x \in \mathcal{X}$}
+\State $\V{ctr} \gets \V{ctr} + 1$ \label{ln:esrhandle}
+\State $\V{M}[\V{ctr}] \gets x$; \ $\V{Own}[\V{ctr}] \gets \id.P$
+\State \textbf{return} $\V{ctr}$ \label{ln:esrnoleak}
+  \Comment{no call on the adversary slot: not even a length}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{KeyGen}(\mathtt{F}, B)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P = C \ \wedge\ \mathtt{F} \in \mathbb{F}^{+} \ \wedge\ \V{Set}[B] = \true$}
+\State $\Adv^{!}\bigl(\id.\op{KeyGen},\ \mathtt{F},\ B\bigr)$ \label{ln:esrack}
+  \Comment{the source's \textsc{ack}, read as responsive}
+\State $\V{St}[B, \mathtt{F}] \gets \emptyset$ \label{ln:esrassign}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Decrypt}(h, \mathtt{F})$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P \in D \ \wedge\ \V{M}[h] \neq \unset$}
+\State $x \gets \V{M}[h]$
+\If{$C \notin \Cs$}
+  \Req{$\V{St}[\id.P, \mathtt{F}] \neq \unset \ \wedge\ x \in \mathcal{X}$} \label{ln:esrauth}
+    \Comment{an unauthorized function is refused, not answered}
+  \State $r \gets_{\$} \mathcal{R}$; \ $s \gets \V{St}[\id.P, \mathtt{F}]$
+  \State $(y, s) \gets \mathtt{F}(x, s, r)$ \label{ln:esreval}
+  \State $\V{St}[\id.P, \mathtt{F}] \gets s$ \label{ln:esradvance}
+    \Comment{the state carried to the next call}
+  \State \textbf{return} $y$
+\EndIf
+\State $y \gets \Adv\bigl(\id.\op{Decrypt},\ h,\ \mathtt{F},\ x\bigr)$ \label{ln:esrcorrupt}
+  \Comment{a corrupt authority: $\Adv$ sees $x$ and names $y$}
+\State \textbf{return} $y$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Status}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $\bigl(\V{Set}[\id.P],\ \{\mathtt{F} : \V{St}[\id.P, \mathtt{F}] \neq \unset\}\bigr)$ \label{ln:esrstatus}
+  \Comment{replaces the source's outbound notifications}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $L \gets \{(h, \V{M}[h]) : \V{Own}[h] = \id.P\}$ \label{ln:esrleakown}
+  \Comment{an encryptor's own plaintexts, and no other's}
+\If{$\id.P \in D$}
+  \State \textbf{return} $\bigl(L,\ \{(\mathtt{F}, \V{St}[\id.P, \mathtt{F}])\}\bigr)$ \label{ln:esrleakdec}
+\EndIf
+\State \textbf{return} $L$
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

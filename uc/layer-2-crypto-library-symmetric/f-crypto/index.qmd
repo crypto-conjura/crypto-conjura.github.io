@@ -2,16 +2,204 @@
 title: "F-crypto — Joint-state cryptographic library"
 status: "Canonical"
 layer: 2
-definition: "Not yet written"
+definition: "Defined"
 ---
 
 *F-crypto* (Joint-state cryptographic library) is part of *Cryptographic Library and Symmetric Primitives* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
 
 Unlike the other local, hardness-based primitives in this layer, this functionality earns its place because keys are reused across sessions — it only becomes necessary once joint state is present.
 
+## Functionality
+
+Reading the box: $\mathcal{A}(\cdot)$ is a call on the adversary slot whose answer *is* used, and a **require** on that answer is the sanitization; $\square$ marks a slot never filled and $\bot$ a refusal; **require** refuses the call, and the framework answers $\textsf{rej}$, so no return is written for it. $\mathcal{T}$, the parameter on the header line, is the set of key types — in the source, $\{\textsf{authenc-key}, \textsf{unauthenc-key}, \textsf{mac-key}, \textsf{pre-key}\}$.
+
+**This box is a declared fragment, and the page says which one.** $\mathcal{F}_{\mathsf{crypto}}$ is printed as twenty-one numbered items across three figures, covering symmetric and public-key encryption, MACs, signatures, key derivation, nonces and key management in one object. What is transcribed here is the *key-management core* — the part every other item presupposes, and the part that makes the library a joint-state library rather than a bag of primitives. Item by item:
+
+| Source item | Here |
+|---|---|
+| 4, symmetric key generation | $\mathsf{New}$, lines 7–16 |
+| 6, nonce generation | $\mathsf{NewNonce}$, lines 17–20 |
+| 7, pre-shared keys | $\mathsf{GetPSK}$, lines 21–34 |
+| 17, store | $\mathsf{Store}$, lines 35–41 |
+| 18, retrieve | $\mathsf{Retrieve}$, lines 42–45 |
+| 19, equality test | $\mathsf{Equal}$, lines 46–47 |
+| 20, corruption request for a symmetric key | $\mathsf{Corrupted}$, lines 48–49 |
+| 12, key derivation | [F-KDF](/uc/layer-2-crypto-library-symmetric/f-kdf/index.qmd) |
+| 13–14, MAC and MAC verification | [F-MAC](/uc/layer-2-crypto-library-symmetric/f-mac/index.qmd) |
+| 8 and 10, symmetric encryption and decryption | [F-SE](/uc/layer-2-crypto-library-symmetric/f-se/index.qmd), from the companion paper's $\mathcal{F}_{\mathsf{senc}}$ |
+| 9 and 11, public-key encryption and decryption | [F-PKE](/uc/layer-3-public-key-primitives/f-pke/index.qmd), from a different source |
+| 1–3, 5, 15–16, 21 | Not transcribed anywhere here: algorithm and public-key setup over the network tape, public-key requests, signing and signature verification, and the public/private-key corruption request |
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{Crypto}}\) &nbsp;(key-management core)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := \mathcal{T}\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{K} \gets \varnothing\); &nbsp;\(\mathtt{Known} \gets \varnothing\)<span class="cj-comment">// every key ever made, and those the adversary holds</span></li>
+<li>\(\mathtt{Key} : \mathcal{F}_{\mathsf{Crypto}}.\mathbf{P} \times \mathbb{N} \to (\mathcal{T} \times \{0,1\}^*) \cup \{\square\}\)</li>
+<li>\(\mathtt{Key}[*,*] \gets \square\); &nbsp;\(\mathtt{Next}[*] \gets 0\)<span class="cj-comment">// a party never holds a key, only a pointer</span></li>
+<li>\(\mathtt{PSK} : \mathcal{T} \times \{0,1\}^* \to \{0,1\}^* \cup \{\square\}\)</li>
+<li>\(\mathtt{PSK}[*,*] \gets \square\)<span class="cj-comment">// pre-shared keys, by type and name</span></li>
+<li>\(\mathtt{Nonce} \gets \varnothing\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.New(<span class="cj-id">t</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="7">
+<li>\(\textbf{require}\ t \in \mathcal{T}\)</li>
+<li>\((\mathit{corr}, k) \gets \mathcal{A}\bigl(\mathit{id}.\mathsf{New}, t\bigr)\)</li>
+<li>\(\textbf{require}\ \mathit{corr} \in \{0,1\}\)</li>
+<li>\(\textbf{require}\ (t,k) \notin \mathtt{K} \ \vee\ (\mathit{corr} = 1 \wedge (t,k) \in \mathtt{Known})\)<span class="cj-comment">// a fresh key, unless the adversary already had it</span></li>
+<li>\(\mathtt{K} \gets \mathtt{K} \cup \{(t,k)\}\)</li>
+<li>\(\textbf{if}\ \mathit{corr} = 1\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{Known} \gets \mathtt{Known} \cup \{(t,k)\}\)</span></li>
+<li>\(\mathit{ptr} \gets \mathtt{Next}[\mathit{id}.P]\); &nbsp;\(\mathtt{Next}[\mathit{id}.P] \gets \mathit{ptr} + 1\)</li>
+<li>\(\mathtt{Key}[\mathit{id}.P, \mathit{ptr}] \gets (t,k)\)</li>
+<li>\(\textbf{return}\ \mathit{ptr}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.NewNonce()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="17">
+<li>\(x \gets \mathcal{A}\bigl(\mathit{id}.\mathsf{NewNonce}\bigr)\)</li>
+<li>\(\textbf{require}\ x \notin \mathtt{Nonce}\)<span class="cj-comment">// never repeated, even for a corrupt party</span></li>
+<li>\(\mathtt{Nonce} \gets \mathtt{Nonce} \cup \{x\}\)</li>
+<li>\(\textbf{return}\ x\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.GetPSK(<span class="cj-id">t</span>, <span class="cj-id">name</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="21">
+<li>\(\textbf{require}\ t \in \mathcal{T}\)</li>
+<li>\((\mathit{corr}, k) \gets \mathcal{A}\bigl(\mathit{id}.\mathsf{GetPSK}, t, \mathit{name}\bigr)\)</li>
+<li>\(\textbf{require}\ \mathit{corr} \in \{0,1\}\)</li>
+<li>\(\textbf{if}\ \mathtt{PSK}[t, \mathit{name}] \neq \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{require}\ k = \mathtt{PSK}[t, \mathit{name}]\)</span><span class="cj-comment">// the same name is the same key, for everyone</span></li>
+<li>\(\textbf{if}\ \mathtt{PSK}[t, \mathit{name}] = \square \ \wedge\ \mathit{corr} = 0\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{require}\ (t,k) \notin \mathtt{K}\)</span></li>
+<li>\(\textbf{if}\ \mathit{corr} = 1\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{require}\ (t,k) \in \mathtt{Known} \ \vee\ (t,k) \notin \mathtt{K}\)</span></li>
+<li><span class="cj-ind">\(\mathtt{Known} \gets \mathtt{Known} \cup \{(t,k)\}\)</span></li>
+<li>\(\mathtt{K} \gets \mathtt{K} \cup \{(t,k)\}\); &nbsp;\(\mathtt{PSK}[t, \mathit{name}] \gets k\)</li>
+<li>\(\mathit{ptr} \gets \mathtt{Next}[\mathit{id}.P]\); &nbsp;\(\mathtt{Next}[\mathit{id}.P] \gets \mathit{ptr} + 1\)</li>
+<li>\(\mathtt{Key}[\mathit{id}.P, \mathit{ptr}] \gets (t,k)\)</li>
+<li>\(\textbf{return}\ \mathit{ptr}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Store(<span class="cj-id">t</span>, <span class="cj-id">k</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="35">
+<li>\(\textbf{require}\ t \in \mathcal{T}\)</li>
+<li>\(\textbf{if}\ (t,k) \in \mathtt{K} \setminus \mathtt{Known}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \bot\)</span><span class="cj-comment">// a bare guess of an unknown key is refused</span></li>
+<li>\(\mathtt{K} \gets \mathtt{K} \cup \{(t,k)\}\); &nbsp;\(\mathtt{Known} \gets \mathtt{Known} \cup \{(t,k)\}\)<span class="cj-comment">// storing a bit string admits knowing it</span></li>
+<li>\(\mathit{ptr} \gets \mathtt{Next}[\mathit{id}.P]\); &nbsp;\(\mathtt{Next}[\mathit{id}.P] \gets \mathit{ptr} + 1\)</li>
+<li>\(\mathtt{Key}[\mathit{id}.P, \mathit{ptr}] \gets (t,k)\)</li>
+<li>\(\textbf{return}\ \mathit{ptr}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Retrieve(<span class="cj-id">ptr</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="42">
+<li>\(\textbf{require}\ \mathtt{Key}[\mathit{id}.P, \mathit{ptr}] \neq \square\)</li>
+<li>\((t,k) \gets \mathtt{Key}[\mathit{id}.P, \mathit{ptr}]\)</li>
+<li>\(\mathtt{Known} \gets \mathtt{Known} \cup \{(t,k)\}\)<span class="cj-comment">// reading a key out gives up its ideality, for good</span></li>
+<li>\(\textbf{return}\ k\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Equal(<span class="cj-id">ptr</span>, <span class="cj-id">mathit{ptr}'</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="46">
+<li>\(\textbf{require}\ \mathtt{Key}[\mathit{id}.P, \mathit{ptr}] \neq \square \ \wedge\ \mathtt{Key}[\mathit{id}.P, \mathit{ptr}'] \neq \square\)</li>
+<li>\(\textbf{return}\ \mathtt{Key}[\mathit{id}.P, \mathit{ptr}] = \mathtt{Key}[\mathit{id}.P, \mathit{ptr}']\)<span class="cj-comment">// comparison without disclosure</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Corrupted(<span class="cj-id">ptr</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="48">
+<li>\(\textbf{require}\ \mathtt{Key}[\mathit{id}.P, \mathit{ptr}] \neq \square\)</li>
+<li>\(\textbf{return}\ \mathtt{Key}[\mathit{id}.P, \mathit{ptr}] \in \mathtt{Known}\)<span class="cj-comment">// a party may ask whether its own key is real</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="50">
+<li>\(\textbf{return}\ \bigl(\{(\mathit{ptr}, \mathtt{Key}[\mathit{id}.P, \mathit{ptr}])\}_{\mathit{ptr} < \mathtt{Next}[\mathit{id}.P]},\ \mathtt{Nonce}\bigr)\)</li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+The box is transcribed from Küsters and Tuengerthal, *Ideal key derivation and encryption in simulation-based security*, ePrint 2010/295, revision `20101011:201701` (the newest of three postings), Figures 4 and 6, pp. 30 and 32 (the PDF's numbering and the printed numbering agree) — the functionality $\mathcal{F}_{\mathsf{crypto}}(q, n, L)$.
+
+Four lines carry the design, and all four are about one distinction:
+
+- **$\mathtt{Known}$ against $\mathtt{K} \setminus \mathtt{Known}$ is the whole functionality.** A key in $\mathtt{Known}$ is one the adversary really holds, and every operation on it is computed for real; a key outside it is *ideal*, and operations on it are answered from tables rather than by running an algorithm. The sibling pages are where that shows — [F-MAC](/uc/layer-2-crypto-library-symmetric/f-mac/index.qmd)'s unforgeability rule and [F-SE](/uc/layer-2-crypto-library-symmetric/f-se/index.qmd)'s decryption table both test exactly this membership.
+- **Line 44 is a one-way door, and it is the price of a usable library.** $\mathsf{Retrieve}$ hands a party the actual bit string, and in doing so moves that key into $\mathtt{Known}$ permanently. There is no operation moving a key back out. So a protocol that ever reads a key out of the library gives up idealized reasoning about it for the rest of the run — which is why the source's realization theorem is about protocols that do not.
+- **Line 36 is the guessing rule.** Storing a bit string that is already an *unknown* key is refused rather than answered, because succeeding would let a party (or the environment) confirm a guess at an ideal key. Storing anything else admits knowing it, at line 38.
+- **Lines 24–30 are the pre-shared-key rules, and they are the most intricate part of the core.** The same $(\textit{type}, \textit{name})$ must yield the same key to every party that asks (line 25); a fresh honest name must yield a key not already in the pool (line 27); and a corrupt request must yield either a key the adversary already holds or a fresh one (line 29). Together these are what let two parties share a key without a protocol between them, which is what a pre-shared key is.
+
+And two smaller ones:
+
+- **Line 47 is comparison without disclosure.** A party can learn whether two of its pointers hold the same key without learning either, which real protocols need for key confirmation.
+- **Line 18 makes nonces globally unique**, even for a corrupt party: the adversary supplies the value and the box refuses a repeat. That is stronger than "chosen uniformly", and it is what lets a protocol treat a nonce as an identifier rather than as a random string.
+
+Where the source needed a decision:
+
+| Source | Box | Why |
+|---|---|---|
+| Every I/O interface reads from tape $T^{\mathrm{in}}_r$ and writes to $T^{\mathrm{out}}_r$, with $(\mathit{lsid}, p, m)$ triples | Operations on $\mathit{id}$, returning to the caller | The source is written for the IITM model, where a functionality is a machine with $n$ tape pairs and the *local session identifier* $\mathit{lsid}$ distinguishes callers. Here the caller is $\mathit{id}$ and the tape is the call. Note the consequence for the pointer tables: $\mathbf{key}(\mathit{ptr}, p, \mathit{lsid}, r)$ is keyed on the triple, so a pointer belongs to one caller in one local session; $\mathtt{Key}[\mathit{id}.P, \mathit{ptr}]$ keys on the party, which is coarser. Two local sessions of the same party share a pointer space here and do not there. |
+| "Send $(\ldots, \textsf{New}, t)$ to $T_{\mathrm{adv}}$ and wait for receiving $(\ldots, \textsf{Continue}, \mathit{corrupt}, k)$ … where the following condition is satisfied" | Line 8's call and lines 9–10's **require**s | The source's condition on the adversary's answer is stated as a side condition on what it is allowed to send; here it is a **require**, so a violating answer is refused rather than assumed away. Same content, made checkable. |
+| The polynomial $q$ bounding simulated algorithm executions | Not in the box | $q$ bounds how long $\mathcal{F}_{\mathsf{crypto}}$ will run an adversary-supplied *algorithm* before giving up and returning $\bot$. No item in this fragment runs one — that happens in the encryption, MAC and signature items, which are on the sibling pages. |
+| The leakage algorithm $L$ | Not in the box | Likewise: $L$ is applied when a plaintext is encrypted under an ideal key, which is item 8's business. |
+| Item 20, `Corrupted?`, "then send $(\textsf{Corrupted}, b)$ … where $b = \mathit{true}$ if $(\mathit{ptr}, (p, \mathit{lsid}, r), \mathit{ptr}) \in \mathbf{Corrupt}$" | Line 49 tests $\mathtt{Known}$ | The source keeps a separate $\mathbf{Corrupt}$ set recording *which pointers* were created corrupt, alongside $\mathcal{K}_{\mathsf{known}}$ recording *which keys* the adversary holds. The two can diverge: a pointer created honestly to a key that later became known reads as uncorrupted in the source and as known here. This box reports the property of the key, which is the one that decides how every other operation behaves, and the divergence is recorded rather than resolved — a reader relying on `Corrupted?` to mean "this pointer was born corrupt" should use the source. |
+| No leakage interface | Line 50 | Required here. A corrupt party's adversary gets that party's own pointers with the keys behind them, plus the nonce set, which it supplied. |
+| $\mathcal{K}_{\mathsf{unknown}} = \mathcal{K} \setminus \mathcal{K}_{\mathsf{known}}$, maintained as a variable | Written as the set difference where it is used | One fewer thing to keep in step. |
+
+## Known realizations
+
+**Theorem 3** in the same paper, and it is an *if and only if* — which is rarer than the usual direction and worth stating as the paper does:
+
+> $\mathcal{F}^{*} \mid \mathcal{P}_{\mathsf{crypto}} \leq \mathcal{F}^{*} \mid \mathcal{F}_{\mathsf{crypto}}$ if and only if $\Sigma_{\mathsf{unauthenc}}$ and $\Sigma_{\mathsf{pub}}$ are IND-CCA, $\Sigma_{\mathsf{authenc}}$ is IND-CPA and INT-CTXT, and $\Sigma_{\mathsf{mac}}$ and $\Sigma_{\mathsf{sig}}$ are UF-CMA secure
+
+with $L$ leaking exactly the length of a message and plaintexts restricted to well-tagged bit strings; the right-to-left direction holds for any plaintext domain. $\mathcal{P}_{\mathsf{crypto}}$ (§3.2, p. 10) maintains the same keys and pointers and simply runs the real algorithms — it "does not maintain the sets $\mathcal{K}_{\mathsf{known}}$ and $\mathcal{K}_{\mathsf{unknown}}$", which is the whole difference.
+
+Two things to carry away from the theorem's shape:
+
+- **$\mathcal{F}^{*}$ is not decoration.** It is the paper's *functionality for restricting the environment*, described in prose on p. 11: it "provides exactly the same I/O interface as $\mathcal{F}_{\mathsf{crypto}}$" but blocks the run the moment a certain use-order condition is violated, and the realization holds only in its presence. **Corollary 1** is what removes it: for a non-committing, used-order-respecting protocol $\mathcal{P}$, one gets $\mathcal{P} \mid \mathcal{P}_{\mathsf{crypto}} \leq \mathcal{P} \mid \mathcal{F}_{\mathsf{crypto}}$ with no restriction functionality. Those two side conditions are the real hypotheses of any use of this box, and neither is visible in the box.
+- **Encryption and key derivation cannot be separated in the proof.** The paper: "Since derived keys can be encrypted and used as encryption keys, the security of encryption depends on the security of key derivation and vice versa. Therefore, we need to carry out a single hybrid argument, intertwining both." That is the technical reason the library is one functionality rather than several, and therefore the reason this page's fragmentation across sibling entries is an editorial convenience and not a decomposition anyone has proved sound.
+
+## Properties
+
+- **Key secrecy for ideal keys**, with probability exactly $0$ of leakage: a key outside $\mathtt{Known}$ leaves the box only through $\mathsf{Retrieve}$ at line 45 — which puts it into $\mathtt{Known}$ — or through its holder's own leak at line 50. Line 47 returns one bit and line 49 returns one bit.
+- **Guess resistance**, with probability exactly $1$: line 36 refuses any attempt to bring an unknown key's bit string into the pool from outside.
+- **Nonce uniqueness**, with probability exactly $1$ and no assumption: line 18.
+- **Monotonicity of knowledge.** $\mathtt{Known}$ only grows — at lines 13, 30, 38 and 44. There is no forward secrecy in this box: once a key is real it stays real, and a protocol wanting to reason about a key it has since deleted needs a different object.
+- **Joint state is the point.** One instance serves every caller and every local session, which is what makes the joint-state theorems in the companion papers usable and what distinguishes this entry from the single-primitive boxes around it. The cost is on the header line: $\mathtt{Key}$ and $\mathtt{Next}$ are indexed by party, so there is exactly one pointer space per party for the whole run.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
+
 *References:*
 
-- Küsters and Tuengerthal. [*Ideal key derivation and encryption in simulation-based security*](https://eprint.iacr.org/2010/295). In Topics in Cryptology – CT-RSA 2011, volume 6558 of LNCS, pages 161–179, 2011.
+- Küsters and Tuengerthal. [*Ideal key derivation and encryption in simulation-based security*](https://eprint.iacr.org/2010/295). In Topics in Cryptology – CT-RSA 2011, volume 6558 of LNCS, pages 161–179, 2011. Figures 4–6, pp. 30–32 of revision `20101011:201701`, the newest of three postings — items 4, 6, 7, 17, 18, 19 and 20 are the definition transcribed above; §3.2, p. 10 for $\mathcal{P}_{\mathsf{crypto}}$; Theorem 3, p. 11 and Corollary 1, p. 12 for the realization; p. 11 for the environment-restricting functionality $\mathcal{F}^{*}$, which is described in prose rather than printed as a box.
 - Küsters and Tuengerthal. [*Joint state theorems for public-key encryption and digital signature functionalities with local computation*](https://eprint.iacr.org/2008/006). In 21st IEEE Computer Security Foundations Symposium (CSF), pages 270–284, 2008.
 - Backes, Pfitzmann, and Waidner. [*A composable cryptographic library with nested operations*](https://eprint.iacr.org/2003/015). In 10th ACM Conference on Computer and Communications Security (CCS), 2003.
 - Canetti and Herzog. [*Universally composable symbolic analysis of cryptographic protocols*](https://eprint.iacr.org/2004/334). Journal of Cryptology, 24(1):83–147, 2011.

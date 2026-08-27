@@ -1,0 +1,458 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  Decomposition for two split unpredictable sources, arbitrary q.
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{DECOMPOSITION FOR SPLIT SOURCES}
+
+\newcommand{\Fun}{\mathsf{Fun}}
+\newcommand{\Adv}{\mathsf{Adv}}
+\newcommand{\Real}{\mathsf{Real}}
+\newcommand{\Dec}{\mathsf{Dec}}
+\newcommand{\Prob}[1]{\Pr\!\left[#1\right]}
+\newcommand{\Exp}{\mathbb{E}}
+\newcommand{\bits}{\{0,1\}}
+\newcommand{\vx}{\mathbf{x}}
+\newcommand{\vz}{\mathbf{z}}
+\newcommand{\ind}{\mathbb{1}}
+
+\begin{document}
+
+\cjkicker{CONJURA OPEN PROBLEM}
+\cjtitle{Decomposition for Split Unpredictable Sources}
+\cjsubtitle{Two sources, arbitrary query budget}
+\cjstatus{Statement: AI-written, not yet formalized. The case $q = 0$ is
+  proved and tight; $q = 1$ is proved under an extra hypothesis; $q \ge 2$
+  is open.}
+\cjcategory{\emph{Idealized Models \& Non-Uniformity}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+Two parties each read an entire random function and each output one input
+point, together with a little leakage about the function. They never
+communicate, and neither party's point can be guessed by anyone who sees
+all of the leakage and the whole function. The conjecture says that, given
+the leakage, the random function is then close to a mixture of functions
+that have been fixed in advance on a short list of points, where the list
+is chosen without any knowledge of the two parties' points. Closeness is
+measured against an observer who sees the leakage, the value of the
+function at the pair of points, and a bounded number of adaptive queries,
+but never the points themselves.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+Presampling, or the bit-fixing model, is the standard route to non-uniform
+security in idealized models. A random oracle together with $S$ bits of
+oracle-dependent advice is close to a mixture of oracles fixed on $P$
+points and uniform elsewhere, at a cost of roughly $ST/P$ against
+$T$-query adversaries~\cite{Unruh,DGK,CDGS}. The technique assumes a
+single preprocessing stage. It is not known how to run it when the advice
+is produced by \emph{several} parties who read the oracle independently,
+which is the setting of multi-source randomness extraction in the
+random-oracle model~\cite{CFHS}. That paper obtains its bounds by
+compression instead, and raises the decomposition question; compression is
+what stalls for non-monolithic constructions such as Merkle-Damg\aa{}rd
+and sponge, which is the reason to want a decomposition route.
+
+The obstruction is that the two leakages can be individually harmless and
+jointly informative, so decomposing the oracle with respect to each
+leakage separately does not work~\cite[\S1.4]{CFHS}. The statement below
+therefore asks for a single mixture, selected using the whole oracle and
+both leakages at once, but forbidden to use the two points; correspondingly
+the observer sees the value of the function at those points but not the
+points themselves. Both restrictions are necessary, and the statement is
+also false with one source in place of two (Remark~\ref{rem:ell1}).
+
+Progress to date. The query-free case is proved, with a bound better than
+the one conjectured here and tight to within a constant factor. The
+one-query case is proved up to polylogarithmic factors under the extra
+hypothesis that $M\delta$ is at most polylogarithmic in $N$, $M$ and
+$1/\delta$. Queries whose positions do not depend on the challenge value
+are almost free at every query budget. What is open is $q \ge 2$, and,
+separately, the regime of large $P$ with growing $q$
+(Remark~\ref{rem:reduces}).
+
+\section{Notation and parameters}\label{sec:notation}
+
+For $n \in \mathbb{N}$ write $[n] := \{1,\dots,n\}$, and let $\bits^{*}$
+denote the set of finite binary strings, with $|z|$ the length of $z$ in
+bits. All logarithms are base two. For a finite set $\mathcal{X}$ we write
+$x \sample \mathcal{X}$ for $x$ drawn uniformly from $\mathcal{X}$, and for
+a distribution $Y$ we write $w \sample Y$ for $w$ drawn according to $Y$;
+each such draw is independent of all others unless stated otherwise. For a
+predicate $E$, $\ind[E]$ is $1$ if $E$ holds and $0$ otherwise. An
+\emph{absolute constant} is one that does not depend on any parameter
+below, and $O(\cdot)$ and $\Theta(\cdot)$ mean up to such constant factors;
+no parameter tends to a limit anywhere in this document.
+
+An algorithm $A$ written with a superscript, as $A^{f}$, has \emph{oracle
+access} to the function $f$: it may submit a point of the domain and
+receive the value of $f$ there, adaptively, and it learns nothing about $f$
+except through such queries. Algorithms are \emph{computationally
+unbounded}: no bound is placed on their running time, only on their number
+of queries where one is stated.
+
+Fix throughout:
+\begin{itemize}
+\item $N, M \in \mathbb{N}$, and let
+  $\Fun := \{\, f : [N]\times[N] \to [M] \,\}$. The oracle is
+  $H \sample \Fun$, a uniformly random such function. Its domain is a pair
+  of coordinates, one produced by each source.
+\item $\sigma_1, \sigma_2 \in \mathbb{N}$, bounds on the number of bits of
+  leakage that each source outputs, and $\sigma := \sigma_1 + \sigma_2$.
+\item $\delta \in (0,1]$, the unpredictability parameter of
+  Definition~\ref{def:sources}.
+\item $q \in \mathbb{N} \cup \{0\}$, the observer's query budget, and
+  $q^{+} := q+1$, the budget together with the one evaluation of the
+  function at the challenge.
+\item $P \in \mathbb{N}$, the number of points the mixture may fix, and
+  $\gamma \in (0,1)$, an additive slack.
+\item $\sigma' := \sigma + 2\log N$, the leakage length together with the
+  number of bits needed to name a point of the domain.
+\end{itemize}
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{definition}[sources, splitness, unpredictability]\label{def:sources}
+A \emph{source} is a computationally unbounded randomized algorithm $S$
+with oracle access to $H$, taking no input and using private coins, whose
+number of queries is unbounded, so that it may read all of $H$, and which
+outputs a pair $(x,z) \in [N] \times \bits^{*}$. We write
+$(x,z) \sample S^{H}$ for one such run.
+
+Fix two sources $S_1, S_2$. They are \emph{split} if they are run on
+\emph{independent} private coins, so that, conditioned on $H$, the pairs
+they output are independent. Write $(x_i,z_i) \sample S_i^{H}$ for the
+output of $S_i$, with $|z_i| \le \sigma_i$, and put
+$\vx := (x_1,x_2) \in [N]\times[N]$ and
+$\vz := (z_1,z_2) \in \bits^{*} \times \bits^{*}$.
+
+A \emph{predictor} is a computationally unbounded algorithm $\mathsf{P}$
+with oracle access to $H$ and unbounded query count, which takes $\vz$ as
+input and outputs an element of $[N]$. The pair $(S_1,S_2)$ is
+\emph{$\delta$-unpredictable} if
+\[
+  \Prob{\mathsf{P}^{H}(\vz) = x_i} \;\le\; \delta
+  \qquad\text{for } i = 1,2
+\]
+and every predictor $\mathsf{P}$, the probability being over
+$H \sample \Fun$, the coins of $S_1$ and $S_2$, and the coins of
+$\mathsf{P}$. Since a predictor may ignore its inputs and output a fixed
+element of $[N]$, necessarily $\delta \ge 1/N$.
+\end{definition}
+
+\begin{definition}[bit-fixing sources, and consistency]\label{def:bf}
+A distribution $Y$ over $\Fun$ is \emph{$P$-bit-fixing} if there are a set
+$I \subseteq [N]\times[N]$ with $|I| \le P$ and a map $a : I \to [M]$ such
+that a draw $g \sample Y$ satisfies $g(u) = a(u)$ for every $u \in I$ and
+is uniform on $[M]$ and independent across the points $u \notin I$. We call
+$I$ its \emph{fixed set} and $a$ its \emph{fixed values}, and we say $Y$ is
+\emph{consistent with} a function $f \in \Fun$ if $a(u) = f(u)$ for every
+$u \in I$. A \emph{$P$-mixture} is a finite indexed family
+$\bigl(\lambda_j, Y_j\bigr)_{j \in \mathcal{J}}$ with $\lambda_j \ge 0$,
+$\sum_j \lambda_j = 1$ and each $Y_j$ a $P$-bit-fixing source; the $Y_j$ are
+its \emph{components}, and the mixture is \emph{consistent with} $f$ if
+every component is. A \emph{draw} from a $P$-mixture means: draw an index
+$J$ with $\Prob{J = j} = \lambda_j$, then draw $g \sample Y_J$; we write
+$(J,g) \sample (\lambda,Y)$. The mixture, and not merely the law of $g$, is
+the object fixed below: one distribution over $\Fun$ can be presented as a
+$P$-mixture in many ways, with different fixed sets, and what follows refers
+to the fixed set of the component actually drawn.
+\end{definition}
+
+\begin{definition}[observers, and the two experiments]\label{def:obs}
+An \emph{observer} is a computationally unbounded algorithm $D$ with oracle
+access, making at most $q$ queries, which takes a pair in
+$[M] \times (\bits^{*} \times \bits^{*})$ and outputs a bit. It is
+\emph{challenge-oblivious}: its input is $\vz$ together with a single value
+of $[M]$, never $\vx$ itself.
+
+Given sources $S_1,S_2$, a family $\mathcal{Y} = \{Y_{f,\zeta}\}$ of
+$P$-mixtures indexed by $f \in \Fun$ and
+$\zeta \in \bits^{*}\times\bits^{*}$, and an observer $D$, define two
+experiments.
+\begin{itemize}
+\item $\Real$: draw $H \sample \Fun$; draw
+  $(x_1,z_1) \sample S_1^{H}$ and $(x_2,z_2) \sample S_2^{H}$ on
+  independent coins; set $y := H(\vx)$; output $D^{H}(y,\vz)$.
+\item $\Dec$: draw $H$ and $(\vx,\vz)$ exactly as in $\Real$, and do not
+  resample them; then draw $(J,H^{*}) \sample Y_{H,\vz}$, set
+  $y^{*} := H^{*}(\vx)$, and output $D^{H^{*}}(y^{*},\vz)$. Write $I_J$ for
+  the fixed set of the component drawn.
+\end{itemize}
+Write
+$\Adv_{\mathcal{Y},D} := \bigl|\Prob{\Real = 1} - \Prob{\Dec = 1}\bigr|$,
+the probabilities being over every draw listed, including the coins of $D$.
+\end{definition}
+
+\begin{conjecture}[decomposition for two split unpredictable sources]
+\label{conj:main}
+There are absolute constants $c, C$ such that the following holds for all
+$N$ and $M$, every split $\delta$-unpredictable pair of sources
+$(S_1,S_2)$ with leakage lengths bounded by $\sigma_1,\sigma_2$, every
+$P \in \mathbb{N}$ and every $\gamma \in (0,1)$. There is a family
+\[
+  \mathcal{Y} \;=\; \bigl\{\, Y_{f,\zeta} \,\bigr\}, \qquad
+  f \in \Fun, \quad \zeta \in \bits^{*}\times\bits^{*},
+\]
+depending only on $S_1$, $S_2$, $P$ and $\gamma$, in which every
+$Y_{f,\zeta}$ is a $P$-mixture consistent with $f$, such that for every
+$q \in \mathbb{N}\cup\{0\}$ and every $q$-query challenge-oblivious
+observer $D$,
+\[
+  \Adv_{\mathcal{Y},D} \;\le\;
+  \frac{c\bigl(\sigma' + \log \gamma^{-1}\bigr)\,q^{+}}{P}
+  \;+\; C\sqrt{\sigma'\,q^{+}\,\delta} \;+\; \gamma.
+\]
+\end{conjecture}
+
+\begin{remark}[what the indexing does and does not allow]\label{rem:index}
+The family is indexed by the oracle as well as by the leakage. This is the
+one departure from the classical single-source lemma, where it is indexed
+by the advice alone, and it is what permits a single \emph{joint}
+decomposition rather than one per source: the component may be chosen by
+inspecting all of $H$ and both leakages. It may not be chosen using $\vx$,
+which is why the index set is $\Fun \times (\bits^{*})^{2}$ and not
+anything larger. Consistency with $f$ is likewise essential rather than
+cosmetic, since it keeps the fixed values compatible with the leakage the
+observer already holds.
+\end{remark}
+
+\begin{remark}[quantifier order]\label{rem:order}
+The order is part of the statement. The family is chosen after $P$ and
+$\gamma$ but \emph{before} $q$, so no part of it may be tuned to the
+observer's query budget. Relaxing this makes the statement easier in a way
+the intended applications cannot use.
+\end{remark}
+
+\begin{remark}[the two forms of unpredictability agree here]\label{rem:vecz}
+Definition~\ref{def:sources} hands the predictor the whole vector $\vz$,
+which is formally a stronger hypothesis than handing it $z_i$ alone. For
+split sources the two coincide exactly. Conditioned on $H$, the pairs
+$(x_1,z_1)$ and $(x_2,z_2)$ are independent, because the coins are; hence
+$z_2$ is independent of $(x_1,z_1)$ given $H$, so $x_1$ is independent of
+$z_2$ given $(H,z_1)$, and
+$\Prob{x_1 = u \mid H,\vz} = \Prob{x_1 = u \mid H,z_1}$ for every
+$u \in [N]$. The same is not true of a predictor without oracle access, for
+which the oracle-free notion is strictly weaker.
+\end{remark}
+
+\begin{remark}[why two sources]\label{rem:ell1}
+Conjecture~\ref{conj:main} is false with a single source. Take $M$ even,
+let $S$ draw $x \sample [N]$, query $H$ at $x$, and output the point $x$
+together with the one-bit leakage $z := \ind[H(x) \le M/2]$, and let the
+observer be the $0$-query $D$ that outputs $\ind\bigl[\ind[y \le M/2] =
+z\bigr]$ on input $(y,z)$. Then $S$ is $\delta$-unpredictable with
+$\delta \le 2/N$, while $\Real$ outputs $1$ with probability $1$ and, for
+any fixed set of size $P \ll N$, $\Dec$ outputs $1$ with probability close
+to $1/2$, so $\Adv_{\mathcal{Y},D}$ is close to $1/2$ for every admissible
+family $\mathcal{Y}$. Any proposed proof must
+therefore fail visibly when the two sources are replaced by one, and it
+cannot draw its use of their independence solely from a bound on the
+probability that the fixed set contains $\vx$, since such bounds hold for
+one source as well.
+\end{remark}
+
+
+\section{A consequence}\label{sec:consequence}
+
+The conjecture is worth having because it yields a bound on extraction from
+split unpredictable sources: the value of the oracle at the pair of points
+looks uniform. That statement mentions no mixtures and no fixed sets, and
+it is the form the applications use.
+
+\begin{definition}[extraction advantage]\label{def:kappa}
+For sources $S_1,S_2$ and a $q$-query challenge-oblivious observer $D$,
+define two further experiments, both drawing $H$ and $(\vx,\vz)$ as in
+$\Real$:
+\begin{itemize}
+\item $\Real_0$: set $y \sample [M]$ and output $D^{H}(y,\vz)$;
+\item $\Dec_0$: draw $(J,H^{*}) \sample Y_{H,\vz}$, for a family
+  $\mathcal{Y}$ as in Definition~\ref{def:obs}, set $y \sample [M]$, and
+  output $D^{H^{*}}(y,\vz)$.
+\end{itemize}
+The \emph{extraction advantage} of the pair at $q$ queries is
+\[
+  \kappa(q) \;:=\; \sup_{D}\ \bigl|\Prob{\Real = 1} - \Prob{\Real_0 = 1}\bigr| ,
+\]
+the supremum over $q$-query challenge-oblivious observers; it involves
+$\Real$ and $\Real_0$ only, so it does not depend on $\mathcal{Y}$. The oracle is the
+real $H$ in both experiments; only the challenge value changes.
+\end{definition}
+
+\begin{lemma}[the fixed set misses the challenge]\label{lem:hit}
+Let $\mathcal{Y}$ be any family as in Conjecture~\ref{conj:main}, let $J$
+index the component drawn in $\Dec$ or in $\Dec_0$, and let $I_J$ be its
+fixed set. Then $\Prob{\vx \in I_J} \le P\delta$.
+\end{lemma}
+
+\begin{proof}
+Consider the predictor $\mathsf{P}$ that, on input $\vz$ and with oracle
+access to $H$, computes the family member $Y_{H,\vz}$, draws a component
+index $J$ from its weights, and outputs a uniformly random element of
+$\{u_1 : (u_1,u_2) \in I_J\}$, or $1$ if that set is empty. It can do this
+because $\mathcal{Y}$ depends only on $(S_1,S_2,P,\gamma)$ and is indexed by
+the oracle and the leakage, both of which $\mathsf{P}$ holds, and because
+predictors are unbounded in time and in queries. Here and below,
+``computationally unbounded algorithm'' should be read as ``arbitrary,
+possibly randomized, function'', since $\mathcal{Y}$ is not assumed
+constructive and nothing in this document needs predictors to be
+computable. Its draw
+of $J$ has the same law as the one in the experiment, since there too the
+component is drawn from $Y_{H,\vz}$ after $(H,\vx,\vz)$ and hence
+independently of $\vx$ given $(H,\vz)$. The first coordinates of $I_J$
+number at most $|I_J| \le P$, so
+$\delta \ge \Prob{\mathsf{P}^{H}(\vz) = x_1} \ge \Prob{x_1 \in
+\{u_1 : u \in I_J\}}/P \ge \Prob{\vx \in I_J}/P$.
+\end{proof}
+
+\begin{lemma}[the observer misses the challenge]\label{lem:query}
+In $\Dec_0$, let $Q$ be the set of points $D$ queries. Then
+$\Prob{\vx \in Q} \le q\delta$, the case $q = 0$ holding because $Q$ is then
+empty.
+\end{lemma}
+
+\begin{proof}
+Consider the predictor that, on input $\vz$ and with oracle access to $H$,
+draws $H^{*} \sample Y_{H,\vz}$ internally, draws $y \sample [M]$, runs
+$D^{H^{*}}(y,\vz)$ while recording its queries, and outputs the first
+coordinate of a uniformly chosen one, or $1$ if there are none. Every
+object it draws has the law it has in $\Dec_0$, conditioned on
+$(H,\vx,\vz)$: the component because it is drawn from $Y_{H,\vz}$, and $y$
+because it is uniform there. As $|Q| \le q$, we get $\delta \ge \Prob{\vx \in Q}/q$ for $q \ge 1$.
+\end{proof}
+
+\begin{theorem}[extraction for split unpredictable sources]\label{thm:main}
+Assume Conjecture~\ref{conj:main}, with constants $c$ and $C$. Then for
+every $N$, $M$, every split $\delta$-unpredictable pair of sources with
+leakage lengths bounded by $\sigma_1,\sigma_2$, and every
+$q \in \mathbb{N}\cup\{0\}$,
+\[
+  \kappa(q) \;\le\; (4c + 2C + 4)\,\sqrt{\sigma'\,q^{+}\,\delta} \;+\; q\delta.
+\]
+The second term is dominated by the first whenever the bound is below one,
+so the content is $\kappa(q) = O(\sqrt{\sigma' q^{+}\delta})$.
+\end{theorem}
+
+\begin{proof}
+Fix a $q$-query challenge-oblivious $D$, put $\gamma := N^{-2}$ and
+$P := \lceil \sqrt{\sigma' q^{+}/\delta}\, \rceil$, and let $\mathcal{Y}$ be
+the family the conjecture supplies for these $P$ and $\gamma$. Choosing $P$
+as a function of $q$ does not disturb the quantifier order of
+Remark~\ref{rem:order}: the conjecture supplies a family for \emph{every}
+$P$, and we may instantiate it at whichever $P$ we please; what the order
+forbids is a single family that depends on $q$, and none here does. Write
+$\beta$ for the right-hand side of the conjecture at these parameters.
+Split
+\begin{align*}
+  \bigl|\Prob{\Real = 1} - \Prob{\Real_0 = 1}\bigr|
+  \;\le\;&
+  \bigl|\Prob{\Real = 1} - \Prob{\Dec = 1}\bigr| \tag{i}\\
+  +\;& \bigl|\Prob{\Dec = 1} - \Prob{\Dec_0 = 1}\bigr| \tag{ii}\\
+  +\;& \bigl|\Prob{\Dec_0 = 1} - \Prob{\Real_0 = 1}\bigr|. \tag{iii}
+\end{align*}
+
+Term (i) is $\Adv_{\mathcal{Y},D} \le \beta$ by the conjecture. For term
+(iii), let $D'$ be the observer that ignores its challenge input, draws
+$y \sample [M]$ itself, runs $D(y,\vz)$ and forwards its oracle queries;
+$D'$ is $q$-query and challenge-oblivious, and running $D'$ in $\Real$ and
+in $\Dec$ reproduces $\Real_0$ and $\Dec_0$ for $D$, so term (iii) is
+$\Adv_{\mathcal{Y},D'} \le \beta$ by the conjecture again.
+
+For term (ii), couple the two experiments. Draw $H$, $(\vx,\vz)$ and a
+component index $J$ with fixed set $I_J$, let $H^{\circ}$ be a draw of that
+component, and let $U \sample [M]$ be independent of everything. Define
+$H^{*} := H^{\circ}$ except that, if $\vx \notin I_J$, its value at $\vx$ is
+overwritten by $U$. Both $H^{\circ}$ and $H^{*}$ are distributed as that
+component, since off $I_J$ its values are uniform and independent, so
+replacing the single value at $\vx$ by an independent uniform one changes
+nothing. Run $\Dec$ with oracle $H^{*}$, whose challenge value
+$H^{*}(\vx)$ then equals $U$ on the event $\vx \notin I_J$, and run
+$\Dec_0$ with oracle $H^{\circ}$ and challenge value $U$. The two
+executions receive the same input and the same oracle answers unless
+$\vx \in I_J$, of probability at most $P\delta$ by
+Lemma~\ref{lem:hit}, or unless $D$ queries $\vx$, in which case
+$H^{\circ}$ answers with a value independent of $U$ while $H^{*}$ answers
+with $U$. The executions agree up to and including the step before the
+first query to $\vx$, so that event has the same probability in both and
+may be bounded in $\Dec_0$, where Lemma~\ref{lem:query} gives $q\delta$.
+Hence term (ii) is at most $P\delta + q\delta$.
+
+Adding, $\kappa(q) \le 2\beta + P\delta + q\delta$. Now
+$\log \gamma^{-1} = 2\log N \le \sigma'$, so
+$\beta \le 2c\sigma' q^{+}/P + C\sqrt{\sigma' q^{+}\delta} + \gamma$; the
+choice of $P$ gives $2c\sigma' q^{+}/P \le 2c\sqrt{\sigma' q^{+}\delta}$
+and $P\delta \le \sqrt{\sigma' q^{+}\delta} + \delta$; and
+$\gamma = N^{-2} \le \delta^{2} \le \delta$ because $\delta \ge 1/N$.
+Collecting, and using $\delta \le \sqrt{\sigma' q^{+}\delta}$ since
+$\delta \le 1 \le \sigma' q^{+}$,
+\[
+  \kappa(q) \;\le\; (4c + 2C + 1)\sqrt{\sigma' q^{+}\delta}
+  + 3\delta + q\delta
+  \;\le\; (4c + 2C + 4)\sqrt{\sigma' q^{+}\delta} + q\delta. \qedhere
+\]
+\end{proof}
+
+\begin{remark}[what the consequence does and does not use]\label{rem:uses}
+Theorem~\ref{thm:main} uses three features of the family and no others: that
+each fixed set has size at most $P$, which is what makes
+Lemma~\ref{lem:hit} cost $P\delta$; that the family is indexed by the oracle
+and the leakage and by nothing else, which is what lets the predictor in
+that lemma rebuild it; and that the component is drawn after $(H,\vx,\vz)$,
+which is what makes the drawn index independent of $\vx$ given $(H,\vz)$.
+The consistency requirement of Definition~\ref{def:bf} is \emph{not} used
+anywhere in this section, so the theorem follows from the weaker conjecture
+obtained by deleting it. It is retained in Conjecture~\ref{conj:main}
+because the intended applications need the fixed values to agree with the
+oracle the leakage was computed from, and because the known single-source
+decomposition delivers it.
+\end{remark}
+
+\begin{remark}[the converse, and where it stops]\label{rem:reduces}
+The implication also runs backwards, which is why the conjecture is not
+merely sufficient. There is a family, independent of $q$ and $D$, for which
+$\Adv_{\mathcal{Y},D} \le \kappa(q) + Aq/P_0 + \gamma + P_0\delta +
+q\delta$, with $A := \sigma + 2 + \log(1/\gamma)$ and
+$P_0 := \min\bigl(P, \lceil\sqrt{A/\delta}\,\rceil\bigr)$. So
+$\kappa(q) = O(\sqrt{\sigma'q^{+}\delta})$ implies
+Conjecture~\ref{conj:main} for $P \le \sqrt{A/\delta}$, and for every $P$
+when $q = O(1)$, while Theorem~\ref{thm:main} gives the reverse at
+$P = \lceil\sqrt{\sigma'q^{+}/\delta}\,\rceil$. The two therefore coincide
+for $q = O(1)$. For growing $q$ they do not: the directions hold at values
+of $P$ separated by $\Theta(\sqrt{q^{+}})$, and closing that is a second
+open problem, distinct from bounding $\kappa(q)$.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{9}
+
+\bibitem[CDGS]{CDGS}
+S. Coretti, Y. Dodis, S. Guo, J. Steinberger.
+\emph{Random Oracles and Non-Uniformity}.
+EUROCRYPT 2018; ePrint 2017/937.
+
+\bibitem[CFHS]{CFHS}
+S. Coretti, P. Farshim, P. Harasser, K. Southern.
+\emph{Multi-Source Randomness Extraction and Generation in the
+Random-Oracle Model}.
+ITC 2025, LIPIcs 343, art. 10; ePrint 2025/1258.
+
+\bibitem[DGK]{DGK}
+Y. Dodis, S. Guo, J. Katz.
+\emph{Fixing Cracks in the Concrete: Random Oracles with Auxiliary Input,
+Revisited}.
+EUROCRYPT 2017.
+
+\bibitem[Unruh]{Unruh}
+D. Unruh.
+\emph{Random Oracles and Auxiliary Input}.
+CRYPTO 2007.
+
+\end{conjurabibliography}
+
+\end{document}

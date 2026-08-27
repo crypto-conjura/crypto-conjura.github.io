@@ -22,7 +22,7 @@ status:
 difficulty:
   reach: adaptation
   by: ai
-  note: "The public-seed case c/0004 is proved and the secret-seed distinguisher is strictly weaker, so the route is visible; the seed's own entropy is the part the existing argument does not already handle."
+  note: "The public-seed case c/0004 is proved and the secret-seed distinguisher is strictly weaker, so the route is visible. Recorded 28 August 2026: in extractor parameters this is Theorem 6.14 of Vadhan's Pseudorandomness, the ordinary (non-strong) case, so the seed's own entropy is handled classically; what has no classical precedent is the average-over-H unpredictability hypothesis."
 
 status_summary: "Open: the secret-seed bound, in which the distinguisher never sees the seed, so unlike the public-seed case c/0004 the seed's own entropy is still available to the extractor."
 status_updated: 2026-08-16
@@ -33,6 +33,8 @@ lean:
 revision: 1
 sources:
   - {cite: "Farshim, Two Leftover-Hash-Lemma Conjectures (self-hosted statement source; states this secret-seed conjecture as Conjecture 1, alongside the public-seed Conjecture 2)", url: "/c/0005/latex/main.tex"}
+  - {cite: "Vadhan, Pseudorandomness, Foundations and Trends in Theoretical Computer Science, chapter 6 (Theorem 6.14 is this conjecture in extractor parameters: ordinary, non-strong extractors, m = k + d - 2log(1/eps))", url: "https://people.seas.harvard.edu/~salil/pseudorandomness/extractors.pdf"}
+  - {cite: "Radhakrishnan and Ta-Shma, Bounds for Dispersers, Extractors, and Depth-Two Superconcentrators, SIAM J. Discrete Math. 13(1), pp. 2-24, 2000 (both of those parameters are optimal)", url: "https://doi.org/10.1137/S0895480197329508"}
 statement_sha: "4138da37b03291077b6b62519d835fe8a6572ab8f9fa8097dbaae346c0b01396"
 status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
 ---
@@ -127,6 +129,10 @@ Publishing the seed breaks exactly that. The proof attached to [c/0004](/c/0004/
 ### Sources
 
 - [Farshim, Two Leftover-Hash-Lemma Conjectures (self-hosted statement source; states this secret-seed conjecture as Conjecture 1, alongside the public-seed Conjecture 2)](/c/0005/latex/main.tex)
+- [Vadhan, *Pseudorandomness*, Foundations and Trends in Theoretical Computer Science, chapter 6 (Theorem 6.14 is this conjecture in extractor parameters: ordinary, non-strong extractors, $m = k + d - 2\log(1/\epsilon)$)](https://people.seas.harvard.edu/~salil/pseudorandomness/extractors.pdf)
+- [Radhakrishnan and Ta-Shma, Bounds for Dispersers, Extractors, and Depth-Two Superconcentrators, SIAM J. Discrete Math. 13(1), pp. 2-24, 2000 (both of those parameters are optimal)](https://doi.org/10.1137/S0895480197329508)
+
+See [Relation to the extractor literature](/p/leftover-hash-lemma-extraction/#relation-to-the-extractor-literature) on the problem hub, and the Discussion tab below.
 
 ## Proof
 
@@ -148,10 +154,18 @@ This statement is **withdrawn** and is kept only so its identifier does not 404 
 
 The [problem page](/p/leftover-hash-lemma-extraction/) carries the parameter lattice for both, including the two $k$-source cells nobody has stated.
 
+### Relation to known results
+
+Recorded 28 August 2026, and worth having on the page even though it is withdrawn, because it changes what a future attempt would be attempting. Put $n := \log_2 D$, $k := \log_2(1/\epsilon)$, $m := \log_2 R$, $d := \log_2 K$. Balancing $\sqrt{\epsilon R / K}$ against a target $\delta$ gives $2^{m-k-d} = \delta^2$, that is $m = k + d - 2\log(1/\delta)$: the seed's $d$ bits are added to the source's $k$, which is exactly what the combined square root above is claiming. That is Theorem 6.14 of Vadhan's *Pseudorandomness*, the **ordinary** (non-strong) extractor existence theorem, where [c/0004](/c/0004/) is Theorem 6.17, its strong counterpart. The two conjectures are the strong/non-strong pair, and Radhakrishnan and Ta-Shma proved both sets of parameters optimal.
+
+So the sentence above -- "the seed's own entropy is the part the existing argument does not already handle" -- names the wrong difficulty. Seed entropy is precisely what the classical non-strong statement handles, and handles optimally. What has no classical precedent here is the same thing as in c/0004: unpredictability is an average over $H$, so the source may carry zero entropy on an $\epsilon$-fraction of oracles, whereas the textbook theorem quantifies per source and concludes with high probability over the extractor. Anyone reopening this statement should be attacking that gap, not the seed's entropy.
+
+The [problem hub](/p/leftover-hash-lemma-extraction/#relation-to-the-extractor-literature) has the full comparison, including why the leftover hash lemma itself cannot reach the $K \approx \log_2 D$ regime either conjecture lives in.
+
 ## Open obligations
 
 - [ ] Confirm the transcription against `latex/main.tex` Conjecture 1. This page was transcribed by an AI; `statement_informal` is `ai` for that reason, and may be raised to `human` by whoever wrote the source document if they judge it faithful.
-- [ ] Attempt the proof, or record why the c/0004 argument does not carry over.
+- [ ] Attempt the proof, or record why the c/0004 argument does not carry over. Per the Discussion tab, the target is now specific: the classical non-strong extractor theorem already gives the shape, so what has to be shown is that it survives an unpredictability hypothesis averaged over $H$.
 - [ ] Formalize the statement in Lean, sharing the game definitions with `c/0004/lean/` rather than duplicating them.
 - [ ] Settle whether the combined-square-root shape is tight, or only an upper bound nobody has matched.
 

@@ -7,11 +7,50 @@ aliases:
 
 ## Motivation
 
-Randomness extraction results usually assume the source is independent of the extractor's key. Here the extractor is itself a random oracle $H$, and the source $S$ is allowed to see the *entire* function table of $H$ before choosing its input $x$ (together with side information $z$) -- it's only assumed *unpredictable*, not independent. Two natural games ask how close $H(\mathit{sd}, x)$ then looks to uniform, differing in whether the extraction seed $\mathit{sd}$ is handed to the distinguisher (public seed) or kept hidden (secret seed). Both conjectured bounds take the classical leftover-hash-lemma shape: an entropy-deficiency term plus a seed-collision term that vanishes as $1/\sqrt{K}$ in the number of seeds $K$.
+Randomness extraction results usually assume the source is independent of the extractor's key. Here the extractor is itself a random oracle $H$, and the source $S$ is allowed to see the *entire* function table of $H$ before choosing its input $x$ (together with side information $z$) -- it's only assumed *unpredictable*, not independent. Two natural games ask how close $H(\mathit{sd}, x)$ then looks to uniform, differing in whether the extraction seed $\mathit{sd}$ is handed to the distinguisher (public seed) or kept hidden (secret seed). Both conjectured bounds take the classical leftover-hash-lemma shape: an entropy-deficiency term plus a second term that vanishes as $1/\sqrt{K}$ in the number of seeds $K$. The shape is the leftover hash lemma's, but the second term is not a collision probability -- it is the union-bound cost of letting the source choose its support *after* seeing $H$, and that difference is what the section below turns on.
 
 ## Provenance and history
 
 Both conjectures were stated together as a single self-contained write-up (statement by Pooya Farshim; see the shared PDF linked from [c/0004](/c/0004/)). The public-seed case was resolved shortly after: an AI-written proof (Claude Opus 5, prompted by Pooya Farshim, 14 August 2026) shows the naive guess -- transposing the secret-seed expression directly to the public-seed game -- is false, and proves a corrected bound instead, with an explicit near-optimal constant. That proof has not yet been independently reviewed by a human, nor formalized. The secret-seed case (Conjecture 1 of the shared write-up) was tracked as [c/0005](/c/0005/), transcribed from the same PDF; no proof of it is recorded, and it was withdrawn on 17 August 2026, so it no longer appears in the listings. A bound for it was referenced only informally, via an unincluded and unverified "companion note," in the public-seed resolution's write-up, and that note is still not on the site.
+
+## Relation to the extractor literature
+
+*Recorded 28 August 2026, in answer to the question "why doesn't this already follow from known results?". It largely does, and neither statement page said so.*
+
+Both conjectures are, after a change of variables, classical theorems about randomness extractors. Write $n := \log_2 D$, $k := \log_2(1/\epsilon)$, $m := \log_2 R$, $d := \log_2 K$, and balance each summand against a target error $\delta$:
+
+| conjecture | summand | in extractor parameters |
+|---|---|---|
+| public seed | $\sqrt{\epsilon R} = \delta$ | $m = k - 2\log(1/\delta)$ |
+| public seed | $\sqrt{\log_2 D / K} = \delta$ | $d = \log n + 2\log(1/\delta)$ |
+| secret seed | $\sqrt{\epsilon R / K} = \delta$ | $m = k + d - 2\log(1/\delta)$ |
+
+These are Theorems 6.17 and 6.14 of Vadhan's *Pseudorandomness*: a random function is, with high probability, a **strong** extractor with $m = k - 2\log(1/\epsilon) - O(1)$ and $d = \log(n-k) + 2\log(1/\epsilon) + O(1)$, and an ordinary (non-strong) one with $m = k + d - 2\log(1/\epsilon) - O(1)$. The public-seed conjecture is the strong case; the secret-seed conjecture is the ordinary one. Radhakrishnan and Ta-Shma proved both sets of parameters optimal, giving $d \ge \log(n-k) + 2\log(1/\epsilon) - O(1)$ and an entropy loss of $d + k - m \ge 2\log(1/\epsilon) - O(1)$ for every extractor.
+
+The correspondence is exact rather than merely of shape. The sharper of the two bounds proved in [c/0004](/c/0004/) carries $\ln(2eD\epsilon) \approx (n-k)\ln 2$, so it delivers $d = \log(n-k) + 2\log(1/\delta) + O(1)$ -- the $\log(n-k)$, not the cruder $\log n$ -- and the quantity $b_t := \tfrac{1}{t}\ln\binom{D}{t}$ it introduces to get there is the textbook count of flat $k$-sources, $\binom{2^n}{2^k}$.
+
+### Why the leftover hash lemma is the wrong precedent
+
+The LHL needs the family $\{H(k,\cdot)\}_{k \in \mathcal{K}}$ to be 2-universal. Universal families need a seed of $\Omega(n)$ bits, that is $K \ge D^{\Omega(1)}$, and pairwise independence needs $K \ge D$. The regime these conjectures live in is $K \approx \log_2 D$, where **no universal family exists at all** -- so this is not a lossy application of the LHL, it is an inapplicable one.
+
+The obvious repair fails too. Condition on $H$, bound the resulting fixed family's collision probability, apply an almost-universal LHL: collision probability is an $L_2$ quantity, and converting it to statistical distance costs a factor $R$ *inside* the square root, so a deviation of true size $\sqrt{\log D / K}$ comes back out as $(R \log D / K)^{1/4}$ -- a fourth root, carrying an $R$ the true bound does not have. This is the familiar reason the LHL is seed-suboptimal, and it is why the optimal-extractor proofs work in $L_1$ instead, by concentration plus a union bound over flat sources. The [c/0004](/c/0004/) proof takes that route, arriving at it independently.
+
+### What is not classical
+
+Three things, of which only the first is mathematics.
+
+1. **The unpredictability hypothesis is an average over $H$.** It asks for $\mathbb{E}_{(H,Z)}[\max_x \Pr[X = x \mid H, Z]] \le \epsilon$, so the source may have *zero* entropy on an $\epsilon$-fraction of oracles. Classical extractor statements quantify per source ("for every $k$-source") and conclude with high probability over the extractor, which cannot be applied here. That is what forces the deviation to be bounded in expectation, uniformly over all support sizes at once, and then averaged. The Dodis--Ostrovsky--Reyzin--Smith average-min-entropy leftover hash lemma does not patch it either: there the side information must be independent of the hash key, and here the side information $z$ may be $H$ itself.
+2. **A single universal constant** over the whole parameter range, degenerate corners included. Textbook statements hide an $O(1)$ in the exponents; the conjectures ask for one $c$ valid for all $K, D, R, \epsilon$.
+3. **No query bound anywhere.** Every random-oracle extraction result -- compression arguments, presampling, bit-fixing, and the multi-source work in ePrint 2025/1258 -- bounds the *distinguisher's* query complexity. Here all three parties hold the entire function table, so there is no query budget to compress against. That paper in fact names statistical multi-source extraction against unbounded distinguishers as an open direction; these two conjectures are its seeded single-source instance.
+
+Read together: what looked like the hard feature of this problem -- the source sees the whole oracle -- is free, since the probabilistic-method union bound runs over flat sources *before* the source is fixed and so already covers supports chosen with $H$ in hand. The genuinely new hypothesis is the unglamorous one in item 1.
+
+### Sources
+
+- [Vadhan, *Pseudorandomness*, Foundations and Trends in Theoretical Computer Science; chapter 6, Randomness Extractors (Theorem 6.14, Theorem 6.17, and the seed-length remark following Theorem 6.18)](https://people.seas.harvard.edu/~salil/pseudorandomness/extractors.pdf)
+- [Radhakrishnan and Ta-Shma, Bounds for Dispersers, Extractors, and Depth-Two Superconcentrators, SIAM J. Discrete Math. 13(1), pp. 2-24, 2000](https://doi.org/10.1137/S0895480197329508)
+- [Dodis, Ostrovsky, Reyzin and Smith, Fuzzy Extractors: How to Generate Strong Keys from Biometrics and Other Noisy Data, SIAM J. Comput. 38(1), pp. 97-139, 2008 (the average-min-entropy leftover hash lemma)](https://eprint.iacr.org/2003/235)
+- [Coretti, Farshim, Harasser and Southern, Multi-Source Randomness Extraction and Generation in the Random-Oracle Model, ITC 2025 (ePrint 2025/1258)](https://eprint.iacr.org/2025/1258)
 
 ## Parameter lattice
 

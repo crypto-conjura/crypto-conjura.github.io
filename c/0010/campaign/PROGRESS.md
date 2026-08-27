@@ -177,13 +177,43 @@ covering *every* challenge value, because `v = f(x)` is correlated with the `x` 
 on. At full resolution that union is `qM` cells even though only `q` matter for any fixed `v`.
 
 > **The sharp question, narrower than §8's:** does `κ(q)` have *any* `M`-dependence for small `q`?
-> Exhibit a `q`-query lower bound carrying `M` for `q ≪ N²`, or prove
-> `κ(q) ≤ O(√(σ'δ)) + (M`-free`)` there. Either answer resolves the `M`-corner for the
-> applications that matter. **A refuter pass hunting a small-`q`, large-`M` distinguisher is the
-> cheap direction, and the campaign has never run one** — the highest-value and least-explored
-> move available. One informal attempt is on record and found nothing: the natural one-query test
-> (given `y`, query `u(y)` and check `H(u(y)) = y`) succeeds with probability `1/M` in both
-> experiments.
+
+**Answered, negatively and with strong evidence, 27 August 2026** — the campaign's first refuter
+pass, `split-decomp-refuter-1.md`, with code and a run record in `checks/refuter-mcorner.py` and
+`checks/refuter-mcorner-run.txt`. **No counterexample found, and the obstruction is now an exact
+identity rather than a suspicion.**
+
+For a flat product source on a `K×K` rectangle (`δ = 1/K`), the *exact* optimal advantage of a
+`q`-query observer is `Phi(min(q,K²),M)/K²` with `Phi(q,M) := (M/2)·E|Bin(q,1/M) − q/M|`, because
+conditioned on the transcript, `E[ρ(v) | transcript] − 1/M = (n_v − q/M)/K²`: **averaging kills the
+histogram fluctuation, and only the mass of the inspected cells survives, which carries no `M`.**
+Hence `adv ≤ qδ²` for every `M`; the deficit is `1 − Phi(q,M)/q = (1−o(1))q/M`; and `δ√M` is
+reached only at `q = 1/δ²`. Re-verified independently for the record at `q` up to `4096`.
+
+**The `M`-dependence onset and the (H2)-failure corner are disjoint in every non-vacuous instance,
+provably.** Appreciable `M`-dependence needs `M ≲ q`; (H2) fails needs `M > σ'q⁺/(4δ)`; both give
+`4δ > σ'`, which with `σ' ≥ 2`, `δ ≤ 1` forces `σ' < 4`, i.e. `N ∈ {2,3}` with `δ` near 1 — and
+every such point is vacuous. At `δ = 1/N`, `N = 2²⁰`: the `M`-dependence has died by `M = 2³` at
+`q = 1` while the corner needs `M > 2²⁴`; by `M = 2¹³` at `q = 1024` while the corner needs
+`M > 2³³`.
+
+So **the `M`-corner is a route artifact at every parameter setting audited**, and the applications'
+failing rows — 512-bit output, streaming — are `M`-free to relative `2⁻⁴³²`. The `δ√M` enters
+through Lemma B's union over all `2^M` tests, which grants the observer a test depending on all of
+`f`, where a `q`-query observer's decision depends on `f` only through its own `q`-cell transcript.
+
+**Where the proving effort should now go.** Replace that union by one over `q`-query *transcripts*:
+`C₁ = M ln2 + ln(4N²/γ₀)` becomes `q ln(N²M) + ln(4N²/γ₀)`, turning `δ√M` into `δ√(q log(N²M))`.
+Over a 7840-point grid the ratio to the target is **≤ 1.78 in the meaningful corner** against
+**29.92** now, so the repair is arithmetically sufficient. The missing input is the
+transcript-**conditioned** rectangle discrepancy bound: the rectangle is chosen after seeing `f`, so
+the union over rectangles must be taken *inside* the conditioning.
+
+**What the negative does not cover**, since a null result is worth only its stated scope: no
+non-vacuous instance can be enumerated (`N ≥ 512` forces `|Fun| = M^{262144}`), so the exact search
+probes the functional form at tiny `N` and only the model-based and sampled stages reach the corner;
+exact optima cover `q ≤ 2`; randomised leakage was not searched; and nothing here *proves* the
+`M`-free bound.
 
 ### 2.3 A second open problem, never worked on
 
@@ -208,9 +238,15 @@ achieving what the `q`-aware cap achieves, or show none exists.
 
 - `E[m₁m₂] ≤ δ²` is **false** — r3 §1 carries the counterexample — so the obvious sharpening of
   the revealed-mass bound is blocked by a proved obstruction, not merely unattempted.
-- Proposition F licenses nothing off the diagonal `δ = 1/N`, so whether `δ√M` is tight elsewhere
-  is open — **and nothing at `q < N²` either**, which is the restriction that matters, since (H2)
-  binds at small `q`. See §2.2.
+- Proposition F licenses nothing off the diagonal `δ = 1/N`, and nothing at `q < N²`.
+  **Partly discharged, 27 August 2026** (`split-decomp-refuter-1.md`): the FIT family with
+  `K = 1/δ` gives `κ(1/δ²) ≈ δ√(M/2π)`, which is **1.57–2.22×** Proposition F's constant for
+  `K ∈ {4,…,32}` and all `2 ≤ M ≤ K²` — so the `δ√M` shape is now witnessed off the diagonal, at
+  `q = δ⁻²` rather than `N²`. It still does not reach the corner: `1/δ² < σ'/(4δ³)` always, so the
+  family is always inside (H2).
+- **A gap no artifact states** (same pass): for `M ≥ 1/(4δ²)` with `q ≥ 1`, **both arms of
+  Corollary D″ exceed 1**, so the campaign has no non-trivial bound on `κ(q)` at all there. `q = 0`
+  remains covered `M`-freely by Theorem A.
 - The public page's claim that `q = 0` is "proved and tight" rests on **no proved lower bound**;
   the only `q = 0` tightness evidence in the repo is numeric.
 - The Contract asserts both its design restrictions are necessary (the mixture may not be chosen
@@ -306,10 +342,13 @@ contain nothing on multi-source extraction or multi-party preprocessing.
   Not yet verified, and flagged so they are not repeated as read: Chor–Goldreich (SICOMP 1988),
   Dodis–Oliveira (RANDOM 2003), and Radhakrishnan–Ta-Shma's two-source entropy-loss form, any of
   which could move Theorem D's verdict from "no prior art found" to "folklore" or "implied by".
-- **No refuter pass, ever**, against any current artifact, and no counterexample-search code in
-  the repo. `checks/rem-window-r4.py` is the first executable artifact committed here, but it
-  verifies arithmetic in a remark; it searches for nothing. Every *refutation* claim in the
-  campaign remains unreproducible prose in the task log.
+- ~~No refuter pass, ever, and no counterexample-search code in the repo.~~ **Done, 27 August
+  2026** — `split-decomp-refuter-1.md`, with `checks/refuter-mcorner.py` (12 stages, prints its own
+  grids) and an 849-line run record. Verdict and scope in §2.2. Method validation worth noting: the
+  search's optimiser was checked against **exhaustive enumeration of the entire observer space** in
+  10/10 cases, 66 witnesses were recomputed in exact rational arithmetic and independently by Monte
+  Carlo, and the open-ended stage used a train/test split so overfitting could not manufacture a
+  witness.
 - **No Lean formalisation** of anything in this campaign.
 
 **Unadjudicated debt:** `c/0010/revision/concerns.md` holds ten suspected errors and six

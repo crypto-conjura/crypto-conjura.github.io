@@ -1,10 +1,168 @@
 ---
-title: "F-ABE — Attribute-based encryption"
+title: "F-ABE — Attribute-based encryption, static attribute corruption"
 status: "Emerging"
 layer: 3
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-ABE* (Attribute-based encryption) is part of *Public-Key Primitives, Key Exchange, Messaging* in the UC functionality encyclopedia. Status: an emerging formulation, still an active area of research.
+*F-ABE* (Attribute-based encryption, static attribute corruption) is part of *Public-Key Primitives, Key Exchange, Messaging* in the UC functionality encyclopedia. Status: an emerging formulation, still an active area of research.
 
-Information about this functionality's precise definition, known realizations, properties, and any formal artifacts has not been added yet.
+**Standard ABE is not composably secure, and this functionality is what the field does about it.** An authority issues decryption keys for attributes; anyone encrypts under an access policy; a key opens a ciphertext exactly when its attribute satisfies the policy. Stating that as an ideal functionality against an *active* adversary turns out to be impossible for ABE as ordinarily defined, and every UC treatment before this one bought security by strengthening the primitive — Abe and Ambrona replace key generation with a *blind* key-generation procedure carrying a non-interactive zero-knowledge proof; Camenisch et al. add a trusted third party holding users' decryption keys and an interactive decryption protocol run against it. Both exclude standard ABE by definition. The box below is the first functionality realizable from a **standard** IND-CCA2-secure ABE scheme, and it pays for that with a restricted corruption model rather than with a strengthened primitive.
+
+This page carried no citations at all before this entry.
+
+## Functionality
+
+**The source is written in iUC, not plain UC**, and three of its idioms need naming. iUC organises a functionality into *roles* — here `setup`, `encryptor`, `decryptor` — with a `CheckID` that admits callers and an `AllowCorruption` that decides who may be corrupted at all. Its two tapes, I/O and NET, separate calls from parties above from calls from the adversary below. And its `send responsively … to NET / wait for …` is exactly this framework's $\mathcal{A}^{!}(\cdot)$: a call on the adversary slot whose answer comes back before anything else can run. Roles become operations with guards here, the tapes become the caller's identity, and the responsive calls survive as themselves.
+
+Otherwise: $\mathsf{require}$ refuses the call; $\mathsf{San}[\mathsf{Clean}]$ sanitizes an answer from the adversary slot; $\bot$ is none-or-refused. $L$ is a deterministic length-preserving leakage function, $p$ a polynomial bounding the runtime of the supplied algorithms, $T$ the time at which the key-issuing phase closes and $t$ the current time. $x \in y$ reads "attribute $x$ satisfies policy $y$".
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{ABE}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := (p, \ L, \ T, \ t)\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{M} \gets \varnothing\)<span class="cj-comment">// triples \((\mathit{msg}, y, \psi)\): plaintext, policy, ciphertext</span></li>
+<li>\(\mathtt{K}[*] \gets \bot\)<span class="cj-comment">// one attribute and one decryption key per decryptor</span></li>
+<li>\(\mathtt{mpk}, \mathtt{Enc}, \mathtt{Dec} \gets \bot\); &nbsp;\(\mathtt{Cor} \gets \varnothing\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Setup()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="4">
+<li>\(\textbf{require}\ \mathtt{mpk} = \bot\)</li>
+<li>\((\mathtt{mpk}, \mathtt{Enc}, \mathtt{Dec}) \gets \mathsf{San}[\mathsf{Clean}_{a}]\bigl(\mathcal{A}^{!}(\mathsf{InitABE})\bigr)\)<span class="cj-comment">// the adversary supplies the \emph{algorithms}; the box then polices them</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.PubKey()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="7">
+<li>\(\textbf{require}\ \mathtt{mpk} \neq \bot\)</li>
+<li>\(\textbf{return}\ \mathtt{mpk}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.InitAttr(<span class="cj-id">x</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="9">
+<li>\(\textbf{require}\ \mathtt{K}[\mathit{id}.P] = \bot\)<span class="cj-comment">// the source prints \(\neq \bot\); see the page</span></li>
+<li>\(\mathit{sk} \gets \mathsf{San}[\mathsf{Clean}_{k}]\bigl(\mathcal{A}^{!}(\mathsf{InitReceiver}, x)\bigr)\)</li>
+<li>\(\textbf{if}\ \exists\, (\mathit{msg}, y, \psi) \in \mathtt{M} : \bigl(x \in y \wedge \mathtt{Dec}^{(p)}(\mathit{sk}, \psi) \neq L(\lambda, \mathit{msg})\bigr) \vee \bigl(x \notin y \wedge \mathtt{Dec}^{(p)}(\mathit{sk}, \psi) \neq \bot\bigr)\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathcal{A}(\mathsf{Registered}, x, 0)\); &nbsp;\(\textbf{return}\ \bot\)</span><span class="cj-comment">// decryption-correctness failure, checked against every past ciphertext</span></li>
+<li>\(\mathtt{K}[\mathit{id}.P] \gets (x, \mathit{sk})\); &nbsp;\(\mathcal{A}(\mathsf{Registered}, x, 1)\); &nbsp;\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.CorrAttr(<span class="cj-id">x</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="14">
+<li>\(\textbf{require}\ \mathit{id}'.F = \mathbf{A} \ \wedge\ t \leq T\)<span class="cj-comment">// attributes may be corrupted only before the key phase closes</span></li>
+<li>\(\mathtt{Cor} \gets \mathtt{Cor} \cup \{x\}\); &nbsp;\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Encrypt(<span class="cj-id">y</span>, <span class="cj-id">msg</span>, <span class="cj-id">k</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="16">
+<li>\(\textbf{require}\ T < t\)<span class="cj-comment">// no encryption until every key has been handed out</span></li>
+<li>\(\textbf{if}\ k \neq \mathtt{mpk} \ \vee\ \exists\, x \in \mathtt{Cor} : x \in y\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \mathtt{Enc}^{(p)}(k, y, \mathit{msg})\)</span><span class="cj-comment">// a wrong key or a corrupt attribute: the real message is encrypted</span></li>
+<li>\(\mathit{msg}' \gets L(\lambda, \mathit{msg})\); &nbsp;\(\psi \gets \mathtt{Enc}^{(p)}(\mathtt{mpk}, y, \mathit{msg}')\)<span class="cj-comment">// otherwise only the leakage is encrypted, and \(\mathit{msg}\) never reaches \(\mathtt{Enc}\)</span></li>
+<li>\(\textbf{if}\ \exists\, (x, \mathit{sk}) \in \mathtt{K} : \bigl(x \in y \wedge \mathtt{Dec}^{(p)}(\mathit{sk}, \psi) \neq \mathit{msg}'\bigr) \vee \bigl(x \notin y \wedge \mathtt{Dec}^{(p)}(\mathit{sk}, \psi) \neq \bot\bigr)\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \bot\)</span><span class="cj-comment">// encryption-correctness failure, checked against every key already issued</span></li>
+<li>\(\mathtt{M} \gets \mathtt{M} \cup \{(\mathit{msg}, y, \psi)\}\); &nbsp;\(\textbf{return}\ \psi\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Decrypt(<span class="cj-id">c</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="23">
+<li>\(\textbf{require}\ T < t \ \wedge\ \mathtt{K}[\mathit{id}.P] \neq \bot\)</li>
+<li>\((x, \mathit{sk}) \gets \mathtt{K}[\mathit{id}.P]\); &nbsp;\(\psi \gets c\)</li>
+<li>\(\textbf{if}\ \nexists\, (\cdot, \cdot, \psi) \in \mathtt{M}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \mathtt{Dec}^{(p)}(\mathit{sk}, \psi)\)</span><span class="cj-comment">// a ciphertext the box did not make is decrypted by the real algorithm</span></li>
+<li>\(\textbf{if}\ \exists\, \mathit{msg} \neq \mathit{msg}' : (\mathit{msg}, \cdot, \psi), (\mathit{msg}', \cdot, \psi) \in \mathtt{M}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \bot\)</span><span class="cj-comment">// one ciphertext, two plaintexts: the box refuses to choose</span></li>
+<li>take \((\mathit{msg}, y, \psi) \in \mathtt{M}\)</li>
+<li>\(\textbf{if}\ x \notin y\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \bot\)</span><span class="cj-comment">// the policy test, and the only place it decides anything</span></li>
+<li>\(\textbf{return}\ \mathit{msg}\)<span class="cj-comment">// the \emph{stored} plaintext, not \(\mathtt{Dec}\)'s output</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="33">
+<li>\(\textbf{require}\ \mathit{id}.P \neq \mathit{pid}.\mathit{setup} \ \wedge\ \bigl(\mathtt{K}[\mathit{id}.P] = \bot \ \vee\ t \leq T\bigr)\)<span class="cj-comment">// the authority is never corruptible, and a decryptor not after \(T\)</span></li>
+<li>\(\textbf{return}\ \mathtt{K}[\mathit{id}.P]\)</li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+*Source: Figure 3, p. 8 of Pascal Lafourcade, Léo Robert and Gael Marcadet, "iUC-Secure Distributed File Transfer From Standard Attribute-based Encryption", 2024 — the author order as printed on the version read; see the references for a discrepancy with the indexed record. The figure was rendered at 150 dpi and read against the extraction; it carries no shading. Not on ePrint — obtained from the authors' HAL deposit, `hal-04620459v1`, which is why the provenance record names a repository rather than a revision stamp.*
+
+**One guard is printed with the wrong polarity, and it is corrected here.** Line 9 reads $\mathtt{K}[\mathit{id}.P] = \bot$; the source prints $\mathsf{keys}[\mathit{entity}_{\mathsf{call}}] \neq \bot$ — *only if this decryptor already has a key*. As printed the operation is unreachable for a fresh decryptor, so the functionality can never issue a first key and nothing downstream of it can happen. The repair is fixed by the source itself rather than chosen: its own protocol $\mathcal{P}_{\mathsf{ABE}}$ (Figure 4, p. 9) guards the matching `InitAttr` with `s.t. sk_x = ⊥`, and the setup machine refuses a `Register` when `keys[entity_call] ≠ ⊥`. Both say "only if you do not already have one". Fixed the way `f-asyncmpc`'s never-firing counter was fixed, and flagged the same way: **a protocol proved against the printed box is not proved against this one.**
+
+- **Line 5 is the design decision the rest of the box follows from.** The functionality does not define encryption; it *asks the adversary for the algorithms* and then holds them to account. $\mathtt{Enc}$ and $\mathtt{Dec}$ arrive from the adversary slot at setup, and every later operation runs them. This is the same device [*F-AE*](/uc/layer-2-crypto-library-symmetric/f-ae/index.qmd) and [*F-fsAEAD*](/uc/layer-2-crypto-library-symmetric/f-fsaead/index.qmd) get from $\mathcal{F}_{\mathsf{Lib}}$, and it is what makes ciphertexts in the ideal world have the shape real ciphertexts have.
+- **Lines 11 and 20 are the same check run in opposite directions, and together they are the whole correctness argument.** When a key arrives, it is tested against every ciphertext already made; when a ciphertext is made, it is tested against every key already issued. Either failure aborts. So the functionality never gets into a state where a key that should open a ciphertext does not — it refuses to *reach* that state instead. Quadratic work, and unusual: most functionalities assert correctness by construction rather than by checking.
+- **Line 19 is confidentiality, and it is one substitution.** In the good case the box encrypts $L(\lambda, \msg)$ — the leakage, which is length-preserving and nothing else — and $\msg$ never reaches $\mathtt{Enc}$ at all. The plaintext is kept in $\mathtt{M}$ and handed back at line 32 by table lookup. The ciphertext therefore carries no information about the message beyond its length, *by construction rather than by assumption*.
+- **Line 17 is where the box gives up, and it names both reasons.** A caller encrypting under a master key that is not the functionality's own, or under a policy some corrupted attribute already satisfies, gets the real message encrypted for real. No pretence: in either case an adversary could decrypt anyway, so substituting the leakage would be a lie the environment could catch.
+- **Lines 16 and 23 split the run in two at $T$, and this is the restricted corruption model doing its work.** Keys are issued before $T$; encryption and decryption happen only after. Line 14 lets the adversary corrupt an attribute only before $T$, and line 33 refuses to corrupt a decryptor that holds a key once $T$ has passed. Put together: *the adversary must commit to which attributes it controls before it sees a single ciphertext.* That is exactly the static-corruption restriction that buys realizability from a standard ABE scheme, and it is the price the introduction advertises.
+- **Line 33 makes the authority uncorruptible outright.** No $T$, no condition — the setup role is simply outside the corruption model. A functionality that let the master secret leak would have nothing left to say, so the restriction is not a weakness of this box so much as the boundary of the question it answers.
+- **Line 26 decrypts a foreign ciphertext with the real algorithm.** A ciphertext the box did not produce is not refused; it is handed to $\mathtt{Dec}$ and whatever comes out is returned. That is what makes the functionality realizable — the simulator has no way to recognise adversarial ciphertexts — and it is also the line that a reader wanting *ciphertext* guarantees should stop at. The box's guarantees are about ciphertexts it made.
+- **Line 28 refuses to choose between two plaintexts for one ciphertext.** If the supplied $\mathtt{Enc}$ ever collides, the functionality returns $\bot$ rather than picking. The collision is a real algorithm's failure and the box declines to launder it.
+- **Line 30 is the access-control decision, and it is the only one in the box.** Everything else is bookkeeping around this single test of $x \in y$.
+
+**Mismatch register.**
+
+| The source | This box | Why |
+|---|---|---|
+| `s.t. keys[entity_call] ≠ ⊥` on `InitAttr` | $\mathtt{K}[\mathit{id}.P] = \bot$ at line 9 | **Corrected**, per the paragraph above. The printed guard makes the operation unreachable and the source's own protocol has the opposite polarity. |
+| Three roles — `setup`, `encryptor`, `decryptor` — in one machine | Eight operations, with the role expressed as a guard | This framework has no roles. The mapping is exact except at line 33, where `AllowCorruption`'s role test becomes an identity test. |
+| `CheckID(pid, sid, role)` | Nothing | Access control lives in the framework's own guard here, and a box does not re-check that its caller is admitted. |
+| `AllowCorruption`: false for `setup`, and for `decryptor` when $T < t$ | $\mathsf{require}$ at line 33 | **The largest structural difference.** iUC lets a functionality declare who is corruptible at all; this framework has no such declaration, so the restriction is enforced where corruption is read off. A reader should treat line 33 as a statement about the *model*, not as an operation. |
+| `send responsively … to NET` / `wait for` | $\mathcal{A}^{!}(\cdot)$ at lines 5 and 10 | An exact match, and the one place iUC and this framework agree on a notion the plain UC literature usually leaves implicit. Both are genuinely responsive: the source's algorithms and keys must arrive before anything else runs, and lines 11 and 20 depend on it. |
+| `Initialization`, run at instance creation, placing a NET call | $\mathsf{Initialize}$ sets state; $\mathsf{Setup}$ at lines 4–6 places the call | $\mathsf{Initialize}$ places no calls by convention. Guarded to run once. |
+| The current time $t$, ambient | A parameter | Neither the source nor iUC supplies a clock; $t$ is simply "the current time" in the prose. Carried as a parameter rather than inventing a $\mathcal{G}_{\mathsf{clock}}$ dependency the source does not have. Every guard on $t$ is the source's. |
+| `reply` ends the activation | Explicit $\textbf{return}$ | Load-bearing at line 18: the source falls through to `m' ← L(λ,m)` textually, and only iUC's `reply` semantics stops it. Written as a return so the control flow is visible. |
+| `pid_setup` recorded at initialization | $\mathit{pid}.\mathit{setup}$, from the process id | The source parses the session id for it. |
+| No leakage interface beyond `AllowCorruption` | $\mathsf{Leak}$ at lines 33–34 | Required here. Returns the attribute and decryption key of the corrupted decryptor — which is what a corrupt decryptor holds — and nothing else. |
+
+## Known realizations
+
+**$\mathcal{P}_{\mathsf{ABE}}$, from any IND-CCA2-secure ABE scheme** (Figure 4, p. 9). This is the contribution: the underlying scheme needs no blind key generation, no attached NIZK and no third party — the four ordinary algorithms $(\mathsf{Setup}, \mathsf{KeyGen}, \mathsf{Enc}, \mathsf{Dec})$ suffice, given the phase restriction at lines 16, 23 and 14. The paper builds an authenticated attribute-based file-transfer functionality $\mathcal{F}_{\mathsf{AAFT}}$ on top of it and reports a Rust implementation.
+
+**Two earlier UC functionalities, and why they are not this one.** Abe and Ambrona's replaces key generation by a blind procedure with a NIZK; Camenisch et al.'s introduces a trusted third party that holds users' decryption keys and runs an interactive decryption protocol with them, without learning which ciphertext is being decrypted. Both are functionalities for a *strengthened* ABE, so a scheme off the shelf does not realize either. Recorded as variants and deliberately not blended.
+
+**What no functionality here realizes.** Standard ABE against a fully active adversary. That is the impossibility the whole line of work is arranged around, and the box above answers it by restricting corruption rather than by strengthening the primitive.
+
+## Properties
+
+- **Message confidentiality, with advantage exactly $0$, in the good case.** Line 19: only $L(\lambda, \msg)$ is encrypted, and $\msg$ is returned at line 32 from the table. The "good case" is line 17's negation — the right master key, and no corrupted attribute satisfying the policy.
+- **Access control, with probability exactly $1$, for ciphertexts the box made.** Line 30.
+- **Correctness of every issued key against every existing ciphertext, and conversely.** Lines 11 and 20, checked rather than assumed.
+- **Static attribute corruption only.** Line 14: after $T$ the corrupted-attribute set is frozen, and by line 16 no ciphertext exists before then. The adversary chooses what it controls with no ciphertext in hand.
+- **The authority is never corrupted.** Line 33, unconditionally.
+- **No guarantee for foreign ciphertexts.** Line 26 runs the real algorithm and returns what it says.
+- **One attribute per decryptor, for the instance's lifetime.** Line 9. Multi-attribute users need several instances, or a different functionality.
+
+## Formal artifacts
+
+No machine-checked formalization yet. The paper reports a Rust proof-of-concept implementation of the protocol, which is not the same thing.
+
+*References:*
+
+- Lafourcade, Robert, and Marcadet. [*iUC-secure distributed file transfer from standard attribute-based encryption*](https://uca.hal.science/hal-04620459v1/document). Springer LNCS 14895, 2024; [Springer chapter 10.1007/978-3-031-64381-1_8](https://link.springer.com/chapter/10.1007/978-3-031-64381-1_8). **Two discrepancies with the indexed record, both recorded rather than resolved.** The title page of the deposited version orders the authors Lafourcade, Robert, Marcadet; the indexed record orders them Lafourcade, Marcadet, Robert. And the venue is [UNVERIFIED: reported as ACISP 2024 by an index, not confirmed against the paper — the deposited version's title page names no conference, and both the Springer chapter page and the HAL record refused retrieval]. **The source of the box above**: Figure 3, p. 8, with the realizing protocol $\mathcal{P}_{\mathsf{ABE}}$ in Figure 4, p. 9 and the file-transfer functionality $\mathcal{F}_{\mathsf{AAFT}}$ in Figure 5. Read Figure 4 alongside Figure 3: it is what settles the polarity of the guard at line 9. **Added to this page's references by this entry** — the page previously cited nothing. Not on ePrint; the link is the authors' HAL deposit.
+- Küsters, Tuengerthal, and Rausch. [*The IITM model: A simple and expressive model for universal composability*](https://eprint.iacr.org/2013/025). ePrint 2013/025; published elsewhere, status not recorded on the archive. Background for the framework the source is written in — iUC is built on the IITM model, and its roles, `CheckID` and `AllowCorruption` are that model's machinery rather than the source's own. Cited for the translation in the register, not for a definition. **Added by this entry.**

@@ -1,10 +1,125 @@
 ---
-title: "F-ORAM — Oblivious RAM"
+title: "F-ORAM — Verifiable oblivious storage, honest client"
 status: "Open"
 layer: 5
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-ORAM* (Oblivious RAM) is part of *Oblivious Transfer and Correlated Randomness* in the UC functionality encyclopedia. Status: open — no accepted UC formulation exists yet.
+*F-ORAM* (Verifiable oblivious storage, honest client) is part of *Oblivious Transfer and Correlated Randomness* in the UC functionality encyclopedia. Status: open — no accepted UC formulation exists yet.
 
-Information about this functionality's precise definition, known realizations, properties, and any formal artifacts has not been added yet.
+**The status line stays "open", and the box below does not contradict it.** Oblivious RAM is a *scheme* notion — a compiler from a RAM program to one whose access pattern is independent of its input — and forty years of ORAM papers state security as an indistinguishability game over access sequences, not as an ideal functionality. What this page carries is the nearest printed ideal object: the simulation-based definition of *verifiable oblivious storage*, which generalizes ORAM by letting the server compute and by adding integrity and freshness. It is quantified in the UC order and against an environment, but it is not a UC functionality in the full sense, and the ways it is not are the most useful thing on this page.
+
+**The stub cited nothing.** All references here were found by forward search and added by this entry.
+
+## Functionality
+
+Reading the box: $\mathsf{require}$ refuses the call; $\mathcal{A}^{!}(\cdot)$ is a *responsive* call on the adversary slot; $\square$ marks a value never set, $\bot$ none-or-refused. $C$ is the client, and it is the only served party — the server is the adversary. $\mathtt{D}$ is the database, held by the functionality on the client's behalf.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{VOS}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P} := \{C\}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := \bot\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{D} \gets \square\)<span class="cj-comment">// the client's database, held on its behalf</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Setup(<span class="cj-id">D</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="2">
+<li>\(\textbf{require}\ \mathit{id}.P = C \ \wedge\ \mathtt{D} = \square\)<span class="cj-comment">// one client, and it is never corrupt; see the page</span></li>
+<li>\(b \gets \mathsf{San}[\mathsf{Clean}_{s}]\bigl(\mathcal{A}^{!}(\mathsf{Setup})\bigr)\)<span class="cj-comment">// that a setup happened, and not one bit of \(D\)</span></li>
+<li>\(\textbf{if}\ b \neq \mathsf{ok}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \bot\)</span></li>
+<li>\(\mathtt{D} \gets D\); &nbsp;\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Access(<span class="cj-id">op</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="7">
+<li>\(\textbf{require}\ \mathit{id}.P = C \ \wedge\ \mathtt{D} \neq \square\)</li>
+<li>parse \(\mathit{op}\) as \((\mathsf{read}, j)\) or \((\mathsf{write}, j, v)\)</li>
+<li>\(b \gets \mathsf{San}[\mathsf{Clean}_{a}]\bigl(\mathcal{A}^{!}(\mathsf{Access})\bigr)\)<span class="cj-comment">// that an access happened: not \(j\), not \(v\), not even which of the two</span></li>
+<li>\(\textbf{if}\ b \neq \mathsf{ok}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \bot\)</span><span class="cj-comment">// the server may stop the client, and cannot mislead it</span></li>
+<li>\(u \gets \mathtt{D}[j]\)</li>
+<li>\(\textbf{if}\ \mathit{op} = (\mathsf{write}, j, v)\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{D}[j] \gets v\)</span></li>
+<li>\(\textbf{return}\ u\)<span class="cj-comment">// a write returns the \emph{previous} value</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="16">
+<li>\(\textbf{return}\ \bot\)<span class="cj-comment">// the source's client is honest by hypothesis</span></li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+*Source: §2.1, "Ideal world", p. 4 of Daniel Apon, Jonathan Katz, Elaine Shi and Aishwarya Thiruvengadam, "Verifiable Oblivious Storage", PKC 2014, ePrint 2014/153, revision `20140302:230426`. **Stated in running prose as two bullets**, with no figure, no numbered environment and no box — a sixth false-negative mode for a box scan, after `f-dkg`'s numbered `Functionality` environment and [*G-ledger*](/uc/layer-1-channels-agreement-ledgers/g-ledger/index.qmd)'s named block. The printed folio and the PDF page agree.*
+
+**Three ways this is not a UC functionality, and they are why the page's status is "open".**
+
+- **The client is honest by hypothesis, not by assumption on the run.** The source says so in as many words: "This definition is simulation-based where the client is honest, and the server is corrupted. (The client is never malicious in our setting.)" There is no corruption model, no adaptive corruption, and line 16 has nothing to return. A UC functionality is a statement about every corruption pattern; this is a statement about one.
+- **There is one client and one server, fixed.** Nothing in the definition admits a second client, and nothing composes two instances. Every guarantee below is a two-party guarantee.
+- **The composition theorem is never invoked.** The definition quantifies in the UC order — for every real adversary there is a simulator such that for every environment — and stops there. That is enough to be *simulation-based* and not enough to be *composable*: no subroutine-respecting statement, no hybrid model, no claim that a protocol using this as a subroutine stays secure.
+
+Read as a functionality anyway, it is a good one, and these are the lines that matter.
+
+- **Lines 5 and 11 are the whole of obliviousness, and they are two calls that carry no argument.** The adversary is told that a setup happened and that an access happened. Not the operation, not the index, not the value — **and not whether it was a read or a write**. The source is explicit: $\mathcal{S}$ is notified "without revealing to $\mathcal{S}$ the operation $\mathit{op}$". Every access looks alike from outside, which is exactly what an ORAM compiler is for, and stating it as an argumentless notification is a much sharper way to say it than an indistinguishability game over sequences.
+- **Lines 12 and 7 give the server exactly one power: to stop.** It may say $\mathsf{ok}$ or $\mathsf{abort}$, and $\mathsf{abort}$ yields $\bot$ to the client. It cannot make the client read a wrong value, and there is no branch in which it could. That single bit is the entire integrity model, and it is what "verifiable" buys: the client's alternatives are the truth or a visible failure.
+- **Line 14 answers from $\mathtt{D}$, and line 15 updates it afterwards.** A write therefore returns the *previous* value at that index. The source writes it that way — "$\mathcal{F}$ sends $D[\mathit{ind}]$ to the client, and updates $D[\mathit{ind}] := \mathit{data}$ accordingly if this is a write operation" — and it makes reads and writes indistinguishable from the client's side as well as the server's, which is not an accident.
+- **Freshness is line 14 and nothing else.** The functionality keeps "an up-to-date version of the data", so the value returned is by construction the last one written. A rollback attack is not defended against here; it is *unrepresentable*.
+- **The responsive calls are doing real work.** Both adversary calls block: the functionality may not proceed until the server has answered. That is what makes "the server can abort this access" a statement about *this* access rather than about some later one.
+
+**Mismatch register.**
+
+| The source | This box | Why |
+|---|---|---|
+| Two prose bullets under "Ideal world" | Four operations | The source's `Setup` and `Access` bullets are transcribed one to one; $\mathsf{Initialize}$ and $\mathsf{Leak}$ are this framework's. |
+| The environment $\mathcal{Z}$ hands $D$ to the client, which sends it to $\mathcal{F}$ | $\mathsf{Setup}(D)$, called by $C$ | Same, with the dummy-party indirection dropped as usual. |
+| "$\mathcal{F}$ notifies the ideal-world adversary $\mathcal{S}$ (of the setup operation, but not of the data contents $D$)" | $\mathcal{A}^{!}(\mathsf{Setup})$ at line 5, with no argument | The parenthesis is the definition; an argumentless call is the honest rendering of it. |
+| "$\mathcal{S}$ says ok or abort" | A sanitized one-bit answer at lines 5 and 11 | The sanitizer admits nothing but the two values, which is all the source allows. |
+| "$\mathcal{F}$ then says ok or $\bot$ to the client" | $\bot$ at lines 7 and 13 | A value the caller receives, not a refusal. |
+| No corruption model at all | $\mathsf{Leak}$ at line 16, returning $\bot$ | Required here, and there is nothing to return: the client is honest by hypothesis and the server is not a served party. Recorded because an empty $\mathsf{Leak}$ usually means "no per-party state" and here it means something stronger — the question is outside the definition. |
+| $\mathcal{S}$ is the ideal-world adversary, i.e. the server | The adversary slot; $\mathbf{P} := \{C\}$ | The server is modelled as the adversary rather than as a party, which is why it appears nowhere in the served set. |
+
+## Known realizations
+
+**A generic compiler from any ORAM scheme, in three strengths.** The paper's contribution is that server-side computation buys asymptotic efficiency an ORAM cannot match — "for large block sizes they can construct a VOS scheme with constant bandwidth per query with only poly-logarithmic server computation".
+
+- **Semi-honest server** (Theorem 1): from a semantically secure FHE scheme and any secure ORAM scheme, the compiler of the paper's Figure 1.
+- **Malicious server** (Theorem 3): "Assuming existence of SNARKs, collision resistant hash functions, and a semantically secure FHE scheme, the VOS construction in Appendix B is secure against a malicious server." The verifiability comes from a verifiable-computation-for-RAM scheme, which is what stops a malicious server deviating undetectably.
+- The intermediate object is a non-interactive **VC-RAM** scheme (Theorem 2) with server time $\tilde{O}(\tau \log n)\,\mathrm{poly}(\lambda)$ and bandwidth $|x| + |y| + O(\lambda)$ — the additive $O(\lambda)$ being an updated digest of the outsourced memory plus a proof.
+
+**What is still missing, and what would close this page.** A functionality with a corruption model, admitting more than one client, stated in a hybrid model and used as a subroutine somewhere. [*F-PIR*](/uc/layer-5-oblivious-transfer/f-pir/index.qmd)'s source is the nearest thing on this site to that treatment for the read-only case, twelve years later — it is a genuine UC functionality, with static corruption of all parties and a composition argument it actually uses. Someone doing the same for read-write oblivious storage would retire this page's "open" status.
+
+## Properties
+
+- **Access-pattern privacy, with advantage exactly $0$.** Line 11: the adversary is told nothing about the operation, including its kind.
+- **Data privacy, with advantage exactly $0$.** Line 5: the database is never handed over. Contrast [*F-PIR*](/uc/layer-5-oblivious-transfer/f-pir/index.qmd), whose source hands the database to the simulator outright because PIR does not claim it.
+- **Integrity, with probability exactly $1$.** The client receives $\mathtt{D}[j]$ or $\bot$. There is no third possibility in the box.
+- **Freshness, with probability exactly $1$.** Line 14 reads the functionality's own current record.
+- **No availability, and the server holds the switch.** Lines 6 and 12: every operation can be aborted, forever, with no bound and no penalty.
+- **No guarantee under client corruption, because the question is not asked.** Line 16.
+- **No multi-client guarantee, because there is one client.** $\mathbf{P} := \{C\}$.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
+
+*References:*
+
+- Apon, Katz, Shi, and Thiruvengadam. [*Verifiable oblivious storage*](https://eprint.iacr.org/2014/153). In Public-Key Cryptography (PKC), 2014. **The source of the box above**: §2.1, p. 4 of ePrint revision `20140302:230426`, stated in prose rather than in a figure. Definition 2 on the same page is the security statement; the compilers are Theorems 1 and 3 with the VC-RAM scheme at Theorem 2. **Added to this page's references by this entry** — the page previously cited nothing.
+- Guskind, Hamlin, Little, Roche, and Varia. [*Single-server verifiable PIR with updates and universally composable security*](https://eprint.iacr.org/2026/1651). 2026. Cited for the contrast rather than for a definition: it is what a full UC treatment of the read-only case looks like, and its functionality is on [*F-PIR*](/uc/layer-5-oblivious-transfer/f-pir/index.qmd). Reading the two boxes side by side is the clearest available statement of what this page is still missing. **Added by this entry.**

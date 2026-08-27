@@ -1,0 +1,73 @@
+%% The interface box of f-oram, the one source for both the book
+%% and uc/.../f-oram/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+%%
+%% The source states this functionality in running prose rather than as a
+%% figure or a numbered environment -- section 2.1, under the heading "Ideal
+%% world", as two bullets. That is a sixth false-negative mode for a box
+%% scan, after f-dkg's numbered Functionality environment and g-ledger's
+%% named block: prose with no environment at all.
+\begin{interface}[nofloat]{Functionality $\Fvos$ \\
+\params{$\PID$, \quad $\Ps := \{C\}$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := \none$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{D} \gets \unset$
+  \Comment{the client's database, held on its behalf}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Setup}(D)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P = C \ \wedge\ \V{D} = \unset$} \label{ln:vosonce}
+  \Comment{one client, and it is never corrupt; see the page}
+\State $b \gets \San[\Clean_{s}]\bigl(\Adv^{!}(\op{Setup})\bigr)$ \label{ln:vosnoleak}
+  \Comment{that a setup happened, and not one bit of $D$}
+\If{$b \neq \ok$}
+  \State \textbf{return} $\none$ \label{ln:vosabortsetup}
+\EndIf
+\State $\V{D} \gets D$; \ \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{Access}(\mathit{op})$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P = C \ \wedge\ \V{D} \neq \unset$}
+\State parse $\mathit{op}$ as $(\op{read}, j)$ or $(\op{write}, j, v)$
+\State $b \gets \San[\Clean_{a}]\bigl(\Adv^{!}(\op{Access})\bigr)$ \label{ln:vosnopattern}
+  \Comment{that an access happened: not $j$, not $v$, not even which of the two}
+\If{$b \neq \ok$}
+  \State \textbf{return} $\none$ \label{ln:vosabort}
+    \Comment{the server may stop the client, and cannot mislead it}
+\EndIf
+\State $u \gets \V{D}[j]$ \label{ln:vosold}
+\If{$\mathit{op} = (\op{write}, j, v)$}
+  \State $\V{D}[j] \gets v$
+\EndIf
+\State \textbf{return} $u$ \label{ln:vosreturnold}
+  \Comment{a write returns the \emph{previous} value}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $\none$ \label{ln:vosnocorrupt}
+  \Comment{the source's client is honest by hypothesis}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

@@ -1,0 +1,126 @@
+%% The interface box of f-abe, the one source for both the book
+%% and uc/.../f-abe/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+%%
+%% `breakable' and no `multicols', per the head of f-secmsg.tex.
+%%
+%% Translated out of iUC, not plain UC. iUC's roles become operations with
+%% guards, its I/O and NET tapes become the caller's identity, and its
+%% `send responsively ... to NET / wait for' is exactly this framework's
+%% \Adv^{!}. The page's register carries the rest.
+\begin{interface}[nofloat, breakable]{Functionality $\Fabe$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := (p, \ L, \ T, \ t)$}}
+
+{\scriptsize
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{M} \gets \emptyset$
+  \Comment{triples $(\msg, y, \psi)$: plaintext, policy, ciphertext}
+\State $\V{K}[*] \gets \none$
+  \Comment{one attribute and one decryption key per decryptor}
+\State $\V{mpk}, \V{Enc}, \V{Dec} \gets \none$; \ $\V{Cor} \gets \emptyset$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Setup}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{mpk} = \none$}
+\State $(\V{mpk}, \V{Enc}, \V{Dec}) \gets \San[\Clean_{a}]\bigl(\Adv^{!}(\op{InitABE})\bigr)$ \label{ln:abealgs}
+  \Comment{the adversary supplies the \emph{algorithms}; the box then polices them}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{PubKey}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{mpk} \neq \none$}
+\State \textbf{return} $\V{mpk}$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{InitAttr}(x)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{K}[\id.P] = \none$} \label{ln:abepolarity}
+  \Comment{the source prints $\neq \none$; see the page}
+\State $\mathit{sk} \gets \San[\Clean_{k}]\bigl(\Adv^{!}(\op{InitReceiver}, x)\bigr)$ \label{ln:abekeyfromadv}
+\If{$\exists\, (\msg, y, \psi) \in \V{M} : \bigl(x \in y \wedge \V{Dec}^{(p)}(\mathit{sk}, \psi) \neq L(\lambda, \msg)\bigr) \vee \bigl(x \notin y \wedge \V{Dec}^{(p)}(\mathit{sk}, \psi) \neq \none\bigr)$} \label{ln:abebackcheck}
+  \State $\Adv(\op{Registered}, x, 0)$; \ \textbf{return} $\none$
+    \Comment{decryption-correctness failure, checked against every past ciphertext}
+\EndIf
+\State $\V{K}[\id.P] \gets (x, \mathit{sk})$; \ $\Adv(\op{Registered}, x, 1)$; \ \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{CorrAttr}(x)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F = \Apid \ \wedge\ t \leq T$} \label{ln:abecorrwindow}
+  \Comment{attributes may be corrupted only before the key phase closes}
+\State $\V{Cor} \gets \V{Cor} \cup \{x\}$; \ \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Encrypt}(y, \msg, k)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$T < t$} \label{ln:abeusephase}
+  \Comment{no encryption until every key has been handed out}
+\If{$k \neq \V{mpk} \ \vee\ \exists\, x \in \V{Cor} : x \in y$} \label{ln:abegiveup}
+  \State \textbf{return} $\V{Enc}^{(p)}(k, y, \msg)$
+    \Comment{a wrong key or a corrupt attribute: the real message is encrypted}
+\EndIf
+\State $\msg' \gets L(\lambda, \msg)$; \ $\psi \gets \V{Enc}^{(p)}(\V{mpk}, y, \msg')$ \label{ln:abeleakonly}
+  \Comment{otherwise only the leakage is encrypted, and $\msg$ never reaches $\V{Enc}$}
+\If{$\exists\, (x, \mathit{sk}) \in \V{K} : \bigl(x \in y \wedge \V{Dec}^{(p)}(\mathit{sk}, \psi) \neq \msg'\bigr) \vee \bigl(x \notin y \wedge \V{Dec}^{(p)}(\mathit{sk}, \psi) \neq \none\bigr)$} \label{ln:abefwdcheck}
+  \State \textbf{return} $\none$
+    \Comment{encryption-correctness failure, checked against every key already issued}
+\EndIf
+\State $\V{M} \gets \V{M} \cup \{(\msg, y, \psi)\}$; \ \textbf{return} $\psi$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Decrypt}(c)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$T < t \ \wedge\ \V{K}[\id.P] \neq \none$}
+\State $(x, \mathit{sk}) \gets \V{K}[\id.P]$; \ $\psi \gets c$
+\If{$\nexists\, (\cdot, \cdot, \psi) \in \V{M}$}
+  \State \textbf{return} $\V{Dec}^{(p)}(\mathit{sk}, \psi)$ \label{ln:abeforeign}
+    \Comment{a ciphertext the box did not make is decrypted by the real algorithm}
+\EndIf
+\If{$\exists\, \msg \neq \msg' : (\msg, \cdot, \psi), (\msg', \cdot, \psi) \in \V{M}$}
+  \State \textbf{return} $\none$ \label{ln:abecollide}
+    \Comment{one ciphertext, two plaintexts: the box refuses to choose}
+\EndIf
+\State take $(\msg, y, \psi) \in \V{M}$
+\If{$x \notin y$}
+  \State \textbf{return} $\none$ \label{ln:abepolicy}
+    \Comment{the policy test, and the only place it decides anything}
+\EndIf
+\State \textbf{return} $\msg$ \label{ln:abeplaintext}
+  \Comment{the \emph{stored} plaintext, not $\V{Dec}$'s output}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P \neq \PID.\mathit{setup} \ \wedge\ \bigl(\V{K}[\id.P] = \none \ \vee\ t \leq T\bigr)$} \label{ln:abenocorrupt}
+  \Comment{the authority is never corruptible, and a decryptor not after $T$}
+\State \textbf{return} $\V{K}[\id.P]$
+\algsave
+\end{algorithmic}}
+\end{interface}

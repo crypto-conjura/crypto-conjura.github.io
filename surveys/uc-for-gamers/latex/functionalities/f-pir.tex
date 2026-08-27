@@ -1,0 +1,96 @@
+%% The interface box of f-pir, the one source for both the book
+%% and uc/.../f-pir/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+%%
+%% `breakable' and no `multicols': the box is under sixty lines, but two
+%% of its conditions are long enough that a narrow column breaks them badly.
+\begin{interface}[nofloat, breakable]{Functionality $\Fvpir$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves),\,(\Glib,\serves)\}$, \quad $\pars := (\Sigma, \ N, \ S)$}}
+
+{\scriptsize
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{init} \gets 0$; \ $\V{DB} \gets \unset$
+\State $\V{Q}[*] \gets \unset$; \ $\V{del}[*] \gets 0$; \ $\V{res}[*] \gets 0$
+  \Comment{per query id: the index asked for, whether the server saw it, whether it answered}
+\State $\V{out}[*] \gets \unset$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Init}(D)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P = S \ \wedge\ \V{init} = 0 \ \wedge\ D \in \Sigma^{N}$} \label{ln:pironce}
+  \Comment{one database per instance, and only from the server the process id names}
+\State $V \gets \id_{\Glib}.\fopl{Retrieve}(\op{DigestVerifyCode}) \text{ as } \id$ \label{ln:pircode}
+\If{$V(\PID, D) = \atom{reject}$} \label{ln:pirdigest}
+  \State \textbf{return} $\atom{invaliddigest}$
+    \Comment{the digest lives in the process id and the box cannot read it}
+\EndIf
+\Req{$\San[\Clean_{i}]\bigl(\Adv^{!}(\op{ReportInit}, D)\bigr) = \ok$} \label{ln:pirleakdb}
+  \Comment{the database is handed to the simulator entire, deliberately}
+\State $\V{init} \gets 1$; \ $\V{DB} \gets D$; \ \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Query}(q, i)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$q = (\PID, \id.P, \cdot) \ \wedge\ \V{Q}[q] = \unset \ \wedge\ i \in [N]$} \label{ln:pirfresh}
+  \Comment{a query id names its own client and is used once}
+\State $\V{Q}[q] \gets i$
+\State $\Adv^{!}(\op{ReportQuery}, q)$ \label{ln:pirnoindex}
+  \Comment{the query id, never $i$: this line is query privacy}
+\State $\V{del}[q] \gets 1$; \ \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Response}(q, D^{*})$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P = S$}
+\Req{$S \in \Cs \ \vee\ \V{init} = 1$} \label{ln:pircheckA}
+  \Comment{(a) an honest server must have initialized; a corrupt one need not}
+\Req{$\V{del}[q] = 1$} \label{ln:pircheckB}
+  \Comment{(b) every response answers a completed query}
+\Req{$\V{res}[q] = 0$} \label{ln:pircheckC}
+  \Comment{(c) one response per query, ever}
+\Req{$S \in \Cs \ \vee\ D^{*} = \V{DB}$} \label{ln:pircheckD}
+  \Comment{(d) an honest server is bound to the database it initialized with}
+\State $\V{res}[q] \gets 1$; \ $\Adv^{!}(\op{ReportResponse}, q)$
+\If{$S \in \Cs \ \wedge\ (\V{init} = 0 \ \vee\ D^{*} \neq \V{DB})$} \label{ln:pirretrieval}
+  \State $\V{out}[q] \gets \atom{verificationfail}$; \ \textbf{return} $\ok$
+    \Comment{a server that forgot the database can produce nothing but this}
+\EndIf
+\State $\V{out}[q] \gets \V{DB}[\V{Q}[q]]$; \ \textbf{return} $\ok$ \label{ln:pircorrect}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Fetch}(q)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$q = (\PID, \id.P, \cdot) \ \wedge\ \V{out}[q] \neq \unset$} \label{ln:pirfetch}
+\State \textbf{return} $\V{out}[q]$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$\id.P = S$}
+  \State \textbf{return} $(\V{DB}, \V{del}, \V{res})$ \label{ln:pirleakserver}
+    \Comment{never $\V{Q}$: the server does not learn any index, at any corruption}
+\EndIf
+\State \textbf{return} $\{(q, \V{Q}[q], \V{out}[q]) : q = (\PID, \id.P, \cdot)\}$ \label{ln:pirleakclient}
+  \Comment{a corrupt client's own queries, and no one else's}
+\algsave
+\end{algorithmic}}
+\end{interface}

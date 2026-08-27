@@ -1,10 +1,145 @@
 ---
-title: "F-PIR — Private information retrieval"
-status: "Open"
+title: "F-PIR — Verifiable private information retrieval, single server"
+status: "Emerging"
 layer: 5
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-PIR* (Private information retrieval) is part of *Oblivious Transfer and Correlated Randomness* in the UC functionality encyclopedia. Status: open — no accepted UC formulation exists yet.
+*F-PIR* (Verifiable private information retrieval, single server) is part of *Oblivious Transfer and Correlated Randomness* in the UC functionality encyclopedia. Status: an emerging formulation, still an active area of research.
 
-Information about this functionality's precise definition, known realizations, properties, and any formal artifacts has not been added yet.
+A client reads one entry of a server's database without the server learning which. That is PIR; and stated as an ideal functionality it is almost trivial, which is why it took so long to get one worth printing. What makes this box a definition rather than a restatement is the second half of its name: **verifiable**. A single server is free to answer with garbage, and plain PIR gives a client no way to tell. This functionality binds the server to one database and hands the client either the right entry or an explicit failure — never a wrong entry it might believe.
+
+**The stub's title was "Private information retrieval" and its status was "open — no accepted UC formulation exists yet".** Both are updated by this entry. The title now names the printed object, which is *verifiable* PIR; the status moves to "emerging", because one functionality with two realizations is not yet a settled formulation. This page carried no citations at all before this entry.
+
+## Functionality
+
+Reading the box: $\mathsf{require}$ refuses the call; $\mathcal{A}^{!}(\cdot)$ is a *responsive* call on the adversary slot — the answer comes back before anything else runs — and $\mathsf{San}[\mathsf{Clean}]$ sanitizes it; $\mathbf{C}$ is the corrupted set; $\square$ is never-set. $\Sigma$ is the alphabet of database entries, $N$ the database size, $S$ the server. A *query id* $q$ is a triple $(\mathit{sid}, C, \mathit{nonce})$, so it names its own client. $\mathcal{G}_{\mathsf{lib}}$ is a **global** code library — the same device this site already carries as $\mathcal{F}_{\mathsf{Lib}}$ on [*F-AE*](/uc/layer-2-crypto-library-symmetric/f-ae/index.qmd) and [*F-fsAEAD*](/uc/layer-2-crypto-library-symmetric/f-fsaead/index.qmd), printed there as local and here as global. That the same object appears under both types in two papers is the point [*G-ledger*](/uc/layer-1-channels-agreement-ledgers/g-ledger/index.qmd)'s source makes in general: globality is a fact about use.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{VPIR}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves}),\,(\mathcal{G}_{\mathsf{lib}},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := (\Sigma, \ N, \ S)\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{init} \gets 0\); &nbsp;\(\mathtt{DB} \gets \square\)</li>
+<li>\(\mathtt{Q}[*] \gets \square\); &nbsp;\(\mathtt{del}[*] \gets 0\); &nbsp;\(\mathtt{res}[*] \gets 0\)<span class="cj-comment">// per query id: the index asked for, whether the server saw it, whether it answered</span></li>
+<li>\(\mathtt{out}[*] \gets \square\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Init(<span class="cj-id">D</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="4">
+<li>\(\textbf{require}\ \mathit{id}.P = S \ \wedge\ \mathtt{init} = 0 \ \wedge\ D \in \Sigma^{N}\)<span class="cj-comment">// one database per instance, and only from the server the process id names</span></li>
+<li>\(V \gets \mathit{id}_{\mathcal{G}_{\mathsf{lib}}}.\mathsf{FullRetrieve}(\mathsf{DigestVerifyCode}) \text{ as } \mathit{id}\)</li>
+<li>\(\textbf{if}\ V(\mathit{pid}, D) = \mathsf{reject}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \mathsf{invaliddigest}\)</span><span class="cj-comment">// the digest lives in the process id and the box cannot read it</span></li>
+<li>\(\textbf{require}\ \mathsf{San}[\mathsf{Clean}_{i}]\bigl(\mathcal{A}^{!}(\mathsf{ReportInit}, D)\bigr) = \mathsf{ok}\)<span class="cj-comment">// the database is handed to the simulator entire, deliberately</span></li>
+<li>\(\mathtt{init} \gets 1\); &nbsp;\(\mathtt{DB} \gets D\); &nbsp;\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Query(<span class="cj-id">q</span>, <span class="cj-id">i</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="10">
+<li>\(\textbf{require}\ q = (\mathit{pid}, \mathit{id}.P, \cdot) \ \wedge\ \mathtt{Q}[q] = \square \ \wedge\ i \in [N]\)<span class="cj-comment">// a query id names its own client and is used once</span></li>
+<li>\(\mathtt{Q}[q] \gets i\)</li>
+<li>\(\mathcal{A}^{!}(\mathsf{ReportQuery}, q)\)<span class="cj-comment">// the query id, never \(i\): this line is query privacy</span></li>
+<li>\(\mathtt{del}[q] \gets 1\); &nbsp;\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Response(<span class="cj-id">q</span>, <span class="cj-id">D^{*}</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="14">
+<li>\(\textbf{require}\ \mathit{id}.P = S\)</li>
+<li>\(\textbf{require}\ S \in \mathbf{C} \ \vee\ \mathtt{init} = 1\)<span class="cj-comment">// (a) an honest server must have initialized; a corrupt one need not</span></li>
+<li>\(\textbf{require}\ \mathtt{del}[q] = 1\)<span class="cj-comment">// (b) every response answers a completed query</span></li>
+<li>\(\textbf{require}\ \mathtt{res}[q] = 0\)<span class="cj-comment">// (c) one response per query, ever</span></li>
+<li>\(\textbf{require}\ S \in \mathbf{C} \ \vee\ D^{*} = \mathtt{DB}\)<span class="cj-comment">// (d) an honest server is bound to the database it initialized with</span></li>
+<li>\(\mathtt{res}[q] \gets 1\); &nbsp;\(\mathcal{A}^{!}(\mathsf{ReportResponse}, q)\)</li>
+<li>\(\textbf{if}\ S \in \mathbf{C} \ \wedge\ (\mathtt{init} = 0 \ \vee\ D^{*} \neq \mathtt{DB})\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{out}[q] \gets \mathsf{verificationfail}\); &nbsp;\(\textbf{return}\) <span class="cj-atom">ok</span></span><span class="cj-comment">// a server that forgot the database can produce nothing but this</span></li>
+<li>\(\mathtt{out}[q] \gets \mathtt{DB}[\mathtt{Q}[q]]\); &nbsp;\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Fetch(<span class="cj-id">q</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="23">
+<li>\(\textbf{require}\ q = (\mathit{pid}, \mathit{id}.P, \cdot) \ \wedge\ \mathtt{out}[q] \neq \square\)</li>
+<li>\(\textbf{return}\ \mathtt{out}[q]\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="25">
+<li>\(\textbf{if}\ \mathit{id}.P = S\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ (\mathtt{DB}, \mathtt{del}, \mathtt{res})\)</span><span class="cj-comment">// never \(\mathtt{Q}\): the server does not learn any index, at any corruption</span></li>
+<li>\(\textbf{return}\ \{(q, \mathtt{Q}[q], \mathtt{out}[q]) : q = (\mathit{pid}, \mathit{id}.P, \cdot)\}\)<span class="cj-comment">// a corrupt client's own queries, and no one else's</span></li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+*Source: Algorithm 3, p. 10 of Julia Guskind, Ariel Hamlin, Ryan Little, Daniel S. Roche and Mayank Varia, "Single-Server Verifiable PIR with Updates and Universally Composable Security", ePrint 2026/1651, revision `20260810:184710`. The functionality is printed as a numbered *Algorithm* rather than a figure, which is why a figure-caption sweep does not find it — the same false-negative mode `f-dkg` recorded for a numbered `Functionality` environment.*
+
+- **Line 4 is a call the functionality makes because it cannot do the job itself, and the paper says so.** The database's digest lives in the session id, and "the structure of the digest is abstracted out of the ideal $\mathcal{F}_{\mathsf{VPIR}}$ functionality" — so the box fetches real-world verification code from $\mathcal{G}_{\mathsf{lib}}$ and runs it at line 5. The problem it solves is stated in the source: "the ideal functionality $\mathcal{F}_{\mathsf{VPIR}}$ must be convinced that a database is consistent with its own digest, but the digest is based on the real-world instantiation that the ideal functionality does not know." This is what the internal-code device is *for*, and it is a cleaner example than the Signal papers' because the need is stated in one sentence.
+- **Line 8 hands the whole database to the simulator, on purpose.** Nothing here is hidden from the server or from the adversary — the source's reason is that "we do not require the digest to provide a hiding property, and so it may reveal arbitrary information about the database". PIR protects the *query*, not the data. A reader who wants both wants symmetric PIR, which this is not.
+- **Line 12 is query privacy, and it is one omission.** The adversary is told $q$ and is *not* told $i$. Since $q$ is a triple naming its client, the server learns exactly who asked and when, and nothing about what. Compare line 24: even on corruption, the server is never given $\mathtt{Q}$.
+- **Lines 16 through 20 are four checks, and they are asymmetric in a way that carries the whole verifiability argument.** Checks (a) and (d) are conditional on the server being *honest*: an honest server must have initialized and must answer with the database it initialized with. A corrupt server is allowed past both — and line 21 then guarantees that the only thing such a server can produce is $\mathsf{verificationfail}$. That asymmetry is the definition doing real work: it does not forbid a malicious server from cheating, it forbids a malicious server from cheating *undetectably*. The source's own gloss is that "this makes it possible to simulate a malicious server who does not know a valid $DB$ and simply responds to queries with garbage, causing honest clients' verification to fail".
+- **Line 20 is proof of retrievability, stated as a binding condition.** An honest server that does not still hold the database cannot pass check (d). Taken with line 21, "a server must remember the database used at initialization to successfully respond to" queries. The property is not proved about the box; it is the box.
+- **Line 25 is the correct answer, and note what it is not.** It is $\mathtt{DB}[\mathtt{Q}[q]]$ — the functionality's own record, indexed by the client's own stored index. The server's $D^{*}$ is used only in the check at line 20 and never to compute an answer. So a client that gets an answer at all gets the right one.
+- **Lines 17 and 18 make a query id a one-shot slot in both directions.** Every response answers a completed query, and no query is answered twice. Combined with line 11's freshness test, the query id is the only bookkeeping the box needs.
+- **Every adversary call here is responsive.** Lines 8, 12 and 21 use $\mathcal{A}^{!}$, because the source's idiom is "send … and wait for" with the functionality's own next step depending on the answer. That is a real restriction on the simulator and is why the source can let the adversary "prevent or delay the server's output" — the delay is expressible precisely because the call blocks.
+- **Line 24 is the leak that decides whether this is PIR at all.** Corrupting the server returns the database (already public by line 8) and the query bookkeeping, and never $\mathtt{Q}$. A functionality that returned the index table on server corruption would offer no privacy against the one party PIR exists to hide from.
+
+**Mismatch register.**
+
+| The source | This box | Why |
+|---|---|---|
+| `output (Query, qid) to S` and `return (Answer, qid, DB[i]) to C` — outputs to a party other than the caller | $\mathtt{del}$ and $\mathtt{out}$, read back by $\mathsf{Fetch}$ at lines 26–27 | Delivery is to the caller here. **This is an added interface**, and the addition is recorded rather than hidden: the source's cross-party outputs become a recorded result and a poll. It is the same shape the ticked entries use, and it changes *when* a party learns, not *what*. |
+| "End execution if …" | $\mathsf{require}$ | A refusal. Distinct from line 6's $\mathsf{invaliddigest}$ and line 22's $\mathsf{verificationfail}$, which are values a caller receives. The source uses all three. |
+| `Send … to the simulator Sim. Wait for Sim to respond` | $\mathcal{A}^{!}(\cdot)$ under $\mathsf{San}[\mathsf{Clean}]$ | Responsive, as above. |
+| The session id contains the server's party id and the digest material | The process id, with the guard at line 3 and the digest passed to $V$ at line 5 | The one place a session identifier is genuinely load-bearing on this site: line 5 hands $\mathit{pid}$ to the fetched code because the digest is inside it. |
+| $\mathcal{G}_{\mathsf{lib}}$, a global functionality with `Store` and `Retrieve` | A used slot | Not transcribed here: the site's $\mathcal{F}_{\mathsf{Lib}}$ pages already carry the same object under a different type. |
+| No leakage interface | $\mathsf{Leak}$ at lines 23–25 | Required here, and its content is a real decision; see the last bullet. |
+| $\mathcal{F}_{\mathsf{UVPIR}}$, the updatable extension of §6.1 | Not transcribed | A different, larger object — it holds a DAG of database versions and lets clients sync along a path, with forking. Recorded as the successor, not blended. |
+
+## Known realizations
+
+**Two, and both restrict the adversary's control of the network.**
+
+- **$\Pi_{\mathsf{Triv\text{-}VPIR}}$** (Theorem 1): given a collision-resistant hash function family, it UC-realizes this functionality in the presence of the global $\mathcal{G}_{\mathsf{lib}}$ and $\mathcal{G}_{\mathsf{CRS}}$, "with static corruptions, and against an adver[s]ary who cannot forge or modify network traffic". Trivial PIR — the server sends the whole database — with a digest check.
+- **$\Pi_{\mathsf{VeriSimplePIR}}$** (Theorem 2): given a semantically secure linearly homomorphic encryption scheme and hardness of $\mathsf{SIS}_{\lambda,m,q,4B}$, it UC-realizes this functionality in the presence of $\mathcal{G}_{\mathsf{lib}}$ and $\mathcal{G}_{\mathsf{CRS}}$ and the local $\mathcal{F}_{\mathsf{NIZK}}$ — this site's [*F-NIZK*](/uc/layer-4-commitments-proofs/f-nizk/index.qmd). Here the adversary "may statically corrupt all parties, and may arbitrarily delay or drop network messages, but cannot modify or spoof them".
+
+**The network restriction is the caveat to carry away.** Neither theorem holds against an adversary that can modify or spoof traffic. That is a genuine weakening of the usual UC quantification and it is stated in the theorems rather than in the functionality, so a reader looking only at the box will not see it.
+
+**An updatable extension exists in the same paper.** $\mathcal{F}_{\mathsf{UVPIR}}$ (§6.1) is built generically from this functionality: it stores the global state as a directed acyclic graph of database versions, lets a client sync forward along a path, and supports forking. Realized by $\Pi_{\mathsf{UVPIR}}$ (Theorem 3) treating the underlying VPIR as a black box — which is the composition argument the paper is arranged to make.
+
+## Properties
+
+- **Query privacy against the server, with advantage exactly $0$.** Lines 12 and 24: the index reaches the adversary at no point, in no interface, at any corruption level.
+- **Correctness, with probability exactly $1$, for any answer at all.** Line 25 answers from the functionality's own record. A client never receives a wrong entry — only the right one or $\mathsf{verificationfail}$.
+- **Database binding for an honest server, with probability exactly $1$.** Line 20.
+- **Detectability of a cheating server, with probability exactly $1$.** Line 21. A corrupt server that does not hold the database can produce nothing but a failure.
+- **No data privacy whatsoever.** Line 8 gives the adversary the database. This is PIR, not symmetric PIR.
+- **One response per query and one query per id.** Lines 11, 17 and 18.
+- **No liveness.** Nothing obliges the server to respond, and the responsive adversary calls let the simulator delay each step.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
+
+*References:*
+
+- Guskind, Hamlin, Little, Roche, and Varia. [*Single-server verifiable PIR with updates and universally composable security*](https://eprint.iacr.org/2026/1651). 2026. **The source of the box above**: Algorithm 3, p. 10 of ePrint revision `20260810:184710`, with the design discussion in §5.1. The global code library $\mathcal{G}_{\mathsf{lib}}$ is Algorithm 2, p. 9; the realizations are Theorems 1 and 2; the updatable extension $\mathcal{F}_{\mathsf{UVPIR}}$ and its Theorem 3 are §6. **Added to this page's references by this entry** — the page previously cited nothing. Printed as a numbered *Algorithm* rather than a figure, so a figure-caption sweep does not find it.
+- Apon, Katz, Shi, and Thiruvengadam. [*Verifiable oblivious storage*](https://eprint.iacr.org/2014/153). In Public-Key Cryptography (PKC), 2014. The nearest predecessor, and the source of the ideal functionality on [*F-ORAM*](/uc/layer-5-oblivious-transfer/f-oram/index.qmd). It generalizes ORAM by allowing server computation and adds integrity and freshness — the same combination of privacy and verifiability this page's box has, over a *read-write* store rather than a read-only database. Cited for the lineage; its functionality is a different object and is not blended in. **Added by this entry.**

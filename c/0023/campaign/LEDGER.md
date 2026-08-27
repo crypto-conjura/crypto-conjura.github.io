@@ -107,11 +107,10 @@ Together: expected profile if ε*(d)=Θ(1/d) and **the conjecture is TRUE with c
 **In collection (cards evict originals):**
 - **S1-acc22-card.md** (id: S1-acc22, retrieved 2026-08-27 by Scout): [ACC22] full theorem statements, proof mechanism, counterexamples B.1–B.5, context.
 - **S2-clm23-card.md** (id: S2-clm23, retrieved 2026-08-27 by Scout): [CLM23] Conjecture 2.8, state formulation, conversion lemma, consumption regime, uncertainty-principle ingredient.
-- **S3-2026-bypass-lemmas-card.md** (ids: S3a, S3b, retrieved 2026-08-27 by Scout, source-request resolution): S3a = arXiv:2608.03824 Lemma 3.5 (depth-O(d⁴) decision tree deciding which of two everywhere-disjoint degree-≤d real multilinear polynomials is nonzero, under a promise; per-pair, algorithmic, no influence/norm/distribution content); S3b = arXiv:2504.05710v2 Lemma 3.4 (win-win partial assignments for a single nonzero degree-d polynomial). **Both [RESTATED]** (two cross-checked HTML extractions each, never the raw page) — any use of the proofs' internals or the O(d⁴) constant stays [SOURCE-BLOCKED]; PCC-mismatch flags on the card.
+- **S3-2026-bypass-lemmas-card.md** (ids: S3a, S3b, first carded 2026-08-27 by Scout at [RESTATED] grade, **upgraded to [READ] the same day** from the human-uploaded PDFs `2608.03824v1.pdf` and `2504.05710v2.pdf`): S3a = arXiv:2608.03824 Lemma 3.5 "Disjoint-support separator", §3.4 pp. 7–8 (depth-O(d⁴) decision tree deciding which of two everywhere-disjoint degree-≤d real multilinear polynomials is nonzero, under a promise; per-pair, algorithmic, no influence/norm/distribution content) — statement AND proof now carded, including the recursion and the explicit constant assembly (b ≤ 8D² disjoint maximum monomials per stage via the KKDWY26 rational-degree lemma, ≤ 8d³ queries per stage, ≤ 2d stages, depth ≤ 16d⁴); S3b = arXiv:2504.05710v2 Lemma 3.4, §3.2 pp. 13–14 (win-win partial assignments for a single nonzero degree-d polynomial) — statement AND proof carded (≤ d rounds of maximal-disjoint-maximum-monomial fixing, |μ| ≤ md², case (b) via Mid04). PCC-mismatch flags unchanged on the card. Residual one-level-deeper blocks: internals of [KKDWY26] (arXiv:2601.08727v2) and [Mid04] (quant-ph/0403168) — statements printed in the read papers, their own proofs not read.
 
 **QUEUE (ranked by load-bearing impact):**
-1. **[REQUEST PENDING — activate only if plan P2 is chosen]** Li–Li–Li–Liu, arXiv:2608.03824v1, PDF of §3 (statement + full proof of Lemma 3.5): upgrades S3a from [RESTATED] to [READ] and supplies the recursion + constant that extraction cannot deliver. Fallback (already viable): run P2 on card S3a with everything downstream CONDITIONAL. Former rank-1 request resolved at [RESTATED] by S3a on 2026-08-27.
-2. **[OPTIONAL, BELOW BAR]** arXiv:2504.05710v2 PDF §3, same rationale at lower stakes; fallback: card S3b.
+(empty — both strategist requests resolved at [READ] grade on 2026-08-27. Latent, below bar, only if a proof step comes to depend on their internals: PDFs of arXiv:2601.08727v2 [KKDWY26] and quant-ph/0403168 [Mid04].)
 
 **DECLINED:** none.
 
@@ -137,7 +136,7 @@ Together: expected profile if ε*(d)=Θ(1/d) and **the conjecture is TRUE with c
 | PROGRESS.md | PROGRESS.md | case-planner | claude-fable-5 | 1 | AWAITING APPROVAL | case ladder R0–R6; conventions; extremal-case calibration (Rung 0); no rung materialised |
 | S1-acc22-card | sources/S1-acc22-card.md | scout | — | 1 | IN LIBRARY | [ACC22] source card: three conjecture formulations, K1 theorem, K2 counterexamples, proof mechanism |
 | S2-clm23-card | sources/S2-clm23-card.md | scout | — | 1 | IN LIBRARY | [CLM23] source card: state form, conversion lemma, consumption regime, Donoho–Stark caveat |
-| S3-2026-bypass-lemmas-card | sources/S3-2026-bypass-lemmas-card.md | scout | claude-fable-5 | 1 | IN LIBRARY ([RESTATED]) | S3a = 2608.03824 Lem 3.5, S3b = 2504.05710v2 Lem 3.4; resolves strategist source request at extraction grade; PDF read still queued if P2 chosen |
+| S3-2026-bypass-lemmas-card | sources/S3-2026-bypass-lemmas-card.md | scout + orchestrator | claude-fable-5 | 1–2 | IN LIBRARY ([READ]) | S3a = 2608.03824 Lem 3.5 (statement + proof, pp. 7–8), S3b = 2504.05710v2 Lem 3.4 (statement + proof, pp. 13–14); upgraded from [RESTATED] via human-uploaded PDFs 2026-08-27; source queue now empty |
 
 ---
 

@@ -1,0 +1,173 @@
+%% The interface box of f-vote, the one source for both the book
+%% and uc/.../f-vote/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+%%
+%% `breakable' and no `multicols', per the head of f-secmsg.tex.
+%%
+%% \op{Advance} is the source's "delayed ballot generation and casting"
+%% subroutine, which it runs on every command rather than inside any one of
+%% them. Written once as a non-callable block, the form g-ledger.tex uses for
+%% the same shape. The \op{Status} predicate is the source's Eq. (6) and is
+%% carried as a declared parameter; the page states it in full.
+\begin{interface}[nofloat, breakable]{Functionality $\Fste$ \\
+\params{$\PID$, \quad $\Ps := \{\mathit{SA}\} \cup \mathbf{V}$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves),\,(\Gclock,\serves)\}$, \\
+\quad $\pars := (\mathit{SA}, \ \mathbf{V}, \ \opl{Status}, \ \mathit{d}_{g}, \ \mathit{d}_{c})$}}
+
+{\scriptsize
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{El} \gets \varepsilon$; \ $\V{Gb} \gets \varepsilon$; \ $\V{Ca} \gets \varepsilon$; \ $\V{Pe} \gets \varepsilon$
+  \Comment{credentials, generated ballots, cast ballots, ballots in flight}
+\State $\V{Ad} \gets \emptyset$; \ $\V{T} \gets \unset$
+  \Comment{who has asked to advance this round, and the tally}
+\State $\vec{t} \gets \unset$; \ $\V{par} \gets \unset$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\op{Advance}()$} \quad (not an interface; runs at the head of every operation below)
+\begin{algorithmic}[1]
+\algcont
+\State $\mathit{Cl} \gets \Gclock.\fopl{Read}()$
+\If{$\mathbf{V} \setminus \Cs \subseteq \V{Ad}$} \label{ln:voteallmust}
+  \State $\Gclock.\fopl{Update}()$
+    \Comment{the round turns only when every honest voter has asked}
+\EndIf
+\State $G \gets \{(V, \msg, o, \mathit{tg}, \mathit{Cl}') \in \V{Gb} : \mathit{Cl} - \mathit{Cl}' \geq \mathit{d}_{g} \ \wedge\ \opl{Status}(\mathit{Cl}, \vec{t}, \op{cast})\}$
+\State for each such tuple with $\msg = \none$: \ $\msg \gets_{\$} \{0,1\}^{p(\lambda)}$ \label{ln:voteballotlate}
+  \Comment{the ballot value is sampled $\mathit{d}_{g}$ after the vote was cast}
+\State for each such tuple with $\msg \neq \none$: \label{ln:votecommit}
+\State \quad $\V{Ca} \gets \V{Ca} \, \| \, (V, \msg, o, \mathit{Cl})$; \ $\V{Pe} \gets \V{Pe} \, \| \, (\msg, V, \mathit{Cl})$; \ drop it from $\V{Gb}$
+\State $R \gets \{(\msg, V, \mathit{Cl}^{*}) \in \V{Pe} : \mathit{Cl} - \mathit{Cl}^{*} = \mathit{d}_{c}\}$ \label{ln:voteexactly}
+  \Comment{delivered at exactly $\mathit{d}_{c}$, not at least}
+\State for each $(\msg, V, \mathit{Cl}^{*}) \in R$ with $\neg\, \opl{Status}(\mathit{Cl}, \vec{t}, \op{cast})$: \ $\Adv(\op{CastBallot}, \msg)$ \label{ln:votefair}
+  \Comment{the adversary learns a ballot only once casting has closed}
+\State $\V{Pe} \gets \V{Pe} \setminus R$; \ $\V{Ad} \gets \emptyset$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{ElectionInfo}(E, O, c, w)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $\Fste.\op{Advance}()$
+\State write $(E, O, c, w)$ as $(\mathbf{V}_{e}, \mathbf{O}, t_{c}, t_{o})$
+\Req{$\id.P = \mathit{SA} \ \wedge\ \V{par} = \unset \ \wedge\ \mathbf{V}_{e} \subseteq \mathbf{V} \ \wedge\ \mathit{Cl} < t_{c} < t_{o}$} \label{ln:voteonce}
+\Req{$\San[\Clean_{i}]\bigl(\Adv(\op{ElectionInfo}, \mathbf{V}_{e}, \mathbf{O}, t_{c}, t_{o})\bigr) = \ok$} \label{ln:voteadvveto}
+  \Comment{the adversary may refuse to let the election open at all}
+\State $\vec{t} \gets (t_{c}, t_{o}, \mathit{d}_{c})$; \ $\V{par} \gets (\mathbf{V}_{e}, \mathbf{O}, \vec{t})$; \ \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{GenCred}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $\Fste.\op{Advance}()$
+\Req{$\id.P \in \mathbf{V}_{e} \ \wedge\ \nexists\, b : (\id.P, b) \in \V{El} \ \wedge\ \opl{Status}(\mathit{Cl}, \vec{t}, \op{cred})$} \label{ln:votecredonce}
+\State $b \gets [\, \id.P \notin \Cs \,]$; \ $\V{El} \gets \V{El} \, \| \, (\id.P, b)$ \label{ln:voteready}
+  \Comment{an honest voter is ready; a corrupt one is registered and is not}
+\State $\Adv(\op{GenCred}, \id.P)$; \ \textbf{return} $\ok$ \label{ln:votewhovoted}
+  \Comment{who asked for a credential is public}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Cast}(o)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $\Fste.\op{Advance}()$
+\Req{$\id.P \notin \Cs \ \wedge\ (\id.P, 1) \in \V{El} \ \wedge\ o \in \mathbf{O} \ \wedge\ \opl{Status}(\mathit{Cl}, \vec{t}, \op{cast})$} \label{ln:votecastguard}
+\Req{$\nexists\, (\id.P, \cdot, \cdot, \cdot, \cdot) \in \V{Gb} \cup \V{Ca}$} \label{ln:voteonevote}
+  \Comment{one voter, one vote}
+\State $\mathit{tg} \gets_{\$} \Tags$; \ $\V{Gb} \gets \V{Gb} \, \| \, (\id.P, \none, o, \mathit{tg}, \mathit{Cl})$ \label{ln:votenoballotyet}
+\State $\Adv(\op{GenBallot}, \mathit{tg}, \mathit{Cl}, 0^{|o|})$; \ \textbf{return} $\ok$ \label{ln:voteleaklength}
+  \Comment{the length of the choice, never the choice}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{AdvUpdate}(U)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $\Fste.\op{Advance}()$
+\Req{$\id'.F = \Apid$}
+\State write $U$ as $\{(\msg_j, \mathit{tg}_j)\}_j$
+\Req{$\nexists\, j \neq j^{*} : \msg_j = \msg_{j^{*}} \neq \none$} \label{ln:votedistinct}
+  \Comment{two ballots may not be made equal}
+\State for each $j$ with $\msg_j \neq \none$: \ replace $(\cdot, \none, o_j, \mathit{tg}_j, \mathit{Cl}_j)$ in $\V{Gb}$ by $(\cdot, \msg_j, o_j, \mathit{tg}_j, \mathit{Cl}_j)$ \label{ln:voteciphertext}
+  \Comment{the simulator supplies the ciphertext, addressed by its handle}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{AdvCast}(m, V)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $\Fste.\op{Advance}()$
+\Req{$\id'.F = \Apid \ \wedge\ V \in \Cs \ \wedge\ (V, 0) \in \V{El}$} \label{ln:votecorrupteligible}
+\Req{$\nexists\, (V, \cdot, \cdot, \cdot) \in \V{Ca} \ \wedge\ \opl{Status}(\mathit{Cl}, \vec{t}, \op{cast})$}
+\State $\V{Ca} \gets \V{Ca} \, \| \, (V, m, \none, \mathit{Cl})$; \ \textbf{return} $\ok$ \label{ln:votenoo}
+  \Comment{a corrupt ballot enters with no recorded choice}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{AdvanceClock}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $\Fste.\op{Advance}()$
+\Req{$\id.P \in \mathbf{V} \setminus \Cs \ \wedge\ \id.P \notin \V{Ad}$}
+\State $\V{Ad} \gets \V{Ad} \cup \{\id.P\}$; \ \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Tally}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $\Fste.\op{Advance}()$
+\If{$\id'.F = \Apid$} \label{ln:voteadvtally}
+  \Req{$\neg\,\opl{Status}(\mathit{Cl}, \vec{t}, \op{cred}) \wedge \neg\,\opl{Status}(\mathit{Cl}, \vec{t}, \op{cast}) \ \vee\ \opl{Status}(\mathit{Cl}, \vec{t}, \op{tally})$} \label{ln:voteearlyadv}
+    \Comment{the adversary may tally in the gap before the tally phase opens}
+\EndIf
+\If{$\id'.F \neq \Apid$}
+  \Req{$\id.P \in \mathbf{V} \setminus \Cs \ \wedge\ \opl{Status}(\mathit{Cl}, \vec{t}, \op{tally})$}
+\EndIf
+\If{$\V{T} = \unset$} \label{ln:voteopenings}
+  \State for each $(V, \msg, \none, \mathit{Cl}') \in \V{Ca}$: \ $o \gets \San[\Clean_{o}]\bigl(\Adv(\op{Opening}, V, \msg)\bigr)$ \label{ln:voteadvopens}
+  \State \quad if $o \in \mathbf{O}$ then record it against that tuple \label{ln:voteoptionset}
+    \Comment{an unopened or invalid corrupt ballot simply does not count}
+  \State $\V{T} \gets \{\!\{\, o : (V, \msg, o, \cdot) \in \V{Ca} \wedge o \in \mathbf{O} \,\}\!\}$ \label{ln:votemultiset}
+\EndIf
+\State \textbf{return} $\V{T}$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Verify}(S)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $\Fste.\op{Advance}()$
+\Req{$\id.P \in \mathbf{V} \setminus \Cs \ \wedge\ \opl{Status}(\mathit{Cl}, \vec{t}, \op{tally})$}
+\If{$\V{T} = \unset$}
+  \State $\V{T} \gets \Fste.\op{Tally}()$ \label{ln:voteselfcall}
+\EndIf
+\State \textbf{return} $[\, S = \V{T} \,]$ \label{ln:voteverify}
+  \Comment{verification compares against the box's own tally, and nothing else}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $(\V{El}, \V{Ca}, \V{par})$ \label{ln:voteleak}
+  \Comment{never $\V{Gb}$: an honest voter's choice is not readable at corruption}
+\algsave
+\end{algorithmic}}
+\end{interface}

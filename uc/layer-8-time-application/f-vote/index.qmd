@@ -1,14 +1,212 @@
 ---
-title: "F-vote — Self-tallying election"
+title: "F-vote — Self-tallying election, five properties in one box"
 status: "Canonical"
 layer: 8
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-vote* (Self-tallying election) is part of *Time and Application Composites* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+*F-vote* (Self-tallying election, five properties in one box) is part of *Time and Application Composites* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
 
-Recently acquired a UC anchor via a 2025 paper on universally composable self-tallying elections over anonymous broadcast.
+A *self-tallying* election is one where the result falls out of the cast ballots with no tallying authority to trust — anyone can compute it, and anyone can check it. This functionality states that as a single object with five phases governed by one predicate, and it is unusual in the encyclopedia for a reason worth naming up front: **its source labels each clause with the security property that clause exists to enforce**, in colour. Vote privacy, one-voter-one-vote, eligibility, fairness and verifiability are each traceable to specific lines rather than argued about in prose. The commentary below inherits that map.
+
+This is the encyclopedia's second shading-coded figure after OPAQUE's, and the outcome is the opposite one. There the shading selected between three different functionalities and a text-only reading silently produced a blend. Here the colours are *annotations over one functionality* — every clause is present in every reading — so `pdftotext` loses the property labels and nothing else. Both figure pages were rendered and inspected before transcription; the distinction between the two cases is now the thing to check for, not the shading itself.
+
+## Functionality
+
+Reading the box: $\mathsf{require}$ refuses the call; $\mathcal{A}(\cdot)$ is a call on the adversary slot and $\mathsf{San}[\mathsf{Clean}]$ its sanitizer; $\mathbf{C}$ is the corrupted set; $\square$ is never-set and $\bot$ none. $\mathtt{El}$ records who holds a credential and whether they are *ready* to vote; $\mathtt{Gb}$ holds ballots generated but not yet cast, $\mathtt{Ca}$ ballots cast, $\mathtt{Pe}$ ballots in flight. $\mathsf{Advance}$ is not an interface — it is the source's "delayed ballot generation and casting" subroutine, which runs at the head of every command.
+
+**The parameter $\mathsf{Status}$ is the election's whole schedule**, and since three of the guards below are nothing but calls to it, it is worth having in full. Given the clock $\mathit{Cl}$, the time vector $\vec{t} = (t_{\mathsf{cast}}, t_{\mathsf{open}}, \mathit{delay\_cast})$ and a phase $\phi$:
+
+$$\mathsf{Status}(\mathit{Cl}, \vec{t}, \phi) = \begin{cases} \top & \phi = \mathsf{Cred} \ \wedge \ \mathit{Cl} < t_{\mathsf{cast}} \\ \top & \phi = \mathsf{Cast} \ \wedge \ t_{\mathsf{cast}} \leq \mathit{Cl} < t_{\mathsf{open}} - \mathit{delay\_cast} \\ \top & \phi = \mathsf{Tally} \ \wedge \ t_{\mathsf{open}} \leq \mathit{Cl} \\ \bot & \text{otherwise} \end{cases}$$
+
+Note what that leaves: casting closes at $t_{\mathsf{open}} - \mathit{delay\_cast}$ and tallying opens at $t_{\mathsf{open}}$, so there is a **gap** of exactly $\mathit{delay\_cast}$ rounds in which no phase is active. The gap is not an oversight; line 43 depends on it.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{STE}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P} := \{\mathit{SA}\} \cup \mathbf{V}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves}),\,(\mathcal{G}_{\mathsf{Clock}},\mathsf{serves})\}\), \\ &nbsp; \(\mathit{par} := (\mathit{SA}, \ \mathbf{V}, \ \mathsf{Status}, \ \mathit{d}_{g}, \ \mathit{d}_{c})\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{El} \gets \varepsilon\); &nbsp;\(\mathtt{Gb} \gets \varepsilon\); &nbsp;\(\mathtt{Ca} \gets \varepsilon\); &nbsp;\(\mathtt{Pe} \gets \varepsilon\)<span class="cj-comment">// credentials, generated ballots, cast ballots, ballots in flight</span></li>
+<li>\(\mathtt{Ad} \gets \varnothing\); &nbsp;\(\mathtt{T} \gets \square\)<span class="cj-comment">// who has asked to advance this round, and the tally</span></li>
+<li>\(\vec{t} \gets \square\); &nbsp;\(\mathtt{par} \gets \square\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig">Advance()</div>
+<ol class="cj-code" start="4">
+<li>\(\mathit{Cl} \gets \mathcal{G}_{\mathsf{Clock}}.\mathsf{FullRead}()\)</li>
+<li>\(\textbf{if}\ \mathbf{V} \setminus \mathbf{C} \subseteq \mathtt{Ad}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathcal{G}_{\mathsf{Clock}}.\mathsf{FullUpdate}()\)</span><span class="cj-comment">// the round turns only when every honest voter has asked</span></li>
+<li>\(G \gets \{(V, \mathit{msg}, o, \mathit{tg}, \mathit{Cl}') \in \mathtt{Gb} : \mathit{Cl} - \mathit{Cl}' \geq \mathit{d}_{g} \ \wedge\ \mathsf{Status}(\mathit{Cl}, \vec{t}, \mathsf{cast})\}\)</li>
+<li>for each such tuple with \(\mathit{msg} = \bot\): &nbsp;\(\mathit{msg} \gets_{\$} \{0,1\}^{p(\lambda)}\)<span class="cj-comment">// the ballot value is sampled \(\mathit{d}_{g}\) after the vote was cast</span></li>
+<li>for each such tuple with \(\mathit{msg} \neq \bot\):</li>
+<li><span class="cj-ind">\(\mathtt{Ca} \gets \mathtt{Ca} \, \| \, (V, \mathit{msg}, o, \mathit{Cl})\); &nbsp;\(\mathtt{Pe} \gets \mathtt{Pe} \, \| \, (\mathit{msg}, V, \mathit{Cl})\); &nbsp;drop it from \(\mathtt{Gb}\)</span></li>
+<li>\(R \gets \{(\mathit{msg}, V, \mathit{Cl}^{*}) \in \mathtt{Pe} : \mathit{Cl} - \mathit{Cl}^{*} = \mathit{d}_{c}\}\)<span class="cj-comment">// delivered at exactly \(\mathit{d}_{c}\), not at least</span></li>
+<li>for each \((\mathit{msg}, V, \mathit{Cl}^{*}) \in R\) with \(\neg\, \mathsf{Status}(\mathit{Cl}, \vec{t}, \mathsf{cast})\): &nbsp;\(\mathcal{A}(\mathsf{CastBallot}, \mathit{msg})\)<span class="cj-comment">// the adversary learns a ballot only once casting has closed</span></li>
+<li>\(\mathtt{Pe} \gets \mathtt{Pe} \setminus R\); &nbsp;\(\mathtt{Ad} \gets \varnothing\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.ElectionInfo(<span class="cj-id">E</span>, <span class="cj-id">O</span>, <span class="cj-id">c</span>, <span class="cj-id">w</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="14">
+<li>\(\mathcal{F}_{\mathsf{STE}}.\mathsf{Advance}()\)</li>
+<li>write \((E, O, c, w)\) as \((\mathbf{V}_{e}, \mathbf{O}, t_{c}, t_{o})\)</li>
+<li>\(\textbf{require}\ \mathit{id}.P = \mathit{SA} \ \wedge\ \mathtt{par} = \square \ \wedge\ \mathbf{V}_{e} \subseteq \mathbf{V} \ \wedge\ \mathit{Cl} < t_{c} < t_{o}\)</li>
+<li>\(\textbf{require}\ \mathsf{San}[\mathsf{Clean}_{i}]\bigl(\mathcal{A}(\mathsf{ElectionInfo}, \mathbf{V}_{e}, \mathbf{O}, t_{c}, t_{o})\bigr) = \mathsf{ok}\)<span class="cj-comment">// the adversary may refuse to let the election open at all</span></li>
+<li>\(\vec{t} \gets (t_{c}, t_{o}, \mathit{d}_{c})\); &nbsp;\(\mathtt{par} \gets (\mathbf{V}_{e}, \mathbf{O}, \vec{t})\); &nbsp;\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.GenCred()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="19">
+<li>\(\mathcal{F}_{\mathsf{STE}}.\mathsf{Advance}()\)</li>
+<li>\(\textbf{require}\ \mathit{id}.P \in \mathbf{V}_{e} \ \wedge\ \nexists\, b : (\mathit{id}.P, b) \in \mathtt{El} \ \wedge\ \mathsf{Status}(\mathit{Cl}, \vec{t}, \mathsf{cred})\)</li>
+<li>\(b \gets [\, \mathit{id}.P \notin \mathbf{C} \,]\); &nbsp;\(\mathtt{El} \gets \mathtt{El} \, \| \, (\mathit{id}.P, b)\)<span class="cj-comment">// an honest voter is ready; a corrupt one is registered and is not</span></li>
+<li>\(\mathcal{A}(\mathsf{GenCred}, \mathit{id}.P)\); &nbsp;\(\textbf{return}\) <span class="cj-atom">ok</span><span class="cj-comment">// who asked for a credential is public</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Cast(<span class="cj-id">o</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="23">
+<li>\(\mathcal{F}_{\mathsf{STE}}.\mathsf{Advance}()\)</li>
+<li>\(\textbf{require}\ \mathit{id}.P \notin \mathbf{C} \ \wedge\ (\mathit{id}.P, 1) \in \mathtt{El} \ \wedge\ o \in \mathbf{O} \ \wedge\ \mathsf{Status}(\mathit{Cl}, \vec{t}, \mathsf{cast})\)</li>
+<li>\(\textbf{require}\ \nexists\, (\mathit{id}.P, \cdot, \cdot, \cdot, \cdot) \in \mathtt{Gb} \cup \mathtt{Ca}\)<span class="cj-comment">// one voter, one vote</span></li>
+<li>\(\mathit{tg} \gets_{\$} \mathcal{T}\); &nbsp;\(\mathtt{Gb} \gets \mathtt{Gb} \, \| \, (\mathit{id}.P, \bot, o, \mathit{tg}, \mathit{Cl})\)</li>
+<li>\(\mathcal{A}(\mathsf{GenBallot}, \mathit{tg}, \mathit{Cl}, 0^{|o|})\); &nbsp;\(\textbf{return}\) <span class="cj-atom">ok</span><span class="cj-comment">// the length of the choice, never the choice</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.AdvUpdate(<span class="cj-id">U</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="28">
+<li>\(\mathcal{F}_{\mathsf{STE}}.\mathsf{Advance}()\)</li>
+<li>\(\textbf{require}\ \mathit{id}'.F = \mathbf{A}\)</li>
+<li>write \(U\) as \(\{(\mathit{msg}_j, \mathit{tg}_j)\}_j\)</li>
+<li>\(\textbf{require}\ \nexists\, j \neq j^{*} : \mathit{msg}_j = \mathit{msg}_{j^{*}} \neq \bot\)<span class="cj-comment">// two ballots may not be made equal</span></li>
+<li>for each \(j\) with \(\mathit{msg}_j \neq \bot\): &nbsp;replace \((\cdot, \bot, o_j, \mathit{tg}_j, \mathit{Cl}_j)\) in \(\mathtt{Gb}\) by \((\cdot, \mathit{msg}_j, o_j, \mathit{tg}_j, \mathit{Cl}_j)\)<span class="cj-comment">// the simulator supplies the ciphertext, addressed by its handle</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.AdvCast(<span class="cj-id">m</span>, <span class="cj-id">V</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="34">
+<li>\(\mathcal{F}_{\mathsf{STE}}.\mathsf{Advance}()\)</li>
+<li>\(\textbf{require}\ \mathit{id}'.F = \mathbf{A} \ \wedge\ V \in \mathbf{C} \ \wedge\ (V, 0) \in \mathtt{El}\)</li>
+<li>\(\textbf{require}\ \nexists\, (V, \cdot, \cdot, \cdot) \in \mathtt{Ca} \ \wedge\ \mathsf{Status}(\mathit{Cl}, \vec{t}, \mathsf{cast})\)</li>
+<li>\(\mathtt{Ca} \gets \mathtt{Ca} \, \| \, (V, m, \bot, \mathit{Cl})\); &nbsp;\(\textbf{return}\) <span class="cj-atom">ok</span><span class="cj-comment">// a corrupt ballot enters with no recorded choice</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.AdvanceClock()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="38">
+<li>\(\mathcal{F}_{\mathsf{STE}}.\mathsf{Advance}()\)</li>
+<li>\(\textbf{require}\ \mathit{id}.P \in \mathbf{V} \setminus \mathbf{C} \ \wedge\ \mathit{id}.P \notin \mathtt{Ad}\)</li>
+<li>\(\mathtt{Ad} \gets \mathtt{Ad} \cup \{\mathit{id}.P\}\); &nbsp;\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Tally()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="41">
+<li>\(\mathcal{F}_{\mathsf{STE}}.\mathsf{Advance}()\)</li>
+<li>\(\textbf{if}\ \mathit{id}'.F = \mathbf{A}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{require}\ \neg\,\mathsf{Status}(\mathit{Cl}, \vec{t}, \mathsf{cred}) \wedge \neg\,\mathsf{Status}(\mathit{Cl}, \vec{t}, \mathsf{cast}) \ \vee\ \mathsf{Status}(\mathit{Cl}, \vec{t}, \mathsf{tally})\)</span><span class="cj-comment">// the adversary may tally in the gap before the tally phase opens</span></li>
+<li>\(\textbf{if}\ \mathit{id}'.F \neq \mathbf{A}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{require}\ \mathit{id}.P \in \mathbf{V} \setminus \mathbf{C} \ \wedge\ \mathsf{Status}(\mathit{Cl}, \vec{t}, \mathsf{tally})\)</span></li>
+<li>\(\textbf{if}\ \mathtt{T} = \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">for each \((V, \mathit{msg}, \bot, \mathit{Cl}') \in \mathtt{Ca}\): &nbsp;\(o \gets \mathsf{San}[\mathsf{Clean}_{o}]\bigl(\mathcal{A}(\mathsf{Opening}, V, \mathit{msg})\bigr)\)</span></li>
+<li><span class="cj-ind">if \(o \in \mathbf{O}\) then record it against that tuple</span><span class="cj-comment">// an unopened or invalid corrupt ballot simply does not count</span></li>
+<li><span class="cj-ind">\(\mathtt{T} \gets \{\!\{\, o : (V, \mathit{msg}, o, \cdot) \in \mathtt{Ca} \wedge o \in \mathbf{O} \,\}\!\}\)</span></li>
+<li>\(\textbf{return}\ \mathtt{T}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Verify(<span class="cj-id">S</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="51">
+<li>\(\mathcal{F}_{\mathsf{STE}}.\mathsf{Advance}()\)</li>
+<li>\(\textbf{require}\ \mathit{id}.P \in \mathbf{V} \setminus \mathbf{C} \ \wedge\ \mathsf{Status}(\mathit{Cl}, \vec{t}, \mathsf{tally})\)</li>
+<li>\(\textbf{if}\ \mathtt{T} = \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{T} \gets \mathcal{F}_{\mathsf{STE}}.\mathsf{Tally}()\)</span></li>
+<li>\(\textbf{return}\ [\, S = \mathtt{T} \,]\)<span class="cj-comment">// verification compares against the box's own tally, and nothing else</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="56">
+<li>\(\textbf{return}\ (\mathtt{El}, \mathtt{Ca}, \mathtt{par})\)<span class="cj-comment">// never \(\mathtt{Gb}\): an honest voter's choice is not readable at corruption</span></li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+*Source: Figure 5, pp. 25–26 of Ackermann, Arapinis, Georgiou, Lamprou, Mareková and Zacharias, "E-cclesia: Universally Composable Self-Tallying Elections over Anonymous Broadcast", IACR Communications in Cryptology 2(3), 2025. The $\mathsf{Status}$ predicate is Eq. (6), p. 24; the prose walk-through is §5.2. Both figure pages were rendered at 130 dpi and read against the extraction, because the caption carries a colour key.*
+
+- **Line 27 is vote privacy, and it is one argument long.** When an honest voter casts, the functionality tells the adversary a fresh random tag, the time, and $0^{|o|}$ — a string of zeros as long as the choice. Not the choice. The tag exists so that the simulator has a *handle*: line 32 lets it supply the real ciphertext later, addressed by that handle, without ever having been given the plaintext. The source is explicit that this is why the tag is there, and it is the cleanest small example on this site of how a functionality hands a simulator enough to work with and no more.
+- **Line 26 is where the ballot does not yet exist, and line 8 is where it appears.** $\mathsf{Cast}$ records the voter's choice with $\bot$ in the ballot slot. The ballot value is sampled $\mathit{d}_{g}$ rounds later, inside $\mathsf{Advance}$ — or, if the simulator got there first at line 32, is whatever the simulator wrote. So a vote and its ballot are separated in time by construction, which is what "delayed ballot generation" means and why the subroutine exists.
+- **Line 25 is one-voter-one-vote, stated over two lists at once.** A voter with an entry in either $\mathtt{Gb}$ or $\mathtt{Ca}$ is refused. Checking only the cast list would leave a window of $\mathit{d}_{g}$ rounds in which a second vote could be started before the first had landed.
+- **Line 21 is eligibility, and the flag it sets is not what a reader expects.** An honest voter gets $\mathit{ready} = 1$; a corrupt voter is registered with $\mathit{ready} = 0$. Both are *eligible* — both are in $\mathbf{V}_{e}$ and both hold a credential. The flag separates the two casting paths: line 24 requires $1$ and line 35 requires $0$, so an honest voter goes through $\mathsf{Cast}$ and a corrupt one only through the adversary's $\mathsf{AdvCast}$. Eligibility is enforced identically for both; what differs is who supplies the ballot.
+- **Line 12 is fairness, and the condition on it is the whole of it.** A ballot in flight is revealed to the adversary only when it lands *and* the casting phase has closed. So an adversary that waits can learn honest votes before the tally phase opens — during the $\mathit{delay\_cast}$ gap — and this does not break fairness, because by then no one can still cast a vote in response. The source says so directly: "Observe that $\mathcal{S}$ might receive a vote before the Tally phase. This does not break fairness as the Cast phase would be over."
+- **Line 43 is the same gap, from the other side.** The adversary may ask for the tally either when the tally phase has opened *or* when neither credential nor casting phase is active — which is exactly the gap. An honest voter (line 45) must wait for the tally phase proper. The asymmetry is deliberate and is the price of the previous bullet.
+- **Line 11 delivers at exactly $\mathit{d}_{c}$, not at least $\mathit{d}_{c}$.** The equality is the source's. A ballot is revealed on precisely the round its delay elapses; a $\mathsf{Poll}$-style "any time after" reading would leak differently, and, more sharply, a round in which $\mathsf{Advance}$ never runs is a round in which that ballot's window passes and it is never revealed at all. Transcribed as printed.
+- **Line 55 is verifiability, and it is weaker than the word suggests.** $\mathsf{Verify}$ compares the submitted tally against the functionality's own $\mathtt{T}$ — computing it first if nobody has asked yet — and returns a bit. It checks nothing about *how* the tally was reached, because in an ideal world there is nothing to check: the box is the authority. What the property means is therefore that the realization must make a wrong tally detectable, and the functionality's contribution is to fix what "the right tally" is.
+- **Lines 47–49 let the adversary open its own ballots, and let it decline.** At tally time each corrupt ballot recorded with no choice is put to the adversary for an opening. An opening outside $\mathbf{O}$, or none at all, means that ballot simply does not appear in the multiset. So a corrupt voter can cast and then abstain retroactively, after seeing that casting has closed — a real capability, and it is what a self-tallying scheme's "unconditional dispute-freeness" costs.
+- **Line 49 returns a multiset of choices with no voters attached.** That is the ballot secrecy of the *result*: the tally says how many chose each option and nothing about who. Compare line 22, where who *asked for a credential* is announced to the adversary in the clear — participation is public, choice is not.
+- **Line 5 makes the round turn only when every honest voter has asked.** The clock does not advance on its own; it advances when $\mathbf{V} \setminus \mathbf{C} \subseteq \mathtt{Ad}$. A single honest voter that stops calling $\mathsf{AdvanceClock}$ halts the election permanently — there is no timeout anywhere in this box.
+- **Line 17 lets the adversary refuse the election.** Setup requires the adversary's acknowledgement, so an election that never opens is a run this functionality permits.
+- **Line 56 never returns $\mathtt{Gb}$.** Corrupting a voter reveals its credential status and the cast ballots, which are public anyway, and *not* the pending choice of any honest voter. Vote privacy survives corruption of other voters, which is the property a real election needs and the one an over-generous $\mathsf{Leak}$ would have quietly destroyed.
+
+**Mismatch register.**
+
+| The source | This box | Why |
+|---|---|---|
+| "Upon each command, it executes the *delayed ballot generation and casting* procedure" | $\mathsf{Advance}$, lines 4–13, called at the head of every operation | This framework has no per-activation hook. Written once as a non-callable block, the form [*G-ledger*](/uc/layer-1-channels-agreement-ledgers/g-ledger/index.qmd) uses for the same shape. |
+| `Status(·, ·, ·)` as defined in Eq. (6) | A declared parameter, stated in full above | A three-case predicate printed outside the figure. |
+| $\mathcal{S}$, the simulator, as a named party sending and receiving | $\mathcal{A}(\cdot)$ under $\mathsf{San}[\mathsf{Clean}]$ | The source writes its interface against a simulator rather than an adversary slot; the messages are the same. |
+| `ADVANCE_CLOCK` and `READ_CLOCK` forwarded to $\mathcal{G}_{\mathsf{clock}}$ on the voter's behalf | $\mathsf{AdvanceClock}$ at lines 38–40; the clock read folded into line 4 | $\mathsf{Advance}$ reads the clock on every activation anyway, so a separate read interface would return a value the caller could get from any other call. Dropped, and recorded here. |
+| Corrupt voters fixed by a `CORRUPT` message from $\mathcal{S}$ | $\mathbf{C}$, the framework's corrupted set | The source's static-corruption message is this framework's corruption machinery. |
+| $\mathit{sid}$ and $\mathit{sid}_C$ threaded separately, the second for clock messages | The process id | Nothing is conditional on either. |
+| The tally computed inline in both `TALLY` and `VERIFY` | Computed once at lines 46–49 and cached in $\mathtt{T}$; $\mathsf{Verify}$ self-calls $\mathsf{Tally}$ at line 54 | The source says `VERIFY` "computes the tally multiset as if it received a $(\mathit{sid}, \textsc{Tally})$ command", so the self-call is its own construction. Caching matters: lines 47–48 put openings to the adversary, and asking twice would let it answer differently. |
+| Ballot tuples carry a `1`/`0` flag distinguishing generated from cast | Two lists, $\mathtt{Gb}$ and $\mathtt{Ca}$ | Same partition, made structural. The flag is the source's way of keeping one list; line 25 has to test both either way. |
+| No leakage interface | $\mathsf{Leak}$ at line 56 | Required here. What it may *not* return is the point; see the last bullet. |
+
+## Known realizations
+
+**A three-step modular construction, ending in a fully instantiated protocol.** The functionality is first decomposed into two modules — $\mathcal{F}_{\mathsf{elig}}$ for eligibility and $\mathcal{F}_{\mathsf{vm}}$ for vote management — each realized separately (Theorems 3 and 4), then recombined: **Theorem 5**, "The protocol $\Pi^{\mathsf{elig},\mathsf{vm}}_{\mathsf{STE}}(\mathit{SA}, \mathbf{V}, \mathit{delay\_gen}, \mathit{delay\_cast})$ in Figure 9 UC-realizes $\mathcal{F}_{\mathsf{STE}}(\mathit{SA}, \mathbf{V}, \mathit{delay\_gen}, \mathit{delay\_cast})$ in the $(\mathcal{F}_{\mathsf{elig}}, \mathcal{F}_{\mathsf{vm}}, \mathcal{G}_{\mathsf{clock}})$-hybrid model."
+
+**Theorem 6 is the one that matters, because it removes the modules.** Replacing $\mathcal{F}_{\mathsf{elig}}$ and $\mathcal{F}_{\mathsf{vm}}$ by concrete protocols yields E-cclesia, which "UC realizes $\mathcal{F}_{\mathsf{STE}}$ in the $(\mathcal{F}_{\mathsf{RO}}, \mathcal{W}_q(\mathcal{F}^{*}_{\mathsf{RO}}), \mathcal{F}_{\mathsf{CRS}}, \mathcal{F}_{\mathsf{BC}}, \mathcal{G}_{\mathsf{clock}})$-hybrid model". Every hybrid there has a page on this site: [*F-RO*](/uc/layer-0-idealized-setup/f-ro/index.qmd), [*F-CRS*](/uc/layer-0-idealized-setup/f-crs/index.qmd), [*F-BC*](/uc/layer-1-channels-agreement-ledgers/f-bc/index.qmd) and [*G-clock*](/uc/layer-0-idealized-setup/g-clock/index.qmd) — the wrapped oracle $\mathcal{W}_q(\mathcal{F}^{*}_{\mathsf{RO}})$ being the same query-bounding device [*G-ledger*](/uc/layer-1-channels-agreement-ledgers/g-ledger/index.qmd)'s source uses for proof of work.
+
+**What it is built from.** Time-lock encryption for fairness — the mechanism behind $\mathit{delay\_cast}$ — signatures of knowledge and anonymous broadcast for eligibility, privacy and one-voter-one-vote, and dynamic accumulators for efficiency. The anonymous broadcast channel $\mathcal{F}_{\mathsf{an.BC}}$ is a contribution of the same paper, and its accumulator functionality $\mathcal{F}_{\mathsf{acc}}$ is this site's [*F-acc*](/uc/layer-4-commitments-proofs/f-acc/index.qmd).
+
+## Properties
+
+- **Vote privacy.** Lines 27 and 56: the adversary learns $0^{|o|}$ and never the choice, at cast time or at corruption. The tally at line 49 is a multiset with no voters attached.
+- **One voter, one vote.** Line 25, over both the pending and the cast lists; line 36 for corrupt voters.
+- **Eligibility.** Lines 20, 24 and 35: a credential must exist and must have been issued during the credential phase, for honest and corrupt voters alike.
+- **Fairness, with one stated exception.** Line 12: no ballot is revealed before casting closes. The exception is the $\mathit{delay\_cast}$ gap, in which the adversary may see honest ballots (line 12) and ask for the tally (line 43) while no one can cast. The source argues this is not a fairness break, and the argument is that the information cannot be acted on.
+- **Verifiability, relative to the box.** Line 55 compares against the functionality's own tally. The content of the property lives in the realization.
+- **No liveness of any kind.** Line 5 advances the clock only when every honest voter asks; there is no timeout. One silent honest voter stops the election forever.
+- **A corrupt voter may abstain retroactively.** Lines 47–48: declining to open a cast ballot removes it from the tally, after casting has closed.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Ackermann et al. [*E-cclesia: Universally composable self-tallying elections over anonymous broadcast*](https://cic.iacr.org/p/2/3/8/pdf). IACR Communications in Cryptology, 2(3), 2025.
+- Ackermann, Arapinis, Georgiou, Lamprou, Mareková, and Zacharias. [*E-cclesia: Universally composable self-tallying elections over anonymous broadcast*](https://cic.iacr.org/p/2/3/8/pdf). IACR Communications in Cryptology, 2(3), 2025. **The source of the box above**: Figure 5, pp. 25–26, with the $\mathsf{Status}$ predicate at Eq. (6), p. 24 and the walk-through in §5.2. The realizations are Theorems 5 and 6; the modules are $\mathcal{F}_{\mathsf{elig}}$ (§6.2) and $\mathcal{F}_{\mathsf{vm}}$ (§6.3). The paper also prints an anonymous broadcast functionality $\mathcal{F}_{\mathsf{an.BC}}$ (Figure 1) and an accumulator functionality $\mathcal{F}_{\mathsf{acc}}$ (Figure 4), the latter being [*F-acc*](/uc/layer-4-commitments-proofs/f-acc/index.qmd)'s object. Read the figure as rendered, not as extracted: the caption's colour key assigns each clause to one of the five security properties, and that mapping does not survive the text layer.

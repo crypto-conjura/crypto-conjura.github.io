@@ -134,6 +134,44 @@ subset `T ⊆ [M]` "gives nothing beyond the endpoints up to constants". The sha
 in the artifact's own words: whether `κ(q) ≤ O(√(σ'δ)) + μ'(q)` holds for unrestricted observers,
 i.e. whether the first arm can be made `M`-free.
 
+**Sharpened, 27 August 2026, and this is the actionable form.** `D` has **full challenge
+resolution `M`** in this campaign's applications — a general distinguisher `D^H(y,z)` may steer
+its queries on `y` — so the `M`-free arm `μ'(q)` of resolution-1 observers is unavailable, and by
+§6's "which arm wins" the `2δ√M` arm is then strictly the smaller for `q ≥ 1`, `M ≥ 4`,
+`2δ√M < 1`. (H2) therefore reduces to arm 2 alone, which in bits reads
+
+```
+log M  ≤  k + log(σ'q⁺) − 2          k := log(1/δ)
+```
+
+— *do not ask for more output bits than one source's unpredictability*, the `q`-dependence being
+only additive-logarithmic. `checks/h2-applications.py` tabulates it: key extraction sits well
+inside (128- or 256-bit key from 256-bit-unpredictable sources, allowance 328 bits), and what
+falls outside is **long-output extraction** — 512-bit or streaming output — while the bound is
+still strong at `2⁻⁹¹`. That is exactly the sponge/Merkle-Damgård streaming use that motivated
+wanting the decomposition route at all.
+
+**And the evidence for arm 2 does not reach the corner that binds.** Proposition F, the campaign's
+only lower bound, exhibits an observer making **`N²` queries**. `κ` is monotone in `q` — a
+`q`-query observer may ignore queries — so `κ(N²) ≥ δ√M/(4√2)` constrains `κ(1)` not at all. (H2)
+binds hardest at *small* `q` with large `M`; at `q = N²` it is free, permitting
+`M ≤ σ'N²/(4δ)`. **So no artifact in this campaign gives any evidence that `κ(q)` carries
+`M`-dependence where (H2) actually bites.** §8's "both arms are individually tight" is true as
+stated and misleading as read: arm 2's tightness is demonstrated only at `q = N²`.
+
+Why the route pays it: the revealing-rule argument needs `S(f,ζ)` a function of `(f,ζ)` alone,
+covering *every* challenge value, because `v = f(x)` is correlated with the `x` being conditioned
+on. At full resolution that union is `qM` cells even though only `q` matter for any fixed `v`.
+
+> **The sharp question, narrower than §8's:** does `κ(q)` have *any* `M`-dependence for small `q`?
+> Exhibit a `q`-query lower bound carrying `M` for `q ≪ N²`, or prove
+> `κ(q) ≤ O(√(σ'δ)) + (M`-free`)` there. Either answer resolves the `M`-corner for the
+> applications that matter. **A refuter pass hunting a small-`q`, large-`M` distinguisher is the
+> cheap direction, and the campaign has never run one** — the highest-value and least-explored
+> move available. One informal attempt is on record and found nothing: the natural one-query test
+> (given `y`, query `u(y)` and check `H(u(y)) = y`) succeeds with probability `1/M` in both
+> experiments.
+
 ### 2.3 A second open problem, never worked on
 
 Contract `rem:reduces` states that the implication runs backwards too, and that "the directions
@@ -155,7 +193,8 @@ cap achieves, or show none exists. It is now the *only* thing standing between t
 - `E[m₁m₂] ≤ δ²` is **false** — r3 §1 carries the counterexample — so the obvious sharpening of
   the revealed-mass bound is blocked by a proved obstruction, not merely unattempted.
 - Proposition F licenses nothing off the diagonal `δ = 1/N`, so whether `δ√M` is tight elsewhere
-  is open.
+  is open — **and nothing at `q < N²` either**, which is the restriction that matters, since (H2)
+  binds at small `q`. See §2.2.
 - The public page's claim that `q = 0` is "proved and tight" rests on **no proved lower bound**;
   the only `q = 0` tightness evidence in the repo is numeric.
 - The Contract asserts both its design restrictions are necessary (the mixture may not be chosen
@@ -251,4 +290,4 @@ None of these is a mathematical error; all of them will mislead a reader.
 status files the harness convention expects. Present: `CONTRACT.md`, `intermediates/` (artifacts,
 findings, triage, tallies), `sources/` (cards S1, S2), and `checks/` (executable verification of
 numeric claims — `rem-window-r4.py` and `cap-fixed-q.py`, each printing its own grid size and
-worst margins).
+worst margins, `h2-applications.py` tabulating (H2) at application parameters).

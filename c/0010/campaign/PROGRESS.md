@@ -245,10 +245,46 @@ discharged: a pass aimed at that parenthetical, blind to its history, confirmed 
 and a second confirmed it unprompted. It is load-bearing (without it the leading part is
 `5.506 > 5`), and it holds. See `split-decomp-kappa-2-findings-r2.md`.
 
-**The weakest link is now the source cards.** No pass has ever checked a card against the paper it
-summarises, and [CDGS, Claim 2] and [CDGS, Claim 3] enter the whole chain through r3's Lemma P on
-transcription alone. Three consequences of Claim 2 used there are not stated in the published
-claim in that form.
+**The source cards have now been checked, and they hold.** Both were read against their papers on
+27 August 2026 — the first time any card in this campaign has been — reaching full text including
+the CDGS appendix everything turns on. **No mathematical defect in either card.** Claims 25 and 26
+exist with those numbers on p. 40 saying what card S1 says; Definition 1's "at most `P`", which
+`kappa-4`'s Theorem H turns on, is verbatim and is load-bearing in the paper itself. See
+`split-decomp-card-check-1.md`.
+
+Four things the check found that nobody knew. The chain uses **four** consequences beyond Claim 2's
+statement, not three — the exact-decomposition-with-residue was unlisted. Disjointness holds for the
+**exact** decomposition only, not for Claim 2's γ-close object as the paper realises it, which makes
+"simplifying" Lemma P to quote Claim 2 literally a trap. Claim 26 as printed carries numerator `S`,
+not `S + log γ⁻¹`; the version Lemma P needs exists only in **footnote 15**. And `[CFHS, Lemma 4.3]`
+**does not exist** — it is Lemma 4, item 3 — so every citation in that form was unresolvable.
+
+Separately, a defect **in CFHS itself**: Theorem 3 states exponent `1/(ℓ+1)` while the final case of
+its proof delivers `1/(ℓ+2)`, verified from the text layer of both the ePrint and the published
+LIPIcs version and re-derived by hand. Inert here — that bound is used nowhere in the chain.
+
+**The weakest link is now the novelty question, and it is not what it looked like.** The first
+prior-art pass ran the same day (`split-decomp-scout-1.md`) and found that **Lemma B's engine is
+textbook**: Vadhan, *Pseudorandomness* (Now Publishers, 2012), Proposition 6.12 proves that a random
+function extracts from a fixed flat source by exactly this route — a union bound over all `2^M`
+subsets, Chernoff per fixed subset, and the good event a property of the function alone — with
+Theorem 6.14 supplying the `binom(N,K) ≤ (Ne/K)^K` counting, and the remark after 6.12 being the
+same one-source-fails observation. Both verified directly against the monograph. §10 of the kappa-2
+arm registers **no citation into the extractor literature at all**, and should.
+
+What survives as novel is narrower and better located: **Lemma 1**, that the posterior factorises
+because the sources are split — the step CFHS could not make with compression — and **Lemma A(a)**,
+whose Cauchy–Schwarz across the two coordinates gives `δ√M` rather than `√(Mδ)`. Neither has a
+one-source counterpart. **Proposition F is folklore in content** (the balls-in-bins histogram
+distance) but is *not* implied by the classical extractor lower bounds: Radhakrishnan–Ta-Shma is
+about seeded extractors and is vacuous when the seed is all of `f`, and at `δ = 1/N` exactly both
+sources are pinned uniform on all of `[N]`, leaving no subset to choose. That diagonal is precisely
+where it is not classical, and the scout calls it the most defensible novelty claim in the campaign.
+
+No prior art was found for Theorem D / Corollary D′ as a statement, and the negative is
+well-evidenced: CFHS's own abstract lists statistical multi-source extraction against **unbounded
+distinguishers** as an open problem, CFHS has zero forward citations, and CDGS's 88 forward citations
+contain nothing on multi-source extraction or multi-party preprocessing.
 
 **Never refereed at all:**
 
@@ -257,16 +293,19 @@ claim in that form.
   referee prompt hands the Contract over as the *yardstick*, so no pass has ever examined them.
 - The **chain** `r3 → kappa-2-r2 → kappa-3-r4` end to end. Each link was refereed in isolation
   with its dependencies handed over as unchecked givens.
-- Any **source card against the paper it summarises**. All passes were package-only. The kappa
-  chain rests on three consequences of CDGS Claim 2 that the *published* claim does not state,
-  taken on trust from a card transcribed from a local PDF.
+- ~~Any source card against the paper it summarises.~~ **Done, 27 August 2026**, both cards, full
+  text — `split-decomp-card-check-1.md`. The count was wrong: the chain rests on **four**
+  consequences of CDGS Claim 2 that the published claim does not state, not three. All four are
+  established by the proof text.
 - Two card quotations in `kappa-3-r4` §4 (§4 is byte-identical to r3's) — the r2 pass could not open the package's `cards/`
   directory, a packaging error on the requester's side, recorded in the findings file.
 
 **Passes never run, of kinds the harness provides:**
 
-- **No scout pass, ever.** No prior-art record of any kind. Theorem D and Corollary D′ are
-  unconditional results whose novelty has never been checked against the literature.
+- ~~No scout pass, ever.~~ **Done, 27 August 2026** — `split-decomp-scout-1.md`. Verdicts above.
+  Not yet verified, and flagged so they are not repeated as read: Chor–Goldreich (SICOMP 1988),
+  Dodis–Oliveira (RANDOM 2003), and Radhakrishnan–Ta-Shma's two-source entropy-loss form, any of
+  which could move Theorem D's verdict from "no prior art found" to "folklore" or "implied by".
 - **No refuter pass, ever**, against any current artifact, and no counterexample-search code in
   the repo. `checks/rem-window-r4.py` is the first executable artifact committed here, but it
   verifies arithmetic in a remark; it searches for nothing. Every *refutation* claim in the

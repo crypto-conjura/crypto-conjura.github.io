@@ -1,0 +1,387 @@
+% =====================================================================
+%  CONJURA - NOTE
+%  The capping construction for c/0010: the P-axis at fixed q.
+%  Requires conjura-solution.cls and conjura-conjecture.cls here.
+% =====================================================================
+\documentclass{conjura-solution}
+
+\runninghead{CAPPING THE FIXED SET}
+
+\newcommand{\Fun}{\mathsf{Fun}}
+\newcommand{\Adv}{\mathsf{Adv}}
+\newcommand{\Real}{\mathsf{Real}}
+\newcommand{\Dec}{\mathsf{Dec}}
+\newcommand{\Prob}[1]{\Pr\!\left[#1\right]}
+\newcommand{\bits}{\{0,1\}}
+\newcommand{\vx}{\mathbf{x}}
+\newcommand{\vz}{\mathbf{z}}
+
+\newtheorem*{lemHz}{Lemma H\textlf{0}}
+\newtheorem*{lemHo}{Lemma H\textlf{1}}
+\newtheorem*{thmH}{Theorem H}
+\newtheorem*{thmHp}{Theorem H$'$}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} NOTE}
+\cjtitle{Capping the Fixed Set}
+\cjsubtitle{The $P$-axis of the split-source decomposition, once $q$ may be fixed first}
+\cjresolves{\emph{Decomposition for Split Unpredictable Sources}
+  (\texttt{c/0010}). \textbf{Partially, and for a relaxed statement.} The
+  conjecture's hypothesis on $P$ is removed entirely, on the region $(\mathrm{H2})$,
+  provided the mixture family is allowed to depend on the observer's query budget
+  $q$. That is a relaxation of the conjecture, not the conjecture. The
+  order-respecting statement, with an absolute constant and a $q$-free family, is
+  \emph{not} settled here.}
+
+\cjstatus{Post-audit. Every result below has been through six independent blind
+  referee passes spanning two model families; five judged the artifact and all
+  five returned \textsc{defects}, none of them computational. The mathematics
+  survived; seven claims \emph{about} the mathematics did not, and are corrected
+  here. The revision carrying these corrections has itself had no pass.}
+
+\vspace{0.4em}
+
+\section*{Reader's guide}
+
+\noindent\textbf{The idea, in one sentence.} The conjecture asks for \emph{some}
+family of $P$-mixtures; it never asks that the fixed sets be large, and
+Definition~\ref{def:bf-here} bounds them by $|I| \le P$ rather than fixing $|I|$. So when the
+requested $P$ exceeds what the proof can afford, do not use it --- build the family
+at the balance point instead. A $P_0$-mixture with $P_0 \le P$ \emph{is} a
+$P$-mixture.
+
+\smallskip
+\noindent\textbf{What that buys.} The hypothesis $(\mathrm{H1})$ of the campaign's
+Theorem~E$''$, which caps $P$ at roughly $\sqrt{\sigma'q^{+}/\delta}$, disappears.
+The cost is the constant $C$, which moves from $8$ to $13$; the constant $c$ does
+not move.
+
+\smallskip
+\noindent\textbf{What it does not buy.} Two things, and both were overclaimed in
+the first draft of this work before referees caught them.
+
+\begin{itemize}[leftmargin=1.2em,itemsep=2pt]
+\item The family must be allowed to depend on $q$. The Contract's
+  Remark~\texttt{rem:order} forbids that: the family is chosen after $P$ and
+  $\gamma$ but \emph{before} $q$. So Theorem~H proves a relaxation, and the window
+  the campaign records as open --- absolute $C$, $q$-free family --- stays open.
+\item Keeping the family $q$-free costs a factor $\sqrt{q^{+}}$ in the constant
+  (Theorem~H$'$). It is tempting to conclude that the $\sqrt{q^{+}}$ therefore
+  \emph{is} the price of $q$-independence. That does not follow, and it is not
+  claimed here: what is shown is that $q$-dependence \emph{suffices} to remove the
+  factor within this route. No lower bound against $q$-free families exists
+  anywhere in the campaign.
+\end{itemize}
+
+\smallskip
+\noindent\textbf{What remains.} The hypothesis $(\mathrm{H2})$, a condition on the
+output size $M$, is carried unchanged through everything below. It is the whole
+residue on the $P$-axis, and \S\ref{sec:h2} is about what it means and whether
+applications satisfy it. They do for key extraction and do not for long-output
+extraction.
+
+\section{Setting}
+
+Fix $N, M \ge 2$ and let $\Fun := \{f : [N] \times [N] \to [M]\}$, with
+$H \gets_{\$} \Fun$. A pair $(S_1, S_2)$ of sources is \emph{split} when the two
+use independent coins and neither sees the other's output; each reads all of $H$
+and outputs a point $x_i \in [N]$ together with leakage $z_i$ with
+$|z_i| \le \sigma_i$. The pair is \emph{$\delta$-unpredictable} when no predictor
+given $H$ and the whole leakage vector guesses either point with probability more
+than $\delta$. All algorithms are computationally unbounded; only queries count.
+
+Throughout, with logarithms to base $2$,
+\[
+  \sigma := \sigma_1 + \sigma_2, \qquad
+  \sigma' := \sigma + 2\log N, \qquad
+  q^{+} := q + 1, \qquad
+  S := \sqrt{\sigma' q^{+} \delta},
+\]
+\[
+  t_q := \sqrt{\sigma' q^{+}/\delta}, \qquad
+  t_0 := \sqrt{\sigma'/\delta}, \qquad
+  t_q = t_0\sqrt{q^{+}}, \qquad
+  B := \sigma' + \log \gamma^{-1}.
+\]
+Note $\delta \ge 1/N$ always, since a uniform guess predicts $x_i$ with probability
+$1/N$; and $\sigma' \ge 2$, which needs $N \ge 2$ and is used three times below.
+
+\begin{definition}[bit-fixing sources, and consistency]\label{def:bf-here}
+A distribution $Y$ over $\Fun$ is \emph{$P$-bit-fixing} if there are a set
+$I \subseteq [N] \times [N]$ with $|I| \le P$ and a map $a : I \to [M]$ such that a
+draw $g \gets Y$ satisfies $g(u) = a(u)$ for every $u \in I$ and is uniform on
+$[M]$ and independent across the points $u \notin I$. A \emph{$P$-mixture} is a
+finite indexed family of $P$-bit-fixing components; it is \emph{consistent with}
+$f$ when $a(u) = f(u)$ on $I$ for every component.
+\end{definition}
+
+The inequality $|I| \le P$ is the whole hinge, and it is worth pausing on. It is
+not a stylistic choice: the same convention appears verbatim in
+Coretti--Dodis--Guo--Steinberger, whose Definition~1 reads ``$P$-bit-fixing if it
+is fixed on \emph{at most} $P$ coordinates''.
+
+\section{The construction}
+
+Given a requested $P \in \mathbb{N}$ and $\gamma \in (0,1)$, put
+\[
+  \gamma_0 := \max(\gamma,\, N^{-2}),
+  \qquad
+  P_0 := \min\bigl(P,\ \lceil t_q \rceil\bigr),
+  \qquad
+  \mathcal{Y} := \mathcal{Y}^{P_0, \gamma_0/2},
+\]
+where $\mathcal{Y}^{\cdot,\cdot}$ is the family the campaign's Theorem~E$''$ takes
+as given. Two observations license this.
+
+\begin{lemHz}[admissibility]
+Every member of $\mathcal{Y}$ is a $P$-mixture consistent with its index;
+$\mathcal{Y}$ is indexed by $(f,\zeta)$ and by nothing else; and Theorem~E$''$
+applies to it at $(P_0, \gamma_0)$.
+\end{lemHz}
+
+\begin{proof}
+Each member is a $P_0$-mixture, so each component has fixed set $I$ with
+$|I| \le P_0 \le P$. Definition~\ref{def:bf-here} asks $|I| \le P$ and nothing
+more, so the same witness $(I,a)$ that proves $P_0$-bit-fixing proves
+$P$-bit-fixing. The uniformity and independence conditions off $I$ refer to the
+same unchanged $I$, and consistency is a property of the values $a$, so both
+survive verbatim. The index set is unchanged, as \texttt{rem:index} requires. For
+Theorem~E$''$: $\gamma_0 \in (0,1)$ since $\gamma < 1$ and $N^{-2} \le 1/4$;
+hypothesis $(\mathrm{H1})$ reads $P_0 \le t_q + 1$ and holds because
+$P_0 \le \lceil t_q \rceil \le t_q + 1$; and $(\mathrm{H2})$ does not mention $P$,
+so it is unaffected.
+\end{proof}
+
+\begin{lemHo}[three slack bounds]
+$\log \gamma_0^{-1} \le \log \gamma^{-1}$; $\ \log \gamma_0^{-1} \le \sigma'$, hence
+$\sigma' + \log \gamma_0^{-1} \le 2\sigma'$; and $N^{-2} \le \tfrac{1}{4}S$.
+\end{lemHo}
+
+\begin{proof}
+$\gamma_0 \ge \gamma$ gives the first, and it is what keeps $c$ at $2$: without it
+the clamp would inflate the leading term rather than the additive one.
+$\gamma_0 \ge N^{-2}$ gives $\log \gamma_0^{-1} \le 2\log N \le \sigma'$. For the
+third, $\delta \ge 1/N$, $\sigma' \ge 2$ and $q^{+} \ge 1$ give
+$S \ge \sqrt{2/N}$, so
+$N^{-2} \le \tfrac14 S \iff N^{-3} \le \tfrac12$, true for every $N \ge 2$.
+\end{proof}
+
+\section{The two theorems}
+
+\begin{thmH}[at fixed $q$, no hypothesis on $P$]
+Let $N,M \ge 2$, fix $q \in \mathbb{N} \cup \{0\}$ and suppose $(\mathrm{H2})$. For
+every $P \in \mathbb{N}$ and every $\gamma \in (0,1)$, the family $\mathcal{Y}$
+above consists of $P$-mixtures consistent with their indices, depends only on
+$(S_1, S_2, P, \gamma, q)$, and satisfies, for every $q$-query
+challenge-oblivious observer $D$ and with no restriction on challenge resolution,
+\[
+  \Adv_{\mathcal{Y}, D}
+  \ \le\ \frac{2(\sigma' + \log \gamma^{-1})\,q^{+}}{P}
+  \ +\ 13\,S \ +\ \gamma .
+\]
+\end{thmH}
+
+\begin{proof}
+Lemma~H\textlf{0} licenses Theorem~E$''$ at $(P_0, \gamma_0)$, giving
+$\Adv \le 2(\sigma' + \log \gamma_0^{-1})q^{+}/P_0 + 8S + \gamma_0$. Two cases.
+
+\emph{Case (a), $P \le \lceil t_q \rceil$.} Then $P_0 = P$, and
+$\log \gamma_0^{-1} \le \log \gamma^{-1}$ makes the first term at most
+$2Bq^{+}/P$, the target's own. With $\gamma_0 \le \gamma + \tfrac14 S$ the total is
+$2Bq^{+}/P + 8\tfrac14 S + \gamma$.
+
+\emph{Case (b), $P > \lceil t_q \rceil$.} Then $P_0 = \lceil t_q \rceil \ge t_q$,
+and $\sigma' + \log \gamma_0^{-1} \le 2\sigma'$ gives
+\[
+  \frac{2(\sigma' + \log \gamma_0^{-1})q^{+}}{P_0}
+  \ \le\ \frac{4\sigma' q^{+}}{t_q}
+  \ =\ 4\sigma' q^{+}\sqrt{\frac{\delta}{\sigma' q^{+}}}
+  \ =\ 4S,
+\]
+so the total is at most $12\tfrac14 S + \gamma$, and the target's first term is
+non-negative.
+
+Both cases are dominated by $2Bq^{+}/P + 13S + \gamma$.
+\end{proof}
+
+\noindent This is the Contract's conjectural \emph{display} at $c = 2$, $C = 13$,
+with no hypothesis on $P$. It is not the conjecture: that requires the family to
+depend only on $(S_1, S_2, P, \gamma)$, and a $q$-dependent family satisfies a
+relaxation of it. Of the five extra units in $C$, four are case~(b)'s capping and a
+quarter is the $\gamma$-clamp; three quarters go unused.
+
+\begin{thmHp}[one $q$-free family, every $P$, at a cost of $\sqrt{q^{+}}$]
+Let $N,M \ge 2$ and suppose $(\mathrm{H2})$ holds at \emph{every}
+$q \in \mathbb{N} \cup \{0\}$ --- equivalently $M \le \sigma'/(2\delta)$, the
+intersection binding at $q = 1$. Then the family
+$\mathcal{Y}' := \mathcal{Y}^{P_0', \gamma_0/2}$ with
+$P_0' := \min(P, \lceil t_0 \rceil)$ depends only on $(S_1, S_2, P, \gamma)$ ---
+not on $q$ --- and satisfies, for every $P \in \mathbb{N}$, every
+$q \in \mathbb{N} \cup \{0\}$ and every $q$-query challenge-oblivious observer $D$,
+\[
+  \Adv_{\mathcal{Y}', D}
+  \ \le\ \frac{2(\sigma' + \log \gamma^{-1})\,q^{+}}{P}
+  \ +\ \bigl(4\sqrt{q^{+}} + 9\bigr) S \ +\ \gamma .
+\]
+\end{thmHp}
+
+\begin{proof}
+As in Lemma~H\textlf{0}, with $(\mathrm{H1})$ at $P_0'$ holding for every $q$ at once, since
+$P_0' \le \lceil t_0 \rceil \le t_0 + 1 \le t_q + 1$ by $t_0 \le t_q$. The
+hypothesis $(\mathrm{H2})$ is \emph{not} uniform in $q$ and is supplied at every
+$q$ by assumption. Case (a) is as before. Case (b), $P > \lceil t_0 \rceil$: now
+$P_0' \ge t_0$, so
+$4\sigma' q^{+}/t_0 = 4q^{+}\sqrt{\sigma'\delta} = 4\sqrt{q^{+}} \cdot S$, using
+$S = \sqrt{q^{+}}\sqrt{\sigma'\delta}$.
+\end{proof}
+
+\begin{remark}[the hypothesis of Theorem~H$'$, and a defect worth recording]
+The first draft of this theorem wrote ``suppose $(\mathrm{H2})$ holds at $q$'' and
+then quantified its conclusion over \emph{every} $q$ --- leaving $q$ free in the
+hypothesis and rebinding it in the conclusion. Read literally the hypothesis is
+\emph{vacuously} satisfiable at $q=0$, where the relevant quantity is $0$, so the
+theorem would have delivered the conjecture for every $M$ and contradicted its own
+statement of what remains open. A non-vacuous witness that the readings differ:
+$N = 2^{12}$, $\sigma = 0$, $\delta = 2^{-12}$, $M = 2^{16}$. There
+$8S < 1$ at both $q = 0$ and $q = 1$, $(\mathrm{H2})$ holds at $q = 0$, and at
+$q = 1$ it fails on both arms. Three of the six referees raised this.
+\end{remark}
+
+\section{What $(\mathrm{H2})$ is, and whether applications satisfy it}\label{sec:h2}
+
+$(\mathrm{H2})$ asks that the residue of the campaign's extraction bound fit inside
+one unit of the budget $S$:
+\[
+  \min\bigl\{\mu'(\min(qM, N^{2})),\ 2\delta\sqrt{M}\bigr\} \ \le\ S,
+  \qquad \mu'(s) := \min\bigl(s\delta,\ 2(s\delta^{2})^{1/3},\ 1\bigr).
+\]
+It is not a condition about decomposition at all. It is inherited from routing the
+decomposition through extraction, and it enters at exactly one step.
+
+The second arm has a clean reading. A random function's image distribution
+$\nu(v) = |f^{-1}(v)|/N^{2}$ is lumpy: throwing the pair's $\approx 1/\delta^{2}$
+effective probability mass into $M$ buckets gives a balls-in-bins deviation
+$\approx \sqrt{M\delta^{2}} = \delta\sqrt{M}$. The real challenge is drawn from
+that lumpy law and the decomposed one is uniform off the fixed set, so the
+lumpiness genuinely appears in the advantage. Exploiting it, however, requires
+knowing \emph{which} values are over-represented, and that means learning $f$.
+That is why $q = 0$ is free for every $M$, and why the only known lower bound
+witnessing $\delta\sqrt{M}$ spends $N^{2}$ queries.
+
+When $D$ has full challenge resolution --- as a general distinguisher
+$D^{H}(y, \vz)$ does, since it may steer its queries on $y$ --- the second arm is
+the smaller for $q \ge 1$, $M \ge 4$, and $(\mathrm{H2})$ becomes, in bits,
+\[
+  \log M \ \le\ k + \log(\sigma' q^{+}) - 2, \qquad k := \log(1/\delta).
+\]
+\emph{Do not ask for more output bits than one source's unpredictability}, plus a
+logarithmic allowance. The $q$-dependence is only additive-logarithmic: $q$ from
+$2^{0}$ to $2^{128}$ moves the allowance by $127$ bits. So the corner where
+$(\mathrm{H2})$ binds is not really about query budgets at all --- it is about
+asking for a long output.
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{lrrrcc}
+\toprule
+setting & $k$ & output & allowed & $(\mathrm{H2})$ & bound \\
+\midrule
+$128$-bit key, $256$-bit-unpredictable sources & $256$ & $128$ & $\le 328$ & yes & $2^{-91}$ \\
+$256$-bit key, $256$-bit-unpredictable sources & $256$ & $256$ & $\le 328$ & yes & $2^{-91}$ \\
+$128$-bit key, $128$-bit-unpredictable sources & $128$ & $128$ & $\le 200$ & yes & $2^{-27}$ \\
+$256$-bit key, $128$-bit-unpredictable sources & $128$ & $256$ & $\le 200$ & \textbf{no} & $2^{-27}$ \\
+$512$-bit output, $256$-bit sources & $256$ & $512$ & $\le 328$ & \textbf{no} & $2^{-91}$ \\
+$1$\,Mbit stream, $256$-bit sources & $256$ & $2^{20}$ & $\le 328$ & \textbf{no} & $2^{-91}$ \\
+\bottomrule
+\end{tabular}
+\caption{$(\mathrm{H2})$ at application parameters, with $\sigma = 64$,
+  $q = 2^{64}$, $\log N = 512$. Computed by
+  \texttt{c/0010/campaign/checks/h2-applications.py}.}
+\end{table}
+
+The two failing rows differ in kind and only one matters. Row~4 fails
+$(\mathrm{H2})$, but the bound there is $2^{-27}$ anyway, so nothing is lost that
+one had. Rows~5 and~6 are the real gap: security is still $2^{-91}$ and
+$(\mathrm{H2})$ blocks the statement purely for asking for a long output. That is
+precisely the sponge and Merkle--Damg\aa{}rd streaming use which motivated wanting
+a decomposition route in the first place.
+
+\begin{remark}[the evidence for $(\mathrm{H2})$ does not reach the corner that binds]
+The only lower bound in the campaign exhibits an observer making $N^{2}$ queries,
+and $\kappa$ is monotone in $q$ --- a $q$-query observer may ignore queries --- so
+a lower bound at $q = N^{2}$ constrains $\kappa(1)$ not at all. Meanwhile
+$(\mathrm{H2})$ is free at $q = N^{2}$, permitting $M \le \sigma' N^{2}/(4\delta)$,
+and binds at small $q$. \emph{No artifact in this campaign gives any evidence that
+the extraction advantage carries $M$-dependence where $(\mathrm{H2})$ actually
+bites.} The sharp question is therefore narrower than the campaign has been
+recording: does $\kappa(q)$ have \emph{any} $M$-dependence for small $q$? A
+refuter pass hunting a small-$q$, large-$M$ distinguisher is the cheap direction,
+and the campaign has never run one.
+\end{remark}
+
+\section{What is settled, and what is not}
+
+\noindent\textbf{Settled, on the region $(\mathrm{H2})$.} The $P$-axis, at fixed
+$q$, in full: no hypothesis on $P$ survives in Theorem~H.
+
+\smallskip
+\noindent\textbf{Not settled.}
+\begin{itemize}[leftmargin=1.2em,itemsep=2pt]
+\item \emph{The conjecture as stated.} Theorem~H's family depends on $q$;
+  Theorem~H$'$'s constant does. Neither is the conjecture, which wants both a
+  $q$-free family and an absolute $C$. The window the campaign records as open is
+  exactly as open as before, only better described: the residue on the $P$-axis is
+  a factor $\sqrt{q^{+}}$ in the constant under $q$-free families, on
+  $M \le \sigma'/(2\delta)$.
+\item \emph{The $M$-corner.} $(\mathrm{H2})$ is carried, not discharged, except at
+  $q = 0$ where it is vacuous for every $M$.
+\item \emph{Whether the $\sqrt{q^{+}}$ is necessary.} Only achievability is shown.
+\end{itemize}
+
+\smallskip
+\noindent\textbf{A redirection.} The campaign's deepest effort goes into removing
+the $P\delta$ term so that a \emph{large} fixed set can be afforded. At fixed $q$
+that work is unnecessary: one never needs a fixed set larger than
+$\lceil t_q \rceil$. That programme is aimed solely at the $q$-free statement,
+where the cap must sit at $t_0$ and the $\sqrt{q^{+}}$ is real.
+
+\section{Verification status}
+
+\noindent This work has been through six independent blind referee passes in fresh
+context, spanning two model families: five on the artifact (lenses: the
+definitional step; arithmetic and constants; quantifier order; case coverage and
+degenerate instances; citation fidelity) and one on three proposed simplifications.
+All five artifact passes returned \textsc{defects}.
+
+\smallskip
+\noindent\textbf{Confirmed after adversarial attempt.} Lemma~H\textlf{0} was attacked by
+four referees independently, each trying to construct a reading of
+Definition~\ref{def:bf-here} on which it fails; none could. The arithmetic referee
+re-derived every inequality by hand, reproduced the machine check's grid sizes
+exactly including collision counts, found \emph{no computational error}, and
+confirmed that $c = 2$ and $C = 13$ follow from the displayed inequalities rather
+than from the grid. The case analysis is exhaustive with no boundary gap. No
+referee found a violation of the index-set restriction, or a leak of $D$, $\vx$ or
+the challenge into either family.
+
+\smallskip
+\noindent\textbf{Corrected.} Seven class-(A) and class-(C) findings, every one of
+them a claim \emph{about} the results rather than a result: Theorem~H$'$'s
+malformed hypothesis; an identification of the $\sqrt{q^{+}}$ with the Contract's
+own separation that conflated a threshold in $P$ with a degradation of $C$ and
+overrode a documented caution; a claim to reproduce a construction whose parameter
+$A := \sigma + 2 + \log(1/\gamma)$ is not $\sigma'$; a machine check described as
+reaching $q \le 10^{7}$ whose vacuity filter in fact admitted nothing above
+$q^{+} = 410$, so that $\sqrt{q^{+}}$ was exercised only to $\sqrt{11}$; the
+unstated standing hypothesis $N, M \ge 2$; and two summary lines scoped to a
+stronger statement than the body proves.
+
+\smallskip
+\noindent\textbf{Still owed.} The revision carrying these corrections has had
+\emph{no} pass. Everything here is a corollary of the campaign's Theorem~E$''$,
+which rests on a corollary sitting in an artifact with zero verification passes,
+whose only referee objection was overruled and never retested. The audit verified
+this work \emph{given} its dependencies; it did not touch them.
+
+\end{document}

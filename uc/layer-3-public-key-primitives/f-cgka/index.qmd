@@ -1,13 +1,253 @@
 ---
-title: "F-CGKA — Continuous group key agreement"
+title: "F-CGKA — Continuous group key agreement, history graph"
 status: "Emerging"
 layer: 3
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-CGKA* (Continuous group key agreement) is part of *Public-Key Primitives, Key Exchange, Messaging* in the UC functionality encyclopedia. Status: an emerging formulation, still an active area of research.
+*F-CGKA* (Continuous group key agreement, history graph) is part of *Public-Key Primitives, Key Exchange, Messaging* in the UC functionality encyclopedia. Status: an emerging formulation, still an active area of research.
+
+The group analogue of the two-party ratchet: members propose changes, one member commits a batch of them, and every commit starts an epoch with a fresh group key. What makes this functionality unlike anything else in the encyclopedia is that it does not maintain *a* group state. It maintains a **history graph** — a tree of every epoch any party could believe it is in, including epochs the adversary invented — and each party carries a pointer into it. Group agreement is then not an assumption but an output: two parties agree exactly when their pointers coincide.
+
+**This is the largest box on the site, at 106 lines, and it is a *declared fragment*.** The source's Figure 10 is the functionality; its sixteen starred helpers occupy two further pages (Figures 11 and 12) and its two safety predicates are recursive deduction rules (Figure 6) that no pseudocode subset expresses. All eighteen are carried as declared parameters and named below, which is how the source presents them too — it states outright that the functionality "is parameterized in the predicates $\mathsf{safe}(c)$, specifying which keys are confidential, and $\mathsf{inj\text{-}allowed}(c, \mathit{id})$, specifying when authenticity is not guarantee[d]". The same treatment [*F-crypto*](/uc/layer-2-crypto-library-symmetric/f-crypto/index.qmd), [*F-cred*](/uc/layer-7-privacy-anonymity/f-cred/index.qmd) and [*F-DH*](/uc/layer-2-crypto-library-symmetric/f-dh/index.qmd) established.
+
+## Functionality
+
+Reading the box, and **two keywords that are not the same**: $\mathsf{require}$ is the source's `req`, which "unwinds all state changes and returns $\bot$"; $\mathsf{assert}$ is the source's `assert`, which "is used in the description of functionalities to validate inputs of the simulator" and means that "if [the condition] is false, then the given functionality permanently halts, making the real and ideal worlds trivially distinguishable". The second is not a runtime check at all — it is a proof obligation on the simulator, written into the functionality's code, and it has no counterpart elsewhere in this encyclopedia. Every $\mathsf{assert}$ below marks a place where the *simulator* must have behaved, not where a caller might misbehave.
+
+Otherwise: $\mathcal{A}(\cdot)$ is a call on the adversary slot, $\mathsf{San}[\mathsf{Clean}]$ its sanitizer; $\bot$ is none-or-refused. $\mathtt{Node}$ is the history graph, indexed by commit messages $c$, with fields $\mathit{orig}$ (who committed), $\mathit{mem}$ (a map from member to signature key), $\mathit{pro}$ (the proposals committed), $\mathit{exp}$ (who was exposed here), $\mathit{stat}$, $\mathit{key}$ and $\mathit{chall}$. $\mathtt{Ptr}[\mathit{id}]$ is where a party currently believes it is; $\mathbf{H}$ in the parameter line stands for the sixteen helpers.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{CGKA}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves}),\,(\mathcal{F}_{\mathsf{AS}},\mathsf{serves}),\,(\mathcal{F}_{\mathsf{KS}},\mathsf{serves})\}\), \\ &nbsp; \(\mathit{par} := (\mathit{id}_{\mathsf{creator}}, \ \mathsf{safe}, \ \mathsf{inj-allowed}, \ \mathsf{cons-invariant}, \ \mathsf{auth-invariant}, \ \mathbf{H})\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{Ptr}[*], \mathtt{Node}[*], \mathtt{Prop}[*], \mathtt{Wel}[*] \gets \bot\)<span class="cj-comment">// who is where, the history graph, proposals, welcomes</span></li>
+<li>\(\mathtt{Rnd}[*] \gets \mathsf{good}\); &nbsp;\(\mathtt{Has}[*] \gets \mathsf{false}\)</li>
+<li>\(\mathtt{ctr} \gets 0\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Create(<span class="cj-id">spk</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="4">
+<li>\(\textbf{require}\ \mathit{id}.P = \mathit{id}_{\mathsf{creator}}\)<span class="cj-comment">// one instance, one group creator, fixed by the process id</span></li>
+<li>\(\textbf{require}\ \mathtt{Node}[\mathit{root}_0] = \bot \ \wedge\ \mathsf{valid-spk}(\mathit{id}_{\mathsf{creator}}, \mathit{spk})\)</li>
+<li>\(\mathit{mem} \gets \{(\mathit{id}_{\mathsf{creator}}, \mathit{spk})\}\)</li>
+<li>\(\mathtt{Node}[\mathit{root}_0] \gets \mathsf{create-root}(\mathit{id}_{\mathsf{creator}}, \mathit{mem}, \mathtt{Rnd}[\mathit{id}_{\mathsf{creator}}])\)</li>
+<li>\(\mathtt{Has}[\mathit{id}_{\mathsf{creator}}] \gets \mathsf{true}\); &nbsp;\(\mathtt{Ptr}[\mathit{id}_{\mathsf{creator}}] \gets \mathit{root}_0\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Propose(<span class="cj-id">act</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="9">
+<li>\(\textbf{require}\ \mathtt{Ptr}[\mathit{id}.P] \neq \bot\)</li>
+<li>\((p, \mathit{spk}_t, \mathit{ack}) \gets \mathsf{San}[\mathsf{Clean}_{p}]\bigl(\mathcal{A}(\mathsf{Propose}, \mathit{id}.P, \mathit{act})\bigr)\)<span class="cj-comment">// the adversary names the proposal</span></li>
+<li>\(\textbf{if}\ \neg\, \mathsf{req-correctness}(\mathsf{prop}, \mathit{id}.P, \mathit{act})\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{require}\ \mathit{ack}\)</span><span class="cj-comment">// a veto the adversary holds only when correctness is not owed</span></li>
+<li>\(\textbf{if}\ \mathit{act} = \mathsf{up-spk}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{assert}\)&nbsp;\(\mathsf{valid-spk}(\mathit{id}.P, \mathit{spk})\)</span><span class="cj-comment">// \(\mathit{spk}\) is unbound here; transcribed as printed</span></li>
+<li>\(\textbf{if}\ \mathit{act} = \mathsf{add-id}_t\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathit{act} \gets \mathsf{add-id}_t\text{-}\mathit{spk}_t\)</span></li>
+<li>\(\textbf{if}\ \mathtt{Prop}[p] = \bot\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{Prop}[p] \gets \mathsf{create-prop}(\mathtt{Ptr}[\mathit{id}.P], \mathit{id}.P, \mathit{act}, \mathtt{Rnd}[\mathit{id}.P])\)</span></li>
+<li>\(\textbf{if}\ \mathtt{Prop}[p] \neq \bot\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathsf{consistent-prop}(p, \mathit{id}.P, \mathit{act}, \mathtt{Rnd}[\mathit{id}.P])\)</span><span class="cj-comment">// a re-proposal must agree with the record</span></li>
+<li>\(\textbf{if}\ \mathtt{Rnd}[\mathit{id}.P] = \mathsf{bad}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathit{id}_{\mathcal{F}_{\mathsf{AS}}}.\mathsf{FullExposed}(\mathit{id}.P, \mathit{spk}) \text{ as } \mathit{id}\)</span><span class="cj-comment">// the same unbound \(\mathit{spk}\)</span></li>
+<li>\(\textbf{return}\ p\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Commit(<span class="cj-id">vec{p}</span>, <span class="cj-id">spk</span>, <span class="cj-id">rekey</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="24">
+<li>\(\textbf{require}\ \mathtt{Ptr}[\mathit{id}.P] \neq \bot\)</li>
+<li>\((\mathit{ack}, c, w, \mathit{rt}) \gets \mathsf{San}[\mathsf{Clean}_{c}]\bigl(\mathcal{A}(\mathsf{Commit}, \mathit{id}.P, \vec{p}, \mathit{spk}, \mathit{rekey})\bigr)\)</li>
+<li>\(\textbf{if}\ \neg\, \mathsf{req-correctness}(\mathsf{comm}, \mathit{id}.P, \vec{p}, \mathit{spk}, \mathit{rekey})\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{require}\ \mathit{ack}\)</span></li>
+<li>\(\mathsf{fill-props}(\mathit{id}.P, \vec{p})\)</li>
+<li>\(\textbf{if}\ \neg \mathit{rekey} \ \wedge\ \mathsf{only-adds}(\vec{p})\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathit{spk} \gets \mathtt{Node}[\mathtt{Ptr}[\mathit{id}.P]].\mathit{mem}[\mathit{id}.P]\)</span><span class="cj-comment">// an add-only commit reuses the committer's key</span></li>
+<li>\(\textbf{assert}\)&nbsp;\(\mathsf{valid-spk}(\mathit{id}.P, \mathit{spk})\)</li>
+<li>\(\mathit{mem} \gets \mathsf{members}(\mathtt{Ptr}[\mathit{id}.P], \mathit{id}.P, \vec{p}, \mathit{spk})\)</li>
+<li>\(\textbf{assert}\)&nbsp;\(\mathit{mem} \neq \bot \ \wedge\ (\mathit{id}.P, \mathit{spk}) \in \mathit{mem}\)</li>
+<li>\(\textbf{if}\ \mathtt{Node}[c] = \bot \ \wedge\ \mathit{rt} = \bot\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathit{stat} \gets \mathtt{Rnd}[\mathit{id}.P]\)</span></li>
+<li><span class="cj-ind">\(\textbf{if}\ \neg \mathit{rekey} \ \wedge\ \mathsf{only-adds}(\vec{p})\ \textbf{then}\)</span></li>
+<li><span class="cj-ind">\(\mathit{stat} \gets \mathsf{bad}\)</span><span class="cj-comment">// no fresh randomness enters, so the epoch is not confidential</span></li>
+<li><span class="cj-ind">\(\mathtt{Node}[c] \gets \mathsf{create-child}(\mathtt{Ptr}[\mathit{id}.P], \mathit{id}.P, \vec{p}, \mathit{mem}, \mathit{stat})\)</span></li>
+<li>\(\textbf{if}\ \mathtt{Node}[c] \neq \bot \ \vee\ \mathit{rt} \neq \bot\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(c' \gets c\)</span></li>
+<li><span class="cj-ind">\(\textbf{if}\ \mathtt{Node}[c] = \bot\ \textbf{then}\)</span></li>
+<li><span class="cj-ind">\(c' \gets \mathit{root}_{\mathit{rt}}\)</span></li>
+<li><span class="cj-ind">\(\mathsf{consistent-comm}(c', \mathit{id}.P, \vec{p}, \mathit{mem})\)</span></li>
+<li><span class="cj-ind">\(\textbf{if}\ c \neq c'\ \textbf{then}\)</span></li>
+<li><span class="cj-ind">\(\mathsf{attach}(c, c', \mathit{id}.P, \vec{p})\)</span><span class="cj-comment">// a detached root is grafted onto the graph</span></li>
+<li>\(\textbf{assert}\)&nbsp;\(w \neq \bot \iff \exists\, p \in \vec{p} : \mathtt{Node}[p].\mathit{act} = \mathsf{add}\text{-}*\)</li>
+<li>\(\textbf{if}\ w \neq \bot\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{assert}\)&nbsp;\(\mathtt{Wel}[w] \in \{\bot, c\}\); &nbsp;\(\mathtt{Wel}[w] \gets c\)</span></li>
+<li>\(\textbf{assert}\)&nbsp;\(\mathsf{cons-invariant} \ \wedge\ \mathsf{auth-invariant}\)</li>
+<li>\(\textbf{if}\ \mathtt{Rnd}[\mathit{id}.P] = \mathsf{bad}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathit{id}_{\mathcal{F}_{\mathsf{AS}}}.\mathsf{FullExposed}(\mathit{id}.P, \mathtt{Node}[\mathtt{Ptr}[\mathit{id}.P]].\mathit{mem}[\mathit{id}.P]) \text{ as } \mathit{id}\)</span></li>
+<li>\(\textbf{return}\ (c, w)\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Key()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="53">
+<li>\(\textbf{require}\ \mathtt{Ptr}[\mathit{id}.P] \neq \bot \ \wedge\ \mathtt{Has}[\mathit{id}.P]\)</li>
+<li>\(\textbf{if}\ \mathtt{Node}[\mathtt{Ptr}[\mathit{id}.P]].\mathit{key} = \bot\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathsf{set-key}(\mathtt{Ptr}[\mathit{id}.P])\)</span></li>
+<li>\(\mathtt{Has}[\mathit{id}.P] \gets \mathsf{false}\)<span class="cj-comment">// the key is handed out once per epoch and per party</span></li>
+<li>\(\textbf{return}\ \mathtt{Node}[\mathtt{Ptr}[\mathit{id}.P]].\mathit{key}\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Process(<span class="cj-id">c</span>, <span class="cj-id">vec{p}</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="58">
+<li>\((\mathit{ack}, \mathit{rt}, \mathit{orig}', \mathit{spk}') \gets \mathsf{San}[\mathsf{Clean}_{q}]\bigl(\mathcal{A}(\mathsf{Process}, \mathit{id}.P, c, \vec{p})\bigr)\)</li>
+<li>\(\textbf{if}\ \neg\, \mathsf{req-correctness}(\mathsf{proc}, \mathit{id}.P, c, \vec{p})\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{require}\ \mathit{ack}\)</span></li>
+<li>\(\mathsf{fill-props}(\mathit{id}.P, \vec{p})\)</li>
+<li>\(\textbf{if}\ \mathtt{Node}[c] = \bot \ \wedge\ \mathit{rt} = \bot\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathit{mem} \gets \mathsf{members}(\mathtt{Ptr}[\mathit{id}.P], \mathit{orig}', \vec{p}, \mathit{spk}')\)</span></li>
+<li><span class="cj-ind">\(\textbf{assert}\)&nbsp;\(\mathit{mem} \neq \bot \ \wedge\ \mathsf{inj-allowed}(\mathtt{Ptr}[\mathit{id}.P], \mathit{id}.P)\)</span><span class="cj-comment">// the one line that admits a forgery, and only where the predicate does</span></li>
+<li><span class="cj-ind">\(\mathtt{Node}[c] \gets \mathsf{create-child}(\mathtt{Ptr}[\mathit{id}.P], \mathit{orig}', \vec{p}, \mathit{mem}, \mathsf{adv})\)</span></li>
+<li>\(\textbf{if}\ \mathtt{Node}[c] \neq \bot \ \vee\ \mathit{rt} \neq \bot\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(c' \gets c\)</span></li>
+<li><span class="cj-ind">\(\textbf{if}\ \mathtt{Node}[c] = \bot\ \textbf{then}\)</span></li>
+<li><span class="cj-ind">\(c' \gets \mathit{root}_{\mathit{rt}}\)</span></li>
+<li><span class="cj-ind">\(\mathit{id}_c \gets \mathtt{Node}[c'].\mathit{orig}\); &nbsp;\(\mathit{spk}_c \gets \mathtt{Node}[c'].\mathit{mem}[\mathit{id}_c]\)</span></li>
+<li><span class="cj-ind">\(\mathit{mem} \gets \mathsf{members}(\mathtt{Ptr}[\mathit{id}.P], \mathit{id}_c, \vec{p}, \mathit{spk}_c)\)</span></li>
+<li><span class="cj-ind">\(\textbf{assert}\)&nbsp;\(\mathit{mem} \neq \bot\)</span></li>
+<li><span class="cj-ind">\(\mathsf{valid-successor}(c', \mathit{id}.P, \vec{p}, \mathit{mem})\)</span></li>
+<li><span class="cj-ind">\(\textbf{if}\ c \neq c'\ \textbf{then}\)</span></li>
+<li><span class="cj-ind">\(\mathsf{attach}(c, c', \mathit{id}.P, \vec{p})\)</span></li>
+<li>\(\textbf{if}\ \exists\, p \in \vec{p} : \mathtt{Prop}[p].\mathit{act} = \mathsf{rem-id}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{Ptr}[\mathit{id}.P] \gets \bot\)</span><span class="cj-comment">// a removed party is unmoored, not deleted</span></li>
+<li>\(\textbf{if}\ \nexists\, p \in \vec{p} : \mathtt{Prop}[p].\mathit{act} = \mathsf{rem-id}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{assert}\)&nbsp;\(\mathit{id}.P \in \mathtt{Node}[c].\mathit{mem}\)</span></li>
+<li><span class="cj-ind">\(\mathtt{Ptr}[\mathit{id}.P] \gets c\); &nbsp;\(\mathtt{Has}[\mathit{id}.P] \gets \mathsf{true}\)</span></li>
+<li>\(\textbf{assert}\)&nbsp;\(\mathsf{cons-invariant} \ \wedge\ \mathsf{auth-invariant}\)</li>
+<li>\(\textbf{return}\ \mathsf{output-proc}(c)\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Join(<span class="cj-id">w</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="83">
+<li>\((\mathit{ack}, c', \mathit{orig}', \mathit{mem}') \gets \mathsf{San}[\mathsf{Clean}_{j}]\bigl(\mathcal{A}(\mathsf{Join}, \mathit{id}.P, w)\bigr)\)</li>
+<li>\(\textbf{require}\ \mathit{ack}\)</li>
+<li>\(c \gets \mathtt{Wel}[w]\)</li>
+<li>\(\textbf{if}\ c = \bot \ \wedge\ \mathtt{Node}[c'] \neq \bot\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(c \gets c'\)</span></li>
+<li>\(\textbf{if}\ c = \bot \ \wedge\ \mathtt{Node}[c'] = \bot\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{ctr} \gets \mathtt{ctr} + 1\); &nbsp;\(c \gets \mathit{root}_{\mathtt{ctr}}\)</span></li>
+<li><span class="cj-ind">\(\mathtt{Node}[c] \gets \mathsf{create-root}(\mathit{orig}', \mathit{mem}', \mathsf{adv})\)</span><span class="cj-comment">// a welcome to a group that never existed gets its own root</span></li>
+<li>\(\textbf{if}\ \mathtt{Wel}[w] = \bot\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{Wel}[w] \gets c\)</span></li>
+<li>\(\mathtt{Ptr}[\mathit{id}.P] \gets c\); &nbsp;\(\mathtt{Has}[\mathit{id}.P] \gets \mathsf{true}\)</li>
+<li>\(\textbf{assert}\)&nbsp;\(\mathit{id}.P \in \mathtt{Node}[c].\mathit{mem} \ \wedge\ \mathsf{cons-invariant} \ \wedge\ \mathsf{auth-invariant}\)</li>
+<li>\(\textbf{return}\ \mathsf{output-join}(c)\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="96">
+<li>\(\textbf{if}\ \mathtt{Ptr}[\mathit{id}.P] \neq \bot\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{Node}[\mathtt{Ptr}[\mathit{id}.P]].\mathit{exp} \gets \mathtt{Node}[\mathtt{Ptr}[\mathit{id}.P]].\mathit{exp} \cup \{(\mathit{id}.P, \mathtt{Has}[\mathit{id}.P])\}\)</span></li>
+<li><span class="cj-ind">\(\mathsf{update-stat-after-exp}(\mathit{id}.P)\)</span></li>
+<li><span class="cj-ind">\(\mathit{id}_{\mathcal{F}_{\mathsf{AS}}}.\mathsf{FullExposed}(\mathit{id}.P, \mathtt{Node}[\mathtt{Ptr}[\mathit{id}.P]].\mathit{mem}[\mathit{id}.P]) \text{ as } \mathit{id}\)</span></li>
+<li>\((\mathtt{SK}, \mathtt{SPK}) \gets \mathit{id}_{\mathcal{F}_{\mathsf{KS}}}.\mathsf{FullGetSk}() \text{ as } \mathit{id}\)</li>
+<li>\(\forall\, \mathit{kp}, c\) with \(\mathtt{SK}[\mathit{id}.P, \mathit{kp}] \neq \bot \wedge \exists p \in \mathtt{Node}[c].\mathit{pro} : \mathtt{Prop}[p].\mathit{act} = \mathsf{add-id-spk}\)</li>
+<li><span class="cj-ind">where \(\mathtt{SPK}[\mathit{id}.P, \mathit{kp}] = \mathit{spk}\): &nbsp;\(\mathtt{Node}[c].\mathit{exp} \gets \mathtt{Node}[c].\mathit{exp} \cup \{(\mathit{id}.P, \mathsf{true})\}\)</span></li>
+<li>\(\textbf{require}\ \nexists\, c : \mathtt{Node}[c].\mathit{chall} \wedge \neg\, \mathsf{safe}(c)\)<span class="cj-comment">// evaluated \emph{after} the exposure is recorded; see the register</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.CorrRand(<span class="cj-id">b</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="105">
+<li>\(\textbf{require}\ \mathit{id}'.F = \mathbf{A} \ \wedge\ b \in \{\mathsf{good}, \mathsf{bad}\}\)</li>
+<li>\(\mathtt{Rnd}[\mathit{id}.P] \gets b\); &nbsp;\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+*Source: Figure 10, p. 33 of Joël Alwen, Daniel Jost and Marta Mularczyk, "On the Insider Security of MLS", ePrint 2020/1327, revision `20220811:145544` (the newest of three postings). PDF page and printed folio agree. The figure was rendered and inspected rather than read only through `pdftotext`: this paper encodes two functionality variants into one figure by solid and dashed boxes elsewhere (Figure 9), and Figures 2–4 mark injection- and randomness-related code the same way. Figure 10 turns out to carry **no** such marks — its boxes are hyperlink borders — but the check was owed.*
+
+**One line of the source is defective as printed, and it is transcribed rather than repaired.** In $\mathsf{Propose}$, line 14 asserts $\mathsf{valid\text{-}spk}(\mathit{id}, \mathit{spk})$ and line 22 reports $\mathit{spk}$ as exposed — and $\mathit{spk}$ **is never bound in that operation**. $\mathsf{Propose}$ takes only $\mathit{act}$; the only key-like value in scope is $\mathit{spk}_t$, which the adversary returns at line 10. The paper's own main-body presentation of the same operation (Figure 2, p. 13) has no such line at all, and receives $\mathit{spk}_t$ only in the `add` case, so the two figures disagree about this operation as well. Transcribed as printed, with the box saying so, because there is no unique repair: reading it as $\mathit{spk}_t$ makes the $\mathsf{up\text{-}spk}$ branch assert a validity condition on a key the adversary chose, which is a different functionality. This is the same class of defect this encyclopedia has already recorded for `f-fe` (an unbound successor state) and `f-asyncmpc` (a counter that never reaches its trigger).
+
+- **Line 64 is the whole security statement, and everything else is bookkeeping around it.** A party processes a commit that no honest party ever produced only if $\mathsf{inj\text{-}allowed}$ says so at that node, for that party — and if the predicate says no, the functionality *halts*, which is to say the simulator has been caught. Authenticity in this functionality is therefore not a property proved about the box; it is the extension of a predicate, and the predicate is where the work is. That is why the paper's four negative theorems all take the form "with $\mathsf{safe}$ and $\mathsf{inj\text{-}allowed}$ as in Figure 6, protocol variant $X$ does *not* realize this".
+- **Lines 34 and 39 split every commit into "new" and "already known", and the second case is the interesting one.** A commit the functionality has not seen and that names no detached root creates a fresh node. Anything else means the adversary is re-presenting a node that already exists somewhere in the graph — possibly as an orphan root created by an earlier $\mathsf{Join}$ — and lines 43 and 45 then check consistency and graft the orphan into place. The history graph grows sideways as well as downwards, and $\mathsf{attach}$ is the operation that repairs it.
+- **Lines 88–90 let a party join a group that never existed.** If a welcome message matches no recorded commit and no known node, the functionality mints a *new root* from membership the adversary supplies. It does not fail. The party is now in a well-formed group of its own, disjoint from everyone else's, and $\mathsf{safe}$ and $\mathsf{inj\text{-}allowed}$ decide whether that was allowed. This is the cleanest expression on this site of what a history graph buys: a functionality with one group state would have had to either refuse or lie.
+- **Line 37 says an add-only commit is not confidential, and this is a real MLS property, not a modelling artifact.** When nothing forces a rekey and every proposal is an add, line 30 reuses the committer's existing key and line 37 marks the new epoch's status $\mathsf{bad}$ outright. No fresh entropy enters the epoch, so the epoch secret is derivable from what the adversary may already hold. A reader looking for "where does MLS not heal" should look here first.
+- **Lines 76 and 77 unmoor a removed party rather than deleting it.** Processing a commit that removes you sets your pointer to $\bot$ — you are nowhere in the graph, not gone from it. Every later operation of yours is refused at line 9, 24 or 53, and yet your exposures remain recorded at the node you were removed from. Removal is a fact about a pointer, and the history is not rewritten.
+- **Line 56 consumes the key.** $\mathsf{Key}$ hands out the epoch secret once per party per epoch and then clears the flag, so a second call is refused at line 53. That is what makes $\mathit{chall}$ at line 103 meaningful: a key that has been extracted is a key the environment holds, and the safety predicate has to account for the difference between an epoch whose key was taken and one whose key was not.
+- **Line 103 is evaluated *after* the exposure it guards, and that ordering is the point.** The source states it as "This input is disallowed if $\exists c : \mathtt{Node}[c].\mathit{chall} \wedge \neg\mathsf{safe}(c)$", printed at the *end* of the operation. It cannot be hoisted: $\mathsf{safe}$ reads the $\mathit{exp}$ fields that lines 97 and 102 have just written, so the condition means "this exposure would compromise a key already challenged", which is only decidable once it is recorded. The source's `req` unwinds state on failure, which makes the trailing position sound; see the register for what this framework does instead.
+- **Lines 100–102 are a second, indirect exposure and they reach backwards.** Corrupting a party also fetches its key-service secrets, and *every* node whose committed proposals added that party under one of those key packages gains an exposure — nodes the party may never have visited. Welcome messages are encrypted to key packages, so holding the package retroactively opens every epoch a party could have been welcomed into. This is the "insider" half of the paper's title made concrete.
+- **Line 105 is an adversary-only interface with no analogue elsewhere on this site.** $\mathsf{CorrRand}$ lets the adversary declare a party's randomness bad, prospectively, and lines 35 and 21 then read that flag. Bad randomness is modelled as a *mode* a party is put into rather than as an event, which is what lets the functionality reason about a commit generated with adversarial coins without the adversary having to produce the coins.
+
+**Mismatch register.**
+
+| The source | This box | Why |
+|---|---|---|
+| `assert cond` — permanent halt, validating the simulator | $\mathsf{assert}$, kept as a distinct keyword, at lines 14, 31, 33, 46, 48, 49, 64, 72, 79, 81, 94 | This framework has no such keyword. Keeping the source's word is the only honest option: rendering it as $\mathsf{require}$ would turn a proof obligation into a refusal, and the four negative theorems are all statements about these lines firing. |
+| `req cond` — unwinds all state changes and returns $\bot$ | $\mathsf{require}$ | Matches, except for rollback: the source's `req` restores state and this framework's refusal does not specify that it does. Immaterial everywhere except line 103, below. |
+| "This input is disallowed if $\exists c : \dots$", printed after the body of `Expose` | $\mathsf{require}$ at line 103, in the same trailing position | The condition reads state the body just wrote, so it cannot be hoisted. It therefore relies on the source's rollback semantics, and this is the one place in the box where the two frameworks genuinely differ. A reader should take line 103 as a restriction on the environment — the source's own word is "disallowed" — rather than as an operation with an effect. |
+| `Corrupt`/`Expose`, an adversary input | $\mathsf{Leak}$, lines 96–104 | Corruption is the framework's; $\mathsf{Leak}$ is what a corrupt party's adversary reads off. |
+| `Send X to the adversary and receive Y` | $\mathcal{A}(\cdot)$ under $\mathsf{San}[\mathsf{Clean}]$, lines 10, 25, 58, 83 | Required here. Each sanitizer checks only the tuple shape the source's own message format fixes. Note that these are *not* responsive calls: the source's idiom permits the adversary to run other machinery first, and nothing in the functionality needs atomicity. |
+| $\mathit{sid}$ carries $\mathit{id}_{\mathsf{creator}}$ | A parameter, with the guard at line 4 | The source says the functionality "expects as part of the instance's session identifier sid the group creator's identity". Made explicit, since it is the one piece of the session identifier this box is conditional on. |
+| `mem ← {id_creator, spk}` in `Create` | $\{(\idc, \mathit{spk})\}$ at line 6 | Notation, not content: every other use of $\mathit{mem}$ treats it as a map from member to key ($\mathtt{Node}[c].\mathit{mem}[\mathit{id}]$, $(\mathit{id},\mathit{spk}) \in \mathit{mem}$), so the two-element set is a slip. |
+| `if Prop[p] = ⊥ … else *consistent-prop(…)` | Two guarded $\mathsf{if}$s, lines 17–20 | The generator's LaTeX subset has no `else`. The second condition is the negation of the first, and $\mathtt{Prop}[p]$ is assigned in the first branch — so the two are written in an order where the second **would** re-fire. Read line 19 as the source's `else`. Same at lines 34/39, 62/66, 76/78, 86/88. |
+| $\mathsf{safe}(c, \mathit{id})$ in the prose, $\mathsf{safe}(c)$ in Figure 10 | $\mathsf{safe}(c)$ | The figure is the definition; the prose §5 uses the two-argument form. Recorded because a reader comparing the two will notice. |
+| The sixteen starred helpers and the two predicates | Declared, in the parameter line | Two further figure-pages plus a page of recursive deduction rules. Named in full below. |
+
+**What is declared.** The helpers, all from Figures 11 and 12 (pp. 34–35): $\mathsf{create\text{-}root}$, $\mathsf{create\text{-}child}$, $\mathsf{create\text{-}prop}$, $\mathsf{attach}$, $\mathsf{members}$, $\mathsf{fill\text{-}props}$, $\mathsf{only\text{-}adds}$, $\mathsf{valid\text{-}spk}$, $\mathsf{valid\text{-}successor}$, $\mathsf{consistent\text{-}prop}$, $\mathsf{consistent\text{-}comm}$, $\mathsf{req\text{-}correctness}$, $\mathsf{set\text{-}key}$, $\mathsf{update\text{-}stat\text{-}after\text{-}exp}$, $\mathsf{output\text{-}proc}$ and $\mathsf{output\text{-}join}$. The graph invariants $\mathsf{cons\text{-}invariant}$ and $\mathsf{auth\text{-}invariant}$ are from the same figures. The predicates $\mathsf{safe}$ and $\mathsf{inj\text{-}allowed}$ are Figure 6, p. 19, built from two recursive deduction rules: $\mathsf{know}(c, \mathit{id})$, that the adversary holds a party's secrets at a node, and $\mathsf{know}(c, \text{`epoch'})$, that it holds the epoch secrets. The paper's Remark 3 is worth reading alongside them: earlier work defined safety by asking whether any single exposure affects a node, and that is not enough here, because "a set of simultaneous exposures may leak information that is not leaked by any of the exposures alone".
+
+## Known realizations
+
+**ITK — "insider-secure TreeKEM", the paper's model of the MLS key schedule — realizes it, under IND-CCA and EUF-CMA, in the global random oracle model** (Theorem 1): "Assuming that PKE is IND-CCA secure, and that Sig is EUF-CMA secure, the ITK protocol securely realizes $(\mathcal{F}^{\mathit{iw}}_{\mathsf{AS}}, \mathcal{F}^{\mathit{iw}}_{\mathsf{KS}}, \mathcal{F}_{\mathsf{CGKA}})$ in the $(\mathcal{F}_{\mathsf{AS}}, \mathcal{F}_{\mathsf{KS}}, \mathcal{G}_{\mathsf{RO}})$-hybrid model, where $\mathcal{F}_{\mathsf{CGKA}}$ uses the predicates $\mathsf{safe}$ and $\mathsf{inj\text{-}allowed}$ from Fig. 6 and calls to HKDF.Expand, HKDF.Extract and MAC functions are replaced by calls to the global random oracle $\mathcal{G}_{\mathsf{RO}}$." The global oracle is [*G-RO*](/uc/layer-0-idealized-setup/g-ro/index.qmd) on this site.
+
+**Four negative results, and they are the paper's actual contribution.** Each weakens ITK in a way MLS had at some point considered or shipped, and shows the result does *not* realize this functionality against the same predicates — for every simulator there is a distinguishing environment.
+
+- **Theorem 2.** Drop membership tags, and an adversary who has corrupted a party can still forge proposals in that party's name *after* the party has updated. Signature keys rotate far less often than epoch keys, so post-compromise security is weaker than the epoch structure suggests.
+- **Theorem 3.** If the signature scheme lacks unique signatures — a property standard EUF-CMA does not give — the protocol fails.
+- **Theorem 4.** The old tree-signing mechanism is broken, with the attack drawn out in the paper's Figure 8.
+- **Theorem 5.** A CPA-secure variant fails, which is the concrete argument for the IND-CCA requirement in Theorem 1.
+
+Read together, these say something the positive theorem alone does not: this functionality is *tight* enough to separate protocols that a game-based treatment had not separated.
+
+## Properties
+
+- **Agreement is an output, not an assumption, with probability exactly $1$.** Two parties are in the same epoch exactly when $\mathtt{Ptr}$ points them at the same node. Nothing in the box forces that to happen, and the history graph exists precisely to describe the runs where it does not.
+- **Authenticity, exactly as far as $\mathsf{inj\text{-}allowed}$ reaches.** Line 64. The guarantee has no free-standing statement: it is the predicate.
+- **Key secrecy, exactly as far as $\mathsf{safe}$ reaches.** Line 103, and the $\mathit{chall}$ field. Likewise.
+- **No confidentiality for an add-only epoch.** Line 37, unconditionally. This is a $\mathsf{bad}$ status assigned by the functionality itself, not a consequence of any corruption.
+- **Retroactive exposure through key packages.** Lines 100–102. Corrupting a party opens every node that added it, including nodes it never reached.
+- **Bad randomness is a mode, not an event.** Line 105 sets it; lines 21, 35 and 50 read it; and it persists until the adversary sets it back.
+- **One key per party per epoch.** Lines 53 and 56.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Alwen, Jost, and Mularczyk. [*On the insider security of MLS*](https://eprint.iacr.org/2020/1327). In Advances in Cryptology – CRYPTO 2022, volume 13508 of LNCS, pages 34–68, 2022.
-- Alwen et al. [*Security analysis and improvements for the IETF MLS standard for group messaging*](https://eprint.iacr.org/2019/1189). In Advances in Cryptology – CRYPTO 2020, 2020.
+- Alwen, Jost, and Mularczyk. [*On the insider security of MLS*](https://eprint.iacr.org/2020/1327). In Advances in Cryptology – CRYPTO 2022, volume 13508 of LNCS, pages 34–68, 2022. **The source of the box above**: Figure 10, p. 33 of ePrint revision `20220811:145544`, with the helpers in Figures 11–12 (pp. 34–35) and the safety predicates in Figure 6 (p. 19). The positive realization is Theorem 1; the four separations are Theorems 2–5. The paper's main body states the same functionality across Figures 2–4 (pp. 13–15) in a marked-up form that separates injection- and randomness-related code — **do not read those in place of Figure 10**, which is the merged and complete version, and which differs from Figure 2 in $\mathsf{Propose}$.
+- Alwen et al. [*Security analysis and improvements for the IETF MLS standard for group messaging*](https://eprint.iacr.org/2019/1189). In Advances in Cryptology – CRYPTO 2020, 2020. The earlier treatment, and the one whose simpler notion of safety Remark 3 of the source argues is insufficient — an exposure-by-exposure definition misses what simultaneous exposures leak together. Its functionality is a different, weaker object, so it is not blended into the box above.

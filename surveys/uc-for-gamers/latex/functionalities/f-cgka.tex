@@ -1,0 +1,231 @@
+%% The interface box of f-cgka, the one source for both the book
+%% and uc/.../f-cgka/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+%%
+%% `breakable' and no `multicols', per the head of f-secmsg.tex.
+%%
+%% A *declared fragment*, in the sense f-crypto, f-cred and f-dh established:
+%% the source's Fig. 10 is the functionality, and its sixteen starred helpers
+%% (Figs. 11-12, two further pages) and its two safety predicates (Fig. 6,
+%% recursive deduction rules that the algorithmic subset cannot express) are
+%% carried as declared parameters rather than inlined. The source presents it
+%% the same way -- it says outright that it "is parameterized in the
+%% predicates safe(c) ... and inj-allowed(c, id)". The page names all
+%% eighteen and says where each is printed.
+\begin{interface}[nofloat, breakable]{Functionality $\Fcgka$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves),\,(\Fas,\serves),\,(\Fks,\serves)\}$, \\
+\quad $\pars := (\idc, \ \opl{safe}, \ \opl{inj-allowed}, \ \opl{cons-invariant}, \ \opl{auth-invariant}, \ \mathbf{H})$}}
+
+{\scriptsize
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{Ptr}[*], \V{Node}[*], \V{Prop}[*], \V{Wel}[*] \gets \none$
+  \Comment{who is where, the history graph, proposals, welcomes}
+\State $\V{Rnd}[*] \gets \atom{good}$; \ $\V{Has}[*] \gets \false$
+\State $\V{ctr} \gets 0$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Create}(\mathit{spk})$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P = \idc$} \label{ln:cgkacreator}
+  \Comment{one instance, one group creator, fixed by the process id}
+\Req{$\V{Node}[\mathit{root}_0] = \none \ \wedge\ \opl{valid-spk}(\idc, \mathit{spk})$}
+\State $\mathit{mem} \gets \{(\idc, \mathit{spk})\}$
+\State $\V{Node}[\mathit{root}_0] \gets \opl{create-root}(\idc, \mathit{mem}, \V{Rnd}[\idc])$
+\State $\V{Has}[\idc] \gets \true$; \ $\V{Ptr}[\idc] \gets \mathit{root}_0$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Propose}(\mathit{act})$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{Ptr}[\id.P] \neq \none$}
+\State $(p, \mathit{spk}_t, \mathit{ack}) \gets \San[\Clean_{p}]\bigl(\Adv(\op{Propose}, \id.P, \mathit{act})\bigr)$ \label{ln:cgkaadvnames}
+  \Comment{the adversary names the proposal}
+\If{$\neg\, \opl{req-correctness}(\atom{prop}, \id.P, \mathit{act})$} \label{ln:cgkacorrectness}
+  \Req{$\mathit{ack}$}
+    \Comment{a veto the adversary holds only when correctness is not owed}
+\EndIf
+\If{$\mathit{act} = \atom{up-spk}$}
+  \State \textbf{assert}\ $\opl{valid-spk}(\id.P, \mathit{spk})$ \label{ln:cgkaunbound}
+    \Comment{$\mathit{spk}$ is unbound here; transcribed as printed}
+\EndIf
+\If{$\mathit{act} = \atom{add-id}_t$}
+  \State $\mathit{act} \gets \atom{add-id}_t\text{-}\mathit{spk}_t$
+\EndIf
+\If{$\V{Prop}[p] = \none$}
+  \State $\V{Prop}[p] \gets \opl{create-prop}(\V{Ptr}[\id.P], \id.P, \mathit{act}, \V{Rnd}[\id.P])$
+\EndIf
+\If{$\V{Prop}[p] \neq \none$}
+  \State $\opl{consistent-prop}(p, \id.P, \mathit{act}, \V{Rnd}[\id.P])$ \label{ln:cgkareprop}
+    \Comment{a re-proposal must agree with the record}
+\EndIf
+\If{$\V{Rnd}[\id.P] = \atom{bad}$}
+  \State $\id_{\Fas}.\fopl{Exposed}(\id.P, \mathit{spk}) \text{ as } \id$ \label{ln:cgkabadrand}
+    \Comment{the same unbound $\mathit{spk}$}
+\EndIf
+\State \textbf{return} $p$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Commit}(\vec{p}, \mathit{spk}, \mathit{rekey})$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{Ptr}[\id.P] \neq \none$}
+\State $(\mathit{ack}, c, w, \mathit{rt}) \gets \San[\Clean_{c}]\bigl(\Adv(\op{Commit}, \id.P, \vec{p}, \mathit{spk}, \mathit{rekey})\bigr)$
+\If{$\neg\, \opl{req-correctness}(\atom{comm}, \id.P, \vec{p}, \mathit{spk}, \mathit{rekey})$}
+  \Req{$\mathit{ack}$}
+\EndIf
+\State $\opl{fill-props}(\id.P, \vec{p})$
+\If{$\neg \mathit{rekey} \ \wedge\ \opl{only-adds}(\vec{p})$}
+  \State $\mathit{spk} \gets \V{Node}[\V{Ptr}[\id.P]].\mathit{mem}[\id.P]$ \label{ln:cgkanorekey}
+    \Comment{an add-only commit reuses the committer's key}
+\EndIf
+\State \textbf{assert}\ $\opl{valid-spk}(\id.P, \mathit{spk})$
+\State $\mathit{mem} \gets \opl{members}(\V{Ptr}[\id.P], \id.P, \vec{p}, \mathit{spk})$
+\State \textbf{assert}\ $\mathit{mem} \neq \none \ \wedge\ (\id.P, \mathit{spk}) \in \mathit{mem}$
+\If{$\V{Node}[c] = \none \ \wedge\ \mathit{rt} = \none$} \label{ln:cgkafreshnode}
+  \State $\mathit{stat} \gets \V{Rnd}[\id.P]$
+  \If{$\neg \mathit{rekey} \ \wedge\ \opl{only-adds}(\vec{p})$}
+    \State $\mathit{stat} \gets \atom{bad}$ \label{ln:cgkaaddonlybad}
+      \Comment{no fresh randomness enters, so the epoch is not confidential}
+  \EndIf
+  \State $\V{Node}[c] \gets \opl{create-child}(\V{Ptr}[\id.P], \id.P, \vec{p}, \mathit{mem}, \mathit{stat})$
+\EndIf
+\If{$\V{Node}[c] \neq \none \ \vee\ \mathit{rt} \neq \none$} \label{ln:cgkainjected}
+  \State $c' \gets c$
+  \If{$\V{Node}[c] = \none$}
+    \State $c' \gets \mathit{root}_{\mathit{rt}}$
+  \EndIf
+  \State $\opl{consistent-comm}(c', \id.P, \vec{p}, \mathit{mem})$
+  \If{$c \neq c'$}
+    \State $\opl{attach}(c, c', \id.P, \vec{p})$ \label{ln:cgkaattach}
+      \Comment{a detached root is grafted onto the graph}
+  \EndIf
+\EndIf
+\State \textbf{assert}\ $w \neq \none \iff \exists\, p \in \vec{p} : \V{Node}[p].\mathit{act} = \atom{add}\text{-}*$
+\If{$w \neq \none$}
+  \State \textbf{assert}\ $\V{Wel}[w] \in \{\none, c\}$; \ $\V{Wel}[w] \gets c$
+\EndIf
+\State \textbf{assert}\ $\opl{cons-invariant} \ \wedge\ \opl{auth-invariant}$ \label{ln:cgkacommitinv}
+\If{$\V{Rnd}[\id.P] = \atom{bad}$}
+  \State $\id_{\Fas}.\fopl{Exposed}(\id.P, \V{Node}[\V{Ptr}[\id.P]].\mathit{mem}[\id.P]) \text{ as } \id$
+\EndIf
+\State \textbf{return} $(c, w)$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Key}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\V{Ptr}[\id.P] \neq \none \ \wedge\ \V{Has}[\id.P]$} \label{ln:cgkakeyonce}
+\If{$\V{Node}[\V{Ptr}[\id.P]].\mathit{key} = \none$}
+  \State $\opl{set-key}(\V{Ptr}[\id.P])$ \label{ln:cgkasetkey}
+\EndIf
+\State $\V{Has}[\id.P] \gets \false$ \label{ln:cgkaconsume}
+  \Comment{the key is handed out once per epoch and per party}
+\State \textbf{return} $\V{Node}[\V{Ptr}[\id.P]].\mathit{key}$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Process}(c, \vec{p})$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $(\mathit{ack}, \mathit{rt}, \mathit{orig}', \mathit{spk}') \gets \San[\Clean_{q}]\bigl(\Adv(\op{Process}, \id.P, c, \vec{p})\bigr)$
+\If{$\neg\, \opl{req-correctness}(\atom{proc}, \id.P, c, \vec{p})$}
+  \Req{$\mathit{ack}$}
+\EndIf
+\State $\opl{fill-props}(\id.P, \vec{p})$
+\If{$\V{Node}[c] = \none \ \wedge\ \mathit{rt} = \none$} \label{ln:cgkainject}
+  \State $\mathit{mem} \gets \opl{members}(\V{Ptr}[\id.P], \mathit{orig}', \vec{p}, \mathit{spk}')$
+  \State \textbf{assert}\ $\mathit{mem} \neq \none \ \wedge\ \opl{inj-allowed}(\V{Ptr}[\id.P], \id.P)$ \label{ln:cgkainjallowed}
+    \Comment{the one line that admits a forgery, and only where the predicate does}
+  \State $\V{Node}[c] \gets \opl{create-child}(\V{Ptr}[\id.P], \mathit{orig}', \vec{p}, \mathit{mem}, \atom{adv})$
+\EndIf
+\If{$\V{Node}[c] \neq \none \ \vee\ \mathit{rt} \neq \none$}
+  \State $c' \gets c$
+  \If{$\V{Node}[c] = \none$}
+    \State $c' \gets \mathit{root}_{\mathit{rt}}$
+  \EndIf
+  \State $\mathit{id}_c \gets \V{Node}[c'].\mathit{orig}$; \ $\mathit{spk}_c \gets \V{Node}[c'].\mathit{mem}[\mathit{id}_c]$
+  \State $\mathit{mem} \gets \opl{members}(\V{Ptr}[\id.P], \mathit{id}_c, \vec{p}, \mathit{spk}_c)$
+  \State \textbf{assert}\ $\mathit{mem} \neq \none$
+  \State $\opl{valid-successor}(c', \id.P, \vec{p}, \mathit{mem})$
+  \If{$c \neq c'$}
+    \State $\opl{attach}(c, c', \id.P, \vec{p})$
+  \EndIf
+\EndIf
+\If{$\exists\, p \in \vec{p} : \V{Prop}[p].\mathit{act} = \atom{rem-id}$} \label{ln:cgkaremoved}
+  \State $\V{Ptr}[\id.P] \gets \none$
+    \Comment{a removed party is unmoored, not deleted}
+\EndIf
+\If{$\nexists\, p \in \vec{p} : \V{Prop}[p].\mathit{act} = \atom{rem-id}$}
+  \State \textbf{assert}\ $\id.P \in \V{Node}[c].\mathit{mem}$
+  \State $\V{Ptr}[\id.P] \gets c$; \ $\V{Has}[\id.P] \gets \true$
+\EndIf
+\State \textbf{assert}\ $\opl{cons-invariant} \ \wedge\ \opl{auth-invariant}$
+\State \textbf{return} $\opl{output-proc}(c)$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Join}(w)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $(\mathit{ack}, c', \mathit{orig}', \mathit{mem}') \gets \San[\Clean_{j}]\bigl(\Adv(\op{Join}, \id.P, w)\bigr)$
+\Req{$\mathit{ack}$}
+\State $c \gets \V{Wel}[w]$
+\If{$c = \none \ \wedge\ \V{Node}[c'] \neq \none$}
+  \State $c \gets c'$
+\EndIf
+\If{$c = \none \ \wedge\ \V{Node}[c'] = \none$} \label{ln:cgkaneworphan}
+  \State $\V{ctr} \gets \V{ctr} + 1$; \ $c \gets \mathit{root}_{\V{ctr}}$
+  \State $\V{Node}[c] \gets \opl{create-root}(\mathit{orig}', \mathit{mem}', \atom{adv})$ \label{ln:cgkafakegroup}
+    \Comment{a welcome to a group that never existed gets its own root}
+\EndIf
+\If{$\V{Wel}[w] = \none$}
+  \State $\V{Wel}[w] \gets c$
+\EndIf
+\State $\V{Ptr}[\id.P] \gets c$; \ $\V{Has}[\id.P] \gets \true$
+\State \textbf{assert}\ $\id.P \in \V{Node}[c].\mathit{mem} \ \wedge\ \opl{cons-invariant} \ \wedge\ \opl{auth-invariant}$
+\State \textbf{return} $\opl{output-join}(c)$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\If{$\V{Ptr}[\id.P] \neq \none$}
+  \State $\V{Node}[\V{Ptr}[\id.P]].\mathit{exp} \gets \V{Node}[\V{Ptr}[\id.P]].\mathit{exp} \cup \{(\id.P, \V{Has}[\id.P])\}$
+  \State $\opl{update-stat-after-exp}(\id.P)$
+  \State $\id_{\Fas}.\fopl{Exposed}(\id.P, \V{Node}[\V{Ptr}[\id.P]].\mathit{mem}[\id.P]) \text{ as } \id$
+\EndIf
+\State $(\V{SK}, \V{SPK}) \gets \id_{\Fks}.\fopl{GetSk}() \text{ as } \id$ \label{ln:cgkaks}
+\State $\forall\, \mathit{kp}, c$ with $\V{SK}[\id.P, \mathit{kp}] \neq \none \wedge \exists p \in \V{Node}[c].\mathit{pro} : \V{Prop}[p].\mathit{act} = \atom{add-id-spk}$
+\State \quad where $\V{SPK}[\id.P, \mathit{kp}] = \mathit{spk}$: \ $\V{Node}[c].\mathit{exp} \gets \V{Node}[c].\mathit{exp} \cup \{(\id.P, \true)\}$ \label{ln:cgkawelcomekeys}
+\Req{$\nexists\, c : \V{Node}[c].\mathit{chall} \wedge \neg\, \opl{safe}(c)$} \label{ln:cgkadisallowed}
+  \Comment{evaluated \emph{after} the exposure is recorded; see the register}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{CorrRand}(b)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F = \Apid \ \wedge\ b \in \{\atom{good}, \atom{bad}\}$} \label{ln:cgkacorrrand}
+\State $\V{Rnd}[\id.P] \gets b$; \ \textbf{return} $\ok$
+\algsave
+\end{algorithmic}}
+\end{interface}

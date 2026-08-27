@@ -266,47 +266,36 @@ next card took id S5. S4 must never be reused.
 
 ## NEXT ACTION (exactly one)
 
-**HUMAN GATE — Ratification of two escalations; sub-items: two r2 re-verification passes in flight; post-ratification: continue I02 with P2/P4/P5 and new gap G5.**
+**HUMAN GATE — one forward decision: which plan gets the next proving budget on rung R2 (I02).** Everything that was blocking is now resolved; see "Gate state" below. No agent should start a prover, refuter or strategist wave until this is answered.
 
-**Escalations requiring ratification:**
-- **(E1) Empty-window class model in r2:** The repaired formulation of the empty-window equivalence class in prover-3-r2, on which CAP I/II depend. **No cap depends on this;** on ratification, advance to full r2 acceptance or trigger third revision cycle if justified.
-- **(E2) Exact wording of R4 ladder record:** The exact phrasing of the ladder record for the next rung R4, which the triage ruled is NOT condemned (eligible for attempted). **Decision:** which Contract phrasing best captures the R3→R4 transition without conflating with defeated approaches?
+### Gate state, 2026-08-27 (cycle 3 fully closed)
 
-**Sub-items, not separate actions:**
-- ~~Two r2 re-verification passes (F/G) in flight~~ **LANDED 2026-08-27, see the tally.** RAW verdicts: **F (verifier-b) DEFECTS**, **G (verifier) PARTIAL**. **POST-TRIAGE: PENDING — the triage agent was terminated mid-run by an org monthly spend limit (session limit resets 16:10 Europe/Zurich). No triage artifact exists for this round; `0023-prover-3-r2-triage.md` was NOT written.** Nothing from this round may be treated as adjudicated until it is.
-- On ratification: campaign continues on I02 with strategist's remaining plans **P2/P4/P5** (P1's key step refuted; P6 delivered the barrier). **New gap G5** (reviser-identified, minimal vs minimum window selection in r2 formulation) is the first issue P1-successor must settle before re-attempting.
+**The barrier side-thread is CLOSED. Current artifact: `0023-prover-3-r3`** (supersedes r2, which supersedes the original). Chain and verdicts:
 
-### THE PENDING TRIAGE, SPECIFIED (first action on resume, before any new proving)
+| round | artifact | passes | outcome |
+|---|---|---|---|
+| 1 | `0023-prover-3` | A NOT CLEAN, B CLEAN, C CLEAN, D DEFECTS, E DEFECTS | triage `-triage.md`: 10 upheld / 9 overruled / 6 pedantic; **both CLEAN verdicts ruled WRONG** |
+| 2 | `0023-prover-3-r2` | F DEFECTS, G PARTIAL | triage `-r2-triage.md`: 5 upheld / 4 overruled / 4 pedantic; **F's class-B claim OVERRULED** (the caps stand); a **third** false affirmative clearance caught |
+| 3 | `0023-prover-3-r3` | H (diff-only, as triage prescribed) | **CLEAN as a repair**; all five upheld findings landed; ladder-record sentence matches the ruling verbatim |
 
-Re-run the triage on the r2 re-verification round: inputs `proofs/0023-prover-3-r2.md`,
-`proofs/0023-prover-3-r2-verify-F.md`, `proofs/0023-prover-3-r2-verify-G.md`, and the previous
-round's ruling `proofs/0023-prover-3-triage.md`; output `proofs/0023-prover-3-r2-triage.md`.
+**Both former escalations are resolved and need no ratification unless the human wants to revisit:**
+- **(E1) empty-window class model — RESOLVED.** The r2 triage established no cap depends on the choice, and demolished the class-B objection that had made it look load-bearing (that objection's own alternative model is self-refuting: it would collapse "provable by the class" into "true", so no barrier could be stated, and it would credit frozen R1 with a constant it does not prove). Residual [G1] stands as a declared stipulation, harming nothing.
+- **(E2) R4 ladder wording — RESOLVED.** R4 is **NOT** condemned. The r2 triage wrote the correct record sentence and r3 now carries it verbatim, marked as the record sentence, with an explicit warning not to paste r2's version. **Any future ladder record must use r3's §5.3 display, never r2's.**
 
-**The finding that decides the round (F, class B).** The previous round upheld that an
-empty-window branch was invalid; r2 repaired it by inserting a remark whose principle is
-"an out-of-scope family refutes nothing". F argues the caps' own proof violates that
-principle, because both caps are obtained by evaluating the master count at point-mass
-families whose `max(δ_F, δ_G)` is 1/4 resp. 1/2 — above every threshold at issue — so the
-**barrier reading** of CAP I and CAP II is unproved under r2's own repaired class model.
-Triage must rule: (a) is F's reading right; (b) is the damage to the barrier reading only, or
-also to the arithmetic (which F, G and three earlier passes all independently confirmed);
-(c) do the two CONCRETE killers of `proofs/0023-refuter-3.md` — exact computational
-certificates about specific pairs, not class-model-dependent — stand regardless; (d) bounded
-edit or new mathematics.
+**Known non-load-bearing defect in r3, recorded here rather than by mutating the artifact chain (monotone-id rule, §2.2):** in the very dependency row repaired under U-C1, r3 writes "The card says nothing about influences, families, pairs or factorisation"; that is false of **card S7** (whose obstacle (ii) speaks of the union over a whole family) and was meant to say **the paper** (arXiv:2510.13705), which is what the triage's wording said. Correction: read "the paper" for "the card" in that row. Found by pass H; affects no theorem, constant or claim.
 
-**Second finding (G, class A, never PEDANTIC).** r2's title and a verdict clause claim the
-certificate-window route escapes both caps, while r2's own gap G5 leaves open whether that
-route's declared variant does. Touches the secondary route, not the lead one.
+### The forward decision
 
-**Orchestrator's provisional reading, recorded as such and NOT as an adjudication** (a cold
-session must re-derive it): the operational content probably survives, because the two
-killers that actually steer plan selection are refuter-certified by exact search on named
-pairs and never relied on the barrier's class model; the barrier was an attempt to
-*generalise* them, and losing the generalisation does not revive the routes the certificates
-killed. On that reading the campaign should NOT commission an r3 — this artifact is a
-steering document that will never be frozen as a rung, the active target is R2 itself, and
-two revision cycles on a side product whose operational content is independently certified
-is the wrong place to spend. **This is a recommendation to the human, not a ruling.**
+Rung R2 (I02) is the active target and is OPEN. R2 is proved at d=2 with the optimal constant (eps*_ind(2)=1/4, all N) and for every delta < 2^-d/d by an independent route; eps*_ind(3)=1/6 survived an exhaustive probe. The inverse-polynomial window between is the open content. The strategist's plan set is `0023-strategist-2`; P1's key step is refuted (`0023-prover-2`), P6 is discharged (this barrier thread). Candidates for the next budget:
+
+- **P1-successor (repaired payment).** The refuted step's repaired form survives on all four extremal families, and the prover showed it **implies** every balanced degree-D Boolean function has a coordinate of influence >= 1/poly(D) — i.e. the rung's difficulty on this route is now a single-function influence question, Aaronson-Ambainis-flavoured. **First obligation: settle [G5]** (does an unrestricted minimal-window selection keep the expected window size polynomial? one witness admits a minimal certificate of size 2^(d-1)).
+- **P2 (direct construction, fibre-wise).** Aims at the live obstruction, FIBRE BALANCE — the influence identity holds fibre-wise but the fibre normalisation differs from the hypothesis's, leaving a weight with an exponential floor. Best R3-liftability of the set.
+- **P4 (weakening: bounded support).** Would yield max-influence R2 at every support size, i.e. the theorem that R2's whole content is dilution. Declared an R3 detour. Gated on carding OSSS (a read, not an upload).
+- **P5 (transfer: certificate windows).** Cleared by the barrier only for minimum-size selections; its declared minimal-certificate variant is open at [G5], and its per-point variant is capped — it must stay averaged.
+
+Also available, not a plan: **Formalizer on frozen I01** (per §4, non-blocking, one external lemma unread).
+
+**Do not re-run:** the milestone "find a cross-disjoint pair with relevance payment < 1" is CLOSED NEGATIVELY by `0023-refuter-5`, which proved the floor is exactly 1 and characterised its equality manifold. r3's own "open bracket" and milestone are SUPERSEDED by that proof, not falsified.
 
 **Cycle 3 SUMMARY (CLOSED 2026-08-27):** 
 - **Rung R2 prover+verify cycle completed.** Scouts (0023-scout-4/5): NO PRIOR RESOLUTION FOUND on R2 standalone; literature scanned; Nisan–Szegedy and Chang-Fang carded (S6/S7b). Refuters (0023-refuter-3/4/5): degree d=2 frontier eps*_ind(2)=1/4 proved; d=3 frontier eps*_ind(3)=1/6 with complete window enumerations; relevance-payment floor min π_Rel=1 proved (all N,d).

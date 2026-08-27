@@ -142,13 +142,21 @@ Together: expected profile if ε*(d)=Θ(1/d) and **the conjecture is TRUE with c
 
 ## NEXT ACTION (exactly one)
 
-**HUMAN GATE — approve or reorder the case ladder in PROGRESS.md**
+**Refuter-first sweep on intermediate I01 (rung R1), artifact `0023-refuter-2`.**
 
-The case ladder (Rungs R0–R6, pp. 27–142 of PROGRESS.md) is complete and ready for review. **On approval**, the next action is: **materialise R1 (spread-junta indicator rung) as intermediate I01**, then run **Refuter first** (bounded search on small d, windows, patterns; existing tooling in `proofs/0023-refuter-1-code/`; ~1–2 hours); if refutation succeeds R1 is false and skip to R2 attempt or weaken; if no counterexample found, mark NEAR-MISS and pass to Prover.
+Gate history: the human APPROVED the ladder as ordered on 2026-08-27 (no
+reorder). R1 is materialised as `intermediates/I01-spread-junta.md` (the
+single active target). The Refuter runs a bounded search over small d,
+windows, and patterns for cross-disjoint junta-indicator families below the
+$1/(2d)$ line; the rung-start micro-scout (`0023-scout-2`, R1 as a standalone
+combinatorial object) runs concurrently as insurance, not as a second action.
+If refutation succeeds at sub-inverse-polynomial influence, ℤ₂-PCC is dead
+and the ladder re-bases on another group; if no counterexample, pass I01 to
+one Prover.
 
-**Pending sub-items (do not count as separate actions):**
-- **Source gate (concurrent with I01 materialisation):** Request arXiv:2608.03824 Lemma 3.5 (rank 1) for P2's milestone; proceed on extraction [RESTATED] if unavailable, flagged conditional downstream. This is housekeeping during I01 refuter sweep, not a blocking step.
-- **Reorder options recorded in PROGRESS.md** (pp. 144–146): defend or swap R4/R5 (analytic heart vs threshold-climbing); drop R2 if R1's mechanism scales (R2 rider on R3); acceptable per Contract constraints.
+Resolved gate sub-item: the rank-1 source request (2608.03824 Lem 3.5) was
+filled at [READ] grade on 2026-08-27 (card S3, upgraded from the
+human-uploaded PDFs); the source queue is empty.
 
 ---
 

@@ -153,4 +153,10 @@ The Contract's checklist ticks **nothing**: relativization/algebrization/natural
 
 ### Gate
 
-**AWAITING HUMAN APPROVAL / REORDER of the ladder (harness §3.2.1 / §4).** No rung is materialised; no proving has started. On approval, next action: materialise R1 as intermediate I01 (`new-intermediate.sh`), Refuter-first computational sanity check (bounded search over small $d$, windows, patterns; existing tooling in `proofs/0023-refuter-1-code/`), then one Prover.
+**APPROVED by the human, 2026-08-27, as ordered** (no reorder). R1 is
+materialised as `intermediates/I01-spread-junta.md` — the single active
+target. In flight: Refuter-first computational sanity check on I01 (bounded
+search over small $d$, windows, patterns; artifact `0023-refuter-2`) plus the
+rung-start micro-scout flagged in R1's Scout status (artifact
+`0023-scout-2`); one Prover follows only if the Refuter finds no
+counterexample.

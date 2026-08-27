@@ -1,13 +1,221 @@
 ---
-title: "F-chan — State channel, virtual channel"
+title: "F-chan — Ledger and virtual state channels, recursive"
 status: "Canonical"
 layer: 8
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-chan* (State channel, virtual channel) is part of *Time and Application Composites* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+*F-chan* (Ledger and virtual state channels, recursive) is part of *Time and Application Composites* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+
+Off-chain payment and contract execution, stated as one object that covers two cases at once. A *ledger* channel is opened by locking coins on the blockchain. A *virtual* channel is opened over two existing channels, through an intermediary who never sees what it carries — and since a virtual channel is itself a channel, it can serve as a subchannel for the next one up. The functionality is parameterized by a maximum depth $i$, and the realization theorem is recursive: the protocol for depth $i$ runs in the *hybrid model of this same functionality at depth $i-1$*. That is the structural idea, and it is unusual enough to be worth stating before anything else.
+
+**Every number in the box is the point.** This is a synchronous functionality whose entire content is *how many rounds* each guarantee takes, and the constants divide sharply: with both end-users honest an execution completes in five rounds regardless of depth, and with one corrupt it costs $4\Delta + 5$ at depth one and grows with $\mathsf{TimeExeReq}(\lceil j/2 \rceil)$ below that. The optimistic/pessimistic split *is* the state-channel argument.
+
+## Functionality
+
+**This box is a declared translation, and the deviation is stated rather than hidden.** The source is synchronous: it writes "within $\Delta$ rounds remove ... coins", and the functionality itself acts when the round comes. This framework has no ticker and delivery is a pull, so a promised effect is recorded in $\mathtt{Due}$ against the deadline the source names, and fires on $\mathsf{Poll}$ — either because the adversary released it early (line 64) or because the deadline has passed (line 65). That is the same idiom [*F-net*](/uc/layer-1-channels-agreement-ledgers/f-net/index.qmd) uses for its $\Delta$, and the translation [*F-diffuse*](/uc/layer-1-channels-agreement-ledgers/f-diffuse/index.qmd), [*F-beacon*](/uc/layer-6-secret-sharing-mpc/f-beacon/index.qmd) and [*F-TLP*](/uc/layer-8-time-application/f-tlp/index.qmd) already make. **Every constant survives; who drives the clock does not.** A reader checking a round bound against the paper will find it here; a reader checking *who is activated when* will not.
+
+Otherwise: $\mathsf{require}$ refuses the call; $\mathcal{A}(\cdot)$ is a call on the adversary slot; $\mathbf{C}$ is the corrupted set; $\square$ is never-set. A channel $\gamma$ is a record with fields $\mathit{id}$, $\mathit{end}$ (the two end-users $A, B$), $I$ (the intermediary, "Ingrid", for a virtual channel), $\mathit{sub}(P)$ (the subchannel on $P$'s side), $\mathit{cash}(P)$, $\mathit{val}$ (the round it expires), $\mathit{len}$ (its depth $j$), $\mathit{cs}(\mathit{cid})$ (its contract space) and $\mathit{oth}(P)$ (the other end-user). $\mathtt{G}$ is the channel space $\Gamma$.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}^{\widehat{\mathcal{L}}(\Delta)}_{\mathsf{ch}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves}),\,(\mathcal{G}_{\mathsf{Clock}},\mathsf{serves}),\,(\widehat{\mathcal{L}},\mathsf{serves})\}\), \\ &nbsp; \(\mathit{par} := (i, \ \mathcal{C}, \ \Delta, \ \mathsf{Update}, \ \mathsf{TimeExeReq}, \ \mathsf{TimeExe})\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{G}[*] \gets \bot\)<span class="cj-comment">// the channel space \(\Gamma\): one current version per channel id</span></li>
+<li>\(\mathtt{R}[*,*] \gets \square\)<span class="cj-comment">// when each party asked to create each channel</span></li>
+<li>\(\mathtt{Due} \gets \varnothing\)<span class="cj-comment">// promised effects, each with the round the source promises it by</span></li>
+<li>\(\mathtt{t} \gets 0\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.CreateLedger(<span class="cj-id">gamma</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="5">
+<li>\(\mathtt{t} \gets \mathcal{G}_{\mathsf{Clock}}.\mathsf{FullRead}()\); &nbsp;write \(\gamma.\mathit{end}\) as \(\{A, B\}\)</li>
+<li>\(\textbf{require}\ \gamma\) is a ledger channel \(\wedge\ \mathit{id}.P \in \gamma.\mathit{end} \ \wedge\ \gamma.\mathit{len} \leq i\)</li>
+<li>\(\textbf{if}\ \mathit{id}.P = A \ \wedge\ \mathtt{R}[\gamma, A] = \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{R}[\gamma, A] \gets \mathtt{t}\)</span></li>
+<li><span class="cj-ind">\(\mathtt{Due} \gets \mathtt{Due} \cup \{(\mathsf{debit}, \gamma, A, \ \mathtt{t} + \Delta)\}\)</span><span class="cj-comment">// \(A\)'s coins leave the ledger before \(B\) has agreed to anything</span></li>
+<li>\(\textbf{if}\ \mathit{id}.P = B \ \wedge\ \mathtt{R}[\gamma, A] \neq \square \ \wedge\ \mathtt{t} \leq \mathtt{R}[\gamma, A] + \Delta\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{R}[\gamma, B] \gets \mathtt{t}\)</span></li>
+<li><span class="cj-ind">\(\mathtt{Due} \gets \mathtt{Due} \cup \{(\mathsf{debit}, \gamma, B, \ \mathtt{t} + 2\Delta), \ (\mathsf{open}, \gamma, \ \mathtt{t} + 2\Delta)\}\)</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Refund(<span class="cj-id">gamma</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="14">
+<li>\(\mathtt{t} \gets \mathcal{G}_{\mathsf{Clock}}.\mathsf{FullRead}()\)</li>
+<li>\(\textbf{require}\ \mathit{id}.P = A \ \wedge\ \mathtt{R}[\gamma, B] = \square \ \wedge\ \mathtt{t} > \mathtt{R}[\gamma, A] + 2\Delta\)<span class="cj-comment">// \(A\) must ask; nothing returns the coins on its own</span></li>
+<li>\(\mathtt{Due} \gets \mathtt{Due} \cup \{(\mathsf{credit}, \gamma, A, \ \mathtt{t} + \Delta)\}\); &nbsp;\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.CreateVirtual(<span class="cj-id">gamma</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="17">
+<li>\(\mathtt{t} \gets \mathcal{G}_{\mathsf{Clock}}.\mathsf{FullRead}()\); &nbsp;\(j \gets \gamma.\mathit{len}\)</li>
+<li>\(\textbf{require}\ \mathit{id}.P \in \gamma.\mathit{end} \cup \{\gamma.I\} \ \wedge\ j \leq i\)</li>
+<li>\(\mathtt{R}[\gamma, \mathit{id}.P] \gets \mathtt{t}\)</li>
+<li>\(\textbf{if}\ \mathit{id}.P \in \gamma.\mathit{end} \ \wedge\ \mathtt{R}[\gamma, \gamma.I] = \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">move \(\gamma.\mathit{cash}(\mathit{id}.P)\) from \(\mathit{id}.P\) and \(\gamma.\mathit{cash}(\gamma.\mathit{oth}(\mathit{id}.P))\) from \(\gamma.I\), both in \(\gamma.\mathit{sub}(\mathit{id}.P)\)</span><span class="cj-comment">// locked at once, on one party's word alone</span></li>
+<li>\(\textbf{if}\ \mathit{id}.P = \gamma.I\ \textbf{then}\)</li>
+<li><span class="cj-ind">do the same in \(\gamma.\mathit{sub}(P')\) for each \(P' \in \gamma.\mathit{end}\) with \(\mathtt{R}[\gamma, P'] = \square\)</span></li>
+<li>\(\textbf{if}\ |\{P' : \mathtt{R}[\gamma, P'] \neq \square\}| = 3 \ \wedge\ \mathtt{t} \leq \min_{P'} \mathtt{R}[\gamma, P'] + 3\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{G}[\gamma.\mathit{id}] \gets \gamma\); &nbsp;\(\mathcal{A}(\mathsf{created}, \gamma)\)</span><span class="cj-comment">// announced to \(\gamma.\mathit{end}\) only: \(\gamma.I\) is never told</span></li>
+<li><span class="cj-ind">\(\mathtt{Due} \gets \mathtt{Due} \cup \{(\mathsf{close}, \gamma, \ \gamma.\mathit{val} + 2(\mathsf{TimeExeReq}(\lceil j/2 \rceil) + \mathsf{TimeExe}(\lceil j/2 \rceil)))\}\)</span></li>
+<li>\(\textbf{if}\ \mathtt{t} > \min_{P'} \mathtt{R}[\gamma, P'] + 3 \ \wedge\ \mathtt{G}[\gamma.\mathit{id}] = \bot\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{Due} \gets \mathtt{Due} \cup \{(\mathsf{unlock}, \gamma, \ \gamma.\mathit{val} + 2(\mathsf{TimeExeReq}(\lceil j/2 \rceil) + \mathsf{TimeExe}(\lceil j/2 \rceil)))\}\)</span><span class="cj-comment">// a failed creation holds the coins until \(\gamma.\mathit{val}\), not until now</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Update(<span class="cj-id">cid</span>, <span class="cj-id">tilde{\sigma}</span>, <span class="cj-id">C</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="30">
+<li>\(\mathtt{t} \gets \mathcal{G}_{\mathsf{Clock}}.\mathsf{FullRead}()\); &nbsp;\(\gamma \gets \mathtt{G}[\mathit{pid}.\mathit{id}]\); &nbsp;\(j \gets \gamma.\mathit{len}\)</li>
+<li>\(\textbf{require}\ \mathit{id}.P \in \gamma.\mathit{end} \ \wedge\ C \in \mathcal{C}\)<span class="cj-comment">// the intermediary may not update the channel it funds</span></li>
+<li>\(\mathcal{A}(\mathsf{update-requested}, \mathit{id}.P, \mathit{cid}, \tilde{\sigma}, C)\) &nbsp;at \(\mathtt{t} + 1\)</li>
+<li>\(T \gets \mathtt{t} + 1\)<span class="cj-comment">// both end-users honest</span></li>
+<li>\(\textbf{if}\ \gamma.\mathit{end} \cap \mathbf{C} \neq \varnothing \ \wedge\ j = 1\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(T \gets \mathtt{t} + 3\Delta + 1\)</span></li>
+<li>\(\textbf{if}\ \gamma.\mathit{end} \cap \mathbf{C} \neq \varnothing \ \wedge\ j > 1\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(T \gets \mathtt{t} + 4 \cdot \mathsf{TimeExeReq}(\lceil j/2 \rceil) + 1\)</span><span class="cj-comment">// the price of depth, and it is charged on every update</span></li>
+<li>\(\mathtt{Due} \gets \mathtt{Due} \cup \{(\mathsf{update}, \gamma, \mathit{cid}, \tilde{\sigma}, C, \ T)\}\); &nbsp;\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.UpdateReply(<span class="cj-id">cid</span>, <span class="cj-id">b</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="39">
+<li>\(\mathtt{t} \gets \mathcal{G}_{\mathsf{Clock}}.\mathsf{FullRead}()\); &nbsp;\(\gamma \gets \mathtt{G}[\mathit{pid}.\mathit{id}]\)</li>
+<li>\(\textbf{require}\ \mathit{id}.P \in \gamma.\mathit{end} \ \wedge\ (\mathsf{update}, \gamma, \mathit{cid}, \tilde{\sigma}, C, T) \in \mathtt{Due} \ \wedge\ \mathtt{t} \leq T\)</li>
+<li>\(\textbf{if}\ b = \mathsf{ok}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathit{a}_A \gets -\tilde{\sigma}.\mathit{cash}(A)\); &nbsp;\(\mathit{a}_B \gets -\tilde{\sigma}.\mathit{cash}(B)\)</span></li>
+<li><span class="cj-ind">\(\textbf{if}\ \gamma.\mathit{cs}(\mathit{cid}) \neq \bot\ \textbf{then}\)</span></li>
+<li><span class="cj-ind">\(\sigma \gets \gamma.\mathit{cs}(\mathit{cid}).\mathit{storage}\); &nbsp;\(\mathit{a}_A \gets \sigma.\mathit{cash}(A) - \tilde{\sigma}.\mathit{cash}(A)\); &nbsp;\(\mathit{a}_B\) likewise</span></li>
+<li><span class="cj-ind">\(\mathtt{G} \gets \mathsf{Update}(\mathtt{G}, \gamma.\mathit{id}, \mathit{cid}, \tilde{\sigma}, C, \mathit{a}_A, \mathit{a}_B)\)</span></li>
+<li>\(\mathtt{Due} \gets \mathtt{Due} \setminus \{(\mathsf{update}, \gamma, \mathit{cid}, \tilde{\sigma}, C, T)\}\); &nbsp;\(\textbf{return}\) <span class="cj-atom">ok</span><span class="cj-comment">// no reply by \(T\) and the update simply expires, unannounced</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Execute(<span class="cj-id">cid</span>, <span class="cj-id">f</span>, <span class="cj-id">z</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="47">
+<li>\(\mathtt{t} \gets \mathcal{G}_{\mathsf{Clock}}.\mathsf{FullRead}()\); &nbsp;\(\gamma \gets \mathtt{G}[\mathit{pid}.\mathit{id}]\); &nbsp;\(j \gets \gamma.\mathit{len}\)</li>
+<li>\(\textbf{require}\ \mathit{id}.P \in \gamma.\mathit{end}\)</li>
+<li>\(T_1 \gets \mathtt{t} + 4\); &nbsp;\(T_2 \gets \mathtt{t} + 5\)<span class="cj-comment">// both end-users honest: five rounds, whatever the channel's depth</span></li>
+<li>\(\textbf{if}\ \gamma.\mathit{end} \cap \mathbf{C} \neq \varnothing \ \wedge\ j = 1\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(T_1, T_2 \gets \mathtt{t} + 4\Delta + 5\)</span></li>
+<li>\(\textbf{if}\ \gamma.\mathit{end} \cap \mathbf{C} \neq \varnothing \ \wedge\ j > 1\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(T_1 \gets \mathtt{t} + 2 \cdot \mathsf{TimeExeReq}(\lceil j/2 \rceil) + 5\); &nbsp;\(T_2 \gets \mathtt{t} + 4 \cdot \mathsf{TimeExeReq}(\lceil j/2 \rceil) + 5\)</span></li>
+<li>\(\tau \gets \mathtt{t}\)</li>
+<li>\(\textbf{if}\ \mathit{id}.P \in \mathbf{C}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\tau \gets \mathsf{San}[\mathsf{Clean}_{\tau}]\bigl(\mathcal{A}(\mathsf{time}, \mathit{id}.P, \mathit{cid})\bigr)\)</span><span class="cj-comment">// a corrupt caller lets the simulator choose the contract's clock</span></li>
+<li>\(\mathtt{Due} \gets \mathtt{Due} \cup \{(\mathsf{exereq}, \gamma, \mathit{cid}, f, z, \ T_1), \ (\mathsf{exe}, \gamma, \mathit{cid}, f, z, \tau, \ T_2)\}\)</li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Close()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="59">
+<li>\(\mathtt{t} \gets \mathcal{G}_{\mathsf{Clock}}.\mathsf{FullRead}()\); &nbsp;\(\gamma \gets \mathtt{G}[\mathit{pid}.\mathit{id}]\)</li>
+<li>\(\textbf{require}\ \gamma\) is a ledger channel \(\wedge\ \mathit{id}.P \in \gamma.\mathit{end}\)</li>
+<li>\(\mathtt{Due} \gets \mathtt{Due} \cup \{(\mathsf{settle}, \gamma, \ \mathtt{t} + 8\Delta)\}\)<span class="cj-comment">// \(7\Delta\) to drain the contracts, then \(\Delta\) on the ledger</span></li>
+<li>\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Poll()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="63">
+<li>\(\mathtt{t} \gets \mathcal{G}_{\mathsf{Clock}}.\mathsf{FullRead}()\)</li>
+<li>\(S \gets \mathsf{San}[\mathsf{Clean}_{s}]\bigl(\mathcal{A}(\mathsf{release}, \mathit{id}.P, \mathtt{t})\bigr) \cap \mathtt{Due}\)</li>
+<li>\(S \gets S \cup \{e \in \mathtt{Due} : e.T \leq \mathtt{t}\}\)<span class="cj-comment">// early if the adversary allows, and no later than the source promises</span></li>
+<li>perform each \(e \in S\) against \(\widehat{\mathcal{L}}\) and \(\mathtt{G}\), in the order the source states them</li>
+<li>\(\mathtt{Due} \gets \mathtt{Due} \setminus S\)</li>
+<li>\(\textbf{if}\ (\mathsf{settle}, \gamma, T) \in S \ \wedge\ \exists\, \mathit{cid} : \gamma.\mathit{cs}(\mathit{cid}).\mathit{storage}.\mathit{locked} \neq 0\ \textbf{then}\)</li>
+<li><span class="cj-ind">undo the settlement</span><span class="cj-comment">// a ledger channel with locked coins never closes at all</span></li>
+<li>\(\textbf{if}\ (\mathsf{close}, \gamma, T) \in S\ \textbf{then}\)</li>
+<li><span class="cj-ind">return \(\hat{\gamma}.\mathit{cash}\) to \(\gamma.\mathit{sub}(A)\) and \(\gamma.\mathit{sub}(B)\) for \(\hat{\gamma} := \mathtt{G}[\gamma.\mathit{id}]\)</span></li>
+<li><span class="cj-ind">every coin locked in a contract of \(\hat{\gamma}\) goes to \(\gamma.I\), in \emph{both} subchannels</span><span class="cj-comment">// the intermediary is made whole twice over; see the page</span></li>
+<li><span class="cj-ind">\(\mathtt{G}[\gamma.\mathit{id}] \gets \bot\)</span></li>
+<li>\(\textbf{return}\ S\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="75">
+<li>\(\textbf{return}\ (\mathtt{G}, \mathtt{R}, \mathtt{Due})\)<span class="cj-comment">// a channel's whole state is public to its own parties anyway</span></li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+*Source: Figure 6, p. 16 of Dziembowski, Faust and Hostáková, "General State Channel Networks", CCS 2018, ePrint 2018/320, revision `20180822:133632`. The abbreviated field notation is §4.1; the auxiliary channel-space update is Figure 5, p. 14, and is carried here as the declared parameter $\mathsf{Update}$. The ledger $\widehat{\mathcal{L}}$ is the paper's Figure 4 and is this site's [*F-ledger*](/uc/layer-1-channels-agreement-ledgers/f-ledger/index.qmd).*
+
+- **Line 72 locks money on one party's word, and this is the design decision that makes virtual channels cheap.** An end-user asking to create a virtual channel has coins moved out of its subchannel *immediately*, together with the intermediary's coins on that side, before anyone else has agreed to anything. No handshake, no escrow, no confirmation. If the other two never come, line 85 says the coins come back — at $\gamma.\mathit{val}$, the channel's expiry, not at the moment creation fails. So a party that starts a virtual channel nobody joins has its funds locked for the channel's whole intended lifetime. That is the cost of not paying for a blockchain round.
+- **Line 79 is the three-round guarantee, and line 80 is what it does not tell anyone.** Creation succeeds if all three — both end-users and the intermediary — ask within three rounds. The success is announced to $\gamma.\mathit{end}$ and *not* to $\gamma.I$. The source's footnote gives the reason and it is entirely pragmatic: it keeps the protocol simple, and the intermediary "does not need this information, as she is not allowed to update this virtual channel". So the party funding the channel does not learn whether the channel it funded exists.
+- **Line 97 is why that is safe, and it is the whole role of the intermediary.** Only end-users may update. $\gamma.I$ puts up half the collateral on each side and has no say in what the channel does — it is a funding counterparty, not a participant. Combined with line 72, the intermediary's exposure is fixed at creation and its ignorance afterwards costs it nothing.
+- **Line 72's counterpart at line 82 is where the intermediary is protected, and it is protected *twice*.** When a virtual channel closes at expiry, coins still locked inside an unfinished contract instance go to $\gamma.I$ — in **both** subchannels, not split between them. The source states the reason plainly: this "is to guarantee that $I$ never loses coins even if end-users of $\gamma$ do not terminate their contract instance in $\gamma$ before $\gamma.\mathit{validity}$". End-users who leave a contract running past expiry forfeit its stake to the intermediary. That is a real incentive, written into the ideal object.
+- **Lines 49 through 53 are the optimistic/pessimistic split, and the constants say what state channels are for.** Two honest end-users execute a contract in five rounds no matter how deep the channel is — depth is free when nobody misbehaves. One corrupt end-user costs $4\Delta + 5$ at depth one, where $\Delta$ is the blockchain's own latency, and at greater depth it costs $2$ or $4$ times $\mathsf{TimeExeReq}(\lceil j/2 \rceil)$, which recurses. Depth is therefore free in the optimistic case and compounding in the pessimistic one, and the halving is what keeps the recursion from being linear.
+- **Line 107 charges the pessimistic price on every update, not only on a dispute.** $T$ in $\mathsf{Update}$ is set from the corruption status of the end-user set, so a channel with one corrupt end-user has a slow deadline on *every* update from then on, whether or not that update is contested. The functionality has no notion of a party that misbehaved once and is now behaving.
+- **Line 126 lets an update expire in silence.** If no reply arrives by $T$, the pending update is dropped and nothing is reported to anyone: no failure message, no timeout event, no interface through which the proposer learns. A caller must infer it from the channel state.
+- **Line 68 is a ledger channel that cannot be closed.** If any contract instance in it still has coins locked, $\mathsf{Close}$ stops — permanently, with no timeout and no recourse in this box. The virtual case has line 82 to drain stuck coins to the intermediary at expiry; the ledger case has no expiry, so the channel stays open until the contract resolves itself. A reader designing a contract for a ledger channel should notice that a contract which never releases its stake bricks the channel.
+- **Line 56 lets the simulator choose what time a contract sees, when the caller is corrupt.** The contract function $f$ takes a timestamp; for an honest caller it is the real round, and for a corrupt one it is whatever the adversary says. This is a substantial power — contracts whose behaviour depends on time can be driven to any branch — and it is the source's own construction, not an artifact of this translation.
+- **Line 46 gives $B$ exactly $\Delta$ rounds to join a ledger channel, and line 15 gives $A$ no automatic way out.** $A$'s coins leave the ledger at line 9 before $B$ has done anything; if $B$ never comes, $A$ must call $\mathsf{Refund}$, and only after $2\Delta$. Nothing returns them on its own.
+
+**Mismatch register.**
+
+| The source | This box | Why |
+|---|---|---|
+| "Within $X$ rounds ...", the functionality acting when the round comes | An entry in $\mathtt{Due}$ with deadline $X$, fired by $\mathsf{Poll}$ at lines 64–65 | **The declared translation, and the largest deviation on this page.** This framework has no ticker and delivery is a pull. Every constant is preserved verbatim; the activation structure is not. A protocol proved against the source is proved against this box only up to that reading. |
+| $\tau_0, \tau_1, \tau_2$ as round annotations on message arrows | $\mathtt{t}$, read from $\mathcal{G}_{\mathsf{clock}}$ at the head of each operation | Same clock, read rather than implied. |
+| One functionality accepting `create` for both a ledger and a virtual $\gamma$, distinguished by $\gamma$'s own type | $\mathsf{CreateLedger}$ and $\mathsf{CreateVirtual}$ | The two procedures share no code and have different guards; splitting them makes the type test explicit rather than implicit in $\gamma$. |
+| `update` and `update–reply` as two messages of one procedure | $\mathsf{Update}$ and $\mathsf{UpdateReply}$ | Likewise. The deadline $T$ computed in the first is checked in the second, at line 118. |
+| `UpdateChanSpace` (Figure 5, p. 14) | The declared parameter $\mathsf{Update}$, used at line 124 | A page-long auxiliary procedure; carried as a declared helper, as [*F-CGKA*](/uc/layer-3-public-key-primitives/f-cgka/index.qmd) carries its sixteen. |
+| `TimeExeReq`, `TimeExe` | Declared parameters | Recursive time functions defined outside the figure. Their *values* are what the round bounds mean, and they are not in this box. |
+| "If $P \notin \gamma.\mathit{end–users}$ then stop" | $\mathsf{require}$ at lines 97, 136, 60 | A refusal. |
+| `(created, γ) ,→ γ.end–users` and the other output arrows | $\mathcal{A}(\cdot)$ at line 80, and returns elsewhere | The source pushes to a party set; here delivery is to the caller, and a broadcast to the end-users is expressed as an adversary-slot call that the pull model then serves. This is the same translation the ticked entries make and it is where an ordering guarantee could be lost — the source's arrows carry round numbers and these do not. |
+| Contract instance execution computing $f(\sigma, P, \tau, z)$ inline in step 2 | An $\mathsf{exe}$ entry in $\mathtt{Due}$, carrying $\tau$, performed at line 66 | Consequence of the translation: the computation happens when the deadline fires, and $\tau$ is captured at request time so that line 56's choice is not re-made later. |
+| No leakage interface | $\mathsf{Leak}$ at line 75, returning the channel space, the creation record and the pending queue | Required here. Nothing secret: a channel's state is known to its own parties by construction, and the paper's contracts are public code. |
+
+## Known realizations
+
+**At depth one, from a state-channel contract** (Theorem 1): "Suppose the underlying signature scheme is existentially unforgeable against chosen message attacks. The protocol $\Pi(1, \mathcal{C})$ working in $\mathcal{F}^{\widehat{\mathcal{L}}(\Delta)}_{\mathsf{scc}}(\mathcal{C})$-hybrid model emulates the ideal functionality $\mathcal{F}^{\widehat{\mathcal{L}}(\Delta)}_{\mathsf{ch}}(1, \mathcal{C})$." $\mathcal{F}_{\mathsf{scc}}$ is a smart contract on the blockchain — the paper names Ethereum as a candidate — so depth one is where the abstraction touches the chain.
+
+**At depth $i$, from itself at depth $i-1$** (Theorem 2): $\Pi(i, \mathcal{C})$ working in the $\mathcal{F}_{\mathsf{ch}}(i-1, \mathsf{VSCC}_i(\mathcal{C}) \cup \mathcal{C})$-hybrid model emulates $\mathcal{F}_{\mathsf{ch}}(i, \mathcal{C})$, for every $\mathcal{C}$ and every $i > 1$. The contract-code set grows at each level by a virtual-state-channel contract, which is how a channel becomes usable as a subchannel. This is the recursion, and it is why the functionality carries $i$ as a parameter rather than being stated once.
+
+**Both theorems hold only against a restricted class of environments, $\mathcal{E}_{\mathsf{res}}$, and this is a real weakening.** The restrictions "typically disallow the environment to carry out certain actions, e.g., we forbid $\mathcal{Z}$ to instruct one party to start a protocol without instructing the other party to start the protocol as well"; the complete list is in the paper's Appendix B. The authors state that the restrictions "can easily be eliminated by integrating additional checks into the protocols and functionalities" — but they were not eliminated, so the theorem as proved is not the unrestricted UC statement, and a composition argument that quantifies over all environments is not licensed by it. This is the sharpest caveat on the page and it is easy to miss, because it lives in §3 rather than beside either theorem.
+
+## Properties
+
+- **Consensus on creation, in three rounds for a virtual channel and $2\Delta$ for a ledger channel.** Lines 79 and 48.
+- **Constant-round virtual channel creation, independent of depth.** Line 79's bound is $3$, with no $j$ in it. Creation is the one operation depth does not slow down.
+- **Optimistic execution in five rounds at any depth.** Line 49.
+- **Pessimistic execution costs $4\Delta + 5$ at depth one and recurses with $\mathsf{TimeExeReq}(\lceil j/2 \rceil)$ below.** Lines 51 and 53. The halving is what makes deep channels affordable.
+- **Balance security for the intermediary, with probability exactly $1$.** Line 82: locked coins go to $\gamma.I$ in both subchannels at expiry. The source proves this separately in its Appendix C.
+- **No guarantee at all for a ledger channel with locked coins.** Line 68. $\mathsf{Close}$ stops and there is no deadline.
+- **A virtual channel's funds are locked from the first $\mathsf{CreateVirtual}$ until $\gamma.\mathit{val}$ even if creation fails.** Lines 72 and 85.
+- **No privacy from the intermediary beyond non-participation.** $\gamma.I$ does not learn the channel's contract executions, but $\mathsf{Leak}$ at line 75 concedes that nothing in this box is secret from a channel's own parties.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Dziembowski, Faust, and Hostáková. [*General state channel networks*](https://eprint.iacr.org/2018/320). In ACM Conference on Computer and Communications Security (CCS), pages 949–966, 2018.
-- Dziembowski et al. [*Multi-party virtual state channels*](https://eprint.iacr.org/2019/571). In Advances in Cryptology – EUROCRYPT 2019, volume 11476 of LNCS, pages 625–656, 2019.
+- Dziembowski, Faust, and Hostáková. [*General state channel networks*](https://eprint.iacr.org/2018/320). In ACM Conference on Computer and Communications Security (CCS), pages 949–966, 2018. **The source of the box above**: Figure 6, p. 16 of ePrint revision `20180822:133632`, with the abbreviated field notation in §4.1, the auxiliary `UpdateChanSpace` in Figure 5 (p. 14) and the ledger $\widehat{\mathcal{L}}$ in Figure 4. The realizations are Theorems 1 and 2; the restricted environment class $\mathcal{E}_{\mathsf{res}}$ is §3 with the full list in Appendix B; the intermediary's balance security is proved in Appendix C.
+- Dziembowski, Eckey, Faust, Hesse, and Hostáková. [*Multi-party virtual state channels*](https://eprint.iacr.org/2019/571). In Advances in Cryptology – EUROCRYPT 2019, volume 11476 of LNCS, pages 625–656, 2019. **Prints $\mathcal{F}_{\mathsf{mpch}}(i, \mathcal{C})$, an extension of the box above to more than two end-users**, and reproduces the two-party $\mathcal{F}_{\mathsf{ch}}(i, \mathcal{C})$ "for completeness". Not blended in: the multi-party object is a different functionality with its own dispute machinery, and this slot carries the two-party one that everything else builds on. It also prints a guaranteed-delivery authenticated channel $\mathcal{F}_{\mathsf{GDC}}$ (Figure 3) which no page on this site claims.

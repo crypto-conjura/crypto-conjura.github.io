@@ -1,0 +1,199 @@
+%% The interface box of f-chan, the one source for both the book
+%% and uc/.../f-chan/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+%%
+%% `breakable' and no `multicols', per the head of f-secmsg.tex.
+%%
+%% A ticked functionality under the declared translation F-diffuse, F-beacon
+%% and F-TLP established: the source is synchronous and states every guarantee
+%% as "within X rounds", where the functionality itself acts when the round
+%% comes. This framework has no ticker and delivery is a pull, so a promised
+%% effect is entered in \V{Due} with the deadline the source names and fires
+%% on \op{Poll}, either because the adversary released it or because the
+%% deadline has passed -- the same idiom \Fnet uses for \Delta. Every constant
+%% survives; who drives the clock does not.
+\begin{interface}[nofloat, breakable]{Functionality $\Fchan$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves),\,(\Gclock,\serves),\,(\Fledger,\serves)\}$, \\
+\quad $\pars := (i, \ \mathcal{C}, \ \Delta, \ \opl{Update}, \ \opl{TimeExeReq}, \ \opl{TimeExe})$}}
+
+{\scriptsize
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{G}[*] \gets \none$
+  \Comment{the channel space $\Gamma$: one current version per channel id}
+\State $\V{R}[*,*] \gets \unset$
+  \Comment{when each party asked to create each channel}
+\State $\V{Due} \gets \emptyset$
+  \Comment{promised effects, each with the round the source promises it by}
+\State $\V{t} \gets 0$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{CreateLedger}(\gamma)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $\V{t} \gets \Gclock.\fopl{Read}()$; \ write $\gamma.\mathit{end}$ as $\{A, B\}$
+\Req{$\gamma$ is a ledger channel $\wedge\ \id.P \in \gamma.\mathit{end} \ \wedge\ \gamma.\mathit{len} \leq i$}
+\If{$\id.P = A \ \wedge\ \V{R}[\gamma, A] = \unset$}
+  \State $\V{R}[\gamma, A] \gets \V{t}$
+  \State $\V{Due} \gets \V{Due} \cup \{(\op{debit}, \gamma, A, \ \V{t} + \Delta)\}$ \label{ln:chanlockA}
+    \Comment{$A$'s coins leave the ledger before $B$ has agreed to anything}
+\EndIf
+\If{$\id.P = B \ \wedge\ \V{R}[\gamma, A] \neq \unset \ \wedge\ \V{t} \leq \V{R}[\gamma, A] + \Delta$} \label{ln:chanBwindow}
+  \State $\V{R}[\gamma, B] \gets \V{t}$
+  \State $\V{Due} \gets \V{Due} \cup \{(\op{debit}, \gamma, B, \ \V{t} + 2\Delta), \ (\op{open}, \gamma, \ \V{t} + 2\Delta)\}$
+\EndIf
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Refund}(\gamma)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $\V{t} \gets \Gclock.\fopl{Read}()$
+\Req{$\id.P = A \ \wedge\ \V{R}[\gamma, B] = \unset \ \wedge\ \V{t} > \V{R}[\gamma, A] + 2\Delta$} \label{ln:chanrefundask}
+  \Comment{$A$ must ask; nothing returns the coins on its own}
+\State $\V{Due} \gets \V{Due} \cup \{(\op{credit}, \gamma, A, \ \V{t} + \Delta)\}$; \ \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{CreateVirtual}(\gamma)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $\V{t} \gets \Gclock.\fopl{Read}()$; \ $j \gets \gamma.\mathit{len}$
+\Req{$\id.P \in \gamma.\mathit{end} \cup \{\gamma.I\} \ \wedge\ j \leq i$}
+\State $\V{R}[\gamma, \id.P] \gets \V{t}$
+\If{$\id.P \in \gamma.\mathit{end} \ \wedge\ \V{R}[\gamma, \gamma.I] = \unset$} \label{ln:chanlocknow}
+  \State move $\gamma.\mathit{cash}(\id.P)$ from $\id.P$ and $\gamma.\mathit{cash}(\gamma.\mathit{oth}(\id.P))$ from $\gamma.I$, both in $\gamma.\mathit{sub}(\id.P)$
+    \Comment{locked at once, on one party's word alone}
+\EndIf
+\If{$\id.P = \gamma.I$}
+  \State do the same in $\gamma.\mathit{sub}(P')$ for each $P' \in \gamma.\mathit{end}$ with $\V{R}[\gamma, P'] = \unset$
+\EndIf
+\If{$|\{P' : \V{R}[\gamma, P'] \neq \unset\}| = 3 \ \wedge\ \V{t} \leq \min_{P'} \V{R}[\gamma, P'] + 3$} \label{ln:chanthree}
+  \State $\V{G}[\gamma.\mathit{id}] \gets \gamma$; \ $\Adv(\op{created}, \gamma)$ \label{ln:chanINotTold}
+    \Comment{announced to $\gamma.\mathit{end}$ only: $\gamma.I$ is never told}
+  \State $\V{Due} \gets \V{Due} \cup \{(\op{close}, \gamma, \ \gamma.\mathit{val} + 2(\opl{TimeExeReq}(\lceil j/2 \rceil) + \opl{TimeExe}(\lceil j/2 \rceil)))\}$ \label{ln:chanautoclose}
+\EndIf
+\If{$\V{t} > \min_{P'} \V{R}[\gamma, P'] + 3 \ \wedge\ \V{G}[\gamma.\mathit{id}] = \none$}
+  \State $\V{Due} \gets \V{Due} \cup \{(\op{unlock}, \gamma, \ \gamma.\mathit{val} + 2(\opl{TimeExeReq}(\lceil j/2 \rceil) + \opl{TimeExe}(\lceil j/2 \rceil)))\}$ \label{ln:chanlatemoney}
+    \Comment{a failed creation holds the coins until $\gamma.\mathit{val}$, not until now}
+\EndIf
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Update}(\mathit{cid}, \tilde{\sigma}, C)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $\V{t} \gets \Gclock.\fopl{Read}()$; \ $\gamma \gets \V{G}[\PID.\mathit{id}]$; \ $j \gets \gamma.\mathit{len}$
+\Req{$\id.P \in \gamma.\mathit{end} \ \wedge\ C \in \mathcal{C}$} \label{ln:chanendusers}
+  \Comment{the intermediary may not update the channel it funds}
+\State $\Adv(\op{update-requested}, \id.P, \mathit{cid}, \tilde{\sigma}, C)$ \ at $\V{t} + 1$
+\State $T \gets \V{t} + 1$ \label{ln:chanoptimistic}
+  \Comment{both end-users honest}
+\If{$\gamma.\mathit{end} \cap \Cs \neq \emptyset \ \wedge\ j = 1$}
+  \State $T \gets \V{t} + 3\Delta + 1$ \label{ln:chanpess1}
+\EndIf
+\If{$\gamma.\mathit{end} \cap \Cs \neq \emptyset \ \wedge\ j > 1$}
+  \State $T \gets \V{t} + 4 \cdot \opl{TimeExeReq}(\lceil j/2 \rceil) + 1$ \label{ln:chanpessdeep}
+    \Comment{the price of depth, and it is charged on every update}
+\EndIf
+\State $\V{Due} \gets \V{Due} \cup \{(\op{update}, \gamma, \mathit{cid}, \tilde{\sigma}, C, \ T)\}$; \ \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{UpdateReply}(\mathit{cid}, b)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $\V{t} \gets \Gclock.\fopl{Read}()$; \ $\gamma \gets \V{G}[\PID.\mathit{id}]$
+\Req{$\id.P \in \gamma.\mathit{end} \ \wedge\ (\op{update}, \gamma, \mathit{cid}, \tilde{\sigma}, C, T) \in \V{Due} \ \wedge\ \V{t} \leq T$}
+\If{$b = \ok$}
+  \State $\mathit{a}_A \gets -\tilde{\sigma}.\mathit{cash}(A)$; \ $\mathit{a}_B \gets -\tilde{\sigma}.\mathit{cash}(B)$
+  \If{$\gamma.\mathit{cs}(\mathit{cid}) \neq \none$}
+    \State $\sigma \gets \gamma.\mathit{cs}(\mathit{cid}).\mathit{storage}$; \ $\mathit{a}_A \gets \sigma.\mathit{cash}(A) - \tilde{\sigma}.\mathit{cash}(A)$; \ $\mathit{a}_B$ likewise
+  \EndIf
+  \State $\V{G} \gets \opl{Update}(\V{G}, \gamma.\mathit{id}, \mathit{cid}, \tilde{\sigma}, C, \mathit{a}_A, \mathit{a}_B)$ \label{ln:chanapply}
+\EndIf
+\State $\V{Due} \gets \V{Due} \setminus \{(\op{update}, \gamma, \mathit{cid}, \tilde{\sigma}, C, T)\}$; \ \textbf{return} $\ok$ \label{ln:chansilent}
+  \Comment{no reply by $T$ and the update simply expires, unannounced}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Execute}(\mathit{cid}, f, z)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $\V{t} \gets \Gclock.\fopl{Read}()$; \ $\gamma \gets \V{G}[\PID.\mathit{id}]$; \ $j \gets \gamma.\mathit{len}$
+\Req{$\id.P \in \gamma.\mathit{end}$}
+\State $T_1 \gets \V{t} + 4$; \ $T_2 \gets \V{t} + 5$ \label{ln:chanexeopt}
+  \Comment{both end-users honest: five rounds, whatever the channel's depth}
+\If{$\gamma.\mathit{end} \cap \Cs \neq \emptyset \ \wedge\ j = 1$}
+  \State $T_1, T_2 \gets \V{t} + 4\Delta + 5$
+\EndIf
+\If{$\gamma.\mathit{end} \cap \Cs \neq \emptyset \ \wedge\ j > 1$}
+  \State $T_1 \gets \V{t} + 2 \cdot \opl{TimeExeReq}(\lceil j/2 \rceil) + 5$; \ $T_2 \gets \V{t} + 4 \cdot \opl{TimeExeReq}(\lceil j/2 \rceil) + 5$
+\EndIf
+\State $\tau \gets \V{t}$
+\If{$\id.P \in \Cs$}
+  \State $\tau \gets \San[\Clean_{\tau}]\bigl(\Adv(\op{time}, \id.P, \mathit{cid})\bigr)$ \label{ln:chanadvtime}
+    \Comment{a corrupt caller lets the simulator choose the contract's clock}
+\EndIf
+\State $\V{Due} \gets \V{Due} \cup \{(\op{exereq}, \gamma, \mathit{cid}, f, z, \ T_1), \ (\op{exe}, \gamma, \mathit{cid}, f, z, \tau, \ T_2)\}$
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Close}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $\V{t} \gets \Gclock.\fopl{Read}()$; \ $\gamma \gets \V{G}[\PID.\mathit{id}]$
+\Req{$\gamma$ is a ledger channel $\wedge\ \id.P \in \gamma.\mathit{end}$}
+\State $\V{Due} \gets \V{Due} \cup \{(\op{settle}, \gamma, \ \V{t} + 8\Delta)\}$ \label{ln:chanclose}
+  \Comment{$7\Delta$ to drain the contracts, then $\Delta$ on the ledger}
+\State \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Poll}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $\V{t} \gets \Gclock.\fopl{Read}()$
+\State $S \gets \San[\Clean_{s}]\bigl(\Adv(\op{release}, \id.P, \V{t})\bigr) \cap \V{Due}$ \label{ln:chanrelease}
+\State $S \gets S \cup \{e \in \V{Due} : e.T \leq \V{t}\}$ \label{ln:chandeadline}
+  \Comment{early if the adversary allows, and no later than the source promises}
+\State perform each $e \in S$ against $\Fledger$ and $\V{G}$, in the order the source states them
+\State $\V{Due} \gets \V{Due} \setminus S$
+\If{$(\op{settle}, \gamma, T) \in S \ \wedge\ \exists\, \mathit{cid} : \gamma.\mathit{cs}(\mathit{cid}).\mathit{storage}.\mathit{locked} \neq 0$} \label{ln:chanstuck}
+  \State undo the settlement
+    \Comment{a ledger channel with locked coins never closes at all}
+\EndIf
+\If{$(\op{close}, \gamma, T) \in S$} \label{ln:chanvirtualclose}
+  \State return $\hat{\gamma}.\mathit{cash}$ to $\gamma.\mathit{sub}(A)$ and $\gamma.\mathit{sub}(B)$ for $\hat{\gamma} := \V{G}[\gamma.\mathit{id}]$
+  \State every coin locked in a contract of $\hat{\gamma}$ goes to $\gamma.I$, in \emph{both} subchannels \label{ln:chanIwhole}
+    \Comment{the intermediary is made whole twice over; see the page}
+  \State $\V{G}[\gamma.\mathit{id}] \gets \none$
+\EndIf
+\State \textbf{return} $S$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $(\V{G}, \V{R}, \V{Due})$ \label{ln:chanleak}
+  \Comment{a channel's whole state is public to its own parties anyway}
+\algsave
+\end{algorithmic}}
+\end{interface}

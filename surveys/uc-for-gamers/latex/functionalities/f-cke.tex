@@ -1,0 +1,147 @@
+%% The interface box of f-cke, the one source for both the book
+%% and uc/.../f-cke/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+%%
+%% `breakable' and no `multicols', for the reason recorded at the head of
+%% f-secmsg.tex: past ~60 numbered lines two columns overflow the book's page
+%% silently, and a breakable box runs onto a second page instead. The option
+%% rides on the `interface' environment's optional argument, so it costs no
+%% edit to ucgamers.sty.
+\begin{interface}[nofloat, breakable]{Functionality $\Feke$ \\
+\params{$\PID$, \quad $\Ps := \{P_0, P_1\}$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves),\,(\Fltm,\serves),\,(\Fdir,\serves),\,(\Flib,\serves)\}$,
+\quad $\pars := \mathcal{K}$}}
+
+{\scriptsize
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{init} \gets 0$; \ $\V{rfirst} \gets 0$; \ $\V{div} \gets 0$
+\State $\V{I} \gets \unset$; \ $\V{st} \gets \none$
+  \Comment{the internal code drawn from $\Flib$, and its state}
+\State $\V{en} : \{0,1\} \to \mathbb{Z}$; \ $\V{Self}, \V{Ptnr} : \{0,1\} \to \Tags \cup \{\unset\}$
+\State $\V{sk} : \{0,1\} \to \mathcal{K} \cup \{\unset\}$; \ $\V{got} : \{0,1\} \to \{0,1\}$
+  \Comment{one sending chain key per party, handed out once}
+\State $\V{Comp} \gets \emptyset$
+  \Comment{epoch numbers the adversary controls}
+\State $\V{Num} : \Tags \to \mathbb{Z} \cup \{\unset\}$; \ $\V{Num}[*] \gets \unset$
+\State $\V{Att} : \mathbb{Z} \to (\Tags \times \mathcal{K})^{*}$; \ $\V{Att}[*] \gets \varepsilon$
+  \Comment{keys handed out for epoch ids that did not match}
+\State $\V{Seen} \gets \emptyset$; \ $\V{cl} : \{0,1\} \to \Tags^{*}$; \ $\V{cl}[*] \gets \varepsilon$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{ConfirmEpoch}(e^{*})$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P \in \Feke.\Ps$}
+\State $i \gets$ the index with $\id.P = P_i$; \ $\V{new} \gets [\, \V{init} = 0 \,]$
+\If{$\V{new} = 1$}
+  \Req{$i = 0$} \label{ln:ckeinitiator}
+    \Comment{only the initiator may open a conversation}
+  \State $(\mathit{ik}, \mathit{rk}, \mathit{ok}) \gets \id_{\Fdir}.\fopl{GetInitKeys}(P_1, P_0) \text{ as } \id$
+  \If{$\mathit{ok} = \none$}
+    \State \textbf{return} $\atom{fail}$ \label{ln:ckeprekey}
+      \Comment{the peer's one-time prekeys have run out}
+  \EndIf
+  \State $\V{Ptnr}[0], \V{Self}[1] \gets \mathit{ok}$ \label{ln:ckeprekeyid}
+    \Comment{the peer's prekey \emph{is} its first epoch id}
+  \State $\V{en}[0] \gets -2$; \ $\V{en}[1] \gets -1$ \label{ln:ckeoffset}
+  \State $(k, \mathit{ek}) \gets \id_{\Fltm}.\fopl{ComputeSendingRootKey}(\mathit{ik}, \mathit{rk}, \mathit{ok}) \text{ as } \id$ \label{ln:ckerootkey}
+  \State $\V{I} \gets \id_{\Flib}.\fopl{Code}() \text{ as } \id$; \ $\V{init} \gets 1$
+\EndIf
+\If{$\V{new} = 0$}
+  \State $\V{Ptnr}[i] \gets e^{*}$
+\EndIf
+\If{$\V{new} = 0 \ \wedge\ e^{*} \neq \V{Self}[1-i]$} \label{ln:ckediverge}
+  \State $\V{div} \gets 1$
+    \Comment{the two parties are no longer in one conversation}
+  \State $j \gets$ the index with $\V{en}[j] > \V{en}[1-j]$; \ $\kappa \gets \none$ \label{ln:ckeahead}
+  \If{$\V{got}[j] = 1$}
+    \State $\kappa \gets \V{sk}[j]$
+  \EndIf
+  \State $\San[\Clean_{\ell}]\bigl(\Adv(\V{st}, \op{ReportState}, i, \kappa, \V{Att}[\V{en}[j]])\bigr)$ \label{ln:ckehandover}
+    \Comment{the simulator takes control before the first divergence}
+\EndIf
+\If{$\V{en}[i] + 2 \in \V{Comp} \ \vee\ \V{div} = 1$} \label{ln:ckecompromised}
+  \State $(\V{st}, e) \gets \San[\Clean_{e}]\bigl(\Adv(\V{st}, \op{GenEpochId}, i, e^{*})\bigr)$ \label{ln:ckeadvid}
+\EndIf
+\If{$\V{en}[i] + 2 \notin \V{Comp} \ \wedge\ \V{div} = 0$}
+  \State $(\V{st}, e) \gets \V{I}\bigl(\V{st}, \op{GenEpochId}, i, e^{*}\bigr)$ \label{ln:ckehonestid}
+\EndIf
+\Req{$e \notin \V{Seen}$} \label{ln:ckefresh}
+  \Comment{an epoch id is generated once, by either route}
+\State $\V{Seen} \gets \V{Seen} \cup \{e\}$; \ $\V{Self}[i] \gets e$; \ $\V{Num}[e] \gets \V{en}[i]$
+\State $\V{got}[i] \gets 0$; \ $\V{en}[i] \gets \V{en}[i] + 2$ \label{ln:ckestep}
+  \Comment{each party's own epochs are two apart}
+\State \textbf{return} $e$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{GetSendingKey}(e)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P \in \Feke.\Ps$}
+\State $i \gets$ the index with $\id.P = P_i$
+\Req{$\V{init} = 1 \ \wedge\ e = \V{Self}[i] \ \wedge\ \V{got}[i] = 0$} \label{ln:ckeonce}
+  \Comment{one sending key per epoch, and no second}
+\State $\V{sk}[i] \gets_{\$} \mathcal{K}$ \label{ln:ckesample}
+\If{$\V{div} = 1 \ \vee\ \V{en}[i] \in \V{Comp}$}
+  \State $\V{sk}[i] \gets \San[\Clean_{k}]\bigl(\Adv(\op{GetSendingKey}, i)\bigr)$ \label{ln:ckeoverwrite}
+    \Comment{the sample at line~\ref{ln:ckesample} is overwritten, not skipped}
+\EndIf
+\State $\V{got}[i] \gets 1$; \ \textbf{return} $\V{sk}[i]$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{GetReceivingKey}(e)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P \in \Feke.\Ps$}
+\State $i \gets$ the index with $\id.P = P_i$; \ parse $e$ as $(e_0, \mathit{ek}, \mathit{ok})$
+\Req{$\V{init} = 1 \ \wedge\ \V{sk}[1-i] \neq \unset$} \label{ln:ckedeleted}
+  \Comment{a deleted sending key ends the receiving side too}
+\If{$\V{rfirst} = 0$}
+  \Req{$i = 1$} \label{ln:ckeresponder}
+  \State $\mathit{ik} \gets \id_{\Fdir}.\fopl{GetResponseKeys}(P_{1-i}) \text{ as } \id$
+  \State $\id_{\Fltm}.\fopl{ComputeReceivingRootKey}(\mathit{ik}, \mathit{ek}, \mathit{ok}) \text{ as } \id$; \ $\V{rfirst} \gets 1$
+\EndIf
+\If{$(\V{div} = 1 \ \vee\ \V{en}[i] + 1 \in \V{Comp}) \ \wedge\ e \neq \V{Self}[1-i]$} \label{ln:ckedelayheal}
+  \State $\V{Comp} \gets \V{Comp} \cup \{\V{en}[i]+2, \V{en}[i]+3\}$
+    \Comment{a bogus epoch id postpones healing}
+\EndIf
+\If{$\V{div} = 1 \ \vee\ \V{en}[i] + 1 \in \V{Comp}$}
+  \State \textbf{return} $\San[\Clean_{k}]\bigl(\Adv(\op{GetReceivingKey}, i, e)\bigr)$ \label{ln:ckeadvkey}
+\EndIf
+\If{$e \neq \V{Self}[1-i]$} \label{ln:ckemismatch}
+  \State $\kappa \gets_{\$} \mathcal{K}$; \ $\V{Att}[\V{en}[i]] \gets \V{Att}[\V{en}[i]] \, \| \, (e, \kappa)$ \label{ln:ckerecord}
+    \Comment{an unmatched id still gets a key, and the key is remembered}
+  \State \textbf{return} $\kappa$
+\EndIf
+\State \textbf{return} $\V{sk}[1-i]$ \label{ln:ckeagree}
+  \Comment{the expected case: the peer's own sending key}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P \in \Feke.\Ps$}
+\State $i \gets$ the index with $\id.P = P_i$
+\State $\V{cl}[i] \gets \V{cl}[i] \, \| \, \V{Self}[i]$
+\State $\V{Comp} \gets \V{Comp} \cup \{\V{en}[i], \V{en}[i]{+}1, \V{en}[i]{+}2, \V{en}[i]{+}3\}$ \label{ln:ckewiden}
+  \Comment{four epochs; the fifth is protected by forward secrecy}
+\State $j \gets$ the index with $\V{en}[j] > \V{en}[1-j]$; \ $\kappa \gets \none$
+\If{$\V{got}[j] = 1$}
+  \State $\kappa \gets \V{sk}[j]$ \label{ln:ckeunfetched}
+    \Comment{a key not yet fetched is not there to be stolen}
+\EndIf
+\State \textbf{return} $\San[\Clean_{\ell}]\bigl(\Adv(\V{st}, \op{ReportState}, i, \kappa, \V{Att}[\V{en}[j]])\bigr)$ \label{ln:ckereport}
+\algsave
+\end{algorithmic}}
+\end{interface}

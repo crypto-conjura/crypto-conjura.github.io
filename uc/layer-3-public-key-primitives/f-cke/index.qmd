@@ -1,14 +1,178 @@
 ---
-title: "F-CKE — Continuous KE, asymmetric ratchet"
+title: "F-CKE — Epoch key exchange, asymmetric ratchet"
 status: "Canonical"
 layer: 3
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-CKE* (Continuous KE, asymmetric ratchet) is part of *Public-Key Primitives, Key Exchange, Messaging* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+*F-CKE* (Epoch key exchange, asymmetric ratchet) is part of *Public-Key Primitives, Key Exchange, Messaging* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
 
-Introduced as one piece of a decomposition of the Signal protocol, alongside *F-secmsg* and *F-fsAEAD*.
+Signal's public-key ratchet, stated as an ideal object: one instance serves one two-party session, hands each party a fresh chain key for each of its sending epochs, and controls exactly how long an adversary keeps reading and writing after a compromise. It is the layer directly beneath [*F-secmsg*](/uc/layer-3-public-key-primitives/f-secmsg/index.qmd) in the same paper's decomposition of Signal, and the layer where the assumptions enter: $\mathcal{F}_{\mathsf{SM}}$ above it is realized *perfectly*, and this one is not.
+
+**The stub's title named an abstraction from a different paper.** It read "Continuous KE, asymmetric ratchet". *Continuous key agreement* (CKA) is Alwen, Coretti and Dodis's primitive, from the game-based double-ratchet analysis, and it is not what the cited paper prints. What it prints is *epoch key exchange*, $\mathcal{F}_{\mathsf{eKE}}$, whose interface is organised around epochs and epoch identifiers rather than around a continuous stream of key agreements. The two model the same part of Signal and are not the same object; the slug stays `f-cke`, the title now names the box.
+
+## Functionality
+
+Reading the box: $\mathsf{require}$ refuses the call, and the framework answers $\textsf{rej}$; $\mathcal{A}(\cdot)$ is a call on the adversary slot and $\mathsf{San}[\mathsf{Clean}]$ its sanitizer; $\square$ marks a table entry never set, $\bot$ none-or-refused. $\mathtt{I}$ is code drawn from the library $\mathcal{F}_{\mathsf{Lib}}$, with state $\mathtt{st}$; $\mathcal{K}$ is the chain-key distribution. Epoch *numbers* $\mathtt{en}[i]$ are integers a party owns, stepping by two; epoch *identifiers* are the public tags that name them on the wire, and the two are related only through $\mathtt{Num}$ and $\mathtt{Self}$. $\mathtt{Comp}$ holds the epoch numbers the adversary currently controls — one set, not two, because a compromise of either party compromises the shared ratchet.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{eKE}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P} := \{P_0, P_1\}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves}),\,(\mathcal{F}_{\mathsf{LTM}},\mathsf{serves}),\,(\mathcal{F}_{\mathsf{DIR}},\mathsf{serves}),\,(\mathcal{F}_{\mathsf{Lib}},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := \mathcal{K}\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{init} \gets 0\); &nbsp;\(\mathtt{rfirst} \gets 0\); &nbsp;\(\mathtt{div} \gets 0\)</li>
+<li>\(\mathtt{I} \gets \square\); &nbsp;\(\mathtt{st} \gets \bot\)<span class="cj-comment">// the internal code drawn from \(\mathcal{F}_{\mathsf{Lib}}\), and its state</span></li>
+<li>\(\mathtt{en} : \{0,1\} \to \mathbb{Z}\); &nbsp;\(\mathtt{Self}, \mathtt{Ptnr} : \{0,1\} \to \mathcal{T} \cup \{\square\}\)</li>
+<li>\(\mathtt{sk} : \{0,1\} \to \mathcal{K} \cup \{\square\}\); &nbsp;\(\mathtt{got} : \{0,1\} \to \{0,1\}\)<span class="cj-comment">// one sending chain key per party, handed out once</span></li>
+<li>\(\mathtt{Comp} \gets \varnothing\)<span class="cj-comment">// epoch numbers the adversary controls</span></li>
+<li>\(\mathtt{Num} : \mathcal{T} \to \mathbb{Z} \cup \{\square\}\); &nbsp;\(\mathtt{Num}[*] \gets \square\)</li>
+<li>\(\mathtt{Att} : \mathbb{Z} \to (\mathcal{T} \times \mathcal{K})^{*}\); &nbsp;\(\mathtt{Att}[*] \gets \varepsilon\)<span class="cj-comment">// keys handed out for epoch ids that did not match</span></li>
+<li>\(\mathtt{Seen} \gets \varnothing\); &nbsp;\(\mathtt{cl} : \{0,1\} \to \mathcal{T}^{*}\); &nbsp;\(\mathtt{cl}[*] \gets \varepsilon\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.ConfirmEpoch(<span class="cj-id">e^{*}</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="9">
+<li>\(\textbf{require}\ \mathit{id}.P \in \mathcal{F}_{\mathsf{eKE}}.\mathbf{P}\)</li>
+<li>\(i \gets\) the index with \(\mathit{id}.P = P_i\); &nbsp;\(\mathtt{new} \gets [\, \mathtt{init} = 0 \,]\)</li>
+<li>\(\textbf{if}\ \mathtt{new} = 1\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{require}\ i = 0\)</span><span class="cj-comment">// only the initiator may open a conversation</span></li>
+<li><span class="cj-ind">\((\mathit{ik}, \mathit{rk}, \mathit{ok}) \gets \mathit{id}_{\mathcal{F}_{\mathsf{DIR}}}.\mathsf{FullGetInitKeys}(P_1, P_0) \text{ as } \mathit{id}\)</span></li>
+<li><span class="cj-ind">\(\textbf{if}\ \mathit{ok} = \bot\ \textbf{then}\)</span></li>
+<li><span class="cj-ind">\(\textbf{return}\ \mathsf{fail}\)</span><span class="cj-comment">// the peer's one-time prekeys have run out</span></li>
+<li><span class="cj-ind">\(\mathtt{Ptnr}[0], \mathtt{Self}[1] \gets \mathit{ok}\)</span><span class="cj-comment">// the peer's prekey \emph{is} its first epoch id</span></li>
+<li><span class="cj-ind">\(\mathtt{en}[0] \gets -2\); &nbsp;\(\mathtt{en}[1] \gets -1\)</span></li>
+<li><span class="cj-ind">\((k, \mathit{ek}) \gets \mathit{id}_{\mathcal{F}_{\mathsf{LTM}}}.\mathsf{FullComputeSendingRootKey}(\mathit{ik}, \mathit{rk}, \mathit{ok}) \text{ as } \mathit{id}\)</span></li>
+<li><span class="cj-ind">\(\mathtt{I} \gets \mathit{id}_{\mathcal{F}_{\mathsf{Lib}}}.\mathsf{FullCode}() \text{ as } \mathit{id}\); &nbsp;\(\mathtt{init} \gets 1\)</span></li>
+<li>\(\textbf{if}\ \mathtt{new} = 0\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{Ptnr}[i] \gets e^{*}\)</span></li>
+<li>\(\textbf{if}\ \mathtt{new} = 0 \ \wedge\ e^{*} \neq \mathtt{Self}[1-i]\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{div} \gets 1\)</span><span class="cj-comment">// the two parties are no longer in one conversation</span></li>
+<li><span class="cj-ind">\(j \gets\) the index with \(\mathtt{en}[j] > \mathtt{en}[1-j]\); &nbsp;\(\kappa \gets \bot\)</span></li>
+<li><span class="cj-ind">\(\textbf{if}\ \mathtt{got}[j] = 1\ \textbf{then}\)</span></li>
+<li><span class="cj-ind">\(\kappa \gets \mathtt{sk}[j]\)</span></li>
+<li><span class="cj-ind">\(\mathsf{San}[\mathsf{Clean}_{\ell}]\bigl(\mathcal{A}(\mathtt{st}, \mathsf{ReportState}, i, \kappa, \mathtt{Att}[\mathtt{en}[j]])\bigr)\)</span><span class="cj-comment">// the simulator takes control before the first divergence</span></li>
+<li>\(\textbf{if}\ \mathtt{en}[i] + 2 \in \mathtt{Comp} \ \vee\ \mathtt{div} = 1\ \textbf{then}\)</li>
+<li><span class="cj-ind">\((\mathtt{st}, e) \gets \mathsf{San}[\mathsf{Clean}_{e}]\bigl(\mathcal{A}(\mathtt{st}, \mathsf{GenEpochId}, i, e^{*})\bigr)\)</span></li>
+<li>\(\textbf{if}\ \mathtt{en}[i] + 2 \notin \mathtt{Comp} \ \wedge\ \mathtt{div} = 0\ \textbf{then}\)</li>
+<li><span class="cj-ind">\((\mathtt{st}, e) \gets \mathtt{I}\bigl(\mathtt{st}, \mathsf{GenEpochId}, i, e^{*}\bigr)\)</span></li>
+<li>\(\textbf{require}\ e \notin \mathtt{Seen}\)<span class="cj-comment">// an epoch id is generated once, by either route</span></li>
+<li>\(\mathtt{Seen} \gets \mathtt{Seen} \cup \{e\}\); &nbsp;\(\mathtt{Self}[i] \gets e\); &nbsp;\(\mathtt{Num}[e] \gets \mathtt{en}[i]\)</li>
+<li>\(\mathtt{got}[i] \gets 0\); &nbsp;\(\mathtt{en}[i] \gets \mathtt{en}[i] + 2\)<span class="cj-comment">// each party's own epochs are two apart</span></li>
+<li>\(\textbf{return}\ e\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.GetSendingKey(<span class="cj-id">e</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="36">
+<li>\(\textbf{require}\ \mathit{id}.P \in \mathcal{F}_{\mathsf{eKE}}.\mathbf{P}\)</li>
+<li>\(i \gets\) the index with \(\mathit{id}.P = P_i\)</li>
+<li>\(\textbf{require}\ \mathtt{init} = 1 \ \wedge\ e = \mathtt{Self}[i] \ \wedge\ \mathtt{got}[i] = 0\)<span class="cj-comment">// one sending key per epoch, and no second</span></li>
+<li>\(\mathtt{sk}[i] \gets_{\$} \mathcal{K}\)</li>
+<li>\(\textbf{if}\ \mathtt{div} = 1 \ \vee\ \mathtt{en}[i] \in \mathtt{Comp}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{sk}[i] \gets \mathsf{San}[\mathsf{Clean}_{k}]\bigl(\mathcal{A}(\mathsf{GetSendingKey}, i)\bigr)\)</span><span class="cj-comment">// the sample at line~\ref{ln:ckesample} is overwritten, not skipped</span></li>
+<li>\(\mathtt{got}[i] \gets 1\); &nbsp;\(\textbf{return}\ \mathtt{sk}[i]\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.GetReceivingKey(<span class="cj-id">e</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="43">
+<li>\(\textbf{require}\ \mathit{id}.P \in \mathcal{F}_{\mathsf{eKE}}.\mathbf{P}\)</li>
+<li>\(i \gets\) the index with \(\mathit{id}.P = P_i\); &nbsp;parse \(e\) as \((e_0, \mathit{ek}, \mathit{ok})\)</li>
+<li>\(\textbf{require}\ \mathtt{init} = 1 \ \wedge\ \mathtt{sk}[1-i] \neq \square\)<span class="cj-comment">// a deleted sending key ends the receiving side too</span></li>
+<li>\(\textbf{if}\ \mathtt{rfirst} = 0\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{require}\ i = 1\)</span></li>
+<li><span class="cj-ind">\(\mathit{ik} \gets \mathit{id}_{\mathcal{F}_{\mathsf{DIR}}}.\mathsf{FullGetResponseKeys}(P_{1-i}) \text{ as } \mathit{id}\)</span></li>
+<li><span class="cj-ind">\(\mathit{id}_{\mathcal{F}_{\mathsf{LTM}}}.\mathsf{FullComputeReceivingRootKey}(\mathit{ik}, \mathit{ek}, \mathit{ok}) \text{ as } \mathit{id}\); &nbsp;\(\mathtt{rfirst} \gets 1\)</span></li>
+<li>\(\textbf{if}\ (\mathtt{div} = 1 \ \vee\ \mathtt{en}[i] + 1 \in \mathtt{Comp}) \ \wedge\ e \neq \mathtt{Self}[1-i]\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{Comp} \gets \mathtt{Comp} \cup \{\mathtt{en}[i]+2, \mathtt{en}[i]+3\}\)</span><span class="cj-comment">// a bogus epoch id postpones healing</span></li>
+<li>\(\textbf{if}\ \mathtt{div} = 1 \ \vee\ \mathtt{en}[i] + 1 \in \mathtt{Comp}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \mathsf{San}[\mathsf{Clean}_{k}]\bigl(\mathcal{A}(\mathsf{GetReceivingKey}, i, e)\bigr)\)</span></li>
+<li>\(\textbf{if}\ e \neq \mathtt{Self}[1-i]\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\kappa \gets_{\$} \mathcal{K}\); &nbsp;\(\mathtt{Att}[\mathtt{en}[i]] \gets \mathtt{Att}[\mathtt{en}[i]] \, \| \, (e, \kappa)\)</span><span class="cj-comment">// an unmatched id still gets a key, and the key is remembered</span></li>
+<li><span class="cj-ind">\(\textbf{return}\ \kappa\)</span></li>
+<li>\(\textbf{return}\ \mathtt{sk}[1-i]\)<span class="cj-comment">// the expected case: the peer's own sending key</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="58">
+<li>\(\textbf{require}\ \mathit{id}.P \in \mathcal{F}_{\mathsf{eKE}}.\mathbf{P}\)</li>
+<li>\(i \gets\) the index with \(\mathit{id}.P = P_i\)</li>
+<li>\(\mathtt{cl}[i] \gets \mathtt{cl}[i] \, \| \, \mathtt{Self}[i]\)</li>
+<li>\(\mathtt{Comp} \gets \mathtt{Comp} \cup \{\mathtt{en}[i], \mathtt{en}[i]{+}1, \mathtt{en}[i]{+}2, \mathtt{en}[i]{+}3\}\)<span class="cj-comment">// four epochs; the fifth is protected by forward secrecy</span></li>
+<li>\(j \gets\) the index with \(\mathtt{en}[j] > \mathtt{en}[1-j]\); &nbsp;\(\kappa \gets \bot\)</li>
+<li>\(\textbf{if}\ \mathtt{got}[j] = 1\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\kappa \gets \mathtt{sk}[j]\)</span><span class="cj-comment">// a key not yet fetched is not there to be stolen</span></li>
+<li>\(\textbf{return}\ \mathsf{San}[\mathsf{Clean}_{\ell}]\bigl(\mathcal{A}(\mathtt{st}, \mathsf{ReportState}, i, \kappa, \mathtt{Att}[\mathtt{en}[j]])\bigr)\)</li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+*Source: Figures 13 and 14, pp. 38–39 of Canetti, Jain, Swanberg and Varia, "Universally Composable End-to-End Secure Messaging: A Modular Analysis", ePrint 2022/376, revision `20230519:151937`. PDF page and printed folio agree.*
+
+**The same revision warning as [*F-secmsg*](/uc/layer-3-public-key-primitives/f-secmsg/index.qmd), on the same provision.** Figure 14 carries a footnote on its step 5(a) — line 51 below — saying it "was missing in the [25] version", where [25] is this paper's own CRYPTO 2022 proceedings. Both functionalities in this decomposition were corrected in the same way and after publication. Read the ePrint.
+
+- **Line 61 is the healing schedule, and it is four epochs, not three.** A corruption compromises $\mathtt{en}[i]$ through $\mathtt{en}[i]+3$. The source's own comment breaks that down: fully compromised for two to three epochs, then the sender's randomness is refreshed, then both parties'; and $\mathtt{en}[i]+5$ "is protected by forward secrecy even in the case of re-corruption". The paper is explicit that this number is an artifact of the protocol it had in hand rather than a fact about the primitive — its Remark on p. 37 notes the constant could be a parameter, and its Remark on p. 51 gives a modification of $\Pi_{\mathsf{eKE}}$ that heals in two rounds instead of three, at the cost of one extra Diffie–Hellman pair per epoch turn.
+- **Line 51 is where healing stops being a promise about epochs and becomes a race.** During a compromised window, a receiving key requested under an epoch id the peer never claimed pushes $\mathtt{Comp}$ two further epochs forward. The condition is on the *identifier alone*: nothing about the key, the ciphertext or any payload enters it. So an adversary that can keep feeding unclaimed epoch ids keeps its access indefinitely, and this is the provision the published version lacked.
+- **Line 39 samples a key the box may be about to throw away, and the order matters.** Under compromise line 41 overwrites it with the adversary's choice. Writing it the other way round — sample only when honest — would be the same functionality, but this order makes the invariant visible: a sending key always exists by line 42, and compromise changes *who chose it*, never whether there is one.
+- **Line 57 is the one line where the two parties agree on anything.** In the expected case the receiver is handed the *sender's own* $\mathtt{sk}[1-i]$ — the identical value, not a re-derivation. Every other return in $\mathsf{GetReceivingKey}$ is a fresh sample (line 55) or the adversary's (line 53). Agreement is therefore not a property proved of this box; it is a single table lookup, and everything else in the functionality exists to say when that lookup is *not* what happens.
+- **Line 55 hands out a key for an epoch id that does not match, and remembers it. This is the subtlest line in the box.** An honest, uncompromised receiver asked for a key under an unrecognised identifier does not fail — it gets a fresh independent key, and the pair is recorded in $\mathtt{Att}$. That is what makes immediate decryption safe at the layer above: a forged epoch id decrypts under a key unrelated to anything, so decapsulation fails on its own without the key exchange having to adjudicate. And the record matters, because line 65 hands $\mathtt{Att}$ to the adversary on corruption: the simulator must be able to explain keys the functionality already gave out under identifiers that turned out to be junk.
+- **Line 27 is a corruption that no one requested.** When the partner's epoch id fails to match, the functionality performs the reporting half of $\mathsf{Leak}$ *before* it does anything else — handing the adversary the leading party's chain key and its record of unmatched attempts. The source's comment is the whole justification: "If this may be the first divergence, make sure the simulator has control." Divergence is the point past which the ideal object can no longer predict the real one, so the simulator is given everything at exactly that moment, and not one call later.
+- **Line 32 is a uniqueness test spanning both routes.** An epoch id must be fresh whether the honest code at line 31 produced it or the adversary at line 29 did. Without it a compromised adversary could re-use an identifier and collapse two epochs into one; with it, $\mathtt{Num}$ is injective and the epoch-number arithmetic at lines 34, 50 and 61 is well founded.
+- **Lines 16 and 17 make the responder's first epoch id its one-time prekey.** There is no separate first-epoch negotiation: the prekey fetched from the directory *is* $\mathtt{Self}[1]$, and the numbering starts at $-2$ and $-1$ so that the first call to $\mathsf{ConfirmEpoch}$ leaves the initiator at $0$. That is why line 15 refuses the session when the peer has no prekey left — without one there is no identifier for the responder's first epoch, and the ratchet has nowhere to start.
+- **Line 64 is a small piece of forward secrecy in the corruption interface itself.** A sending key that has been sampled but never fetched ($\mathtt{got}[j] = 0$) is reported as $\bot$ rather than handed over. The key exists in the functionality's state; what the adversary gets is what the *party* would have had.
+
+**Mismatch register.**
+
+| The source | This box | Why |
+|---|---|---|
+| `Corrupt`, taking a request from $\Pi_{\mathsf{SGNL}}$ | $\mathsf{Leak}$, lines 58–65 | Corruption is the framework's; $\mathsf{Leak}$ is what a corrupt party's adversary reads off, which is precisely what this interface computes. |
+| `ConfirmReceivingEpoch` | $\mathsf{ConfirmEpoch}$, lines 9–35 | Renamed for length only. The source's own comment notes the same method starts the conversation, so "receiving" was never the whole of it. |
+| Step 2(b): "run step 3 of `Corrupt` to set `recv_chain_key*` and `leakage`" | Lines 24–27, written out | There is no interface to call: the source factors out a *step*, not an operation. Written twice rather than inventing a helper the source does not have. Lines 24–26 and 62–64 are the same three lines. |
+| The epoch id arrives inside $\mathit{sid.mKE}$, and is checked against it | An argument $e$, checked at lines 38 and 44 | Session identifiers live in the process id here. This is the one place the translation is not free: the source's check is that the *caller's own session id* names the right epoch, and an argument is a weaker thing than a caller's identity. The guard at line 38 is what keeps it equivalent. |
+| "end the activation" | $\mathsf{require}$, lines 12, 32, 38, 45, 47 | A refusal. Distinct from step 1(c)i's `output (ConfirmReceivingEpoch, Fail)`, which is line 15, a value the caller receives. The source uses both. |
+| "If `sending_chain_key`$_{1-i}$ has been deleted" | $\mathtt{sk}[1-i] \neq \square$ at line 45 | The source never prints a deletion, so $\square$ — never set — is the only reading its own code supports. Recorded because it is a place where the printed functionality refers to an operation it does not have. |
+| `receive_attempts[epoch_num]` in step 6(b), with a bare `epoch_num` | $\mathtt{Att}[\mathtt{en}[i]]$ at line 55 | **An ambiguity in the source.** Every other use of the variable is subscripted by a party; this one is not, and the two parties' numbers differ. Read as the receiver's own, because it is the receiver's call; the alternative reading changes which bucket line 65 reports. |
+| `epoch_num_i, epoch_num_i + 1, …, epoch_num_i + 3` as a list | One set union at line 61 | Same four values. |
+| No leakage interface beyond `Corrupt`; answers from $\mathcal{A}$ used directly | $\mathsf{San}[\mathsf{Clean}_{e}]$, $\mathsf{San}[\mathsf{Clean}_{k}]$, $\mathsf{San}[\mathsf{Clean}_{\ell}]$ at lines 27, 29, 41, 53, 65 | Required here. Each checks only the shape the source's message format already fixes. |
+
+## Known realizations
+
+**$\Pi_{\mathsf{eKE}}$, under DDH and a computational assumption on the KDF** (Theorem 3): "Assume that KDF is a CPRFG with security parameter $\lambda$, that the DDH assumption holds in the group $\mathbb{G}$ where $|\mathbb{G}| \geq 2^{\lambda}$. Then protocol $\Pi_{\mathsf{eKE}}$ UC-realizes the ideal functionality $\mathcal{F}_{\mathsf{eKE}}$ in the presence of global functionalities $\mathcal{F}_{\mathsf{Lib}}$, $\mathcal{F}_{\mathsf{DIR}}$ and $\mathcal{F}_{\mathsf{LTM}}$." This is where the Signal decomposition stops being unconditional: the paper calls the modular instantiation of this functionality "one of the most delicate parts of this work".
+
+**The KDF requirement is two-sided, and that is the hard part.** The key derivation function inside the ratchet must stay secure if *either* the previous root key or the newly generated Diffie–Hellman secret is good — an observation the paper attributes to Alwen, Coretti and Dodis, who formalize it as a PRF-PRNG (pseudorandom function in its first input, generator-with-input in its second). A KDF that is only a PRF in one argument does not suffice.
+
+**Faster healing is available, and the functionality would have to change with it.** The Remark on p. 51 gives a modification of $\Pi_{\mathsf{eKE}}$ that heals in two rounds rather than three, using two Diffie–Hellman pairs at each epoch turn so that both parties can delete their sending exponents immediately; substituting it yields an $\mathcal{F}_{\mathsf{SM}}$ that heals in $\geq 2$ rounds. The paper also points to Bienstock et al.'s "triple ratchet" as achieving comparable healing without the extra communication. So the constant at line 61 is a property of one protocol, and the box as printed is the one that matches $\Pi_{\mathsf{eKE}}$.
+
+## Properties
+
+- **Key agreement, with advantage exactly $0$ in the expected case.** Line 57 returns the peer's own key by table lookup. There is nothing probabilistic about agreement here; it is either that lookup or one of the three other branches.
+- **Key secrecy while uncompromised.** Lines 39 and 55 sample uniformly from $\mathcal{K}$ and no interface returns a key to the adversary except through lines 41, 53 and 65, all guarded by $\mathtt{div}$ or $\mathtt{Comp}$.
+- **Post-compromise security, with a window of exactly four epochs.** Line 61, and the source's note that the fifth survives even re-corruption. Under the two-round modification the window would be shorter; under this protocol it is four.
+- **…and the window is extendable without bound.** Line 51, on the epoch identifier alone. The same caveat as [*F-secmsg*](/uc/layer-3-public-key-primitives/f-secmsg/index.qmd), and it is the reason both boxes needed the same post-publication correction.
+- **Forward secrecy for unfetched keys, with probability exactly $1$.** Line 64: a key the party never collected is never reported.
+- **One sending key per epoch, enforced.** Line 38's $\mathtt{got}[i] = 0$ test. A second request is refused rather than answered again, so the symmetric ratchet above cannot silently restart an epoch's chain.
+- **Epoch identifiers are unique across the instance, with probability exactly $1$.** Line 32, and it holds against the adversary's choice as well as the honest code's.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Canetti et al. [*Universally composable end-to-end secure messaging*](https://eprint.iacr.org/2022/376). In Advances in Cryptology – CRYPTO 2022, volume 13508 of LNCS, 2022.
+- Canetti, Jain, Swanberg, and Varia. [*Universally composable end-to-end secure messaging*](https://eprint.iacr.org/2022/376). In Advances in Cryptology – CRYPTO 2022, volume 13508 of LNCS, pages 3–33, 2022. **The source of the box above**: Figures 13 and 14, pp. 38–39 of ePrint revision `20230519:151937`. The realization is $\Pi_{\mathsf{eKE}}$, Theorem 3; the faster-healing variant is the Remark on p. 51. **Read the ePrint, not the proceedings** — Figure 14's step 5(a), line 51 below, was added after publication.
+- Alwen, Coretti, and Dodis. [*The double ratchet: Security notions, proofs, and modularization for the Signal protocol*](https://eprint.iacr.org/2018/1037). In Advances in Cryptology – EUROCRYPT 2019, 2019. The origin of the *continuous key agreement* abstraction this page's stub title named, of the FS-AEAD abstraction one layer down, and of the two-sided PRF-PRNG requirement on the KDF that Theorem 3 has to meet. Game-based rather than UC, so it prints no functionality. **Added to this page's references by this entry.**

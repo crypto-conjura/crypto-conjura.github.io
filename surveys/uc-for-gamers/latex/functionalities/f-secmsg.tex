@@ -1,0 +1,164 @@
+%% The interface box of f-secmsg, the one source for both the book
+%% and uc/.../f-secmsg/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+%%
+%% `breakable`, and no `multicols`. This is the first box in the encyclopedia
+%% past the ~60 numbered lines that two columns hold on the book's 5.5x8.5in
+%% page -- the budget f-cred established the hard way, by silently losing
+%% everything past line 73. tcolorbox's `breakable` lets the box run onto a
+%% second page instead of overflowing the first, but only outside multicols,
+%% which does not break inside a breakable box. The optional argument of the
+%% `interface' environment exists for exactly this, so the trade costs no edit
+%% to ucgamers.sty and no rebuild of the book. The HTML is unaffected: the
+%% generator emits one block per operation and never sees the columns.
+\begin{interface}[nofloat, breakable]{Functionality $\Fsm$ \\
+\params{$\PID$, \quad $\Ps := \{P_0, P_1\}$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves),\,(\Fltm,\serves),\,(\Fdir,\serves),\,(\Flib,\serves)\}$,
+\quad $\pars := \none$}}
+
+{\scriptsize
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{init} \gets 0$; \ $\V{rinit} \gets 0$; \ $\V{div} \gets 0$
+  \Comment{sender open, receiver open, states diverged}
+\State $\V{I} \gets \unset$; \ $\V{st} \gets \none$
+  \Comment{the internal code drawn from $\Flib$, and its state}
+\State $\V{ep}, \V{snt}, \V{rcv}, \V{Ns} : \{0,1\} \to \mathbb{N}$; \ all $\gets 0$
+\State $\V{Ctl} : \mathbb{N} \to 2^{\{\op{leak},\op{inj}\}}$; \ $\V{Ctl}[*] \gets \emptyset$
+  \Comment{what the adversary may do in each epoch}
+\State $\V{Eid} : \Tags \to \mathbb{N} \cup \{\unset\}$; \ $\V{Eid}[*] \gets \unset$
+\State $\V{Cnt} : \mathbb{N} \to \mathbb{N} \cup \{\infty\}$; \ $\V{Cnt}[*] \gets \infty$
+  \Comment{messages sent in a closed epoch; $\infty$ while it is open}
+\State $\V{R} \gets \emptyset$
+  \Comment{sent records $(P, h, c, \msg)$}
+\State $\V{Au} : \Tags \times \bits \to \{0,1,\unset\}$; \ $\V{Au}[*,*] \gets \unset$
+\State $\V{cl} \gets \varepsilon$
+  \Comment{the corruption log}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{SendMessage}(\msg)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P \in \Fsm.\Ps$} \label{ln:smtwo}
+\State $i \gets$ the index with $\id.P = P_i$
+\If{$\V{init} = 0$}
+  \Req{$i = 0$} \label{ln:sminitiator}
+    \Comment{only $P_0$ may open a session}
+  \State $t \gets \id_{\Fltm}.\fopl{ConfirmRegistration}() \text{ as } \id$
+  \Req{$t = \ok$} \label{ln:smltm}
+  \State $(\mathit{ik}, \mathit{rk}, \mathit{ok}) \gets \id_{\Fdir}.\fopl{GetInitKeys}(P_1) \text{ as } \id$
+  \Req{$\mathit{ok} \neq \none$} \label{ln:smprekey}
+    \Comment{no one-time prekey, no session}
+  \State $\V{I} \gets \id_{\Flib}.\fopl{Code}() \text{ as } \id$; \ $\V{init} \gets 1$
+\EndIf
+\State $\V{snt}[i] \gets \V{snt}[i] + 1$
+\If{$\op{leak} \in \V{Ctl}[\V{ep}[i]] \ \vee\ \V{div} = 1$} \label{ln:smcompromised}
+  \State $(\V{st}, e, c) \gets \San[\Clean_{s}]\bigl(\Adv(\V{st}, \op{SendMessage}, \id.P, \msg)\bigr)$ \label{ln:smplaintext}
+    \Comment{the message itself, not its length}
+\EndIf
+\If{$\op{leak} \notin \V{Ctl}[\V{ep}[i]] \ \wedge\ \V{div} = 0$}
+  \State $(\V{st}, e, c) \gets \V{I}\bigl(\V{st}, \op{SendMessage}, \id.P, |\msg|\bigr)$ \label{ln:smlength}
+    \Comment{the length only: the code cannot see $\msg$}
+\EndIf
+\If{$\V{snt}[i] = 1$}
+  \Req{$\V{Eid}[e] = \unset$} \label{ln:smfreshepoch}
+    \Comment{an epoch id is claimed once and never again}
+  \State $\V{Eid}[e] \gets \V{ep}[i]$
+\EndIf
+\State $h \gets (e, \V{snt}[i], \V{Ns}[i])$ \label{ln:smheader}
+\If{$\V{div} = 0$} \label{ln:smrecord}
+  \State $\V{R} \gets \V{R} \cup \{(\id.P, h, c, \msg)\}$
+    \Comment{once diverged, nothing more is recorded}
+\EndIf
+\State \textbf{return} $(h, c)$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{ReceiveMessage}(h, c)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P \in \Fsm.\Ps$}
+\State $i \gets$ the index with $\id.P = P_i$; \ parse $h$ as $(e, n, N)$
+\If{$\V{rinit} = 0$}
+  \Req{$i = 1$} \label{ln:smresponder}
+    \Comment{only $P_1$ may open the receiving side}
+  \State $t \gets \id_{\Fltm}.\fopl{ConfirmRegistration}() \text{ as } \id$
+  \Req{$t = \ok$}
+  \State $\mathit{ik} \gets \id_{\Fdir}.\fopl{GetResponseKeys}(P_0, P_1) \text{ as } \id$
+  \State $\V{snt}[1] \gets 0$; \ $\V{rcv}[1] \gets 0$; \ $\V{ep}[1] \gets 1$; \ $\V{rinit} \gets 1$ \label{ln:smoffset}
+    \Comment{the responder starts one epoch ahead}
+\EndIf
+\If{$\exists\, c' : \V{Au}[h, c'] = 1 \ \vee\ \V{Au}[h, c] = 0$} \label{ln:smreplay}
+  \State \textbf{return} $\atom{fail}$
+    \Comment{one accepted ciphertext per header, and no retry of a rejected one}
+\EndIf
+\State $n^{*} \gets \V{Eid}[e]$; \ $\V{new} \gets [\, n^{*} = \unset \,]$
+\If{$\V{new} = 1 \ \wedge\ \V{snt}[i] = 0$} \label{ln:smnoswitch}
+  \State \textbf{return} $\atom{fail}$
+    \Comment{a party still receiving will not take a new epoch id}
+\EndIf
+\If{$\V{new} = 1$}
+  \State $n^{*} \gets \V{ep}[i] + 1$
+\EndIf
+\If{$\V{new} = 1 \ \wedge\ \op{leak} \in \V{Ctl}[n^{*}]$} \label{ln:smdelayheal}
+  \State $\V{Ctl}[n^{*}], \V{Ctl}[n^{*}{+}1] \gets \{\op{leak},\op{inj}\}$; \ $\V{Ctl}[n^{*}{+}2] \gets \V{Ctl}[n^{*}{+}2] \cup \{\op{leak}\}$
+    \Comment{a bogus epoch id postpones healing}
+\EndIf
+\If{$n > \V{Cnt}[n^{*}]$} \label{ln:smpasttail}
+  \State \textbf{return} $\atom{fail}$
+\EndIf
+\If{$\V{div} = 0 \ \wedge\ \op{inj} \notin \V{Ctl}[n^{*}]$}
+  \State $(\V{st}, v) \gets \V{I}\bigl(\V{st}, \op{Inject}, \id.P, h, c\bigr)$
+\EndIf
+\If{$\V{div} = 1 \ \vee\ \op{inj} \in \V{Ctl}[n^{*}]$}
+  \State $(\V{st}, v) \gets \San[\Clean_{r}]\bigl(\Adv(\V{st}, \op{Inject}, \id.P, h, c)\bigr)$ \label{ln:smadvinject}
+\EndIf
+\If{$v = \none$}
+  \State $\V{Au}[h, c] \gets 0$; \ \textbf{return} $\atom{fail}$
+\EndIf
+\If{$\V{div} = 0 \ \wedge\ \op{inj} \notin \V{Ctl}[n^{*}] \ \wedge\ \nexists\, (P', h, c^{*}, m) \in \V{R}$}
+  \State \textbf{return} $\atom{fail}$
+\EndIf
+\If{$\V{div} = 0 \ \wedge\ \op{inj} \notin \V{Ctl}[n^{*}]$}
+  \State take $(P', h, c^{*}, m) \in \V{R}$; \ $\msg^{*} \gets m$; \ $\V{Au}[h, c] \gets 1$ \label{ln:smhonestmac}
+    \Comment{the sent message, even when $c \neq c^{*}$}
+\EndIf
+\If{$\V{div} = 1 \ \vee\ \op{inj} \in \V{Ctl}[n^{*}]$}
+  \State $\msg^{*} \gets v$; \ $\V{Au}[h, c] \gets 1$ \label{ln:smadvchooses}
+    \Comment{the adversary's message, delivered as authentic}
+\EndIf
+\If{$(\V{div} = 1 \ \vee\ \op{inj} \in \V{Ctl}[n^{*}]) \ \wedge\ \V{Eid}[e] = \unset$}
+  \State $\V{div} \gets 1$ \label{ln:smdiverge}
+    \Comment{the one line that declares the two views irreconcilable}
+\EndIf
+\If{$\V{ep}[i] < n^{*}$} \label{ln:smadvance}
+  \State $\V{Cnt}[n^{*}{-}2] \gets N$; \ $\V{ep}[i] \gets \V{ep}[i] + 2$; \ $\V{Ns}[i] \gets \V{snt}[i]$; \ $\V{snt}[i] \gets 0$
+    \Comment{the epoch two back is closed, at the length its sender reports}
+\EndIf
+\State \textbf{return} $(h, \msg^{*})$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P \in \Fsm.\Ps$}
+\State $i \gets$ the index with $\id.P = P_i$
+\State $\V{cl} \gets \V{cl} \, \| \, (i, \V{ep}[i], \V{snt}[i], \V{rcv}[i])$ \label{ln:smdeadvar}
+\State $\forall\, e \leq \V{ep}[i] + 2 : \ \V{Ctl}[e] \gets \{\op{leak}, \op{inj}\}$ \label{ln:smwiden}
+  \Comment{every past epoch, and the next two}
+\State $\V{Ctl}[\V{ep}[i] + 3] \gets \{\op{leak}\}$ \label{ln:smthird}
+  \Comment{the third is readable but not writable}
+\State $\V{Pend} \gets \{(P_{1-i}, h, c, m) \in \V{R} : \nexists\, c' \ \V{Au}[h, c'] = 1\}$ \label{ln:smpending}
+  \Comment{what is still in flight towards $P_i$}
+\State \textbf{return} $\San[\Clean_{\ell}]\bigl(\Adv(\V{st}, \op{ReportState}, i, \V{Pend})\bigr)$ \label{ln:smreport}
+  \Comment{the corrupt party's state is the adversary's to invent}
+\algsave
+\end{algorithmic}}
+\end{interface}

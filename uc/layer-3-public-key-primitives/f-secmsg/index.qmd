@@ -1,14 +1,180 @@
 ---
-title: "F-secmsg — End-to-end secure messaging"
+title: "F-secmsg — End-to-end secure messaging, two-party session"
 status: "Canonical"
 layer: 3
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-secmsg* (End-to-end secure messaging) is part of *Public-Key Primitives, Key Exchange, Messaging* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+*F-secmsg* (End-to-end secure messaging, two-party session) is part of *Public-Key Primitives, Key Exchange, Messaging* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
 
-Introduced as part of a single decomposition of the Signal protocol into this functionality, a continuous-key-exchange functionality (*F-CKE*), epoch-level symmetric ratchets, and a forward-secure AEAD functionality (*F-fsAEAD*).
+The top of a four-way decomposition of the Signal protocol: one instance is one session between two fixed parties, and everything that a reader would call "Signal" — the double ratchet, the epochs, the healing after compromise, the ordering of a conversation that both sides are writing into at once — is stated here as the ideal object, with the machinery pushed into [*F-CKE*](/uc/layer-3-public-key-primitives/f-cke/index.qmd), [*F-fsAEAD*](/uc/layer-2-crypto-library-symmetric/f-fsaead/index.qmd) and [*F-AE*](/uc/layer-2-crypto-library-symmetric/f-ae/index.qmd), all three of which this site already carries from the same paper.
+
+**This is the encyclopedia's first box past the two-column budget, and the presentation changed to fit it.** Seventy-three numbered lines will not go into two columns on the book's page: `f-cred` established the ceiling at about sixty by silently losing everything past line 73, with the overflow invisible until `--vs-preview` reported the tail missing. The fragment behind this box therefore asks for `breakable` and drops `multicols`, so the box runs onto a second page in the standalone compile instead of overflowing the first. That is a per-fragment option on the `interface` environment, so it costs no edit to the book's style file and no rebuild. Nothing about the page below changes — the generator emits one block per operation and never sees the columns.
+
+## Functionality
+
+Reading the box: $\mathsf{require}$ refuses the call, and the framework answers $\textsf{rej}$ — as against an explicit $\mathsf{fail}$ return, which is a *result* the caller receives and which this functionality uses a great deal; $\mathcal{A}(\cdot)$ is a call on the adversary slot and $\mathsf{San}[\mathsf{Clean}]$ its sanitizer; $\square$ marks a table entry never set, $\bot$ none-or-refused. $\mathtt{I}$ is a piece of code drawn from the code library $\mathcal{F}_{\mathsf{Lib}}$ and $\mathtt{st}$ its state — the mechanism that lets an *honest* send compute a ciphertext without the functionality knowing how, which is what makes immediate encryption expressible at all. The two tokens $\mathsf{leak}$ and $\mathsf{inj}$ are the adversary's two powers over an epoch, read and write; $\mathsf{leak}$ the token is not the $\mathsf{Leak}$ interface, and $\mathsf{inj}$ the token is not the $\mathsf{Inject}$ message. An *epoch* is one party's run of consecutive sends; $\mathtt{ep}[i]$ counts them, $P_0$ from $0$ and $P_1$ from $1$, and both climb by two.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{SM}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P} := \{P_0, P_1\}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves}),\,(\mathcal{F}_{\mathsf{LTM}},\mathsf{serves}),\,(\mathcal{F}_{\mathsf{DIR}},\mathsf{serves}),\,(\mathcal{F}_{\mathsf{Lib}},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := \bot\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{init} \gets 0\); &nbsp;\(\mathtt{rinit} \gets 0\); &nbsp;\(\mathtt{div} \gets 0\)<span class="cj-comment">// sender open, receiver open, states diverged</span></li>
+<li>\(\mathtt{I} \gets \square\); &nbsp;\(\mathtt{st} \gets \bot\)<span class="cj-comment">// the internal code drawn from \(\mathcal{F}_{\mathsf{Lib}}\), and its state</span></li>
+<li>\(\mathtt{ep}, \mathtt{snt}, \mathtt{rcv}, \mathtt{Ns} : \{0,1\} \to \mathbb{N}\); &nbsp;all \(\gets 0\)</li>
+<li>\(\mathtt{Ctl} : \mathbb{N} \to 2^{\{\mathsf{leak},\mathsf{inj}\}}\); &nbsp;\(\mathtt{Ctl}[*] \gets \varnothing\)<span class="cj-comment">// what the adversary may do in each epoch</span></li>
+<li>\(\mathtt{Eid} : \mathcal{T} \to \mathbb{N} \cup \{\square\}\); &nbsp;\(\mathtt{Eid}[*] \gets \square\)</li>
+<li>\(\mathtt{Cnt} : \mathbb{N} \to \mathbb{N} \cup \{\infty\}\); &nbsp;\(\mathtt{Cnt}[*] \gets \infty\)<span class="cj-comment">// messages sent in a closed epoch; \(\infty\) while it is open</span></li>
+<li>\(\mathtt{R} \gets \varnothing\)<span class="cj-comment">// sent records \((P, h, c, \mathit{msg})\)</span></li>
+<li>\(\mathtt{Au} : \mathcal{T} \times \{0,1\}^* \to \{0,1,\square\}\); &nbsp;\(\mathtt{Au}[*,*] \gets \square\)</li>
+<li>\(\mathtt{cl} \gets \varepsilon\)<span class="cj-comment">// the corruption log</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.SendMessage(<span class="cj-id">msg</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="10">
+<li>\(\textbf{require}\ \mathit{id}.P \in \mathcal{F}_{\mathsf{SM}}.\mathbf{P}\)</li>
+<li>\(i \gets\) the index with \(\mathit{id}.P = P_i\)</li>
+<li>\(\textbf{if}\ \mathtt{init} = 0\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{require}\ i = 0\)</span><span class="cj-comment">// only \(P_0\) may open a session</span></li>
+<li><span class="cj-ind">\(t \gets \mathit{id}_{\mathcal{F}_{\mathsf{LTM}}}.\mathsf{FullConfirmRegistration}() \text{ as } \mathit{id}\)</span></li>
+<li><span class="cj-ind">\(\textbf{require}\ t = \mathsf{ok}\)</span></li>
+<li><span class="cj-ind">\((\mathit{ik}, \mathit{rk}, \mathit{ok}) \gets \mathit{id}_{\mathcal{F}_{\mathsf{DIR}}}.\mathsf{FullGetInitKeys}(P_1) \text{ as } \mathit{id}\)</span></li>
+<li><span class="cj-ind">\(\textbf{require}\ \mathit{ok} \neq \bot\)</span><span class="cj-comment">// no one-time prekey, no session</span></li>
+<li><span class="cj-ind">\(\mathtt{I} \gets \mathit{id}_{\mathcal{F}_{\mathsf{Lib}}}.\mathsf{FullCode}() \text{ as } \mathit{id}\); &nbsp;\(\mathtt{init} \gets 1\)</span></li>
+<li>\(\mathtt{snt}[i] \gets \mathtt{snt}[i] + 1\)</li>
+<li>\(\textbf{if}\ \mathsf{leak} \in \mathtt{Ctl}[\mathtt{ep}[i]] \ \vee\ \mathtt{div} = 1\ \textbf{then}\)</li>
+<li><span class="cj-ind">\((\mathtt{st}, e, c) \gets \mathsf{San}[\mathsf{Clean}_{s}]\bigl(\mathcal{A}(\mathtt{st}, \mathsf{SendMessage}, \mathit{id}.P, \mathit{msg})\bigr)\)</span><span class="cj-comment">// the message itself, not its length</span></li>
+<li>\(\textbf{if}\ \mathsf{leak} \notin \mathtt{Ctl}[\mathtt{ep}[i]] \ \wedge\ \mathtt{div} = 0\ \textbf{then}\)</li>
+<li><span class="cj-ind">\((\mathtt{st}, e, c) \gets \mathtt{I}\bigl(\mathtt{st}, \mathsf{SendMessage}, \mathit{id}.P, |\mathit{msg}|\bigr)\)</span><span class="cj-comment">// the length only: the code cannot see \(\mathit{msg}\)</span></li>
+<li>\(\textbf{if}\ \mathtt{snt}[i] = 1\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{require}\ \mathtt{Eid}[e] = \square\)</span><span class="cj-comment">// an epoch id is claimed once and never again</span></li>
+<li><span class="cj-ind">\(\mathtt{Eid}[e] \gets \mathtt{ep}[i]\)</span></li>
+<li>\(h \gets (e, \mathtt{snt}[i], \mathtt{Ns}[i])\)</li>
+<li>\(\textbf{if}\ \mathtt{div} = 0\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{R} \gets \mathtt{R} \cup \{(\mathit{id}.P, h, c, \mathit{msg})\}\)</span><span class="cj-comment">// once diverged, nothing more is recorded</span></li>
+<li>\(\textbf{return}\ (h, c)\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.ReceiveMessage(<span class="cj-id">h</span>, <span class="cj-id">c</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="31">
+<li>\(\textbf{require}\ \mathit{id}.P \in \mathcal{F}_{\mathsf{SM}}.\mathbf{P}\)</li>
+<li>\(i \gets\) the index with \(\mathit{id}.P = P_i\); &nbsp;parse \(h\) as \((e, n, N)\)</li>
+<li>\(\textbf{if}\ \mathtt{rinit} = 0\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{require}\ i = 1\)</span><span class="cj-comment">// only \(P_1\) may open the receiving side</span></li>
+<li><span class="cj-ind">\(t \gets \mathit{id}_{\mathcal{F}_{\mathsf{LTM}}}.\mathsf{FullConfirmRegistration}() \text{ as } \mathit{id}\)</span></li>
+<li><span class="cj-ind">\(\textbf{require}\ t = \mathsf{ok}\)</span></li>
+<li><span class="cj-ind">\(\mathit{ik} \gets \mathit{id}_{\mathcal{F}_{\mathsf{DIR}}}.\mathsf{FullGetResponseKeys}(P_0, P_1) \text{ as } \mathit{id}\)</span></li>
+<li><span class="cj-ind">\(\mathtt{snt}[1] \gets 0\); &nbsp;\(\mathtt{rcv}[1] \gets 0\); &nbsp;\(\mathtt{ep}[1] \gets 1\); &nbsp;\(\mathtt{rinit} \gets 1\)</span><span class="cj-comment">// the responder starts one epoch ahead</span></li>
+<li>\(\textbf{if}\ \exists\, c' : \mathtt{Au}[h, c'] = 1 \ \vee\ \mathtt{Au}[h, c] = 0\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \mathsf{fail}\)</span><span class="cj-comment">// one accepted ciphertext per header, and no retry of a rejected one</span></li>
+<li>\(n^{*} \gets \mathtt{Eid}[e]\); &nbsp;\(\mathtt{new} \gets [\, n^{*} = \square \,]\)</li>
+<li>\(\textbf{if}\ \mathtt{new} = 1 \ \wedge\ \mathtt{snt}[i] = 0\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \mathsf{fail}\)</span><span class="cj-comment">// a party still receiving will not take a new epoch id</span></li>
+<li>\(\textbf{if}\ \mathtt{new} = 1\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(n^{*} \gets \mathtt{ep}[i] + 1\)</span></li>
+<li>\(\textbf{if}\ \mathtt{new} = 1 \ \wedge\ \mathsf{leak} \in \mathtt{Ctl}[n^{*}]\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{Ctl}[n^{*}], \mathtt{Ctl}[n^{*}{+}1] \gets \{\mathsf{leak},\mathsf{inj}\}\); &nbsp;\(\mathtt{Ctl}[n^{*}{+}2] \gets \mathtt{Ctl}[n^{*}{+}2] \cup \{\mathsf{leak}\}\)</span><span class="cj-comment">// a bogus epoch id postpones healing</span></li>
+<li>\(\textbf{if}\ n > \mathtt{Cnt}[n^{*}]\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \mathsf{fail}\)</span></li>
+<li>\(\textbf{if}\ \mathtt{div} = 0 \ \wedge\ \mathsf{inj} \notin \mathtt{Ctl}[n^{*}]\ \textbf{then}\)</li>
+<li><span class="cj-ind">\((\mathtt{st}, v) \gets \mathtt{I}\bigl(\mathtt{st}, \mathsf{Inject}, \mathit{id}.P, h, c\bigr)\)</span></li>
+<li>\(\textbf{if}\ \mathtt{div} = 1 \ \vee\ \mathsf{inj} \in \mathtt{Ctl}[n^{*}]\ \textbf{then}\)</li>
+<li><span class="cj-ind">\((\mathtt{st}, v) \gets \mathsf{San}[\mathsf{Clean}_{r}]\bigl(\mathcal{A}(\mathtt{st}, \mathsf{Inject}, \mathit{id}.P, h, c)\bigr)\)</span></li>
+<li>\(\textbf{if}\ v = \bot\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{Au}[h, c] \gets 0\); &nbsp;\(\textbf{return}\ \mathsf{fail}\)</span></li>
+<li>\(\textbf{if}\ \mathtt{div} = 0 \ \wedge\ \mathsf{inj} \notin \mathtt{Ctl}[n^{*}] \ \wedge\ \nexists\, (P', h, c^{*}, m) \in \mathtt{R}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \mathsf{fail}\)</span></li>
+<li>\(\textbf{if}\ \mathtt{div} = 0 \ \wedge\ \mathsf{inj} \notin \mathtt{Ctl}[n^{*}]\ \textbf{then}\)</li>
+<li><span class="cj-ind">take \((P', h, c^{*}, m) \in \mathtt{R}\); &nbsp;\(\mathit{msg}^{*} \gets m\); &nbsp;\(\mathtt{Au}[h, c] \gets 1\)</span><span class="cj-comment">// the sent message, even when \(c \neq c^{*}\)</span></li>
+<li>\(\textbf{if}\ \mathtt{div} = 1 \ \vee\ \mathsf{inj} \in \mathtt{Ctl}[n^{*}]\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathit{msg}^{*} \gets v\); &nbsp;\(\mathtt{Au}[h, c] \gets 1\)</span><span class="cj-comment">// the adversary's message, delivered as authentic</span></li>
+<li>\(\textbf{if}\ (\mathtt{div} = 1 \ \vee\ \mathsf{inj} \in \mathtt{Ctl}[n^{*}]) \ \wedge\ \mathtt{Eid}[e] = \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{div} \gets 1\)</span><span class="cj-comment">// the one line that declares the two views irreconcilable</span></li>
+<li>\(\textbf{if}\ \mathtt{ep}[i] < n^{*}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{Cnt}[n^{*}{-}2] \gets N\); &nbsp;\(\mathtt{ep}[i] \gets \mathtt{ep}[i] + 2\); &nbsp;\(\mathtt{Ns}[i] \gets \mathtt{snt}[i]\); &nbsp;\(\mathtt{snt}[i] \gets 0\)</span><span class="cj-comment">// the epoch two back is closed, at the length its sender reports</span></li>
+<li>\(\textbf{return}\ (h, \mathit{msg}^{*})\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="67">
+<li>\(\textbf{require}\ \mathit{id}.P \in \mathcal{F}_{\mathsf{SM}}.\mathbf{P}\)</li>
+<li>\(i \gets\) the index with \(\mathit{id}.P = P_i\)</li>
+<li>\(\mathtt{cl} \gets \mathtt{cl} \, \| \, (i, \mathtt{ep}[i], \mathtt{snt}[i], \mathtt{rcv}[i])\)</li>
+<li>\(\forall\, e \leq \mathtt{ep}[i] + 2 : \ \mathtt{Ctl}[e] \gets \{\mathsf{leak}, \mathsf{inj}\}\)<span class="cj-comment">// every past epoch, and the next two</span></li>
+<li>\(\mathtt{Ctl}[\mathtt{ep}[i] + 3] \gets \{\mathsf{leak}\}\)<span class="cj-comment">// the third is readable but not writable</span></li>
+<li>\(\mathtt{Pend} \gets \{(P_{1-i}, h, c, m) \in \mathtt{R} : \nexists\, c' \ \mathtt{Au}[h, c'] = 1\}\)<span class="cj-comment">// what is still in flight towards \(P_i\)</span></li>
+<li>\(\textbf{return}\ \mathsf{San}[\mathsf{Clean}_{\ell}]\bigl(\mathcal{A}(\mathtt{st}, \mathsf{ReportState}, i, \mathtt{Pend})\bigr)\)<span class="cj-comment">// the corrupt party's state is the adversary's to invent</span></li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+*Source: Figures 6 and 7, pp. 22–23 of Canetti, Jain, Swanberg and Varia, "Universally Composable End-to-End Secure Messaging: A Modular Analysis", ePrint 2022/376, revision `20230519:151937` — the newest of five postings, and the one to read. The PDF page and the printed folio agree.*
+
+**Read the revision note before the box.** The functionality carries a footnote on its own step 4(c): "This provision (which was missing in the [25] version) allows the environment to delay recovery from corruption by delivering messages with bogus epoch ids". Reference [25] is this paper's own CRYPTO 2022 proceedings version, LNCS 13508, pp. 3–33. So the published version of $\mathcal{F}_{\mathsf{SM}}$ heals from compromise faster than this one does, and a protocol proved against the proceedings text is not proved against the box below. Line 47 is the provision in question. This is the case the sourcing discipline on this site exists for: "Canetti et al. 2022" names two different objects.
+
+- **Line 63 is the functionality's pivot, and everything else arranges itself around it.** $\mathtt{div}$ is set exactly once, when a message is accepted under adversarial control *and* under an epoch id the sender never claimed. That is the moment the two parties stop being in the same conversation — the receiver has advanced into an epoch the sender does not have — and from there the functionality stops pretending it can relate their views. Line 28 stops recording sent messages, line 20 hands every subsequent send to the adversary in the clear, and line 52 hands every receive to it too. The object does not "fail" at line 63; it degrades, permanently, into a transcript the adversary writes.
+- **Lines 21 and 23 are the same operation under two regimes, and the difference is one argument.** Under compromise the adversary sees $\mathit{msg}$; otherwise the library code sees only $|\mathit{msg}|$. Length is what a secure channel concedes, and it is conceded here in the honest case only. Note which side computes the ciphertext: in *both* branches something outside the functionality produces $c$, which is the point of the $\mathcal{F}_{\mathsf{Lib}}$ construction — the functionality never needs to know how Signal encrypts, only that it does so immediately.
+- **Line 59 authenticates a message the sender sent, not a ciphertext the sender produced.** The honest branch looks up the record by header $h$ alone and returns the message stored there, with the source's own comment allowing "a message with a different mac". So $c \neq c^{*}$ still authenticates, provided $h$ matches and the epoch is uncompromised. This is a deliberate weakening — the ciphertext is not binding, the header is — and any protocol claiming ciphertext integrity is claiming more than this box gives.
+- **Lines 70, 71 and 47 are the healing schedule, and they are the whole of post-compromise security.** Corrupting a party hands the adversary read-and-write over every past epoch and the next two, read-only over the third, and nothing after. Two epochs of full control is the double ratchet's cost of recovery; the third being $\mathsf{leak}$-without-$\mathsf{inj}$ is the asymmetry that lets the adversary keep watching one epoch longer than it can keep writing. Line 47 is the correction described above: an adversary that delivers a message under an epoch id nobody claimed pushes the whole schedule forward again, so healing can be *delayed indefinitely* by an adversary willing to keep injecting garbage headers — and note that this happens whether or not the injected payload authenticates.
+- **Line 38 gives the two parties different starting epochs, and the asymmetry is load-bearing.** $P_0$ starts at $0$, $P_1$ at $1$, and line 65 advances by two. The parity is the conversation's turn-taking: even epochs belong to the initiator, odd to the responder, and the alternation is what lets line 65 close "the epoch two back" without ambiguity about whose it was.
+- **Lines 13 and 34 fix the roles for the lifetime of the instance.** Only $P_0$ may send first and only $P_1$ may receive first, so an instance is not symmetric even though the parties are. Read against line 32: the header is parsed before either party is known to be initialized, which is harmless but makes the initialization guards the only thing keeping an unopened session from answering.
+- **Line 39 is the anti-replay rule and it is stated over headers, not ciphertexts.** Once any ciphertext has authenticated under $h$, no other ever will; and a ciphertext that failed under $h$ never gets a second attempt. Combined with line 59, a header is a one-shot slot, which is what makes the $\mathtt{Cnt}$ bookkeeping at lines 48 and 65 well founded.
+- **Line 48 is a bound that does nothing until an epoch closes.** $\mathtt{Cnt}$ is $\infty$ everywhere at line 6, so the test passes automatically for any epoch still open; only when line 65 closes an epoch — recording $N$, the count its *sender* reported in the header — does it start rejecting. The count is therefore taken on the sender's word, carried in the header, and never checked against anything.
+- **Line 73 does not report a state; it asks for one.** On corruption the functionality tells the adversary which messages are still in flight and lets the adversary invent whatever local state it likes to explain them. That is the standard simulator-friendly treatment, and it is the reason the realization can be *perfect*: there is nothing for a simulator to get wrong, because the functionality never committed to a representation.
+- **Line 69 records a counter the box never increments, and this is a defect in the source as printed.** $\mathtt{rcv}$ is initialized at lines 3 and 38 and read here, and nothing in $\mathcal{F}_{\mathsf{SM}}$ ever advances it — checked across the whole paper: the eight occurrences of the name are two initializations, this one read, and five in $\Pi_{\mathsf{SGNL}}$, a different object that does maintain it. So the corruption log always records a received-message count of zero. The source also names it `rcv msgnum` where it initializes it and `received msg num` where it reads it. Transcribed as printed rather than repaired, because repairing it would mean choosing where the increment goes and the source does not say; but a reader should not take line 69's third component for a real number.
+
+**Mismatch register.**
+
+| The source | This box | Why |
+|---|---|---|
+| `Corrupt`, an interface taking $\mathit{pid}$ from the environment | $\mathsf{Leak}$, lines 67–73 | Corruption is the framework's here, and $\mathsf{Leak}$ is what a corrupt party's adversary reads off. Everything the source's `Corrupt` does — widening $\mathtt{Ctl}$, collecting what is in flight, asking $\mathcal{A}$ for a state — is exactly that. |
+| Initialization folded into the first `SendMessage` (step 2) and the first `ReceiveMessage` (step 2) | $\mathsf{Initialize}$ sets the tables; the two handshakes stay in place at lines 12–18 and 33–38 | $\mathsf{Initialize}$ places no calls, by convention, and the source's step 2 places three — to $\mathcal{F}_{\mathsf{LTM}}$, $\mathcal{F}_{\mathsf{DIR}}$ and $\mathcal{F}_{\mathsf{Lib}}$ — and refuses on their answers. Splitting it any other way would move a guard. |
+| `advControl[epoch_num_0] = ⊥`, and unset dictionary entries elsewhere | $\mathtt{Ctl}[*] \gets \varnothing$ at line 4 | The source tests $\mathsf{leak} \in \mathtt{advControl}[e]$ against both $\bot$ and absent entries, and means "no control" by each. One decision, made once: it is the empty set, not $\square$. |
+| "end the activation" | $\mathsf{require}$ at lines 13, 15, 17, 25, 34, 36 | A refusal. Distinct from the source's other failure mode, `output Fail`, which is a value the caller receives — lines 40, 43, 49, 55, 57. The source uses both and they are not interchangeable. |
+| Corrupt steps 4 and 5, three separate assignments over $e \leq \mathtt{ep}_i$, $\mathtt{ep}_i{+}1$, $\mathtt{ep}_i{+}2$ | One quantified assignment at line 70 | The three ranges are contiguous and carry the same value. Merged; line 71 keeps the one that differs. |
+| $\mathit{sid} = (\mathit{sid}_0, \mathit{pid}_0, \mathit{pid}_1)$, with inputs from other identities ignored | The process id, and $\mathbf{P} := \{P_0, P_1\}$ with the guard at lines 10, 31, 67 | The source's "ignored" is this framework's refusal. The pair is fixed at instantiation either way. |
+| `Output (SendMessage, sid, pid, h, c) to pid` | $\textbf{return}\ (h, c)$ at line 30 | Delivery is to the caller here, so the identity fields carry nothing. |
+| No leakage of the message length in the compromised branch | Line 21 passes $\mathit{msg}$ | Faithful: the source passes the plaintext to $\mathcal{A}$ under compromise. Recorded because the asymmetry with line 23 is easy to misread as a transcription slip. |
+| Answers from $\mathcal{A}$ used directly | $\mathsf{San}[\mathsf{Clean}_{s}]$, $\mathsf{San}[\mathsf{Clean}_{r}]$, $\mathsf{San}[\mathsf{Clean}_{\ell}]$ at lines 21, 53, 73 | Required here. The source constrains these answers by their message format alone; the sanitizers are that format check made explicit and add nothing else. |
+
+## Known realizations
+
+**$\Pi_{\mathsf{SGNL}}$, perfectly** (Theorem 2): "Protocol $\Pi_{\mathsf{SGNL}}$ (perfectly) UC-realizes the ideal functionality $\mathcal{F}_{\mathsf{SM}}$ in the presence of $\mathcal{F}_{\mathsf{Lib}}$, $\mathcal{F}_{\mathsf{DIR}}$ and $\mathcal{F}_{\mathsf{LTM}}$." Exactly zero distinguishing advantage, with a concrete simulator, and the reason it can be zero is line 73: the functionality asks the adversary to supply the corrupt party's state rather than committing to one.
+
+The protocol is "purely management code" — it handles idealized primitives and never touches keying material directly. It calls [*F-CKE*](/uc/layer-3-public-key-primitives/f-cke/index.qmd) for the identifier of each new epoch, then creates an [*F-fsAEAD*](/uc/layer-2-crypto-library-symmetric/f-fsaead/index.qmd) instance for that epoch id and routes the epoch's messages through it. The circular dependence between "the epoch id may be a forgery" and "decapsulation must then fail" is broken by keying: instances of the message-key-exchange functionality under different epoch ids produce mutually pseudorandom keys, so a forged epoch id decapsulates under the wrong instance and fails.
+
+**What the chain costs.** The perfection stops here. Realizing the functionality one level down is where the assumptions enter — Theorem 3 needs a KDF that is a CPRFG and the DDH assumption, and the AEAD layer needs MAC unforgeability and a length-doubling PRG. This entry's box is the only one in the decomposition realized at advantage exactly $0$.
+
+## Properties
+
+- **Confidentiality, in the honest case, up to length.** Line 23 passes $|\mathit{msg}|$ and nothing else to the code that produces the ciphertext. Line 21 is the exception and it is guarded by compromise.
+- **Authentication by header, with advantage exactly $0$ — and not by ciphertext.** Line 59. A message accepted in an uncompromised epoch is a message the peer sent under that header. It need not be the ciphertext the peer produced.
+- **Post-compromise security, with a recovery window of exactly two epochs.** Lines 70 and 71, read with line 65's step of two. Stated as a guarantee this is: after a corruption at epoch $e$, injection is impossible from epoch $e+3$ onward and reading from $e+4$ onward.
+- **…except that the window is extendable by the adversary, without bound.** Line 47. Delivering a message under an unclaimed epoch id re-arms the schedule, and it does so on the header alone — the payload need not authenticate. This is the provision the CRYPTO 2022 version lacked, and it is the sharpest thing on this page: post-compromise security here is a guarantee about epochs, not about time, and an adversary that can keep the receiver from advancing keeps its access.
+- **No delivery guarantee at all.** Nothing in the box obliges any message to arrive; $\mathsf{ReceiveMessage}$ is a call the environment makes or does not. Ordering, loss and reordering are the caller's problem, which is what makes this a messaging *session* rather than a channel.
+- **Immediate decryption is expressible, and that is the point of $\mathcal{F}_{\mathsf{Lib}}$.** A receiver can decrypt out of order, at once, without waiting for the messages it missed — a property Signal has and most secure-channel functionalities cannot state, because a functionality that computes its own ciphertexts has to decide the order. Here it computes none.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Canetti et al. [*Universally composable end-to-end secure messaging*](https://eprint.iacr.org/2022/376). In Advances in Cryptology – CRYPTO 2022, volume 13508 of LNCS, 2022.
+- Canetti, Jain, Swanberg, and Varia. [*Universally composable end-to-end secure messaging*](https://eprint.iacr.org/2022/376). In Advances in Cryptology – CRYPTO 2022, volume 13508 of LNCS, pages 3–33, 2022. **The source of the box above**: Figures 6 and 7, pp. 22–23 of ePrint revision `20230519:151937`. The realization is $\Pi_{\mathsf{SGNL}}$, Theorem 2. **Read the ePrint, not the proceedings**: the functionality's own footnote records that its step 4(c) — line 47 below — was missing from the CRYPTO version, and that step is the difference between post-compromise security that heals in two epochs and post-compromise security an adversary can postpone indefinitely.
+- Alwen, Coretti, and Dodis. [*The double ratchet: Security notions, proofs, and modularization for the Signal protocol*](https://eprint.iacr.org/2018/1037). In Advances in Cryptology – EUROCRYPT 2019, 2019. The game-based treatment this functionality is the composable answer to, and the source of the observation about the KDF's two-sided security that the epoch-key-exchange layer has to handle.

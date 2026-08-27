@@ -1,0 +1,47 @@
+---
+id: 0023-prover-1-blindgate
+agent: blind-verifier
+model: claude-sonnet-5
+cycle: 2
+---
+
+## FINAL VERDICT
+
+CLEAN — the artifact is complete (closing marker present), the stated
+Theorem in §9 is verbatim the Statement in §0 with no drift, and every
+load-bearing step (Lemmas 1–6, the Theorem, and the tightness Remark 10.1)
+was re-derived and checked correct with no critical errors, no justification
+gaps, and no substantive citation dependency (the sole citation, S1/ACC22 in
+Remark 10.1, is explicitly non-load-bearing and its mathematical content was
+independently re-verified without relying on the citation).
+
+## FINDINGS TABLE
+
+| Location | Class | Explanation |
+|---|---|---|
+| §10 Remark 10.1, "(This is the NegRow/PosCol pattern of [ACC22] Claim B.3 — card S1 …)" | (E) unverifiable, non-critical | The sources directory `/Users/farshim/crypto-conjura.github.io/c/0023/campaign/sources/` could not be enumerated with the tools available to this reviewer (no directory-listing capability; guessed filenames for a card such as `S1.md`, `ACC22.md`, `S1-ACC22.md` all failed to resolve), so the S1 card's exact content could not be cross-checked. This has no bearing on the verdict: the artifact itself labels this citation as "context, not justification," the grid construction in Remark 10.1 is fully reproved inline, and Remark 10.1 is explicitly flagged non-load-bearing (§11 Gap register). Independent re-derivation of Remark 10.1 (row/column patterns, disjointness, influence computation) confirms it is correct on its own terms regardless of the citation. |
+| §8 Remark 8.1, "This is the engine I01's binding generalization hypothesis demands." | (E) unverifiable, non-critical | This is a self-assessed methodological claim referencing an external requirement ("I01's binding generalization hypothesis") for which no card was supplied to this reviewer. It is descriptive commentary, not a step in the mathematical derivation of the Theorem in §9; the Theorem's proof does not depend on this label being accurate. |
+
+No (A) statement-drift, (B) critical-error, (C) justification-gap, or
+substantive (D) citation-defect findings.
+
+## STEP-BY-STEP LOG
+
+- **Step 0 (completeness).** File ends with `### END OF ARTIFACT 0023-prover-1 ###` at line 526; not truncated.
+- **Step 1 (statement match).** §0's boxed Statement (existence of $c_1,c_2,\delta$ with the stated quantifier order: $\forall d,N$, $\forall$ distributions $\mathbf F,\mathbf G$ satisfying a per-coordinate *average*-influence bound $\le\delta(d)$ that may depend on $d$ only (not $N$), $\exists f,g,x$ with $f(x)g(x)\ne0$) is reproduced verbatim as the Theorem in §9. Explicit witnesses $c_1=1/3,c_2=1,\delta(d)=1/(3d)$ are supplied and checked admissible ($\delta(d)\in(0,1]$, $\delta(d)\ge c_1d^{-c_2}$ with equality). No strengthening/weakening, no quantifier reordering, no average/worst-case conflation detected: $\delta_F,\delta_G$ (Lemma 6) are correctly the *max over coordinates* of the *average over the distribution* of $\mathrm{Inf}_i$, matching "for every $i$, $\mathbb E[\mathrm{Inf}_i]\le\delta(d)$" exactly. Accepted.
+- **Lemma 1 (influence = boundary-edge count).** Fourier orthonormality and Parseval re-derived from independence of uniform $\pm1$ coordinates (Step 1); flip identity giving $\mathrm{Inf}_i(f)=\frac14\mathbb E[(f(x)-f(x^{\oplus i}))^2]$ (Step 2, standard and correctly derived); specialization to normalized indicators giving $\mathrm{Inf}_i(f)=|\partial_iA|/(2|A|)$ (Step 3, edge-disjointness argument correct); junta lifting $|A|=|P|2^{N-|J|}$, $|\partial_iA|=b_i(P)2^{N-|J|}$ for $i\in J$, $=0$ for $i\notin J$ (Step 4, correctly handles both cases via the product-cube identification). Accepted, no gap.
+- **Lemma 2 (disjointness $\iff$ projection disjointness).** Both directions verified by direct construction/restriction; the witness point $x$ built in the ($\Rightarrow$) direction is checked to lie in both $A$ and $B$ using the partition $J,K\setminus J,[N]\setminus(J\cup K)$ of $[N]$. Degenerate case $S=\emptyset$ (one-point cube) correctly forces intersection. Accepted.
+- **Lemma 3 (entropy-form edge-isoperimetry, induction on $n$).** Base case $n=0$ verified directly. Inductive step: exact boundary decomposition (facet + direction-$n$ edges) is an equality, then bounded below using $|W_+\triangle W_-|\ge a-b$ (verified via $|W_+\setminus W_-|=|W_+|-|W_+\cap W_-|\ge a-b$). Case $b=0$ algebra re-derived and checked exactly: $a\log_2(2^{n-1}/a)+a=a\log_2(2^n/a)$. Case $b\ge1$: the reduction to $g(a)=(a+b)\log_2(a+b)-a\log_2a-b\log_2b-2b$ was independently re-derived from (3.3) and the target, matching the artifact's algebra exactly; $g(b)=0$ and $g'(a)=\log_2\frac{a+b}{a}>0$ were both independently recomputed and confirmed, giving $g(a)\ge0$ on $[b,\infty)$, applied at integers. No gap in this induction (base case, inductive hypothesis application, and the real-to-integer restriction are all correctly handled).
+- **Lemma 4 (projection-density payment).** $S=\emptyset$ case trivial and correct. For $S\ne\emptyset$: fiber-count function $w$ well-defined with $\sum_uw(u)=|P|$; Step 1's bound $\sum_{i\in S}b_i(P)\ge\mathrm{TV}_S(w)$ verified via $|V_u\triangle V_{u'}|\ge|w(u)-w(u')|$ and the fact each $S$-cube edge is an $i$-edge for a unique $i\in S$. Step 2's layer-cake identity $\mathrm{TV}_S(w)=\sum_{t=1}^{t_{\max}}|\partial_EL_t|$ re-derived from the elementary identity $|c-c'|=\sum_{t\ge1}|\mathbf 1[c\ge t]-\mathbf 1[c'\ge t]|$ and a valid finite-sum interchange. Step 3 applies Lemma 3 to each nonempty $L_t\subseteq\pi_S(P)$ and uses monotonicity of $\log_2$ correctly (prefactor $|L_t|\ge0$ preserves the direction), then sums using $\sum_t|L_t|=|P|$ (verified, standard layer-cake identity for a nonnegative integer function). Chained assembly reproduces (4.0) exactly, then divides by $2|P|>0$ and substitutes Lemma 1. Accepted, no gap.
+- **Lemma 5 (per-pair payment $\ge1$).** Applies Lemma 2 to get $S\ne\emptyset$ and disjoint nonempty projections, hence $\nu_P(S)+\nu_Q(S)\le1$ and (AM–GM, correctly applied) $\nu_P(S)\nu_Q(S)\le1/4$; applies Lemma 4 to both $(J,P,S)$ and $(K,Q,S)$ (valid since $S\subseteq J,K$) and adds; final $\log_2$ bound $\frac12\log_2(1/(\nu_P\nu_Q))\ge\frac12\log_24=1$ correctly computed. Accepted.
+- **Lemma 6 (master count / "union-bound replacement").** Finite double sum over all support pairs $(a,b)$, each weighted by $p_aq_b\ge0$ and $\sum_{a,b}p_aq_b=1$; Lemma 5 applied to every pair since incompatibility gives disjointness for *all* pairs (correct index range, no unbounded/wrong-range summation). Split into $\Sigma_1,\Sigma_2$; enlargement of the inner index from $S_{ab}$ to $K_b$ (resp. $J_a$) is justified by nonnegativity of influences and $S_{ab}\subseteq K_b$ (resp. $\subseteq J_a$) — verified valid, not an unjustified interchange since all sums are finite ($m,n,N<\infty$, stated explicitly). $E_{\mathbf F}[\mathrm{Inf}_i]\le\delta_F$ used correctly by definition of $\delta_F$ as the max. Final derivation of (6.2) from (6.1) via $\sum q_b|K_b|\le d$, $\sum p_a|J_a|\le d$, and $\delta_F+\delta_G\le2\max(\delta_F,\delta_G)$ independently re-checked and correct. Accepted, no gap; this is the crux "isoperimetric payment routed through the partner's window budget" step and it is sound.
+- **Theorem (§9).** Admissibility of $c_1,c_2,\delta(d)$ checked directly. Proof by contradiction: "conclusion fails for all $f,g,x$" is correctly shown equivalent to "all support pairs disjoint" (since $f,g$ are nonnegative normalized indicators, product $>0$ iff $x\in A\cap B$) — exactly Lemma 6's incompatibility hypothesis, correctly matched. Final numeric contradiction $1/(2d)\le1/(3d)$ for $d\ge1$ independently re-verified (false for all $d\ge1$, since it would require $3d\le2d$). Accepted.
+- **Remark 9.1 ($0\in\mathbb N$ convention).** Non-load-bearing side note; independently checked self-consistent: at $N=0$ the class collapses to $\{f\equiv1\}$ so the failure hypothesis of the Theorem's contradiction argument is never satisfiable, sidestepping the (otherwise ill-defined, max-over-empty-set) use of $\delta_F,\delta_G$ at $N=0$; the primary convention adopted in §1 ($\mathbb N=\{1,2,3,\dots\}$) means this case does not arise in the main line of proof.
+- **Remark 10.1 (tightness, non-load-bearing).** Grid construction (rows/columns of a $d\times d$ grid, $N=d^2$) independently re-derived: no common nonvanishing point (verified by direct coordinate contradiction), and $\mathbb E_{\mathbf F}[\mathrm{Inf}_{(r',c')}]=\mathbb E_{\mathbf G}[\mathrm{Inf}_{(r',c')}]=1/(2d)$ recomputed exactly via Lemma 1 (singleton pattern gives $b_i=1$ for each $i$ in the window). Confirms $\delta(d)\ge1/(2d)$ cannot witness the rung; correct and self-contained, independent of the cited card.
+- **§11–12 (gap register / dependencies).** Consistent with the actual proof: no [GAP]/[SOURCE-BLOCKED]/[MEMORY] tags present, and none needed — verification above found no place where an external or unjustified fact was silently used.
+
+## SOURCE REQUEST
+
+None load-bearing. (For completeness only: this reviewer could not enumerate `/Users/farshim/crypto-conjura.github.io/c/0023/campaign/sources/` with the tools available and so could not open the S1/ACC22 card by name; this does not affect the verdict since the citation is explicitly non-load-bearing and its content was independently re-verified in Remark 10.1 above.)
+
+### END OF ARTIFACT 0023-prover-1-blindgate ###

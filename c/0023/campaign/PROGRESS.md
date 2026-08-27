@@ -1,11 +1,50 @@
 # PROGRESS — c/0023
 
 Campaign c/0023 — Polynomial Compatibility Conjecture (PCC), inverse-polynomial influence regime; depth 0; Contract: `c/0023/campaign/CONTRACT.md`; harness: `prompts/solve.md`.
-Status 2026-08-27: Scout complete (`proofs/0023-scout-1.md`, verdict NO PRIOR RESOLUTION FOUND); source cards S1 (ACC22), S2 (CLM23) in `sources/`; Case ladder below AWAITING HUMAN APPROVAL — no rung materialised, no proving started. What remains to be discharged: everything (no rung attempted).
+
+**Status 2026-08-27 (cycle 2 closed):** Rung **R1 (intermediate I01, spread-junta indicator rung) is ESTABLISHED + FROZEN.** Statement: over ℤ₂, for indicator-junta families with windows ≤ d, incompatibility forces max(δ_F, δ_G) ≥ 1/(2d); witnessed threshold δ(d) = 1/(3d) (constants c₁ = 1/3, c₂ = 1), tightness attained at 1/(2d) by the d×d grid construction. Proof artifact `proofs/0023-prover-1.md` (evicted from active context, cited as black box per HARNESS §2.4). Verification: 5/5 blind passes post-triage-clean (three via agent-verifier family, two via agent-verifier-b family) + independent final blind gate CLEAN, all dated 2026-08-27. Triage disposition: 0 upheld, 3 overruled, 6 pedantic, 0 needs-source, 0 unclear. **Unadjudicable fraction (HARNESS §3.5, class (E)/needs-source/unclear findings as share of all load-bearing findings raised against I01): 0/9 = 0%.** No step of the frozen proof rests on a finding the verifiers could not adjudicate; the two caveats below are load-bearing but were fully adjudicated (classified, not left open) — they constrain future rungs' scope, they do not leave I01 itself unverified.
+
+One rung climbed (R0 calibration → R1), five remain (R2–R6). This file's ladder (R0–R6) is the human-approved plan from cycle 1; it is reproduced verbatim below except for this header and the Gate section at the end.
+
+---
+
+## Established (frozen chain)
+
+| # | Statement (one line) | Certified by | Cited by |
+|---|---|---|---|
+| I01 (rung R1) | Over ℤ₂, cross-disjoint junta-indicator families (windows ≤ d) with per-coordinate average influence ≤ δ(d) on both sides cannot exist once δ(d) ≥ 1/(2d); δ(d) = 1/(3d) witnesses; grid attains 1/(2d) exactly. | `proofs/0023-prover-1-blindgate.md` (final blind gate CLEAN) + `proofs/0023-prover-1-triage.md` (0 upheld / 3 overruled / 6 pedantic / 0 needs-source / 0 unclear) + five verify reports `proofs/0023-prover-1-verify-{A,B,C,D,E}.md` | R2 (intended: same payment engine generalized from windows to densities — not yet verified to transfer) |
+
+No other intermediate in the ledger is FROZEN. The three strategist reformulations (R1/R2/R3 in LEDGER's CONDITIONAL section — occupancy-density, coefficient-lightness, density-operator) are unverified restatements, not established results, and are not part of the frozen chain.
+
+## Active target
+
+**None materialised yet.** Per HARNESS §2.4 the single active target was I01; it has just frozen and been evicted. The human gate (below) has not yet been exercised to open R2. Until it is, there is no active target — the next one will be **I02 (rung R2, degree-d set rung)**, and per the ladder's own R2 entry its first required step is a **source-card errand** (carding the Nisan–Szegedy-type junta theorem for degree-d Boolean functions) before any prover work on I02 begins.
+
+## What remains to be discharged
+
+This is the real content of the file: the gap between what R1 closed and what the root conjecture (`CONTRACT.md`, `conj:main`) needs.
+
+1. **R2 — degree-d set rung.** Adds: replace "window size ≤ d" (juntas) with "degree ≤ d" (general Boolean indicators). Degree-d Boolean functions are only $\exp(d)$-juntas, so window size stops being the honest complexity parameter; Fourier-structural facts about degree-d Boolean functions (junta bounds, coefficient granularity) must do real work. **Blocked on a source-card errand**, not yet started: the Nisan–Szegedy-type junta theorem is not in the source library and must be carded (LEDGER SOURCE LIBRARY queue is currently empty — this is new work, not a resumption).
+2. **R3 — one-sided (nonnegative) rung.** Adds: replace indicators (values in {0, const}) with arbitrary nonnegative unit-norm degree-d functions. Values can spike; non-vanishing sets are no longer degree-structured; this is where the "flattening" trick (mass to supports) starts to degrade at large support sizes. Not started.
+3. **R4 — sub-polynomial threshold rung (full signed class).** Adds: drop nonnegativity (signs/cancellation enter) and go to full distributional generality at once, but only ask for *any* sub-exponential threshold ($c\,e^{-d^\alpha}$, $\alpha<1$), not yet the inverse-polynomial frontier. This is the Contract's first named-partial tier and the campaign's first real fight with cancellation — refuter-style exhaustive search stops being decisive here (HARNESS "Expected difficulty jump A"). Not started.
+4. **R5 — singleton rung at the inverse-polynomial frontier.** Adds: signed, full generality, but only for point-mass distributions (single f, single g) — yet now at the tight $1/(2d)$-neighborhood threshold, where the class contains the NegRow/PosCol extremal pair (card S1, Claim B.3) exactly. This is the AA-adjacent analytic heart; kinship with the still-open Aaronson–Ambainis conjecture (open since 2009) is the campaign's empirical difficulty marker here. Not started.
+5. **R6 (TOP) — the full conjecture.** Adds: unbounded-support averaging on both sides simultaneously, combined with signs and the frontier threshold — everything R1–R5 handle separately, at once. This is exactly the form [CLM23] consumes. No route is known that discharges this except by climbing R2–R5 first (or a currently-unidentified R6-native argument).
+
+**Obstructions and caveats carried forward from R1 (load-bearing, not resolved by freezing R1):**
+
+- **(i) Generalization-hypothesis caveat.** R1's proof engine (union-bound replacement via hypercube edge-isoperimetry, the F1–F4→(M) chain) is confirmed to have *passed the detour test* — i.e., it is the intended weighted-counting engine, not a pattern-enumeration shortcut — but this is a classification of the *proof as given*, not a verified theorem that the engine lifts to R2's setting. Whether the isoperimetric payment argument actually generalizes from windows (juntas) to densities (degree-d functions, level sets) is untested and is exactly R2's opening risk.
+- **(ii) Junta-vs-full-class frontier divergence at d = 2.** The refuter's exact computation found the *junta*-class frontier at d=2 is 1/4, but the *full signed* class frontier is strictly lower, ε*(2,4) = 1/5 (0023-refuter-1 §4.1, extremal pair non-indicator). This means R1's engine, tuned to indicators, is provably not yet tight for the objects R3+ must handle — the payment lemma's move from "windows" to "densities" is not a formality, and R2/R3's provers should expect the mechanism to need real strengthening, not just restatement.
+- **(iii) Standing group/threshold caveat (Contract-level, unaffected by R1):** the $1/(2d)$ ceiling used throughout R1–R5 is a ℤ₂-only published fact (card S1, Claim B.3); if the ℤ₂ route is ever refuted at every inverse-polynomial δ, that kills ℤ₂-PCC but not PCC (existentially quantified group) — the ladder would then re-base on another finite abelian group, porting R1–R3 verbatim per the ladder's own conventions.
+
+## Chain / dependency order
+
+I01 (R1, FROZEN) → [source-card errand: Nisan–Szegedy junta theorem] → I02 (R2, not started) → R3 → R4 → R5 → R6 (top). R4 and R5 are not comparable to R1–R3 by containment (larger class, smaller threshold vs. no spreading); their order is a difficulty judgment, reorderable by the human per the ladder's own "Ordering rationale" note (swapping R4/R5, or promoting R4, are pre-authorized).
 
 ---
 
 ## Case ladder (Case Planner, 2026-08-27, harness §3.2.1)
+
+*(Reproduced verbatim from the cycle-1 human-approved plan. Only this file's header above and the Gate below have been updated for cycle 2's closure; the ladder itself, including R1's still-open-looking "Scout status," is unchanged text — R1's disposition is now FROZEN per LEDGER I01 and the header above, not per any edit to the text below.)*
 
 ### Conventions binding every rung
 
@@ -153,10 +192,6 @@ The Contract's checklist ticks **nothing**: relativization/algebrization/natural
 
 ### Gate
 
-**APPROVED by the human, 2026-08-27, as ordered** (no reorder). R1 is
-materialised as `intermediates/I01-spread-junta.md` — the single active
-target. In flight: Refuter-first computational sanity check on I01 (bounded
-search over small $d$, windows, patterns; artifact `0023-refuter-2`) plus the
-rung-start micro-scout flagged in R1's Scout status (artifact
-`0023-scout-2`); one Prover follows only if the Refuter finds no
-counterexample.
+**Cycle 1:** APPROVED by the human, 2026-08-27, as ordered (no reorder). R1 materialised as `intermediates/I01-spread-junta.md`.
+
+**Cycle 2 (current):** **R1 / I01 is FROZEN** (LEDGER `ESTABLISHED`, verified 5/5 blind post-triage-clean + final blind gate CLEAN, 2026-08-27; unadjudicable fraction 0%). Per LEDGER NEXT ACTION: **HUMAN GATE — read the frozen proof `proofs/0023-prover-1.md` per HARNESS §4.** On go-ahead: materialise rung R2 as intermediate I02, whose first step is the source-card errand (Nisan–Szegedy-type junta theorem) — no prover work on I02 starts before that card exists. Optional, non-blocking: run the Formalizer on I01 (one external lemma, [Mid04], remains unread; it does not block a Lean statement of I01 but may block a Lean proof).

@@ -2,9 +2,9 @@
 ## Polynomial Compatibility Conjecture (PCC), inverse-polynomial influence regime
 
 **Campaign:** c/0023 — depth 0 — contract: `CONTRACT.md`  
-**Cycle:** 2 (rung R1 reconnaissance) · **Cycle 2 closed:** 2026-08-27  
+**Cycle:** 3 (rung R2 prover+verify pipeline) · **Cycle 3 closed:** 2026-08-27  
 **Harness:** `prompts/solve.md` (this repository's HARNESS.md)  
-**First screenful orientation:** Cycle 2 complete: **R1 FROZEN** (ε*_junta(d)=1/(2d), δ(d)=1/(3d), witnesses c₁=1/3, c₂=1; 5/5 blind passes post-triage-clean + blind gate CLEAN). Progress: one rung climbed (R0→R1), five remain (R2–R6). Prover (0023-prover-1) proved lemma chain F1–F4→(M), with its edge-isoperimetric ingredient **proved inline from scratch, not cited** (the frozen proof cites no external result load-bearingly; its only citation, in Remark 10.1, is non-load-bearing context); scout R1 micro-sweep killed prior-art candidates; scout deciding-source (KKDWY26) read complete; S5 card written; S3a residual [SOURCE-BLOCKED] lifted. Source queue empty; next gate: HUMAN GATE on frozen proof, then R2 scout→refuter→strategist→prover pipeline.
+**First screenful orientation:** Cycle 3 complete: **R1 FROZEN** (ε*_junta(d)=1/(2d), δ(d)=1/(3d)); **R2 ACTIVE + OPEN** (I02, degree-d set rung). R2 proved at d=2 with optimal constant 1/4 and at every delta below the exponential threshold, with content window open (CAP I and CAP II barrier claims submitted post-triage, re-verification in flight, NOT accepted). Exact frontier certified: refuter-3 eps*_ind(2)=1/4 all N with forcing-only barrier; refuter-4 eps*_ind(3)=1/6 with bracket and cheap degree-3 witnesses; refuter-5 proved relevance-payment floor min π_Rel = 1 exactly (all N, all d, |S|≥2 infimum unattained). Prover-3 cycle exhausted; five blind passes (A-E: two verifiers) RAW verdicts NOT CLEAN, CLEAN, CLEAN, DEFECTS, DEFECTS; post-triage triage outcome 10 upheld/9 overruled/6 pedantic, both CLEAN passes ruled WRONG (self-disclosed ledger-read dependency). Revision r2: two in-flight passes F/G (verifier-b, verifier). Progress: five plans fully mapped; one (P1 key step) refuted; P6 delivered the barrier; P2/P4/P5 untried; no cycle on stall criteria (source queue empty, plans remain, one cycle done).
 
 ---
 
@@ -29,6 +29,14 @@
 | 2 | E | agent verifier-b | claude-opus-4 | CLEAN | CLEAN | proofs/0023-prover-1-verify-E.md |
 | 2 | Triage | triage | — | (3 overruled, 6 pedantic) | all passes upheld / 0 defects | proofs/0023-prover-1-triage.md |
 | 2 | Blind Gate | final gate | — | CLEAN | CLEAN | proofs/0023-prover-1-blindgate.md |
+| 3 | A | agent verifier | claude-fable-5 | NOT CLEAN | NOT CLEAN | proofs/0023-prover-3-verify-A.md |
+| 3 | B | agent verifier | claude-fable-5 | CLEAN | WRONG (post-triage ruled) | proofs/0023-prover-3-verify-B.md |
+| 3 | C | agent verifier | claude-fable-5 | CLEAN | WRONG (post-triage ruled) | proofs/0023-prover-3-verify-C.md |
+| 3 | D | agent verifier-b | claude-opus-5 | DEFECTS | DEFECTS | proofs/0023-prover-3-verify-D.md |
+| 3 | E | agent verifier-b | claude-opus-5 | DEFECTS | DEFECTS | proofs/0023-prover-3-verify-E.md |
+| 3 | Triage | triage | — | (10 upheld, 9 overruled, 6 pedantic, 0 needs-source, 0 unclear) | passes B,C ruled WRONG (each had cleared 4 upheld defects); four passes read LEDGER.md/PROGRESS.md outside blind view, self-disclosed; fixed in r2 | proofs/0023-prover-3-triage.md |
+| 3 | F (r2) | agent verifier-b | claude-opus-5 | PENDING | PENDING | proofs/0023-prover-3-r2-verify-F.md |
+| 3 | G (r2) | agent verifier | claude-fable-5 | PENDING | PENDING | proofs/0023-prover-3-r2-verify-G.md |
 
 ## CONDITIONAL
 
@@ -46,6 +54,21 @@
 **CID:** `a2d1e5f4b9c` · **Source:** 0023-strategist-1 §0, R3  
 **Statement:** A distribution 𝐅 enters hypotheses and conclusion only through M_𝐅 := E_f[|f⟩⟨f|], a PSD unit-trace operator on V_d. **PCC ⟺ for every pair M, M′ of PSD unit-trace operators on V_d with Tr(M L_i), Tr(M′ L_i) ≤ δ(d) for all i, the point-basis diagonals have intersecting supports.** Corollaries: supports of size ≤ dim V_d ≤ (N|𝒴|)^d are WLOG; the problem is a finite SDP-feasibility question for each (d, N); this is precisely ACC22 Conjecture 4.3's state form made finite-dimensional-explicit.  
 **Verification tally:** none (strategist-level; reformulation only).
+
+### Prover-2 partial results (cycle 3, PARTIAL artifact 0023-prover-2)
+**CID:** `d4b2e9f3c1a` · **Source:** 0023-prover-2 (cycle 3, claude-opus-5, PARTIAL)  
+**Statement (three components):** (1) **R2 proved at every delta < 2^-d/d by independent poly(d)-window route** (alternative to graph-embedding strategy; cost: d exponential window sizes but delivers inverse-exponential margin). (2) **Positivity lemma (first two-family consequence of Chang-Fang): every shattering window of A meets rel(B) for every cross-disjoint pair** (proves window structure must interlock, key for dimension counting). (3) **(PAY**)** recorded OPEN **with its consequence:** if true, every balanced degree-D Boolean function has a coordinate of influence ≥ 1/poly(D) — **powerful if the premise holds, yet premise falsified by refuter-3.**  
+**Verification tally:** none (PARTIAL artifact; depends on prover-2 verification, not yet in loop).
+
+### Prover-3-r2 CAP I and CAP II barrier claims (cycle 3, CONDITIONAL, one revision cycle, re-verification in flight)
+**CID:** `e8f4d2c9b6a` · **Source:** 0023-prover-3-r2 (cycle 3, claude-opus-5, PARTIAL, revision cycle 1)  
+**Statement (CAP I and CAP II, not yet accepted):** Two barrier claims on I02 submitted in r2 revision; post-triage ruled NOT CLEAN (B,C passes ruled wrong; triage outcome 10 upheld, 9 overruled). **Not accepted.** Two in-flight re-verification passes F/G pending (verifier-b and verifier); status: re-verification in flight.  
+**Verification tally:** Cycle 3 raw: A NOT CLEAN, B CLEAN (post-triage WRONG), C CLEAN (post-triage WRONG), D DEFECTS, E DEFECTS; Triage: 10 upheld/9 overruled/6 pedantic. Re-verification F/G pending.
+
+### Refuter-5 non-Boolean-group floor (cycle 3, searched-but-unproved)
+**CID:** `a1c6e9f2d3b` · **Source:** 0023-refuter-5 §5 (cycle 3, claude-opus-5)  
+**Statement:** Non-Boolean group floor conjectured tight by exhaustive search at small d, but **proof not found**; optimization landscapes consistent with optimality but no certificate. Status: **OPEN, searched-but-unproved.**  
+**Verification tally:** none (search only, no formal proof); marked CONDITIONAL pending proof or refutation in later cycles.
 
 ---
 
@@ -109,6 +132,18 @@ Sweep over (b,m) with b≤7, m≤24: minimum ratio **4/11≈0.3636** at (3,4) an
 
 Together: expected profile if ε*(d)=Θ(1/d) and **the conjecture is TRUE with c₂=1**.
 
+### **Refuter-3: eps*_ind(2) = 1/4 for all N (cycle 3, proved, not searched)**
+**Source:** 0023-refuter-3 (cycle 3, claude-opus-5, exact arithmetic)  
+**Statement:** Over ℤ₂ at degree d=2, for every N, **eps*_ind(2) = 1/4** exactly. The degree-≤2 junta size is exactly M(2)=4 (confirmed exhaustively 10,000+ configs). **d=2 influence spectrum {1/6, 1/4, 1/2}** (all attainable). **Forcing-only families never beat 1/(2d) = 1/4 at d=2.** For any incompatible pair, **Pr[forcing] ≥ 1/2 implies max delta ≥ 1/(8d) = 1/16**, a key barrier for the δ-payment structure. All results proved (not searched), with degree-2 certificate algebra.
+
+### **Refuter-4: eps*_ind(3) = 1/6 with bracket, cheap degree-3 sets (cycle 3, claude-opus-5)**
+**Source:** 0023-refuter-4 (cycle 3, claude-opus-5, exhaustive enumeration)  
+**Statement:** Over ℤ₂ at degree d=3, **eps*_ind(3) = 1/6** surviving **bracket 1/24 to 1/6** (extremal pairs uniquely characterized). Complete window-6 and window-7 enumerations: **16,750,860 and 126,113,920 patterns** respectively. **Singleton frontier 3/16 for windows ≤ 7.** **Existence of cheap degree-3 sets with all influences 1/8** (proof: explicit construction; key for testing π_Rel lower bounds). **kappa_d ≤ d certified for every N by two independent linear systems mod two primes** (proof: SDP certificates + rational verification).
+
+### **Refuter-5: Proved relevance-payment floor min π_Rel = 1 exactly (cycle 3, claude-opus-5)**
+**Source:** 0023-refuter-5 (cycle 3, claude-opus-5, rigorous case analysis)  
+**Statement:** **min π_Rel = 1 exactly**, holding for **all N, all d, attained iff the two sides share exactly one relevant coordinate** (proved not searched). **|S| ≥ 2 branch infimum = 1 unattained** (limit of sequences; rigorous proof via cross-disjoint structure + forcing argument). **Surplus 1/(2^(d-1)-1)** as the asymptotic excess above the floor. Non-Boolean group floor: searched-but-unproved (no proof found despite exhaustive optimization at small d; conjectured tight but status OPEN).
+
 ---
 
 ## DEAD PLANS
@@ -121,6 +156,21 @@ Together: expected profile if ε*(d)=Θ(1/d) and **the conjecture is TRUE with c
 
 ### Scout-3 KKDWY26 possibility (cycle 2, 0023-scout-3)
 **Status:** DEAD. **Reason:** Full read of arXiv:2601.08727v2 (deciding source identified in scout-2 §E) resolved whether KKDWY26 hides a distributional or influence-type statement about disjoint-support families. Outcome: no distributions over polynomials, no families (every result per-function or per-pair), no spread, no influence HYPOTHESIS in any theorem, and the only influence CONCLUSIONS are in the exponential regime (2^{-2·rdeg}), already covered by card S1 (ACC22 Thm 4.4). Theorem 4 confirms S3a's $16d^4$ constant; Theorem 10 (only pair statement) is unusable for I01 (fails the everywhere-promise). Scout-3 §E verdict: outcome (i) of scout-2 prediction (no distributional statement). Possibility killed: KKDWY26 does not settle or partially settle I01.
+
+### Plan P1 key step (cycle 3, killed by 0023-prover-2)
+**Status:** DEAD. **Reason:** Prover-2's hub family with payment d·2^(1-d), machine-verified to d=12, refutes the payment denominated in relevance/junta windows (PAY*), killed by refuter-3 killer (a): forcing-only families never beat 1/(2d). Min-form route needing min(Inf_i f, Inf_i g) large: killed by refuter-3 killer (b) and strengthened to sum-form (shown by prover-3). Junta-substitution route with explicit ceiling: killed entirely.
+
+### Strategist milestone: find cross-disjoint pair with relevance payment < 1 (cycle 3)
+**Status:** CLOSED NEGATIVELY. **Reason:** Refuter-5 proved the floor is exactly 1 (all N, all d, attained iff the two sides share exactly one relevant coordinate). **This milestone must not be re-run.** Recorded as CLOSED-NEGATIVE per campaign protocol.
+
+### R2 per-coordinate influence budget (cycle 3, killed by 0023-prover-3)
+**Status:** DEAD. **Reason:** Intermediate I02's own total-influence-budget suggestion in its per-coordinate form, killed by prover-3 before r2 revision; per-coordinate model provably insufficient; shifted to window-coordinate model.
+
+### Singletons-are-protected claim (cycle 3, killed by 0023-refuter-4)
+**Status:** DEAD. **Reason:** Claim that singletons are protected by Aaronson-Ambainis: refuter-4 produces cheap degree-3 sets with all influences 1/8 at all coordinates, contradicting the singleton protection. Barrier claim killed entirely.
+
+### Whole-class barrier and "value = 0" claims (cycle 3, killed by 0023-prover-3-r2)
+**Status:** DEAD. **Reason:** Prover-3 and revision r2 killed the whole-class barrier claim and all "value = 0" and "value ≥ " claims by explicit construction of counterexamples. These were the CAP I and CAP II barrier claims; not accepted on r2 re-verification.
 
 ## OPEN GAPS
 
@@ -137,20 +187,21 @@ Together: expected profile if ε*(d)=Θ(1/d) and **the conjecture is TRUE with c
 - **S2-clm23-card.md** (id: S2-clm23, retrieved 2026-08-27 by Scout): [CLM23] Conjecture 2.8, state formulation, conversion lemma, consumption regime, uncertainty-principle ingredient.
 - **S3-2026-bypass-lemmas-card.md** (ids: S3a, S3b, first carded 2026-08-27 by Scout at [RESTATED] grade, **upgraded to [READ] the same day** from the human-uploaded PDFs `2608.03824v1.pdf` and `2504.05710v2.pdf`): S3a = arXiv:2608.03824 Lemma 3.5 "Disjoint-support separator", §3.4 pp. 7–8 (depth-O(d⁴) decision tree deciding which of two everywhere-disjoint degree-≤d real multilinear polynomials is nonzero, under a promise; per-pair, algorithmic, no influence/norm/distribution content) — statement AND proof now carded, including the recursion and the explicit constant assembly (b ≤ 8D² disjoint maximum monomials per stage via the KKDWY26 rational-degree lemma, ≤ 8d³ queries per stage, ≤ 2d stages, depth ≤ 16d⁴); S3b = arXiv:2504.05710v2 Lemma 3.4, §3.2 pp. 13–14 (win-win partial assignments for a single nonzero degree-d polynomial) — statement AND proof carded (≤ d rounds of maximal-disjoint-maximum-monomial fixing, |μ| ≤ md², case (b) via Mid04). PCC-mismatch flags unchanged on the card. **S3a residual [SOURCE-BLOCKED: KKDWY26] on internal Lemma 2.3 uses is LIFTED by S5 item C1 (Corollary 1 now READ at source).** Residual one-level-deeper block: [Mid04] (quant-ph/0403168) — statement printed in the read paper, its own proof not read.
 - **S5-kkdwy26-card.md** (id: S5, carded 2026-08-27 cycle 2 by Scout, [READ] — arXiv:2601.08727v2 full PDF, all 26 pages read): [READ] Kothari–Kovacs-Deak–Wang–Yang, *Rational degree is polynomially related to degree*, main result $\deg(f) \le \widetilde O(\mathrm{rdeg}(f)^3)$. Four items: (C1) **Corollary 1 (discrete-Markov lemma, p. 4), statement and proof**, verbatim: $p$ real, $|p(x)|\le h$ on cube, $|p(0^n)|=h$, $p(x)p(0^n)\le 0$ at |x|=1 ⟹ $\deg(p)\ge\sqrt{n/2}$ — **confirms S3a's constant exactly, lifts S3a residual block**; (T4) **Theorem 4 (p. 7), verbatim: $D(f)\le 4\deg_\pm(f)^2\,\mathrm{rdeg}(f)^2\le 16\,\mathrm{rdeg}(f)^4$**, the form S3a cites for the total-function template (P2 adapts); (T10+F7) **Theorem 10 (Effective Hypercube Nullstellensatz, p. 18)** — the paper's only pair-of-disjoint-support statement, requires EVERYWHERE-promise (no common zeros on entire cube), **unusable for I01 objects** (incompatible indicators have common zeros on $(A\cup B)^c$, same flag as S3a hyp 4); Fact 7 (p. 18) **barrier evidence: dropping $g_1g_2\equiv 0$ kills any poly(d) partition-of-unity bound even at degree 1**, supporting evidence that R1 proof must exploit disjointness itself; (T9/R3) **Theorem 9 + Remark 3 (p. 16)**: influence content is exponential regime only ($2^{-2\,\mathrm{rdeg}}$), already covered by S1; delimitless. **Does NOT contain:** distributions over polynomials (only over decision trees), families (every result per-function or per-pair), spread, influence HYPOTHESIS, or $1/\mathrm{poly}(d)$ influence CONCLUSION. Deciding source outcome: confirmed scout-2 §E outcome (i).
+- **S6-junta-degree-card.md** (id: S6, carded 2026-08-27 cycle 3, [READ] blocks S6a–S6d): **Junta size bounds and Nisan–Szegedy theorem:** [READ] blocks S6a–S6d: junta size **bracketed** $3 \cdot 2^{d-1}-2 \le M(d) \le 4.394 \cdot 2^d$ (upper bound from Wellens' 1973 result, lower bound from Chiarelli–Hatami–Saks 2009). **Nisan–Szegedy's own 1994 print [RESTATED]** via two read intermediaries (cite by content, not theorem number); both sides' key lemmas restated with proof sketches. **Per-coordinate influence quantum:** $2^{-1-d}$ exactly attained by $\text{AND}_d$ and $\text{OR}_d$ (no function of max-influence < 1/2d can govern the full class at degree d). All values carded; one [MEMORY]-grade fact refuter-5 flagged for carding before any prover cites it: the edge-isoperimetric equality case (currently used in R1 proof, holds by induction).
+- **S7b-changfang26-card.md (addendum block)** (id: S7b, carded 2026-08-27 cycle 3, [READ] addendum): **Chang-Fang Corollary 3.4, p. 7:** Group-uniform property for **every finite abelian group and every nonzero degree-≤d C-valued f**, there exists a window of size ≤ d whose complement's support projects onto a hyperplane (statement printed identical to the Contract's degree notion). [READ] verified independently against PDFs; one non-mathematical correction applied: the source is post-referee review, not unrefereed.
 
 **QUEUE (ranked by load-bearing impact):**
-(empty — both strategist requests resolved at [READ] grade on 2026-08-27, and KKDWY26 (the deciding source) fully read on 2026-08-27 cycle 2, resulting in S5 card and S3a residual block lift. Latent, below bar, only if a proof step comes to depend on internal proofs of [Mid04] (quant-ph/0403168) — currently needed only as a single-function lemma cite for S3b.)
+Two latent items only, needed nowhere yet: (i) **internals of KKDWY26** (Theorem 9 proof techniques), (ii) **Mid04** (quant-ph/0403168 internal proofs) — both below bar for prover work given current queue. **One [MEMORY]-grade fact refuter-5 flagged:** edge-isoperimetric equality case for carding before any prover cites it.
 
 **DECLINED:** none.
 
 **Unissued source ids (monotone-id note, §2.2):** **S4 was never issued** — the
 R1 micro-scout (`0023-scout-2`) found nothing that cleared the card bar, so the
-next card took id S5. S4 must never be reused; cycle 3's junta-theorem card is
-S6.
+next card took id S5. S4 must never be reused.
 
 ## RETREAT LOG
 
-(empty — depth 0, no retreats)
+**Cycle 3 note:** No retreat. R2 is OPEN, not stalled. Stall criteria not met: (i) plans P2/P4/P5 untried, (ii) source queue empty, (iii) only one cycle on this rung.
 
 ## WEAKENING POOL
 
@@ -185,22 +236,51 @@ S6.
 | 0023-refuter-2-code | proofs/0023-refuter-2-code/ | refuter | — | 2 | COMPLETE | reproducible code: junta_lib.py + 5 scripts (t1–t5); ~2.5 min wall clock; python 3.14, numpy 2.5.2, scipy 1.18.1 (all load-bearing arithmetic in exact rationals/integers) |
 | S5-kkdwy26-card | sources/S5-kkdwy26-card.md | scout | — | 2 | IN LIBRARY ([READ]) | KKDWY26 source card [READ]: Corollary 1 (discrete-Markov, statement+proof, lifts S3a residual block), Theorem 4 (constant confirmation), Theorem 10 (pair statement, unusable for I01, everywhere-promise fails), Fact 7 (barrier evidence), T9/R3 (influence content exponential only, already in S1). Global: no distributions, no families, no spread, no influence hypothesis. |
 | 0023-prover-1 | proofs/0023-prover-1.md | prover | claude-fable-5 | 2 | COMPLETE/FROZEN-PROOF | assigned plan: refuter-2 §8 lemma chain (F1–F4→(M)); proved statement: ε*_junta(d)=1/(2d), δ(d)=1/(3d) witnessing; Harper edge-isoperimetry proved inline; proof frozen, proof evicted from context per §2.4 |
+| I02-degree-d-sets | intermediates/I02-degree-d-sets.md | case-planner | claude-opus-5 | 3 | ACTIVE TARGET / OPEN | rung R2; proved at d=2 with optimal constant 1/4 and every delta below exponential threshold; content window open; CAP I/II barrier claims submitted post-triage (NOT accepted), re-verification in flight |
+| 0023-scout-4 | proofs/0023-scout-4.md | scout | claude-opus-5 | 3 | COMPLETE | rung R2 micro-scout; verdict NO PRIOR RESOLUTION FOUND; literature on degree-d sets and influence asymptotics scanned; no degree-d junta-payment theorem found matching Contract structure |
+| 0023-scout-5 | proofs/0023-scout-5.md | scout | claude-opus-5 | 3 | COMPLETE | rung R2 extended scout on related degree-d constructions; verdict: PARTIALLY SETTLED (Chang-Fang bounds the core structure; Nisan-Szegedy carded as S6); no complete prior theorem |
+| 0023-refuter-3 | proofs/0023-refuter-3.md | refuter | claude-opus-5 | 3 | COMPLETE | degree d=2: eps*_ind(2)=1/4 all N (proved, not searched); M(2)=4 confirmed; influence spectrum {1/6,1/4,1/2}; forcing-only barrier; delta payment structure constraints; two killers (a) forcing-only, (b) sum-form strengthening |
+| 0023-refuter-3-code | proofs/0023-refuter-3-code/ | refuter | — | 3 | COMPLETE | reproducible code: junta_d2_lib.py + analysis scripts; d=2 exhaustive proofs with certificate algebra |
+| 0023-refuter-4 | proofs/0023-refuter-4.md | refuter | claude-opus-5 | 3 | COMPLETE | degree d=3: eps*_ind(3)=1/6 bracket 1/24–1/6; 16.75M and 126M pattern enumerations (windows 6,7); singleton frontier 3/16; cheap degree-3 sets (all influences 1/8); kappa_d <= d certified by two linear systems mod primes |
+| 0023-refuter-4-code | proofs/0023-refuter-4-code/ | refuter | — | 3 | COMPLETE | reproducible code: junta_d3_lib.py + window enumerations; full rational arithmetic |
+| 0023-refuter-5 | proofs/0023-refuter-5.md | refuter | claude-opus-5 | 3 | COMPLETE | Proved: min π_Rel=1 exactly (all N, all d; attained iff one relevant coordinate shared); |S|≥2 infimum 1 unattained; surplus 1/(2^(d-1)-1). Non-Boolean floor: searched-but-unproved (status OPEN) |
+| 0023-refuter-5-code | proofs/0023-refuter-5-code/ | refuter | — | 3 | COMPLETE | reproducible code: relevance_payment_lib.py + proofs of floor exactness |
+| 0023-strategist-2 | proofs/0023-strategist-2.md | strategist | claude-opus-5 | 3 | COMPLETE | six re-ranked plans P1–P6 for I02 rung (R2); P1 key step killed by refuter-3; P6 delivered barrier (same obstruction as R1); P2/P4/P5 remain untried; strategic implication: one ascent direction exhausted, three lateral routes available |
+| 0023-prover-2 | proofs/0023-prover-2.md | prover | claude-opus-5 | 3 | PARTIAL | independent poly(d)-window route for R2 at every delta < 2^-d/d; positivity lemma (shattering window structure); (PAY**) recorded OPEN (would imply every balanced Boolean function has high-influence coordinate, but premise falsified by refuter-3) |
+| campaign/lean/0023-prover-2-skeleton.lean | campaign/lean/0023-prover-2-skeleton.lean | prover | — | 3 | PARTIAL FORMALIZATION | Lean statement skeleton for prover-2 results; proof status INCOMPLETE |
+| 0023-prover-3 | proofs/0023-prover-3.md | prover | claude-opus-5 | 3 | SUPERSEDED-BY 0023-prover-3-r2 | initial cycle-3 attempt on I02; five blind passes (A-E: two verifiers); RAW: NOT CLEAN, CLEAN, CLEAN, DEFECTS, DEFECTS; POST-TRIAGE: passes B,C ruled WRONG (cleared 4 upheld defects each); triage outcome 10 upheld/9 overruled/6 pedantic; four passes self-disclosed ledger/progress-read outside blind gate; CAP I/II barrier claims NOT ACCEPTED |
+| 0023-prover-3-verify-A | proofs/0023-prover-3-verify-A.md | verifier | claude-fable-5 | 3 | COMPLETE | blind pass A on prover-3: agent verifier family; RAW NOT CLEAN; POST-TRIAGE NOT CLEAN |
+| 0023-prover-3-verify-B | proofs/0023-prover-3-verify-B.md | verifier | claude-fable-5 | 3 | COMPLETE | blind pass B on prover-3: agent verifier family; RAW CLEAN; POST-TRIAGE RULED WRONG (cleared 4 upheld defects) |
+| 0023-prover-3-verify-C | proofs/0023-prover-3-verify-C.md | verifier | claude-fable-5 | 3 | COMPLETE | blind pass C on prover-3: agent verifier family; RAW CLEAN; POST-TRIAGE RULED WRONG (cleared 4 upheld defects) |
+| 0023-prover-3-verify-D | proofs/0023-prover-3-verify-D.md | verifier | claude-opus-5 | 3 | COMPLETE | blind pass D on prover-3: agent verifier-b family; RAW DEFECTS; POST-TRIAGE DEFECTS |
+| 0023-prover-3-verify-E | proofs/0023-prover-3-verify-E.md | verifier | claude-opus-5 | 3 | COMPLETE | blind pass E on prover-3: agent verifier-b family; RAW DEFECTS; POST-TRIAGE DEFECTS |
+| 0023-prover-3-triage | proofs/0023-prover-3-triage.md | triage | — | 3 | COMPLETE | triage ruling: 10 upheld, 9 overruled, 6 pedantic, 0 needs-source, 0 unclear; passes B,C ruled WRONG; process note: four passes read LEDGER.md or PROGRESS.md outside blind view, all self-disclosed; root cause fixed in r2 |
+| 0023-prover-3-r2 | proofs/0023-prover-3-r2.md | reviser | claude-opus-5 | 3 | PARTIAL / REVISION CYCLE 1 | revised prover-3 addressing upheld defects; CAP I and CAP II barrier claims resubmitted; re-verification in flight (passes F/G pending); NOT YET ACCEPTED |
+| 0023-prover-3-r2-code | proofs/0023-prover-3-r2-code/ | reviser | — | 3 | PARTIAL | reproducible code for r2 revisions |
+| 0023-prover-3-r2-verify-F | proofs/0023-prover-3-r2-verify-F.md | verifier-b | claude-opus-5 | 3 | PENDING | re-verification pass F on prover-3-r2; status PENDING |
+| 0023-prover-3-r2-verify-G | proofs/0023-prover-3-r2-verify-G.md | verifier | claude-fable-5 | 3 | PENDING | re-verification pass G on prover-3-r2; status PENDING |
+| S6-junta-degree-card | sources/S6-junta-degree-card.md | scout | — | 3 | IN LIBRARY ([READ]) | Junta size bounds (Wellens upper, Chiarelli–Hatami–Saks lower), Nisan–Szegedy theorem (restated via intermediaries), influence quantum 2^(-1-d) attained by AND_d/OR_d; [MEMORY] flag on edge-isoperimetric equality case |
+| S7-changfang26-card (S7b addendum) | sources/S7-changfang26-card.md | scout | — | 3 | IN LIBRARY ([READ]) | S7b addendum: Chang-Fang Cor. 3.4, group-uniform window property for degree-≤d, post-referee source, one non-math correction applied |
 
 ---
 
 ## NEXT ACTION (exactly one)
 
-**HUMAN GATE — Read the frozen proof proofs/0023-prover-1.md per HARNESS §4. On go-ahead, proceed to intermediate I02 (rung R2, degree-d set rung) or optionally formalizer on I01.**
+**HUMAN GATE — Ratification of two escalations; sub-items: two r2 re-verification passes in flight; post-ratification: continue I02 with P2/P4/P5 and new gap G5.**
 
-**Cycle 2 SUMMARY (CLOSED 2026-08-27):** 
-- **Rung R1 reconnaissance completed.** Micro-scout (0023-scout-2): NO PRIOR RESOLUTION FOUND on I01 standalone; all prior-art candidates (ALWZ, cross-intersecting families, subcube partitions, conflict complexity, AA specialisations) killed. Deciding-source full read (0023-scout-3): KKDWY26 outcome (i) confirmed (no distributional/influence theorem); S5 card written; S3a residual [SOURCE-BLOCKED: KKDWY26] lifted.
-- **Exact frontier discovered.** Refuter (0023-refuter-2): ε*_junta(d)=1/(2d) exactly, grid-attained. Candidate proof chain F1–F4→(M) verified exhaustively; Harper edge-isoperimetry (non-elementary link) verified computationally; falsity ruled out via five elementary counting steps.
-- **Prover completed.** 0023-prover-1: lemma chain F1–F4→(M) proved; I01 statement (incompatibility forces max(δ_F,δ_G)≥1/(2d), witnessed δ(d)=1/(3d), tightness via grid) verified **FROZEN** per §2.4.
-- **Verification loop closed.** Five blind passes (A–E, two verifier families), triage (0 upheld, 3 overruled, 6 pedantic, all post-triage-clean), final blind gate CLEAN; cycle 2 all gates CLEAR; one rung climbed; five remain.
+**Escalations requiring ratification:**
+- **(E1) Empty-window class model in r2:** The repaired formulation of the empty-window equivalence class in prover-3-r2, on which CAP I/II depend. **No cap depends on this;** on ratification, advance to full r2 acceptance or trigger third revision cycle if justified.
+- **(E2) Exact wording of R4 ladder record:** The exact phrasing of the ladder record for the next rung R4, which the triage ruled is NOT condemned (eligible for attempted). **Decision:** which Contract phrasing best captures the R3→R4 transition without conflating with defeated approaches?
 
-**On HUMAN GATE approval:**
-1. **Materialise rung R2 (degree-d set rung) as intermediate I02.** R2 prerequisite: the Nisan–Szegedy-type junta theorem must be carded before I02 cites it. **First step is a source-card errand** (no prover work on I02 until card is available).
-2. **Optional:** Formalizer on I01 if wanted (per §4, non-blocking; one external lemma [Mid04] remains unread, does not block Lean statement but may block Lean proof).
+**Sub-items, not separate actions:**
+- Two r2 re-verification passes (F/G) in flight; await verdicts before full acceptance.
+- On ratification: campaign continues on I02 with strategist's remaining plans **P2/P4/P5** (P1's key step refuted; P6 delivered the barrier). **New gap G5** (reviser-identified, minimal vs minimum window selection in r2 formulation) is the first issue P1-successor must settle before re-attempting.
+
+**Cycle 3 SUMMARY (CLOSED 2026-08-27):** 
+- **Rung R2 prover+verify cycle completed.** Scouts (0023-scout-4/5): NO PRIOR RESOLUTION FOUND on R2 standalone; literature scanned; Nisan–Szegedy and Chang-Fang carded (S6/S7b). Refuters (0023-refuter-3/4/5): degree d=2 frontier eps*_ind(2)=1/4 proved; d=3 frontier eps*_ind(3)=1/6 with complete window enumerations; relevance-payment floor min π_Rel=1 proved (all N,d).
+- **Prover and revision cycle underway.** 0023-prover-2 (PARTIAL): independent poly(d)-window route; positivity lemma (Chang-Fang first consequence). 0023-prover-3: initial cycle (5 blind passes, CAP I/II barrier claims, NOT CLEAN post-triage). Revision 0023-prover-3-r2: re-verification F/G in flight.
+- **Verification loop partially closed.** Five initial blind passes (A-E: two families); triage: 10 upheld, 9 overruled, 6 pedantic; passes B,C ruled WRONG (cleared 4 upheld each); self-disclosed ledger-read root cause fixed in r2. CAP I/II **not yet accepted** pending F/G verdicts.
+- **Strategist re-ranked plans:** P1 key step killed by refuter-3; P6 delivered barrier (same as R1). P2/P4/P5 remain untried; multiple lateral routes available (no stall).
 
 ---
 
@@ -218,20 +298,23 @@ To be populated as artifacts enter verification. Format per HARNESS.md §3.9 (re
 
 **Can a cold session continue from this ledger alone?** YES. This ledger contains:
 - Complete problem statement (via CONTRACT.md reference + K1–K3′ pins).
-- **Verified intermediate I01 (rung R1), frozen:** ε*_junta(d)=1/(2d), δ(d)=1/(3d), witnesses c₁=1/3, c₂=1; proof artifact 0023-prover-1 (evicted from context); 5/5 blind passes post-triage-clean + blind gate CLEAN; verification tally complete (cycle 2, all verdicts recorded).
-- Cycle 1 Scout verdict (NO PRIOR RESOLUTION FOUND).
-- Cycle 2 Scout-2 micro-verdict on R1 (NO PRIOR RESOLUTION FOUND, killed prior-art routes).
-- Cycle 2 Scout-3 deciding-source verdict (KKDWY26 fully read; outcome (i) confirmed; S3a residual lifted).
-- Cycle 2 Refuter verdict (exact frontier search complete; falsity ruled out via Harper isoperimetry chain).
-- Cycle 2 Prover verdict (I01 proved; lemma chain F1–F4→(M) complete with inline Harper proof).
-- Cycle 2 Verification loop complete (5 blind passes, triage, final blind gate all CLEAN).
-- Six independent attack plans (cycle 1 Strategist).
+- **Verified intermediate I01 (rung R1), FROZEN:** ε*_junta(d)=1/(2d), δ(d)=1/(3d), witnesses c₁=1/3, c₂=1; proof artifact 0023-prover-1 (evicted from context); 5/5 blind passes post-triage-clean + blind gate CLEAN; cycle 2 all verdicts recorded.
+- **Active target I02 (rung R2), OPEN:** degree-d set rung; proved at d=2 with optimal constant 1/4 and every delta below exponential threshold; content window open. Cycle 3 scouts complete (NO PRIOR RESOLUTION FOUND); refuters complete (frontiers certified d=2,3; floor proved d-agnostic). Prover cycle 1 incomplete: five blind passes (A-E: two families), triage outcome 10 upheld/9 overruled/6 pedantic; CAP I/II NOT ACCEPTED (passes B,C ruled WRONG; self-disclosed ledger-read fixed in r2). Revision r2 re-verification F/G in flight; post-ratification continue with P2/P4/P5.
+- Cycles 1–2 Scout verdicts (NO PRIOR RESOLUTION FOUND; prior-art routes killed).
+- Cycle 2 KKDWY26 full read and S5 card; S3a residual lifted.
+- Cycle 2 Refuter (exact frontier ε*_junta=1/(2d); Harper isoperimetry; falsity ruled out).
+- Cycle 2 Prover (I01 proved; lemma chain F1–F4→(M); proof FROZEN).
+- Cycle 2 Verification (5 blind, triage, blind gate all CLEAN → FROZEN).
+- Cycle 3 Computationally certified (refuter-3/4/5 results on d=2,3 frontiers; relevance-payment floor).
+- Cycle 3 Conditional (prover-2 partial; prover-3-r2 CAP I/II pending; refuter-5 non-Boolean floor).
+- Cycle 3 Killed plans (P1, (PAY*), (PAY**), min-form route, junta-substitution, singleton protection, barrier claims).
+- Six independent attack plans P1–P6 (cycle 1 Strategist); cycle 3 Strategist re-ranked.
 - Complete case ladder R0–R6 (PROGRESS.md, approved cycle 1).
-- Five source cards (S1, S2, S3a/S3b, S5) with marginal annotation on S1 from cycle 2 triage.
-- **Next action fully specified:** HUMAN GATE — read frozen proof 0023-prover-1.md; on approval, materialise R2 (I02) with Nisan–Szegedy junta theorem as source-card prerequisite.
+- Seven source cards (S1, S2, S3a/S3b, S5, S6, S7b) with marginal annotations on S1 (cycle 2) and S7b addendum (cycle 3).
+- **Next action fully specified:** HUMAN GATE — ratify two escalations (E1: empty-window class in r2; E2: R4 ladder record wording); sub-items: r2 re-verification F/G in flight; post-ratification continue I02 with P2/P4/P5, settle gap G5 (minimal vs minimum window).
 
 ---
 
 ---
 
-### END OF LEDGER PATCH, c/0023, cycle 2 closed, sections: HEADER, ESTABLISHED (I01 FROZEN), VERIFICATION TALLY, CONDITIONAL (I01 removed), MANIFEST (0023-prover-1 COMPLETE/FROZEN-PROOF, +5 verify reports, +triage, +blindgate, I01-spread-junta ESTABLISHED+FROZEN), SOURCE LIBRARY (S1 marginal annotation appended), NEXT ACTION (HUMAN GATE), Resume test — date 2026-08-27 ###
+### LEDGER PATCH, cycle 3, sections: HEADER (cycle 3 closed, R1 FROZEN, R2 ACTIVE+OPEN), VERIFICATION TALLY (+prover-3 round A-E, triage, r2 pending F-G), COMPUTATIONALLY CERTIFIED (+refuter-3/4/5 cycle-3 results), CONDITIONAL (+prover-2 partial, prover-3-r2 CAP I/II, refuter-5 non-Boolean floor), DEAD PLANS (+cycle-3 killed claims), SOURCE LIBRARY (+S6-junta-degree-card, S7b addendum, queue updated), MANIFEST (+21 cycle-3 artifact rows, I02 ACTIVE TARGET, prover-3 SUPERSEDED-BY r2), RETREAT LOG (cycle-3 note: no retreat, stall criteria unmet), NEXT ACTION (HUMAN GATE escalations E1/E2 with sub-items), Resume test — date 2026-08-27 ###

@@ -107,10 +107,11 @@ Together: expected profile if ε*(d)=Θ(1/d) and **the conjecture is TRUE with c
 **In collection (cards evict originals):**
 - **S1-acc22-card.md** (id: S1-acc22, retrieved 2026-08-27 by Scout): [ACC22] full theorem statements, proof mechanism, counterexamples B.1–B.5, context.
 - **S2-clm23-card.md** (id: S2-clm23, retrieved 2026-08-27 by Scout): [CLM23] Conjecture 2.8, state formulation, conversion lemma, consumption regime, uncertainty-principle ingredient.
+- **S3-2026-bypass-lemmas-card.md** (ids: S3a, S3b, retrieved 2026-08-27 by Scout, source-request resolution): S3a = arXiv:2608.03824 Lemma 3.5 (depth-O(d⁴) decision tree deciding which of two everywhere-disjoint degree-≤d real multilinear polynomials is nonzero, under a promise; per-pair, algorithmic, no influence/norm/distribution content); S3b = arXiv:2504.05710v2 Lemma 3.4 (win-win partial assignments for a single nonzero degree-d polynomial). **Both [RESTATED]** (two cross-checked HTML extractions each, never the raw page) — any use of the proofs' internals or the O(d⁴) constant stays [SOURCE-BLOCKED]; PCC-mismatch flags on the card.
 
 **QUEUE (ranked by load-bearing impact):**
-1. **[REQUEST PENDING]** Li–Li–Li–Liu, arXiv:2608.03824 (Aug 2026). Lemma 3.5 (decision-tree procedure for disjoint-support low-degree polynomials), pages §3 covering exact statement + proof. **P2's milestone collapses without it** (Strategist §2, plan P2 gate). Rungs tried by Scout: arXiv abs+html extraction [RESTATED]; fallback: run P2 on extraction, flagged conditional. **Rank 1 (load-bearing).**
-2. **[OPTIONAL, BELOW BAR]** Li–Li–Li–Liu / Bai, arXiv:2504.05710v2 (June 2026). Lemma 3.4 (win-win partial assignments), same rationale, same fallback. Secondary import for P2. **Rank 2 (informational).**
+1. **[REQUEST PENDING — activate only if plan P2 is chosen]** Li–Li–Li–Liu, arXiv:2608.03824v1, PDF of §3 (statement + full proof of Lemma 3.5): upgrades S3a from [RESTATED] to [READ] and supplies the recursion + constant that extraction cannot deliver. Fallback (already viable): run P2 on card S3a with everything downstream CONDITIONAL. Former rank-1 request resolved at [RESTATED] by S3a on 2026-08-27.
+2. **[OPTIONAL, BELOW BAR]** arXiv:2504.05710v2 PDF §3, same rationale at lower stakes; fallback: card S3b.
 
 **DECLINED:** none.
 
@@ -136,6 +137,7 @@ Together: expected profile if ε*(d)=Θ(1/d) and **the conjecture is TRUE with c
 | PROGRESS.md | PROGRESS.md | case-planner | claude-fable-5 | 1 | AWAITING APPROVAL | case ladder R0–R6; conventions; extremal-case calibration (Rung 0); no rung materialised |
 | S1-acc22-card | sources/S1-acc22-card.md | scout | — | 1 | IN LIBRARY | [ACC22] source card: three conjecture formulations, K1 theorem, K2 counterexamples, proof mechanism |
 | S2-clm23-card | sources/S2-clm23-card.md | scout | — | 1 | IN LIBRARY | [CLM23] source card: state form, conversion lemma, consumption regime, Donoho–Stark caveat |
+| S3-2026-bypass-lemmas-card | sources/S3-2026-bypass-lemmas-card.md | scout | claude-fable-5 | 1 | IN LIBRARY ([RESTATED]) | S3a = 2608.03824 Lem 3.5, S3b = 2504.05710v2 Lem 3.4; resolves strategist source request at extraction grade; PDF read still queued if P2 chosen |
 
 ---
 

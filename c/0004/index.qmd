@@ -22,7 +22,7 @@ status:
 difficulty:
   reach: adaptation
   by: ai
-  note: "Resolved here by a concrete-constant analysis inside standard leftover-hash technique, with no new ingredient needed."
+  note: "Resolved by a concrete-constant analysis of the classical probabilistic-method extractor argument -- concentration in L1 plus a union bound over supports -- and not by the leftover hash lemma, whose collision route cannot reach this seed regime at all. Recorded 28 August 2026: in extractor parameters the bound is Theorem 6.17 of Vadhan's Pseudorandomness with explicit constants; the part that is not classical is the average-over-H unpredictability hypothesis."
 
 status_summary: "Proven, and the statement is now formalized in Lean with an AI match check: the public-seed bound holds with a concrete constant, but the proof itself is still only informal (PDF), unreviewed, and unformalized."
 status_updated: 2026-08-16
@@ -36,6 +36,10 @@ lean:
 sources:
   - {cite: "Farshim, Two Leftover-Hash-Lemma Conjectures (self-hosted statement source; states this public-seed conjecture as Conjecture 2, alongside the secret-seed Conjecture 1)", url: "/c/0004/latex/main.tex"}
   - {cite: "McDiarmid, On the Method of Bounded Differences, in Surveys in Combinatorics 1989, LMS Lecture Note Series 141, pp. 148-188, Cambridge University Press (the bounded-differences inequality the proof's concentration step rests on)", url: "https://doi.org/10.1017/CBO9781107359949.008"}
+  - {cite: "Vadhan, Pseudorandomness, Foundations and Trends in Theoretical Computer Science, chapter 6 (Theorem 6.17 is this bound in extractor parameters; the remark after Theorem 6.18 is why the leftover hash lemma cannot reach this seed regime)", url: "https://people.seas.harvard.edu/~salil/pseudorandomness/extractors.pdf"}
+  - {cite: "Radhakrishnan and Ta-Shma, Bounds for Dispersers, Extractors, and Depth-Two Superconcentrators, SIAM J. Discrete Math. 13(1), pp. 2-24, 2000 (matching lower bounds for both summands, which Remark 5.3 of the proof note gives only as sketches)", url: "https://doi.org/10.1137/S0895480197329508"}
+  - {cite: "Dodis, Ostrovsky, Reyzin and Smith, Fuzzy Extractors, SIAM J. Comput. 38(1), pp. 97-139, 2008 (the average-min-entropy leftover hash lemma, which does not apply here because the side information may be H itself)", url: "https://eprint.iacr.org/2003/235"}
+  - {cite: "Coretti, Farshim, Harasser and Southern, Multi-Source Randomness Extraction and Generation in the Random-Oracle Model, ITC 2025 (random-oracle extraction with a bounded distinguisher; names the unbounded-distinguisher case this statement lives in as open)", url: "https://eprint.iacr.org/2025/1258"}
 statement_sha: "85c5fd1befb0092f9a3345b1c5110f526b9c336efb936b7a03adf01071f749f8"
 status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: human-written, AI-formalized, AI-matched against the informal statement. Proof: AI draft, not yet independently reviewed, not yet formalized. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-3' stroke-dasharray='5,3'/><circle cx='16' cy='16' r='8' class='cj-disc-1'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>·</text></svg></a>"
 ---
@@ -112,6 +116,12 @@ $$
 
 - [Farshim, Two Leftover-Hash-Lemma Conjectures (self-hosted statement source; states this public-seed conjecture as Conjecture 2, alongside the secret-seed Conjecture 1)](/c/0004/latex/main.tex)
 - [McDiarmid, On the Method of Bounded Differences, in Surveys in Combinatorics 1989, LMS Lecture Note Series 141, pp. 148-188, Cambridge University Press (the bounded-differences inequality the proof's concentration step rests on)](https://doi.org/10.1017/CBO9781107359949.008)
+- [Vadhan, *Pseudorandomness*, Foundations and Trends in Theoretical Computer Science, chapter 6 (Theorem 6.17 is this bound in extractor parameters; the remark after Theorem 6.18 is why the leftover hash lemma cannot reach this seed regime)](https://people.seas.harvard.edu/~salil/pseudorandomness/extractors.pdf)
+- [Radhakrishnan and Ta-Shma, Bounds for Dispersers, Extractors, and Depth-Two Superconcentrators, SIAM J. Discrete Math. 13(1), pp. 2-24, 2000 (matching lower bounds for both summands, which Remark 5.3 of the proof note gives only as sketches)](https://doi.org/10.1137/S0895480197329508)
+- [Dodis, Ostrovsky, Reyzin and Smith, Fuzzy Extractors, SIAM J. Comput. 38(1), pp. 97-139, 2008 (the average-min-entropy leftover hash lemma, which does not apply here because the side information may be $H$ itself)](https://eprint.iacr.org/2003/235)
+- [Coretti, Farshim, Harasser and Southern, Multi-Source Randomness Extraction and Generation in the Random-Oracle Model, ITC 2025 (random-oracle extraction with a bounded distinguisher; names the unbounded-distinguisher case this statement lives in as open)](https://eprint.iacr.org/2025/1258)
+
+See [Relation to the extractor literature](/p/leftover-hash-lemma-extraction/#relation-to-the-extractor-literature) on the problem hub for how these bear on the conjecture, and the Discussion tab for the short version.
 
 ## Proof
 
@@ -230,7 +240,22 @@ on `leanprover/lean4:v4.33.0`.
 
 This is the one resolved statement on the site, and the shape of the resolution is worth keeping in view: the naive guess — transposing the secret-seed expression directly into the public-seed game — is *false*, and the proof both refutes it and establishes a corrected bound with an explicit near-optimal constant. So the value here is not only the theorem but the counterexample that rules out the obvious statement.
 
-What remains is verification rather than mathematics. The proof is AI-written and has not been reviewed by a human, and the Lean formalization stops at the statement: `lean/Statement.lean` still carries the single real `sorry`, and `lean/LEDGER.md` lists what a full formalization would have to discharge, item 6 (bounded differences, which Mathlib does not have) being the largest.
+### Relation to known results
+
+Recorded 28 August 2026, and it recalibrates the page. **In extractor parameters this theorem is classical.** Put $n := \log_2 D$, $k := \log_2(1/\epsilon)$, $m := \log_2 R$, $d := \log_2 K$ and balance each summand against a target error $\delta$: the $\sqrt{\epsilon R}$ term gives $m = k - 2\log(1/\delta)$ and the $\sqrt{\log_2 D / K}$ term gives $d = \log n + 2\log(1/\delta)$. That is Theorem 6.17 of Vadhan's *Pseudorandomness* — a random function is, with high probability, a strong extractor with optimal entropy loss — and Radhakrishnan and Ta-Shma proved those parameters optimal. The match is exact, not approximate: the second bound above carries $\ln(2eD\epsilon) \approx (n-k)\ln 2$ and so delivers $d = \log(n-k) + 2\log(1/\delta) + O(1)$, the sharp form, while the $b_t := \tfrac1t\ln\binom{D}{t}$ the proof introduces to get there is the textbook count of flat $k$-sources.
+
+Two things survive that reading, and they are why the page is not simply a rediscovery.
+
+- **The leftover hash lemma genuinely cannot give this.** It needs $\{H(k,\cdot)\}_{k \in \mathcal{K}}$ to be 2-universal, and universal families need $K \ge D^{\Omega(1)}$; the regime here is $K \approx \log_2 D$, where no universal family exists. Conditioning on $H$ and using an almost-universal LHL does not repair it either — collision probability is an $L_2$ quantity, so converting it costs a factor $R$ inside the square root and turns $\sqrt{\log D/K}$ into $(R\log D/K)^{1/4}$. The proof above avoids this by working in $L_1$ throughout, which is the same route the classical existence proofs take.
+- **The hypothesis is weaker than the classical one.** $\epsilon$-unpredictability bounds $\mathbb{E}_{(H,Z)}[\max_x \Pr[X=x \mid H,Z]]$, an average over $H$, so the source may have zero entropy on an $\epsilon$-fraction of oracles. Classical statements quantify per source and conclude with high probability over the extractor, which cannot be applied; the average-min-entropy leftover hash lemma of Dodis, Ostrovsky, Reyzin and Smith does not help, since there the side information must be independent of the hash key and here $z$ may be $H$ itself. The note's closing remark isolates this correctly — the selection term is a high-probability-over-$H$ statement, the deficiency term inherently is not — without saying that this is the part with no precedent.
+
+What is *not* novel, contrary to how the setting reads, is that the source sees the entire function table. The probabilistic-method union bound runs over flat sources before the source is fixed, so it already covers supports chosen with $H$ in hand.
+
+One consequence for the proof note itself: Remark 5.3 offers matching lower bounds for both summands as sketches ("For the second we only sketch"). Radhakrishnan and Ta-Shma proved both — $d \ge \log(n-k) + 2\log(1/\epsilon) - O(1)$, and $d + k - m \ge 2\log(1/\epsilon) - O(1)$, which specialises to $k - m \ge 2\log(1/\epsilon) - O(1)$ for strong extractors since $(\mathit{sd}, \mathrm{Ext}(x,\mathit{sd}))$ is then an ordinary extractor with output $m+d$. The sketch can be replaced by a citation. See the [problem hub](/p/leftover-hash-lemma-extraction/#relation-to-the-extractor-literature) for the full comparison, including the secret-seed cell.
+
+### What remains
+
+Verification rather than mathematics. The proof is AI-written and has not been reviewed by a human, and the Lean formalization stops at the statement: `lean/Statement.lean` still carries the single real `sorry`, and `lean/LEDGER.md` lists what a full formalization would have to discharge, item 6 (bounded differences, which Mathlib does not have) being the largest.
 
 ## Open obligations
 
@@ -238,5 +263,7 @@ What remains is verification rather than mathematics. The proof is AI-written an
 - [ ] Independent **human** match check of `lean/Statement.lean` against the Statement tab. `MATCH.md` is an AI match check; the quantifier order on `c`, and the bit convention in `extGame` (which the sanity lemmas deliberately do not pin down), are the two places to look first.
 - [ ] Finish the formal proof. `lean/Proof.lean` has the statistical-distance foundation, Fact 2.1 in full, and the bridge from the game to the analytic quantity, all `sorry`-free; `lean/LEDGER.md` lists the eight remaining obligations. Mathlib v4.33.0 has been checked and carries no McDiarmid and no bounded-differences inequality, so that step has to be proved from scratch in the finite case.
 - [ ] Decide whether `Z` should stay an arbitrary type or be pinned to a finite alphabet, and say so in the Statement tab either way.
+- [ ] Bring `latex/proof.tex` in line with the Discussion tab. It has no related-work section and its bibliography cites only McDiarmid; Remark 5.3 should cite Radhakrishnan and Ta-Shma instead of sketching, and the note should say plainly which of its two bounds is Theorem 6.17 of Vadhan and which hypothesis has no classical precedent. Editing it means rebuilding `pdf/proof.pdf`, which `scripts/artifact_manifest.py` gates in CI.
+- [ ] Decide whether the prior-art finding should move `difficulty.reach` off `adaptation`, or whether `adaptation` was already the right call for a concrete-constant reproof of a textbook theorem under a weaker hypothesis.
 
 :::

@@ -229,18 +229,26 @@ it: `kappa-4` has had six. Everything else is still at zero or one.
 
 | artifact | passes | verdict of record | note |
 |---|---|---|---|
-| `kappa-1-r3` | 1 of 5 | CLEAN, 6 class-(C) | **no triage file, no revision** — the six (C)s were never adjudicated |
-| `kappa-2-r2` | **0 of 5** | — | never reviewed; its tally reviews the *pre-revision* `kappa-2` at `8c68c62` and says so |
+| `kappa-1-r4` | 1 of 5 | CLEAN, adjudicated | six (C)s **triaged** (4 upheld, 2 pedantic) and repaired in r4; four angles still owed |
+| `kappa-2-r2` | **5 of 5** | DEFECTS, **0 class-(A)** | first ever review of this arm; the overruled D″ objection **confirmed overruled**, twice independently; repairs in r3 |
+| `kappa-2-r3` | **0 of 5** | — | lands with this revision |
 | `kappa-3` | 1 (superseded) | DEFECTS, F1 upheld | tally does not carry to r2 |
 | `kappa-3-r2` | 1 (superseded) | DEFECTS, 4 upheld | tally does not carry to r3 |
 | `kappa-3-r4` | **0 of 5** | — | r3 never refereed; r4 repairs A3 and inherits the unreviewed lineage |
 | `kappa-4` | **6 of 5** | **DEFECTS** | six blind passes, two model families; Lemma H0 CLEAN and no class-(B) error; 7 class-(A)/(C) upheld — see `split-decomp-kappa-4-findings.md` |
 | `kappa-4-r2` | **0 of 5** | — | repairs all upheld findings; answering an audit is not the same as having had one |
 
-**The weakest link.** Corollary D″ is load-bearing for Theorem E″ and sits in `kappa-2-r2`, which
-has zero passes — and the triage of the earlier `kappa-2` pass **overruled** the referee on D″'s
-constant, so the one referee opinion ever formed about it was rejected and never re-tested. Aim
-the next pass here.
+**The former weakest link is no longer one.** `kappa-2-r2` has now had five blind passes, the
+first ever on that arm, with **zero class-(A) findings**. The specific worry — that D″'s constant
+rested on a referee objection which triage *overruled* rather than independently re-tested — is
+discharged: a pass aimed at that parenthetical, blind to its history, confirmed the absorption,
+and a second confirmed it unprompted. It is load-bearing (without it the leading part is
+`5.506 > 5`), and it holds. See `split-decomp-kappa-2-findings-r2.md`.
+
+**The weakest link is now the source cards.** No pass has ever checked a card against the paper it
+summarises, and [CDGS, Claim 2] and [CDGS, Claim 3] enter the whole chain through r3's Lemma P on
+transcription alone. Three consequences of Claim 2 used there are not stated in the published
+claim in that form.
 
 **Never refereed at all:**
 

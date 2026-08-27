@@ -1,0 +1,204 @@
+%% The interface box of g-ledger, the one source for both the book
+%% and uc/.../g-ledger/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+%%
+%% `breakable' and no `multicols', per the head of f-secmsg.tex.
+%%
+%% The source runs three steps at the head of *every* input rather than
+%% inside any one operation. This framework has no such hook, so they are
+%% written once as a non-callable block, \op{Advance}, and named at the head
+%% of each operation that the source runs them for. It is not an interface:
+%% nothing outside the box may call it, which is why its signature carries no
+%% \id. prefix and no `from' clause, the same form \op{Initialize} uses.
+\begin{interface}[nofloat, breakable]{Functionality $\Gledger$ \\
+\params{$\PID := (\op{G}\op{Ledger},0,0)$, \quad $\Ps$, \quad
+$\admits := \Stdpid \cup \Apid \cup \Zpid$, \\
+\quad $\uses := \{(\Adv,\serves),\,(\Gclock,\serves)\}$, \\
+\quad $\pars := (\opl{Validate}, \opl{ExtendPolicy}, \opl{Blockify}, \opl{predict-time}, \mathit{win}, \Delta)$}}
+
+{\scriptsize
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{st} \gets \varepsilon$; \ $\V{ep} \gets \varepsilon$; \ $\V{Nxt} \gets \varepsilon$; \ $\V{Log} \gets \varepsilon$
+  \Comment{the state, the policy's state, the next-block candidate, the honest-input log}
+\State $\V{Buf} \gets \emptyset$
+  \Comment{submitted transactions not yet in the state}
+\State $\Ps, \V{H}, \V{DS} \gets \emptyset$
+  \Comment{registered, honest, honest-but-desynchronized}
+\State $\V{pt}, \V{reg} : \Ps \to \mathbb{N}$
+  \Comment{each party's pointer into $\V{st}$, and when it last registered}
+\State $\V{t} \gets 0$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\op{Advance}(I, P)$} \quad (not an interface; runs at the head of every operation below)
+\begin{algorithmic}[1]
+\algcont
+\State $\V{t} \gets \Gclock.\fopl{Read}()$ \label{ln:gledclock}
+  \Comment{every activation begins by re-reading the clock}
+\If{$P \in \V{H}$}
+  \State $\V{Log} \gets \V{Log} \, \| \, (I, P, \V{t})$ \label{ln:gledlog}
+    \Comment{only honest inputs, and this log is the policy's whole view}
+\EndIf
+\State $\V{DS} \gets \V{DS} \setminus \{P' \in \V{DS} : \V{reg}[P'] < \V{t} - \Delta\}$ \label{ln:glednosync}
+  \Comment{a late joiner is synchronized after $\Delta$, unconditionally}
+\If{$P \in \V{H}$} \label{ln:gledhonestonly}
+  \Comment{the state grows only on an \emph{honest} party's activation}
+  \State $(\vec{N}, \V{ep}) \gets \opl{ExtendPolicy}(\V{Log}, \V{st}, \V{Nxt}, \V{Buf}; \V{ep})$ \label{ln:gledpolicy}
+  \State $\V{Nxt} \gets \varepsilon$
+  \If{$\vec{N} \neq \varepsilon$}
+    \State parse $\vec{N}$ as $(\vec{N}_1, \ldots, \vec{N}_\ell)$; \ $\V{st} \gets \V{st} \, \| \, \opl{Blockify}(\vec{N}_1) \, \| \cdots \| \, \opl{Blockify}(\vec{N}_\ell)$ \label{ln:gledextend}
+  \EndIf
+  \State $\V{Buf} \gets \{\mathit{btx} \in \V{Buf} : \opl{Validate}(\mathit{btx}, \V{st}, \V{Buf}) = 1\}$ \label{ln:gledrevalidate}
+    \Comment{re-checked against the \emph{new} state, so a transaction may die here}
+  \If{$\exists\, P' \in \V{H} \setminus \V{DS} : \V{pt}[P'] \notin [\,|\V{st}| - \mathit{win} + 1, \ |\V{st}|\,]$} \label{ln:gledwindow}
+    \State $\V{pt}[P''] \gets |\V{st}|$ for every $P'' \in \V{H} \setminus \V{DS}$ \label{ln:gledsnapback}
+      \Comment{one party out of the window drags \emph{everyone} to the tip}
+  \EndIf
+\EndIf
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Register}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $\Ps \gets \Ps \cup \{\id.P\}$; \ $\V{pt}[\id.P] \gets 1$; \ $\V{reg}[\id.P] \gets \V{t}$
+\If{$\id.P \notin \Cs$}
+  \If{$\V{H} = \emptyset$}
+    \State $\Gclock.\fopl{Register}()$ \label{ln:gledclockreg}
+      \Comment{the ledger holds the clock open only while an honest party is present}
+  \EndIf
+  \State $\V{Log} \gets \V{Log} \, \| \, (\op{register}, \id.P, \V{t})$; \ $\V{H} \gets \V{H} \cup \{\id.P\}$
+  \If{$\V{reg}[\id.P] > 0$}
+    \State $\V{DS} \gets \V{DS} \cup \{\id.P\}$ \label{ln:gleddesync}
+      \Comment{anyone joining after time $0$ starts desynchronized}
+  \EndIf
+\EndIf
+\State \textbf{return} $\id.P$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Deregister}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P \in \Ps$}
+\State $\Ps \gets \Ps \setminus \{\id.P\}$; \ $\V{H} \gets \V{H} \setminus \{\id.P\}$; \ $\V{DS} \gets \V{DS} \setminus \{\id.P\}$
+\If{$\V{H} = \emptyset$}
+  \State $\Gclock.\fopl{Deregister}()$
+\EndIf
+\State \textbf{return} $\id.P$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Submit}(\mathit{tx})$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P \in \Ps$}
+\State $\Gledger.\op{Advance}((\op{submit},\mathit{tx}), \id.P)$
+\State $\mathit{txid} \gets$ a fresh transaction id; \ $\mathit{btx} \gets (\mathit{tx}, \mathit{txid}, \V{t}, \id.P)$
+\If{$\opl{Validate}(\mathit{btx}, \V{st}, \V{Buf}) = 1$} \label{ln:gledadmit}
+  \State $\V{Buf} \gets \V{Buf} \cup \{\mathit{btx}\}$
+    \Comment{the buffer may hold conflicting transactions; see the page}
+\EndIf
+\State $\Adv(\op{submit}, \mathit{btx})$ \label{ln:gledleaktx}
+  \Comment{every submission is shown to the adversary, in the clear}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Read}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P \in \Ps$}
+\State $\Gledger.\op{Advance}(\op{read}, \id.P)$
+\If{$\id.P \in \V{H} \setminus \V{DS}$}
+  \State \textbf{return} $\V{st}|_{\min\{\V{pt}[\id.P], \, |\V{st}|\}}$ \label{ln:gledprefix}
+    \Comment{a prefix, never the tip: the pointer is what the adversary moves}
+\EndIf
+\State \textbf{return} $\V{st}_{\id.P}$ \label{ln:gleddesyncread}
+  \Comment{a desynchronized party reads whatever the adversary last wrote for it}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Maintain}(\mathit{mid})$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P \in \V{H}$}
+\State $\Gledger.\op{Advance}((\op{maintain},\mathit{mid}), \id.P)$
+\If{$\opl{predict-time}(\V{Log}) > \V{t}$} \label{ln:gledpredict}
+  \State $\Gclock.\fopl{Update}()$ \label{ln:gledtick}
+    \Comment{the ledger drives the clock, from the honest log alone}
+\EndIf
+\If{$\opl{predict-time}(\V{Log}) \leq \V{t}$}
+  \State $\Adv(\op{maintain}, \mathit{mid}, \id.P)$
+\EndIf
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{AdvRead}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F = \Apid$}
+\State \textbf{return} $(\V{st}, \V{Buf}, \V{Log})$ \label{ln:gledadvread}
+  \Comment{the adversary reads the tip, the whole buffer and the honest log}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{AdvNextBlock}(\vec{x})$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F = \Apid$}
+\State parse $\vec{x}$ as $(\mathit{txid}_1, \ldots, \mathit{txid}_\ell)$; \ $L \gets$ those naming a $\mathit{btx} \in \V{Buf}$ \label{ln:gledpropose}
+\State $\V{Nxt} \gets \V{Nxt} \, \| \, L$; \ \textbf{return} $\ok$
+  \Comment{a proposal only: $\opl{ExtendPolicy}$ decides what is taken}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{AdvSetSlack}(\vec{q})$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F = \Apid$}
+\State parse $\vec{q}$ as $((P_1,q_1), \ldots, (P_\ell,q_\ell))$
+\Req{$\{P_1,\ldots,P_\ell\} \subseteq \V{H}$}
+\Req{$\forall\, j$ with $P_j \in \V{H} \setminus \V{DS}$: \ $|\V{st}| - q_j < \mathit{win} \ \wedge\ q_j \geq |\V{st}_{P_j}|$} \label{ln:gledslack}
+  \Comment{inside the window, and never backwards}
+\State $\V{pt}[P_j] \gets q_j$ for every $j$; \ \textbf{return} $\ok$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{AdvDesync}(\vec{s})$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F = \Apid$}
+\State parse $\vec{s}$ as $((P_1,s_1), \ldots, (P_\ell,s_\ell))$
+\Req{$\{P_1,\ldots,P_\ell\} \subseteq \V{DS}$}
+\State $\V{st}_{P_j} \gets s_j$ for every $j$; \ \textbf{return} $\ok$ \label{ln:gleddesyncset}
+  \Comment{for a desynchronized party the adversary writes the state entire}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State $\V{H} \gets \V{H} \setminus \{\id.P\}$; \ $\V{DS} \gets \V{DS} \setminus \{\id.P\}$ \label{ln:gledcorrupt}
+\If{$\opl{predict-time}(\V{Log}) > \V{t}$}
+  \State $\Gclock.\fopl{Update}()$ \label{ln:gledcorrupttick}
+    \Comment{corruption itself can advance the clock}
+\EndIf
+\State \textbf{return} $\Ps$ \label{ln:gledregistered}
+  \Comment{the registered set; the state and buffer come from $\op{AdvRead}$}
+\algsave
+\end{algorithmic}}
+\end{interface}

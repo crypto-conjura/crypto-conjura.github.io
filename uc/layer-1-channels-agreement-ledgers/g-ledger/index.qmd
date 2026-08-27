@@ -1,13 +1,222 @@
 ---
-title: "G-ledger — Global ledger, irreplaceability"
+title: "G-ledger — Global transaction ledger, sliding window"
 status: "Canonical"
 layer: 1
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*G-ledger* (Global ledger, irreplaceability) is part of *Channels, Agreement, Ledgers* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+*G-ledger* (Global transaction ledger, sliding window) is part of *Channels, Agreement, Ledgers* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+
+The functionality Bitcoin was shown to realize, and the reason "blockchain as a UC setup" is a phrase that means something. It maintains one append-only state, hands each party a *prefix* of it rather than the state itself, and lets the adversary move those prefixes around inside a sliding window of $\mathit{win}$ blocks. Everything a reader would call a security guarantee — liveness, chain quality, how fast the state grows — is deferred to one parameter, $\mathsf{ExtendPolicy}$, and that displacement is the design.
+
+This site carries **two** ledgers and they are different objects. [*F-ledger*](/uc/layer-1-channels-agreement-ledgers/f-ledger/index.qmd) is Dziembowski et al.'s twelve-line account-balance ledger $\widehat{\mathcal{L}}$, printed as a local functionality and used as a global one. This page is the transaction-log ledger, printed as global.
+
+**Before using this as a global setup, read the second reference.** Badertscher, Hesse and Zikas's *(Ir)replaceability* paper is about exactly this box, and its finding is that the CRYPTO 2017 realization result does not license the substitution everyone wants to make from it: "the UC security of Bitcoin for realizing a ledger proved by Badertscher et al. [CRYPTO'17] is not sufficient per se to allow us to replace the ledger by Bitcoin when used as a global setup. In particular, we cannot expect that all security statements in the global ledger-hybrid world would be preserved when using Bitcoin as a ledger." The concrete mechanism is on this page's own box, at lines 47–49: this ledger lets the adversary reorder transactions freely, and a real blockchain does not, so *a simulator that exploits the reordering has nothing to exploit once the ledger is replaced*. The general lesson they draw is worth stating in their words, because it is a design rule for every global functionality in this encyclopedia: "an extensive adversarial interface at the global setup hinders its replacement."
+
+## Functionality
+
+Reading the box: this is a **global** functionality, which here means exactly two things, both visible in the header line — the process id is pinned to a constant rather than left a parameter, and every identity is admitted. $\mathsf{require}$ refuses the call and the framework answers $\textsf{rej}$; $\mathcal{A}(\cdot)$ is a call on the adversary slot; $\mathbf{C}$ is the corrupted set. $\mathtt{st}$ is the state, a sequence of blocks; $\mathtt{Buf}$ the submitted-but-unsettled transactions; $\mathtt{Log}$ the *timed honest-input sequence*, which is the only history $\mathsf{ExtendPolicy}$ ever sees. $\mathtt{H}$ is the honest parties and $\mathtt{DS}$ the honest-but-desynchronized ones. $\mathsf{Advance}$ is not an interface: it is the source's per-activation preamble, written once and named where it runs.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{G}_{\mathsf{ledger}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid} := (\mathsf{GLedger},0,0)\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N} := \mathbf{Std} \cup \mathbf{A} \cup \mathbf{Z}\), \\ &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves}),\,(\mathcal{G}_{\mathsf{Clock}},\mathsf{serves})\}\), \\ &nbsp; \(\mathit{par} := (\mathsf{Validate}, \mathsf{ExtendPolicy}, \mathsf{Blockify}, \mathsf{predict-time}, \mathit{win}, \Delta)\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{st} \gets \varepsilon\); &nbsp;\(\mathtt{ep} \gets \varepsilon\); &nbsp;\(\mathtt{Nxt} \gets \varepsilon\); &nbsp;\(\mathtt{Log} \gets \varepsilon\)<span class="cj-comment">// the state, the policy's state, the next-block candidate, the honest-input log</span></li>
+<li>\(\mathtt{Buf} \gets \varnothing\)<span class="cj-comment">// submitted transactions not yet in the state</span></li>
+<li>\(\mathbf{P}, \mathtt{H}, \mathtt{DS} \gets \varnothing\)<span class="cj-comment">// registered, honest, honest-but-desynchronized</span></li>
+<li>\(\mathtt{pt}, \mathtt{reg} : \mathbf{P} \to \mathbb{N}\)<span class="cj-comment">// each party's pointer into \(\mathtt{st}\), and when it last registered</span></li>
+<li>\(\mathtt{t} \gets 0\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig">Advance(<span class="cj-id">I</span>, <span class="cj-id">P</span>)</div>
+<ol class="cj-code" start="6">
+<li>\(\mathtt{t} \gets \mathcal{G}_{\mathsf{Clock}}.\mathsf{FullRead}()\)<span class="cj-comment">// every activation begins by re-reading the clock</span></li>
+<li>\(\textbf{if}\ P \in \mathtt{H}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{Log} \gets \mathtt{Log} \, \| \, (I, P, \mathtt{t})\)</span><span class="cj-comment">// only honest inputs, and this log is the policy's whole view</span></li>
+<li>\(\mathtt{DS} \gets \mathtt{DS} \setminus \{P' \in \mathtt{DS} : \mathtt{reg}[P'] < \mathtt{t} - \Delta\}\)<span class="cj-comment">// a late joiner is synchronized after \(\Delta\), unconditionally</span></li>
+<li>\(\textbf{if}\ P \in \mathtt{H}\ \textbf{then}\)<span class="cj-comment">// the state grows only on an \emph{honest} party's activation</span></li>
+<li><span class="cj-ind">\((\vec{N}, \mathtt{ep}) \gets \mathsf{ExtendPolicy}(\mathtt{Log}, \mathtt{st}, \mathtt{Nxt}, \mathtt{Buf}; \mathtt{ep})\)</span></li>
+<li><span class="cj-ind">\(\mathtt{Nxt} \gets \varepsilon\)</span></li>
+<li><span class="cj-ind">\(\textbf{if}\ \vec{N} \neq \varepsilon\ \textbf{then}\)</span></li>
+<li><span class="cj-ind">parse \(\vec{N}\) as \((\vec{N}_1, \ldots, \vec{N}_\ell)\); &nbsp;\(\mathtt{st} \gets \mathtt{st} \, \| \, \mathsf{Blockify}(\vec{N}_1) \, \| \cdots \| \, \mathsf{Blockify}(\vec{N}_\ell)\)</span></li>
+<li><span class="cj-ind">\(\mathtt{Buf} \gets \{\mathit{btx} \in \mathtt{Buf} : \mathsf{Validate}(\mathit{btx}, \mathtt{st}, \mathtt{Buf}) = 1\}\)</span><span class="cj-comment">// re-checked against the \emph{new} state, so a transaction may die here</span></li>
+<li><span class="cj-ind">\(\textbf{if}\ \exists\, P' \in \mathtt{H} \setminus \mathtt{DS} : \mathtt{pt}[P'] \notin [\,|\mathtt{st}| - \mathit{win} + 1, \ |\mathtt{st}|\,]\ \textbf{then}\)</span></li>
+<li><span class="cj-ind">\(\mathtt{pt}[P''] \gets |\mathtt{st}|\) for every \(P'' \in \mathtt{H} \setminus \mathtt{DS}\)</span><span class="cj-comment">// one party out of the window drags \emph{everyone} to the tip</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Register()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="18">
+<li>\(\mathbf{P} \gets \mathbf{P} \cup \{\mathit{id}.P\}\); &nbsp;\(\mathtt{pt}[\mathit{id}.P] \gets 1\); &nbsp;\(\mathtt{reg}[\mathit{id}.P] \gets \mathtt{t}\)</li>
+<li>\(\textbf{if}\ \mathit{id}.P \notin \mathbf{C}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{if}\ \mathtt{H} = \varnothing\ \textbf{then}\)</span></li>
+<li><span class="cj-ind">\(\mathcal{G}_{\mathsf{Clock}}.\mathsf{FullRegister}()\)</span><span class="cj-comment">// the ledger holds the clock open only while an honest party is present</span></li>
+<li><span class="cj-ind">\(\mathtt{Log} \gets \mathtt{Log} \, \| \, (\mathsf{register}, \mathit{id}.P, \mathtt{t})\); &nbsp;\(\mathtt{H} \gets \mathtt{H} \cup \{\mathit{id}.P\}\)</span></li>
+<li><span class="cj-ind">\(\textbf{if}\ \mathtt{reg}[\mathit{id}.P] > 0\ \textbf{then}\)</span></li>
+<li><span class="cj-ind">\(\mathtt{DS} \gets \mathtt{DS} \cup \{\mathit{id}.P\}\)</span><span class="cj-comment">// anyone joining after time \(0\) starts desynchronized</span></li>
+<li>\(\textbf{return}\ \mathit{id}.P\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Deregister()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="26">
+<li>\(\textbf{require}\ \mathit{id}.P \in \mathbf{P}\)</li>
+<li>\(\mathbf{P} \gets \mathbf{P} \setminus \{\mathit{id}.P\}\); &nbsp;\(\mathtt{H} \gets \mathtt{H} \setminus \{\mathit{id}.P\}\); &nbsp;\(\mathtt{DS} \gets \mathtt{DS} \setminus \{\mathit{id}.P\}\)</li>
+<li>\(\textbf{if}\ \mathtt{H} = \varnothing\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathcal{G}_{\mathsf{Clock}}.\mathsf{FullDeregister}()\)</span></li>
+<li>\(\textbf{return}\ \mathit{id}.P\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Submit(<span class="cj-id">tx</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="31">
+<li>\(\textbf{require}\ \mathit{id}.P \in \mathbf{P}\)</li>
+<li>\(\mathcal{G}_{\mathsf{ledger}}.\mathsf{Advance}((\mathsf{submit},\mathit{tx}), \mathit{id}.P)\)</li>
+<li>\(\mathit{txid} \gets\) a fresh transaction id; &nbsp;\(\mathit{btx} \gets (\mathit{tx}, \mathit{txid}, \mathtt{t}, \mathit{id}.P)\)</li>
+<li>\(\textbf{if}\ \mathsf{Validate}(\mathit{btx}, \mathtt{st}, \mathtt{Buf}) = 1\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathtt{Buf} \gets \mathtt{Buf} \cup \{\mathit{btx}\}\)</span><span class="cj-comment">// the buffer may hold conflicting transactions; see the page</span></li>
+<li>\(\mathcal{A}(\mathsf{submit}, \mathit{btx})\)<span class="cj-comment">// every submission is shown to the adversary, in the clear</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Read()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="37">
+<li>\(\textbf{require}\ \mathit{id}.P \in \mathbf{P}\)</li>
+<li>\(\mathcal{G}_{\mathsf{ledger}}.\mathsf{Advance}(\mathsf{read}, \mathit{id}.P)\)</li>
+<li>\(\textbf{if}\ \mathit{id}.P \in \mathtt{H} \setminus \mathtt{DS}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \mathtt{st}|_{\min\{\mathtt{pt}[\mathit{id}.P], \, |\mathtt{st}|\}}\)</span><span class="cj-comment">// a prefix, never the tip: the pointer is what the adversary moves</span></li>
+<li>\(\textbf{return}\ \mathtt{st}_{\mathit{id}.P}\)<span class="cj-comment">// a desynchronized party reads whatever the adversary last wrote for it</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Maintain(<span class="cj-id">mid</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="42">
+<li>\(\textbf{require}\ \mathit{id}.P \in \mathtt{H}\)</li>
+<li>\(\mathcal{G}_{\mathsf{ledger}}.\mathsf{Advance}((\mathsf{maintain},\mathit{mid}), \mathit{id}.P)\)</li>
+<li>\(\textbf{if}\ \mathsf{predict-time}(\mathtt{Log}) > \mathtt{t}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathcal{G}_{\mathsf{Clock}}.\mathsf{FullUpdate}()\)</span><span class="cj-comment">// the ledger drives the clock, from the honest log alone</span></li>
+<li>\(\textbf{if}\ \mathsf{predict-time}(\mathtt{Log}) \leq \mathtt{t}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathcal{A}(\mathsf{maintain}, \mathit{mid}, \mathit{id}.P)\)</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.AdvRead()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="48">
+<li>\(\textbf{require}\ \mathit{id}'.F = \mathbf{A}\)</li>
+<li>\(\textbf{return}\ (\mathtt{st}, \mathtt{Buf}, \mathtt{Log})\)<span class="cj-comment">// the adversary reads the tip, the whole buffer and the honest log</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.AdvNextBlock(<span class="cj-id">vec{x}</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="50">
+<li>\(\textbf{require}\ \mathit{id}'.F = \mathbf{A}\)</li>
+<li>parse \(\vec{x}\) as \((\mathit{txid}_1, \ldots, \mathit{txid}_\ell)\); &nbsp;\(L \gets\) those naming a \(\mathit{btx} \in \mathtt{Buf}\)</li>
+<li>\(\mathtt{Nxt} \gets \mathtt{Nxt} \, \| \, L\); &nbsp;\(\textbf{return}\) <span class="cj-atom">ok</span><span class="cj-comment">// a proposal only: \(\mathsf{ExtendPolicy}\) decides what is taken</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.AdvSetSlack(<span class="cj-id">vec{q}</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="53">
+<li>\(\textbf{require}\ \mathit{id}'.F = \mathbf{A}\)</li>
+<li>parse \(\vec{q}\) as \(((P_1,q_1), \ldots, (P_\ell,q_\ell))\)</li>
+<li>\(\textbf{require}\ \{P_1,\ldots,P_\ell\} \subseteq \mathtt{H}\)</li>
+<li>\(\textbf{require}\ \forall\, j\) with \(P_j \in \mathtt{H} \setminus \mathtt{DS}\): &nbsp;\(|\mathtt{st}| - q_j < \mathit{win} \ \wedge\ q_j \geq |\mathtt{st}_{P_j}|\)<span class="cj-comment">// inside the window, and never backwards</span></li>
+<li>\(\mathtt{pt}[P_j] \gets q_j\) for every \(j\); &nbsp;\(\textbf{return}\) <span class="cj-atom">ok</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.AdvDesync(<span class="cj-id">vec{s}</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="58">
+<li>\(\textbf{require}\ \mathit{id}'.F = \mathbf{A}\)</li>
+<li>parse \(\vec{s}\) as \(((P_1,s_1), \ldots, (P_\ell,s_\ell))\)</li>
+<li>\(\textbf{require}\ \{P_1,\ldots,P_\ell\} \subseteq \mathtt{DS}\)</li>
+<li>\(\mathtt{st}_{P_j} \gets s_j\) for every \(j\); &nbsp;\(\textbf{return}\) <span class="cj-atom">ok</span><span class="cj-comment">// for a desynchronized party the adversary writes the state entire</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="62">
+<li>\(\mathtt{H} \gets \mathtt{H} \setminus \{\mathit{id}.P\}\); &nbsp;\(\mathtt{DS} \gets \mathtt{DS} \setminus \{\mathit{id}.P\}\)</li>
+<li>\(\textbf{if}\ \mathsf{predict-time}(\mathtt{Log}) > \mathtt{t}\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\mathcal{G}_{\mathsf{Clock}}.\mathsf{FullUpdate}()\)</span><span class="cj-comment">// corruption itself can advance the clock</span></li>
+<li>\(\textbf{return}\ \mathbf{P}\)<span class="cj-comment">// the registered set; the state and buffer come from \(\mathsf{AdvRead}\)</span></li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+*Source: the functionality $\mathcal{G}_{\mathsf{ledger}}$, pp. 22–23 of Badertscher, Maurer, Tschudi and Zikas, "Bitcoin as a Transaction Ledger: A Composable Treatment", CRYPTO 2017, ePrint 2017/149, revision `20240405:081352` — the newest of ten postings. The parameters and state variables are tabulated separately in Figure 5, p. 24; both were read. The functionality is printed as a named block rather than in a numbered figure, which is why a figure-caption sweep does not find it.*
+
+- **Line 10 is where the whole design lives, and it is easy to read past.** The state grows only inside an *honest* party's activation. The adversary can propose a block at line 51 and can read everything at line 46, but it cannot cause the state to extend by acting alone; something honest has to be scheduled first. That is what makes progress a consequence of honest participation rather than of adversarial permission, and it is the reason $\mathsf{ExtendPolicy}$ at line 11 is handed $\mathtt{Log}$ — a record of honest activity — as its evidence.
+- **Line 11 is the functionality's escape hatch, and the paper is candid that it is one.** Everything that distinguishes a good ledger from a useless one — that blocks appear at some rate, that submitted transactions eventually settle, that honest miners get a share of the blocks — is a property of $\mathsf{ExtendPolicy}$ and of nothing else in this box. Without such a policy, the source says, you would have "a ledger that only guarantees the common prefix property but no liveness or chain quality". Read that way, $\mathcal{G}_{\mathsf{ledger}}$ is not one functionality but a family, and quoting "Bitcoin realizes $\mathcal{G}_{\mathsf{ledger}}$" without naming the policy says less than it appears to.
+- **Line 40 is a prefix, and that single bar is the whole of state slackness.** An honest party never reads the tip; it reads $\mathtt{st}$ truncated at its own pointer. The adversary moves those pointers at lines 50–53, bounded only by the window and by monotonicity. So two honest parties reading at the same instant can legitimately disagree about the last $\mathit{win}$ blocks, which is what a real blockchain looks like and what a naive "everyone sees one state" functionality could not express.
+- **Lines 17–18 are the strangest rule in the box, and they are a rule about *everyone*.** If any single synchronized honest party's pointer has fallen outside the window, every synchronized honest party is snapped to the tip. Not the offending party — all of them. The effect is that the adversary cannot hold one party back beyond $\mathit{win}$ blocks without surrendering its slack over every other party at the same moment. Slack is a shared budget, not a per-party one.
+- **Line 15 re-validates the buffer against the *new* state, so a transaction can die of old age.** A transaction admitted at line 33 sits in the buffer only while it stays valid; once the state extends past a conflicting transaction, $\mathsf{Validate}$ drops it. Nothing tells the submitter. There is no interface on this box through which a party learns that its transaction was discarded — it can only keep reading the state and infer.
+- **Line 33 admits a transaction that conflicts with one already in the buffer, deliberately.** The source is explicit that it departs from earlier work here: assuming a validation predicate that keeps the buffer conflict-free is "a strong filter" that "in reality we do not know how to implement", because different miners work on different, potentially conflicting sets. So the buffer holds everything that *might* end up in the state, conflicts included, and the conflict is resolved only when line 14 commits one of them. This is a relaxation made in order to be realizable, and it is the kind of thing that makes a functionality weaker than a reader assumes.
+- **Line 42 makes the ledger drive the clock, and the condition is computed from the honest log.** $\mathsf{predict-time}$ reads $\mathtt{Log}$ and says what time the real world would be at; if that is ahead of the clock, the ledger ticks it. Time here is therefore a function of how much honest work has happened, not an independent process — which is what lets a proof-of-work protocol be modelled without the model assuming the rate it is trying to prove.
+- **Lines 20–21 and 28–29 make the ledger the clock's only registrant.** The clock is registered when the first honest party arrives and de-registered when the last one leaves. A reader composing this with [*G-clock*](/uc/layer-0-idealized-setup/g-clock/index.qmd) should notice that the ledger owns that relationship rather than sharing it.
+- **Line 24 makes every late joiner desynchronized, with no exception for an honest one.** Registering at any time after $0$ puts a party in $\mathtt{DS}$, where line 41 gives it whatever state the adversary wrote at line 54 — an arbitrary string, subject to nothing. Line 9 releases it $\Delta$ later, unconditionally and regardless of what has happened in between. Joining is therefore a fixed-cost, fully-adversarial window, and $\Delta$ is the price.
+- **Line 35 leaks every submission to the adversary in the clear, immediately.** Transaction privacy is not a property of this object at any level. Anything a protocol needs to keep private has to be private before it reaches $\mathsf{Submit}$.
+- **Line 57 is why corruption can move time.** Corrupting a party changes $\mathtt{Log}$'s interpretation, so $\mathsf{predict-time}$ can jump; the source ticks the clock on corruption for the same reason it does on $\mathsf{Maintain}$. It is an unusual coupling and it is deliberate.
+
+**Mismatch register.**
+
+| The source | This box | Why |
+|---|---|---|
+| Steps 1–3, run at the head of *every* input before any operation's own code | $\mathsf{Advance}$, lines 6–18, named at the head of each operation that runs them | This framework has no per-activation hook. Written once as a non-callable block — no $\mathit{id}.$ prefix, no *from* clause, the form $\mathsf{Initialize}$ uses — rather than replicated five times or hidden in a declared helper. |
+| Step 3 applies "if $P_i \in \mathcal{H}$"; steps 1–2 apply always | Line 10 is an $\mathsf{if}$, not a $\mathsf{require}$ | The distinction matters: a corrupt party's input is still logged at line 8 and still ages out $\mathtt{DS}$ at line 9. Only the state extension is honest-only. |
+| Clock-time re-read "upon any activation (and thus also initialization)" | Line 6, inside $\mathsf{Advance}$ | $\mathsf{Initialize}$ places no calls by convention, so line 5 sets $\mathtt{t} \gets 0$ and the first real read happens on the first activation. |
+| `Validate`, `ExtendPolicy`, `Blockify`, `predict-time`, `windowSize`, `Delay` | The parameter line | The source parameterizes on all six and tabulates them in Figure 5. |
+| The party sets $\mathcal{P}$, $\mathcal{H}$, $\mathcal{P}_{DS}$ | $\mathbf{P}$, $\mathtt{H}$, $\mathtt{DS}$ | $\mathbf{P}$ is this framework's served-party set, and the source's $\mathcal{P}$ is exactly that — registered parties. The other two are ordinary state. |
+| Corruption handled inside step 1, and `(get-registered)` as a separate adversarial input | $\mathsf{Leak}$, lines 55–58 | Corruption is the framework's. The two adversarial capabilities the source attaches to it — the corruption bookkeeping and the registered-set query — are what $\mathsf{Leak}$ returns and does. |
+| A single input tape carrying `submit`, `read`, `maintain-ledger` and five adversarial messages | Nine named operations | The source dispatches on the message; this framework dispatches on the operation. The adversarial five carry an explicit $\mathit{id}'.F = \mathbf{A}$ guard, which the source expresses by "received on the backdoor tape". |
+| Answers from $\mathcal{A}$ | No sanitizer anywhere | Unusual, and correct: this functionality never *uses* an answer from the adversary slot. Lines 35, 44 and 51 push information out or take a proposal into $\mathtt{Nxt}$, and $\mathsf{ExtendPolicy}$ — not the box — decides what to do with it. There is nothing to sanitize. |
+| $\mathit{sid}_C$ threaded to the clock | The process id | Nothing is conditional on it. |
+
+## Known realizations
+
+**Bitcoin, as the paper's $\mathsf{Ledger\text{-}Protocol}$, in the $(\mathcal{F}_{\mathsf{N\text{-}MC}}, \mathcal{G}_{\mathsf{clock}}, \mathcal{W}^{q}(\mathcal{F}_{\mathsf{RO}}))$-hybrid model** — that is: a multicast network with eventual delivery, a global clock, and a *wrapped* random oracle whose wrapper bounds each party to $q$ queries per round. The wrapper is how proof-of-work enters as a hypothesis rather than as an assumption about the adversary's code, and it is the paper's other contribution. This site carries the components: [*G-clock*](/uc/layer-0-idealized-setup/g-clock/index.qmd), [*F-RO*](/uc/layer-0-idealized-setup/f-ro/index.qmd), and, on [*F-diffuse*](/uc/layer-1-channels-agreement-ledgers/f-diffuse/index.qmd), a sibling of the multicast network — $\mathcal{F}^{\Delta}_{\mathsf{N\text{-}MC}}$ from the Ouroboros Genesis paper, which bounds delivery by $\Delta$ where the box this ledger is proved against guarantees only *eventual* delivery. The difference is exactly the assumption a proof-of-work ledger may not make.
+
+**With which $\mathsf{ExtendPolicy}$ matters more than the realization statement.** The theorem is of the form "Bitcoin realizes $\mathcal{G}_{\mathsf{ledger}}$ *for this policy*", and the policy is where the honest-majority assumption, the chain-growth rate and the chain-quality bound are all encoded. Two papers can both say "realizes $\mathcal{G}_{\mathsf{ledger}}$" and mean incomparable things.
+
+**Realizing it is not the same as being able to use it as a global setup**, per the caveat above. The (Ir)replaceability paper gives positive characterizations too — conditions under which the substitution *is* sound — so the right reading is that this box needs a compatibility check against the statement you want to preserve, not that it is unusable.
+
+## Properties
+
+- **Common prefix, with probability exactly $1$, and it is structural.** There is one $\mathtt{st}$; line 40 returns a prefix of it. No two synchronized honest parties can hold inconsistent states, because neither holds a state at all — they hold indices.
+- **Bounded slack, with probability exactly $1$: at most $\mathit{win}$ blocks.** Lines 16–18 and 52. Enforced twice, once as a snap-back and once as a guard on the adversary's own request.
+- **Monotone pointers, with probability exactly $1$.** Line 52's $q_j \geq |\mathtt{st}_{P_j}|$. An honest party's view never shrinks, so a transaction it has seen settled stays settled.
+- **Liveness and chain quality: not guaranteed by this box at all.** Both are $\mathsf{ExtendPolicy}$'s to give. This is the single most important thing to know about the functionality and the source says it in as many words.
+- **No transaction privacy, and none available.** Line 35.
+- **Desynchronized parties get no guarantee whatsoever for $\Delta$ time.** Lines 24, 41 and 54: the adversary writes their state entire. The only guarantee is that it ends, at line 9.
+- **A submitted transaction may be dropped silently.** Line 15. There is no interface that reports it.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
 
 *References:*
 
-- Badertscher, Maurer, Tschudi, and Zikas. [*Bitcoin as a transaction ledger: A composable treatment*](https://eprint.iacr.org/2017/149). In Advances in Cryptology – CRYPTO 2017, Part I, volume 10401 of LNCS, pages 324–356, 2017.
-- Badertscher, Hesse, and Zikas. [*On the (ir)replaceability of global setups, or how (not) to use a global ledger*](https://eprint.iacr.org/2020/1489). In 19th Theory of Cryptography Conference (TCC), Part II, 2021.
+- Badertscher, Maurer, Tschudi, and Zikas. [*Bitcoin as a transaction ledger: A composable treatment*](https://eprint.iacr.org/2017/149). In Advances in Cryptology – CRYPTO 2017, Part I, volume 10401 of LNCS, pages 324–356, 2017. **The source of the box above**: the functionality $\mathcal{G}_{\mathsf{ledger}}$, pp. 22–23 of ePrint revision `20240405:081352`, with its parameters and state variables tabulated in Figure 5, p. 24. The reason for the conflicting-transaction buffer is §4.3.1, p. 24. This paper also prints $\mathcal{F}_{\mathsf{N\text{-}MC}}$ (Figure 1), the $\mathcal{G}_{\mathsf{clock}}$ variant it uses as a global setup (Figure 2), $\mathcal{F}_{\mathsf{RO}}$ (Figure 3) and the query-bounding wrapper $\mathcal{W}^{q}(\mathcal{F}_{\mathsf{RO}})$ (Figure 4).
+- Badertscher, Hesse, and Zikas. [*On the (ir)replaceability of global setups, or how (not) to use a global ledger*](https://eprint.iacr.org/2020/1489). In 19th Theory of Cryptography Conference (TCC), Part II, 2021. **Prints no ledger functionality**, and is cited here for something more useful than one: it is a composition-theory paper whose running example is precisely the box above, and it establishes that realizing this functionality does not by itself license using it as a global setup. Its concrete counterexample against this box is adversarial reordering; its general rule is that "an extensive adversarial interface at the global setup hinders its replacement". It also gives positive characterizations (Theorems 3.3, 3.5 and 3.10) of when replacement is sound.

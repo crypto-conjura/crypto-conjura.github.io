@@ -30,18 +30,30 @@ observer and therefore one `q` — and Corollary G1 shows it now reaches `thm:ma
 on which `conj:main` holds, and the `√q⁺` relaxation buys nothing there. See
 `split-decomp-kappa-3-r4` §2, findings A2 and A3.
 
-**The `P`-axis, at fixed `q`, in full** (`kappa-4` Theorem H): on region (H2), `conj:main`
-holds at **every** `P ∈ ℕ` with `c = 2`, `C = 13`, if the family may depend on `q`. The
+**The `P`-axis, at fixed `q`, in full** (`kappa-4-r2` Theorem H): on region (H2), the Contract's
+bound holds at **every** `P ∈ ℕ` with `c = 2`, `C = 13`, if the family may depend on `q` — which is
+a *relaxation* of `conj:main`, not `conj:main`, since the conjecture requires the family to depend
+only on `(S₁,S₂,P,γ)`. The
 construction is one line — cap the fixed set at `P₀ := min(P, ⌈t_q⌉)` and clamp the slack at
 `γ₀ := max(γ, N⁻²)`, then apply Theorem E″ at `(P₀, γ₀)` — and it is legal because `def:bf` asks
 `|I| ≤ P`, so a `P₀`-mixture with `P₀ ≤ P` *is* a `P`-mixture. No `P`-hypothesis survives.
 
-**And with the family `q`-free, every `P` at a cost of `√q⁺`** (`kappa-4` Theorem H′): capping at
-the `q`-free `⌈t₀⌉` instead gives `conj:main` on the whole axis with `C(q) = 4√q⁺ + 9`. So the
-`P`-window is **not blank**: it is proved with `C` degraded by exactly `Θ(√q⁺)`, and Theorem H
-identifies that factor as the price of `q`-independence and nothing else. This is the Contract's
-`rem:reduces` made uniform in `P` — the first thing the campaign has said about a remark
-`PROGRESS.md` §2.3 records as cited by no artifact.
+**And with the family `q`-free, every `P` at a cost of `√q⁺`** (`kappa-4-r2` Theorem H′): capping
+at the `q`-free `⌈t₀⌉` gives the bound on the whole axis with `C(q) = 4√q⁺ + 9` — **on the smaller
+region `M ≤ σ'/(2δ)`**, which is (H2) intersected over `q`, binding at `q = 1`. `C(q)` is not
+absolute, so this is not `conj:main` either. It is the campaign's first engagement with the
+Contract's `rem:reduces`, recorded in §2.3 as cited by no artifact, and supplies one direction of
+its question.
+
+**Three corrections to what `kappa-4` (r1) claimed here**, all from the six-referee audit
+(`split-decomp-kappa-4-findings.md`), all repaired in r2. The `P`-window as §2.1 states it — for
+`conj:main`, `C` absolute, family `q`-free — **does not close**; r1's "closes completely" was scoped
+to a different statement. Theorem H′'s hypothesis was malformed (`q` free in the hypothesis, rebound
+in the conclusion) and its literal reading is vacuously satisfied at `q = 0`; the true hypothesis is
+(H2) at *every* `q`. And the claim that the `√q⁺` is "the price of `q`-independence and nothing
+else" was an achievability result asserting a necessity — no lower bound against `q`-free families
+exists anywhere, and `kappa-3-r4` §4's `rem:second` had warned that `rem:reduces`'s `√q⁺` (a
+separation in `P`) and this one (a degradation of `C`) are different objects.
 
 **Also proved, and trivially so — recorded because no artifact had noticed it:** `conj:main`
 holds for `P ≥ N²`, via the point-mass family `Y_{f,ζ} = δ_f`, which is `P`-bit-fixing,
@@ -64,14 +76,15 @@ the `q`-free bound to within `8√2` on that diagonal alone.
 
 ## 2. What is left to prove
 
-### 2.1 The `P`-cap — no longer blocking at fixed `q`; a `√q⁺` in `C` under `q`-free families
+### 2.1 The `P`-cap — not blocking for the `q`-relaxed statement; a `√q⁺` in `C` otherwise
 
-**Superseded in part by `kappa-4`.** Read §1's two new entries first. On region (H2) the
-`P`-axis is closed outright at fixed `q` (Theorem H), and under `q`-free families the whole axis
-is covered with `C(q) = 4√q⁺ + 9` (Theorem H′). What remains on this axis is therefore **a factor
-`√q⁺` in the constant, under `q`-free families only** — not an uncovered region. The `Pδ` analysis
-below stands as written and remains the account of *why* the `q`-free cap cannot move past `t₀`;
-it is no longer the campaign's blocking item at fixed `q`.
+**Superseded in part by `kappa-4-r2`.** Read §1's entries first, including the three corrections.
+On region (H2) the `P`-axis is closed for the `q`-relaxed statement (Theorem H); under `q`-free
+families the axis is covered with `C(q) = 4√q⁺ + 9` on `M ≤ σ'/(2δ)` (Theorem H′). **The window as
+stated below — `conj:main`, `C` absolute, `q`-free family — is not closed by either.** What remains
+on this axis is a factor `√q⁺` in the constant under `q`-free families, on the intersected `M`
+region. The `Pδ` analysis below stands and remains the account of *why* the `q`-free cap cannot move
+past `t₀`; it is no longer the blocking item once `q` may be fixed first.
 
 With `C` required absolute and the family `q`-free, `conj:main` is unproved on the window
 
@@ -181,12 +194,15 @@ converse construction across all artifacts returned nothing. Flagged in `kappa-3
 (`rem:second`), including the caution that the `√q⁺` there may or may not be the same `√q⁺` that
 (H1) relaxes.
 
-**Now engaged, by `kappa-4` §3.** Theorem H′ reproduces `rem:reduces`'s capping uniformly in `P`,
-and Theorem H answers the caution: the two `√q⁺` are **the same one**. It is the price of
-`q`-independence — capping at `t_q` rather than `t₀` removes it and changes nothing else. The
-second open problem is thereby sharpened to: find a `q`-free family achieving what the `q`-aware
-cap achieves, or show none exists. It is now the *only* thing standing between the campaign and
-`conj:main` on the whole `P`-axis, on region (H2).
+**Now engaged, by `kappa-4-r2` §3 — but the caution stands.** Theorem H′ runs an *analogue* of
+`rem:reduces`'s capping uniformly in `P`. It is not the same cap: `rem:reduces` uses
+`A := σ + 2 + log(1/γ)`, which carries a `log(1/γ)` that `σ'` does not and diverges from it as
+`γ → 0`. And `rem:second`'s caution is **not** answered: whether the two `√q⁺` are the same
+phenomenon is still open, and r1's claim that they are was refuted by four referees — one is a
+separation in `P` between two directions of a biconditional, the other a degradation of `C` at fixed
+`P`, sharing only an exponent. What r2 supplies is one direction: `q`-dependence *suffices* to
+remove the `√q⁺` within this route. The second open problem is therefore: find a `q`-free family
+achieving what the `q`-aware cap achieves, or show none exists.
 
 ### 2.4 Smaller mathematical debts
 
@@ -208,7 +224,8 @@ cap achieves, or show none exists. It is now the *only* thing standing between t
 
 ## 3. What is left to check
 
-The lineage standard is **five independent verification angles per artifact**. Nothing is close.
+The lineage standard is **five independent verification angles per artifact**. One arm now meets
+it: `kappa-4` has had six. Everything else is still at zero or one.
 
 | artifact | passes | verdict of record | note |
 |---|---|---|---|
@@ -217,7 +234,8 @@ The lineage standard is **five independent verification angles per artifact**. N
 | `kappa-3` | 1 (superseded) | DEFECTS, F1 upheld | tally does not carry to r2 |
 | `kappa-3-r2` | 1 (superseded) | DEFECTS, 4 upheld | tally does not carry to r3 |
 | `kappa-3-r4` | **0 of 5** | — | r3 never refereed; r4 repairs A3 and inherits the unreviewed lineage |
-| `kappa-4` | **0 of 5** | — | lands with this revision; Theorems H, H′ rest entirely on E″ and D″, both at zero passes |
+| `kappa-4` | **6 of 5** | **DEFECTS** | six blind passes, two model families; Lemma H0 CLEAN and no class-(B) error; 7 class-(A)/(C) upheld — see `split-decomp-kappa-4-findings.md` |
+| `kappa-4-r2` | **0 of 5** | — | repairs all upheld findings; answering an audit is not the same as having had one |
 
 **The weakest link.** Corollary D″ is load-bearing for Theorem E″ and sits in `kappa-2-r2`, which
 has zero passes — and the triage of the earlier `kappa-2` pass **overruled** the referee on D″'s

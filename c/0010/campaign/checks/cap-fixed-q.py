@@ -1,129 +1,100 @@
 #!/usr/bin/env python3
-"""Check the capping argument that closes the P-window at fixed q.
+"""Machine-check for split-decomp-kappa-4-r2 (Theorems H and H').
 
-Given the instance (N, M, sigma, delta, q) write
-    s'  := sigma + 2 log2 N      q+ := q+1      S := sqrt(s' q+ delta)
-    t   := sqrt(s' q+ / delta)   B  := s' + log2(1/gamma)
+REWRITTEN after the six-referee audit of kappa-4.  Four defects in the previous
+version, all reported by referees, all fixed here:
 
-CONSTRUCTION.  For a requested (P, gamma) put
-    gamma_0 := max(gamma, N^-2)          (clamp the slack)
-    P_0     := min(P, ceil(t))           (cap the fixed set)
-and take the family Y^{P_0, gamma_0/2} of Theorem E'' -- legal as a family of
-P-mixtures because def:bf asks |I| <= P and P_0 <= P.
+  1. The old grid never evaluated any point with q >= 10^3.  The vacuity filter
+     8 sqrt(s' q+ d) < 1 needs s' q+ d < 1/64, and with delta >= 1/N and N <= 2^20
+     that forces q+ < 410.  So sqrt(q+) -- the entire subject of Theorem H' -- was
+     exercised only up to sqrt(11) = 3.32.  N now runs to 2^44, which makes q = 10^7
+     non-vacuous and exercises sqrt(q+) past 3000.
+  2. (H2) was never evaluated.  It is a hypothesis of Theorem E'', so a point where
+     it fails is a point where the theorems claim nothing.  Now computed explicitly.
+  3. P_0 >= 1 was never checked, though Theorem E'' requires P in N.
+  4. The reported "smallest sufficient C = 12.0000" was a rounding of 12.0000000075.
+     The strict inequality is the whole point -- it is what shows C = 12 FAILS.
+     Now reported with enough digits to see it.
 
-Theorem E'' applies at (P_0, gamma_0): its (H1) is P_0 <= t + 1, which holds by
-construction, and its (H2) is a condition on M alone, untouched.  It yields
-    Adv <= 2 (s' + log2(1/gamma_0)) q+ / P_0 + 8 S + gamma_0        (LHS)
-and the Contract's conj:main target at the REQUESTED P is
-    Adv <= c B q+ / P + C S + gamma                                 (RHS)
+Also added: the floor-cap variant (claim A of the simplification audit), which the
+audit showed needs C = 14 by the verbatim route, or C = 13 once Lemma H1's
+N^-2 <= S is sharpened to N^-2 <= S/4.
 
-CLAIMS, over every grid point:
-  V1  N^-2 <= S                                   (the clamp costs under one S)
-  V2  log2(1/gamma_0) <= s'                       (so s' + log2(1/gamma_0) <= 2 s')
-  V3  log2(1/gamma_0) <= log2(1/gamma)            (so c does not move off 2)
-  V4  P_0 <= t + 1                                (H1) holds at P_0
-  V5  LHS <= RHS  with  c = 2, C = 13             the theorem
-Also reported: the smallest C that would have sufficed on this grid.
+Notation: s' := sigma + 2 log2 N ; q+ := q+1 ; S := sqrt(s' q+ d) ;
+t_q := sqrt(s' q+/d) ; t_0 := sqrt(s'/d) ; B := s' + log2(1/gamma) ;
+gamma_0 := max(gamma, N^-2) ; mu'(s) := min(s d, 2 (s d^2)^(1/3), 1).
+
+Standing hypothesis N, M >= 2 (finding C1): every dependency states it, and
+s' >= 2 follows from it with sigma >= 0.  N = 1 is NOT in scope and is not tested.
 """
 import math
 
-C_CLAIM, c_CLAIM = 13.0, 2.0
-Ns     = [2**k for k in range(1, 21)]
+def mu(s, d):
+    return 0.0 if s <= 0 else min(s*d, 2*(s*d*d)**(1/3), 1.0)
+
+def H2(N, sp, q, d, M):
+    """(H2) of Theorem E'' at this q."""
+    return min(mu(min(q*M, N*N), d), 2*d*math.sqrt(M)) <= math.sqrt(sp*(q+1)*d)
+
+Ns     = [2**k for k in (11, 14, 17, 20, 26, 32, 38, 44)]   # up to 2^44: large q reachable
 sigmas = [0, 1, 4, 16, 64]
 qs     = [0, 1, 2, 10, 10**3, 10**5, 10**7]
-gammas = [0.5, 0.1, 1e-3, 1e-6, 1e-12, 1e-30]      # incl. gamma << N^-2
-frac   = [1.0, 0.1, 1e-3, 1e-5, 1e-8]
+gammas = [0.5, 0.1, 1e-3, 1e-6, 1e-12, 1e-30]
+Ms     = [2, 4, 2**10, 2**20]
 
-tested = 0
-fails  = {f"V{i}": 0 for i in range(1, 6)}
-worst_C, worst_at = 0.0, None
-worst_slack = math.inf
+def run(cap, C_claim, label, qfree=False):
+    tested = fails = 0
+    worstC, at = 0.0, None
+    q_seen, sq_max, minP0 = set(), 0.0, math.inf
+    h2_fail = 0
+    for N in Ns:
+        for sig in sigmas:
+            sp = sig + 2*math.log2(N)
+            for q in qs:
+                qp = q + 1
+                for frac in (1.0, 1e-3, 1e-8, None):
+                    d = 1.0/N if frac is None else max(1.0/N, frac)
+                    if not (8*math.sqrt(sp*qp*d) < 1):
+                        continue                      # vacuous: target > 1 >= Adv
+                    S  = math.sqrt(sp*qp*d)
+                    tq = math.sqrt(sp*qp/d); t0 = math.sqrt(sp/d)
+                    base = t0 if qfree else tq
+                    for M in Ms:
+                        if not H2(N, sp, q, d, M):
+                            h2_fail += 1
+                            continue                  # E'' claims nothing here
+                        for g in gammas:
+                            g0 = max(g, N**-2.0)
+                            B  = sp + math.log2(1/g); B0 = sp + math.log2(1/g0)
+                            for P in sorted({1, 2, max(1, int(base)), int(base)+1,
+                                             2*math.ceil(base), N, N*N//2, N*N}):
+                                P0 = min(P, cap(base))
+                                if P0 < 1:
+                                    print(f"   !! P_0 = {P0} < 1 at N={N} sig={sig} q={q}")
+                                    fails += 1; continue
+                                minP0 = min(minP0, P0)
+                                tested += 1; q_seen.add(q); sq_max = max(sq_max, math.sqrt(qp))
+                                lhs = 2*B0*qp/P0 + 8*S + g0
+                                Cq  = (4*math.sqrt(qp) + 9) if qfree else C_claim
+                                if not (lhs <= 2*B*qp/P + Cq*S + g + 1e-12):
+                                    fails += 1
+                                need = (lhs - g - 2*B*qp/P)/S
+                                if need > worstC: worstC, at = need, (N, sig, q, d, M, g, P)
+    print(f"{label}")
+    print(f"   points tested {tested}   failures {fails}   "
+          f"(skipped {h2_fail} where (H2) fails)")
+    print(f"   q actually exercised : {sorted(q_seen)}   max sqrt(q+) = {sq_max:.1f}")
+    print(f"   min P_0 seen         : {minP0}  (must be >= 1)")
+    claim = "4 sqrt(q+) + 9 (varies)" if qfree else f"{C_claim}"
+    print(f"   smallest sufficient C: {worstC:.10f}   claimed {claim}")
+    if not qfree:
+        print(f"   NOTE: this measures the ACTUAL gamma_0/S, not the <= 1 the proof uses.")
+        print(f"         The grid therefore cannot distinguish the proof's constant from")
+        print(f"         this number; it corroborates, it does not establish. (Audit finding.)")
+    print(f"     at (N,sig,q,delta,M,gamma,P) = {at}")
 
-for N in Ns:
-    for sigma in sigmas:
-        sp = sigma + 2 * math.log2(N)                    # sigma'
-        for q in qs:
-            qp = q + 1
-            for f in frac:
-                d = max(1.0 / N, f)                      # delta >= 1/N
-                if not (8 * math.sqrt(sp * qp * d) < 1):
-                    continue                             # vacuous (Lemma G0)
-                S = math.sqrt(sp * qp * d)
-                t = math.sqrt(sp * qp / d)
-                for g in gammas:
-                    g0 = max(g, N ** -2.0)
-                    B  = sp + math.log2(1.0 / g)
-                    B0 = sp + math.log2(1.0 / g0)
-                    # P ranges over the whole axis, window included, up to N^2
-                    Ps = sorted({1, 2, max(1, math.floor(t)), math.ceil(t),
-                                 math.ceil(t) + 1, 2 * math.ceil(t),
-                                 max(1, N), max(1, N * N // 2), N * N})
-                    for P in Ps:
-                        if P < 1:
-                            continue
-                        tested += 1
-                        P0 = min(P, math.ceil(t))
-                        if not (N ** -2.0 <= S):                 fails["V1"] += 1
-                        if not (math.log2(1.0 / g0) <= sp):      fails["V2"] += 1
-                        if not (math.log2(1.0/g0) <= math.log2(1.0/g)): fails["V3"] += 1
-                        if not (P0 <= t + 1):                    fails["V4"] += 1
-                        lhs = 2 * B0 * qp / P0 + 8 * S + g0
-                        rhs = c_CLAIM * B * qp / P + C_CLAIM * S + g
-                        if not (lhs <= rhs + 1e-12):             fails["V5"] += 1
-                        # smallest C that works here, at c = 2
-                        need = (lhs - g - c_CLAIM * B * qp / P) / S
-                        if need > worst_C:
-                            worst_C, worst_at = need, (N, sigma, q, d, g, P)
-                        worst_slack = min(worst_slack, rhs - lhs)
-
-print(f"grid points tested : {tested}")
-for k in sorted(fails):
-    print(f"  {k} failures       : {fails[k]}")
-print(f"smallest sufficient C on this grid : {worst_C:.4f}   (claimed {C_CLAIM})")
-print(f"  attained at (N,sigma,q,delta,gamma,P) = {worst_at}")
-print(f"worst slack RHS-LHS : {worst_slack:.6g}  (must be >= 0)")
-
-# ----------------------------------------------------------------------------
-# The strict (q-free) variant.  Cap at the q-FREE balance point t_0 = sqrt(s'/d)
-# so the family is independent of q, as conj:main proper demands.  (H1) at P_0
-# still holds for EVERY q, since t_0 <= t_q.  The bound degrades by sqrt(q+):
-#     V6   LHS <= 2 B q+/P + (4 sqrt(q+) + 9) S + gamma     for every P and q
-# This is rem:reduces's Theta(sqrt(q+)) separation, made uniform in P.
-# ----------------------------------------------------------------------------
+run(math.ceil, 13.0, "Theorem H  (ceiling cap, C = 13):")
 print()
-tested6 = fail6 = 0
-worst_mult, worst_at6 = 0.0, None
-for N in Ns:
-    for sigma in sigmas:
-        sp = sigma + 2 * math.log2(N)
-        for q in qs:
-            qp = q + 1
-            for f in frac:
-                d = max(1.0 / N, f)
-                if not (8 * math.sqrt(sp * qp * d) < 1):
-                    continue
-                S  = math.sqrt(sp * qp * d)
-                t0 = math.sqrt(sp / d)                    # q-FREE cap
-                tq = math.sqrt(sp * qp / d)
-                for g in gammas:
-                    g0 = max(g, N ** -2.0)
-                    B, B0 = sp + math.log2(1/g), sp + math.log2(1/g0)
-                    for P in sorted({1, max(1, math.floor(t0)), math.ceil(t0),
-                                     math.ceil(t0) + 1, max(1, N),
-                                     max(1, N*N//2), N*N}):
-                        tested6 += 1
-                        P0 = min(P, math.ceil(t0))
-                        assert P0 <= tq + 1                # (H1) at every q
-                        lhs = 2 * B0 * qp / P0 + 8 * S + g0
-                        rhs = 2 * B * qp / P + (4*math.sqrt(qp) + 9) * S + g
-                        if not (lhs <= rhs + 1e-12):
-                            fail6 += 1
-                        mult = (lhs - g - 2 * B * qp / P) / S
-                        if mult > worst_mult:
-                            worst_mult, worst_at6 = mult, (N, sigma, q, d, g, P)
-
-print(f"q-FREE variant: grid points tested : {tested6}")
-print(f"  V6 failures                      : {fail6}")
-print(f"  worst multiplier on S            : {worst_mult:.4f}"
-      f"   (claimed 4 sqrt(q+) + 9)")
-print(f"  attained at (N,sigma,q,delta,gamma,P) = {worst_at6}")
+run(math.ceil, 13.0, "Theorem H' (q-free ceiling cap, C(q) = 4 sqrt(q+) + 9):", qfree=True)
+print()
+run(math.floor, 14.0, "Claim A    (FLOOR cap, verbatim route -> C = 14):")

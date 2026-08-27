@@ -18,7 +18,7 @@ The three calls are deliberately unequal in what they are allowed to do. The ext
 
 ## What the script does, so the prompt does not have to
 
-`scripts/harvest_conjectures.py` handles everything mechanical and cached: hashing each PDF so the same paper is never read twice, extracting the per-page text layer with `pdftotext`, grounding every quote, copying `conjura-conjecture.cls` into each new folder, running `pdflatex`/`chktex`/`lacheck` over the result, writing `harvest.json` and `SOURCE.md` as the provenance a reviewer reads first, and moving the PDF to `processed/`. A paper with no usable text layer is refused outright rather than read unchecked — run OCR over it and drop it back in.
+`scripts/harvest_conjectures.py` handles everything mechanical and cached: hashing each PDF so the same paper is never read twice — a paper whose bytes are already in `processed/` is skipped before `pdftotext` runs, and a hash already in the run ledger is skipped after, so neither a lost ledger nor a tidied inbox can cause a re-read — extracting the per-page text layer with `pdftotext`, grounding every quote, copying `conjura-conjecture.cls` into each new folder, running `pdflatex`/`chktex`/`lacheck` over the result, writing `harvest.json` and `SOURCE.md` as the provenance a reviewer reads first, and moving the PDF to `processed/`. A paper with no usable text layer is refused outright rather than read unchecked — run OCR over it and drop it back in.
 
 ---
 

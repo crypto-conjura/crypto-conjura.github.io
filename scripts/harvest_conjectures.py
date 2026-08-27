@@ -4,12 +4,17 @@
 Drop papers into `latex/harvest/`, run this, and each one is read for the
 open problems it actually poses, each promoted problem is written out as a
 `latex/conjectures/<slug>/statement.tex` in the Conjura house style, and the
-PDF is moved to `latex/harvest/processed/` so it is never read twice:
+PDF is moved to `latex/harvest/processed/`:
 
     python3 scripts/harvest_conjectures.py                # everything waiting
     python3 scripts/harvest_conjectures.py --dry-run      # what would be read
     python3 scripts/harvest_conjectures.py --limit 1      # one paper
     python3 scripts/harvest_conjectures.py --report       # what has been done
+
+A paper is never read twice. Two checks enforce that, on purpose: a PDF whose
+bytes are already in `processed/` is skipped before pdftotext runs, and a hash
+already in the run ledger is skipped after. Neither subsumes the other -- see
+"Have we read this paper before?" below -- and `--force` overrides both.
 
 The interesting question is not how to get a model to write a plausible
 conjecture from a paper -- that is easy, and that is the problem. It is how
@@ -571,6 +576,84 @@ def write_source_note(folder, record):
 
 
 # --------------------------------------------------------------------------
+# Have we read this paper before?
+#
+# Two independent answers, because they disagree in both directions and each
+# catches what the other misses.
+#
+# The ledger says whether this *hash* has been read. It survives the file
+# being deleted from processed/ afterwards, which is the case for a tidied
+# inbox.
+#
+# processed/ says whether these *bytes* are already sitting there. It survives
+# the ledger being lost, reset, or -- the case that motivated this -- never
+# written: `main` moves each PDF to processed/ and only then writes the
+# ledger, so a run interrupted in between leaves the paper moved and
+# unrecorded. Without this check the next run re-reads it in full and spends
+# the model budget again, which is exactly what happened to the 14 papers of
+# the 2026-08-25 batch.
+# --------------------------------------------------------------------------
+
+def file_sha256(path, chunk=1 << 20):
+    """The file's sha256, read in chunks.
+
+    PdfDoc hashes the whole file into memory, which is fine for the one paper
+    being read. This is for the pre-check, which runs before pdftotext is
+    spawned and may sweep a backlog, so it does not hold a PDF in memory to
+    decide it is not going to look at it.
+    """
+    digest = hashlib.sha256()
+    with open(path, "rb") as handle:
+        for block in iter(lambda: handle.read(chunk), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def already_processed(pdf_path, digest):
+    """The file in processed/ with these exact bytes, or None.
+
+    Identity is the content hash, never the filename. ePrints get revised, and
+    a revised 2024-870.pdf is a different paper that has to be read: skipping
+    it because processed/ happens to hold a file of that name is precisely the
+    bug this must not introduce. The filename is not consulted at all here.
+
+    Sizes come from stat, and only a same-size candidate is hashed, so the
+    common case -- nothing in processed/ is the same length -- costs one stat
+    per processed file and no reads.
+    """
+    if not PROCESSED.is_dir():
+        return None
+    try:
+        size = pdf_path.stat().st_size
+    except OSError:
+        return None
+    here = pdf_path.resolve()
+    for candidate in sorted(PROCESSED.glob("*.pdf")):
+        if candidate.resolve() == here:
+            continue          # an explicit path argument inside processed/
+        try:
+            if candidate.stat().st_size != size:
+                continue
+            if file_sha256(candidate) == digest:
+                return candidate
+        except OSError:
+            continue          # vanished mid-sweep; not our problem to report
+    return None
+
+
+def same_name_in_processed(pdf_path):
+    """A file of this name in processed/, whatever its contents.
+
+    Only ever used to say so out loud. A name that matches while the bytes do
+    not is the revised-ePrint case, and the run reads the paper -- but silently
+    reading what looks like an already-processed file is the kind of thing a
+    reviewer should be told about rather than left to infer.
+    """
+    same = PROCESSED / pdf_path.name
+    return same if same.is_file() else None
+
+
+# --------------------------------------------------------------------------
 # Ledger
 # --------------------------------------------------------------------------
 
@@ -623,6 +706,25 @@ def now():
 def process(pdf_path, backend, prompts, args, ledger):
     """Read one paper end to end. Returns (folders_written, note)."""
     print(f"\n=== {pdf_path.name}")
+
+    # Before pdftotext, before the ledger: is this paper already in
+    # processed/? Cheapest check available and the one that does not depend on
+    # any state the pipeline itself has to have written correctly.
+    if not args.force:
+        digest = file_sha256(pdf_path)
+        seen = already_processed(pdf_path, digest)
+        if seen is not None:
+            print(f"  sha256 {digest[:12]}; already in "
+                  f"{seen.relative_to(ROOT)}, byte for byte. Skipping.")
+            print("    The copy in latex/harvest/ is redundant and can be")
+            print("    deleted; --force reads it again anyway.")
+            return [], "skipped-processed", digest
+        clash = same_name_in_processed(pdf_path)
+        if clash is not None:
+            print(f"  ! {clash.relative_to(ROOT)} has this name but different"
+                  " bytes.")
+            print("    Reading this as a new version of the paper.")
+
     doc = PdfDoc(pdf_path)
     print(f"  {doc.pages} pages, {doc.size / 1e6:.1f}MB, sha256 {doc.sha256[:12]}")
 
@@ -890,7 +992,7 @@ def main():
     ap.add_argument("--keep", action="store_true",
                     help="leave processed PDFs in latex/harvest/ instead of moving them")
     ap.add_argument("--force", action="store_true",
-                    help="re-read a paper already in the ledger")
+                    help="re-read a paper already in the ledger or in processed/")
     args = ap.parse_args()
 
     if args.report:
@@ -929,6 +1031,12 @@ def main():
             continue
         total += written
         outcomes.append((pdf.name, status, len(written)))
+        # `skipped-processed` is deliberately not here. Those bytes are
+        # already in processed/, so moving would write a second, identical
+        # copy under the collision name move_to_processed picks -- and the
+        # inbox copy is the one a human can see and delete. Deleting it here
+        # instead would be this script's first destructive act on a file it
+        # did not create, which is not a default worth having.
         if status in ("ok", "skipped-duplicate") and not args.keep:
             dest = move_to_processed(pdf, sha)
             print(f"  moved to {dest.relative_to(ROOT)}")
@@ -946,6 +1054,7 @@ def main():
         "ok": "read",
         "failed": "FAILED",
         "skipped-duplicate": "skipped, already in the ledger",
+        "skipped-processed": "skipped, already in processed/ (left in place)",
         "no-text-layer": "SKIPPED, no text layer (run OCR)",
         "dry-run": "not read (dry run)",
     }

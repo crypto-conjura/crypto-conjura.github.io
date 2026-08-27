@@ -48,7 +48,14 @@ VALUES = (DEFINED, PENDING, NONE_KNOWN)
 # either has one or has nothing at all, and a half-written box fails
 # gen_interface.py --check long before it reaches this script.
 BOX = re.compile(r'<div class="cj-interface">')
-FIELD = re.compile(r"^definition:\s*(.+?)\s*$", re.M)
+# `[ \t]*` rather than `\s*`, and the difference is not cosmetic. `\s` matches
+# a newline, `$` under re.M matches at end of string, and `definition:` is the
+# last line of every entry's frontmatter -- so `\s*$` greedily ate the trailing
+# newline and FIELD.sub below wrote `definition: "Defined"---`, fusing the
+# field into the frontmatter's closing fence and destroying the block. It only
+# fires on a page the script actually rewrites, which is why 104 entries went
+# by without it showing up.
+FIELD = re.compile(r"^definition:[ \t]*(.+?)[ \t]*$", re.M)
 FRONT = re.compile(r"\A---\n(.*?\n)---\n", re.S)
 
 

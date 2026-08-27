@@ -1,0 +1,85 @@
+%% The interface box of f-rp, the one source for both the book
+%% and uc/.../f-rp/index.qmd. Edit here and nowhere else:
+%% scripts/gen_interface.py regenerates the page's HTML from this file,
+%% and CI fails the build when the two have drifted apart.
+\begin{interface}[nofloat]{Functionality $\Frp$ \\
+\params{$\PID$, \quad $\Ps$, \quad $\admits$, \quad
+$\uses := \{(\Adv,\serves)\}$, \quad $\pars := (R, \mathbb{G}), \ D := R \times \mathbb{G}$}}
+
+{\scriptsize
+\setlength{\columnsep}{1.4em}
+\begin{multicols}{2}
+\opsig{$\op{Initialize}()$}:
+\begin{algorithmic}[1]
+\setcounter{contline}{0}\algcont
+\State $\V{T} : \bits \times D \to D \cup \{\unset\}$; \ $\V{T}[*,*] \gets \unset$
+  \Comment{one lazily-sampled permutation per key}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Enc}(\mathit{pw}, M)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P \notin \Cs \ \wedge\ M \in \mathbb{G}$} \label{ln:rphonest}
+\State $r \gets_{\$} R$ \label{ln:rpcoins}
+  \Comment{the caller does not choose it}
+\If{$\V{T}[\mathit{pw}, (r,M)] \neq \unset$}
+  \State \textbf{return} $\V{T}[\mathit{pw}, (r,M)]$
+\EndIf
+\State $c \gets_{\$} \{\hat{c} \in D : \nexists m : \V{T}[\mathit{pw}, m] = \hat{c}\}$ \label{ln:rpfresh}
+\State $\V{T}[\mathit{pw}, (r,M)] \gets c$; \ \textbf{return} $c$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Dec}(\mathit{pw}, c)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id.P \notin \Cs \ \wedge\ c \in D$}
+\State $(r, M) \gets \Frp.\op{AdvDec}(\mathit{pw}, c)$ \label{ln:rpselfcall}
+  \Comment{the source's own definition of $\op{Dec}$}
+\State \textbf{return} $M$ \label{ln:rpdiscard}
+  \Comment{the randomness is discarded, never returned}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\columnbreak
+
+\opsig{$\id.\op{AdvEnc}(\mathit{pw}, (r,M), T)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F = \Apid \ \wedge\ (r,M) \in D \ \wedge\ T \in \mathbb{G}$} \label{ln:rpadvonly}
+\If{$\V{T}[\mathit{pw}, (r,M)] \neq \unset$}
+  \State \textbf{return} $\V{T}[\mathit{pw}, (r,M)]$
+\EndIf
+\State $s \gets_{\$} \{\hat{s} \in R : \nexists \hat{m} : \V{T}[\mathit{pw}, \hat{m}] = (\hat{s}, T)\}$ \label{ln:rphalf}
+  \Comment{only the $R$ half is sampled}
+\State $\V{T}[\mathit{pw}, (r,M)] \gets (s, T)$; \ \textbf{return} $(s, T)$ \label{ln:rpforced}
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{AdvDec}(\mathit{pw}, c)$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\Req{$\id'.F = \Apid \ \wedge\ c \in D$}
+\If{$\exists m : \V{T}[\mathit{pw}, m] = c$}
+  \State \textbf{return} $m$ \label{ln:rpconsistent}
+\EndIf
+\State $m \gets_{\$} \{\hat{m} \in D : \V{T}[\mathit{pw}, \hat{m}] = \unset\}$ \label{ln:rpinverse}
+\State $\V{T}[\mathit{pw}, m] \gets c$; \ \textbf{return} $m$
+\algsave
+\end{algorithmic}
+\vspace{1.4ex}
+
+\opsig{$\id.\op{Leak}()$} \quad from $\id'$
+\begin{algorithmic}[1]
+\algcont
+\State \textbf{return} $\none$ \label{ln:rpnoleak}
+  \Comment{no per-party state; see $\op{AdvEnc}$ and $\op{AdvDec}$}
+\algsave
+\end{algorithmic}
+\end{multicols}}
+\end{interface}

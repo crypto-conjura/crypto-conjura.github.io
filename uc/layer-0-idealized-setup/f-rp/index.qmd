@@ -1,10 +1,136 @@
 ---
-title: "F-RP — Ideal cipher, two-sided permutation"
+title: "F-RP — Randomized half-ideal cipher"
 status: "Idealized Setup"
 layer: 0
-definition: "Not yet written"
+definition: "Defined"
 ---
 
-*F-RP* (Ideal cipher, two-sided permutation) is part of *Idealized Setup and Resources* in the UC functionality encyclopedia. Status: an idealized setup assumption or shared resource.
+*F-RP* (Randomized half-ideal cipher) is part of *Idealized Setup and Resources* in the UC functionality encyclopedia. Status: an idealized setup assumption or shared resource.
 
-Information about this functionality's precise definition, known realizations, properties, and any formal artifacts has not been added yet.
+**The stub's title was a claim, and it was wrong.** This page read *"Ideal cipher, two-sided permutation"* until this entry was written. There is no such box to transcribe. The ideal cipher is used as a hybrid all over the UC literature — Bradley, Camenisch, Jarecki, Lehmann, Neven and Xu's password-authenticated public-key encryption paper (ePrint 2019/199) is typical: it proves its protocol "in the $\mathcal{F}_{\mathsf{IC}}$-hybrid model", then says outright, on p. 39, that it assumes the ideal cipher "is made available to all parties through an ideal functionality $\mathcal{F}_{\mathsf{IC}}$, but for the ease of exposition use the algorithm-based" form instead — and prints no such functionality anywhere. What *is* printed, and what this page carries, is a deliberate **relaxation** of it: the randomized half-ideal cipher, a cipher on a product domain $D = R \times \mathbb{G}$ in which the adversary may program half of every ciphertext it asks for, and the honest caller may neither choose nor see the other half.
+
+The relaxation is not a modelling convenience. Its authors introduced it because the full ideal cipher on a group is what they could not realize, and the half-ideal one is what they could; and a later paper (below) shows that the obvious way to hand the missing half back to honest parties breaks the realization outright. This is the rare case where a functionality's *weaknesses* are the content, so they are what the commentary is about.
+
+## Functionality
+
+Reading the box: $\mathsf{require}$ refuses the call, and the framework answers $\textsf{rej}$; $\mathbf{C}$ is the set of corrupted parties, and $\mathit{id}'.F = \mathbf{A}$ tests that the caller occupies the adversary slot; $\square$ marks a table entry never set, as against $\bot$ for none-or-refused. The parameters are the two factors of the domain: $R$, the randomness space, and $\mathbb{G}$, the group the plaintexts live in, with $D := R \times \mathbb{G}$ carrying both plaintexts and ciphertexts. Keys are written $\mathit{pw}$ throughout, following the source, which notes that they are arbitrary bitstrings and are called passwords only because every application of this object is a PAKE.
+
+```{=html}
+<div class="cj-interface">
+<div class="cj-interface-head">
+<div class="cj-interface-title">Functionality \(\mathcal{F}_{\mathsf{HIC}}\)</div>
+<div class="cj-interface-params">\(\mathit{pid}\), &nbsp; \(\mathbf{P}\), &nbsp; \(\mathbf{N}\), &nbsp; \(\mathbf{U} := \{(\mathcal{A},\mathsf{serves})\}\), &nbsp; \(\mathit{par} := (R, \mathbb{G}), \ D := R \times \mathbb{G}\)</div>
+</div>
+<div class="cj-interface-body">
+
+<div class="cj-op">
+<div class="cj-op-sig">Initialize():</div>
+<ol class="cj-code" start="1">
+<li>\(\mathtt{T} : \{0,1\}^* \times D \to D \cup \{\square\}\); &nbsp;\(\mathtt{T}[*,*] \gets \square\)<span class="cj-comment">// one lazily-sampled permutation per key</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Enc(<span class="cj-id">pw</span>, <span class="cj-id">M</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="2">
+<li>\(\textbf{require}\ \mathit{id}.P \notin \mathbf{C} \ \wedge\ M \in \mathbb{G}\)</li>
+<li>\(r \gets_{\$} R\)<span class="cj-comment">// the caller does not choose it</span></li>
+<li>\(\textbf{if}\ \mathtt{T}[\mathit{pw}, (r,M)] \neq \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \mathtt{T}[\mathit{pw}, (r,M)]\)</span></li>
+<li>\(c \gets_{\$} \{\hat{c} \in D : \nexists m : \mathtt{T}[\mathit{pw}, m] = \hat{c}\}\)</li>
+<li>\(\mathtt{T}[\mathit{pw}, (r,M)] \gets c\); &nbsp;\(\textbf{return}\ c\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Dec(<span class="cj-id">pw</span>, <span class="cj-id">c</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="8">
+<li>\(\textbf{require}\ \mathit{id}.P \notin \mathbf{C} \ \wedge\ c \in D\)</li>
+<li>\((r, M) \gets \mathcal{F}_{\mathsf{HIC}}.\mathsf{AdvDec}(\mathit{pw}, c)\)<span class="cj-comment">// the source's own definition of \(\mathsf{Dec}\)</span></li>
+<li>\(\textbf{return}\ M\)<span class="cj-comment">// the randomness is discarded, never returned</span></li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.AdvEnc(<span class="cj-id">pw</span>, <span class="cj-id">(r</span>, <span class="cj-id">M)</span>, <span class="cj-id">T</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="11">
+<li>\(\textbf{require}\ \mathit{id}'.F = \mathbf{A} \ \wedge\ (r,M) \in D \ \wedge\ T \in \mathbb{G}\)</li>
+<li>\(\textbf{if}\ \mathtt{T}[\mathit{pw}, (r,M)] \neq \square\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ \mathtt{T}[\mathit{pw}, (r,M)]\)</span></li>
+<li>\(s \gets_{\$} \{\hat{s} \in R : \nexists \hat{m} : \mathtt{T}[\mathit{pw}, \hat{m}] = (\hat{s}, T)\}\)<span class="cj-comment">// only the \(R\) half is sampled</span></li>
+<li>\(\mathtt{T}[\mathit{pw}, (r,M)] \gets (s, T)\); &nbsp;\(\textbf{return}\ (s, T)\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.AdvDec(<span class="cj-id">pw</span>, <span class="cj-id">c</span>)<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="16">
+<li>\(\textbf{require}\ \mathit{id}'.F = \mathbf{A} \ \wedge\ c \in D\)</li>
+<li>\(\textbf{if}\ \exists m : \mathtt{T}[\mathit{pw}, m] = c\ \textbf{then}\)</li>
+<li><span class="cj-ind">\(\textbf{return}\ m\)</span></li>
+<li>\(m \gets_{\$} \{\hat{m} \in D : \mathtt{T}[\mathit{pw}, \hat{m}] = \square\}\)</li>
+<li>\(\mathtt{T}[\mathit{pw}, m] \gets c\); &nbsp;\(\textbf{return}\ m\)</li>
+</ol>
+</div>
+
+<div class="cj-op">
+<div class="cj-op-sig"><span class="cj-id">id</span>.Leak()<span class="cj-op-from">from <span class="cj-id">id</span>&prime;</span></div>
+<ol class="cj-code" start="21">
+<li>\(\textbf{return}\ \bot\)<span class="cj-comment">// no per-party state; see \(\mathsf{AdvEnc}\) and \(\mathsf{AdvDec}\)</span></li>
+</ol>
+</div>
+
+</div>
+</div>
+```
+
+*Source: Figure 2, p. 11 of Bruno Freitas Dos Santos, Yanqi Gu and Stanislaw Jarecki, "Randomized Half-Ideal Cipher on Groups with applications to UC (a)PAKE", EUROCRYPT 2023, ePrint 2023/295, revision `20230228:063301`. The PDF page and the printed folio agree, so 11 is unambiguous.*
+
+- **Lines 3 and 10 are the "half", and they are the whole of what the honest party gives up.** Line 3 samples the randomness itself rather than accepting it, and line 10 throws it away rather than returning it. An honest caller therefore submits only $M$ and receives only $M$ back; the $R$ component of the plaintext is a value it never touches in either direction. Everything else in the box is an ordinary lazily-sampled permutation.
+- **That restriction is necessary, and a later paper proves it by exhibiting the attack.** Arriaga, Barbosa, Jarecki and Škrobot (ePrint 2024/308, §2) ask the natural question — why not a $\mathcal{F}_{\mathsf{HIC}^+}$ that lets honest parties pick $r$ on the way in and read it on the way out — and answer it with a three-line distinguisher against the source's own realization. The environment picks $r$ and $M$, encrypts through an honest party to get $(s,T)$, then asks its adversary for $t \gets H'(\mathit{pw}, T)$ and for $\mathsf{IC}.\mathsf{Enc}(t, r)$, which in the real world returns exactly that $s$. The simulator saw none of the first query, so it cannot make the third answer agree. Under the box as printed the same environment is stuck at step one: it can hand the honest $\mathsf{Enc}$ interface a message and nothing more, so it never learns the $r$ that would let it check. Lines 3 and 10 are load-bearing in the strict sense that deleting either one makes the functionality unrealizable by the construction it was written for.
+- **Line 14 is the "half" on the adversary's side, and it is the mirror image.** $\mathsf{AdvEnc}$ takes an extra argument $T$ and *installs it* as the $\mathbb{G}$ component of the ciphertext, sampling only the $R$ component around it. A full ideal cipher would sample the ciphertext whole. This is the programmability a simulator needs and the precise sense in which the object is ideal on one factor and adversarial on the other.
+- **Line 9 is the strangest line in the box, and it is the source's own.** Honest decryption is not defined; it is *delegated*, by an explicit self-call to the adversarial interface. So decrypting a ciphertext nobody has seen before samples a fresh preimage at line 19 and installs it in the table, exactly as an adversarial decryption would. The two directions run the same code and diverge only at line 10, where the honest caller loses $r$. A reader who expects the honest and adversarial halves of a functionality to be independent should read this line twice.
+- **Lines 6, 14 and 19 are three exclusion constraints, and together they are the permutation.** Line 6 samples a ciphertext no plaintext already maps to; line 19 samples a plaintext not already mapped; line 14 samples only within the fibre $R \times \{T\}$, excluding the $s$ values already spoken for there. $\mathtt{T}[\mathit{pw}, \cdot]$ is thereby maintained as a partial injection at every step, which is what makes "one permutation per key" true of a table that is only ever filled in lazily.
+- **The exclusion at line 14 is what the *ideal* cipher's realization could not deliver.** The source closes its introduction by showing that plain 2-Feistel — its construction without the block cipher — lets an adversary manufacture $t^2$ valid plaintext/ciphertext pairs out of $2t$ group elements, so that $M_{ij}/M_{i'j}$ is the same for every $j$. "Creating such correlations on plaintexts is impossible in the UC HIC", because every pair an adversary holds must have come through line 14 or line 19, and both sample freshly subject to exclusion. That sentence is a statement about these two lines and nothing else.
+- **Lines 4, 12 and 17 are memoization, and they do different work in the two directions.** At line 12 the adversary chooses $(r,M)$, so a repeat query is ordinary and the hit is the point. At line 4 the honest caller does not choose $r$ — line 3 just sampled it — so the test fires only on a collision in $R$, and it is there for consistency rather than for use.
+- **Line 21 returns $\bot$ rather than the table, and that is not an omission.** This functionality holds no per-party state at all: one table per key, shared across everyone the instance serves. An adversary that wants to know the table can already read it point by point through lines 11 and 16, and it must, because reading it *through the interface* is what makes the lazy sampling well defined. Handing back $\mathtt{T}$ wholesale on corruption would return $\square$ at every entry not yet queried, which tells the adversary nothing it did not already know and commits the functionality to nothing.
+
+**Mismatch register.**
+
+| The source | This box | Why |
+|---|---|---|
+| No leakage interface | $\mathsf{Leak}$ at line 21, returning $\bot$ | Required here. There is no per-party state to return; see the last bullet above. |
+| "Interfaces for Adversary $\mathcal{A}$ (**or corrupt parties**)" | Lines 11 and 16 test $\mathit{id}'.F = \mathbf{A}$ alone | In this framework a corrupt party's calls are placed by the occupant of the adversary slot, so the two coincide in every run that matters. A corrupt party calling in its own name is refused here and would be admitted there. |
+| "on query … from party $\mathsf{P}$" | Lines 2 and 8 test $\mathit{id}.P \notin \mathbf{C}$ | The source's word for the honest interface is "honest parties", which is exactly a test against the corruption set. |
+| $\mathit{sid}$, "a global constant, hence we omit it from notation" | The process id | Unusually explicit: most sources thread a session identifier and leave its role implicit. Nothing here is conditional on it. |
+| $\mathsf{THIC}_{\mathit{pw}}$, one empty table per $\mathit{pw} \in \{0,1\}^*$, all initialized up front | One table $\mathtt{T}$ keyed by $(\mathit{pw}, m)$, everywhere $\square$ | Same object. Initializing infinitely many tables is the source's way of saying the table is lazy; $\square$ says it directly. |
+| The table is a **set of pairs**, tested for membership in both directions | A partial function $\mathtt{T}[\mathit{pw}, \cdot]$, with the reverse tests written out at lines 6, 17 and 19 | Same object. The function form makes the partial-injection invariant visible, which is the box's one non-obvious property. |
+| $\mathsf{Enc}$ and $\mathsf{Dec}$ return "to $\mathsf{P}$"; $\mathsf{AdvEnc}$ and $\mathsf{AdvDec}$ return "to $\mathcal{A}$" | Plain returns | Delivery is to the caller here, so the distinction is carried by the guards at lines 2, 8, 11 and 16 rather than by the return. |
+
+## Known realizations
+
+**The modified 2-Feistel construction, m2F, from the source itself (Theorem 1, p. 13).** It realizes $\mathcal{F}_{\mathsf{HIC}}$ on $R \times \mathbb{G}$ for $R = \{0,1\}^n$, given two random oracles $H : \{0,1\}^* \times \{0,1\}^n \to \mathbb{G}$ and $H'\!: \{0,1\}^* \times \mathbb{G} \to \{0,1\}^\mu$ and an ideal cipher $\mathsf{BC} : \{0,1\}^\mu \times \{0,1\}^n \to \{0,1\}^n$, with $\mu$ and $n$ both $\Omega(\kappa)$. The change from 2-Feistel is one line: where 2F sets $s = k \oplus r$ for $k = H'(\mathit{pw}, T)$, m2F sets $s = \mathsf{BC}.\mathsf{Enc}(k, r)$. So the realization needs an ideal cipher on *bitstrings*, which is standard, in order to deliver a half-ideal cipher on a *group*, which is not — that trade is the paper's contribution.
+
+**Plain 2-Feistel does not realize it**, by the $t^2$-correlations attack quoted above. This is worth stating alongside the positive result, because 2-Feistel had been used for the same purpose through the POPF abstraction and the separation is what motivates the modification.
+
+**The full ideal cipher on a group has no realization here, and that is why this page exists.** Instantiating an ideal cipher over a group is the problem the source opens with; the half-ideal relaxation is what it offers instead, on the argument that the relaxation "is as easy to use as IC in the security proofs" for EKE and for the aPAKEs built on it.
+
+## Properties
+
+- **One permutation per key, exactly.** $\mathtt{T}[\mathit{pw}, \cdot]$ is a partial injection after every operation, by the exclusions at lines 6, 14 and 19, and distinct keys index disjoint tables. The guarantee is structural rather than probabilistic: it holds in every run, not with high probability.
+- **No adversarially manufactured correlations, with advantage exactly $0$.** Every plaintext/ciphertext pair the adversary holds arrived through line 14 or line 19, each of which samples freshly. The source's $t^2$-pairs attack on 2-Feistel is precisely a violation of this, and its being impossible against the box is what the separation argument turns on.
+- **Half-programmability, and no more.** Line 14 lets the adversary fix the $\mathbb{G}$ component of a ciphertext and nothing else; line 19 lets it fix nothing at all. A simulator gets exactly one factor to play with.
+- **Honest-party randomness is unavailable in both directions.** By lines 3 and 10, no honest interface reveals $r$, and this is a property of the *functionality*, not of any realization of it — which is the strongest form the guarantee could take, and the reason the $\mathcal{F}_{\mathsf{HIC}^+}$ attack does not apply.
+- **No delivery guarantee, and no deadline.** Every operation answers its caller immediately; nothing is delegated to the adversary slot for scheduling. This is a setup functionality, and it behaves like one.
+
+## Formal artifacts
+
+No machine-checked formalization yet.
+
+*References:*
+
+- Dos Santos, Gu, and Jarecki. [*Randomized half-ideal cipher on groups with applications to UC (a)PAKE*](https://eprint.iacr.org/2023/295). In Advances in Cryptology – EUROCRYPT 2023. **The source of the box above**: Figure 2, p. 11 of ePrint revision `20230228:063301`. The realization is the m2F construction of §4, Theorem 1, p. 13; the argument that plain 2-Feistel does not realize it is on p. 8. **Added to this page's references by this entry** — the page previously cited nothing at all.
+- Arriaga, Barbosa, Jarecki, and Škrobot. [*C'est très CHIC: A compact password-authenticated key exchange from lattice-based KEM*](https://eprint.iacr.org/2024/308). In Advances in Cryptology – ASIACRYPT 2024. Prints no half-ideal-cipher box of its own — it uses m2F as a white-box drop-in and proves its protocol directly in the RO and IC models — but its §2 contains the $\mathcal{F}_{\mathsf{HIC}^+}$ argument quoted above, which is the clearest available evidence that the restriction at lines 3 and 10 is necessary rather than incidental. **Added by this entry.**
+- Arriaga, Mestel, Oupický, Rønne, and Škrobot. [*HIC is all you need: Practical post-quantum password-authenticated public-key encryption*](https://eprint.iacr.org/2026/020). 2026. Reprints this functionality as its Figure 4, "from [33]", threading $\mathit{sid}$ explicitly through a list rather than keying a table by password. Checked line by line against the source: it is a restatement, not a revision, so it does not supersede the definition taken. **Added by this entry** as the current use of the object.
+- Bradley, Camenisch, Jarecki, Lehmann, Neven, and Xu. [*Password-authenticated public-key encryption*](https://eprint.iacr.org/2019/199). 2019. Cited here only for the negative fact in the lead: it works in the $\mathcal{F}_{\mathsf{IC}}$-hybrid model and declines to print $\mathcal{F}_{\mathsf{IC}}$, which is the normal treatment of the ideal cipher in UC papers and the reason this slot carries a relaxation instead. **Added by this entry.**
+- Gu, Jarecki, and Krawczyk. [*KHAPE: Asymmetric PAKE from key-hiding key exchange*](https://eprint.iacr.org/2021/873). In Advances in Cryptology – CRYPTO 2021, pages 701–730, 2021. Named by the source as one of the protocols the half-ideal cipher is meant to serve: its argument for the relaxation is that HIC "is as easy to use as IC in the security proofs" for EKE and for the asymmetric PAKEs of this paper and its EUROCRYPT 2022 successor. Listed for the application rather than a definition — KHAPE predates the abstraction and is proved directly in the ideal cipher model.

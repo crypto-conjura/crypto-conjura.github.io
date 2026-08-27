@@ -1,0 +1,88 @@
+---
+title: "Contracting vectors on the hypergrid"
+subtitle: "The Johnson-Lindenstrauss lemma has exceptions; finding them is where the cryptography is"
+---
+
+## Motivation
+
+The Johnson-Lindenstrauss lemma says a scaled random projection from $\mathbb{R}^n$
+to $\mathbb{R}^m$ is an approximate isometry on any small enough set. Read the
+other way, it admits exceptions: vectors that *are* badly contracted must exist
+once the set is large enough. Whether they can be found is a different question,
+and the answer depends sharply on what the vector is allowed to look like.
+
+With arbitrary real coordinates the exceptions are easy — take anything in the
+kernel. Restrict the coordinates to a bounded integer grid $([-B,B] \cap
+\mathbb{Z})^n$ and a statistical-computational gap opens: vectors achieving a given
+contraction exist far below the level at which any efficient algorithm can produce
+one. That gap is not a nuisance. It is exactly the raw material for a hash function
+whose distortion guarantee holds against computationally bounded adversaries even
+though counterexamples exist — which is what adversarial robustness of semantic
+embeddings actually requires.
+
+## Provenance and history
+
+Andrej Bogdanov, Alon Rosen, Neekon Vafa and Vinod Vaikuntanathan, *Adaptive
+Robustness of Hypergrid Johnson-Lindenstrauss* ([IACR ePrint
+2025/666](https://eprint.iacr.org/2025/666)), define the problem and chart it from
+both sides.
+
+The *contracting hypergrid vector* problem: given $A \sim \mathcal{N}(0,1)^{m \times
+n}$ with $m < n$, find $x \in ([-B,B] \cap \mathbb{Z})^n$ with $\|Ax\|_2 <
+\kappa\|x\|_2\sqrt{m}$. Any non-zero $x$ gives $\kappa = \Theta(1)$ in expectation,
+so the interest is in pushing $\kappa$ down. Writing $\alpha = m/n$, the
+statistical threshold is $\kappa_{\mathrm{stat}} = \Theta((2B+1)^{-1/\alpha})$ and
+the paper establishes $\kappa_{\mathrm{comp}} = \tilde{\Theta}(\sqrt{\alpha}/B)$.
+
+Two algorithms give the upper side: a kernel-rounding algorithm, and an online
+algorithm — processing the columns of $A$ in sequence and fixing each entry of $x$
+before seeing the rest — inspired by Bansal and Spencer's online discrepancy
+algorithm. Two lower bounds give the other side, and they are not comparable. An
+overlap gap property gives evidence of hardness against stable algorithms in the
+regime $\alpha \gg B^2\kappa^2\log(1/\kappa)$. A lattice-based argument, using
+ideas from the CLWE line, gives hardness against *all* polynomial-time algorithms
+for $\kappa = O(1/(Bn^{1/2+\varepsilon}))$ under the worst-case polynomial hardness
+of standard lattice problems — quantitatively weaker, over a narrower range, but
+unconditional in the algorithm class. Closing the distance between the two is left
+as an open question.
+
+In the analysis of their own online algorithm a specific constant appears: a drift
+pushes a process toward the fixed point $1/(2\mu) = \sqrt{\pi/8} \approx 0.627$,
+where $\mu = \sqrt{2/\pi}$. Their Conjecture 1 asserts this is the genuine barrier
+for online algorithms, not an artefact of one analysis.
+
+On the cryptographic side they build robust locality-sensitive hash functions for
+the Euclidean metric from the hardness of the problem, with distortion
+$O(1/\kappa)\sqrt{n/m}$; these imply collision resistance, so the gap yields
+cryptography beyond the existence of one-way functions.
+
+## Parameter lattice
+
+Thresholds for $\kappa$, in terms of the aspect ratio $\alpha = m/n$ and the
+coordinate bound $B$.
+
+| Threshold | Value | Status |
+|---|---|---|
+| **Statistical** | $\Theta((2B+1)^{-1/\alpha})$ | solutions exist above, not below |
+| **Online algorithm** | $O(\sqrt{\alpha}/B)$, when $n \ge Km\log B$ | proved |
+| **Both algorithms combined** | $O(\sqrt{\alpha}\log B/B)$, all $n > m$ | proved |
+| **Conjectured online barrier** | $(\sqrt{\pi/8} - \delta)\sqrt{\alpha}/B$ | [c/0094](/c/0094/) — open |
+| **OGP (stable algorithms)** | hard for $\alpha \gg B^2\kappa^2\log(1/\kappa)$ | proved |
+| **Lattice-based (all p.p.t.)** | hard for $\kappa = O(1/(Bn^{1/2+\varepsilon}))$ | proved under worst-case lattice hardness |
+
+Relation to the studied neighbours:
+
+| Problem | Domain of $x$ | Objective |
+|---|---|---|
+| **CHV** | $([-B,B] \cap \mathbb{Z})^n$ | $\|Ax\|_2$, normalized by $\sqrt{m}$ |
+| **Symmetric Binary Perceptron** | $\{-1,1\}^n$ | $\|Ax\|_\infty$ |
+| **Nearest Boolean Vector** | $\{-1,1\}^n$ | proximity to a random subspace |
+
+At $B = 1$ both the Bansal and Spencer algorithm and the
+Gamarnik–Kızıldağ–Perkins–Xu overlap-gap bound match this paper's, so $B$ is the
+axis along which the hypergrid version is new. The SBP's own collision-resistance
+question is [c/0095](/c/0095/).
+
+## Statements in this hub
+
+- [The Online Threshold for Contracting Hypergrid Vectors](/c/0094/) — open

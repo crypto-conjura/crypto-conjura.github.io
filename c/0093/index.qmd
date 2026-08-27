@@ -1,0 +1,179 @@
+---
+id: "0093"
+problem: quantum-stabilizer-decoding
+draft: lsn-tableau-randomizing-self-reduction
+title: "No Tableau-Randomizing Self-Reduction for Learning Stabilizer with Noise"
+short_title: "No Self-Reduction for LSN"
+areas: [quantum, foundations]
+topics: [stabilizer-codes, learning-parity-with-noise, average-case-hardness, quantum-information]
+model: standard
+form: impossibility
+assumption_class: unconditional
+category: research-open
+revision: 1
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: adaptation
+  by: ai
+  note: "The source has the barrier conditionally and names the missing piece exactly: a bound on the scrambling gap eta(eps), which it expects 'analysis techniques generalizing the scrambling gap formalism' to supply. That is a definite technical target with the surrounding machinery already built -- Clifford entropies and Pauli mixing times, both developed in the same paper. What keeps it off routine is that the quantity is new and its behaviour is not obviously tractable, and the statement quantifies over all restrictions V and all weights w at once."
+status_summary: "Conjecture 5.20 of the source. It proves no random self-reduction exists from an arbitrary worst-case QNCP instance into LSN, naming exchange symmetry between code and error as the obstruction, and proves the tableau-randomizing barrier conditionally on the scrambling gap being polynomially related to eps. It is explicit that this is not an impossibility for random self-reductions in general."
+status_updated: 2026-08-27
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Khesin, Lu, Poremba, Ramkumar, Vaikuntanathan, Average-Case Complexity of Quantum Stabilizer Decoding, IACR ePrint 2025/1769", url: "https://eprint.iacr.org/2025/1769"}
+  - {cite: "Brakerski, Lyubashevsky, Vaikuntanathan, Wichs, Worst-Case Hardness for LPN and Cryptographic Hashing via Code Smoothing, EUROCRYPT 2019", url: "https://doi.org/10.1007/978-3-030-17659-4_21"}
+statement_sha: "81e89e4915700dffef9d7b70d6b529a160cd201bbe9947aeec37216fdb54df6c"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+<!-- topics:start -->
+<div class="cj-tags cj-page-topics"><a class="cj-tag cj-tag-topic" href="/problems/by-topic/average-case-hardness/">Average Case Hardness</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/learning-parity-with-noise/">Learning Parity With Noise</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/quantum-information/">Quantum Information</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/stabilizer-codes/">Stabilizer Codes</a></div>
+<!-- topics:end -->
+
+Classical coding theory has a prized tool: a worst-case to average-case
+self-reduction, turning an arbitrary hard decoding instance into a random one. For
+quantum stabilizer codes nobody has one, and the source explains why it is harder
+than it looks. A stabilizer instance carries two Pauli objects — the code and the
+error — and a reduction must scramble both at once, but making one maximally
+random destroys the other's decodability. The source turns that tension into a
+quantitative barrier and conjectures that, for reductions working by randomizing
+the stabilizer tableau, the barrier is absolute.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [LaTeX source](latex/main.tex) · Formal statement — *not yet formalized*
+
+**The definition (the source's Definition 5.7).** Fix $n, k$ and let
+$\mathcal{D}_{n,k,p} = \mathrm{Unif}(\mathrm{Stab}(n,k)) \otimes
+\mathcal{D}_p^{\otimes n}$, where $\mathrm{Stab}(n,k)$ is the set of
+$[\![n,k]\!]$ stabilizer codes and $\mathcal{D}_p$ is the depolarizing channel
+with probability $p$. A $(\mathcal{V}, \varepsilon, w, p)$ *random self-reduction
+distribution* is an efficiently sampleable distribution $\mathcal{R}_n$ over
+Cliffords $\mathcal{C}_n$ satisfying
+$$\mathrm{TV}_{\mathbf{R} \sim \mathcal{R}_n}\bigl((\mathbf{R}\mathbf{C},\, \mathbf{R}\mathbf{E}\mathbf{R}^\dagger),\, \mathcal{D}_{n,k,p}\bigr) \le \varepsilon$$
+for all $\mathbf{C}$ whose stabilizer code lies in $\mathcal{V}$ and all
+$\mathbf{E}$ with $\mathrm{wt}(\mathbf{E}) \le w$.
+
+The reduction is *strong* when $\varepsilon = \mathrm{negl}(n)$, and *non-trivial*
+when $p = \frac{3}{4} - \frac{1}{\mathrm{poly}(n)}$. Both qualifiers matter: $p =
+\frac{3}{4}$ is always achievable and worthless, being equivalent to replacing the
+encoded state by the maximally mixed state.
+
+**Conjecture (the source's Conjecture 5.20).** There is no $(\mathcal{V},
+\varepsilon, w, p)$ tableau-randomizing random self-reduction operator, in the
+sense of Definition 5.7, for $\mathsf{LSN}$, for any $\mathcal{V} \subseteq
+\mathcal{C}_n$ and any $w \ge 1$, such that $\varepsilon = \mathrm{negl}(n)$ and
+$p = \frac{3}{4} - \frac{1}{\mathrm{poly}(n)}$.
+
+**How the source frames it.** Page 62: "It remains an open question as to whether
+these barriers can be surpassed, or can be strengthened to a complete
+impossibility theorem for random self-reductions. We conjecture that, at least in
+the case of tableau-randomizing reductions, analysis techniques generalizing the
+scrambling gap formalism will reveal unconditionally that a reduction cannot
+scramble the tableau."
+
+**The named obstruction.** Page 52: "The culprit preventing the existence of such
+a reduction is exchange symmetry between the code and the error — both are Pauli
+strings which are randomly scrambled during the reduction, but one must be
+maximally random while the other cannot be maximally random (less we lose
+decodability), which is impossible." The source shows an analogous no-go holds
+classically too, which is why the classical restriction trick is the thing to
+imitate: Brakerski, Lyubashevsky, Vaikuntanathan and Wichs obtain a classical
+self-reduction, but only for a restricted subset of linear codes.
+
+**What is proved, and the shape of the gap.** The barrier the source establishes is
+conditional on the scrambling gap $\eta(\varepsilon)$ satisfying $\eta(\varepsilon)
+= O(\mathrm{poly}(n)\varepsilon^b)$ for some constant $b > 0$; under that, for any
+$k$, $w$ and $\mathcal{V} \subseteq \mathrm{Stab}(n,k)$, no number $d$ of repeated
+samples from $\mathcal{R}_n$ yields a strong non-trivial self-reduction. So the
+missing step is a bound on the scrambling gap itself.
+
+**Explicitly outside the statement.** The source is careful, and so is this: "these
+barriers do not definitely prove the non-existence of a random self-reduction."
+Three escapes it names, none of which the conjecture rules out — reductions that
+are not tableau-randomizing; reductions where $n, k$ increase by a polynomial
+factor, i.e. where $\mathbf{R}$ is an isometry rather than a unitary; and
+reductions with $\varepsilon = 1/\mathrm{poly}(n)$, for which non-triviality would
+require smaller $p$, e.g. $p < \frac{3}{4} - \Omega(1)$.
+
+### Sources
+
+- Khesin, Lu, Poremba, Ramkumar and Vaikuntanathan. [*Average-Case Complexity of Quantum Stabilizer Decoding*](https://eprint.iacr.org/2025/1769). IACR ePrint 2025/1769. The source. Definition 5.7 is on page 52, the conditional barrier via the scrambling gap on page 57, and Conjecture 5.20 with the discussion of what it does and does not rule out on page 62.
+- Brakerski, Lyubashevsky, Vaikuntanathan and Wichs. [*Worst-Case Hardness for LPN and Cryptographic Hashing via Code Smoothing*](https://doi.org/10.1007/978-3-030-17659-4_21). EUROCRYPT 2019. The classical self-reduction the source compares against, which circumvents the analogous barrier by restricting the worst-case instances.
+
+## Proof
+
+View PDF — *no proof written yet* · LaTeX source — *no proof written yet* · Formal proof — *not yet formalized*
+
+Open, with the missing piece named precisely.
+
+**The route the source expects.** Bound the scrambling gap. Its conditional theorem
+already converts such a bound into the barrier, for every restriction and weight at
+once, and it says it expects "analysis techniques generalizing the scrambling gap
+formalism" to deliver it unconditionally. The supporting machinery — new bounds on
+Clifford entropies and Pauli mixing times — is developed in the same paper and is
+what a resolution would build on.
+
+**Why both parameters are load-bearing.** Drop $\varepsilon = \mathrm{negl}(n)$ and
+the claim concerns a weaker object the source explicitly does not address. Drop $p
+= \frac{3}{4} - 1/\mathrm{poly}(n)$ and the statement is false, since $p =
+\frac{3}{4}$ is always achievable. A refutation must hit both targets at once,
+which is the same coupling that creates the barrier in the first place.
+
+**Checked against the literature, 2026-08-27.** No unconditional barrier and no
+self-reduction found. Targeted check on this line and the classical
+code-smoothing line, not an exhaustive sweep.
+
+## Discussion
+
+**Why a self-reduction is wanted even though hardness is already proved.** The
+source establishes average-case hardness directly, by reducing $\mathsf{LPN}$ to
+$\mathsf{LSN}$: decoding a random stabilizer code with even a single logical qubit
+is at least as hard as decoding a random classical code at constant rate, so any
+sub-exponential algorithm for a typical stabilizer code at any rate would be a
+cryptographic breakthrough. A self-reduction would give something different in
+kind — hardness of typical instances from worst-case instances of the *same*
+problem, without importing a classical assumption.
+
+**Neighbouring open questions in the same section, all distinct from this.**
+Whether there is a reduction from $\mathsf{LSN}(k,n,p)$ to $\mathsf{LPN}(\Theta(np),
+\Theta(n), \Theta(p))$. Whether the source's search-to-decision reduction, which
+needs a $\mathsf{QNCP}(k,n,w')$ solver for *every* $w' \le w$, can be weakened to
+one working for weight exactly $w$. Whether a decision-to-search reduction exists
+for Search $\mathsf{QNCP}$ or $\mathsf{recQNCP}$, where the difficulty is that
+proposed solutions cannot be efficiently verified. And whether the average-case
+search-decision equivalence for $\mathsf{LSN}_{\mathrm{poly}}$, which relies on
+multiple samples, holds with a single sample.
+
+**What a reviewer should be suspicious of, in order.** First, whether a claimed
+barrier is unconditional or still rests on a scrambling-gap hypothesis. Second,
+whether it covers all $\mathcal{V}$ and all $w \ge 1$, as the conjecture states, or
+only a restricted family — the restricted case is what the classical result
+exploits, so a barrier that fails for some $\mathcal{V}$ is much weaker. Third,
+whether a claimed self-reduction is tableau-randomizing at all, since the
+conjecture says nothing about the others.
+
+## Open obligations
+
+- [ ] Bound the scrambling gap so the source's conditional barrier becomes unconditional — or refute Conjecture 5.20 with a strong, non-trivial tableau-randomizing self-reduction.
+- [ ] Say which of the three named escapes a resolution leaves open: non-tableau-randomizing reductions, dimension-increasing isometries, or the $\varepsilon = 1/\mathrm{poly}(n)$ regime.
+- [ ] Settle whether a reduction from $\mathsf{LSN}$ to $\mathsf{LPN}$ at the stated parameters exists, which the source poses alongside.
+- [ ] Formalize the statement in Lean; nothing here has been formalized.
+
+:::

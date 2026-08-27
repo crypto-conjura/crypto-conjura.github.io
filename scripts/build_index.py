@@ -118,6 +118,16 @@ TOPIC_SLUGS = {
     "arithmetic-cryptography",
     "non-interactive-secure-computation",
     "code-based-cryptography",
+    "reed-solomon-codes",
+    "t-wise-independence",
+    "stabilizer-codes",
+    "overlap-gap-property",
+    "locally-testable-codes",
+    "proximity-testing",
+    "fault-tolerant-circuits",
+    "randomized-encodings",
+    "planted-subgraph-problems",
+    "randomness-complexity",
 }
 
 MODELS = {"rom", "prom", "icm", "ggm", "qrom", "standard", "other"}

@@ -1,0 +1,177 @@
+---
+id: "0086"
+problem: expand-accumulate-codes
+draft: ea-code-distance-over-rings
+title: "Minimum Distance of Expand-Accumulate Codes over Arbitrary Rings"
+short_title: "EA-Code Distance over Rings"
+areas: [information-theoretic, mpc]
+topics: [code-based-cryptography, dual-distance, pseudorandom-correlation-functions, learning-parity-with-noise]
+model: standard
+form: lower-bound
+assumption_class: unconditional
+category: research-open
+revision: 1
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: adaptation
+  by: ai
+  note: "The binary case is proved and the obstruction is named precisely: the expander Hoeffding bound the argument applies costs a factor of ln q over a ring of size q, forcing R much less than 1/ln q. So what is wanted is a concentration inequality for sums of sparse ring-valued vectors that does not pay that factor, or a different route to the same weight-class bound. That is a definite technical target in well-charted territory, and the source's belief that the conjecture holds is supported by weight-distribution experiments. Rings with zero divisors are the case where the intuition is weakest, which is why Z_16 was one of the two experiments."
+status_summary: "Theorem 3.10 of the source proves the distance bound over F_2 only. Over a ring of size q its proof technique forces the rate to satisfy R much less than 1/ln q, which the source states it believes is an artefact of the argument, supported by small-parameter weight-distribution experiments over F_17 and Z_16."
+status_updated: 2026-08-27
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Boyle, Couteau, Gilboa, Ishai, Kohl, Resch, Scholl, Correlated Pseudorandomness from Expand-Accumulate Codes, IACR ePrint 2022/1014", url: "https://eprint.iacr.org/2022/1014"}
+  - {cite: "Boyle, Couteau, Gilboa, Ishai, Kohl, Scholl, Efficient Pseudorandom Correlation Generators: Silent OT Extension and More, CRYPTO 2019", url: "https://doi.org/10.1007/978-3-030-26954-8_16"}
+statement_sha: "500d7604d4cf666544c5869b17d88131f6fafdbfaeb97a925d67a7d6aadc6da1"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+<!-- topics:start -->
+<div class="cj-tags cj-page-topics"><a class="cj-tag cj-tag-topic" href="/problems/by-topic/code-based-cryptography/">Code Based Cryptography</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/dual-distance/">Dual Distance</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/learning-parity-with-noise/">Learning Parity With Noise</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/pseudorandom-correlation-functions/">Pseudorandom Correlation Functions</a></div>
+<!-- topics:end -->
+
+An expand-accumulate code is about the simplest linear code that still behaves
+well: multiply by a sparse random matrix, then take running prefix sums. The
+second step is one addition per coordinate, which is why the construction is fast
+enough to sit underneath pseudorandom correlation generators for secure
+computation. What those applications need from the code is minimum distance — a
+low-weight dual codeword is exactly a linear attack on the underlying dual-LPN
+assumption — and the source proves the bound it needs over the binary field. Over
+a larger ring its proof degrades in a suspicious way, forcing the rate to shrink
+like $1/\ln q$ in the ring size. The authors conjecture that the distance does not
+in fact degrade, and that the restriction is an artefact of the argument.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [LaTeX source](latex/main.tex) · Formal statement — *not yet formalized*
+
+**The code (the source's Definitions 3.1 and 3.2).** The accumulator matrix $A
+\in \mathcal{R}^{N\times N}$ has ones on and below the main diagonal and zeros
+elsewhere, so $A\vec x = \vec y$ means $y_i = \sum_{j\le i}x_j$, computable with
+$N-1$ sequential ring additions. To sample an expand-accumulate code, draw rows
+$\vec r_1^\top,\dots,\vec r_n^\top \leftarrow \mathsf{Ber}_p^N(\mathcal{R})$
+independently — each coordinate independently non-zero with probability $p$ — let
+$B$ be the matrix with those rows, and output $H = BA$. Write $H \leftarrow
+\mathsf{EAGen}(n,N,p,\mathcal{R})$; when $\mathcal{R}$ is omitted it is
+$\mathbb{F}_2$.
+
+**What is proved, over $\mathbb{F}_2$ only (the source's Theorem 3.10).** Let $n
+\le N$ with $R = n/N$ constant, let $C > 0$ and $p = C\ln N/N \in (0,1/2)$, fix
+$\delta \in (0,1/2)$ and put $\beta = 1/2 - \delta$. Then for sufficiently large
+$N$,
+$$\Pr\bigl[d(H) \ge \delta N \ \big|\ H \leftarrow \mathsf{EAGen}(n,N,p)\bigr]
+\;\ge\; 1 - 2\sum_{r=1}^{n}\binom{n}{r}\exp\!\left(-2\,\frac{1-\xi_r}{1+\xi_r}\right),$$
+where $\xi_r = (1-2p)^r$, provided $R$ and $C$ satisfy the source's two stated
+inequalities, among them $C > 1/\beta^2$.
+
+**Conjecture.** Theorem 3.10 holds with $\mathbb{F}_2$ replaced by an arbitrary
+ring $\mathcal{R}$, with no restriction of the rate $R$ in terms of $q =
+|\mathcal{R}|$: under the same conditions on $R$, $C$ and $\delta$, a code
+sampled from $\mathsf{EAGen}(n,N,p,\mathcal{R})$ has minimum distance at least
+$\delta N$ with at least the same probability.
+
+**How the source states it.** Page 21: "the expander Hoeffding bound that we
+apply does not appear to work well in this case; in particular, we are forced to
+require the rate $R \ll \frac{1}{\ln q}$, where $q$ is the size of the ring
+$\mathcal{R}$." And: "However, we believe that this is an artefact of the proof".
+And: "We conjecture that the minimum distance should at the very least not
+degrade over larger rings; in fact, we believe that it should increase
+commensurately."
+
+**The stronger clause is recorded, not promoted.** That the distance should
+*increase* with $q$ is nowhere quantified in the source, so the conjecture above
+takes the weaker half. A resolution establishing an improvement should report the
+improvement it gets.
+
+### Sources
+
+- Boyle, Couteau, Gilboa, Ishai, Kohl, Resch and Scholl. [*Correlated Pseudorandomness from Expand-Accumulate Codes*](https://eprint.iacr.org/2022/1014). IACR ePrint 2022/1014. The source. Definitions 3.1 and 3.2 are on pages 13–14, Theorem 3.10 on page 18, and the arbitrary-rings discussion with the conjecture on page 21.
+- Boyle, Couteau, Gilboa, Ishai, Kohl and Scholl. [*Efficient Pseudorandom Correlation Generators: Silent OT Extension and More*](https://doi.org/10.1007/978-3-030-26954-8_16). CRYPTO 2019. The pseudorandom correlation generator line the source's codes are built for, and the reason the distance bound is what matters.
+
+## Proof
+
+View PDF — *no proof written yet* · LaTeX source — *no proof written yet* · Formal proof — *not yet formalized*
+
+Open, with an unusually precise obstruction.
+
+**Where the proof breaks.** The named culprit is the expander Hoeffding bound.
+Over $\mathbb{F}_2$ the argument bounds, for each weight class, the probability
+that a codeword falls below the distance target, using concentration for a sum
+indexed by the sparse rows. Over a ring of size $q$ the same bound is available
+only after shrinking the rate to $R \ll 1/\ln q$, which makes the theorem vacuous
+for large rings at constant rate. So the substance of the conjecture is not a new
+distance argument from scratch but a concentration inequality that does not pay
+$\ln q$ — or a different route to the same weight-class bound.
+
+**Why larger rings should if anything help.** A non-zero entry of the sparse
+matrix carries more information over a larger ring, so the cancellations that
+produce low-weight codewords should become rarer rather than more common. The
+source's experiments compute average weight distributions for codes sampled by
+$\mathsf{EAGen}(4,20,4,\mathbb{F}_{17})$ and
+$\mathsf{EAGen}(4,20,4,\mathbb{Z}_{16})$ — deliberately one field and one ring
+with zero divisors, since the latter is where cancellation is easiest and a
+counterexample would most plausibly live.
+
+**Where a refutation would live.** In rings with many zero divisors, at constant
+rate. A family $\mathcal{R}_q$ for which the distance genuinely degrades as $q$
+grows would show the rate restriction is real, and would matter directly for the
+ring-based instantiations of correlated pseudorandomness.
+
+**Checked against the literature, 2026-08-27.** No extension of Theorem 3.10 to
+arbitrary rings found. Targeted check on the expand-accumulate line, not an
+exhaustive sweep of the coding-theory literature.
+
+## Discussion
+
+**Why the ring case is not a generalization for its own sake.** Pseudorandom
+correlation generators are wanted over the rings the application computes over —
+$\mathbb{Z}_{2^k}$ for arithmetic on machine words, large fields for
+arithmetic circuits. A distance bound available only over $\mathbb{F}_2$, or only
+at rate $\ll 1/\ln q$, leaves exactly those instantiations without the guarantee
+that motivates the construction.
+
+**What the conjecture does not cover.** The distance bound resists linear
+attacks; it is not by itself the dual-LPN assumption, and a proof would not turn
+that assumption unconditional. It removes one class of attack, which is what the
+source claims for it in the binary case.
+
+**A separate open problem in the same discussion.** Immediately before the
+passage this statement comes from, the source compares row distributions for $B$
+over $\mathbb{F}_2$ — Bernoulli, exact weight, regular — reports that regular
+noise appears best at putting mass on heavier weights, and says
+"[p]roviding theoretical guarantees for these other row distributions remains an
+open problem meriting further study." That is about which distribution on $B$ to
+analyse, not which ring to work over, and it is not this statement.
+
+**What a reviewer should be suspicious of, in order.** First, whether a claimed
+ring version really keeps the rate unrestricted in $q$, since a bound with any
+$\ln q$ dependence in $R$ is the status quo. Second, whether it covers rings with
+zero divisors and not only finite fields. Third, whether the failure probability
+matches Theorem 3.10's, since a weaker bound at the same rate is progress but not
+the conjecture.
+
+## Open obligations
+
+- [ ] Prove Theorem 3.10 over an arbitrary ring with no restriction of $R$ in terms of $q$.
+- [ ] Or supply the missing concentration inequality for sparse ring-valued sums that avoids the $\ln q$ loss.
+- [ ] Or exhibit a ring family at constant rate for which the distance genuinely degrades.
+- [ ] Quantify the source's stronger belief that distance *increases* with $q$, if it can be established.
+- [ ] Formalize the statement in Lean; nothing here has been formalized.
+
+:::

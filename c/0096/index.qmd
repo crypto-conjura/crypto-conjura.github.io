@@ -1,0 +1,195 @@
+---
+id: "0096"
+problem: conflict-checkable-codes
+draft: conflict-checkable-local-to-global
+title: "Conflict Checkable Codes with Local-to-Global Consistency Beyond Half the Singleton Bound"
+short_title: "Conflict Checkable Codes Beyond Half-Singleton"
+areas: [information-theoretic, secret-sharing]
+topics: [locally-testable-codes, code-based-cryptography, threshold-secret-sharing]
+model: standard
+form: separation
+assumption_class: unconditional
+category: research-open
+revision: 1
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: adaptation
+  by: ai
+  note: "The candidate object already exists -- the source's almost-MDS Theorem 1.3 code -- and the whole question is whether it satisfies local-to-global consistency, which the source says it does not know. That is a concrete property of a constructed (if non-explicit) code, and the conjecture is already proved at d = n-1. What keeps it from routine is that the code is non-explicit, built from a probabilistic lemma about degree-t polynomials with bounded integer coefficients, so checking a global property of it is not a matter of inspection; and if it fails, a new construction is needed."
+status_summary: "Theorem 1.8 proves k <= (n-d+2)/2 for codes that are both comparison-based and local-to-global consistent. Theorem 1.3 gives an almost-MDS conflict checkable code at k >= n-d+1-epsilon which bypasses that bound, but it is neither comparison-based nor known to be local-to-global consistent. The conjecture names comparison-basedness as the culprit. It already holds at d = n-1."
+status_updated: 2026-08-27
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Applebaum, Kachlon, Conflict Checkable and Decodable Codes and Their Applications, IACR ePrint 2023/627", url: "https://eprint.iacr.org/2023/627"}
+  - {cite: "Cramer, Damgard, Maurer, General Secure Multi-Party Computation from Any Linear Secret-Sharing Scheme, EUROCRYPT 2000", url: "https://doi.org/10.1007/3-540-45539-6_22"}
+  - {cite: "Raz, Safra, A Sub-Constant Error-Probability Low-Degree Test, and a Sub-Constant Error-Probability PCP Characterization of NP, STOC 1997", url: "https://doi.org/10.1145/258533.258641"}
+statement_sha: "e6cb1a039124df693dfb49b58e108e4646acd7973a9c658623c0f26ab11a5a6f"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+<!-- topics:start -->
+<div class="cj-tags cj-page-topics"><a class="cj-tag cj-tag-topic" href="/problems/by-topic/code-based-cryptography/">Code Based Cryptography</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/locally-testable-codes/">Locally Testable Codes</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/threshold-secret-sharing/">Threshold Secret Sharing</a></div>
+<!-- topics:end -->
+
+Store a codeword across $n$ servers, one symbol each, and have every pair of
+servers announce publicly whether their two symbols are consistent with some legal
+codeword. What can be inferred from that graph alone? Enough to check membership in
+the code, and — with an extra property — to decode. Two structural properties keep
+appearing together in the constructions: conflicts decided by comparing a function
+of each symbol, and consistency on any large enough set lifting to a genuine
+codeword. Together they cost exactly a factor of two in rate against the Singleton
+bound. The source has an almost-optimal code with neither, and conjectures the
+first property is what costs the factor.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [LaTeX source](latex/main.tex) · Formal statement — *not yet formalized*
+
+**The setting.** Let $C$ be an $(n,k,d)_q$ code and let a possibly corrupted
+codeword be distributed among $n$ servers. The *conflict functions* $G =
+(G_{i,j})_{1 \le i < j \le n}$ record, for each pair of positions, whether the two
+symbols could co-occur in a codeword; the resulting graph is the *conflict graph*.
+$C$ is *conflict checkable* if from the conflict graph of a vector one can decide
+whether the vector is a codeword.
+
+**Local-to-global consistency (the source's Lemma 1.6).** An $(n,k,d)_q$ conflict
+checkable code $C$ provides *local-to-global consistency* if for every set $I
+\subseteq [n]$ of at least $n-d+1$ indices and every symbols $(\sigma_i)_{i \in
+I}$, if $G_{i,j}(\sigma_i,\sigma_j) = 0$ for every $i < j$ in $I$, then there
+exists a codeword $c \in C$ with $c[i] = \sigma_i$ for every $i \in I$.
+
+**Comparison-based (the source's Section 4).** $C$ is *comparison-based* if for
+every $1 \le i < j \le n$ there exist $f_{i,j}, f_{j,i} : [q] \to [q]$ with
+$G_{i,j}(\sigma,\tau) = \mathrm{NEQ}(f_{i,j}(\sigma), f_{j,i}(\tau))$, where
+$\mathrm{NEQ}$ returns $1$ if its arguments differ.
+
+Why these matter: local-to-global consistency is *sufficient* for conflict
+decodability with an efficient decoder (Lemma 1.6), and *necessary* for robust
+conflict decodability. And every linear code over a finite field is
+comparison-based (Theorem 4.7). So for linear codes the two properties come as a
+package — and the package has a price.
+
+**The rate bound (the source's Theorem 1.8).** For every $(n,k,d)_q$
+comparison-based conflict checkable code with $1 < d < n$ that satisfies
+local-to-global consistency, $k \le \frac{n-d+2}{2}$. In particular the bound holds
+for any *linear* conflict checkable code satisfying local-to-global consistency.
+
+**The almost-MDS code (the source's Theorem 1.3).** For every $n \ge 3$, every $2
+\le d \le n-1$ and every $\epsilon > 0$ there is an alphabet size $q =
+q(n,d,\epsilon)$ for which there exists an $(n,k,d)_q$ conflict checkable code with
+$k \ge n-d+1-\epsilon$.
+
+**Conjecture.** There is a conflict checkable code satisfying local-to-global
+consistency that bypasses Theorem 1.8: for some $n$ and some $1 < d < n$, an
+$(n,k,d)_q$ conflict checkable code with local-to-global consistency and $k >
+\frac{n-d+2}{2}$.
+
+**How the source states it, and what it is really claiming.** Page 11: "We
+conjecture that the former property is the important one and that the bound from
+Theorem 1.8 can be bypassed by some conflict checkable code with local-to-global
+consistency." "The former property" is comparison-basedness. So the content is an
+attribution of blame: of the two hypotheses of Theorem 1.8, the source predicts
+comparison-basedness forces the factor of two, and that local-to-global consistency
+alone is compatible with an almost-MDS rate. By Theorem 4.7 such a code cannot be
+linear.
+
+**It is already true at one endpoint.** The source records the case: "Observe that
+this conjecture holds for the special case of $d = n-1$ since, in this case, the
+conflict checkable code from Theorem 1.3 trivially satisfies local-to-global
+consistency (any pair of consistent entries must be consistent with a unique
+codeword)." So the statement is not open across the whole parameter range, and a
+resolution should say which range of $d$ it covers. The degenerate reason it holds
+at $d = n-1$ — sets $I$ of size $n-d+1 = 2$ — also shows why that case carries no
+information about the rest.
+
+**What is honestly not known about the candidate.** Theorem 1.3's code is the
+natural candidate, and the source is careful: "We do not know whether the code from
+Theorem 1.3 satisfies local-to-global consistency." It is also non-explicit. So the
+shortest route is to settle that one question about an existing object — and a proof
+that this code does *not* have the property would leave the conjecture open while
+removing its most obvious candidate.
+
+### Sources
+
+- Applebaum and Kachlon. [*Conflict Checkable and Decodable Codes and Their Applications*](https://eprint.iacr.org/2023/627). IACR ePrint 2023/627. The source. Theorem 1.3 is on page 7, Lemma 1.6 on page 9, Theorem 1.8 and the conjecture on page 11, Lemma 1.12 on page 13, and the comparison-based definition and Theorem 4.7 in Section 4, pages 29 and 36.
+- Cramer, Damgård and Maurer. [*General Secure Multi-Party Computation from Any Linear Secret-Sharing Scheme*](https://doi.org/10.1007/3-540-45539-6_22). EUROCRYPT 2000. One of the two works in which the symmetric-bivariate-polynomial code the source uses appears implicitly.
+- Raz and Safra. [*A Sub-Constant Error-Probability Low-Degree Test, and a Sub-Constant Error-Probability PCP Characterization of NP*](https://doi.org/10.1145/258533.258641). STOC 1997. The source notes closely related arguments appear here, used to derive better soundness for a local test — an information-theoretic goal — whereas it uses the same combinatorial structure for an algorithmic one.
+
+## Proof
+
+View PDF — *no proof written yet* · LaTeX source — *no proof written yet* · Formal proof — *not yet formalized*
+
+Open, with a single well-defined question standing in front of it.
+
+**The shortest route.** Determine whether the Theorem 1.3 code satisfies
+local-to-global consistency. If it does, the conjecture follows immediately for all
+$2 \le d \le n-1$, since that code is almost-MDS at $k \ge n-d+1-\epsilon >
+(n-d+2)/2$ for $d < n$. If it does not, a new construction is needed, and the
+conjecture stays open with its candidate gone.
+
+**Why that question is not settled by inspection.** The code is non-explicit, built
+from a probabilistic lemma: for every $n \ge 3$, $1 \le t \le n-2$ and $\epsilon >
+0$ there is a family $\mathcal{F}$ of degree-$t$ polynomials with coefficients in
+$\{0,\dots,m\}$, of size $|\mathcal{F}| \ge m^{t+1-\epsilon}$, such that any
+$\binom{t+2}{2}$ polynomials in $\mathcal{F}$ agreeing pairwise on $t+2$ points are
+all interpolated by a single degree-$t$ polynomial. Local-to-global consistency is a
+statement about *all* sets $I$ of size $n-d+1$, so verifying it means proving a
+global property of a randomly chosen family.
+
+**What the failure would cost.** Nothing about Theorem 1.8 — that is proved. What
+would be lost is the attribution of blame, and with it the prediction that
+non-linear, non-comparison-based codes can be simultaneously almost-MDS and
+locally-to-globally consistent.
+
+**Checked against the literature, 2026-08-27.** No resolution found. Targeted check
+on this paper's line and the neighbouring locally-testable-codes literature it
+cites, not an exhaustive sweep.
+
+## Discussion
+
+**What the factor of two currently costs.** Not an abstract loss. The source's
+bivariate-polynomial code is linear, conflict checkable and local-to-global
+consistent, and it "half-meets" the Singleton bound at $k = (n-d+2)/2$ — so by
+Theorem 1.8 it is rate-optimal in its class. Downstream, Lemma 1.12 gives a
+Singleton-type bound $k \le (n-2t+1)/2$ for comparison-based $t$-robust conflict
+decodable codes, met by the same code. A code satisfying the conjecture would break
+that whole chain of tight bounds, which is what makes the attribution worth
+settling.
+
+**A separate open question in the same paper.** The source shows how to find a
+$(1+\epsilon)$-approximation of $t$-vertex covers in polynomial time in the graphs
+it works with, and notes that "[t]he question of finding an exact vertex cover in
+polynomial-time algorithm in such graphs remains as an interesting open question."
+That bears on decoder efficiency, not rate, and it is not this statement.
+
+**What a reviewer should be suspicious of, in order.** First, whether a claimed code
+is comparison-based — if it is linear over a field it is, by Theorem 4.7, so it
+cannot bypass the bound and the claim must be wrong somewhere. Second, whether the
+range of $d$ is non-degenerate, since $d = n-1$ is already settled. Third, whether
+local-to-global consistency is verified for *all* sets of size $n-d+1$ and not just
+for a convenient family.
+
+## Open obligations
+
+- [ ] Determine whether the Theorem 1.3 code satisfies local-to-global consistency; if it does, the conjecture follows.
+- [ ] Failing that, construct a conflict checkable, local-to-global consistent code with $k > (n-d+2)/2$ for some $1 < d < n-1$.
+- [ ] Or prove that local-to-global consistency alone forces $k \le (n-d+2)/2$, refuting the attribution of blame.
+- [ ] Formalize the statement in Lean; nothing here has been formalized.
+
+:::

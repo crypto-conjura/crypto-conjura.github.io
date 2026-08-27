@@ -1,0 +1,248 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  Ben-Sasson-Carmon-Ishai-Kopparty-Saraf's Conjecture 8.4: proximity
+%  gaps and correlated agreement for Reed-Solomon codes hold up to
+%  capacity, not only up to the Johnson bound.
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{PROXIMITY GAPS FOR RS CODES UP TO CAPACITY}
+
+\newcommand{\F}{\mathbb{F}}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\RS}{\mathrm{RS}}
+\newcommand{\Caff}{\mathcal{C}_{\mathrm{Affine}}}
+\newcommand{\dist}{\Delta}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{Proximity Gaps for Reed--Solomon Codes Up to Capacity}
+\cjsubtitle{From the Johnson bound $1 - \sqrt{\rho}$ to capacity
+  $1 - \rho$, with polynomial error}
+\cjstatus{Statement: AI-written from Eli Ben-Sasson, Dan Carmon, Yuval
+  Ishai, Swastik Kopparty and Shubhangi Saraf, \emph{Proximity Gaps for
+  Reed--Solomon Codes}, IACR ePrint 2020/654. Not yet checked by a human.
+  Numbered Conjecture 8.4 of the source. Proved up to the
+  Johnson/Guruswami--Sudan bound $\delta < 1 - \sqrt{\rho}$; conjectured
+  up to capacity $\delta \le 1 - \rho - \eta$. The source records that
+  nothing known contradicts $c_{1} = c_{2} = 2$, and that for fields of
+  characteristic greater than the degree nothing known contradicts
+  $c_{1} = c_{2} = 1$ --- while those smaller exponents are ruled out in
+  characteristic two.}
+\cjcategory{\emph{Proof Systems}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+Take a Reed--Solomon code and any affine space of vectors. The source's
+theorem says the space cannot be split: either all of its elements are
+close to the code, or almost none of them are. That dichotomy is what
+makes the FRI protocol sound, and hence what underlies the concrete
+security of the STARK proof systems built on it. The theorem is proved
+for closeness thresholds below the Johnson bound $1 - \sqrt{\rho}$,
+because the proof runs through list-decoding algorithms that stop there.
+The conjecture is that the same dichotomy, with a polynomially small
+error, holds all the way up to capacity $1 - \rho$. Settling it would
+close the factor-two gap between the provable and conjectured number of
+FRI query repetitions needed for a target security level.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+Write $\RS[\F_{q}, D, k]$ for the Reed--Solomon code of blocklength $n =
+|D|$ whose codewords are the polynomials of degree at most $k$ evaluated
+on $D \subseteq \F_{q}$, and $\rho = (k+1)/n$ for its rate. A collection
+$\mathcal{C}$ of subsets of $\F_{q}^{D}$ displays a
+\emph{$(\delta,\eps)$-proximity gap} with respect to a code $V$ if every
+$A \in \mathcal{C}$ satisfies one of two alternatives: either all of its
+elements are within relative Hamming distance $\delta$ of $V$, or at most
+an $\eps$ fraction are.
+
+The source proves this for $\Caff$, the collection of affine spaces
+(its Theorem 1.2), in two regimes. Below the unique decoding radius,
+$\delta \in (0, (1-\rho)/2]$, with the essentially tight error $\eps_{U}
+= n/q$. Above it, up to the Johnson/Guruswami--Sudan list-decoding bound
+$\delta < 1 - \sqrt{\rho}$, with the larger error $\eps_{J} =
+O\bigl((\eta\rho)^{-O(1)} \cdot n^{2}/q\bigr)$ where $\eta = 1 -
+\sqrt{\rho} - \delta$. It also proves the \emph{correlated agreement}
+form the applications actually use --- its Theorem 1.4 for lines,
+Theorem 1.5 for low-degree parameterized curves and Theorem 1.6 for
+affine spaces: if a random element of the space is $\delta$-close to $V$
+with probability exceeding $\eps$, then there is a single set $D'
+\subseteq D$ of density at least $1 - \delta$ on which \emph{every}
+generator agrees with a codeword.
+
+Two things bound what is proved. The proximity parameter stops at the
+Johnson bound because the proof leans on list-decoding algorithms that
+reach exactly that far; the source is explicit that this is an artefact
+of the technique, remarking that it conjectures Theorem 1.2 ``holds even
+for larger proximity parameters, up to capacity $(1-\rho)$''. And the
+error bound above the unique decoding radius is nontrivial only for
+fields quadratically larger than the blocklength.
+
+The stake is concrete. Ben-Sasson et al.\ showed that FRI needs at least
+$s \ge \lambda / \log(1/\rho)$ invocations of its query phase to reach
+security parameter $\lambda$, and conjectured that this lower bound is
+also sufficient for large enough fields; the source's results give $s
+\approx 2\lambda/\log(1/\rho)$ for quadratically large fields. As the
+source puts it, ``Closing the gap between the provable upper and lower
+bounds on $s$ is left as an interesting open problem'', and it identifies
+Conjecture~\ref{conj:main} below as the improvement to its main
+correlated-agreement theorem that would imply that conjecture.
+
+\section{Notation and parameters}\label{sec:notation}
+
+\begin{itemize}[nosep]
+  \item $\F_{q}$ is the field of size $q$; $D \subseteq \F_{q}$ the
+    evaluation domain, $n = |D|$ the blocklength.
+  \item $V = \RS[\F_{q}, D, k]$ is the RS code of dimension $k+1$ and
+    rate $\rho = (k+1)/n$.
+  \item $\dist(u, V)$ is the relative Hamming distance from $u \in
+    \F_{q}^{D}$ to the code; $\delta$ is the proximity parameter and
+    $\eps$ the error parameter.
+  \item $\eta > 0$ is the slack below the relevant bound: the source
+    writes $\eta = 1 - \sqrt{\rho} - \delta$ in Theorem 1.2 and
+    $\delta \le 1 - \rho - \eta$ in the conjecture.
+  \item $\ell$ is the degree of the parameterized curves in
+    Theorem 1.5.
+  \item $c_{1}, c_{2}$ are the two constants the conjecture asserts
+    exist.
+\end{itemize}
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{definition}[Proximity gap, {\cite[Section 1]{BCIKS20}}]
+  \label{def:gap}
+Let $V \subseteq \F_{q}^{D}$ be a code and $\mathcal{C}$ a collection of
+subsets of $\F_{q}^{D}$. Then $\mathcal{C}$ displays a
+\emph{$(\delta,\eps)$-proximity gap} with respect to $V$ if for every $A
+\in \mathcal{C}$, either
+\[
+  \Pr_{u \in A}\bigl[ \dist(u, V) \le \delta \bigr] = 1
+  \qquad\text{or}\qquad
+  \Pr_{u \in A}\bigl[ \dist(u, V) \le \delta \bigr] \le \eps.
+\]
+$\Caff$ denotes the collection of affine spaces in $\F_{q}^{D}$.
+\end{definition}
+
+\begin{theorem}[What is proved, {\cite[Theorems 1.2 and 1.4]{BCIKS20}}]
+  \label{thm:known}
+$\Caff$ displays a $(\delta,\eps)$-proximity gap with respect to $V =
+\RS[\F_{q},D,k]$ for every $\delta \in (0, 1 - \sqrt{\rho})$, with
+$\eps = n/q$ when $\delta \le (1-\rho)/2$ and $\eps =
+O\bigl((\eta\rho)^{-O(1)} n^{2}/q\bigr)$, $\eta = 1 - \sqrt{\rho} -
+\delta$, above that. Moreover (correlated agreement over lines) for
+$u_{0}, u_{1} \in \F_{q}^{D}$ and $\delta$ in the same range, if
+$\Pr_{z \in \F_{q}}[\dist(u_{0} + z u_{1}, V) \le \delta] > \eps$ then
+there are $D' \subseteq D$ with $|D'|/|D| \ge 1 - \delta$ and $v_{0},
+v_{1} \in V$ such that $v_{0}$ agrees with $u_{0}$ and $v_{1}$ with
+$u_{1}$ everywhere on $D'$.
+\end{theorem}
+
+\begin{conjecture}[{\cite[Conjecture 8.4]{BCIKS20}}]\label{conj:main}
+There exist constants $c_{1}, c_{2}$ such that the following hold for all
+$\eta > 0$.
+\begin{itemize}[nosep]
+  \item Theorems 1.2, 1.4 and 1.6 of the source hold for proximity
+    parameter $\delta \le 1 - \rho - \eta$ with error
+    \[
+      \eps \;\le\; \frac{1}{(\eta\rho)^{c_{1}}} \cdot
+      \frac{n^{c_{2}}}{q}.
+    \]
+  \item Theorem 1.5 of the source holds for proximity parameter $\delta
+    \le 1 - \rho - \eta$ and parameterized curves of degree $\ell$ with
+    error
+    \[
+      \eps \;\le\; \frac{1}{(\eta\rho)^{c_{1}}} \cdot
+      \frac{(\ell \cdot n)^{c_{2}}}{q}.
+    \]
+\end{itemize}
+\end{conjecture}
+
+\begin{remark}[Why capacity is the right target, and why the proof stops
+  short]
+The distance $1 - \sqrt{\rho}$ is the Johnson/Guruswami--Sudan bound, the
+largest for which efficient list decoding is known, and the source's
+proof above the unique decoding radius uses the Guruswami--Sudan
+algorithm in a non-algorithmic but essential way. Capacity $1 - \rho$ is
+the information-theoretic limit beyond which the list of nearby
+codewords need not be small at all. So the conjecture asks for the
+dichotomy to survive in the range where the only tool the proof has is
+gone --- which is why the source calls the current ceiling an artefact of
+the technique rather than of the statement.
+\end{remark}
+
+\begin{remark}[The constants, and what is known not to hold]
+The source records two calibrations, both worth keeping in view. To its
+knowledge nothing contradicts $c_{1} = c_{2} = 2$. Restricted to fields
+of characteristic greater than $k$, nothing known contradicts $c_{1} =
+c_{2} = 1$ --- but those smaller exponents provably cannot hold in
+characteristic two, by {\cite[Appendix B]{BGKS20}}. So a proof of
+Conjecture~\ref{conj:main} should report the exponents it achieves and
+the characteristic it needs, and a refutation is most likely to come from
+characteristic two.
+\end{remark}
+
+\begin{remark}[What settling it buys]
+By the source's own accounting, Conjecture~\ref{conj:main} implies the
+conjecture of {\cite{BBHR18b}} that $s \ge \lambda/\log(1/\rho)$ query
+repetitions suffice for FRI to reach security parameter $\lambda$ over
+sufficiently large fields, against the $s \approx 2\lambda/\log(1/\rho)$
+the source can prove. That is a factor of two in the query complexity of
+every FRI-based proof system, which is why the statement is of practical
+and not only combinatorial interest.
+\end{remark}
+
+\begin{remark}[Field size is a separate axis]
+Conjecture~\ref{conj:main} fixes the error's shape as
+$(\eta\rho)^{-c_{1}} n^{c_{2}}/q$ and so still needs $q$ polynomially
+larger than $n$ to be nontrivial. The source separately notes that its
+error above the unique decoding radius is nontrivial only for $q$
+quadratically larger than $n$, while below that radius linear suffices.
+Reducing the required field size at a fixed proximity parameter is a
+different question and is not what this statement asks.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem[BCIKS20]{BCIKS20}
+Eli Ben-Sasson, Dan Carmon, Yuval Ishai, Swastik Kopparty and Shubhangi
+Saraf.
+\emph{Proximity gaps for Reed--Solomon codes}.
+IACR ePrint 2020/654.
+The source. The proximity-gap definition and Theorem 1.2 are on page 2,
+Theorem 1.4 on page 4, Theorems 1.5 and 1.6 on page 5, and
+Conjecture 8.4 with its discussion on page 43 (PDF page 43).
+
+\bibitem[BBHR18b]{BBHR18b}
+Eli Ben-Sasson, Iddo Bentov, Ynon Horesh and Michael Riabzev.
+\emph{Fast Reed--Solomon interactive oracle proofs of proximity}.
+45th International Colloquium on Automata, Languages, and Programming
+(ICALP), 2018.
+Introduces FRI, proves the $s \ge \lambda/\log(1/\rho)$ lower bound on
+the number of query repetitions, and conjectures it is also sufficient
+for large enough fields.
+
+\bibitem[BGKS20]{BGKS20}
+Eli Ben-Sasson, Lior Goldberg, Swastik Kopparty and Shubhangi Saraf.
+\emph{DEEP-FRI: sampling outside the box improves soundness}.
+11th Innovations in Theoretical Computer Science Conference (ITCS), 2020,
+LIPIcs 151, pages 5:1--5:32.
+The prior state of the art the source improves on, and the work whose
+Appendix B rules out $c_{1} = c_{2} = 1$ in characteristic two.
+
+\bibitem[BKS18]{BKS18}
+Eli Ben-Sasson, Swastik Kopparty and Shubhangi Saraf.
+\emph{Worst-case to average case reductions for the distance to a code}.
+33rd Computational Complexity Conference (CCC), 2018, pages
+24:1--24:23.
+Part of the prior state of the art on proximity testing for RS codes that
+the source improves.
+
+\end{conjurabibliography}
+
+\end{document}

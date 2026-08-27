@@ -1,0 +1,227 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  Pelecanos-Tessaro-Vaikuntanathan's conjecture that 192-round AES is
+%  2^-128-close to pairwise independent -- i.e. that censoring the
+%  mixing layers never increases security.
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{192-ROUND AES IS PAIRWISE INDEPENDENT}
+
+\newcommand{\Om}{\Omega}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\Fb}{\mathbb{F}_{2^{8}}}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{192-Round AES Is $2^{-128}$-Close to Pairwise Independent}
+\cjsubtitle{Proved for AES with most mixing layers removed; conjectured
+  for AES itself}
+\cjstatus{Statement: AI-written from Anastasiya Pelecanos, Stefano
+  Tessaro and Vinod Vaikuntanathan, \emph{Layout Graphs, Random Walks and
+  the t-wise Independence of SPN Block Ciphers}, IACR ePrint 2024/083.
+  Not yet checked by a human. Their Theorem 7 proves the bound for
+  ``192-round censored AES'' --- real AES S-boxes, real AES mixing layer,
+  but a subset of the mixing layers removed. The source conjectures the
+  same round count suffices for AES itself, and calls proving it ``an
+  outstanding open problem.'' The best proved bound for actual AES is
+  Liu, Tessaro and Vaikuntanathan's, which needs more than $9000$ rounds.}
+\cjcategory{\emph{Symmetric-Key Cryptography}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+Pairwise independence is a security property strong enough to rule out
+differential and linear cryptanalysis, and weak enough that one can hope
+to prove it for a real cipher with its real S-box, rather than for an
+idealized model. For AES the question is how many rounds are needed
+before the cipher is within $2^{-128}$ of pairwise independent. The
+source gets to $192$ rounds --- but only after \emph{removing} most of the
+mixing layers, which is what lets it substitute repeated S-box
+applications for a random S-box. Nobody expects removing mixing layers to
+help a cipher. The conjecture says so: $192$ rounds of real AES should do
+at least as well.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+A substitution-permutation network with word length $b$, width $k$ and
+$r$ rounds alternates three steps: XOR the round key into the state;
+apply an invertible S-box $S : \mathbb{F} \to \mathbb{F}$, where
+$\mathbb{F} = \mathbb{F}_{2^{b}}$, to each of the $k$ blocks in parallel;
+apply an invertible linear mixing layer $M : \mathbb{F}^{k} \to
+\mathbb{F}^{k}$. AES is the case $k = 16$, $b = 8$, with the patched
+inverse S-box composed with an $\mathbb{F}_{2}$-affine map, and the
+mixing layer given by ShiftRows followed by MixColumns.
+
+Two idealizations are usually needed to say anything provable, and the
+source removes one of them. Analyses in the ``large S-box'' model treat
+the S-box as random or as a public random permutation, which is
+unrealistic when $b = 8$. The source instead proves results for random,
+independent S-boxes (calling the resulting cipher $\mathrm{AES}^{\ast}$)
+and then converts them to results about the \emph{concrete} AES S-box by
+replacing one random S-box with several sequential applications of the
+real one, each preceded by a fresh key XOR\@. That substitution is what
+costs the mixing layers: the resulting cipher is AES with a subset of
+mixing layers removed, which the source calls \emph{censored AES}. The
+other idealization, independent round keys, is retained here and
+throughout the line.
+
+Where this leaves the numbers:
+
+\begin{itemize}[nosep]
+  \item $\mathrm{AES}^{\ast}$ --- random independent S-boxes, real AES
+    mixing --- is $2^{-128}$-close to pairwise independent after $7$
+    rounds (the source's Theorem 6), and $2^{-23.42}$-close after $3$
+    (its Theorem 5).
+  \item $192$-round censored AES is $2^{-128}$-close to pairwise
+    independent (its Theorem 7).
+  \item For real AES, the best proved bound is
+    Liu, Tessaro and Vaikuntanathan's, that $6r$-round AES is
+    $2^{r-1}(0.472)^{r}$-close to pairwise independence, which reaches
+    $2^{-128}$ only past $9000$ rounds.
+\end{itemize}
+
+\section{Notation and parameters}\label{sec:notation}
+
+\begin{itemize}[nosep]
+  \item $b = 8$ is the S-box input length, $k = 16$ the width, so the
+    block is $128$ bits.
+  \item Round keys are independent and uniform, as throughout this line;
+    Remark~\ref{rem:keys} says why that matters.
+  \item \emph{$\eps$-close to pairwise independent} means the joint
+    distribution of the cipher's outputs on any two distinct inputs is
+    within statistical distance $\eps$ of the corresponding distribution
+    for a uniformly random permutation.
+  \item \emph{Censored AES} on $r$ rounds means an $(r-1)$-round SPN
+    (thus $r$ layers of S-boxes), independent keys, the true AES S-box
+    (patched inverse composed with an affine map) and the AES mixing
+    layer, but with a subset of the mixing layers removed; which ones
+    remain is determined by the source's proof.
+\end{itemize}
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{theorem}[What is proved, {\cite[Theorem 7]{PTV24}}]\label{thm:censored}
+$192$-round censored AES is $2^{-128}$-close to pairwise independent.
+\end{theorem}
+
+\begin{conjecture}[Censoring never helps,
+  {\cite[\S 1]{PTV24}}]\label{conj:main}
+$192$-round AES is $2^{-128}$-close to pairwise independent.
+\end{conjecture}
+
+\begin{remark}[How the source states it, and its reason]\label{rem:quote}
+Page 7: ``We give a censored variant of AES which is $2^{-128}$-close to
+pairwise independent after 192 rounds. We conjecture that 192-round of
+AES itself is also $2^{-128}$-close to pairwise independent, i.e., the
+censoring mixing layers never increases security.'' And on page 29, the
+rationale: ``If one believes that the mixing layers are useful for AES to
+achieve pseudorandomness, then it is natural to expect that removing a
+large fraction of them should only hurt the convergence to pairwise
+independence.'' The source then records: ``We view proving this
+conjecture formally to be an outstanding open problem.''
+\end{remark}
+
+\begin{remark}[The conjecture is a monotonicity claim, not a new
+  bound]\label{rem:monotone}
+What is being asserted is not that some argument gives $192$ rounds for
+AES, but that adding back the removed mixing layers cannot make the
+cipher converge more slowly. That is intuitive and, as far as the source
+says, unproved even in weak forms. The clean sub-question is whether
+inserting a single invertible linear layer into an SPN can ever
+\emph{increase} the distance from pairwise independence; a proof of that
+in the generality needed would give the conjecture, and a counterexample
+--- even an artificial one, for some mixing layer and some round count ---
+would show the intuition cannot be used as stated.
+\end{remark}
+
+\begin{remark}[Why $192$ and not $7$]\label{rem:192}
+The gap between Theorem 6 ($7$ rounds for $\mathrm{AES}^{\ast}$) and
+Theorem~\ref{thm:censored} ($192$ rounds for censored AES) is entirely
+the price of replacing a random S-box by real ones. The source computes
+that an $8$-fold sequential composition of the AES S-box with independent
+key bytes is $2^{-29.39}$-close to pairwise independent, so simulating
+four random S-box layers costs $16 \cdot 4$ times that; a $32$-round
+partial censored AES is then $\eps$-close for $\eps < 2^{-22.39}$, and
+amplification with $r = 6$ repetitions gives $2^{5} \cdot
+(2^{-22.39})^{6} < 2^{-128}$ over $192$ rounds. A resolution of
+Conjecture~\ref{conj:main} that also brought the round count near $7$
+would be a substantially stronger result, and should be reported as such.
+\end{remark}
+
+\begin{remark}[Independent round keys is an assumption, not a
+  detail]\label{rem:keys}
+Every result in this line assumes independent round keys, a modelling
+choice rooted in Lai, Massey and Murphy's Markov ciphers and adopted by
+Nyberg. Real AES derives its round keys from a key schedule. The
+expectation in the field is that $t$-wise independence becomes $t$-wise
+pseudorandomness under an appropriate key schedule, and
+Liu, Tessaro and Vaikuntanathan record that ``understanding the precise role
+of key schedules is an important open problem.'' A resolution of
+Conjecture~\ref{conj:main} says nothing about AES-128 as deployed.
+\end{remark}
+
+\begin{remark}[What pairwise independence does and does not
+  rule out]\label{rem:scope}
+Sufficiently strong almost-pairwise independence suffices to resist
+truncated differential attacks and linear cryptanalysis, which is why it
+is the target. It is not a proof of pseudorandomness, and the same line
+names algebraic attacks as a separate class it does not address. Also
+worth keeping in mind: a differential-probability bound of $2^{-127}$ for
+a $128$-bit block does not rule out a distinguisher, so the closeness
+parameter has to be pushed to $2^{-128}$ for the statement to mean what
+it appears to mean --- which is why the conjecture names that number.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem[PTV24]{PTV24}
+Anastasiya Pelecanos, Stefano Tessaro and Vinod Vaikuntanathan.
+\emph{Layout graphs, random walks and the $t$-wise independence of SPN
+block ciphers}.
+IACR ePrint 2024/083.
+The source. The conjecture is stated on page 7 and repeated with its
+rationale on page 29; Theorems 5 and 6 are on page 28 and Theorem 7 on
+pages 28--29. Source code for the computations is linked from Section 6.
+
+\bibitem[LTV21]{LTV21}
+Tianren Liu, Stefano Tessaro and Vinod Vaikuntanathan.
+\emph{The $t$-wise independence of substitution-permutation networks}.
+CRYPTO 2021 (IACR ePrint 2021/507).
+The prior bound for actual AES --- Theorem 3.14 there, $6r$-round AES is
+$2^{r-1}(0.472)^{r}$-close to pairwise independence --- and the source of
+the key-schedule remark. Also the source of the companion Conjura
+statement on $t$-wise independence for $t > 2$.
+
+\bibitem[LMM91]{LMM91}
+Xuejia Lai, James L. Massey and Sean Murphy.
+\emph{Markov ciphers and differential cryptanalysis}.
+EUROCRYPT 1991.
+The origin of the independent-round-keys model this line works in.
+
+\bibitem[KNR09]{KNR09}
+Eyal Kaplan, Moni Naor and Omer Reingold.
+\emph{Derandomized constructions of $k$-wise (almost) independent
+permutations}.
+Algorithmica, 2009.
+One of the two amplification results the source uses to turn a constant
+closeness into $2^{-128}$ by sequential composition. [UNVERIFIED] ---
+cited in the source as [KNR09a]; the bibliographic detail here is
+inferred, not read off the source's reference list.
+
+\bibitem[BV05]{BV05}
+Thomas Baign\`eres and Serge Vaudenay.
+\emph{Proving the security of AES substitution-permutation network}.
+Selected Areas in Cryptography 2005.
+Describes the random walk on layouts for the special case of
+$\mathrm{AES}^{\ast}$ and $t = 2$, which the source notes is related to
+but not sufficient for its results.
+
+\end{conjurabibliography}
+
+\end{document}

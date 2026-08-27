@@ -1,0 +1,262 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  Halevi-Ishai-Kushilevitz-Rabin's open question on statistically
+%  secure ROBUST additive randomized encodings. The non-robust half of
+%  their question was refuted by Bitansky-Erabelli-Garg-Ishai; the
+%  robust half is what remains.
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{STATISTICALLY SECURE ROBUST ARE}
+
+\newcommand{\eps}{\varepsilon}
+\newcommand{\Gr}{\mathbb{G}}
+\newcommand{\Enc}{\mathsf{Enc}}
+\newcommand{\Dec}{\mathsf{Dec}}
+\newcommand{\Setup}{\mathsf{Setup}}
+\newcommand{\Sim}{\mathsf{Sim}}
+\newcommand{\SD}{\mathrm{SD}}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{Statistically Secure Robust Additive Randomized Encodings}
+\cjsubtitle{The half of the source's main question that survives its
+  refutation}
+\cjstatus{Statement: AI-written from Shai Halevi, Yuval Ishai, Eyal
+  Kushilevitz and Tal Rabin, \emph{Additive Randomized Encodings and
+  Their Applications}, IACR ePrint 2023/870. Not yet checked by a human.
+  The source asks whether all functions admit a statistically secure
+  ARE, robust or non-robust, and strongly conjectures the answer is
+  negative. The \emph{non-robust} half was subsequently refuted:
+  Bitansky, Erabelli, Garg and Ishai construct statistical AREs for all
+  finite functions. The \emph{robust} half is open, and is re-posed as
+  an open question by that same later work.}
+\cjcategory{\emph{Information-Theoretic Cryptography}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+In an additive randomized encoding each party turns its input into a
+single element of an abelian group, and the sum of all the elements is
+supposed to reveal the function's output and nothing else. That is the
+non-robust notion, and it assumes the evaluator is on its own. A
+\emph{robust} ARE assumes the worst instead: the evaluator may collude
+with some of the parties, in which case it can subtract their encodings
+and see the sum of the honest ones alone. Since that sum determines the
+residual function on the honest inputs, the definition concedes the
+residual function to the simulator and asks that nothing more leak. The
+source introduced both notions and conjectured that neither admits a
+statistically secure scheme for all functions. For the non-robust notion
+that conjecture has since been refuted. For the robust notion the
+question stands.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+An ARE for a multiparty $f$ over an abelian group $\Gr$ is a triple
+$(\Setup, \Enc, \Dec)$: party $i$ maps its input to a group element
+$\widehat{x}_{i} = \Enc(pp, i, x_{i})$, and $\Dec$ recovers
+$f(x_{1},\dots,x_{n})$ from the sum. Security asks that the sum be
+simulatable from the output alone. The source, which introduced the
+notion, also introduced its robust strengthening, and the reason is
+structural: a collusion between the evaluator and the parties outside a
+set $H$ can subtract their own encodings from $\widehat{y}$ and obtain
+$\widehat{y}_{H} = \sum_{i \in H}\widehat{x}_{i}$, the sum over the
+honest parties. That quantity necessarily determines the residual
+function $f_{H,x}$ obtained by fixing the honest inputs, so a robust
+definition cannot hide it; instead it hands the simulator oracle access
+to $f_{H,x}$ and demands that nothing beyond it leak
+(Definition~\ref{def:robust}).
+
+The source's own results split by accuracy. For \emph{perfect} security
+it gives a full two-party characterization: AREs exist only for
+degenerate functions. For \emph{statistical} security it constructs AREs
+for capped sum (with payloads) and, via that, for multiplication modulo
+an arbitrary integer, and proves there is no perfectly secure ARE for
+capped sum --- a provable separation between perfect and statistical ARE\@.
+It notes that all of its information-theoretic constructions are in fact
+robust. For \emph{computational} security all polynomial-time functions
+have an ARE under a bilinear-group assumption, and robust computational
+ARE for general functions over large domains implies obfuscation, with a
+converse via resettable MPC\@.
+
+Its Section 1.2 then records: ``The main open question is whether all
+functions admit a statistically secure (robust or non-robust) ARE\@. This
+is open even for very simple functions, such as equality of two inputs
+from the domain $\{0,1,2\}$, which can be shown to be complete for
+non-robust ARE (Theorem 5.10). We strongly conjecture that the answer is
+negative.'' The closest it gets to a proof is a negative result under an
+alternative definition using $\ell_{2}$ rather than $\ell_{1}$ distance,
+documented in its Appendix A.
+
+That conjecture is now half wrong. Bitansky, Erabelli, Garg and
+Ishai~\cite{BEGI25} construct, for every multiparty $f$ over a finite
+domain and every $\eps > 0$, an ARE with statistical correctness and
+security errors at most $\eps$ --- so statistical \emph{non-robust} AREs
+exist for all finite functions, and the equality-over-$\{0,1,2\}$ case
+the source singled out is settled the other way. Their own open-questions
+list then re-poses the robust case, noting that a positive answer even
+for finite $3$-party functions would settle the main open question about
+multi-party randomized encodings.
+
+\section{Notation and parameters}\label{sec:notation}
+
+\begin{itemize}[nosep]
+  \item $f$ is an $n$-party function; the statement below concerns
+    \emph{finite} $f$, i.e.\ constant-size domains, which is the regime
+    where the question is information-theoretic at all.
+  \item $\Gr$ is a finite abelian group, described by the public
+    parameters $pp$; $\lambda$ is the security parameter, $\ell$ the
+    input length.
+  \item $H \subseteq [n]$ is the set of honest parties; $x = (x_{i} : i
+    \in H)$ their inputs.
+  \item $\Pi_{H}(1^{\lambda}, x_{1}, \dots, x_{n})$ denotes $(pp,
+    \widehat{y}_{H})$ where $\widehat{y}_{H} = \sum_{i \in
+    H}\widehat{x}_{i}$.
+  \item $f_{H,x}$ is the residual function on the $n - |H|$ remaining
+    inputs, obtained by fixing $x_{i}$ for $i \in H$.
+  \item $\delta$ is the statistical security error; $\SD$ is statistical
+    distance.
+\end{itemize}
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{definition}[ARE, {\cite[Definitions 3.1 and 3.3]{HIKR23}}]
+  \label{def:are}
+An ARE for $f$ is $\Pi = (\Setup, \Enc, \Dec)$ where $\Setup(1^{\lambda},
+1^{n}, 1^{\ell}) \to pp$ fixes an abelian group $\Gr$, $\Enc(pp, i,
+x_{i}) \to \widehat{x}_{i} \in \Gr$, and $\Dec(pp, \widehat{y}) \to y$.
+It is correct with error $\eps$ if $\Dec(pp, \sum_{i}\widehat{x}_{i}) =
+f(x_{1},\dots,x_{n})$ with probability at least $1 - \eps$, for all
+inputs. It is \emph{statistically secure} if for some negligible $\delta$
+there is a simulator $\Sim$ with
+$\SD\bigl(\Sim(1^{\lambda},1^{n},1^{\ell},f(x_{1},\dots,x_{n})),\,
+\Pi(1^{\lambda},x_{1},\dots,x_{n})\bigr) \le \delta(\lambda)$ for all
+inputs.
+\end{definition}
+
+\begin{definition}[Robust ARE, {\cite[Definition 3.4]{HIKR23}}]
+  \label{def:robust}
+$\Pi$ is \emph{statistically robust} if for some negligible $\delta$
+there is a simulator $\Sim$ with access to a residual-function oracle
+such that for all $\lambda, n, \ell$, all $H \subseteq [n]$ and all
+inputs $x = (x_{i} : i \in H)$,
+\[
+  \SD\Bigl( \Sim^{f_{H,x}}\bigl(1^{\lambda}, 1^{n}, H, 1^{\ell}\bigr),\
+  \Pi_{H}\bigl(1^{\lambda}, x\bigr) \Bigr) \;\le\; \delta(\lambda).
+\]
+\end{definition}
+
+\begin{conjecture}[Statistically secure robust ARE for finite
+  functions]\label{conj:main}
+Every finite multiparty function $f$ admits an ARE
+(Definition~\ref{def:are}) that is statistically correct and
+statistically robust (Definition~\ref{def:robust}), with both errors
+negligible.
+\end{conjecture}
+
+\begin{remark}[Which half of the source's question this is, and why the
+  other half is gone]\label{rem:half}
+The source's main open question covers robust and non-robust statistical
+ARE together, and conjectures both are impossible. The non-robust half is
+now settled affirmatively by~\cite{BEGI25}, against that conjecture, for
+every function over a finite domain. Conjecture~\ref{conj:main} is
+therefore the surviving half, stated at the robust notion, and it is
+stated as an achievability claim rather than as the source's negative
+prediction --- because the one prediction of that pair which has been
+tested turned out to be wrong. A refutation is equally a resolution, and
+the source's own $\ell_{2}$-distance negative result in its Appendix A is
+the closest thing to a route toward one.
+\end{remark}
+
+\begin{remark}[Why finiteness is not a technicality]
+For general functions over large input domains, robust ARE implies
+obfuscation --- the source proves this, and the reason is that the
+simulator's access to the residual function is exactly an obfuscation of
+it. So there is no information-theoretic question to ask outside the
+finite regime, and Conjecture~\ref{conj:main} is restricted to finite $f$
+for that reason and not for convenience. It matches how~\cite{BEGI25}
+poses the robust question, ``in the case of finite functions''.
+\end{remark}
+
+\begin{remark}[What a positive answer would settle elsewhere]
+By~\cite{BEGI25}, a positive answer even for finite $3$-party functions
+would settle the main open question about multi-party randomized
+encodings~\cite{ABT21}, and a positive answer for all finite functions
+would settle the main open question about best-possible
+information-theoretic MPC~\cite{HIKR18}. The source itself makes the
+second connection when it says that information-theoretic robust ARE
+implies best-possible information-theoretic MPC\@.
+\end{remark}
+
+\begin{remark}[Neighbouring questions in the source's list]
+The source also asks: extending its perfect-security characterization
+beyond two parties; ruling out an ARE for OR with perfect correctness;
+which assumptions computational ARE really needs (whether other
+public-key assumptions such as DDH or LWE suffice, and whether public-key
+cryptography is needed at all --- since answered in part
+by~\cite{BEG25}, which builds computational ARE from any public-key
+encryption); constructing robust ARE for constant-size functions from iO
+and standard assumptions rather than ideal obfuscation; and applying
+robust ARE to differential privacy in the robust shuffle model. None of
+those is this statement.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem[HIKR23]{HIKR23}
+Shai Halevi, Yuval Ishai, Eyal Kushilevitz and Tal Rabin.
+\emph{Additive randomized encodings and their applications}.
+IACR ePrint 2023/870.
+The source. Definitions 3.1, 3.3 and 3.4 are on pages 10--11; the summary
+of what is left open is on page 5 and the open-questions list in
+Section 1.2, page 7.
+
+\bibitem[BEGI25]{BEGI25}
+Nir Bitansky, Saroja Erabelli, Rachit Garg and Yuval Ishai.
+\emph{Shuffling is universal: statistical additive randomized encodings
+for all functions}.
+IACR ePrint 2025/1442.
+Refutes the non-robust half of the source's conjecture, and re-poses the
+robust case for finite functions. [UNVERIFIED] --- it postdates the
+source, so it is not in the source's reference list; it was checked
+against the paper itself in the Conjura harvest that produced c/0073.
+
+\bibitem[BEG25]{BEG25}
+Nir Bitansky, Saroja Erabelli and Rachit Garg.
+\emph{Additive randomized encodings from public key encryption}.
+IACR ePrint 2025/104.
+Builds computational ARE from any public-key encryption, bearing on the
+source's question about which assumptions are needed. [UNVERIFIED] ---
+postdates the source; read in the reference list of~\cite{BEGI25}, not of
+the source.
+
+\bibitem[ABT21]{ABT21}
+Benny Applebaum, Zvika Brakerski and Rotem Tsabary.
+\emph{Perfect secure computation in two rounds}.
+SIAM Journal on Computing, 50(1):68--97, 2021.
+The multi-party randomized encoding question a positive answer for finite
+$3$-party functions would settle.
+
+\bibitem[HIKR18]{HIKR18}
+Shai Halevi, Yuval Ishai, Eyal Kushilevitz and Tal Rabin.
+\emph{Best possible information-theoretic MPC}.
+Theory of Cryptography Conference (TCC) 2018, Part II, pages 255--281.
+The notion the source states information-theoretic robust ARE implies.
+
+\bibitem[IK00]{IK00}
+Yuval Ishai and Eyal Kushilevitz.
+\emph{Randomizing polynomials: a new representation with applications to
+round-efficient secure computation}.
+41st Annual Symposium on Foundations of Computer Science (FOCS), 2000.
+Introduces randomized encodings, of which ARE is an instance, and poses
+the degree-2 statistical RE question the source flags as a separate
+20-year-old open problem.
+
+\end{conjurabibliography}
+
+\end{document}

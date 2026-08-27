@@ -1,0 +1,215 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  Conjecture 1 of "Adaptive Robustness of Hypergrid
+%  Johnson-Lindenstrauss": the online threshold for the contracting
+%  hypergrid vector problem is sqrt(pi/8) * sqrt(alpha)/B.
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{THE ONLINE THRESHOLD FOR CONTRACTING HYPERGRID VECTORS}
+
+\newcommand{\Om}{\Omega}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\CHV}{\mathrm{CHV}}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{The Online Threshold for Contracting Hypergrid Vectors}
+\cjsubtitle{An exact constant, $\sqrt{\pi/8}$, conjectured to separate
+  what online algorithms can and cannot do}
+\cjstatus{Statement: AI-written from Andrej Bogdanov, Alon Rosen, Neekon
+  Vafa and Vinod Vaikuntanathan, \emph{Adaptive Robustness of Hypergrid
+  Johnson-Lindenstrauss}, IACR ePrint 2025/666. Not yet checked by a
+  human. This is the source's
+  Conjecture 1, the ``online threshold conjecture''. The source gives an
+  online algorithm achieving $\kappa = O(\sqrt{\alpha}/B)$ and an
+  overlap-gap argument against stable algorithms; the conjecture pins the
+  constant in front, $\sqrt{\pi/8} \approx 0.627$, as the exact place
+  where online algorithms stop working.}
+\cjcategory{\emph{Fine-Grained Cryptography}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+The Johnson-Lindenstrauss lemma says a random projection nearly preserves
+lengths. ``Nearly'' leaves room: some vectors do get badly contracted,
+and if the vector is allowed to have arbitrary real coordinates they are
+easy to find. Restrict the coordinates to a bounded integer grid and the
+problem gets interesting, with a wide gap between the vectors that exist
+and the vectors an efficient algorithm can find. The source charts that
+gap and finds a specific constant, $\sqrt{\pi/8}$, showing up as the
+fixed point of a drift in the analysis of its own online algorithm. The
+conjecture is that this constant is not an artefact of the analysis but
+the truth: below it, no online algorithm succeeds.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+\begin{definition}[Contracting Hypergrid Vector,
+  {\cite[Definition 2]{AHJL25}}]\label{def:chv}
+For $n, m, B \in \mathbb{N}$ and $\kappa \in \R_{>0}$ with $m < n$, the
+$\CHV$ problem with parameters $n, m, B, \kappa$ is: given $A \sim
+\mathcal{N}(0,1)^{m \times n}$, find $x \in ([-B,B] \cap \Z)^{n}$ with
+\[
+  \|Ax\|_{2} \;<\; \kappa\,\|x\|_{2}\sqrt{m}.
+\]
+Write $\alpha := m/n < 1$ for the aspect ratio.
+\end{definition}
+
+Any non-zero $x$ achieves $\kappa = \Theta(1)$ in expectation, so the
+question is how small $\kappa$ can be pushed. The two thresholds the
+source identifies:
+\[
+  \kappa_{\mathrm{stat}} = \Theta\bigl((2B+1)^{-1/\alpha}\bigr),
+  \qquad
+  \kappa_{\mathrm{comp}} = \tilde{\Theta}\bigl(\sqrt{\alpha}/B\bigr).
+\]
+Above $\kappa_{\mathrm{stat}}$ solutions exist; below it they do not.
+$\kappa_{\mathrm{comp}}$ is the best $\kappa$ the source's algorithms
+reach, and the gap between the two is what it exploits: it builds robust
+locality-sensitive hash functions from the hardness of $\CHV$, which in
+turn imply collision resistance --- so the statistical-computational gap
+yields cryptography beyond one-way functions.
+
+Two algorithms establish the upper side. A kernel-rounding algorithm
+samples a random $x$ in the kernel, scales, and rounds. An online
+algorithm --- processing the columns of $A$ in sequence and producing the
+entries of $x$ one at a time, inspired by Bansal and Spencer --- achieves
+$\kappa = O(\sqrt{m/n}/B)$ whenever $n \ge Km\log B$. Together they give
+$\kappa = O(\sqrt{\alpha}\log B/B)$ for all $n > m$.
+
+\section{Notation and parameters}\label{sec:notation}
+
+\begin{itemize}[nosep]
+  \item $B$ bounds the coordinates of the solution: $x \in ([-B,B] \cap
+    \Z)^{n}$. It may be as small as $1$ or polynomially large in $n$.
+  \item $\alpha = m/n < 1$ is the aspect ratio; $\kappa$ is the quality
+    of the solution as in Definition~\ref{def:chv}.
+  \item An algorithm is \emph{online} if it processes the columns of $A$
+    in sequence, fixing each entry of $x$ before seeing the rest of the
+    input.
+  \item $\delta$ and $\eps$ are the conjecture's slack and
+    success-fraction parameters.
+\end{itemize}
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{conjecture}[Online threshold conjecture,
+  {\cite[Conjecture 1]{AHJL25}}]\label{conj:main}
+For every $\delta$ and $B$ there exists a sufficiently small $\alpha$ and
+$\eps$ so that every online algorithm fails to find $x \in ([-B,B] \cap
+\Z)^{n}$ such that
+\[
+  \frac{\|Ax\|}{\sqrt{m}\,\|x\|} \;<\; \bigl(\sqrt{\pi/8} -
+  \delta\bigr)\frac{\sqrt{\alpha}}{B}
+\]
+for at least an $\eps$ fraction of $\alpha n$ by $n$ matrices $A$, for
+all sufficiently large $n$.
+\end{conjecture}
+
+\begin{remark}[Where the constant comes from]\label{rem:constant}
+It is not chosen for convenience. In the analysis of the source's online
+algorithm a process $U$ has drift pushing it toward a fixed point
+$U = \frac{1}{2\mu} = \sqrt{\pi/8} \approx 0.627$, where $\mu =
+\sqrt{2/\pi}$ is the mean of $|\mathcal{N}|$.
+Conjecture~\ref{conj:main} asserts that this fixed point is the genuine
+barrier for the whole class of online algorithms, not an artefact of one
+algorithm's analysis. That is what makes it a sharp-threshold claim
+rather than an order-of-magnitude one, and it is why a resolution has to
+control the constant and not merely the exponent.
+\end{remark}
+
+\begin{remark}[The stability caveat is part of the
+  claim]\label{rem:stability}
+Immediately before stating the conjecture the source notes that its
+overlap-gap argument assumes the algorithm is committed to the
+approximate norm of the solution $x$ before seeing $A$, that its own
+online algorithm and those of Bansal and Spencer satisfy this, and that
+``we believe that some assumption of this type is necessary for an
+OGP-based argument to ensure stability.'' Conjecture~\ref{conj:main} as
+printed quantifies over ``every online algorithm'' without repeating that
+condition. A resolution should say which reading it settles; a
+counterexample that is online but not norm-committed would be
+informative either way, and would bear directly on whether the
+assumption is necessary.
+\end{remark}
+
+\begin{remark}[Two lower bounds, and the gap between
+  them]\label{rem:lowerbounds}
+The source proves hardness twice, by different means, and the results are
+not comparable. Its overlap-gap theorem gives evidence that $\CHV$ is
+hard in the regime $\alpha \gg B^{2}\kappa^{2}\log(1/\kappa)$, against
+stable algorithms. Its lattice-based theorem gives, under the worst-case
+polynomial hardness of standard lattice problems, that no
+polynomial-time algorithm solves $\CHV$ for $\kappa =
+O(1/(Bn^{1/2+\eps}))$ --- a statement about \emph{all} efficient
+algorithms, but quantitatively weaker and for a more restricted parameter
+range. The source records: ``We leave it as a fascinating open question
+as to whether this lower bound can be improved to match that of
+Theorem 3 or similar.'' That is a second open problem in the same paper
+and it is not this statement, though a resolution of either informs the
+other.
+\end{remark}
+
+\begin{remark}[Neighbouring problems this is not]\label{rem:neighbours}
+$\CHV$ is close to two studied problems and differs from each in a stated
+way. In the Symmetric Binary Perceptron and the Nearest Boolean Vector
+problem the domain of $x$ is $\{-1,1\}^{n}$ rather than $([-B,B] \cap
+\Z)^{n}$, so the norm of $x$ is fixed and $x$ cannot have zero entries;
+and SBP bounds $\|Ax\|_{\infty}$ rather than $\|Ax\|_{2}$. In the special
+case $B = 1$ both the Bansal and Spencer algorithm and the overlap-gap bound
+of Gamarnik, K{\i}z{\i}lda\u{g}, Perkins and Xu match the source's. So
+$B$ is the axis along which this statement is new.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem[BRVV25]{AHJL25}
+Andrej Bogdanov, Alon Rosen, Neekon Vafa and Vinod Vaikuntanathan.
+\emph{Adaptive robustness of hypergrid Johnson-Lindenstrauss}.
+IACR ePrint 2025/666.
+The source. Definition 1 is on page 4 and Definition 2 on page 12;
+Theorem 2 (the online algorithm) and the informal statement of the
+conjecture are on page 6; Conjecture 1 is stated formally on page 16;
+Theorem 10 (the lattice-based bound) is on page 23. [UNVERIFIED] --- the
+author list was not transcribed during this harvest and is deliberately
+not guessed here; a reviewer should fill it in from the ePrint record
+before citing.
+
+\bibitem[BS20]{BS20}
+Nikhil Bansal and Joel Spencer.
+\emph{On-line balancing of random inputs}.
+Random Structures and Algorithms, 2020.
+The online discrepancy algorithm the source's is a variant of, and whose
+guarantee matches the source's in the case $B = 1$.
+
+\bibitem[GKPX22]{GKPX22}
+David Gamarnik, Eren C.\ K{\i}z{\i}lda\u{g}, Will Perkins and Changji Xu.
+\emph{Algorithms and barriers in the symmetric binary perceptron model}.
+FOCS 2022.
+The overlap-gap bound that matches the source's at $B = 1$.
+
+\bibitem[APZ19]{APZ19}
+Benjamin Aubin, Will Perkins and Lenka Zdeborov\'a.
+\emph{Storage capacity in symmetric binary perceptrons}.
+Journal of Physics A, 2019.
+Introduces the Symmetric Binary Perceptron, the closest studied
+neighbour of $\CHV$.
+
+\bibitem[MRX20]{MRX20}
+Sidhanth Mohanty, Prasad Raghavendra and Jeff Xu.
+\emph{Lifting sum-of-squares lower bounds: degree-$2$ to degree-$4$}.
+STOC 2020.
+Cited by the source as introducing the Nearest Boolean Vector problem.
+[UNVERIFIED] --- cited in the source as [MRX20]; the bibliographic detail
+here is inferred.
+
+\end{conjurabibliography}
+
+\end{document}

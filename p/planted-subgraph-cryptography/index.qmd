@@ -1,0 +1,80 @@
+---
+title: "Cryptography from planted graphs"
+subtitle: "Hiding a subgraph as a cryptographic primitive, and the two questions the reduction leaves behind"
+---
+
+## Motivation
+
+Planted-subgraph problems are among the oldest average-case hardness assumptions
+in combinatorics: hide a clique of size $k$ in a random graph on $N$ nodes and
+ask anyone to find it. The cryptographic interest is not the search problem but
+the decision problem, and not a clique alone. Abram, Beimel and Ishai observe
+that if you hide a large clique *and* a large independent set in the same graph,
+and ask for a random node of one to be indistinguishable from a random node of
+the other, you have exactly the primitive that secret sharing with public
+information needs — because a share is a node, and whether two parties'
+reconstruction returns $1$ or $0$ is whether their two nodes are joined.
+
+That correspondence is what makes the hub worth having. It converts a question
+about share size, where the information-theoretic bounds are exact and there is
+no obvious computational lower bound at all, into a question about graphs, where
+there is a long history of attacks to test candidate distributions against.
+
+## Provenance and history
+
+Both statements here come from Damiano Abram, Amos Beimel and Yuval Ishai,
+*Cryptography from Planted Graphs: Security with Logarithmic-Size Messages*
+([IACR ePrint 2023/1929](https://eprint.iacr.org/2023/1929)). The paper builds
+cryptographic primitives with logarithmic-size messages from planted-graph
+assumptions, and it leaves behind two questions of different kinds.
+
+The first is combinatorial. Analysing how well a low-degree polynomial can
+detect a planted $H$, the paper derives a formula in which a character sum over
+$\mathrm{Sym}(n)$ appears, weighted by binomial factors. Its behaviour decides the
+bound: for a clique the sum is maximal, which is why cliques are the easiest
+subgraph to detect, and the paper conjectures that for most graphs it nearly
+cancels. It leaves the rigorous study of that to future work.
+
+The second is the secret-sharing question the machinery was built for. The
+information-theoretic share size for $2$-out-of-$n$ sharing of one bit is
+exactly $\log n$, met by Shamir's scheme. In the computational setting with
+public information there is no obvious lower bound at all; the paper proves
+$\frac{1}{5}\log\log n$ and then proves that beating $\log n$ by any constant
+factor is *equivalent* to the clique-and-independent-set distribution above. It
+reports that in the relevant regime — an $n$-node clique in a graph on fewer than
+$n^2$ nodes — the attacks of Kučera and of Alon, Krivelevich and Sudakov
+recovered the clique on every distribution it tried.
+
+One structural warning the paper flags: this is not a standard planted problem.
+The distribution may be such that every node lies in many planted cliques and
+independent sets — Beimel and Franklin give an $n$-partite graph with four nodes
+per part where every node lies in both a clique and an independent set of size
+$n$ — so there is no natural search version. And since beating $\log n$ is
+information-theoretically impossible, the decision problem is solvable by an
+unbounded distinguisher. The hardness sought is purely computational.
+
+## Parameter lattice
+
+Share size for computational $2$-out-of-$n$ secret sharing of one bit, with
+public information not counted.
+
+| Bound | Value | Status |
+|---|---|---|
+| **Information-theoretic** | $\log n$ | exact; Shamir's scheme meets it |
+| **Computational, lower** | $\frac{1}{5}\log\log n$ | proved (the source) |
+| **Computational, upper** | $\log n$ | Shamir again — nothing better known |
+| **Target** | $\delta\log n$, $\delta < 1$ | [c/0085](/c/0085/) — open, equivalent to the planted distribution |
+
+Low-degree detection of a planted $H$, via the character sum $S(H,\alpha) =
+\sum_{\pi}(-1)^{\langle \pi\circ H + H, \alpha\rangle}$.
+
+| $H$ | $\max_{\alpha\ne 0}\lvert S(H,\alpha)\rvert$ | Consequence |
+|---|---|---|
+| **Clique or independent set** | $\lvert\mathrm{Sym}(n)\rvert$, the maximum | easiest to detect, for every $N$, $t$, $D$ |
+| **Typical $H$** | conjectured $o(1)\cdot\lvert\mathrm{Sym}(n)\rvert$ | [c/0084](/c/0084/) — open |
+| **Degree ceiling** | — | the argument stops at $D = \log^2 n$; the largest clique in a random graph has $\le 2\log n$ nodes |
+
+## Statements in this hub
+
+- [A Character-Sum Conjecture for Planted Subgraphs](/c/0084/) — open
+- [Beating log n for Computational 2-out-of-n Secret Sharing](/c/0085/) — open

@@ -1,0 +1,179 @@
+---
+id: "0081"
+problem: reed-solomon-proximity-gaps
+draft: rs-proximity-gap-to-capacity
+title: "Proximity Gaps for Reed-Solomon Codes Up to Capacity"
+short_title: "RS Proximity Gaps to Capacity"
+areas: [proof-systems, information-theoretic]
+topics: [reed-solomon-codes, proximity-testing, snarks]
+model: standard
+form: tight-bound
+assumption_class: unconditional
+category: research-open
+revision: 1
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: barrier
+  by: ai
+  note: "The proof above the unique decoding radius runs through the Guruswami-Sudan list-decoding algorithm, and the Johnson bound is exactly where that algorithm stops. Past it the list of nearby codewords need not be small, so the argument loses its only tool rather than merely getting harder -- and the source says as much. That is a barrier in the strict sense: a resolution needs a technique for the capacity regime that list decoding does not supply. The characteristic-two exclusion of the smaller exponents is a second sign the terrain is not uniform."
+status_summary: "Proved up to the Johnson/Guruswami-Sudan bound delta < 1 - sqrt(rho); conjectured up to capacity delta <= 1 - rho - eta. The source records that nothing known contradicts c1 = c2 = 2, and that in characteristic greater than the degree nothing known contradicts c1 = c2 = 1 -- while those smaller exponents are provably ruled out in characteristic two."
+status_updated: 2026-08-27
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Ben-Sasson, Carmon, Ishai, Kopparty, Saraf, Proximity Gaps for Reed-Solomon Codes, IACR ePrint 2020/654", url: "https://eprint.iacr.org/2020/654"}
+  - {cite: "Ben-Sasson, Bentov, Horesh, Riabzev, Fast Reed-Solomon Interactive Oracle Proofs of Proximity, ICALP 2018", url: "https://doi.org/10.4230/LIPIcs.ICALP.2018.14"}
+  - {cite: "Ben-Sasson, Goldberg, Kopparty, Saraf, DEEP-FRI: Sampling Outside the Box Improves Soundness, ITCS 2020", url: "https://doi.org/10.4230/LIPIcs.ITCS.2020.5"}
+  - {cite: "Ben-Sasson, Kopparty, Saraf, Worst-Case to Average Case Reductions for the Distance to a Code, CCC 2018", url: "https://doi.org/10.4230/LIPIcs.CCC.2018.24"}
+statement_sha: "c973e12e2b88f8dce5b83f3da3df633a467cdde9830e862ec35709c7b9fafcfa"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+<!-- topics:start -->
+<div class="cj-tags cj-page-topics"><a class="cj-tag cj-tag-topic" href="/problems/by-topic/proximity-testing/">Proximity Testing</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/reed-solomon-codes/">Reed Solomon Codes</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/snarks/">Snarks</a></div>
+<!-- topics:end -->
+
+Take a Reed–Solomon code and any affine space of vectors. The source proves the
+space cannot be split: either all of its elements are close to the code, or
+almost none are. That dichotomy is what makes the FRI protocol sound, and hence
+what underlies the concrete security of the STARK proof systems built on it. It
+is proved for closeness thresholds below the Johnson bound $1 - \sqrt\rho$,
+because the proof runs through list-decoding algorithms that stop there. The
+conjecture is that it holds all the way to capacity $1 - \rho$.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [LaTeX source](latex/main.tex) · Formal statement — *not yet formalized*
+
+**The object.** $\mathrm{RS}[\mathbb{F}_q, D, k]$ is the Reed–Solomon code of
+blocklength $n = |D|$ whose codewords are polynomials of degree at most $k$
+evaluated on $D$, with rate $\rho = (k+1)/n$. A collection $\mathcal{C}$ of
+subsets of $\mathbb{F}_q^{D}$ displays a *$(\delta,\varepsilon)$-proximity gap*
+with respect to a code $V$ if every $A \in \mathcal{C}$ satisfies one of two
+alternatives: all of its elements are within relative Hamming distance $\delta$
+of $V$, or at most an $\varepsilon$ fraction are. $\mathcal{C}_{\mathrm{Affine}}$
+is the collection of affine spaces.
+
+**What is proved (Theorems 1.2 and 1.4).** $\mathcal{C}_{\mathrm{Affine}}$
+displays a $(\delta,\varepsilon)$-proximity gap for every $\delta \in (0, 1 -
+\sqrt\rho)$, with $\varepsilon = n/q$ below the unique decoding radius and
+$\varepsilon = O((\eta\rho)^{-O(1)} n^2/q)$ above it, $\eta = 1 - \sqrt\rho -
+\delta$. In correlated-agreement form: if a random element of the space is
+$\delta$-close to $V$ with probability exceeding $\varepsilon$, then a single
+set $D'$ of density at least $1 - \delta$ carries codeword agreement for
+*every* generator at once.
+
+**Conjecture (the source's Conjecture 8.4).** There exist constants $c_1, c_2$
+such that for all $\eta > 0$: Theorems 1.2, 1.4 and 1.6 hold for $\delta \le 1
+- \rho - \eta$ with error $\varepsilon \le (\eta\rho)^{-c_1} \cdot n^{c_2}/q$;
+and Theorem 1.5 holds for the same $\delta$ and degree-$\ell$ parameterized
+curves with error $\varepsilon \le (\eta\rho)^{-c_1}\cdot(\ell n)^{c_2}/q$.
+
+**How the source states it.** Remark 1.1, page 2: "However, we conjecture that
+Theorem 1.2 holds even for larger proximity parameters, up to capacity
+$(1-\rho)$. See Conjecture 8.4 and the discussion there." And on page 43:
+"Closing the gap between the provable upper and lower bounds on $s$ is left as
+an interesting open problem."
+
+**The constants, and what is known not to hold.** The source records that
+nothing known to it contradicts $c_1 = c_2 = 2$; and that restricted to fields
+of characteristic greater than $k$, nothing known contradicts $c_1 = c_2 = 1$ —
+but those smaller exponents provably cannot hold in characteristic two, by
+DEEP-FRI's Appendix B. A proof should report its exponents and the
+characteristic it needs; a refutation is most likely to come from
+characteristic two.
+
+**What settling it buys.** By the source's own accounting, the conjecture
+implies the Ben-Sasson et al. conjecture that $s \ge \lambda/\log(1/\rho)$
+query repetitions suffice for FRI to reach security parameter $\lambda$ over
+large enough fields, against the $s \approx 2\lambda/\log(1/\rho)$ the source
+can prove. That is a factor of two in the query complexity of every FRI-based
+proof system.
+
+### Sources
+
+- Ben-Sasson, Carmon, Ishai, Kopparty and Saraf. [*Proximity Gaps for Reed–Solomon Codes*](https://eprint.iacr.org/2020/654). IACR ePrint 2020/654. The source. Theorem 1.2 is on page 2, Theorem 1.4 on page 4, Theorems 1.5 and 1.6 on page 5, and Conjecture 8.4 with its discussion on page 43.
+- Ben-Sasson, Bentov, Horesh and Riabzev. [*Fast Reed–Solomon Interactive Oracle Proofs of Proximity*](https://doi.org/10.4230/LIPIcs.ICALP.2018.14). ICALP 2018. Introduces FRI, proves the $s \ge \lambda/\log(1/\rho)$ lower bound and conjectures it is also sufficient — the conjecture this statement would imply.
+- Ben-Sasson, Goldberg, Kopparty and Saraf. [*DEEP-FRI: Sampling Outside the Box Improves Soundness*](https://doi.org/10.4230/LIPIcs.ITCS.2020.5). ITCS 2020. The prior state of the art the source improves on, and whose Appendix B rules out $c_1 = c_2 = 1$ in characteristic two.
+- Ben-Sasson, Kopparty and Saraf. [*Worst-Case to Average Case Reductions for the Distance to a Code*](https://doi.org/10.4230/LIPIcs.CCC.2018.24). CCC 2018. Part of the prior state of the art on proximity testing for RS codes.
+
+## Proof
+
+View PDF — *no proof written yet* · LaTeX source — *no proof written yet* · Formal proof — *not yet formalized*
+
+Open, and the obstruction is unusually well identified.
+
+**Why the proof stops where it does.** Below the unique decoding radius the
+argument is comparatively soft and the error $n/q$ is essentially tight. Above
+it, the source's proof invokes the Guruswami–Sudan list-decoding algorithm —
+non-algorithmically, but essentially — and the Johnson bound $1 - \sqrt\rho$ is
+precisely the largest distance at which that algorithm works. Beyond it the
+list of codewords within distance $\delta$ need not be polynomially bounded at
+all, so the proof does not merely degrade: it loses the object it reasons
+about.
+
+**What a resolution needs.** Either a correlated-agreement argument that does
+not route through list decoding, or a way to control the capacity-regime list
+that suffices for the counting the proof does. The source offers no candidate,
+which is why this is graded a barrier rather than a new idea.
+
+**Where a refutation would live.** In characteristic two, and at the smaller
+exponents. The source notes that $c_1 = c_2 = 1$ is already excluded there by
+DEEP-FRI's Appendix B, so the characteristic-two behaviour of these codes is
+demonstrably different — a natural place to look for a counterexample to the
+$\delta \le 1 - \rho - \eta$ claim itself.
+
+**Checked against the literature, 2026-08-27.** No proof or refutation of
+Conjecture 8.4 found. This is a targeted check on the source and the FRI
+soundness line, not an exhaustive sweep of the proximity-testing literature.
+
+## Discussion
+
+**Why this is not only a coding-theory question.** FRI is the proximity test at
+the heart of the STARK family of proof systems, and its concrete soundness is
+computed from exactly these theorems. The gap between provable and conjectured
+query counts is not asymptotic hand-waving: it is a factor of two in how many
+times a verifier must query, and therefore in proof size and verification time
+for deployed systems.
+
+**Field size is a separate axis.** The conjecture fixes the error's shape as
+$(\eta\rho)^{-c_1} n^{c_2}/q$, so it still needs $q$ polynomially larger than
+$n$ to say anything. The source separately notes that its error above the
+unique decoding radius is nontrivial only for $q$ quadratically larger than
+$n$, while below that radius linear suffices. Reducing the required field size
+at a fixed proximity parameter is a different question.
+
+**What a reviewer should be suspicious of, in order.** First, whether a claimed
+proof covers all four theorems the conjecture names, including Theorem 1.5's
+parameterized curves with their $(\ell n)^{c_2}$ error — the curve case is the
+one applications use for batching and is easy to omit. Second, the
+characteristic: a proof that silently assumes characteristic greater than $k$
+is proving something the source already flags as more plausible. Third, that
+$\eta$ is the slack below *capacity* in the conjecture, whereas in Theorem 1.2
+it is the slack below the Johnson bound — the same letter for two different
+quantities, following the source.
+
+## Open obligations
+
+- [ ] Prove Conjecture 8.4: both bullets, for $\delta \le 1 - \rho - \eta$, with explicit $c_1, c_2$.
+- [ ] Or refute it, most plausibly in characteristic two.
+- [ ] Or settle the intermediate question: push the proximity parameter beyond $1 - \sqrt\rho$ by any amount, with any polynomial error.
+- [ ] Report whether the resolution yields the Ben-Sasson et al. FRI query-count conjecture, which is what the source says it would.
+- [ ] Formalize the statement in Lean; nothing here has been formalized.
+
+:::

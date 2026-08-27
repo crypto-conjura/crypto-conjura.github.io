@@ -1,0 +1,89 @@
+---
+title: "Which protocols survive Fiat-Shamir"
+subtitle: "Every known counterexample uses one trick; the class that forbids it may be safe"
+---
+
+## Motivation
+
+The Fiat-Shamir transform replaces an interactive protocol's verifier coins with a
+hash of the transcript, collapsing interaction into a single message. It underlies
+most deployed non-interactive proof systems. It is also not sound in general.
+
+The distinction that matters is proofs versus arguments. For constant-round
+*proofs* — statistically sound protocols — Fiat-Shamir is sound. For *arguments*,
+sound only against efficient provers, there are counterexamples that fail no
+matter which hash family is used, and Kilian's protocol, the basis of most succinct
+arguments, is among them.
+
+So the question is not whether Fiat-Shamir works but *where*. A characterization
+would tell protocol designers which side of the line they are on, and would
+identify what to aim for when building a protocol intended to be collapsed.
+
+## Provenance and history
+
+Yael Tauman Kalai, Vinod Vaikuntanathan and Rachel Yun Zhang, *Somewhere
+Statistical Soundness, Post-Quantum Security, and SNARGs* ([IACR ePrint
+2021/788](https://eprint.iacr.org/2021/788)), propose a candidate line and a
+reason to believe in it.
+
+Their observation is about the counterexamples rather than the transform. Each is
+built by adding an accepting clause such that a prover who can predict the
+verifier's next message can convince the verifier of a false statement through it.
+Interactively that is harmless — the prover cannot predict. Under Fiat-Shamir the
+prover holds the hash function and can. And the clause's witness *is* the hash
+function, so it has no statistical soundness on any slice of the protocol.
+
+That suggests the property to ask for: keep a slice on which soundness is
+statistical. An argument is *somewhere statistically sound* if for every first
+verifier message there is a distinguished later verifier message such that,
+conditioned on the transcript through that point, the remaining protocol is
+statistically sound — statistically sound on a hidden slice, computationally sound
+elsewhere. The name is by analogy with somewhere statistical binding.
+
+The class earns its keep independently of the conjecture. Their Theorem 4.3 shows
+SSS implies straight-line soundness, hence post-quantum soundness whenever the
+underlying assumption is post-quantum — a route worth contrasting with the highly
+non-trivial quantum techniques Chiesa, Ma, Spooner and Zhandry needed to establish
+post-quantum soundness of classical Kilian for all of NP. And they prove their own
+instantiation of Kilian's protocol, with a multi-extractable somewhere
+statistically binding hash family and a BMW-compatible PCP, is SSS.
+
+Their Conjecture 1.3 is that constant-round SSS arguments are Fiat-Shamir
+friendly, where friendly means *some* hash family makes the transform sound. They
+are explicit that they only conjecture it, and ask for a proof or refutation. A
+positive data point: the only interactive argument previously proven Fiat-Shamir
+friendly, by Canetti et al., is itself an SSS argument. So the class contains the
+sole known success and excludes every known failure.
+
+## Parameter lattice
+
+Soundness type against Fiat-Shamir status.
+
+| Protocol class | Fiat-Shamir | Note |
+|---|---|---|
+| **Constant-round proofs** (statistically sound) | sound | classical |
+| **Constant-round SSS arguments** | [c/0092](/c/0092/) — conjectured friendly | contains the one proven-friendly argument |
+| **General arguments** | *not* sound | counterexamples independent of the hash family |
+| **Kilian's protocol, generally** | *not* sound | Bartusek et al. |
+| **Kilian, SSS instantiation** | friendly if [c/0092](/c/0092/) holds | the source proves this instantiation is SSS |
+
+What SSS buys unconditionally, versus what needs the conjecture:
+
+| Property | Status |
+|---|---|
+| Straight-line soundness | proved, Theorem 4.3 |
+| Post-quantum soundness | proved, from straight-line |
+| Fiat-Shamir friendliness | [c/0092](/c/0092/) — open |
+
+## The route this sits on
+
+Constructing a succinct SSS argument for all of NP is proposed alongside the
+conjecture as "a great open problem", and it is easier than constructing a
+non-adaptive SNARG for NP: any such SNARG is in particular SSS, with two extra
+arbitrary rounds ignored by the verdict function. So the pair — prove the
+conjecture, then build a succinct SSS argument — is a proposed route to SNARGs from
+a standard post-quantum assumption.
+
+## Statements in this hub
+
+- [Somewhere Statistically Sound Arguments Are Fiat-Shamir Friendly](/c/0092/) — open

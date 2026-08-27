@@ -1,0 +1,89 @@
+---
+title: "t-wise independence of concrete block ciphers"
+subtitle: "Provable security for AES as it is built, not for an idealized model of it"
+---
+
+## Motivation
+
+There is no hard mathematical problem underlying AES to reduce security to. The
+design is deliberately simple and fast, which is exactly what puts it at odds with
+the reductionist approach: validation has come from cryptanalysis, not from proof.
+
+The next best thing is to prove that specific, well-studied classes of attack
+cannot succeed. Almost $t$-wise independence is the largest such class currently in
+reach: a permutation family is $\varepsilon$-close to $t$-wise independent if its
+behaviour on any $t$ distinct inputs is within statistical distance $\varepsilon$
+of a random permutation's. At $t = 2$ this already rules out truncated differential
+attacks and linear cryptanalysis. Higher $t$ rules out more.
+
+Two features distinguish this programme from the large body of ideal-model
+analyses. The S-box is the *real* one — the patched inverse over $\mathbb{F}_{2^8}$
+composed with an affine map — not a random or public-random permutation, which
+matters because ideal-model results assume fewer than $2^b$ queries to the S-box
+and $b = 8$ in AES. And the results are concrete: an actual round count and an
+actual closeness parameter, not an asymptotic statement. What is *not* removed is
+the independent-round-keys assumption, inherited from Lai, Massey and Murphy's
+Markov ciphers; the working expectation is that $t$-wise independence becomes
+$t$-wise pseudorandomness under a suitable key schedule, and Liu, Tessaro and
+Vaikuntanathan record that understanding the role of key schedules is itself an
+important open problem.
+
+## Provenance and history
+
+Tianren Liu, Stefano Tessaro and Vinod Vaikuntanathan, *The $t$-wise Independence
+of Substitution-Permutation Networks* ([IACR ePrint
+2021/507](https://eprint.iacr.org/2021/507)), initiate the programme. They prove
+almost pairwise independence for multi-round SPNs with concrete S-boxes and a
+suitable mixing layer, and adapt the argument to the real AES round structure and
+parameters: their Theorem 3.14 gives $6r$-round AES as $2^{r-1}(0.472)^r$-close to
+pairwise independence, which reaches $2^{-128}$ only past $9000$ rounds. They also
+show existentially, by the probabilistic method, that *some* permutations
+instantiate a $(t+1)$-round key-alternating cipher that is almost $t$-wise
+independent in $t + o(t)$ rounds — but those permutations are not AES's S-box. They
+name two outstanding open problems: $t$-wise independence of AES for $t > 2$, and
+security against algebraic attacks.
+
+Their Appendix B is the cautionary note the whole programme has to work around. For
+the width-$1$ key-alternating cipher with the same patched-inverse permutation over
+$\mathbb{F}_{2^n}$, $4$-wise independence *fails* at modest round counts $r \ll
+2^n$, by essentially the interpolation attack of Jakobsen and Knudsen: the output
+is a rational function of the input with numerator and denominator linear in $x$.
+Carlitz's 1953 result says that with $2^{\Omega(n)}$ rounds the same cipher would be
+indistinguishable from random, so this is a statement about round count rather than
+impossibility — but it means any proof for $t \ge 4$ must be sensitive to width and
+mixing.
+
+Anastasiya Pelecanos, Stefano Tessaro and Vinod Vaikuntanathan, *Layout Graphs,
+Random Walks and the $t$-wise Independence of SPN Block Ciphers* ([IACR ePrint
+2024/083](https://eprint.iacr.org/2024/083)), improve the pairwise picture
+dramatically using a random walk on *layout graphs* — a combinatorial abstraction
+capturing equality and inequality constraints among several SPN evaluations. With
+random independent S-boxes and the real AES mixing layer ($\mathrm{AES}^\ast$), $7$
+rounds suffice for $2^{-128}$. Converting to the real S-box costs the mixing
+layers: substituting several keyed applications of the true S-box for one random
+S-box is licensed only when the intervening mixing layers are absent, giving
+"censored AES", for which $192$ rounds suffice. They conjecture the same count
+works for AES itself.
+
+## Parameter lattice
+
+Rounds needed for $2^{-128}$-closeness, by cipher and independence order. Round
+keys independent throughout.
+
+| Cipher | $t = 2$ | $t > 2$ |
+|---|---|---|
+| **$\mathrm{AES}^{\ast}$** (random independent S-boxes, AES mixing) | $7$, proved | layout-graph machinery applies to general $t$ |
+| **Censored AES** (real S-box, some mixing removed) | $192$, proved | not addressed |
+| **Real AES** | $192$ — [c/0090](/c/0090/), open; $>9000$ proved | [c/0091](/c/0091/) — open, no finite bound known |
+| **KAC, width 1, patched inverse** | — | $4$-wise independence *fails* for $r \ll 2^n$ |
+| **KAC, most permutations** | — | $t + o(t)$ rounds, existentially |
+
+The two open statements sit on different axes. [c/0090](/c/0090/) fixes $t = 2$ and
+asks whether restoring the mixing layers can be shown not to hurt — a monotonicity
+claim. [c/0091](/c/0091/) asks whether *any* finite round count works above $t = 2$,
+where the width-$1$ counterexample constrains the shape of any proof.
+
+## Statements in this hub
+
+- [192-Round AES Is 2^-128-Close to Pairwise Independent](/c/0090/) — open
+- [t-Wise Independence of AES for t > 2](/c/0091/) — open

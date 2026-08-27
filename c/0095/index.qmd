@@ -1,0 +1,190 @@
+---
+id: "0095"
+problem: perceptron-collision-resistance
+draft: sbp-intermediate-collision-resistance
+title: "Collision Resistance of the Symmetric Binary Perceptron"
+short_title: "SBP Collision Resistance"
+areas: [foundations]
+topics: [overlap-gap-property, collision-resistant-hashing, average-case-hardness, planted-constraint-satisfaction]
+model: standard
+form: separation
+assumption_class: unconditional
+category: research-open
+revision: 1
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: new-idea
+  by: ai
+  note: "Both available techniques fail for identified reasons: the positive-tail algorithm needs the activation to saturate above kappa and the SBP's is a window, while the OGP argument needs a first-moment computation on the collision space that the SBP's rigid alignments block -- which is why the source introduced a randomized activation instead. So progress needs either an algorithm not relying on saturation or a hardness argument surviving the rigidity. The concrete parameter point the source names inside the window makes the target unusually specific for a question of this shape."
+status_summary: "Posed as a displayed Open Question and called a central open challenge. The source gives an efficient online collision finder for small kappa and an overlap-gap-based online lower bound for a different, randomized activation -- introduced precisely because the SBP's own collision space resists a first-moment analysis. For very large kappa collisions become trivial. The middle window is reached by neither technique."
+status_updated: 2026-08-27
+relations:
+  - {kind: variant-of, target: "0094", note: "both concern where efficient algorithms stop on a random constraint problem analysed by the overlap gap property, and share an author group; c/0094 is over the bounded integer grid with an l2 objective, while this fixes the domain to {-1,1}^n with an infinity-norm window"}
+lean:
+  mode: none
+sources:
+  - {cite: "Benedetti, Bogdanov, Malatesta, Mezard, Perrupato, Rosen, Schwartzbach, Zecchina, Collision Resistance of Single-Layer Neural Nets, IACR ePrint 2026/1143", url: "https://eprint.iacr.org/2026/1143"}
+  - {cite: "Aubin, Perkins, Zdeborova, Storage Capacity in Symmetric Binary Perceptrons, Journal of Physics A, 2019", url: "https://doi.org/10.1088/1751-8121/ab227a"}
+  - {cite: "Gamarnik, The Overlap Gap Property: A Topological Barrier to Optimizing over Random Structures, PNAS, 2021", url: "https://doi.org/10.1073/pnas.2108492118"}
+statement_sha: "cef3f8875f12d79c2c94eb9d3ed6e1004a0292d82a60f11a32f9d864ab45f824"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+<!-- topics:start -->
+<div class="cj-tags cj-page-topics"><a class="cj-tag cj-tag-topic" href="/problems/by-topic/average-case-hardness/">Average Case Hardness</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/collision-resistant-hashing/">Collision Resistant Hashing</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/overlap-gap-property/">Overlap Gap Property</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/planted-constraint-satisfaction/">Planted Constraint Satisfaction</a></div>
+<!-- topics:end -->
+
+A single-layer neural net with random weights compresses its input, so collisions
+exist. Whether they can be found efficiently depends on the activation. If the
+activation flattens out on a positive tail the answer is yes, and the source gives
+the algorithm: drive every margin above the flat region and the outputs agree. The
+symmetric binary perceptron does not flatten — it is a window indicator — and for
+very large window width collisions become trivial for a different reason. Between
+those two regimes nothing is known: no algorithm reaches, and no hardness argument
+applies. The question is whether that middle window is where a collision-resistant
+hash function lives.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [LaTeX source](latex/main.tex) · Formal statement — *not yet formalized*
+
+**The setting.** Fix a random matrix $A$ and an activation $\varphi$, and consider
+$x \mapsto \varphi(Ax)$ on binary inputs. Collision resistance means the hardness
+of finding two distinct inputs with the same output. Two parameters govern:
+$\alpha = m/n$, the collision ratio, and the activation's threshold $\kappa$. A
+collision is *$\delta$-extensive* if the two inputs $x, y \in \{\pm 1\}^n$ satisfy
+$x^\top y \le (1-\delta)n$ — far apart, not near-duplicates.
+
+**Conjecture.** For some $\alpha < 1$, there exists an intermediate window of
+$\kappa$ with $1/\log n \ll \kappa \ll 1/\sqrt{\alpha}$ in which $\mathrm{SBP}$ is
+collision resistant against polynomial-time algorithms.
+
+**How the source states it, and why the direction is mine.** The source displays it
+as a question: "For some $\alpha < 1$, does there exist an intermediate window of
+$\kappa$ with $1/\log n \ll \kappa \ll 1/\sqrt{\alpha}$ in which SBP is collision
+resistant against polynomial-time algorithms?" It predicts nothing. The statement
+is recorded in the affirmative because a statement needs a direction, not because
+the source endorses one. Elsewhere it calls the matter "a central open challenge":
+"Resolving whether SBP is collision resistant in this middle regime, for some
+$\alpha < 1$ and some $\kappa$, remains a central open challenge."
+
+**The concrete point inside the window.** The source names $\kappa \approx 0.675$
+and $\alpha \approx 0.9$, "where statistical physics suggests nontrivial
+structure." That is the natural first target from either side.
+
+**What brackets it.**
+
+| Regime | Status |
+|---|---|
+| Small $\kappa$, $\kappa \ll 1/\sqrt{\alpha}$ | inside the positive-tail algorithmic window — collisions found efficiently |
+| **Intermediate $\kappa$** | **[c/0095](/c/0095/) — open; neither technique reaches** |
+| Very large $\kappa$ | activation nearly constant on typical Gaussian margins — collisions trivial |
+| Randomized oscillating activation | OGP proved, online lower bound derived — but a *different* model |
+
+The source's own words on the gap: "The difficult case is the intermediate window,
+where the positive-tail escape route no longer applies but no OGP-based hardness
+result is known for collision finding."
+
+**Why both known techniques stop short — the useful part.** The positive-tail
+algorithm needs the activation to be constant above $\kappa$, so that pushing
+margins past it suffices; the SBP's activation is a window, so pushing margins up
+eventually leaves the window rather than saturating it. And the OGP argument needs
+a first-moment computation on the collision space, which the source could not carry
+out for the SBP — hence its randomized oscillating activation, whose independent
+per-neuron thresholds destroy the alignments that block the analysis: "This extra
+randomness removes the rigid alignments that make the SBP collision space difficult
+to analyze, while preserving the obstruction to the positive-tail algorithm." So a
+resolution needs either an algorithm not relying on saturation, or a hardness
+argument surviving the SBP's rigidity.
+
+### Sources
+
+- Benedetti, Bogdanov, Malatesta, Mézard, Perrupato, Rosen, Schwartzbach and Zecchina. [*Collision Resistance of Single-Layer Neural Nets*](https://eprint.iacr.org/2026/1143). IACR ePrint 2026/1143. The source. The framing of the SBP as the limiting case is on page 3, the displayed Open Question on page 5, Conjecture 1.4 on page 7, and Theorem 4.1 in Section 4.
+- Aubin, Perkins and Zdeborová. [*Storage Capacity in Symmetric Binary Perceptrons*](https://doi.org/10.1088/1751-8121/ab227a). Journal of Physics A, 2019. Introduces the symmetric binary perceptron.
+- Gamarnik. [*The Overlap Gap Property: A Topological Barrier to Optimizing over Random Structures*](https://doi.org/10.1073/pnas.2108492118). PNAS, 2021. The survey whose framework the source's hardness results sit in.
+
+## Proof
+
+View PDF — *no proof written yet* · LaTeX source — *no proof written yet* · Formal proof — *not yet formalized*
+
+Open in both directions, with both failures diagnosed.
+
+**Toward an algorithm.** The route is to find a collision-finding strategy that
+does not need the activation to saturate. The source's own algorithmic side has a
+loose end that could help or hurt: its practical algorithm is proved correct only
+at inverse logarithmic algorithmic rates, and it leaves its performance at constant
+rates open, using it as a component in a more complicated algorithm that provably
+works at fixed positive rates for sufficiently small $\delta$ and $\alpha$. It also
+notes that whether the sharper discrepancy-minimization approach adapts to
+collision finding "remains open." Progress there would shrink the window from
+below.
+
+**Toward hardness.** The obstruction is the first-moment computation. Any argument
+must handle the SBP's rigid alignments directly rather than randomizing them away,
+which is what the source could not do.
+
+**What is on the other side of the ledger.** The SBP is susceptible to a
+second-preimage attack — sample $y = \mathrm{sign}(Ax)$ for random $x$ and solve the
+resulting teacher-student problem. That is a different goal from collision finding
+and the source presents it as motivation for care rather than as an obstruction.
+There is also complementary evidence for hardness from worst-case lattice
+assumptions, in a regime where the number of variables is polynomially larger than
+the number of constraints, with the proportional regime $m = \Theta(n)$ explicitly
+left open — so it "does not directly address collision finding or the
+intermediate-density SBP window considered here."
+
+**Checked against the literature, 2026-08-27.** No resolution found. Targeted check
+on this paper's line, not an exhaustive sweep of the perceptron literature.
+
+## Discussion
+
+**Why a perceptron would be an interesting hash function.** The source's programme
+is to identify collision-resistant hash candidates from single-layer neural nets,
+using the overlap gap property as the criterion, and to compare them against
+Ajtai's lattice-based function. A collision-resistance result in the intermediate
+window would put a markedly different candidate on the table from the
+lattice-based ones; a collision-finding algorithm would remove the SBP from
+consideration and narrow the search.
+
+**Neighbouring statements in the same paper, both distinct.** Its Conjecture 1.4
+(Hardness of Collision Finding) states that for fixed constants $K \in \mathbb{N}$,
+$\kappa > 0$ and $\delta > 0$ there is a threshold $\alpha^\star < 1$ such that for
+all $\alpha \ge \alpha^\star$, no polynomial-time algorithm finds a
+$\delta$-extensive collision with non-negligible probability. That is about the
+*randomized oscillating* activation, where the source has the OGP and an online
+lower bound, and it asks to upgrade "online" to "polynomial-time"; the source leaves
+"confirming this conjecture, or finding algorithmic counterexamples, as an open
+direction for future work." Separately, its formal lower bound is for online
+algorithms, and it notes that bounds for "low-degree, message-passing, and quantum
+algorithms, remain open."
+
+**What a reviewer should be suspicious of, in order.** First, whether a claimed
+result is about the SBP or about the randomized oscillating activation — the source
+introduced the latter precisely because the former resists analysis, so conflating
+them would erase the whole content. Second, whether $\kappa$ lies in the stated
+window: outside it the question is settled in one direction or the other. Third,
+whether the algorithm class is polynomial-time or merely online, since the source's
+proved bound is the weaker one.
+
+## Open obligations
+
+- [ ] Settle collision resistance of the SBP for some $\alpha < 1$ and some $\kappa$ in $1/\log n \ll \kappa \ll 1/\sqrt{\alpha}$ — starting at $\kappa \approx 0.675$, $\alpha \approx 0.9$.
+- [ ] Either supply an algorithm that does not rely on positive-tail saturation, or a first-moment analysis that survives the SBP's alignments.
+- [ ] Report whether the result covers polynomial-time algorithms or only online ones.
+- [ ] Formalize the statement in Lean; nothing here has been formalized.
+
+:::

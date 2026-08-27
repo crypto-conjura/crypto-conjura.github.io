@@ -1,0 +1,82 @@
+---
+title: "Decoding random quantum stabilizer codes"
+subtitle: "Average-case hardness is settled; the worst-case-to-average-case route is barred"
+---
+
+## Motivation
+
+Random classical linear codes are believed hard to decode, and that belief carries
+a good deal of cryptography. The quantum analogue — decoding a random stabilizer
+code — was for a long time simply not understood, despite stabilizer codes being
+the workhorse of quantum error correction.
+
+There are two separate things one wants. The first is average-case hardness: is a
+typical instance hard? The second is a *self-reduction*, turning an arbitrary
+worst-case instance into a random one, which is what makes classical LPN hardness
+rest on worst-case foundations rather than on a belief about random instances. The
+first has now been settled. The second appears to be obstructed, and the
+obstruction is specific to the quantum setting.
+
+## Provenance and history
+
+Andrey Boris Khesin, Jonathan Z. Lu, Alexander Poremba, Akshar Ramkumar and Vinod
+Vaikuntanathan, *Average-Case Complexity of Quantum Stabilizer Decoding* ([IACR
+ePrint 2025/1769](https://eprint.iacr.org/2025/1769)), close the first question
+and map the second.
+
+On hardness: decoding a random stabilizer code with even a single logical qubit is
+at least as hard as decoding a random classical code at constant rate — the
+maximally hard regime. So the easiest random quantum decoding problem is at least
+as hard as the hardest random classical one, and any sub-exponential algorithm for
+a typical stabilizer code at any rate would be a cryptographic breakthrough. This
+is proved by a direct reduction from $\mathsf{LPN}$ to $\mathsf{LSN}$, not by a
+self-reduction.
+
+On self-reductions, the news is negative and the reason is structural. A stabilizer
+instance carries two Pauli objects, the code and the error, and a reduction has to
+scramble both at once. But one must come out maximally random while the other must
+*not*, on pain of losing decodability. The paper's phrasing: "The culprit
+preventing the existence of such a reduction is exchange symmetry between the code
+and the error." It proves no self-reduction exists from an arbitrary worst-case
+$\mathsf{QNCP}$ instance, and shows an analogous no-go holds classically too —
+which is why the classical escape is the thing to imitate. Brakerski, Lyubashevsky,
+Vaikuntanathan and Wichs get a classical self-reduction by restricting the set of
+worst-case instances.
+
+Beyond that the paper's barrier is conditional, resting on a bound on a quantity it
+introduces called the *scrambling gap*, and supported by new bounds on Clifford
+entropies and Pauli mixing times. Its Conjecture 5.20 asserts the barrier holds
+unconditionally for tableau-randomizing reductions. It is careful that this is not
+an impossibility for self-reductions in general, and names three escapes it does
+not cover.
+
+The paper also finds that several definitions of stabilizer decoding which are
+classically identical have distinct or only non-trivially equivalent complexity in
+the quantum case — quantum degeneracy being one cause — and establishes various
+self-reductions that *are* achievable, notably between search and decision.
+
+## Parameter lattice
+
+What is known about reductions among quantum decoding problems.
+
+| Reduction | Status |
+|---|---|
+| $\mathsf{LPN} \to \mathsf{LSN}$ (average-case hardness) | proved |
+| Worst-case $\mathsf{QNCP}$ $\to$ $\mathsf{LSN}$ self-reduction | proved impossible |
+| Tableau-randomizing self-reduction, conditional on scrambling gap | proved |
+| Tableau-randomizing self-reduction, unconditional | [c/0093](/c/0093/) — open |
+| Search $\to$ decision, worst case | proved, needs a solver for every $w' \le w$ |
+| Decision $\to$ search, Search $\mathsf{QNCP}$ / $\mathsf{recQNCP}$ | open — solutions not efficiently verifiable |
+| Search-decision equivalence for $\mathsf{LSN}_{\mathrm{poly}}$ | proved with multiple samples; single sample open |
+| $\mathsf{LSN}(k,n,p) \to \mathsf{LPN}(\Theta(np),\Theta(n),\Theta(p))$ | open |
+
+The two parameters that make [c/0093](/c/0093/) non-vacuous:
+
+| Parameter | Trivial value | Required |
+|---|---|---|
+| $\varepsilon$ (reduction quality) | any | $\mathrm{negl}(n)$ — *strong* |
+| $p$ (random-case error rate) | $3/4$, always achievable, equivalent to the maximally mixed state | $3/4 - 1/\mathrm{poly}(n)$ — *non-trivial* |
+
+## Statements in this hub
+
+- [No Tableau-Randomizing Self-Reduction for Learning Stabilizer with Noise](/c/0093/) — open

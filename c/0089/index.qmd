@@ -1,0 +1,178 @@
+---
+id: "0089"
+problem: avp-communication-lower-bounds
+draft: avp-communication-lower-bound
+title: "Advisor-Verifier-Prover Protocols Are Lengthy"
+short_title: "AVPs Are Lengthy"
+areas: [information-theoretic, secret-sharing, foundations]
+topics: [private-information-retrieval, randomized-encodings, garbled-circuits, proof-size-lower-bounds]
+model: standard
+form: lower-bound
+assumption_class: unconditional
+category: research-open
+revision: 1
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: barrier
+  by: ai
+  note: "The three primitives this would lower-bound have resisted super-linear bounds for thirty years, and the source is explicit that its hypothesis is 'an (ambitious) target'. The hypothesis is strictly harder than each of them individually, since it implies all three at once. Against that: the model is elementary -- no assumption, no computational bound, three message lengths to add up -- and the source shows the classical counting arguments do transfer, so there is a floor to build from. The barrier grade is for the target, not for the difficulty of understanding it."
+status_summary: "Posed as Hypothesis 1.2 and offered both as a working hypothesis and as an ambitious target. Theorem 1.3 proves it implies super-polynomial lower bounds on sd-PIR, general secret sharing and fully-decomposable randomized encodings -- for none of which a super-linear lower bound is currently known. The source adapts counting-based arguments to the model but does not reach the best-known bound for any primitive."
+status_updated: 2026-08-27
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Applebaum, Nir, Advisor-Verifier-Prover Games and the Hardness of Information Theoretic Cryptography, IACR ePrint 2023/1378", url: "https://eprint.iacr.org/2023/1378"}
+  - {cite: "Ito, Saito, Nishizeki, Secret sharing scheme realizing general access structure, Globecom 1987"}
+  - {cite: "Applebaum, Nir, Upslices, Downslices, and Secret-Sharing with Complexity of 1.5^n, CRYPTO 2021", url: "https://eprint.iacr.org/2021/470"}
+statement_sha: "b2f07a808a0fa041b455b268a136249a4a470606438f8788088d988c327e9ae7"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+<!-- topics:start -->
+<div class="cj-tags cj-page-topics"><a class="cj-tag cj-tag-topic" href="/problems/by-topic/garbled-circuits/">Garbled Circuits</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/private-information-retrieval/">Private Information Retrieval</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/proof-size-lower-bounds/">Proof Size Lower Bounds</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/randomized-encodings/">Randomized Encodings</a></div>
+<!-- topics:end -->
+
+Private information retrieval, general secret sharing and garbling have all
+resisted super-linear communication lower bounds for three decades, and nothing
+connects the three questions to each other: a bound for one would not give a
+bound for another. The source finds a single proof model they all reduce to. An
+advisor sees a function and hands the verifier a secret advice string, then
+leaves; the verifier gets an input, sends one query to an untrusted prover, and
+decides. The hypothesis is that when the prover answers with only a constant
+number of bits, the advice and the query cannot both be short. Prove that and
+all three lower bounds follow at once.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [LaTeX source](latex/main.tex) · Formal statement — *not yet formalized*
+
+**The model (the source's Section 1.1).** An *Advisor-Verifier-Prover* protocol
+has two phases. *Offline*: an arbitrary $f : \{0,1\}^n \to \{0,1\}$ is delivered
+only to the advisor, who computes a randomized advice $a$, delivers it privately
+to the verifier, and leaves. *Online*: the verifier receives $x \in \{0,1\}^n$
+and sends a single query $b = b(a,x)$ to an untrusted prover; the prover, holding
+$x$ and $f$, tries to convince the verifier that $f(x) = 1$ by sending one
+message $c = c(b,x,f)$; the verifier accepts or rejects by computing a predicate
+over $a$, $x$, $c$ and its private random tape.
+
+The advice is hidden from the prover, and no re-usability is required — soundness
+is measured over a single use with a fresh advice. All parties are
+computationally unbounded. The cost is $|a| + |b| + |c|$, and the target is
+perfect completeness with soundness error $1/2$. A prover is *laconic* if it
+sends only $C$ bits for a constant $C$ independent of $n$.
+
+**Conjecture (the source's Hypothesis 1.2).** Every prover-laconic AVP protocol
+that works for the class of $n$-bit predicates must have total communication
+complexity that is super-polynomial in $n$.
+
+**What it buys (the source's Theorem 1.3).** Under the hypothesis, sd-PIR over a
+$2^n$-bit database, general secret sharing over $n$-bit predicates, and
+fully-decomposable randomized encodings over $n$-bit predicates all have
+communication cost growing super-polynomially in $n$.
+
+**How the source frames it.** Page 5: "Hypothesis 1.2 can be used both as a
+working hypothesis or as an (ambitious) target for future works."
+
+**The gap it must cross.** The transforms run both ways, and as a by-product
+yield a non-trivial AVP with sub-exponential communication
+$2^{\tilde{O}(\sqrt{n})}$ *and* a laconic prover sending a single bit. So
+prover-laconic AVPs exist at sub-exponential cost, and the hypothesis is the
+claim that they cannot be pushed to polynomial. The quantity to be ruled out
+sits between $\mathrm{poly}(n)$ and $2^{\tilde{O}(\sqrt{n})}$ — the same shape as
+the gap in each of the three primitives.
+
+**Why laconicity cannot be dropped.** The source's Example 1.1 gives a
+*non-laconic* AVP with polynomial communication, rooted in the PIR literature and
+derivable from an $n$-server PIR protocol. So the hypothesis is false without the
+restriction, and any attack on it must use the constant bound on $|c|$.
+
+**The state of the art in the three primitives, for calibration.** For sd-PIR —
+constant servers, each answering constantly many bits, minimizing the client's
+message — the best upper bounds are $2^{\tilde{O}(\sqrt{n})}$, and a lower bound
+of $Cn$ for a constant $C > 1$ has been known since the late 1990s; even
+improving the constant for three queries and binary responses needs highly
+non-trivial techniques. For secret sharing over $n$-bit predicates the best upper
+bound is $(3/2)^{n+o(n)}$ and the best lower bound, from the mid 1990s, is
+$\Omega(n/\log n)$.
+
+### Sources
+
+- Applebaum and Nir. [*Advisor-Verifier-Prover Games and the Hardness of Information Theoretic Cryptography*](https://eprint.iacr.org/2023/1378). IACR ePrint 2023/1378. The source. The AVP game is described in Section 1.1 on page 3, Hypothesis 1.2 and Theorem 1.3 are on page 4, and the discussion of progress and of the $2^{\tilde{O}(\sqrt{n})}$ AVP is on page 5.
+- Ito, Saito and Nishizeki. *Secret sharing scheme realizing general access structure*. Globecom 1987. The origin of the secret-sharing question whose worst-case share size the hypothesis would lower-bound.
+- Applebaum and Nir. [*Upslices, Downslices, and Secret-Sharing with Complexity of $1.5^n$*](https://eprint.iacr.org/2021/470). CRYPTO 2021. The $(3/2)^{n+o(n)}$ upper bound the source quotes as the state of the art.
+
+## Proof
+
+View PDF — *no proof written yet* · LaTeX source — *no proof written yet* · Formal proof — *not yet formalized*
+
+Open, and the source predicts nothing about which way it goes.
+
+**What is proved toward it.** Simple counting-based lower bounds adapt to the AVP
+model, re-deriving in a unified way several bounds previously proved separately
+for each primitive. The source records the limitation without softening it:
+"Unfortunately, we do not get the best-known lower bounds for any of the above
+primitives." So the model is confirmed to support the classical arguments, and
+confirmed not yet to improve on them.
+
+**Why a unified model might help at all.** Each of the three primitives induces
+*different* additional properties on the resulting AVP, which is what lets the
+source compare the notions cleanly. A lower bound proved for the bare model
+applies to all three; a lower bound that needs one of the extra features applies
+to fewer. Anyone working on this should say which features their argument uses,
+because that determines what it implies downstream.
+
+**Where a refutation would live.** In a prover-laconic AVP for all $n$-bit
+predicates at polynomial total communication. That would be at least as
+interesting as a proof: by Theorem 1.3's transforms it would be a genuinely new
+protocol in a model that generalizes three well-studied primitives, and it would
+close off the route rather than the questions.
+
+**Checked against the literature, 2026-08-27.** No resolution found, and no
+super-linear lower bound for any of the three primitives. Targeted check, not an
+exhaustive sweep of the communication-complexity literature.
+
+## Discussion
+
+**Why the model is worth the detour.** The source's own summary of the motivation
+is that these questions are "unknown how to relate to each other or to other
+complexity-theoretic questions." AVPs relate them to query/space trade-offs
+lifted to interactive proof systems, which is a classical topic with its own
+toolbox. The value of the hypothesis is not that it is easier — it is strictly
+harder than any one of the three — but that it makes progress transferable.
+
+**A confusion worth heading off.** In one-way communication complexity and in
+Yao's model the goal is to *compute* $f$; here the goal is to *certify* that
+$f(x) = 1$. The source notes the difference does not affect asymptotic
+complexity, since computation reduces to certification by running two copies of
+an AVP protocol concurrently, once for $f$ and once for $\neg f$.
+
+**What a reviewer should be suspicious of, in order.** First, whether a claimed
+lower bound really covers prover-laconic protocols with the advice *hidden* from
+the prover and *no* re-usability — weakening either makes the model easier and the
+bound weaker. Second, whether it is a bound on $|a| + |b| + |c|$ rather than on
+one component. Third, whether a claimed upper bound respects the constant bound
+on $|c|$, since without it the polynomial-cost protocol already exists.
+
+## Open obligations
+
+- [ ] Prove that every prover-laconic AVP for $n$-bit predicates needs super-polynomial communication — or exhibit one at polynomial cost.
+- [ ] Either way, state which of the model's optional features the argument uses, since that fixes which of the three primitives it speaks to.
+- [ ] Push the counting-based bounds in this model past the best-known bounds for at least one of sd-PIR, secret sharing and DRE.
+- [ ] Formalize the statement in Lean; nothing here has been formalized.
+
+:::

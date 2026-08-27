@@ -1,0 +1,180 @@
+---
+id: "0092"
+problem: fiat-shamir-friendliness
+draft: sss-fiat-shamir-friendly
+title: "Somewhere Statistically Sound Arguments Are Fiat-Shamir Friendly"
+short_title: "SSS Implies Fiat-Shamir Friendly"
+areas: [proof-systems, zk]
+topics: [fiat-shamir, snarks, commitment-schemes]
+model: standard
+form: characterization
+assumption_class: falsifiable
+category: research-open
+revision: 1
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: new-idea
+  by: ai
+  note: "The class was defined to fit the evidence, and the evidence is genuinely structural: every known Fiat-Shamir counterexample works by adding an accepting clause whose witness is the hash function, which is exactly what destroys statistical soundness on any slice. So a proof needs a general argument that somewhere-statistical soundness survives collapsing the interaction -- and the only known technique for such things, straight-line reduction, the source already exploited for post-quantum soundness without reaching Fiat-Shamir. A refutation would need a defeat mechanism nobody has exhibited."
+status_summary: "Conjecture 1.3 of the source. It is explicit that it does not prove it -- 'only conjecture it' -- and asks for the proof or refutation as an important open problem. It does prove that SSS implies straight-line soundness, hence post-quantum soundness, and that its own instantiation of Kilian's protocol is SSS."
+status_updated: 2026-08-27
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Kalai, Vaikuntanathan, Zhang, Somewhere Statistical Soundness, Post-Quantum Security, and SNARGs, IACR ePrint 2021/788", url: "https://eprint.iacr.org/2021/788"}
+  - {cite: "Bartusek, Bronfman, Holmgren, Ma, Rothblum, On the (in)security of Kilian-based SNARGs, TCC 2019", url: "https://doi.org/10.1007/978-3-030-36033-7_20"}
+  - {cite: "Kilian, A Note on Efficient Zero-Knowledge Proofs and Arguments, STOC 1992", url: "https://doi.org/10.1145/129712.129782"}
+statement_sha: "e672f48ce44657405c6fe529161d7e97d7d5ef12bab157095bbab87c19dca3de"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+<!-- topics:start -->
+<div class="cj-tags cj-page-topics"><a class="cj-tag cj-tag-topic" href="/problems/by-topic/commitment-schemes/">Commitment Schemes</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/fiat-shamir/">Fiat Shamir</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/snarks/">Snarks</a></div>
+<!-- topics:end -->
+
+Fiat-Shamir turns an interactive protocol non-interactive by replacing the
+verifier's coins with a hash of the transcript. It is used everywhere and it is
+not sound in general: there are arguments for which it fails no matter which hash
+family is used, and Kilian's protocol is among them. But look at how those
+counterexamples are built and they all share one trick — an extra accepting clause
+that a prover able to predict the verifier's next message can exploit. That clause
+is precisely what destroys statistical soundness on any fixed slice of the
+protocol. The source isolates the class of arguments that keep such a slice, calls
+them somewhere statistically sound, and conjectures no counterexample can live
+there.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [LaTeX source](latex/main.tex) · Formal statement — *not yet formalized*
+
+**Somewhere statistical soundness (the source's Definition 4.2).** An interactive
+argument $(P,V)(1^\kappa)$ for $L$ is $\theta$-*somewhere statistically sound*
+with respect to a $\theta$-decisional complexity assumption $A$ if for every first
+verifier message $\beta_1$ there exists a second verifier message $T(\beta_1)$
+such that: for every $\mathrm{poly}(\theta)$-size cheating prover $P^\ast$ that
+generates an instance $x$, conditioned on the first three messages being
+$(\beta_1, P^\ast(\beta_1), T(\beta_1))$, the remaining protocol is
+$\theta$-statistically sound with overwhelming probability $1 -
+\mathrm{negl}(\theta)$ over $\beta_1$, assuming $A$.
+
+The name is by analogy with somewhere statistical binding: soundness holds
+statistically on a hidden slice and computationally elsewhere.
+
+**Fiat-Shamir friendly (the source's Section 1.2.2).** An interactive argument
+$(P,V)$ is *Fiat-Shamir friendly* if there exists a hash family $\mathcal{H}$ such
+that applying the Fiat-Shamir paradigm with respect to $\mathcal{H}$ to $(P,V)$
+results in a sound non-interactive argument.
+
+**Conjecture (the source's Conjecture 1.3).** Any constant round SSS interactive
+argument $(P,V)$ is Fiat-Shamir friendly.
+
+**Note what is and is not being asked.** The definition is existential in the hash
+family — *some* $\mathcal{H}$ must work, not a natural one, and not the same one
+for every protocol. So this is the weakest useful form, and correspondingly *not*
+a claim that Fiat-Shamir as deployed, with a concrete hash function, is sound for
+SSS arguments.
+
+**How the source frames it.** Page 6: "We emphasize that we do not prove that any
+SSS interactive argument is Fiat-Shamir friendly, only conjecture it." And page 9:
+"we conjecture that this instantiation is Fiat-Shamir friendly, and leave the proof
+(or refutation) of this conjecture as an important open problem."
+
+**The evidence, which is structural rather than statistical.** All known negative
+results for Fiat-Shamir are for arguments that are not SSS, and not by accident.
+Those counterexamples add an accepting clause such that a prover who can predict
+the verifier's next message can convince the verifier of a false statement through
+it. Interactively this is harmless — the prover cannot predict the next message.
+Under Fiat-Shamir the prover holds the hash function and can. And that clause is
+exactly what stops the argument from being SSS: its witness is the hash function
+itself, so it inherently lacks statistical soundness on any slice.
+
+There is a positive data point too. Prior to this work the only interactive
+argument proven Fiat-Shamir friendly, by Canetti et al., "is indeed an SSS
+argument" — so the class contains the sole known success as well as excluding all
+known failures.
+
+**What the source does prove about the class.** Its Theorem 4.3: any $\theta$-SSS
+interactive argument with respect to a $\theta$-decisional complexity assumption
+$A$ is $\theta$-straight-line sound, and hence post-quantum sound if $A$ is. And
+it proves its own instantiation of Kilian's protocol — with a multi-extractable
+somewhere statistically binding hash family and a BMW-compatible PCP — is SSS.
+
+### Sources
+
+- Kalai, Vaikuntanathan and Zhang. [*Somewhere Statistical Soundness, Post-Quantum Security, and SNARGs*](https://eprint.iacr.org/2021/788). IACR ePrint 2021/788. The source. Conjecture 1.3 is on page 8, the informal statement and the discussion of evidence on page 6, the openness marker on page 9, Definition 4.2 on page 21 and Theorem 4.3 on page 22.
+- Bartusek, Bronfman, Holmgren, Ma and Rothblum. [*On the (in)security of Kilian-based SNARGs*](https://doi.org/10.1007/978-3-030-36033-7_20). TCC 2019. Shows Fiat-Shamir applied to Kilian's protocol is in general not sound, and suggested using a somewhere statistically binding hash family as one step to evade the result.
+- Kilian. [*A Note on Efficient Zero-Knowledge Proofs and Arguments*](https://doi.org/10.1145/129712.129782). STOC 1992. The protocol whose SSS instantiation the source builds.
+
+## Proof
+
+View PDF — *no proof written yet* · LaTeX source — *no proof written yet* · Formal proof — *not yet formalized*
+
+Open. The source predicts a positive answer, proves nothing, and asks for a proof
+*or a refutation*.
+
+**What a proof needs.** A general argument that somewhere-statistical soundness
+survives collapsing the interaction. The source has the one technique that gets
+partway — straight-line reduction, which it uses to derive post-quantum soundness
+from SSS — and it does not reach Fiat-Shamir friendliness. Since the definition is
+existential in $\mathcal{H}$, a proof is licensed to construct a hash family
+tailored to the protocol, which is a genuinely wider latitude than the usual
+Fiat-Shamir setting allows.
+
+**What a refutation needs, and why it would be interesting.** A constant-round SSS
+argument together with a proof that no hash family makes Fiat-Shamir sound for it.
+By the structural evidence above, such a construction cannot use the
+extra-accepting-clause trick — the only known mechanism — so it would have to
+defeat Fiat-Shamir some other way. That is what would make it interesting beyond
+settling this statement.
+
+**Checked against the literature, 2026-08-27.** No proof and no refutation found.
+Targeted check on the Fiat-Shamir and SNARG lines, not an exhaustive sweep.
+
+## Discussion
+
+**The route this sits on.** The source's own instantiation of Kilian's protocol is
+SSS, so the conjecture would imply that instantiation is Fiat-Shamir friendly — in
+contrast with the general insecurity of Kilian under Fiat-Shamir. More broadly it
+proposes "constructing an SSS interactive argument for all of NP as a great open
+problem," and observes that this is easier than constructing a non-adaptive SNARG
+for NP, since any such SNARG is in particular SSS with two additional arbitrary
+rounds ignored by the verdict function. So the pair — prove the conjecture, then
+build a succinct SSS argument for NP — is a proposed route to SNARGs from a
+standard post-quantum assumption, which the source says it believes is promising.
+
+**Constant round is a hypothesis.** The conjecture is stated for constant-round
+arguments. The source defines SSS for multi-round protocols too but focuses on the
+$4$-round case, and the conjecture carries the restriction; nothing here should be
+read as a claim about polynomially many rounds.
+
+**What a reviewer should be suspicious of, in order.** First, whether a claimed
+proof respects the existential quantifier honestly — constructing $\mathcal{H}$
+from the protocol is allowed, assuming a random oracle is not. Second, whether the
+protocol in a claimed counterexample really satisfies Definition 4.2, including
+that the somewhere-soundness holds with respect to a decisional assumption and in
+the adaptive form the definition states. Third, whether the round count is
+constant.
+
+## Open obligations
+
+- [ ] Prove that every constant-round SSS interactive argument is Fiat-Shamir friendly — or exhibit one that is not.
+- [ ] Construct a succinct SSS interactive argument for all of NP, the sub-goal the source proposes alongside.
+- [ ] Determine whether the conjecture extends to polynomially many rounds, which the source does not claim.
+- [ ] Formalize the statement in Lean; nothing here has been formalized.
+
+:::

@@ -1,0 +1,185 @@
+---
+id: "0085"
+problem: planted-subgraph-cryptography
+draft: computational-threshold-share-size
+title: "Beating log n for Computational 2-out-of-n Secret Sharing"
+short_title: "Sub-log Share Size for 2-out-of-n"
+areas: [secret-sharing, foundations]
+topics: [threshold-secret-sharing, planted-subgraph-problems, average-case-hardness]
+model: standard
+form: tight-bound
+assumption_class: falsifiable
+category: research-open
+revision: 1
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: new-idea
+  by: ai
+  note: "A log n versus log log n gap with an exact equivalence sitting in the middle, which is the best possible starting position -- and it is still wide. The positive direction asks for an n-node clique hidden in a graph on fewer than n^2 nodes, and the source reports the classical clique-recovery attacks succeeded on every candidate distribution it tried. The negative direction has no leverage: there is no obvious lower bound in this model at all, the source's own bound is log log n by an induction on the number of parties, and by the equivalence any improvement is a hardness-of-planting statement about graphs."
+status_summary: "The information-theoretic share size is exactly log n and Shamir's scheme matches it. The source proves a (1/5) log log n lower bound for the computational setting with public information, leaving a log n versus log log n gap, and proves that beating log n by any constant factor is equivalent to a concrete planted clique-and-independent-set problem."
+status_updated: 2026-08-27
+relations:
+  - {kind: variant-of, target: "0084", note: "same source and the same planted-subgraph machinery; c/0084 is the combinatorial character-sum question behind its low-degree hardness analysis, while this is the secret-sharing question its Theorem 2.6 translates into a planted-subgraph problem"}
+lean:
+  mode: none
+sources:
+  - {cite: "Abram, Beimel, Ishai, Cryptography from Planted Graphs: Security with Logarithmic-Size Messages, IACR ePrint 2023/1929", url: "https://eprint.iacr.org/2023/1929"}
+  - {cite: "Shamir, How to Share a Secret, Communications of the ACM 22(11):612-613, 1979", url: "https://doi.org/10.1145/359168.359176"}
+  - {cite: "Kucera, Expected complexity of graph partitioning problems, Discrete Applied Mathematics 57(2-3):193-212, 1995", url: "https://doi.org/10.1016/0166-218X(94)00103-K"}
+  - {cite: "Alon, Krivelevich, Sudakov, Finding a large hidden clique in a random graph, Random Structures and Algorithms 13(3-4):457-466, 1998", url: "https://doi.org/10.1002/(SICI)1098-2418(199810/12)13:3/4<457::AID-RSA14>3.0.CO;2-W"}
+  - {cite: "Beimel, Franklin, Weakly-private secret sharing schemes, TCC 2007", url: "https://doi.org/10.1007/978-3-540-70936-7_14"}
+statement_sha: "b76f0401221a600ce4a8ce5a0044f95b40481fa6e82f99b7372d925483ce77cd"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+<!-- topics:start -->
+<div class="cj-tags cj-page-topics"><a class="cj-tag cj-tag-topic" href="/problems/by-topic/average-case-hardness/">Average Case Hardness</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/planted-subgraph-problems/">Planted Subgraph Problems</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/threshold-secret-sharing/">Threshold Secret Sharing</a></div>
+<!-- topics:end -->
+
+Share one bit among $n$ parties so that any two of them can reconstruct it. If
+the scheme must be perfectly private, each share needs $\log n$ bits and
+Shamir's scheme achieves exactly that. Weaken privacy to computational, and let
+the dealer publish a public string alongside the shares, and the bound stops
+applying — and unusually for secret sharing, nothing replaces it. The source
+narrows the truth to somewhere between $\frac{1}{5}\log\log n$ and $\log n$, and
+then does something more useful than either bound: it proves that beating
+$\log n$ by any constant factor is *equivalent* to hiding a large clique and a
+large independent set in one graph so that a random node of one cannot be told
+from a random node of the other.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [LaTeX source](latex/main.tex) · Formal statement — *not yet formalized*
+
+**The model.** In secret sharing with public information the dealer publishes a
+string $I$ in addition to handing each party its share; correctness and privacy
+are as usual, with $I$ available to everyone including the adversary. Share size
+is $\ell$; the size of $I$ is not counted. Security is computational: against
+non-uniform $n^{o(\log n)}$-time adversaries with distinguishing advantage
+$n^{-\Omega(1)}$, the regime the source's own positive results achieve and its
+table reports.
+
+**Why the model makes the question live.** The source's observation, page 8: "in
+the context of secret-sharing schemes with public information, there is no
+obvious lower bound on the share size."
+
+**Conjecture.** There is a constant $0 < \delta < 1$ and a computational
+$2$-out-of-$n$ secret-sharing scheme with public information whose share size is
+$\delta \cdot \log n$.
+
+**How the source states it.** "What is the minimal share size of computationally
+secure $2$-out-of-$n$ secret sharing with public information? Is it possible to
+beat the information-theoretic $\log n$ bound, even by a constant factor?"
+
+**The equivalence (the source's Theorem 2.6, informal).** The following are
+equivalent:
+
+- there is a constant $0 < \delta < 1$ for which there is a computational
+  $2$-out-of-$n$ scheme with public information and $\delta\log n$ share size;
+- there are a constant $1/2 < \beta < 1$ and a distribution $\mathcal{D}$ of
+  triples $(G, C, J)$ with $G$ an $N$-node graph, $C$ an $N^\beta$-node clique in
+  $G$ and $J$ an $N^\beta$-node independent set in $G$, such that $(G,c)$ and
+  $(G,j)$ are hard to distinguish for $c$ and $j$ random nodes of $C$ and $J$.
+
+The translation: from $I$ one derives an $n$-partite graph with $2^\ell$ nodes
+per part, the nodes of part $i$ being party $P_i$'s possible shares, with an
+edge between every pair of shares reconstructing to $1$. Correctness makes the
+secret $1$ hide an $n$-node clique and the secret $0$ an $n$-node independent
+set, one node per part; privacy says the two are indistinguishable given one node
+of the hidden subgraph. A random-partitioning argument removes the multipartite
+structure. (The source writes $I$ both for the independent set and for the public
+information; the independent set is renamed $J$ here.)
+
+**Where the range comes from.** The lower bound $\ell \ge \frac{1}{5}\log\log n$
+follows from the observation that a $2$-out-of-$n$ scheme induces a
+$2$-out-of-$n'$ scheme for every $n' \le n$, whose security does not degrade
+while the public information shrinks. The upper bound is Shamir's $\log n$.
+
+### Sources
+
+- Abram, Beimel and Ishai. [*Cryptography from Planted Graphs: Security with Logarithmic-Size Messages*](https://eprint.iacr.org/2023/1929). IACR ePrint 2023/1929. The source. The question is in the open-problems list on page 8; the equivalence is Theorem 2.6 and the discussion of it is on pages 16–17.
+- Shamir. [*How to Share a Secret*](https://doi.org/10.1145/359168.359176). Communications of the ACM 22(11):612–613, 1979. The scheme meeting the information-theoretic $\log n$ bound.
+- Kučera. [*Expected complexity of graph partitioning problems*](https://doi.org/10.1016/0166-218X(94)00103-K). Discrete Applied Mathematics 57(2–3):193–212, 1995. One of the two clique-recovery attacks the source reports succeeding in the relevant regime.
+- Alon, Krivelevich and Sudakov. [*Finding a large hidden clique in a random graph*](https://doi.org/10.1002/(SICI)1098-2418(199810/12)13:3/4<457::AID-RSA14>3.0.CO;2-W). Random Structures and Algorithms 13(3–4):457–466, 1998. The other.
+- Beimel and Franklin. [*Weakly-private secret sharing schemes*](https://doi.org/10.1007/978-3-540-70936-7_14). TCC 2007. The $n$-partite graph with four nodes per part in which every node lies in both a clique and an independent set of size $n$ — which is why no natural search version of the planted problem presents itself.
+
+## Proof
+
+View PDF — *no proof written yet* · LaTeX source — *no proof written yet* · Formal proof — *not yet formalized*
+
+Open at both ends, and the source predicts nothing.
+
+**Toward a scheme.** By Theorem 2.6 it suffices to exhibit the distribution
+$\mathcal{D}$. That means hiding an $n$-node clique in a graph on fewer than
+$n^2$ nodes, and the source reports that in exactly that regime the attacks of
+Kučera and of Alon, Krivelevich and Sudakov recover the clique for every graph
+distribution it tried — with the multipartite structure making the goal look
+harder still. That is evidence rather than proof, and the source presents it as
+such, but it is the reason a positive answer is the surprising direction.
+
+**Toward a lower bound.** The target is anything above $\Omega(\log\log n)$, and
+ideally $\Omega(\log n)$, which would show that computational security and public
+information buy nothing here at all. Theorem 2.6 makes this a statement about
+graphs too: ruling out the scheme is ruling out $\mathcal{D}$.
+
+**Why this is not a standard planted-clique problem.** In traditional planted
+problems the planting makes the object essentially unique, so there is a natural
+search version. Here $\mathcal{D}$ may be such that every node lies in many
+planted cliques and independent sets — Beimel and Franklin give an $n$-partite
+graph with only four nodes per part in which every node lies in both a clique and
+an independent set of size $n$ — so no natural search problem presents itself.
+Further, the information-theoretic impossibility of beating $\log n$ implies the
+decision problem *is* solvable by an unbounded distinguisher. The target is a
+genuinely computational gap.
+
+**Checked against the literature, 2026-08-27.** No improvement on either end
+found. Targeted check on this line, not an exhaustive sweep of the planted-clique
+literature.
+
+## Discussion
+
+**What the conjecture is worth if it fails.** An $\Omega(\log n)$ lower bound
+would be the more informative outcome: it would say that for the simplest
+non-trivial access structure, computational assumptions and public information
+are worthless, which is not the pattern elsewhere in secret sharing. The source's
+own positive results in this paper go the other way for other access structures,
+which is what makes the $2$-out-of-$n$ case pointed rather than academic.
+
+**Neighbouring questions in the same list, none of them this one.** The source
+also asks whether the limitations of its positive results can be removed —
+security only against $n^{o(\log n)}$-time adversaries, and distinguishing
+advantage only $n^{-\Omega(1)}$ rather than negligible, where making it negligible
+costs a super-constant multiplicative overhead — and whether
+computational–statistical gaps for secret sharing with $1$-bit shares extend to
+domain size $3$.
+
+**What a reviewer should be suspicious of, in order.** First, whether a claimed
+scheme really beats $\log n$ by a *constant factor* on the share size, rather
+than on the public information, which is not counted. Second, whether the
+security regime matches: a scheme secure only against polynomial-time adversaries
+with constant advantage is a different claim. Third, for a claimed lower bound,
+whether it survives the public information being unbounded — that is precisely
+what defeats the information-theoretic argument.
+
+## Open obligations
+
+- [ ] Construct a computational $2$-out-of-$n$ scheme with public information at share size $\delta\log n$ for some $\delta < 1$ — equivalently, exhibit the distribution $\mathcal{D}$ of Theorem 2.6.
+- [ ] Or improve the lower bound above $\frac{1}{5}\log\log n$, ideally to $\Omega(\log n)$.
+- [ ] Either way, report which security regime is achieved: adversary running time and distinguishing advantage.
+- [ ] Formalize the statement in Lean; nothing here has been formalized.
+
+:::

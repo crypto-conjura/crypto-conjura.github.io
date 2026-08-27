@@ -1,0 +1,185 @@
+---
+id: "0082"
+problem: constant-overhead-secure-computation
+draft: constant-overhead-amd-circuits
+title: "Constant-Overhead Boolean AMD Circuits"
+short_title: "Constant-Overhead AMD Circuits"
+areas: [mpc, information-theoretic]
+topics: [fault-tolerant-circuits, oblivious-transfer]
+model: standard
+form: characterization
+assumption_class: unconditional
+category: research-open
+revision: 1
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: new-idea
+  by: ai
+  note: "Genkin, Ishai and Weiss reach polylogarithmic overhead and reduce further improvement to two simple honest-majority protocols, so the target is not unstructured -- but nothing in that reduction is close to constant, and the additive-attack simulation has to hold for every subset of wires at once, which is what makes the encoding machinery expensive. A constant-overhead construction needs an AMD encoding whose cost does not scale with the security parameter per gate, and no candidate is on the table. The compensating fact is that the statement is finite and mechanical, so a construction can be checked outright."
+status_summary: "Polylogarithmic overhead in |C| and lambda is achieved by Genkin, Ishai and Weiss; constant overhead is open. The source's Theorem 43 shows that achieving it would -- together with the source's own constant-overhead OT protocol -- settle the main open question on constant-overhead secure computation for general Boolean circuits."
+status_updated: 2026-08-27
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Boyle, Couteau, Gilboa, Ishai, Kohl, Resch, Scholl, Oblivious Transfer with Constant Computational Overhead, IACR ePrint 2023/817", url: "https://eprint.iacr.org/2023/817"}
+  - {cite: "Ishai, Kushilevitz, Ostrovsky, Sahai, Cryptography with Constant Computational Overhead, STOC 2008", url: "https://doi.org/10.1145/1374376.1374438"}
+  - {cite: "Genkin, Ishai, Prabhakaran, Sahai, Tromer, Circuits Resilient to Additive Attacks with Applications to Secure Computation, STOC 2014", url: "https://doi.org/10.1145/2591796.2591861"}
+  - {cite: "Genkin, Ishai, Weiss, Binary AMD Circuits from Secure Multiparty Computation, TCC 2016-B", url: "https://doi.org/10.1007/978-3-662-53641-4_14"}
+  - {cite: "Damgard, Ishai, Kroigaard, Perfectly Secure Multiparty Computation and the Computational Overhead of Cryptography, EUROCRYPT 2010", url: "https://doi.org/10.1007/978-3-642-13190-5_23"}
+statement_sha: "0b6634f3e77fa00825ee8c3eef64422d172d2c91f3f0b72531ca128e9d3ca182"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+<!-- topics:start -->
+<div class="cj-tags cj-page-topics"><a class="cj-tag cj-tag-topic" href="/problems/by-topic/fault-tolerant-circuits/">Fault Tolerant Circuits</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/oblivious-transfer/">Oblivious Transfer</a></div>
+<!-- topics:end -->
+
+An algebraic manipulation detection circuit computes what it should while making
+tampering useless: whatever an attacker achieves by toggling any subset of the
+internal wires, it could have achieved by toggling bits of the input and output
+instead. Such circuits are what turn a semi-honest protocol into a maliciously
+secure one, and their size overhead is what that security costs. The best known
+construction pays a polylogarithmic factor. The source proves that a constant
+factor would settle one of the main open questions about the asymptotic
+complexity of cryptography — because it supplies the other missing ingredient.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [LaTeX source](latex/main.tex) · Formal statement — *not yet formalized*
+
+**The object (the source's Definition 42, after Genkin et al.).** For a
+Boolean circuit $C : \{0,1\}^n \to \{0,1\}^k$, a randomized Boolean circuit
+$\widehat C$ with the same input and output lengths is an
+*$\varepsilon$-secure AMD implementation* of $C$ if
+
+- *Completeness*: $\widehat C(x) \equiv C(x)$ for all $x$; and
+- *Security against additive attacks*: for any additive attack $A$ toggling a
+  subset of $\widehat C$'s wires, there exist distributions
+  $\Delta_{\mathrm{in}}$ over $\{0,1\}^n$ and $\Delta_{\mathrm{out}}$ over
+  $\{0,1\}^k$ such that for every $x$,
+  $\mathrm{SD}(\widetilde C(x),\ C(x \oplus \Delta_{\mathrm{in}}) \oplus
+  \Delta_{\mathrm{out}}) \le \varepsilon$, where $\widetilde C \leftarrow
+  A(\widehat C)$.
+
+Note the quantifier order: the two distributions may not depend on $x$.
+
+**Conjecture.** Every Boolean circuit $C$ admits a $2^{-\lambda}$-secure AMD
+implementation of size $O(|C|) + \mathrm{poly}(\lambda)\cdot|C|^{0.9}$.
+
+**What it buys (the source's Theorem 43, cf. Genkin–Ishai–Weiss Claim 18).**
+Under exactly that hypothesis, a constant-overhead OT protocol implies a
+constant-overhead protocol for general Boolean circuits. The source supplies the
+other hypothesis: its main result is the first constant-overhead protocol for
+malicious bit-OT.
+
+**How the source states it.** Section 6.3, page 32: "Finally, while we leave
+open the existence of constant-overhead protocols for general Boolean circuits,
+our result for OT allows us to reduce this question to a question about a
+special kind of fault-tolerant circuits." And page 33: "Combined with a
+constant-overhead OT protocol, this reduces an affirmative answer to the main
+open question to the design of constant-overhead AMD circuits."
+
+**The state of the art.** Genkin, Ishai and Weiss construct AMD circuits with
+polylogarithmic overhead in $|C|$ and $\lambda$. The source records: "Whether
+this can be improved was left open, but the question was further reduced to the
+design of two kinds of simple protocols in the honest-majority setting: a
+protocol that only provides semi-honest security (with a constant fraction of
+corrupted parties) and a protocol that only guarantees the correctness of the
+output."
+
+**Why the exponent $0.9$.** The bound is not $O(|C|)$ outright: it allows an
+additive $\mathrm{poly}(\lambda)\cdot|C|^{0.9}$ term, sublinear in $|C|$, so
+that for circuits large relative to $\lambda$ the total is $O(|C|)$ while the
+slack absorbs machinery that need not be linear. The exponent is the source's,
+transcribed as printed; any constant below $1$ would serve, and a resolution
+achieving a different one should say so.
+
+### Sources
+
+- Boyle, Couteau, Gilboa, Ishai, Kohl, Resch and Scholl. [*Oblivious Transfer with Constant Computational Overhead*](https://eprint.iacr.org/2023/817). IACR ePrint 2023/817. The source. Definition 42 and Theorem 43 are on pages 32–33; the main open question is stated in Section 6, page 32.
+- Ishai, Kushilevitz, Ostrovsky and Sahai. [*Cryptography with Constant Computational Overhead*](https://doi.org/10.1145/1374376.1374438). STOC 2008. Settles the semi-honest case from local PRGs and poses the malicious case.
+- Genkin, Ishai, Prabhakaran, Sahai and Tromer. [*Circuits Resilient to Additive Attacks with Applications to Secure Computation*](https://doi.org/10.1145/2591796.2591861). STOC 2014. Introduces AMD circuits; the source's Definition 42 is theirs.
+- Genkin, Ishai and Weiss. [*Binary AMD Circuits from Secure Multiparty Computation*](https://doi.org/10.1007/978-3-662-53641-4_14). TCC 2016-B. The state of the art at polylogarithmic overhead, and the source of the claim Theorem 43 cites.
+- Damgård, Ishai and Kroigaard. [*Perfectly Secure Multiparty Computation and the Computational Overhead of Cryptography*](https://doi.org/10.1007/978-3-642-13190-5_23). EUROCRYPT 2010. The polylogarithmic-overhead protocols the question is measured against.
+
+## Proof
+
+View PDF — *no proof written yet* · LaTeX source — *no proof written yet* · Formal proof — *not yet formalized*
+
+Open. What makes this statement attractive is that half of a conditional has
+already been discharged.
+
+**The route.** Applying the semi-honest GMW protocol to an AMD circuit, with a
+suitable encoding protecting input and output, yields a maliciously secure
+protocol for the original circuit. That is Genkin et al.'s observation, and it
+is why AMD overhead translates directly into protocol overhead. Since the
+source provides constant-overhead malicious OT, an AMD construction at constant
+overhead completes the chain.
+
+**The obstruction.** The additive-attack requirement quantifies over every
+subset of wires simultaneously, with input and output error distributions fixed
+independently of $x$. Meeting it is what forces the existing constructions to
+spend per-gate machinery that scales with $\lambda$. Genkin, Ishai and Weiss
+reduce further improvement to two simple honest-majority protocols — one merely
+semi-honest against a constant corruption fraction, one merely guaranteeing
+output correctness — so the target is structured, but neither is known at
+constant overhead.
+
+**What a negative answer would and would not mean.** Theorem 43 runs one way.
+A proof that AMD circuits must pay more than constant overhead would close this
+route without settling the main question, since constant-overhead protocols
+might exist via the honest-majority route of Ishai, Prabhakaran and Sahai and of
+Damgård, Ishai and Kroigaard instead.
+
+**Checked against the literature, 2026-08-27.** No constant-overhead AMD
+construction and no lower bound found. Targeted check on the source and the
+Genkin–Ishai–Weiss line, not an exhaustive sweep.
+
+## Discussion
+
+**What the source already achieves, which is not this.** Its Section 6.1 gives
+constant-overhead protocols for general functionalities under *relaxed*
+security, and constant-overhead protocols for some restricted classes of
+functionalities. Neither settles the conjecture, and neither should be mistaken
+for it: the conjecture asks for AMD circuits for every Boolean circuit at full
+$2^{-\lambda}$ security.
+
+**Why the semi-honest/malicious gap is the interesting one.** In the
+semi-honest OT-hybrid model the textbook GMW protocol has perfect security at
+small constant overhead. In the malicious OT-hybrid model the best known
+protocols are polylogarithmic. So the entire gap is the price of malicious
+security, and this statement localizes that price in a single combinatorial
+object.
+
+**What a reviewer should be suspicious of, in order.** First, the quantifier
+order in Definition 42: $\Delta_{\mathrm{in}}$ and $\Delta_{\mathrm{out}}$ are
+chosen before $x$, and a construction whose error distributions depend on the
+input is proving something weaker. Second, the size bound's shape — $O(|C|) +
+\mathrm{poly}(\lambda)|C|^{0.9}$, not $O(|C| \cdot \mathrm{poly}(\lambda))$,
+which would be the polylogarithmic status quo restated. Third, whether the
+security error really is $2^{-\lambda}$, since Theorem 43's hypothesis names
+that level specifically.
+
+## Open obligations
+
+- [ ] Construct $2^{-\lambda}$-secure AMD implementations of size $O(|C|) + \mathrm{poly}(\lambda)|C|^{0.9}$ for every Boolean circuit.
+- [ ] Or settle either of the two honest-majority protocols Genkin, Ishai and Weiss reduce the question to, at constant overhead.
+- [ ] Or prove AMD circuits require super-constant overhead, which would close this route to the main question without settling it.
+- [ ] Formalize the statement in Lean; nothing here has been formalized.
+
+:::

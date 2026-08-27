@@ -1,0 +1,219 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  Boyle-Couteau-Gilboa-Ishai-Kohl-Resch-Scholl's conjecture that the
+%  minimum distance of expand-accumulate codes does not degrade over
+%  larger rings.
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{EA-CODE DISTANCE OVER ARBITRARY RINGS}
+
+\newcommand{\F}{\mathbb{F}}
+\newcommand{\Ring}{\mathcal{R}}
+\newcommand{\Ber}{\mathsf{Ber}}
+\newcommand{\EAGen}{\mathsf{EAGen}}
+\newcommand{\dmin}{d}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{Minimum Distance of Expand-Accumulate Codes over Arbitrary
+  Rings}
+\cjsubtitle{Proved over $\F_{2}$; conjectured not to degrade, and to
+  improve, over larger rings}
+\cjstatus{Statement: AI-written from Elette Boyle, Geoffroy Couteau, Niv
+  Gilboa, Yuval Ishai, Lisa Kohl, Nicolas Resch and Peter Scholl,
+  \emph{Correlated Pseudorandomness from Expand-Accumulate Codes}, IACR
+  ePrint 2022/1014. Not yet checked by a human. The source's Theorem 3.10
+  proves the distance bound over the binary field only. Over a ring of
+  size $q$ its proof technique forces the rate to satisfy $R \ll 1/\ln q$,
+  which it states it believes is an artefact, and it supports that belief
+  with small-parameter weight-distribution experiments over $\F_{17}$ and
+  $\mathbb{Z}_{16}$.}
+\cjcategory{\emph{Information-Theoretic Cryptography}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+An expand-accumulate code is about the simplest linear code that still
+behaves well: multiply by a sparse random matrix, then take running
+prefix sums. The second step costs one addition per coordinate, which is
+why the construction is fast enough to underlie pseudorandom correlation
+generators for secure computation. What such an application needs is that
+the code have large minimum distance, and the source proves that over the
+binary field. Over a larger ring its proof degrades in a suspicious way:
+the concentration bound it uses forces the rate to shrink like
+$1/\ln q$ in the ring size. The authors conjecture the distance does not
+in fact degrade over larger rings --- indeed that it improves --- and that
+the rate restriction is an artefact of the argument rather than of the
+codes.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+Pseudorandom correlation generators compress a long stream of correlated
+randomness for secure computation into short seeds, and the dual-LPN
+assumptions they rest on are parameterized by a linear code. What the
+code must supply is minimum distance: a low-weight dual codeword is
+exactly a linear test that breaks the assumption, so the distance
+controls resistance to that whole class of attack. What the application
+also needs is speed, since the code's encoding sits on the critical path.
+
+The source's answer to both is the expand-accumulate family. The
+accumulator matrix $A$ has ones on and below the diagonal, so computing
+$A\vec{x}$ takes $N-1$ sequential ring additions --- over $\F_{2}$, $N-1$
+xors --- and parallelizes well. An EA generator matrix is $BA$ for a sparse
+random $B$ whose rows are independent Bernoulli vectors of density $p$
+(Definition~\ref{def:ea}).
+
+Over the binary field the source proves the distance bound it needs. Its
+Theorem 3.10 fixes rate $R = n/N$ constant, sets $p = C\ln N / N$, takes
+$\delta \in (0,1/2)$ and $\beta = 1/2 - \delta$, and shows that for
+sufficiently large $N$ the code sampled by $\EAGen(n,N,p)$ has minimum
+distance at least $\delta N$ except with probability
+$2\sum_{r=1}^{n}\binom{n}{r}\exp(-2\frac{1-\xi_{r}}{1+\xi_{r}})$ where
+$\xi_{r} = (1-2p)^{r}$, provided $R$ and $C$ satisfy two explicit
+inequalities, among them $C > 1/\beta^{2}$.
+
+That theorem is binary-only, and the source says why the extension
+resists: ``the expander Hoeffding bound that we apply does not appear to
+work well in this case; in particular, we are forced to require the rate
+$R \ll \frac{1}{\ln q}$, where $q$ is the size of the ring $\Ring$.''
+It then states its belief --- ``However, we believe that this is an artefact
+of the proof'' --- and justifies it by computing average weight
+distributions for small codes sampled over $\F_{17}$ and over
+$\mathbb{Z}_{16}$, alongside its comparison of row distributions over
+$\F_{2}$.
+
+\section{Notation and parameters}\label{sec:notation}
+
+\begin{itemize}[nosep]
+  \item $\Ring$ is a ring, $q = |\Ring|$; the binary case is $\Ring =
+    \F_{2}$.
+  \item $n \le N$ are the code's dimension and blocklength, $R = n/N$ the
+    rate, assumed constant.
+  \item $p \in (0,1)$ is the density of the sparse matrix $B$; the
+    source's setting is $p = C \ln N / N$ for a constant $C > 0$.
+  \item $A \in \Ring^{N \times N}$ is the accumulator matrix, with ones
+    on and below the main diagonal and zeros elsewhere.
+  \item $\Ber_{p}^{N}(\Ring)$ is the distribution on $\Ring^{N}$ with
+    each coordinate independently non-zero with probability $p$, as in
+    the source.
+  \item $\dmin(H)$ is the minimum distance of the code generated by $H$;
+    $\delta \in (0,1/2)$ is the relative distance target and $\beta =
+    1/2 - \delta$.
+\end{itemize}
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{definition}[Accumulator matrix,
+  {\cite[Definition 3.1]{BCGIKRS22}}]\label{def:acc}
+For $N \in \mathbb{N}$ and a ring $\Ring$, the accumulator matrix $A \in
+\Ring^{N\times N}$ has ones on and below the main diagonal and zeros
+elsewhere; so $A\vec{x} = \vec{y}$ means $y_{i} = \sum_{j \le i} x_{j}$
+for all $i$, computable with $N-1$ sequential ring additions.
+\end{definition}
+
+\begin{definition}[Expand-accumulate code,
+  {\cite[Definition 3.2]{BCGIKRS22}}]\label{def:ea}
+For $n \le N$, a ring $\Ring$ and density $p \in (0,1)$, sample row
+vectors $\vec{r}_{1}^{\top}, \dots, \vec{r}_{n}^{\top} \leftarrow
+\Ber_{p}^{N}(\Ring)$ independently, let $B$ be the matrix with those
+rows, and output $H = BA$. Write $H \leftarrow \EAGen(n, N, p, \Ring)$;
+when $\Ring$ is omitted it is $\F_{2}$.
+\end{definition}
+
+\begin{theorem}[What is proved, over $\F_{2}$ only,
+  {\cite[Theorem 3.10]{BCGIKRS22}}]\label{thm:binary}
+Let $n \le N$ with $R = n/N$ constant, let $C > 0$ and $p = C\ln N/N \in
+(0,1/2)$, fix $\delta \in (0,1/2)$ and put $\beta = 1/2 - \delta$. Then
+for sufficiently large $N$,
+\[
+  \Pr\bigl[ \dmin(H) \ge \delta N \ \big|\ H \leftarrow \EAGen(n,N,p)
+  \bigr] \;\ge\; 1 - 2\sum_{r=1}^{n} \binom{n}{r}
+  \exp\!\left(-2\,\frac{1-\xi_{r}}{1+\xi_{r}}\right),
+\]
+where $\xi_{r} = (1-2p)^{r}$, provided $R$ and $C$ satisfy the source's
+two stated inequalities, including $C > 1/\beta^{2}$.
+\end{theorem}
+
+\begin{conjecture}[Distance does not degrade over larger
+  rings]\label{conj:main}
+Theorem~\ref{thm:binary} holds with $\F_{2}$ replaced by an arbitrary
+ring $\Ring$, with no restriction of the rate $R$ in terms of $q =
+|\Ring|$: that is, under the same conditions on $R, C, \delta$ as in the
+binary case, a code sampled from $\EAGen(n,N,p,\Ring)$ has minimum
+distance at least $\delta N$ with at least the same probability.
+\end{conjecture}
+
+\begin{remark}[The stronger form the source also believes]
+The source states two things, and Conjecture~\ref{conj:main} is the
+weaker: ``We conjecture that the minimum distance should at the very
+least not degrade over larger rings; in fact, we believe that it should
+increase commensurately.'' The second clause --- that the distance
+\emph{improves} with $q$ --- is not quantified anywhere, so it is recorded
+here as the source's belief rather than promoted to the statement. A
+resolution establishing an improvement should report the improvement it
+gets.
+\end{remark}
+
+\begin{remark}[Where exactly the proof breaks]\label{rem:obstruction}
+The named obstruction is the expander Hoeffding bound. Over $\F_{2}$ the
+argument bounds, for each weight class, the probability that a codeword
+falls below the distance target, using concentration for a sum indexed by
+the sparse rows. Over a ring of size $q$ the same bound is available only
+after shrinking the rate to $R \ll 1/\ln q$, which is what makes the
+theorem vacuous for large rings at constant rate. So the substance of
+Conjecture~\ref{conj:main} is not a new distance argument from scratch
+but a concentration inequality that does not pay $\ln q$ --- or a different
+route to the same conclusion.
+\end{remark}
+
+\begin{remark}[Why larger rings should if anything help]
+The intuition the source offers, and which its small-parameter
+experiments support, is that a non-zero entry of the sparse matrix
+carries more information over a larger ring, so cancellations that
+produce low-weight codewords become rarer rather than more common. Its
+experiments compare codes sampled by $\EAGen(4,20,4,\F_{17})$ and
+$\EAGen(4,20,4,\mathbb{Z}_{16})$ --- deliberately one field and one ring
+with zero divisors, since the latter is where cancellation is easiest and
+a counterexample would most plausibly live.
+\end{remark}
+
+\begin{remark}[A separate open problem in the same discussion]
+Immediately before the passage this statement comes from, the source
+compares row distributions for $B$ over $\F_{2}$ --- Bernoulli, exact
+weight, regular --- reports that regular noise appears best in putting the
+most mass on heavier weights, and says ``[p]roviding theoretical
+guarantees for these other row distributions remains an open problem
+meriting further study.'' That is a different question, about which
+distribution on $B$ to analyse rather than which ring to work over, and it
+is not this statement.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem[BCGIKRS22]{BCGIKRS22}
+Elette Boyle, Geoffroy Couteau, Niv Gilboa, Yuval Ishai, Lisa Kohl,
+Nicolas Resch and Peter Scholl.
+\emph{Correlated pseudorandomness from expand-accumulate codes}.
+IACR ePrint 2022/1014.
+The source. Definitions 3.1 and 3.2 are on pages 13--14, Theorem 3.10 on
+page 18, and the arbitrary-rings discussion with the conjecture on
+page 21.
+
+\bibitem[BCG+19b]{BCGIKS19}
+Elette Boyle, Geoffroy Couteau, Niv Gilboa, Yuval Ishai, Lisa Kohl and
+Peter Scholl.
+\emph{Efficient pseudorandom correlation generators: silent OT extension
+and more}.
+CRYPTO 2019, Part III\@.
+The pseudorandom correlation generator line the source's codes are built
+for.
+
+\end{conjurabibliography}
+
+\end{document}

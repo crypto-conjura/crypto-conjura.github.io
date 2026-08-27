@@ -118,6 +118,16 @@ TOPIC_DESCRIPTIONS = {
     "arithmetic-cryptography": "Constructions whose algorithms are arithmetic circuits making only black-box use of the underlying field or ring.",
     "non-interactive-secure-computation": "Two-party secure computation in one message each way, and the communication overhead malicious security costs there.",
     "code-based-cryptography": "Cryptosystems built from error-correcting codes, and the structural cryptanalysis that attacks their hidden algebraic structure.",
+    "reed-solomon-codes": "Reed-Solomon codes and their algebraic structure, as used in proof systems and in coding-theoretic cryptography.",
+    "t-wise-independence": "Almost t-wise independence of concrete block-cipher constructions, as a provable-security target that rules out differential and linear cryptanalysis.",
+    "stabilizer-codes": "Quantum stabilizer codes and the complexity of decoding them, including the Learning Stabilizer with Noise problem.",
+    "overlap-gap-property": "The overlap gap property as a barrier to stable, online and local algorithms on random structures, and its use as evidence of average-case hardness.",
+    "locally-testable-codes": "Codes whose membership can be checked from local views, and the neighbouring notions of conflict checkability and local-to-global consistency.",
+    "proximity-testing": "Testing whether a vector is close to a code, and the proximity gaps and correlated-agreement statements that make such tests sound.",
+    "fault-tolerant-circuits": "Circuits that resist tampering with their wires rather than leakage from them, including algebraic manipulation detection.",
+    "randomized-encodings": "Replacing a function by a simpler randomized function that reveals its output and nothing more, and the degree or locality that simpler function can have.",
+    "planted-subgraph-problems": "Hiding a clique, an independent set or another subgraph in a random graph, and the hardness of finding or distinguishing it.",
+    "randomness-complexity": "How many random bits a protocol or circuit needs, as a resource to be minimized in its own right.",
 }
 
 missing_desc = TOPIC_SLUGS - set(TOPIC_DESCRIPTIONS)

@@ -1,0 +1,78 @@
+---
+title: "The randomness complexity of secure computation"
+subtitle: "Coins as a counted resource, and the last logarithmic factor for XOR"
+---
+
+## Motivation
+
+Most resource questions in information-theoretic secure computation — rounds,
+communication, computation — are settled only up to broad bounds. Randomness is
+the exception where an exact answer looks reachable. Count the coins a protocol
+tosses, take the simplest function anyone would want to compute securely, and ask
+how many are necessary and sufficient. For XOR of $n$ bits with privacy against
+$t$ collusion, the answer is now known to within a logarithmic factor, and the
+remaining gap is small enough to name precisely.
+
+The interest is not only bookkeeping. Randomness is expensive in practice, and
+the theoretical question has a sharp edge: Kushilevitz, Ostrovsky and Rosén
+showed a two-way relation between the randomness complexity of a function at
+$t = 1$ and its circuit complexity, so a general characterization would be a
+circuit-complexity result in disguise. For XOR specifically, the circuit
+complexity is not in doubt, which is what makes it the right function to pin
+down first.
+
+## Provenance and history
+
+The textbook protocol of Benaloh and of Chor and Kushilevitz uses $O(nt)$ coins.
+Kushilevitz and Mansour improved this to $O(t^2\log(n/t))$ in 1997 —
+non-explicitly, resting on a combinatorial object obtainable either by an
+efficient probabilistic construction with small failure probability or
+deterministically in super-polynomial time — and proved $\Omega(t)$ necessary,
+leaving a quadratic gap. Blundo, De Santis, Persiano and Vaccaro obtained
+$\Omega(t^2/(n-t))$, which the textbook protocol matches when $t = n-\Omega(1)$
+but which still leaves a quadratic gap for $t \le (1-\varepsilon)n$.
+
+Vipul Goyal, Yuval Ishai and Yifan Song, *Tight Bounds on the Randomness
+Complexity of Secure Multiparty Computation* ([IACR ePrint
+2022/799](https://eprint.iacr.org/2022/799)), close most of it. They prove
+$\Omega(t^2)$ for XOR — extending to arbitrary symmetric Boolean functions, and
+holding when the output goes to a strict subset of parties and when input-less
+participants are present — and give an *explicit* protocol using
+$O(t^2\log^2 n)$ coins, extended to symmetric Boolean functions and to addition
+over any finite abelian group, with $t$ additions costing only
+$\widetilde{O}(t^2)$. For general circuits they reach $O(t^2\log|C|)$, but in
+the easier setting that permits input-less helper parties.
+
+Their lower bound is combinatorial rather than information-theoretic, and they
+explain why it must be: with statistical privacy a folklore protocol picks a
+random committee of $\sigma$ parties and secret-shares among them, achieving
+$2^{-\Omega(\sigma)}$ security against $t = 0.99n$ corruptions with $O(n\sigma)$
+coins, beating any $\Omega(n^2)$ bound once $\sigma = o(n)$. So the question
+lives entirely in the perfect-privacy regime.
+
+## Parameter lattice
+
+Randomness complexity of perfectly $t$-secure XOR on $n$ parties.
+
+| Bound | Value | Explicit? | Source |
+|---|---|---|---|
+| **Upper, textbook** | $O(nt)$ | yes | Benaloh; Chor–Kushilevitz |
+| **Upper, best known** | $O(t^2\log(n/t))$ | no | Kushilevitz–Mansour 1997 |
+| **Upper, best explicit** | $O(t^2\log^2 n)$ | yes | Goyal–Ishai–Song |
+| **Lower, information-theoretic** | $\Omega(t^2/(n-t))$ | — | Blundo et al. |
+| **Lower, combinatorial** | $\Omega(t^2)$ | — | Goyal–Ishai–Song |
+| **Truth, $t = \Omega(n)$** | $\Theta(t^2)$ | — | settled |
+| **Truth, $t = o(n)$** | ? | — | [c/0087](/c/0087/) — open |
+
+Two independent gaps live in that table, and they should not be conflated:
+$\Omega(t^2)$ against the non-explicit $O(t^2\log(n/t))$ is the conjecture; the
+further distance up to the explicit $O(t^2\log^2 n)$ is Kushilevitz and Mansour's
+explicitness question, which the source improves without closing.
+
+With statistical rather than perfect privacy the whole question dissolves at
+$O(n\sigma)$ coins, which is why perfection is part of the statement rather than
+a stylistic choice.
+
+## Statements in this hub
+
+- [The Exact Randomness Complexity of t-Secure XOR](/c/0087/) — open

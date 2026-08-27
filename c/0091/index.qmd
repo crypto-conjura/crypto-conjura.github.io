@@ -1,0 +1,199 @@
+---
+id: "0091"
+problem: t-wise-independence-of-block-ciphers
+draft: aes-t-wise-independence
+title: "t-Wise Independence of AES for t > 2"
+short_title: "AES t-Wise Independence, t > 2"
+areas: [symmetric-key]
+topics: [t-wise-independence, block-ciphers, pseudorandom-permutations, limited-independence]
+model: standard
+form: characterization
+assumption_class: unconditional
+category: research-open
+revision: 1
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: barrier
+  by: ai
+  note: "Nothing is known for concrete AES above t = 2, and the source's own Appendix B shows the width-1 specialization of the claim is false at modest round counts, by an interpolation attack on the patched inverse. So any proof must be sensitive to width and mixing, which rules out the arguments that worked for t = 2 and for the existential key-alternating result. The compensating structure is unusually good for a barrier: the counterexample tells you what a proof cannot look like, and t = 3 sits below where the attack is known to bite."
+status_summary: "Named by the source as the first of the two outstanding open problems that come of its work. It proves almost pairwise independence (t = 2) for multi-round AES with independent round keys, and an existential t-wise result for key-alternating ciphers with most permutations, but nothing for concrete AES beyond t = 2. Its Appendix B attacks 4-wise independence in the width-1 case with the same S-box."
+status_updated: 2026-08-27
+relations:
+  - {kind: variant-of, target: "0090", note: "same programme and the same key model; c/0090 fixes t = 2 and asks for a concrete round count on real AES, while this asks whether any finite round count works for t > 2"}
+lean:
+  mode: none
+sources:
+  - {cite: "Liu, Tessaro, Vaikuntanathan, The t-wise Independence of Substitution-Permutation Networks, CRYPTO 2021", url: "https://eprint.iacr.org/2021/507"}
+  - {cite: "Jakobsen, Knudsen, The Interpolation Attack on Block Ciphers, Fast Software Encryption 1997", url: "https://doi.org/10.1007/BFb0052332"}
+  - {cite: "Carlitz, Permutations in a Finite Field, Proceedings of the American Mathematical Society, 1953", url: "https://doi.org/10.1090/S0002-9939-1953-0055965-0"}
+  - {cite: "Pelecanos, Tessaro, Vaikuntanathan, Layout Graphs, Random Walks and the t-wise Independence of SPN Block Ciphers, IACR ePrint 2024/083", url: "https://eprint.iacr.org/2024/083"}
+statement_sha: "9385ad8528c8a32590706a3497e21caaf1cdb782232f459338e7065259058864"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+<!-- topics:start -->
+<div class="cj-tags cj-page-topics"><a class="cj-tag cj-tag-topic" href="/problems/by-topic/block-ciphers/">Block Ciphers</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/limited-independence/">Limited Independence</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/pseudorandom-permutations/">Pseudorandom Permutations</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/t-wise-independence/">T Wise Independence</a></div>
+<!-- topics:end -->
+
+A family of permutations is $t$-wise independent if its behaviour on any $t$
+distinct inputs is indistinguishable from a random permutation's. At $t = 2$ this
+already rules out differential and linear cryptanalysis, and the source proves it
+for real AES with real S-boxes. Higher $t$ rules out more, and the source names it
+as an outstanding open problem. There is a warning attached: in the degenerate
+width-$1$ case, with the same patched-inverse S-box AES uses, $4$-wise
+independence provably *fails* at modest round counts, by an interpolation attack.
+So the question is not whether AES gets there but after how many rounds — and no
+technique currently reaches any finite answer for $t \ge 3$.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [LaTeX source](latex/main.tex) · Formal statement — *not yet formalized*
+
+**The setting.** An SPN with word length $b$, width $k$ and $r$ rounds
+alternates: XOR the round key; apply an S-box $S : \mathbb{F}_{2^b} \to
+\mathbb{F}_{2^b}$ to each of $k$ blocks in parallel; apply an invertible linear
+mixing layer. A *key-alternating cipher* (KAC) is the case $k = 1$, where the
+mixing step can be dropped. AES is $k = 16$, $b = 8$, S-box the patched inverse
+$x \mapsto x^{2^b - 2}$ composed with an invertible $\mathbb{F}_2$-affine map,
+mixing layer ShiftRows then MixColumns. Round keys are independent and uniform.
+
+A family is *$\varepsilon$-close to $t$-wise independent* if its output
+distribution on any $t$ distinct inputs is within statistical distance
+$\varepsilon$ of a uniformly random permutation's.
+
+**Conjecture.** For every $t > 2$ and every $\varepsilon > 0$ there is a round
+count $r = r(t,\varepsilon)$ such that $r$-round AES with independent round keys
+is $\varepsilon$-close to $t$-wise independent.
+
+**How the source states it.** Page 7: "the two outstanding open problems that
+come of this work are (a) to prove $t$-wise independence of multi-round AES with
+independent round keys, for $t > 2$; and (b) to formalize and prove security
+against algebraic attacks." Item (a) is this statement; item (b) is a programme
+rather than a proposition, and is not.
+
+**The quantifiers are supplied here.** The source names the goal without fixing
+$t$, $\varepsilon$ or a target round count, so the structure above — for every
+$t$ and $\varepsilon$, some finite $r$ — is this statement's choice and the
+weakest reading with content. A resolution should report the dependence
+$r(t,\varepsilon)$; a bound polynomial in $t$ and $\log(1/\varepsilon)$ would be
+far more useful than a merely finite one.
+
+**The nearby counterexample, and why it does not settle this.** The source's
+Appendix B shows that for a modest number of rounds $r \ll 2^n$, the
+key-alternating cipher with permutation $x \mapsto x^{2^n - 2}$ — the same patched
+inverse, but at width $1$ over the whole $n$-bit block — is *not* $4$-wise
+independent, by essentially the interpolation attack of Jakobsen and Knudsen: the
+output is a rational function of the input with numerator and denominator linear
+in $x$.
+
+Two consequences. It is not a refutation: AES has width $16$ with $8$-bit S-boxes
+and a mixing layer, and the source cites Carlitz for the fact that with
+$2^{\Omega(n)}$ rounds the same KAC *would* be indistinguishable from a random
+permutation — so the width-$1$ obstruction is about round count, not
+impossibility. But it is a real constraint: an argument for $t \ge 4$ cannot be
+insensitive to width and mixing, since the width-$1$ specialization is false at
+modest $r$. That is a sharper obstruction than one usually gets, and it is the
+reason to distrust any purported proof that never uses $k$ or $M$.
+
+**What is proved, and the line between the two halves.**
+
+| Object | $t$ | Result |
+|---|---|---|
+| Concrete AES, real S-box | $2$ | $6r$-round AES is $2^{r-1}(0.472)^r$-close (Theorem 3.14) |
+| Concrete AES | $> 2$ | **[c/0091](/c/0091/) — open** |
+| KAC with *most* permutations | any $t$ | almost $t$-wise independent in $t + o(t)$ rounds, existentially |
+| KAC with patched inverse, width $1$ | $4$ | **not** $4$-wise independent for $r \ll 2^n$ (Appendix B) |
+
+The existential result fixes permutations that are not AES's S-box and says
+nothing about any named cipher. The gap between it and the concrete $t = 2$
+result is this statement.
+
+**Where $t = 3$ sits.** The source's problem is stated for $t > 2$; the
+counterexample is for $t = 4$. Nothing here rules out $t = 3$ being materially
+easier, and it is the natural first target — smallest case not covered by the
+pairwise machinery, and below the level at which the interpolation attack is known
+to bite. A resolution for $t = 3$ alone is genuine progress and should be reported
+as partial.
+
+**Independent round keys is load-bearing.** It is explicit in the source's
+problem statement and is not a technicality: real AES uses a key schedule. The
+working expectation is that $t$-wise independence becomes $t$-wise
+pseudorandomness under an appropriate schedule, and the source records that
+"understanding the precise role of key schedules is an important open problem."
+
+### Sources
+
+- Liu, Tessaro and Vaikuntanathan. [*The $t$-wise Independence of Substitution-Permutation Networks*](https://eprint.iacr.org/2021/507). CRYPTO 2021. The source. The two open problems are named on page 7; the AES pairwise bound is Theorem 3.14 on page 31; the existential KAC result is Section 4 and the attack against $4$-wise independence is Appendix B, page 46.
+- Jakobsen and Knudsen. [*The Interpolation Attack on Block Ciphers*](https://doi.org/10.1007/BFb0052332). Fast Software Encryption 1997. The attack the source's Appendix B adapts.
+- Carlitz. [*Permutations in a Finite Field*](https://doi.org/10.1090/S0002-9939-1953-0055965-0). Proceedings of the AMS, 1953. Cited by the source for the fact that with $2^{\Omega(n)}$ rounds the KAC with the patched inverse would be indistinguishable from a truly random permutation.
+- Pelecanos, Tessaro and Vaikuntanathan. [*Layout Graphs, Random Walks and the $t$-wise Independence of SPN Block Ciphers*](https://eprint.iacr.org/2024/083). IACR ePrint 2024/083. Improves the $t = 2$ picture substantially and is the source of [c/0090](/c/0090/). Does not address $t > 2$ for concrete AES.
+
+## Proof
+
+View PDF — *no proof written yet* · LaTeX source — *no proof written yet* · Formal proof — *not yet formalized*
+
+Open, with the shape of an acceptable proof unusually constrained.
+
+**Why the $t = 2$ machinery stops.** The pairwise argument works with *input
+differences*: a single difference $\Delta$ propagates, and the S-box extraction
+lemma says that when the incoming difference has enough Rényi entropy the outgoing
+one is near-uniform. For $t \ge 3$ there is no single difference — there are
+$\binom{t}{2}$ of them, correlated — and the object to track is a joint
+distribution over tuples rather than a distribution over one difference. The
+source's successor paper handles the $t$-wise case for random S-boxes via a random
+walk on *layout graphs*, an abstraction capturing equality and inequality
+constraints among multiple evaluations; extending that to a concrete S-box is the
+visible route.
+
+**Why any proof must use width and mixing.** See the Appendix B counterexample
+above. This is the single most useful constraint available: it rules out an entire
+family of arguments a priori.
+
+**Checked against the literature, 2026-08-27.** No result for concrete AES at
+$t > 2$ found. Targeted check on this line and its successor, not an exhaustive
+sweep.
+
+## Discussion
+
+**Why the programme is worth pursuing without pseudorandomness.** There is no hard
+mathematical problem underlying AES to reduce to, so the alternative to
+cryptanalysis is to prove that specific well-studied attack classes cannot
+succeed. $t$-wise independence is the largest such class currently within reach,
+and each increment in $t$ enlarges it.
+
+**Neighbouring questions in the same discussion, none of them this.** A tighter
+tradeoff between round count and statistical distance; a direct bound on
+differential probability without going through statistical distance; and item (b)
+above, algebraic attacks. The source also notes that a $2^{-127}$ differential
+bound for a $128$-bit block does not rule out a distinguisher, which is why
+closeness parameters here have to reach $2^{-128}$.
+
+**What a reviewer should be suspicious of, in order.** First, whether the result
+is for concrete AES or for an SPN with random or public-random S-boxes — the
+latter is the large-S-box model and is a different claim. Second, whether the
+argument uses width and mixing, since Appendix B shows one that does not must be
+wrong. Third, what $r(t,\varepsilon)$ is: a finite but astronomical bound settles
+the statement as posed and little else.
+
+## Open obligations
+
+- [ ] Prove that for some $t > 2$ there is a finite $r$ making $r$-round AES $\varepsilon$-close to $t$-wise independent — $t = 3$ first.
+- [ ] Report the dependence $r(t,\varepsilon)$, and confirm the argument uses width and mixing.
+- [ ] Or extend the Appendix B interpolation attack to AES's width and mixing, which would refute the statement for that $t$.
+- [ ] Formalize the statement in Lean; nothing here has been formalized.
+
+:::

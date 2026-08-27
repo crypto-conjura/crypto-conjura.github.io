@@ -1,0 +1,63 @@
+---
+title: "Secure computation with constant computational overhead"
+subtitle: "Settled for semi-honest parties, open against malicious ones, and now localized in one object"
+---
+
+## Motivation
+
+The ideal that cryptography should cost a constant factor over the insecure
+computation is, for secure multiparty computation, both concrete and nearly
+within reach. Ishai, Kushilevitz, Ostrovsky and Sahai showed in 2008 that with
+semi-honest parties it is achievable: local pseudorandom generators give
+protocols whose computational cost is $O(1)$ times that of evaluating the
+circuit in the clear. Against malicious parties the same paper posed the
+question and it has stayed open, with the best protocols paying a
+polylogarithmic factor in both the circuit size and the security parameter.
+
+That gap is the entire price of active security, asymptotically, and it is
+worth knowing whether it is real. What makes the question tractable rather than
+merely appealing is that it decomposes: oblivious transfer is complete for
+secure computation, so the problem splits into getting OT at constant overhead
+and getting from OT to general circuits at constant overhead.
+
+## Provenance and history
+
+The first half is now done. Boyle, Couteau, Gilboa, Ishai, Kohl, Resch and
+Scholl, *Oblivious Transfer with Constant Computational Overhead* ([IACR ePrint
+2023/817](https://eprint.iacr.org/2023/817)), give the first constant-overhead
+protocol for malicious bit-OT, building on their expand-accumulate code family.
+
+The second half is where this hub sits. In the semi-honest OT-hybrid model the
+textbook GMW protocol already has perfect security at small constant overhead;
+in the malicious OT-hybrid model the best known protocols are polylogarithmic,
+by Damgård, Ishai and Kroigaard and by Genkin, Ishai and Weiss. The source's
+Section 6.3 reduces the general question to a question about circuits: algebraic
+manipulation detection circuits, introduced by Genkin, Ishai, Prabhakaran, Sahai
+and Tromer, which resist tampering on their wires in the sense that any additive
+attack is simulatable by an additive attack on the input and output alone.
+Applying semi-honest GMW to an AMD circuit yields a maliciously secure protocol,
+so AMD overhead becomes protocol overhead — and combined with the source's OT
+result, constant-overhead AMD circuits would settle the main question.
+
+Genkin, Ishai and Weiss reach polylogarithmic overhead for AMD circuits and
+further reduce improvement to two simple honest-majority protocols: one
+providing only semi-honest security against a constant corruption fraction, and
+one guaranteeing only output correctness. This contrasts with the route of
+Ishai, Prabhakaran and Sahai and of Damgård, Ishai and Kroigaard, which reduces
+the question instead to honest-majority protocols with malicious security.
+
+## Parameter lattice
+
+Security model against achieved overhead.
+
+| | Semi-honest | Malicious |
+|---|---|---|
+| **General circuits, from local PRGs** | $O(1)$ (IKOS 2008) | open — the main question |
+| **General circuits, OT-hybrid** | $O(1)$, textbook GMW, perfect security | $\mathrm{polylog}(\lvert C\rvert, \lambda)$ (DIK 2010, GIW 2016) |
+| **Bit-OT** | $O(1)$ | $O(1)$ — the source's main result |
+| **AMD circuits** | — | $\mathrm{polylog}$ (GIW 2016); $O(\lvert C\rvert) + \mathrm{poly}(\lambda)\lvert C\rvert^{0.9}$ is [c/0082](/c/0082/), open |
+| **General circuits, relaxed security** | — | $O(1)$, the source's Section 6.1 — *not* the main question |
+
+## Statements in this hub
+
+- [Constant-Overhead Boolean AMD Circuits](/c/0082/) — open

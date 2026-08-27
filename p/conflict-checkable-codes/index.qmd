@@ -1,0 +1,85 @@
+---
+title: "Conflict checkable and decodable codes"
+subtitle: "What the pairwise consistency graph of a distributed codeword reveals"
+---
+
+## Motivation
+
+Store a codeword across $n$ servers, one symbol each, and suppose some symbols have
+been corrupted. Now have every pair of servers publicly announce a single bit:
+whether their two coordinates are consistent with *some* legal codeword. The
+resulting graph is all the information anyone gets. What can be inferred from it?
+
+The question is natural in distributed storage and it turns out to be the right
+abstraction for verifiable secret sharing, where the classical protocols spend their
+communication precisely on pairwise consistency checks. Two levels of answer:
+*conflict checkable* codes let one decide from the graph whether the stored vector
+is a codeword at all; *conflict decodable* codes let one identify which servers to
+trust and recover the codeword.
+
+The interest is that this seems to need less redundancy than locally testable codes
+do — the graph carries $\binom{n}{2}$ bits about pairs, not a local view of any one
+coordinate — and the question is how much less.
+
+## Provenance and history
+
+Benny Applebaum and Eliran Kachlon, *Conflict Checkable and Decodable Codes and
+Their Applications* ([IACR ePrint 2023/627](https://eprint.iacr.org/2023/627)),
+introduce the notions and pin the achievable rates surprisingly tightly.
+
+For checkability the answer is that very little redundancy is needed. Their
+Theorem 1.3 gives, for every $n \ge 3$, every $2 \le d \le n-1$ and every $\epsilon
+> 0$, an alphabet size for which an $(n,k,d)_q$ conflict checkable code exists with
+$k \ge n-d+1-\epsilon$ — almost meeting the Singleton bound, and beating the known
+upper bounds for locally testable codes. The construction is non-explicit, resting
+on a probabilistic lemma about families of degree-$t$ polynomials with bounded
+integer coefficients.
+
+For decodability they identify a sufficient condition: *local-to-global
+consistency*, that pairwise consistency on any $n-d+1$ positions lifts to an actual
+codeword. Their Lemma 1.6 shows checkability plus local-to-global consistency gives
+$t$-conflict decodability for $t = \lfloor (d-1)/2 \rfloor$, with an efficient
+decoder that finds a $2$-approximate vertex cover in the inconsistency graph. For
+the *robust* version — guarantees even when the stored vector is far from the code
+and the graph itself is corrupted — local-to-global consistency is not merely
+sufficient but necessary.
+
+And then the price. Their Theorem 1.8: any comparison-based conflict checkable code
+satisfying local-to-global consistency has $k \le (n-d+2)/2$ — exactly half the
+Singleton bound. *Comparison-based* means conflicts have the form
+$\mathrm{NEQ}(f_{i,j}(\sigma), f_{j,i}(\tau))$, and by their Theorem 4.7 every
+linear code over a finite field is comparison-based. So for linear codes the two
+properties arrive together and cost a factor of two. Their
+symmetric-bivariate-polynomial code, implicit in earlier verifiable-secret-sharing
+work, meets the bound exactly and is therefore rate-optimal in its class; Lemma 1.12
+extends the bound to $k \le (n-2t+1)/2$ for robust conflict decodable codes, met by
+the same code.
+
+The open question is which hypothesis of Theorem 1.8 does the damage. The
+Theorem 1.3 code bypasses the bound, and it is neither comparison-based nor known
+to be local-to-global consistent. The paper conjectures comparison-basedness is the
+culprit — and notes the conjecture already holds at $d = n-1$, degenerately, since
+there sets of size $n-d+1 = 2$ make local-to-global consistency automatic.
+
+## Parameter lattice
+
+Achievable dimension $k$, against the properties assumed. Singleton is $k \le
+n-d+1$.
+
+| Properties | Bound on $k$ | Status |
+|---|---|---|
+| **Conflict checkable** only | $n-d+1-\epsilon$ | achieved, Theorem 1.3 (non-explicit) |
+| **Checkable + comparison-based + local-to-global** | $\le (n-d+2)/2$ | proved tight, Theorem 1.8; met by $C_{\mathrm{bivariate}}$ |
+| **Checkable + local-to-global**, not comparison-based | $> (n-d+2)/2$? | [c/0096](/c/0096/) — open; holds at $d = n-1$ |
+| **Comparison-based $t$-robust conflict decodable** | $\le (n-2t+1)/2$ | proved, Lemma 1.12; met by $C_{\mathrm{bivariate}}$ |
+
+What each property buys and costs:
+
+| Property | Buys | Costs |
+|---|---|---|
+| **Local-to-global consistency** | conflict decodability with an efficient decoder; *necessary* for robust decodability | unknown alone — that is [c/0096](/c/0096/) |
+| **Comparison-based** | automatic for every linear code over a field | conjectured to be what forces the factor of two |
+
+## Statements in this hub
+
+- [Conflict Checkable Codes with Local-to-Global Consistency Beyond Half the Singleton Bound](/c/0096/) — open

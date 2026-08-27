@@ -1,0 +1,73 @@
+---
+title: "Communication lower bounds via Advisor-Verifier-Prover games"
+subtitle: "One model that three unrelated primitives reduce to, and one hypothesis about it"
+---
+
+## Motivation
+
+Information-theoretic cryptography has a long-standing embarrassment. For its most
+basic primitives — private information retrieval, general secret sharing,
+conditional disclosure of secrets, garbling — nobody can prove a super-linear
+communication lower bound, let alone the exponential ones everyone expects. The
+best bounds date from the mid-to-late 1990s. And the questions are isolated from
+one another: a breakthrough on secret sharing would not transfer to PIR, or the
+reverse.
+
+That isolation is the real obstacle, because it means every technique has to be
+invented once per primitive. A model that all of them reduce to would let a single
+argument pay off several times over — and would let partial progress accumulate
+instead of scattering.
+
+## Provenance and history
+
+Benny Applebaum and Oded Nir, *Advisor-Verifier-Prover Games and the Hardness of
+Information Theoretic Cryptography* ([IACR ePrint
+2023/1378](https://eprint.iacr.org/2023/1378)), supply such a model, by relating
+the questions to query/space trade-offs lifted to interactive proof systems.
+
+In an AVP game an advisor sees a function $f$, computes a randomized advice
+string, hands it privately to the verifier, and leaves. The verifier then receives
+an input $x$, sends one query to an untrusted prover, and decides whether $f(x) =
+1$ from the prover's single reply. The advice is hidden from the prover and is not
+reusable; all parties are unbounded; the cost is the sum of the three message
+lengths.
+
+The paper gives communication-efficient transforms from sd-PIR, general secret
+sharing and fully-decomposable randomized encodings into AVPs with a *laconic*
+prover — one whose answer is a constant number of bits. Its Hypothesis 1.2 asserts
+that prover-laconic AVPs need super-polynomial communication, and its Theorem 1.3
+converts that into super-polynomial lower bounds for all three primitives at once.
+
+Two facts locate the hypothesis. It is not vacuous: the transforms also yield a
+prover-laconic AVP at $2^{\tilde{O}(\sqrt{n})}$ with a single-bit prover, so such
+protocols exist sub-exponentially. And it is false without laconicity: the paper's
+Example 1.1 gives a non-laconic AVP at polynomial cost, derived from an $n$-server
+PIR protocol.
+
+What the paper proves toward the hypothesis is deliberately modest. Counting-based
+lower bounds adapt to the model, re-deriving several existing bounds in a unified
+way, and the paper states plainly that it does not reach the best-known bound for
+any of the primitives. It offers Hypothesis 1.2 "both as a working hypothesis or
+as an (ambitious) target for future works."
+
+## Parameter lattice
+
+Where each primitive stands, and what the hypothesis would give.
+
+| Primitive | Best upper bound | Best lower bound | Under Hypothesis 1.2 |
+|---|---|---|---|
+| **sd-PIR**, $2^n$-bit database | $2^{\tilde{O}(\sqrt{n})}$ | $Cn$, $C > 1$ (late 1990s) | super-polynomial |
+| **Secret sharing**, $n$-bit predicates | $(3/2)^{n+o(n)}$ | $\Omega(n/\log n)$ (mid 1990s) | super-polynomial |
+| **Fully-decomposable RE**, $n$-bit predicates | — | no super-linear bound | super-polynomial |
+
+And the AVP model itself, by prover length.
+
+| Prover | Communication achieved | Status |
+|---|---|---|
+| **Laconic** ($C$ bits, $C$ constant) | $2^{\tilde{O}(\sqrt{n})}$, single-bit prover | proved |
+| **Laconic** | $\mathrm{poly}(n)$ | [c/0089](/c/0089/) — conjectured impossible |
+| **Non-laconic** | $\mathrm{poly}(n)$ | proved, Example 1.1 — so laconicity is essential |
+
+## Statements in this hub
+
+- [Advisor-Verifier-Prover Protocols Are Lengthy](/c/0089/) — open

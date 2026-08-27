@@ -1,0 +1,82 @@
+---
+title: "Collision resistance of single-layer neural nets"
+subtitle: "Where the activation function decides whether a compressing map is a hash function"
+---
+
+## Motivation
+
+Take a single-layer neural net with random weights: $x \mapsto \varphi(Ax)$ on
+binary inputs, with $m < n$ so the map compresses. Collisions exist by counting.
+Whether they can be found efficiently is a question about $\varphi$, and it is a
+sharper question than it first appears, because the answer flips with the shape of
+the activation rather than with the size of the network.
+
+The cryptographic interest is that a positive answer would give a
+collision-resistant hash candidate of a markedly different character from the
+lattice-based ones — Ajtai's function and its descendants — resting on
+average-case hardness of a random constraint satisfaction problem rather than on a
+worst-case lattice reduction. The statistical-physics interest is that the
+overlap gap property, the standard barrier for stable algorithms on random
+structures, has a natural formulation here on the space of collisions rather than
+on the space of solutions.
+
+## Provenance and history
+
+Marco Benedetti, Andrej Bogdanov, Enrico M. Malatesta, Marc Mézard, Gianmarco
+Perrupato, Alon Rosen, Nikolaj I. Schwartzbach and Riccardo Zecchina, *Collision
+Resistance of Single-Layer Neural Nets* ([IACR ePrint
+2026/1143](https://eprint.iacr.org/2026/1143)), give both a positive and a negative
+result, and the gap between them is the interesting part.
+
+Positive: for activations constant on a positive tail $[\kappa,\infty)$, collision
+finding is easy at low densities. Drive every margin above $\kappa$ and the
+activation is flat, so the outputs coincide. Their Theorem 4.1 gives an efficient
+online algorithm doing this at fixed positive algorithmic rates, for $\alpha <
+\alpha_0(\delta)$ and $\kappa \le c/\sqrt{\alpha}$, producing $\delta$-extensive
+collisions — inputs with $x^\top y \le (1-\delta)n$, genuinely far apart. The
+asymmetric binary perceptron falls in this class.
+
+Negative: they introduce a *randomized oscillating* activation, replacing the
+symmetric binary perceptron's fixed window boundary by independent random
+thresholds at each neuron, prove an overlap gap property for extensive collisions,
+and derive an online lower bound in a regime where the algorithm no longer applies.
+The reason for changing the model is stated openly: the extra randomness "removes
+the rigid alignments that make the SBP collision space difficult to analyze, while
+preserving the obstruction to the positive-tail algorithm."
+
+The symmetric binary perceptron itself falls between. Its activation is a window
+indicator, so it never saturates and the positive-tail algorithm does not apply for
+larger $\kappa$; but for very large $\kappa$ the activation is nearly constant on
+typical Gaussian margins and collisions become trivial. The middle is reached by
+neither technique, and the paper poses it as a displayed Open Question and calls it
+a central open challenge, naming $\kappa \approx 0.675$, $\alpha \approx 0.9$ as a
+concrete point inside it.
+
+Two caveats the paper records about its own algorithmic side: the practical
+algorithm is proved correct only at inverse logarithmic algorithmic rates, with
+constant rates left open, and whether the sharper discrepancy-minimization approach
+adapts to collision finding remains open.
+
+## Parameter lattice
+
+Collision finding by activation shape and threshold.
+
+| Activation | Regime | Status |
+|---|---|---|
+| **Positive-tail** (constant on $[\kappa,\infty)$), incl. ABP | $\alpha < \alpha_0$, $\kappa \le c/\sqrt{\alpha}$ | efficient online algorithm, Theorem 4.1 |
+| **SBP** (window indicator) | small $\kappa \ll 1/\sqrt{\alpha}$ | inside the algorithmic window |
+| **SBP** | $1/\log n \ll \kappa \ll 1/\sqrt{\alpha}$ | [c/0095](/c/0095/) — open, neither technique reaches |
+| **SBP** | $\kappa$ very large | collisions trivial: activation nearly constant on typical margins |
+| **Randomized oscillating** | $\alpha \ge \alpha^\star$ | OGP proved; online lower bound proved |
+| **Randomized oscillating** | $\alpha \ge \alpha^\star$, all p.p.t. | the paper's Conjecture 1.4 — open |
+
+Why each technique stops:
+
+| Technique | Requirement | Why the SBP fails it |
+|---|---|---|
+| **Positive-tail algorithm** | activation saturates above $\kappa$ | the SBP's is a window; margins leave it rather than saturating |
+| **OGP argument** | first-moment computation on the collision space | the SBP's rigid alignments block it — hence the randomized activation |
+
+## Statements in this hub
+
+- [Collision Resistance of the Symmetric Binary Perceptron](/c/0095/) — open

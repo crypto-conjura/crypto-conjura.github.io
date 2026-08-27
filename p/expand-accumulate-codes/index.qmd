@@ -1,0 +1,71 @@
+---
+title: "Expand-accumulate codes"
+subtitle: "Sparse matrix, then prefix sums: cheap enough for correlated pseudorandomness, and proved only over F_2"
+---
+
+## Motivation
+
+Pseudorandom correlation generators compress the long streams of correlated
+randomness that secure computation consumes — OT correlations, oblivious linear
+evaluations, multiplication triples — into short seeds that expand locally. The
+dual-LPN assumptions they rest on are parameterized by a linear code, and the
+code has to do two incompatible-looking things at once. It must have large
+minimum distance, because a low-weight dual codeword is exactly a linear test
+that breaks the assumption. And it must encode fast, because the encoding sits on
+the critical path of every party in the protocol.
+
+Expand-accumulate codes are a proposed answer to both. The generator matrix is
+$BA$ where $B$ is sparse and random and $A$ is the accumulator — ones on and
+below the diagonal — so encoding is one sparse multiplication followed by $N-1$
+running additions, which parallelizes well and is about as cheap as a linear map
+can be. The question is what distance such a minimal construction actually has.
+
+## Provenance and history
+
+Elette Boyle, Geoffroy Couteau, Niv Gilboa, Yuval Ishai, Lisa Kohl, Nicolas
+Resch and Peter Scholl, *Correlated Pseudorandomness from Expand-Accumulate
+Codes* ([IACR ePrint 2022/1014](https://eprint.iacr.org/2022/1014)), introduce
+the family and prove the distance bound they need — over the binary field. Their
+Theorem 3.10 fixes constant rate $R = n/N$, density $p = C\ln N/N$, and a
+relative-distance target $\delta < 1/2$, and gives an explicit failure
+probability provided $R$ and $C$ satisfy two inequalities.
+
+Over a larger ring the argument degrades in a way the authors call out
+themselves: the expander Hoeffding bound they apply forces $R \ll 1/\ln q$ for a
+ring of size $q$, which makes the theorem vacuous at constant rate as $q$ grows.
+They state they believe this is an artefact of the proof, and back that with
+computed average weight distributions for small codes over $\mathbb{F}_{17}$ and
+over $\mathbb{Z}_{16}$ — one field and one ring with zero divisors, the latter
+being where cancellation is easiest and a counterexample would most plausibly
+live.
+
+The same discussion leaves a second, distinct question open: which distribution
+to draw the rows of $B$ from. Comparing Bernoulli, exact-weight and regular noise
+over $\mathbb{F}_2$, the paper reports regular noise appears best at putting mass
+on heavier weights, and says providing theoretical guarantees for those other row
+distributions remains open. That is about $B$, not about the ring, and it is not
+the statement in this hub.
+
+## Parameter lattice
+
+What is proved about $d(H) \ge \delta N$ for $H \leftarrow
+\mathsf{EAGen}(n,N,p,\mathcal{R})$, by ring and rate.
+
+| Ring | Rate | Status |
+|---|---|---|
+| **$\mathbb{F}_2$** | constant $R$ | proved, Theorem 3.10 |
+| **General $\mathcal{R}$, $q = \lvert\mathcal{R}\rvert$** | $R \ll 1/\ln q$ | proved, but vacuous at constant rate for large $q$ |
+| **General $\mathcal{R}$** | constant $R$, no dependence on $q$ | [c/0086](/c/0086/) — open |
+| **General $\mathcal{R}$, distance *increasing* in $q$** | constant $R$ | the source's stated belief; nowhere quantified |
+
+Evidence available, by ring:
+
+| Ring | Evidence |
+|---|---|
+| **$\mathbb{F}_2$** | full proof |
+| **$\mathbb{F}_{17}$** | computed average weight distribution, $\mathsf{EAGen}(4,20,4,\mathbb{F}_{17})$ |
+| **$\mathbb{Z}_{16}$** | computed average weight distribution, $\mathsf{EAGen}(4,20,4,\mathbb{Z}_{16})$ — the zero-divisor case |
+
+## Statements in this hub
+
+- [Minimum Distance of Expand-Accumulate Codes over Arbitrary Rings](/c/0086/) — open

@@ -1,0 +1,183 @@
+---
+id: "0084"
+problem: planted-subgraph-cryptography
+draft: planted-graph-character-sum
+title: "A Character-Sum Conjecture for Planted Subgraphs"
+short_title: "Planted-Subgraph Character Sum"
+areas: [foundations, information-theoretic]
+topics: [planted-subgraph-problems, average-case-hardness]
+model: standard
+form: lower-bound
+assumption_class: unconditional
+category: research-open
+revision: 1
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: adaptation
+  by: ai
+  note: "A character sum over the symmetric group acting on graphs, with an explicit heuristic for why it should cancel -- the inner product taking both values almost equally often. Bounding exponential sums for typical instances is standard territory, and the exceptional set is identified in advance (graphs with large automorphism groups). What keeps it off the routine band is that the max is over all non-zero edge sets, so a union bound over the 2^{binom(n,2)} choices needs the per-alpha bound to be strong, and the source supplies no target to aim at."
+status_summary: "The source derives the formula governing low-degree detection of a planted subgraph, observes the character sum in it should be small for most graphs, and says it leaves the rigorous study of the question to future work. No bound is proved and none is stated as a target."
+status_updated: 2026-08-27
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Abram, Beimel, Ishai, Cryptography from Planted Graphs: Security with Logarithmic-Size Messages, IACR ePrint 2023/1929", url: "https://eprint.iacr.org/2023/1929"}
+  - {cite: "Bollobas, Erdos, Cliques in Random Graph, Mathematical Proceedings of the Cambridge Philosophical Society, 1976", url: "https://doi.org/10.1017/S0305004100052417"}
+statement_sha: "fee5fa7638911be8eb30e002e332bdde571dc5356e94aab0b311e07a11cf8ef9"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+<!-- topics:start -->
+<div class="cj-tags cj-page-topics"><a class="cj-tag cj-tag-topic" href="/problems/by-topic/average-case-hardness/">Average Case Hardness</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/planted-subgraph-problems/">Planted Subgraph Problems</a></div>
+<!-- topics:end -->
+
+Hide a small graph $H$ on $n$ nodes inside a random graph on $N$ nodes and ask
+how hard it is to notice. The source derives a formula for exactly how well a
+low-degree polynomial can do, and inside it sits a sum over all permutations of
+the $n$ nodes: for each permutation, compare the permuted copy of $H$ with $H$
+itself and take the parity of their disagreement on a chosen set of edges. If
+those parities come out even and odd about equally often the sum nearly cancels
+and $H$ is hard to detect; if $H$ is a clique or an independent set every term is
+$+1$ and the sum is as large as possible. The conjecture is that cancellation is
+typical.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [LaTeX source](latex/main.tex) · Formal statement — *not yet formalized*
+
+**The encoding (the source's).** A graph on $n$ nodes is a vector of
+$\binom{n}{2}$ bits, one per potential edge; $H$ is such a vector, and sums of
+graphs are coordinatewise over $\mathbb{F}_2$. An edge set $\alpha$ is encoded
+the same way, with $w(\alpha)$ its number of edges and $V(\alpha)$ the number of
+nodes they touch. $\pi \circ H$ permutes the *nodes* of $H$ — not the edges —
+according to $\pi \in \mathrm{Sym}(n)$.
+
+**The quantity.** $S(H,\alpha) := \sum_{\pi \in \mathrm{Sym}(n)}
+(-1)^{\langle \pi \circ H + H,\ \alpha\rangle}$. Always
+$|S(H,\alpha)| \le |\mathrm{Sym}(n)|$, with equality at $\alpha = 0$ and
+whenever $\pi \circ H = H$ for every $\pi$ — in particular for $H$ a clique or an
+independent set.
+
+**Where it comes from.** The source's Theorem 4.7 yields a formula for how
+easily a degree-$D$ polynomial detects a planted $H$; with no hints, it is
+$$\sum_{0 < w(\alpha) \le D} \binom{N - V(\alpha)}{n - V(\alpha)}^{2} \cdot S(H,\alpha),$$
+and the lower the value, the harder detection becomes. Two consequences the
+source draws: cliques are the easiest subgraph to detect, independently of $N$,
+$t$ and $D$; and the argument stops working once $D$ reaches $\log^2 n$, which
+is no accident, since the largest clique in a random $N$-node graph has at most
+$2\log n$ nodes with high probability.
+
+**Conjecture.** There is a function $\eta(n) = o(1)$ such that for a $1 - o(1)$
+fraction of the graphs $H$ on $n$ nodes, $\max_{\alpha \ne 0}|S(H,\alpha)| \le
+\eta(n)\cdot|\mathrm{Sym}(n)|$.
+
+**How the source states it.** Page 28: "We conjecture that, for most graphs $H$,
+the sum $\sum_{\pi \in \mathrm{Sym}(n)} (-1)^{\langle \pi \circ H + H,
+\alpha\rangle}$ should be small for all choices of $\alpha$, as $\langle \pi
+\circ H + H, \alpha\rangle$ should assume the values $0$ and $1$ almost equally
+often. We leave the rigorous study of this problem to future work."
+
+**The target is supplied here, not by the source.** "Small" is unquantified in
+the source, so the bound above — a $o(1)$ fraction of the trivial maximum — is
+this statement's choice, and the weakest reading under which the assertion has
+content. A resolution should report the bound it achieves; a stronger conclusion
+such as $|S(H,\alpha)| \le |\mathrm{Sym}(n)|/2^{\Omega(w(\alpha))}$, or a bound
+in terms of $V(\alpha)$, would be more useful to the application and should be
+stated as such.
+
+**Why "for most $H$" cannot be dropped.** The claim is false for individual
+graphs, visibly: for a clique or an independent set $\pi \circ H = H$ for every
+$\pi$, so $S(H,\alpha) = |\mathrm{Sym}(n)|$ for every $\alpha$. That is the
+phenomenon rather than a defect — the source's point is that those vectors
+measure structure and the conjecture says structure is atypical.
+
+### Sources
+
+- Abram, Beimel and Ishai. [*Cryptography from Planted Graphs: Security with Logarithmic-Size Messages*](https://eprint.iacr.org/2023/1929). IACR ePrint 2023/1929. The source. The detection formula and the conjecture are on page 28; the summary of results and open questions is Section 1.1.5, pages 7–8.
+- Bollobás and Erdős. [*Cliques in Random Graph*](https://doi.org/10.1017/S0305004100052417). Mathematical Proceedings of the Cambridge Philosophical Society, 1976. The result the source cites for the largest clique in a random $N$-node graph having at most $2\log n$ nodes with high probability, which is why its argument stops at $D = \log^2 n$.
+
+## Proof
+
+View PDF — *no proof written yet* · LaTeX source — *no proof written yet* · Formal proof — *not yet formalized*
+
+Open, with the source's heuristic pointing at the route.
+
+**The heuristic to make rigorous.** $\langle \pi \circ H + H, \alpha\rangle$
+should take the values $0$ and $1$ almost equally often as $\pi$ ranges over
+$\mathrm{Sym}(n)$, for a typical $H$. Making that precise is a statement about
+how the random variable $\pi \mapsto \langle \pi \circ H + H, \alpha\rangle$
+distributes, and the natural handle is that $\pi \circ H + H$ is the symmetric
+difference of $H$ with a random relabelling of itself — which for a typical $H$
+should be a large, unstructured edge set, so its parity against any fixed
+non-zero $\alpha$ should be near-balanced.
+
+**Where the difficulty concentrates.** The maximum is over all non-zero
+$\alpha$, of which there are $2^{\binom{n}{2}} - 1$. A per-$\alpha$ bound strong
+enough to survive a union bound over that many choices has to be exponentially
+small in $n^2$, which is much more than "almost equally often" naively delivers.
+Either the union bound must be replaced by an argument exploiting structure
+across $\alpha$, or the per-$\alpha$ bound must be very strong. The application
+only needs $w(\alpha) \le D$ for $D$ up to about $\log^2 n$, which is a far
+smaller family — so a resolution restricted to low-weight $\alpha$ would already
+be useful and should be reported as such.
+
+**Where a refutation would live.** In graphs with large automorphism groups: any
+$H$ fixed by many permutations keeps many terms at $+1$. The conjecture asserts
+these are a $o(1)$ fraction, so a refutation means exhibiting a
+non-vanishing family of graphs whose automorphism structure keeps some
+$S(H,\alpha)$ large.
+
+**Checked against the literature, 2026-08-27.** No rigorous treatment found;
+the source says it leaves this to future work. Targeted check, not an exhaustive
+sweep of the character-sum literature.
+
+## Discussion
+
+**What it would buy, and what it would not.** The character sum is one factor of
+the detection formula; the other is the binomial factor
+$\binom{N-V(\alpha)}{n-V(\alpha)}^2$, summed over edge sets of weight at most
+$D$. A bound on $S(H,\alpha)$ alone is therefore not a hardness result — it has
+to be combined with that outer sum, and the source's own observation that the
+argument breaks once $D \ge \log^2 n$ bounds how far any such combination can
+reach. This statement is the combinatorial half, isolated because it is a
+statement about graphs and permutations with no cryptography in it.
+
+**A separate conjecture in the same paper.** The source also presents a
+candidate construction it conjectures is $(\mathrm{poly}(n),
+\mathrm{negl}(n))$-secure in the sense of its Definition 5.1 when $N(n) \ge
+n^{2+\delta}$, and says it does not know how to prove that conjecture. That is a
+security assumption about a specific construction, not a combinatorial
+statement, and it is not this one.
+
+**What a reviewer should be suspicious of, in order.** First, the quantifier
+order: for most $H$, the bound holds for *all* $\alpha$ — the reversed order
+(for each $\alpha$, most $H$) is much weaker and much easier. Second, that $\pi$
+permutes nodes and not edges, which is what makes $\pi \circ H + H$ a
+non-trivial object. Third, whether a claimed bound covers all non-zero $\alpha$
+or only the low-weight ones the application needs; both are progress but they
+are different statements.
+
+## Open obligations
+
+- [ ] Prove $\max_{\alpha \ne 0}|S(H,\alpha)| \le \eta(n)|\mathrm{Sym}(n)|$ with $\eta = o(1)$, for a $1-o(1)$ fraction of graphs.
+- [ ] Or prove the restricted version for $w(\alpha) \le \mathrm{polylog}(n)$, which is what the source's application needs.
+- [ ] Or refute it, by exhibiting a non-vanishing family of graphs keeping some $S(H,\alpha)$ large.
+- [ ] Combine any such bound with the outer binomial sum to obtain an actual low-degree hardness statement.
+- [ ] Formalize the statement in Lean; nothing here has been formalized.
+
+:::

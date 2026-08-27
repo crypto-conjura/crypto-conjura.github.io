@@ -1,0 +1,184 @@
+---
+id: "0087"
+problem: randomness-complexity-of-mpc
+draft: xor-randomness-complexity-gap
+title: "The Exact Randomness Complexity of t-Secure XOR"
+short_title: "Randomness Complexity of XOR"
+areas: [mpc, information-theoretic]
+topics: [randomness-complexity, limited-independence]
+model: standard
+form: tight-bound
+assumption_class: unconditional
+category: research-open
+revision: 1
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: new-idea
+  by: ai
+  note: "What is left is a single logarithmic factor on the simplest function in the field, which sounds routine and is not: the source has just spent a paper closing the quadratic part, its lower bound is combinatorial because the information-theoretic route provably cannot reach t^2, and Kushilevitz-Mansour's upper bound is non-explicit and has stood since 1997. Either an O(t^2) protocol or an omega(t^2) bound needs a technique neither side currently has. The compensating fact is that the question is completely specified -- one function, one threshold, one counted resource -- so partial progress is unambiguous."
+status_summary: "The source proves an Omega(t^2) lower bound, matching Kushilevitz and Mansour's non-explicit O(t^2 log(n/t)) upper bound up to a logarithmic factor, and up to a constant factor when t = Omega(n). It also gives an explicit protocol at O(t^2 log^2 n). It states it leaves the remaining polylogarithmic gaps open."
+status_updated: 2026-08-27
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Goyal, Ishai, Song, Tight Bounds on the Randomness Complexity of Secure Multiparty Computation, IACR ePrint 2022/799", url: "https://eprint.iacr.org/2022/799"}
+  - {cite: "Kushilevitz, Mansour, Randomness in Private Computations, SIAM Journal on Discrete Mathematics 10(4):647-661, 1997", url: "https://doi.org/10.1137/S0895480196306130"}
+  - {cite: "Blundo, De Santis, Persiano, Vaccaro, Randomness Complexity of Private Computation, Computational Complexity 8(2):145-168, 1999"}
+  - {cite: "Kushilevitz, Ostrovsky, Rosen, Characterizing Linear Size Circuits in Terms of Privacy, STOC 1996", url: "https://doi.org/10.1145/237814.238004"}
+  - {cite: "Chor, Kushilevitz, A Communication-Privacy Tradeoff for Modular Addition, Information Processing Letters 45(4), 1993", url: "https://doi.org/10.1016/0020-0190(93)90210-W"}
+statement_sha: "a2bd0bc3e1638e5b04fd416485196539a81751800cbc9902eb4a4b3bdb5e6d79"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+<!-- topics:start -->
+<div class="cj-tags cj-page-topics"><a class="cj-tag cj-tag-topic" href="/problems/by-topic/limited-independence/">Limited Independence</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/randomness-complexity/">Randomness Complexity</a></div>
+<!-- topics:end -->
+
+Randomness is a resource like any other, and in information-theoretic secure
+computation it is one of the few whose exact cost might actually be determined.
+Take the simplest interesting function: $n$ parties each holding a bit want the
+XOR of all of them, private against any $t$ of them colluding. The textbook
+protocol tosses $O(nt)$ coins. Kushilevitz and Mansour cut that to
+$O(t^2\log(n/t))$, but non-explicitly, and could only prove $\Omega(t)$
+necessary. The source closes most of that quadratic gap — $\Omega(t^2)$ coins are
+necessary, and an explicit protocol uses $O(t^2\log^2 n)$ — and says it leaves
+the remaining polylogarithmic factor open.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [LaTeX source](latex/main.tex) · Formal statement — *not yet formalized*
+
+**The resource.** In the standard model of information-theoretic MPC, $n$ parties
+each holding an input run a protocol computing $f$, every party learning the
+output, with privacy against any $t$ colluding parties. The *randomness
+complexity* is the total number of coins tossed by all parties in the worst case
+over inputs and coins.
+
+**The quantities.** Let $\mathrm{RC}(n,t)$ be the least $r$ for which there is an
+$n$-party protocol computing $\mathrm{XOR}$ with perfect $t$-security tossing at
+most $r$ coins in total in the worst case, and $\mathrm{RC}^{\ast}(n,t)$ the same
+restricted to *explicit* protocols — those whose description is computable in
+polynomial time, as opposed to resting on a combinatorial object obtained
+probabilistically or in super-polynomial time.
+
+**What is known.** $\mathrm{RC}(n,t) = \Omega(t^2)$ (the source);
+$\mathrm{RC}(n,t) = O(t^2\log(n/t))$ non-explicitly (Kushilevitz and Mansour);
+$\mathrm{RC}^{\ast}(n,t) = O(t^2\log^2 n)$ (the source). When $t = \Omega(n)$ the
+first two agree up to a constant factor.
+
+**Conjecture.** Determine the order of $\mathrm{RC}(n,t)$ for $t = o(n)$, by
+resolving one of:
+
+(a) $\mathrm{RC}(n,t) = \Theta(t^2)$ — there is a protocol computing
+$\mathrm{XOR}$ with perfect $t$-security using $O(t^2)$ coins; or
+
+(b) $\mathrm{RC}(n,t) = \omega(t^2)$ — the $\Omega(t^2)$ lower bound can be
+improved, for some $t = o(n)$.
+
+**How the source states it.** Page 3: "We leave open the question of
+characterizing the randomness complexity of general MPC without helper parties,
+as well as closing the remaining (polylogarithmic) gaps between our lower bounds
+and upper bounds."
+
+**Why $t = o(n)$.** For $t = \Omega(n)$ the source's lower bound and Kushilevitz
+and Mansour's upper bound already agree up to a constant factor, so nothing
+asymptotic is left there. The open regime is $t$ genuinely sublinear, where the
+upper bound's $\log(n/t)$ factor is unbounded.
+
+**Perfect privacy is load-bearing.** With statistical privacy the question
+dissolves: the folklore protocol picking a random committee of $\sigma$ parties
+and secret-sharing among them achieves $2^{-\Omega(\sigma)}$ security against
+$t = 0.99n$ corruptions using $O(n\sigma)$ coins, beating $\Omega(n^2)$ whenever
+$\sigma = o(n)$. The source makes exactly this point to explain why its
+lower-bound technique is combinatorial rather than information-theoretic. A
+statistically private protocol below $\Omega(t^2)$ is not a refutation.
+
+### Sources
+
+- Goyal, Ishai and Song. [*Tight Bounds on the Randomness Complexity of Secure Multiparty Computation*](https://eprint.iacr.org/2022/799). IACR ePrint 2022/799. The source. The state of the art and its contribution are on pages 2–3, the statement of what it leaves open on page 3, and the alternative randomness measures in its Appendix B.
+- Kushilevitz and Mansour. [*Randomness in Private Computations*](https://doi.org/10.1137/S0895480196306130). SIAM Journal on Discrete Mathematics 10(4):647–661, 1997. The $O(t^2\log(n/t))$ non-explicit upper bound and the $\Omega(t)$ lower bound, and the source of the explicit-protocol question.
+- Blundo, De Santis, Persiano and Vaccaro. *Randomness Complexity of Private Computation*. Computational Complexity 8(2):145–168, 1999. The $\Omega(t^2/(n-t))$ information-theoretic lower bound, matched by the textbook protocol when $t = n - \Omega(1)$.
+- Kushilevitz, Ostrovsky and Rosén. [*Characterizing Linear Size Circuits in Terms of Privacy*](https://doi.org/10.1145/237814.238004). STOC 1996. The two-way relation between randomness complexity at $t=1$ and circuit complexity, which the source names as evidence for the difficulty of the remaining gaps.
+- Chor and Kushilevitz. [*A Communication-Privacy Tradeoff for Modular Addition*](https://doi.org/10.1016/0020-0190(93)90210-W). Information Processing Letters 45(4), 1993. One of the two sources of the textbook $O(nt)$-coin protocol; the other is Benaloh's *Secret sharing homomorphisms*, CRYPTO '86.
+
+## Proof
+
+View PDF — *no proof written yet* · LaTeX source — *no proof written yet* · Formal proof — *not yet formalized*
+
+Open. Both ends have been pushed recently, which is a reason to think either could
+move again and a reason to expect the last factor to be the hard one.
+
+**Toward $O(t^2)$.** Kushilevitz and Mansour's protocol is non-explicit, resting
+on a combinatorial object obtainable either by an efficient probabilistic
+construction with small failure probability or deterministically in
+super-polynomial time. The $\log(n/t)$ factor comes from that object, so a
+sharper such object — or a construction avoiding it — is the visible route.
+
+**Toward $\omega(t^2)$.** The source's lower bound is combinatorial by necessity:
+the information-theoretic technique of Blundo et al. yields
+$\Omega(t^2/(n-t))$ and deteriorates as $t$ moves away from $n$, and the
+committee protocol above shows no information-theoretic argument can reach
+$\Omega(n^2)$ once privacy is relaxed. Pushing past $t^2$ therefore needs a
+strengthening of the combinatorial argument, not a change of measure.
+
+**The reason for pessimism the source names.** Kushilevitz, Ostrovsky and Rosén
+showed a two-way relation between the randomness complexity of $f$ at $t = 1$ and
+the circuit complexity of $f$. That is a warning about the general problem rather
+than about XOR — XOR's circuit complexity is not in doubt — but it is the reason
+the source gives for expecting the remaining gaps to be difficult in some
+parameter regimes.
+
+**Checked against the literature, 2026-08-27.** No closure of either
+polylogarithmic gap found. Targeted check on this line, not an exhaustive sweep.
+
+## Discussion
+
+**Two gaps, not one.** The gap between $\Omega(t^2)$ and the *non-explicit*
+$O(t^2\log(n/t))$ is this conjecture. The further gap up to the source's
+*explicit* $O(t^2\log^2 n)$ is the question Kushilevitz and Mansour left open — an
+explicit protocol matching their bound — which the source improves without
+closing. An explicit protocol at $O(t^2\log(n/t))$ would settle the second
+without touching the first, and a resolution should say which it settles.
+
+**What the source's lower bound already covers.** It extends beyond XOR to
+arbitrary symmetric Boolean functions, including AND and majority, and holds when
+the output goes to a strict subset of the parties and when extra input-less
+participants are present. The conjecture is stated for XOR because that is where
+the upper bounds are sharpest and the comparison is exact.
+
+**Neighbouring questions the source also leaves open.** Characterizing the
+randomness complexity of general MPC *without* helper parties — its
+$O(t^2\log|C|)$ protocol for general circuits needs input-less participants — and
+extending its lower bounds to a more liberal measure in which each party's
+randomness comes from an arbitrary distribution and the quantity to minimize is
+entropy rather than a count of coins. Neither is this statement.
+
+**What a reviewer should be suspicious of, in order.** First, whether the privacy
+is perfect; the statistical version is settled and much cheaper. Second, whether
+a claimed protocol is explicit, and whether the claim being made is about
+$\mathrm{RC}$ or $\mathrm{RC}^{\ast}$. Third, whether the regime is $t = o(n)$,
+since for $t = \Omega(n)$ the bounds already match.
+
+## Open obligations
+
+- [ ] Give a perfectly $t$-secure protocol for XOR using $O(t^2)$ coins, for $t = o(n)$ — or prove $\omega(t^2)$ are necessary.
+- [ ] Separately: give an *explicit* protocol at $O(t^2\log(n/t))$, settling Kushilevitz and Mansour's question.
+- [ ] State which of the two gaps any partial result closes, and in which regime of $t$.
+- [ ] Formalize the statement in Lean; nothing here has been formalized.
+
+:::

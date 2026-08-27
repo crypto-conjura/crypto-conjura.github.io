@@ -1,0 +1,68 @@
+---
+title: "Proximity gaps for Reed-Solomon codes"
+subtitle: "All close or almost none close, and how far up the distance scale that dichotomy reaches"
+---
+
+## Motivation
+
+A proximity test asks whether a vector is a codeword or far from being one, by
+reading only a few of its coordinates. Batching many such tests is what makes
+modern proof systems practical: instead of testing $u_1, \dots, u_m$
+separately, test a single random linear combination. The step that argument
+needs is not obvious, though. It needs that a random combination being close to
+the code is evidence that *all* the $u_i$ are close — and in a way that pins
+down one common set of agreement positions, not a different one per vector.
+
+Proximity gaps are the statement that makes this work. For a collection of sets
+— lines, low-degree curves, whole affine spaces — the claim is that no set in the
+collection can be split: it cannot happen that half its elements are close to
+the code and half are far. Either everything is close, or almost nothing is.
+The quantitative form, correlated agreement, is what proof systems actually
+invoke, and how far up the distance scale it can be pushed is what decides
+their concrete soundness.
+
+## Provenance and history
+
+The line runs through Ben-Sasson, Kopparty and Saraf (CCC 2018) and Ben-Sasson,
+Goldberg, Kopparty and Saraf's DEEP-FRI (ITCS 2020), which reached proximity
+parameters below the "one-and-a-half Johnson bound" $1 - \sqrt[3]{\rho}$ and
+only for folding parameter $2$. Ben-Sasson, Carmon, Ishai, Kopparty and Saraf,
+*Proximity Gaps for Reed–Solomon Codes* ([IACR ePrint
+2020/654](https://eprint.iacr.org/2020/654)), improve this on three counts: the
+proximity parameter reaches the full Johnson/Guruswami–Sudan bound $1 -
+\sqrt\rho$ for large fields, the error during the commit phase is better, and
+the bounds degrade far more slowly in the folding parameter, which matters
+because large folding parameters are what implementations prefer.
+
+The remaining ceiling is the Johnson bound itself, and it is there for a
+reason: the proof above the unique decoding radius invokes the
+Guruswami–Sudan list-decoding algorithm, which reaches exactly that far. The
+paper conjectures — as its numbered Conjecture 8.4 — that the theorems hold up
+to capacity $1 - \rho$ with polynomial error, and records that this would imply
+the earlier conjecture of Ben-Sasson, Bentov, Horesh and Riabzev on how many
+FRI query repetitions a target security level needs. It also calibrates the
+conjecture's constants against what is known: nothing contradicts $c_1 = c_2 =
+2$, and in characteristic greater than the degree nothing contradicts $c_1 =
+c_2 = 1$ — though DEEP-FRI's Appendix B shows those smaller exponents fail in
+characteristic two.
+
+## Parameter lattice
+
+Proximity parameter against error, for the affine-space collection.
+
+| Regime | Proximity parameter | Error | Status |
+|---|---|---|---|
+| **Unique decoding** | $\delta \le (1-\rho)/2$ | $n/q$, essentially tight | proved (Theorem 1.2) |
+| **Up to Johnson** | $\delta < 1 - \sqrt\rho$ | $O((\eta\rho)^{-O(1)} n^{2}/q)$ | proved (Theorem 1.2) |
+| **Up to capacity** | $\delta \le 1 - \rho - \eta$ | $(\eta\rho)^{-c_1} n^{c_2}/q$ | [c/0081](/c/0081/) — open |
+| **Up to capacity, degree-$\ell$ curves** | $\delta \le 1 - \rho - \eta$ | $(\eta\rho)^{-c_1}(\ell n)^{c_2}/q$ | [c/0081](/c/0081/) — open |
+| **Smaller exponents, char.\ two** | — | $c_1 = c_2 = 1$ | *ruled out*, by DEEP-FRI Appendix B |
+
+The FRI consequence: $s \ge \lambda/\log(1/\rho)$ query repetitions are
+necessary, $s \approx 2\lambda/\log(1/\rho)$ are provably sufficient over
+quadratically large fields, and closing that factor of two is what the
+conjecture would do.
+
+## Statements in this hub
+
+- [Proximity Gaps for Reed–Solomon Codes Up to Capacity](/c/0081/) — open

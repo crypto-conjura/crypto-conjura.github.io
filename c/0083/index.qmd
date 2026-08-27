@@ -1,0 +1,180 @@
+---
+id: "0083"
+problem: additive-randomized-encodings
+draft: statistical-robust-are
+title: "Statistically Secure Robust Additive Randomized Encodings"
+short_title: "Statistical Robust ARE"
+areas: [information-theoretic, mpc]
+topics: [additive-randomized-encodings, randomized-encodings]
+model: standard
+form: characterization
+assumption_class: unconditional
+category: research-open
+revision: 1
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: new-idea
+  by: ai
+  note: "The non-robust case was settled by a construction that shuffles its way around the source's intuition, and the natural hope is that the same machinery extends. It does not obviously: robustness concedes the residual function to the simulator, so the encoding must remain simulatable under every subset of honest parties at once, which is exactly the condition the shuffling construction is not built to meet. On the negative side, the source's own best attempt reaches only an l2-distance variant. Both directions need something new, and the source's prediction being wrong once is a reason for caution rather than confidence."
+status_summary: "The source asks whether all functions admit a statistically secure ARE, robust or non-robust, and strongly conjectures the answer is negative. The non-robust half was refuted: Bitansky, Erabelli, Garg and Ishai construct statistical AREs for all finite functions. The robust half is open, and is re-posed by that later work."
+status_updated: 2026-08-27
+relations:
+  - {kind: variant-of, target: "0073", note: "both concern statistically secure ARE for finite functions and both stem from this line; c/0073 asks whether the correctness error of the now-known non-robust construction can be driven to zero, while this asks whether the robust notion is achievable at all"}
+lean:
+  mode: none
+sources:
+  - {cite: "Halevi, Ishai, Kushilevitz, Rabin, Additive Randomized Encodings and Their Applications, IACR ePrint 2023/870", url: "https://eprint.iacr.org/2023/870"}
+  - {cite: "Bitansky, Erabelli, Garg, Ishai, Shuffling is Universal: Statistical Additive Randomized Encodings for All Functions, IACR ePrint 2025/1442", url: "https://eprint.iacr.org/2025/1442"}
+  - {cite: "Applebaum, Brakerski, Tsabary, Perfect Secure Computation in Two Rounds, SIAM J. Comput. 50(1):68-97, 2021", url: "https://doi.org/10.1137/19M1272718"}
+  - {cite: "Halevi, Ishai, Kushilevitz, Rabin, Best Possible Information-Theoretic MPC, TCC 2018", url: "https://doi.org/10.1007/978-3-030-03810-6_10"}
+statement_sha: "a4194ab976cd439bf0058834a543bda6d7fe4a1140049df8e68f9d0b5c80f78d"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+<!-- topics:start -->
+<div class="cj-tags cj-page-topics"><a class="cj-tag cj-tag-topic" href="/problems/by-topic/additive-randomized-encodings/">Additive Randomized Encodings</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/randomized-encodings/">Randomized Encodings</a></div>
+<!-- topics:end -->
+
+In an additive randomized encoding each party turns its input into a single
+group element, and the sum reveals the function's output and nothing else. That
+assumes the evaluator is on its own. A *robust* ARE assumes the worst: the
+evaluator may collude with some parties, subtract their encodings, and see the
+sum over the honest ones — which determines the residual function, so the
+definition concedes that and asks nothing more leak. The source introduced both
+notions and conjectured neither admits a statistically secure scheme for all
+functions. For the non-robust notion that conjecture has since been refuted. For
+the robust notion the question stands.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [LaTeX source](latex/main.tex) · Formal statement — *not yet formalized*
+
+**The object (the source's Definitions 3.1 and 3.3).** An ARE for $f$ is
+$(\mathsf{Setup}, \mathsf{Enc}, \mathsf{Dec})$: $\mathsf{Setup}$ fixes an
+abelian group $\mathbb{G}$, $\mathsf{Enc}(pp, i, x_i)$ maps party $i$'s input to
+a group element, and $\mathsf{Dec}$ recovers $f(x_1,\dots,x_n)$ from the sum. It
+is statistically secure if the sum is simulatable from the output alone, up to
+negligible statistical distance.
+
+**Robustness (the source's Definition 3.4).** For $H \subseteq [n]$ let
+$\Pi_H(1^\lambda, x)$ be $(pp, \widehat y_H)$ where $\widehat y_H = \sum_{i \in
+H}\widehat x_i$, and let $f_{H,x}$ be the residual function obtained by fixing
+the honest inputs. $\Pi$ is *statistically robust* if for some negligible
+$\delta$ there is a simulator with oracle access to the residual function such
+that for all $\lambda, n, \ell$, all $H$ and all honest inputs $x$,
+$\mathrm{SD}(\mathsf{Sim}^{f_{H,x}}(1^\lambda, 1^n, H, 1^\ell),\ \Pi_H(1^\lambda,
+x)) \le \delta(\lambda)$.
+
+**Conjecture.** Every finite multiparty function admits an ARE that is
+statistically correct and statistically robust, with both errors negligible.
+
+**How the source states it.** Page 5: "We leave open the existence of
+statistically secure ARE for general (or even constant-size) functions, and
+describe a failed attempt in this direction in Appendix A." And Section 1.2,
+page 7: "The main open question is whether all functions admit a statistically
+secure (robust or non-robust) ARE. This is open even for very simple functions,
+such as equality of two inputs from the domain $\{0,1,2\}$, which can be shown
+to be complete for non-robust ARE (Theorem 5.10). We strongly conjecture that
+the answer is negative."
+
+**Half of that question is now settled, against the source's prediction.**
+Bitansky, Erabelli, Garg and Ishai construct, for every multiparty $f$ over a
+finite domain and every $\varepsilon > 0$, an ARE with statistical correctness
+and security errors at most $\varepsilon$. So statistical *non-robust* AREs
+exist for all finite functions, and the equality-over-$\{0,1,2\}$ case the
+source singled out goes the other way. Their own open-questions list re-poses
+the robust case. This statement is therefore restricted to the robust notion,
+and it is posed as an achievability claim rather than as the source's negative
+prediction — because the one half of that prediction which has been tested
+turned out to be wrong.
+
+**Why finiteness is not a technicality.** For general functions over large
+input domains, robust ARE implies obfuscation, which the source proves: the
+simulator's access to the residual function is essentially an obfuscation of
+it. There is no information-theoretic question outside the finite regime, which
+is why the restriction is there and why the later work poses the robust question
+"in the case of finite functions".
+
+### Sources
+
+- Halevi, Ishai, Kushilevitz and Rabin. [*Additive Randomized Encodings and Their Applications*](https://eprint.iacr.org/2023/870). IACR ePrint 2023/870. The source. Definitions 3.1, 3.3 and 3.4 are on pages 10–11; the summary of what is left open is on page 5 and the open-questions list in Section 1.2, page 7.
+- Bitansky, Erabelli, Garg and Ishai. [*Shuffling is Universal: Statistical Additive Randomized Encodings for All Functions*](https://eprint.iacr.org/2025/1442). IACR ePrint 2025/1442. Refutes the non-robust half of the source's conjecture and re-poses the robust case. Also the source of [c/0073](/c/0073/).
+- Applebaum, Brakerski and Tsabary. [*Perfect Secure Computation in Two Rounds*](https://doi.org/10.1137/19M1272718). SIAM J. Comput. 50(1):68–97, 2021. The multi-party randomized encoding question a positive answer for finite $3$-party functions would settle.
+- Halevi, Ishai, Kushilevitz and Rabin. [*Best Possible Information-Theoretic MPC*](https://doi.org/10.1007/978-3-030-03810-6_10). TCC 2018. The notion the source states information-theoretic robust ARE implies.
+
+## Proof
+
+View PDF — *no proof written yet* · LaTeX source — *no proof written yet* · Formal proof — *not yet formalized*
+
+Open in both directions, with the recent history a caution rather than a guide.
+
+**Toward a construction.** The obvious hope is that the shuffling-based
+construction which settled the non-robust case extends. Robustness is a genuine
+strengthening, though: the simulation must hold for *every* subset $H$ of honest
+parties simultaneously, each time conceding only the residual function
+$f_{H,x}$. An encoding designed so that the full sum is simulatable from the
+output need not have that property for partial sums, and the source's own note
+that all of *its* information-theoretic constructions happen to be robust is
+about specific functions (capped sum, modular multiplication), not about a
+general technique.
+
+**Toward an impossibility.** The source's closest approach is in its Appendix
+A: an impossibility under a variant of the definition that measures simulation
+accuracy in $\ell_2$ rather than $\ell_1$ distance. Strengthening that to
+$\ell_1$ is the visible route, and it is the route whose non-robust analogue
+failed — the $\ell_2$-based negative results of Hiwatashi likewise did not
+extend, and the construction eventually went the other way. That is the reason
+to treat a negative answer as no safer a bet than a positive one.
+
+**Checked against the literature, 2026-08-27.** The non-robust case is settled
+as described; no resolution of the robust case found. Targeted check on the two
+papers in this line, not an exhaustive sweep.
+
+## Discussion
+
+**What a positive answer settles elsewhere.** A positive answer even for finite
+$3$-party functions would settle the main open question about multi-party
+randomized encodings, and for all finite functions the main open question about
+best-possible information-theoretic MPC. The source itself makes the second
+connection when it says information-theoretic robust ARE implies best-possible
+information-theoretic MPC.
+
+**Why the source's intuition was reasonable and still wrong.** Its conjecture
+that statistical ARE does not exist was not idle: it is implied by the
+conjecture that shuffle privacy is weaker than central privacy, so it was
+viewed as a possible stepping stone toward separating those two models.
+Refuting it therefore also removed that route to the separation. Anyone
+reasoning about the robust case from the same intuition should keep that history
+in view.
+
+**What a reviewer should be suspicious of, in order.** First, whether a claimed
+construction really achieves robustness for every $H$, rather than for the
+all-honest case or for a fixed collusion pattern. Second, whether the functions
+covered are finite — a construction for general functions over large domains
+would be an obfuscation result, not an information-theoretic one. Third, whether
+a claimed impossibility is under $\ell_1$ distance, since the $\ell_2$ variant is
+where the source's own attempt landed and where the analogous non-robust
+argument stalled.
+
+## Open obligations
+
+- [ ] Construct a statistically robust, statistically correct ARE for every finite function — or for any single finite function for which none is known.
+- [ ] Or prove that some finite function admits no statistically robust ARE, under $\ell_1$ statistical distance.
+- [ ] Report which of the two neighbouring consequences a positive answer yields: the MPRE question for finite $3$-party functions, or best-possible information-theoretic MPC for all finite functions.
+- [ ] Formalize the statement in Lean; nothing here has been formalized.
+
+:::

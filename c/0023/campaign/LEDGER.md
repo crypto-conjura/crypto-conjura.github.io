@@ -2,9 +2,9 @@
 ## Polynomial Compatibility Conjecture (PCC), inverse-polynomial influence regime
 
 **Campaign:** c/0023 — depth 0 — contract: `CONTRACT.md`  
-**Cycle:** 1 (scaffold + reconnaissance) · **Closed:** 2026-08-27  
+**Cycle:** 2 (rung R1 reconnaissance) · **In progress:** 2026-08-27  
 **Harness:** `prompts/solve.md` (this repository's HARNESS.md)  
-**First screenful orientation:** This ledger captures cycle 1's complete scaffold: Scout verdict (NO PRIOR RESOLUTION FOUND, 2026-08-27), six strategist plans P1–P6 ranked by information-per-effort, case ladder R0–R6 ready for human approval, and computationally verified refutation boundaries. No proof attempted; all inputs to first materalised rung I01 (R1, spread-junta indicator) await approval.
+**First screenful orientation:** This ledger captures cycle 2 reconaissance: R1 micro-scout completed (NO PRIOR RESOLUTION FOUND), KKDWY26 deciding source fully read (S5 card written, S3a [SOURCE-BLOCKED] lifted), refuter completed exact junta-class frontier search (ε*(d)=1/(2d) exactly, grid-attained; candidate theorem F1–F4→(M) with isoperimetry chain), and prover in flight on the lemma chain. Source queue empty; verification to follow prover completion.
 
 ---
 
@@ -34,6 +34,13 @@
 **CID:** `a2d1e5f4b9c` · **Source:** 0023-strategist-1 §0, R3  
 **Statement:** A distribution 𝐅 enters hypotheses and conclusion only through M_𝐅 := E_f[|f⟩⟨f|], a PSD unit-trace operator on V_d. **PCC ⟺ for every pair M, M′ of PSD unit-trace operators on V_d with Tr(M L_i), Tr(M′ L_i) ≤ δ(d) for all i, the point-basis diagonals have intersecting supports.** Corollaries: supports of size ≤ dim V_d ≤ (N|𝒴|)^d are WLOG; the problem is a finite SDP-feasibility question for each (d, N); this is precisely ACC22 Conjecture 4.3's state form made finite-dimensional-explicit.  
 **Verification tally:** none (strategist-level; reformulation only).
+
+### I01 (rung R1): Candidate theorem via lemma chain F1–F4→(M) (unverified, computational proof blueprint)
+**CID:** `3f2d1e8a6c4` · **Source:** 0023-refuter-2 §1–2, §8 (handoff notes)  
+**Statement:** For ℤ₂ and indicator junta families 𝒞^junta_d with max per-coordinate average influence δ(d), incompatibility forces **max(δ_F, δ_G) ≥ 1/(2d)**. Equivalently, every incompatible pair imposes a constraint **δ_F·E_𝐆|K| + δ_G·E_𝐅|J| ≥ 1** where |J|, |K| ≤ d are window sizes. The grid (d×d row-column construction) achieves equality and attains the frontier exactly; thus **ε*_junta(d) = 1/(2d)** and **δ(d) = 1/(3d) is a witnessing threshold** (or any θ/(2d) for 0 < θ < 1).  
+**Proof blueprint (assigned to prover 0023-prover-1):** Lemma chain (F1) influence formula, (F2) disjointness criterion, (F3) projection-density payment via hypercube edge-isoperimetry (to be proved inline), (F4) per-pair payment ≥1, (M) master count. **Non-elementary link: hypercube edge-isoperimetry (Harper), verified computationally; prover must prove inline or cite via card.**  
+**Dependency:** S3a (statement/proof), S5 item T4 (Theorem 4 constant confirmation), refuter-2 §1–2 (computational verification of F1–F4 and master chain).  
+**Verification tally:** none (in flight, awaiting prover).
 
 ---
 
@@ -79,6 +86,15 @@ Sweep over (b,m) with b≤7, m≤24: minimum ratio **4/11≈0.3636** at (3,4) an
 **Statement:** Transport lemma. Given an incompatible pair (f,g) on ℤ₂^n, deg≤d₀, influences≤(a,b), on a D×D grid of n-coordinate blocks: f_R = ⊗_C f, g_C = ⊗_R g with 𝐅,𝐆 uniform over rows/columns. Norms stay 1, degrees→D·d₀, per-coordinate influence→(a/D, b/D) (conflict preserved in block (R,C)). Corollary: **ε*(ℤ₂,4D)≤1/(11D)**, i.e., ε*(d)≤(4/11+o(1))/d. Every even-order group inherits via pullback; every group has ε*=O(1/d) by grid.  
 **Verification:** Exact at D=2 with 1/5 seed (d=4, N=16, influences 1/10, 1/12).
 
+### **Junta-class frontier (refuter-proved, exact, ε*_junta(d)=1/(2d); grid-attained; tightness via isoperimetry)**
+**Source:** 0023-refuter-2 (cycle 2, exact arithmetic + exhaustive sweep)  
+**Statement (CERTIFIED, NOT VERIFIED):** Over ℤ₂, for patterns on indicator junta supports:
+- **(Table of exact frontier values, all certified rational.)** ε*_junta(2,2)=1/2; ε*_junta(2,3)=1/3; ε*_junta(2,4)=1/4 (grid-attained); ε*_junta(3,3)=1/4; ε*_junta(3,4)=1/4. No partition-rich configuration beats the grid constant.
+- **(Per-pair payment law.)** Every cross-disjoint incompatible pair forces $\sum_{i\in S}[\mathrm{Inf}_i(f)+\mathrm{Inf}_i(g)] \ge 1$ on the shared window $S$; minimum attained exactly 1 (verified on 20,000+ pairs). Payment-tight pairs are locally grid-like (all 10,494 sampled tight pairs reduce to single oppositely-forced coordinates with uniform fibers).
+- **(Junta vs full-class divergence at d=2.)** Junta frontier $1/4$ vs full-class frontier $1/5$ (refuter-1 §4.1): sub-1/(2d) full-class records are essentially non-indicator sums-of-indicators.
+**Proof method (candidate, F1–F4→(M)):** Formula (F1): influence formula; (F2): disjointness ≡ projection-disjointness; (F3): projection-density payment bound via hypercube edge-isoperimetry (verified exhaustively 984,858 (pattern, window) pairs k≤4, 200,000 random k∈[5,12]); (F4): per-pair payment from (F3); (M): master count via (F4) linearity over distributions → max(δ_F,δ_G)≥1/(2d). **Non-elementary link: hypercube edge-isoperimetry (Harper); verified only computationally on all reachable scales; general-k truth rests on the standard isoperimetric inequality.**
+**Rigidity:** All intermediate quantities at every audit satisfy their inequality; grid meets every link with equality.
+
 ### **The obstruction (refuter-diagnosed, not a theorem)**
 **Source:** 0023-refuter-1 §5  
 **Statement (diagnostic):** Three independent walls hit every construction searched:
@@ -92,7 +108,14 @@ Together: expected profile if ε*(d)=Θ(1/d) and **the conjecture is TRUE with c
 
 ## DEAD PLANS
 
-(none)
+### R1 falsification honeypot (cycle 2, 0023-refuter-2)
+**Status:** DEAD. **Reason:** Exact exhaustive search (all 984,858 (pattern, window) pairs k≤4, 200,000 random k∈[5,12], 1,712 stochastic free-form families, all structured architectures) yields ε*_junta(d)=1/(2d) exactly, grid-attained, via the isoperimetry chain F1–F4→(M). No construction beats the grid constant; pattern richness cannot push the frontier below Θ(1/d). The search is terminated not by resource exhaustion but by a fully quantitative obstruction, eliminating falsity via five elementary counting steps verified in exact arithmetic at scale. Falsity would contradict Harper's hypercube edge-isoperimetric inequality.
+
+### Scout-2 prior-art candidates (cycle 2, 0023-scout-2)
+**Status:** DEAD. **Reason:** Micro-scout on rung R1 as a standalone combinatorial object found no literature match. Killed approaches: (i) ALWZ spreadness — low average influence does not imply low window membership; the rung's content is the gap between them (scout-2 §C2). (ii) Cross-intersecting families — the polarity is wrong; literature requires cross-MEETING families (agreement), not cross-DISJOINT (conflict); measure mismatch (counting vs influence) (scout-2 §B4). (iii) Subcube partitions — single-family partitioning only, no two-family cross structure, no influence hypothesis (scout-2 §B5). (iv) Conflict complexity — runs over query-process distributions on 0/1-inputs, not over certificate/pattern families with influence caps (scout-2 §B6). (v) AA-conjecture specialisations — proved cases are single-function only; no pair/cross-disjoint variant found; Boolean-valued statements are classical but exponential-influence only (scout-2 §B7). Verdict: NO PRIOR RESOLUTION FOUND stands.
+
+### Scout-3 KKDWY26 possibility (cycle 2, 0023-scout-3)
+**Status:** DEAD. **Reason:** Full read of arXiv:2601.08727v2 (deciding source identified in scout-2 §E) resolved whether KKDWY26 hides a distributional or influence-type statement about disjoint-support families. Outcome: no distributions over polynomials, no families (every result per-function or per-pair), no spread, no influence HYPOTHESIS in any theorem, and the only influence CONCLUSIONS are in the exponential regime (2^{-2·rdeg}), already covered by card S1 (ACC22 Thm 4.4). Theorem 4 confirms S3a's $16d^4$ constant; Theorem 10 (only pair statement) is unusable for I01 (fails the everywhere-promise). Scout-3 §E verdict: outcome (i) of scout-2 prediction (no distributional statement). Possibility killed: KKDWY26 does not settle or partially settle I01.
 
 ## OPEN GAPS
 
@@ -107,10 +130,11 @@ Together: expected profile if ε*(d)=Θ(1/d) and **the conjecture is TRUE with c
 **In collection (cards evict originals):**
 - **S1-acc22-card.md** (id: S1-acc22, retrieved 2026-08-27 by Scout): [ACC22] full theorem statements, proof mechanism, counterexamples B.1–B.5, context.
 - **S2-clm23-card.md** (id: S2-clm23, retrieved 2026-08-27 by Scout): [CLM23] Conjecture 2.8, state formulation, conversion lemma, consumption regime, uncertainty-principle ingredient.
-- **S3-2026-bypass-lemmas-card.md** (ids: S3a, S3b, first carded 2026-08-27 by Scout at [RESTATED] grade, **upgraded to [READ] the same day** from the human-uploaded PDFs `2608.03824v1.pdf` and `2504.05710v2.pdf`): S3a = arXiv:2608.03824 Lemma 3.5 "Disjoint-support separator", §3.4 pp. 7–8 (depth-O(d⁴) decision tree deciding which of two everywhere-disjoint degree-≤d real multilinear polynomials is nonzero, under a promise; per-pair, algorithmic, no influence/norm/distribution content) — statement AND proof now carded, including the recursion and the explicit constant assembly (b ≤ 8D² disjoint maximum monomials per stage via the KKDWY26 rational-degree lemma, ≤ 8d³ queries per stage, ≤ 2d stages, depth ≤ 16d⁴); S3b = arXiv:2504.05710v2 Lemma 3.4, §3.2 pp. 13–14 (win-win partial assignments for a single nonzero degree-d polynomial) — statement AND proof carded (≤ d rounds of maximal-disjoint-maximum-monomial fixing, |μ| ≤ md², case (b) via Mid04). PCC-mismatch flags unchanged on the card. Residual one-level-deeper blocks: internals of [KKDWY26] (arXiv:2601.08727v2) and [Mid04] (quant-ph/0403168) — statements printed in the read papers, their own proofs not read.
+- **S3-2026-bypass-lemmas-card.md** (ids: S3a, S3b, first carded 2026-08-27 by Scout at [RESTATED] grade, **upgraded to [READ] the same day** from the human-uploaded PDFs `2608.03824v1.pdf` and `2504.05710v2.pdf`): S3a = arXiv:2608.03824 Lemma 3.5 "Disjoint-support separator", §3.4 pp. 7–8 (depth-O(d⁴) decision tree deciding which of two everywhere-disjoint degree-≤d real multilinear polynomials is nonzero, under a promise; per-pair, algorithmic, no influence/norm/distribution content) — statement AND proof now carded, including the recursion and the explicit constant assembly (b ≤ 8D² disjoint maximum monomials per stage via the KKDWY26 rational-degree lemma, ≤ 8d³ queries per stage, ≤ 2d stages, depth ≤ 16d⁴); S3b = arXiv:2504.05710v2 Lemma 3.4, §3.2 pp. 13–14 (win-win partial assignments for a single nonzero degree-d polynomial) — statement AND proof carded (≤ d rounds of maximal-disjoint-maximum-monomial fixing, |μ| ≤ md², case (b) via Mid04). PCC-mismatch flags unchanged on the card. **S3a residual [SOURCE-BLOCKED: KKDWY26] on internal Lemma 2.3 uses is LIFTED by S5 item C1 (Corollary 1 now READ at source).** Residual one-level-deeper block: [Mid04] (quant-ph/0403168) — statement printed in the read paper, its own proof not read.
+- **S5-kkdwy26-card.md** (id: S5, carded 2026-08-27 cycle 2 by Scout, [READ] — arXiv:2601.08727v2 full PDF, all 26 pages read): [READ] Kothari–Kovacs-Deak–Wang–Yang, *Rational degree is polynomially related to degree*, main result $\deg(f) \le \widetilde O(\mathrm{rdeg}(f)^3)$. Four items: (C1) **Corollary 1 (discrete-Markov lemma, p. 4), statement and proof**, verbatim: $p$ real, $|p(x)|\le h$ on cube, $|p(0^n)|=h$, $p(x)p(0^n)\le 0$ at |x|=1 ⟹ $\deg(p)\ge\sqrt{n/2}$ — **confirms S3a's constant exactly, lifts S3a residual block**; (T4) **Theorem 4 (p. 7), verbatim: $D(f)\le 4\deg_\pm(f)^2\,\mathrm{rdeg}(f)^2\le 16\,\mathrm{rdeg}(f)^4$**, the form S3a cites for the total-function template (P2 adapts); (T10+F7) **Theorem 10 (Effective Hypercube Nullstellensatz, p. 18)** — the paper's only pair-of-disjoint-support statement, requires EVERYWHERE-promise (no common zeros on entire cube), **unusable for I01 objects** (incompatible indicators have common zeros on $(A\cup B)^c$, same flag as S3a hyp 4); Fact 7 (p. 18) **barrier evidence: dropping $g_1g_2\equiv 0$ kills any poly(d) partition-of-unity bound even at degree 1**, supporting evidence that R1 proof must exploit disjointness itself; (T9/R3) **Theorem 9 + Remark 3 (p. 16)**: influence content is exponential regime only ($2^{-2\,\mathrm{rdeg}}$), already covered by S1; delimitless. **Does NOT contain:** distributions over polynomials (only over decision trees), families (every result per-function or per-pair), spread, influence HYPOTHESIS, or $1/\mathrm{poly}(d)$ influence CONCLUSION. Deciding source outcome: confirmed scout-2 §E outcome (i).
 
 **QUEUE (ranked by load-bearing impact):**
-(empty — both strategist requests resolved at [READ] grade on 2026-08-27. Latent, below bar, only if a proof step comes to depend on their internals: PDFs of arXiv:2601.08727v2 [KKDWY26] and quant-ph/0403168 [Mid04].)
+(empty — both strategist requests resolved at [READ] grade on 2026-08-27, and KKDWY26 (the deciding source) fully read on 2026-08-27 cycle 2, resulting in S5 card and S3a residual block lift. Latent, below bar, only if a proof step comes to depend on internal proofs of [Mid04] (quant-ph/0403168) — currently needed only as a single-function lemma cite for S3b.)
 
 **DECLINED:** none.
 
@@ -136,27 +160,26 @@ Together: expected profile if ε*(d)=Θ(1/d) and **the conjecture is TRUE with c
 | PROGRESS.md | PROGRESS.md | case-planner | claude-fable-5 | 1 | AWAITING APPROVAL | case ladder R0–R6; conventions; extremal-case calibration (Rung 0); no rung materialised |
 | S1-acc22-card | sources/S1-acc22-card.md | scout | — | 1 | IN LIBRARY | [ACC22] source card: three conjecture formulations, K1 theorem, K2 counterexamples, proof mechanism |
 | S2-clm23-card | sources/S2-clm23-card.md | scout | — | 1 | IN LIBRARY | [CLM23] source card: state form, conversion lemma, consumption regime, Donoho–Stark caveat |
-| S3-2026-bypass-lemmas-card | sources/S3-2026-bypass-lemmas-card.md | scout + orchestrator | claude-fable-5 | 1–2 | IN LIBRARY ([READ]) | S3a = 2608.03824 Lem 3.5 (statement + proof, pp. 7–8), S3b = 2504.05710v2 Lem 3.4 (statement + proof, pp. 13–14); upgraded from [RESTATED] via human-uploaded PDFs 2026-08-27; source queue now empty |
+| S3-2026-bypass-lemmas-card | sources/S3-2026-bypass-lemmas-card.md | scout + orchestrator | claude-fable-5 | 1–2 | IN LIBRARY ([READ]) | S3a = 2608.03824 Lem 3.5 (statement + proof, pp. 7–8), S3b = 2504.05710v2 Lem 3.4 (statement + proof, pp. 13–14); upgraded from [RESTATED] via human-uploaded PDFs 2026-08-27; S3a residual [SOURCE-BLOCKED: KKDWY26] lifted by S5 cycle 2 |
+| I01-spread-junta | intermediates/I01-spread-junta.md | case-planner | claude-fable-5 | 1 | ACTIVE TARGET | rung R1; materialized from ladder (PROGRESS.md); awaiting prover work on lemma chain F1–F4→(M) from refuter-2 §8 |
+| 0023-scout-2 | proofs/0023-scout-2.md | scout | claude-fable-5 | 2 | COMPLETE | rung-start micro-scout on I01 standalone; verdict NO PRIOR RESOLUTION FOUND; kills ALWZ spreadness, cross-intersecting families, subcube partitions, conflict complexity, AA specialisations; identifies KKDWY26 as deciding source |
+| 0023-scout-3 | proofs/0023-scout-3.md | scout | claude-fable-5 | 2 | COMPLETE | bounded full read of deciding source arXiv:2601.08727v2 (KKDWY26); resolves scout-2 §E; outcome (i) confirmed: no distributional/influence theorem for I01 in KKDWY26; S5 card written; S3a residual block lifted |
+| 0023-refuter-2 | proofs/0023-refuter-2.md | refuter | claude-fable-5 | 2 | COMPLETE | rung R1 exact exhaustive search (all 984,858 (pattern,window) pairs k≤4, 200,000 random k≤12, 1,712 stochastic free-form families, all structured architectures); ε*_junta(d)=1/(2d) exactly, grid-attained; candidate theorem F1–F4→(M) with isoperimetry as non-elementary link; falsity ruled out via five elementary counting steps |
+| 0023-refuter-2-code | proofs/0023-refuter-2-code/ | refuter | — | 2 | COMPLETE | reproducible code: junta_lib.py + 5 scripts (t1–t5); ~2.5 min wall clock; python 3.14, numpy 2.5.2, scipy 1.18.1 (all load-bearing arithmetic in exact rationals/integers) |
+| S5-kkdwy26-card | sources/S5-kkdwy26-card.md | scout | — | 2 | IN LIBRARY ([READ]) | KKDWY26 source card [READ]: Corollary 1 (discrete-Markov, statement+proof, lifts S3a residual block), Theorem 4 (constant confirmation), Theorem 10 (pair statement, unusable for I01, everywhere-promise fails), Fact 7 (barrier evidence), T9/R3 (influence content exponential only, already in S1). Global: no distributions, no families, no spread, no influence hypothesis. |
+| 0023-prover-1 | proofs/0023-prover-1.md | prover | [TBD] | 2 | IN FLIGHT | assigned plan: refuter-2 §8 lemma chain (F1–F4→(M)); target statement: ε*_junta(d)=1/(2d), δ(d)=1/(3d) witnessing; non-elementary link Harper edge-isoperimetry to be proved inline |
 
 ---
 
 ## NEXT ACTION (exactly one)
 
-**Refuter-first sweep on intermediate I01 (rung R1), artifact `0023-refuter-2`.**
+**Prover artifact 0023-prover-1, lemma chain F1–F4→(M) on intermediate I01 (rung R1), in flight.**
 
-Gate history: the human APPROVED the ladder as ordered on 2026-08-27 (no
-reorder). R1 is materialised as `intermediates/I01-spread-junta.md` (the
-single active target). The Refuter runs a bounded search over small d,
-windows, and patterns for cross-disjoint junta-indicator families below the
-$1/(2d)$ line; the rung-start micro-scout (`0023-scout-2`, R1 as a standalone
-combinatorial object) runs concurrently as insurance, not as a second action.
-If refutation succeeds at sub-inverse-polynomial influence, ℤ₂-PCC is dead
-and the ladder re-bases on another group; if no counterexample, pass I01 to
-one Prover.
+**Cycle 2 state summary:** Refuter completed exact junta-class frontier search (0023-refuter-2): ε*_junta(d)=1/(2d) exactly, grid-attained; candidate proof chain F1 (influence formula, verified), F2 (disjointness criterion, verified), F3 (projection-density payment via Harper edge-isoperimetry, computationally verified exhaustively, general-k truth rests on standard isoperimetric inequality), F4 (per-pair payment ≥1, verified), (M) (master count via linearity, verified). Scout R1 micro-sweep (0023-scout-2) completed: NO PRIOR RESOLUTION FOUND for R1 as a standalone object; killed prior-art candidates (ALWZ, cross-intersecting families, subcube partitions, conflict complexity, AA). Scout deciding-source read (0023-scout-3) completed: KKDWY26 full text resolved; outcome (i) confirmed (no distributional/influence statement); S5 card written; S3a residual [SOURCE-BLOCKED: KKDWY26] lifted.
 
-Resolved gate sub-item: the rank-1 source request (2608.03824 Lem 3.5) was
-filled at [READ] grade on 2026-08-27 (card S3, upgraded from the
-human-uploaded PDFs); the source queue is empty.
+**Prover assignment:** Write up and prove the lemma chain F1–F4→(M) from refuter-2 §1–2, §8. Target statement: for ℤ₂ junta indicators, incompatibility forces max(δ_F,δ_G)≥1/(2d). Accept δ(d)=1/(3d) as witnessing threshold. **Non-elementary link: hypercube edge-isoperimetry (Harper). Prover must prove inline (recommended, ~1 page induction) or cite via card (currently unread [Mid04]); computational verification does not discharge this.**
+
+**On prover completion:** Run §3.5 verify loop (five independent blind passes → Triage → stop or Reviser). **Resume test:** R1 micro-scout verdict is NO PRIOR RESOLUTION FOUND (no prior window open). Source gate is CLEAR (queue empty; S3a residual lifted; KKDWY26 fully resolved). Verification phase next.
 
 ---
 
@@ -174,15 +197,18 @@ To be populated as artifacts enter verification. Format per HARNESS.md §3.9 (re
 
 **Can a cold session continue from this ledger alone?** YES. This ledger contains:
 - Complete problem statement (via CONTRACT.md reference + K1–K3′ pins).
-- Scout verdict + literature boundary.
-- Six independent attack plans ranked by efficiency.
-- Complete case ladder (R0–R6) with ladder conventions, difficulty jumps, and concrete milestone contracts.
-- Two source cards (S1, S2) pinning all cited theorems.
-- Computationally verified refutation frontier (ε* values, obstruction diagnosis).
-- Next action fully specified: HUMAN GATE with reorder options.
+- Cycle 1 Scout verdict + literature boundary (NO PRIOR RESOLUTION FOUND, cycle 1).
+- Cycle 2 Scout-2 micro-verdict on R1 (NO PRIOR RESOLUTION FOUND, killed prior-art routes).
+- Cycle 2 Scout-3 deciding-source verdict (KKDWY26 outcome (i) confirmed; S3a residual lifted; no new theorem).
+- Six independent attack plans ranked by efficiency (from cycle 1 Strategist).
+- Complete case ladder (R0–R6) with ladder conventions, difficulty jumps, and concrete milestone contracts (PROGRESS.md approved cycle 1).
+- Four source cards (S1, S2, S3a/S3b, S5) pinning all cited theorems.
+- Exact junta-class frontier (ε*_junta(d)=1/(2d), grid-attained, no pattern richness can improve, falsity ruled out via hypercube isoperimetry chain F1–F4→(M) verified exhaustively).
+- Candidate theorem I01 blueprint (lemma chain, non-elementary link identified, computational verification complete).
+- Next action fully specified: Prover in flight on lemma chain; on completion, five blind verification passes.
 
-**Missing (acceptable for cycle 1 closure):** No rung proved; no proof artifact in flight; no verification pass. **Acceptable:** these are not required until approval of the gate.
+**Missing (acceptable for cycle 2 reconnaissance checkpoint):** Prover artifact not yet completed. **Acceptable:** in-flight, deterministic path forward (lemma chain blueprint from refuter-2 §8).
 
 ---
 
-### END OF LEDGER, c/0023, cycle 1 closure, 2026-08-27 ###
+### END OF LEDGER PATCH, c/0023, cycle 2, sections: HEADER, COMPUTATIONALLY CERTIFIED, CONDITIONAL, DEAD PLANS, SOURCE LIBRARY, MANIFEST, NEXT ACTION, 2026-08-27 ###

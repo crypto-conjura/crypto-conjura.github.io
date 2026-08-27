@@ -1,0 +1,180 @@
+---
+id: "0098"
+problem: planted-fine-grained-problems
+draft: planted-k-ov-hardness
+title: "Average-Case Hardness of Planted k-Orthogonal Vectors"
+short_title: "Planted k-OV Hardness"
+areas: [foundations]
+topics: [orthogonal-vectors, fine-grained-cryptography, average-case-hardness, planted-constraint-satisfaction]
+model: standard
+form: assumption
+assumption_class: falsifiable
+category: research-open
+revision: 1
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: new-idea
+  by: ai
+  note: "This is a freshly proposed assumption rather than a question with accumulated attack history, so the honest difficulty is unknown: it could fall to the first serious cryptanalytic pass or stand for years. What can be said is where an attack must live. The marginal property rules out everything below arity k outright, so any distinguisher has to exploit the joint structure of k-tuples -- which is also what an honest solver does. Uniqueness of the planted solution is the natural handle, and unique-solution promises have historically made problems easier."
+status_summary: "Conjecture 10 of the source, and a newly proposed average-case assumption rather than a question the literature already asked. Its worst-case counterpart -- that k-OV requires n^(k-o(1)) time -- is a central conjecture of fine-grained complexity. The planting preserves the marginal distribution of any subset of fewer than k vectors, and the source gives a search-to-decision reduction."
+status_updated: 2026-08-28
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Kuehnemann, Polak, Rosen, The Planted Orthogonal Vectors Problem, IACR ePrint 2025/780", url: "https://eprint.iacr.org/2025/780"}
+  - {cite: "Williams, A New Algorithm for Optimal 2-Constraint Satisfaction and Its Implications, Theoretical Computer Science, 2005", url: "https://doi.org/10.1016/j.tcs.2005.09.023"}
+  - {cite: "LaVigne, Lincoln, Vassilevska Williams, Public-Key Cryptography in the Fine-Grained Setting, CRYPTO 2019", url: "https://doi.org/10.1007/978-3-030-26954-8_20"}
+statement_sha: "68d46eadcc0494e54291c216e70c6f109e2f25e64fa0ca5f84832627d1de3dda"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+<!-- topics:start -->
+<div class="cj-tags cj-page-topics"><a class="cj-tag cj-tag-topic" href="/problems/by-topic/average-case-hardness/">Average Case Hardness</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/fine-grained-cryptography/">Fine Grained Cryptography</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/orthogonal-vectors/">Orthogonal Vectors</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/planted-constraint-satisfaction/">Planted Constraint Satisfaction</a></div>
+<!-- topics:end -->
+
+Fine-grained complexity rests on a small stock of worst-case conjectures, and
+$k$-Orthogonal Vectors is one of them: given $k$ sets of $n$ binary vectors, pick
+one from each so that at every coordinate some vector is zero, believed to need
+essentially $n^k$ time. Cryptography needs average-case hardness instead, with
+planted instances having a unique known solution. The source supplies a planting
+with an unusual property — look at fewer than $k$ of the vectors and you cannot
+tell a planted instance from a purely random one, because the marginals agree
+exactly. The conjecture is that the planted instances are as hard as the worst
+case.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [LaTeX source](latex/main.tex) · Formal statement — *not yet formalized*
+
+**The problem.** In $k$-OV one is given $k$ sets, each of $n$ binary vectors of
+dimension $d = n^{o(1)}$, and must pick one vector from each so that at each
+coordinate at least one chosen vector has a zero. It is conjectured to require
+$n^{k-o(1)}$ time in the worst case, and a large body of conditional lower bounds
+rests on that.
+
+**The planting.** Vectors have i.i.d. $p$-biased entries for an appropriately
+chosen $p$, with a solution planted so that it is the unique one. Write
+$k\text{-}\mathrm{OV}^{\alpha}_0(n)$ for the model distribution and
+$k\text{-}\mathrm{OV}^{\alpha}_1(n)$ for the planted one. An algorithm *solves
+the decision problem with success probability $\delta(n)$* if for both $b \in
+\{0,1\}$ and large enough $n$, $\Pr_{U \sim k\text{-}\mathrm{OV}^{\alpha}_b(n)}[A(U)
+= b] \ge \delta(n)$.
+
+**Conjecture (the source's Conjecture 10).** For any $\alpha(n) = \omega(1)$ and
+$\varepsilon > 0$, there exists no algorithm $A$ that solves the planted decision
+$k$-OV problem with any constant success probability $\delta > \tfrac{1}{2}$ in
+time $O(n^{k-\varepsilon})$.
+
+**What kind of statement this is.** An average-case hardness assumption the
+source is proposing, not a question the literature had already posed, and
+recorded here on that footing. Two things distinguish it from a security claim
+about a particular construction, which is why it is published rather than
+declined. The underlying object is canonical — $k$-OV is one of the handful of
+problems fine-grained complexity is organized around. And the planting is
+principled rather than ad hoc, with the source proving things about it rather
+than only conjecturing. A reader should still treat it as an assumption awaiting
+cryptanalysis; the absence of an attack after one paper is weak evidence.
+
+**The marginal property, and its limits.** From the abstract: "Our planted
+distribution has the property that any subset of strictly less than $k$ vectors
+has the same marginal distribution as in the model distribution, consisting of
+i.i.d. $p$-biased random vectors." So no algorithm inspecting fewer than $k$
+vectors at a time can distinguish them at all — the planting is invisible below
+its own arity. That rules out a natural family of attacks outright, which is more
+than most fresh assumptions come with. It says nothing about algorithms looking
+at $k$ or more vectors, which is where a real attack would live, and nothing
+about the $n^{k-\varepsilon}$ threshold.
+
+**Search reduces to decision (the source's Theorem 12).** For any $\alpha(n) =
+\mathrm{polylog}(n)$, if there is an algorithm solving the planted decision
+problem with success probability at least $1-\delta(n)$ in time $T(n)$, then
+there is one solving the planted *search* problem with success probability at
+least $1 - (13k\cdot\delta(n) - n^{-k})$ in expected time $O(T(n) +
+n\,\mathrm{polylog}(n)\log(1/\delta(n)))$. The reduction is a binary search:
+split a set in two, resample one half, and use $(k-1)$-wise independence to argue
+the resampled instance follows the model distribution.
+
+Note the parameter mismatch, which the source does not flag: the reduction needs
+$\alpha(n) = \mathrm{polylog}(n)$ while the conjecture is stated for $\alpha(n) =
+\omega(1)$, a weaker constraint. A resolution should say which regime of $\alpha$
+it addresses.
+
+### Sources
+
+- Kühnemann, Polak and Rosen. [*The Planted Orthogonal Vectors Problem*](https://eprint.iacr.org/2025/780). IACR ePrint 2025/780. The source. Definition 8 and the search formulation are on pages 10–11, Conjecture 10 on page 11, and Theorem 12 on page 12.
+- Williams. [*A New Algorithm for Optimal 2-Constraint Satisfaction and Its Implications*](https://doi.org/10.1016/j.tcs.2005.09.023). Theoretical Computer Science, 2005. The origin of the Orthogonal Vectors conjecture in fine-grained complexity.
+- LaVigne, Lincoln and Vassilevska Williams. [*Public-Key Cryptography in the Fine-Grained Setting*](https://doi.org/10.1007/978-3-030-26954-8_20). CRYPTO 2019. The key exchange protocol the source names as the closest existing work toward fine-grained asymmetric cryptography.
+
+## Proof
+
+View PDF — *no proof written yet* · LaTeX source — *no proof written yet* · Formal proof — *not yet formalized*
+
+Open, and for a fresh assumption "open" mostly means untested.
+
+**Where a refutation would live.** In an algorithm exploiting the planting at
+arity exactly $k$. Nothing below that can help, by the marginal property, so an
+attack must use the joint structure of $k$-tuples — which is also what the honest
+solver does. The pointed question for a cryptanalyst is whether *uniqueness* of
+the planted solution is itself a handle: unique-solution promises have
+historically made problems easier rather than harder, and uniqueness is exactly
+what makes the planting useful.
+
+**What a proof would need.** There is no route from the worst-case $k$-OV
+conjecture to this one that the source claims, so a proof means either a
+worst-case-to-average-case reduction for this planting — which would be a major
+result and is not on offer — or an unconditional lower bound, which is out of
+reach for a problem in P.
+
+**Checked against the literature, 2026-08-28.** No attack and no supporting
+reduction found beyond the source's own. The assumption is recent; targeted check
+only.
+
+## Discussion
+
+**Why the goal is worth the assumption.** The source's motivation: "The security
+of cryptographic systems crucially relies on heuristic assumptions about
+average-case hardness of certain computational problems." The specific target is
+fine-grained asymmetric cryptography — "[a] key goal of fine-grained cryptography
+is to devise an advanced asymmetric cryptography scheme -- such as public key
+encryption -- whose security is based on hardness of a well understood problem
+from fine-grained complexity" — where the closest existing work is the LaVigne,
+Lincoln and Vassilevska Williams key exchange.
+
+**The worst-case conjecture is a different statement.** That $k$-OV requires
+$n^{k-o(1)}$ time in the worst case is older, better studied, and not what this
+asserts. Neither implies the other in any way the source claims: worst-case
+hardness does not give average-case hardness for this planting, and a refutation
+here would not touch the worst-case conjecture unless the algorithm happened to
+work on arbitrary instances.
+
+**What a reviewer should be suspicious of, in order.** First, whether a claimed
+attack really distinguishes the two distributions, or merely finds *a* solution —
+the decision problem is what the conjecture is about. Second, the regime of
+$\alpha$, given the mismatch noted above. Third, whether a claimed hardness
+result is unconditional or rests on some other assumption, since the latter moves
+the question rather than settling it.
+
+## Open obligations
+
+- [ ] Attack the planted decision problem at arity $k$, or give evidence that no $O(n^{k-\varepsilon})$ distinguisher exists.
+- [ ] Determine whether uniqueness of the planted solution can be exploited.
+- [ ] Reconcile the $\alpha$ regimes: the conjecture says $\omega(1)$, the search-to-decision reduction needs $\mathrm{polylog}(n)$.
+- [ ] Build the intended application — a fine-grained public-key primitive — on the assumption, which would sharpen what security level is actually needed.
+- [ ] Formalize the statement in Lean; nothing here has been formalized.
+
+:::

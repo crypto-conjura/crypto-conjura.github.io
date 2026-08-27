@@ -1,0 +1,71 @@
+---
+title: "Batch verification for zero-knowledge proofs"
+subtitle: "Proving k statements for the price of roughly one, without leaking"
+---
+
+## Motivation
+
+Proving $k$ statements ought to cost less than proving each separately. In most
+proof systems it does. In zero-knowledge it is delicate, because the natural
+economies — share randomness across instances, combine them into one statement —
+are exactly the operations that risk leaking which instances are which, or
+correlating what the verifier learns.
+
+The measure is communication. Independent execution costs $k$ times a single
+proof; the aggressive target is $\mathrm{poly}(n, \log k)$, where the dependence
+on the number of instances is merely logarithmic. Something around
+$\mathrm{poly}(n)$ is unavoidable even for one instance, under standard
+assumptions, so $\log k$ is where the real question lies.
+
+## Provenance and history
+
+The line runs through Kaslasi, Rothblum, Rothblum, Sealfon and Vasudevan (TCC
+2020) and Kaslasi, Rothblum and Vasudevan on batch verification for statistical
+zero knowledge.
+
+Changrui Mu, Shafik Nassar, Ron D. Rothblum and Prashant Nalini Vasudevan,
+*Strong Batching for Non-Interactive Statistical Zero-Knowledge* ([IACR ePrint
+2024/229](https://eprint.iacr.org/2024/229)), settle the non-interactive case in
+strong form. Their Theorem 1.1: for $\Pi \in \mathsf{NISZK}$ and $k(n) \le
+2^{n^{0.01}}$, the $k$-fold conjunction $\Pi^{\otimes k}$ has an $\mathsf{NISZK}$
+protocol with communication *and* common-random-string length
+$\mathrm{poly}(n, \log k)$, all errors negligible in both parameters.
+
+Their protocol is also notably simpler than the prior ones, and rests on two
+observations: hash functions with bounded independence — $4$-wise suffices —
+preserve very specific types of entropies, and a cascade of such hash functions
+can be derandomized while still preserving that behaviour. The route is a
+reduction to $\mathsf{NISZK}$-complete problems, which are entropy-approximation
+problems, and then a reduction of $k$ of those to a single instance of another
+complete problem.
+
+That route is exactly what does not obviously transfer. $\mathsf{SZK}$ is larger,
+its complete problem is statistical difference rather than entropy approximation,
+and whether the entropy-preserving and derandomization machinery survives the
+substitution is unknown. The authors call the $\mathsf{SZK}$ analogue "[t]he most
+pressing open question", and offer a weaker fallback in the same breath: any
+sub-linear dependence on $k$ would already be non-trivial. Neither is known.
+
+## Parameter lattice
+
+Communication for $\Pi^{\otimes k}$, by class.
+
+| Class | Communication | Status |
+|---|---|---|
+| **Independent execution** (any class) | $k \cdot \mathrm{poly}(n)$ | trivial baseline |
+| **$\mathsf{NISZK}$**, $k \le 2^{n^{0.01}}$ | $\mathrm{poly}(n, \log k)$ | proved, Theorem 1.1 |
+| **$\mathsf{SZK}$** | $\mathrm{poly}(n, \log k)$ | [c/0100](/c/0100/) — open |
+| **$\mathsf{SZK}$**, weaker target | any sub-linear dependence on $k$ | [c/0100](/c/0100/) — also open |
+| **Any class, $k = 1$** | $\mathrm{poly}(n)$ | unavoidable under sub-exponential hardness in $\mathsf{NISZK}$ |
+
+Other axes the same paper leaves open, both tracing to the
+reduction-to-complete-problems route:
+
+| Axis | Question |
+|---|---|
+| **Prover efficiency** | $\mathsf{SZK} \cap \mathsf{NP}$ has efficient-prover protocols; batch protocols do not preserve this. Even for $\mathsf{NISZK} \cap \mathsf{NP}$? |
+| **Rate** | Can overhead be a fixed constant — $O(c) + \mathrm{polylog}(n,k)$ — and can the constant approach $1$? |
+
+## Statements in this hub
+
+- [Batch Verification for Statistical Zero Knowledge](/c/0100/) — open

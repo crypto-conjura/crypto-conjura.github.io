@@ -1,0 +1,187 @@
+---
+id: "0097"
+problem: reed-muller-gap-to-capacity
+draft: rm-codes-capacity-bec
+title: "Reed-Muller Codes Efficiently Achieve Capacity for the Binary Erasure Channel"
+short_title: "RM Gap to Capacity for BEC"
+areas: [information-theoretic, foundations]
+topics: [reed-solomon-codes, code-based-cryptography, expander-graphs, average-case-hardness]
+model: standard
+form: tight-bound
+assumption_class: unconditional
+category: research-open
+revision: 1
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: new-idea
+  by: ai
+  note: "Capacity in the limit was itself a 2016 breakthrough, and controlling the rate of convergence for an explicit code with an efficient decoder is the harder half -- the analogous scaling-exponent results for polar codes took a separate line of work. The source supplies a clean equivalent algebraic form (no low-degree polynomial vanishes on a slightly-too-large random subset of the hypercube), which is a real handle, and a weaker sufficient variant to attack first. What is missing is any technique known to give polynomial gap-to-capacity for Reed-Muller codes at all."
+status_summary: "Conjecture 14 of the source. That Reed-Muller codes achieve capacity for the BEC is a theorem of Kudekar et al.; the gap to capacity -- a polynomial rate of convergence -- is open. The source needs it to strengthen its refutation of the expansion-implies-hardness conjecture for noisy k-XOR from quasi-polynomially many constraints to polynomially many, and notes the question was raised explicitly in three prior works."
+status_updated: 2026-08-28
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Blasiok, Lou, Rosen, Sudan, Expanders Meet Reed-Muller: Easy Instances of Noisy k-XOR, IACR ePrint 2026/664", url: "https://eprint.iacr.org/2026/664"}
+  - {cite: "Kudekar, Kumar, Mondelli, Pfister, Sasoglu, Urbanke, Reed-Muller Codes Achieve Capacity on Erasure Channels, STOC 2016", url: "https://doi.org/10.1145/2897518.2897584"}
+  - {cite: "Guruswami, Umans, Vadhan, Unbalanced Expanders and Randomness Extractors from Parvaresh-Vardy Codes, Journal of the ACM, 2009", url: "https://doi.org/10.1145/1538902.1538904"}
+  - {cite: "Alekhnovich, More on Average Case vs Approximation Complexity, FOCS 2003", url: "https://doi.org/10.1109/SFCS.2003.1238204"}
+statement_sha: "5b6070c4646df2c10964317c766135226459420a5f78e583371b4f38ceefc58e"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+<!-- topics:start -->
+<div class="cj-tags cj-page-topics"><a class="cj-tag cj-tag-topic" href="/problems/by-topic/average-case-hardness/">Average Case Hardness</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/code-based-cryptography/">Code Based Cryptography</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/expander-graphs/">Expander Graphs</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/reed-solomon-codes/">Reed Solomon Codes</a></div>
+<!-- topics:end -->
+
+Reed-Muller codes are the oldest family in coding theory and, it turns out, among
+the best: they achieve capacity on the binary erasure channel, which was proved
+only in 2016. Achieving capacity in the limit is not the same as reaching it
+fast, though, and for an explicit code with an efficient decoder the rate of
+convergence is much harder to control than the limit. For random codes it is
+easy — the gap closes like the inverse square root of the blocklength. The
+conjecture is that Reed-Muller codes do something of the same order: a gap to
+capacity that shrinks polynomially in the blocklength.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [LaTeX source](latex/main.tex) · Formal statement — *not yet formalized*
+
+**The setting.** Write $\mathrm{RM}(m,r)$ for the Reed-Muller code of order $r$
+in $m$ variables — evaluations on $\mathbb{F}_2^m$ of polynomials of total degree
+at most $r$ — with blocklength $M = 2^m$. Over the binary erasure channel each
+coordinate is erased independently with probability $\eta$, and the question is
+for which $\eta$ the erased codeword is still recoverable with probability
+$1-o(1)$. Write $\varepsilon := 1 - \mathrm{Rate}$.
+
+**What is settled.** Kudekar, Kumar, Mondelli, Pfister, Şaşoğlu and Urbanke
+proved Reed-Muller codes achieve capacity over the BEC: they recover from erasure
+rate $\varepsilon - o_M(1)$. That fixes the limit and says nothing about how fast
+the $o_M(1)$ vanishes — the scaling exponent, which is what is open.
+
+**Conjecture (the source's Conjecture 14).** There exists a constant $\gamma$
+such that for every $m, r \in \mathbb{N}$ for which $\mathrm{RM}(m,r)$ has rate
+at most $1-\varepsilon$, a random erasure pattern sampled from
+$\mathsf{Ber}(\eta)^{2^m}$ is recoverable with probability $1-o(1)$ provided that
+$$\eta \;<\; \varepsilon - \frac{1}{M^{\gamma}}.$$
+
+**An equivalent purely algebraic form (the source's Remark 15).** Consider the
+space $\mathbb{F}_2[X]_{\le r}$ of low-degree polynomials, of dimension
+$(1-\varepsilon)M$, and a random subset $S$ of $(1-\varepsilon)M + M^{1-\gamma}$
+locations on the hypercube $\mathbb{F}_2^m$. The conjecture is equivalent to:
+with probability $1-o(1)$ there is no non-zero polynomial in
+$\mathbb{F}_2[X]_{\le r}$ vanishing on all points of $S$. No channel, no decoder
+— just how many random hypercube points force a low-degree polynomial to be zero.
+
+**Calibration.**
+
+| Code family | Gap-to-capacity behaviour |
+|---|---|
+| **Random codes** | true and relatively simple, scaling exponent $1/\gamma = 2$ |
+| **Polar codes** | efficiently achieve capacity for BSC (finite scaling exponent); variants reach $1/\gamma \to 2$ |
+| **Reed-Muller** | capacity proved; **[c/0097](/c/0097/) — gap to capacity open** |
+
+**The weaker form that already suffices.** The source offers a second conjecture
+it calls "plausibly simpler-to-prove", and proves its Main Theorem 2 assuming
+only that one.
+
+*Conjecture 16 (Weak Random Erasure Recovery).* There exist constants $\gamma >
+0$ and $\zeta \ge 1$ such that for every $m,r$, if $\mathrm{RM}(m,r)$ has rate at
+most $1-\varepsilon$ for $M^{-\gamma} < \varepsilon < 1/2$, a random erasure
+pattern from $\mathsf{Ber}(\eta)^{2^m}$ is recoverable with probability $1-o(1)$
+provided $\eta < \varepsilon^{\zeta}$.
+
+Conjecture 16 is implied by Conjecture 14. Attack the weaker one first; a
+resolution should say which it settles.
+
+**Not the source's own question.** It records that "[t]he question of the
+gap-to-capacity results for RM codes for symmetric channels has been explicitly
+raised in [AY19, Section V], [Has+18; MHU14], and in [ASY21]." A resolution
+belongs to that older line.
+
+### Sources
+
+- Błasiok, Lou, Rosen and Sudan. [*Expanders Meet Reed-Muller: Easy Instances of Noisy k-XOR*](https://eprint.iacr.org/2026/664). IACR ePrint 2026/664. The source. Conjecture 14, Remark 15 and Conjecture 16 are all on page 9; Main Theorems 1 and 2 are stated in Section 1.3 and proved as Theorems 37 and 38.
+- Kudekar, Kumar, Mondelli, Pfister, Şaşoğlu and Urbanke. [*Reed-Muller Codes Achieve Capacity on Erasure Channels*](https://doi.org/10.1145/2897518.2897584). STOC 2016. The capacity theorem whose rate of convergence this is about.
+- Guruswami, Umans and Vadhan. [*Unbalanced Expanders and Randomness Extractors from Parvaresh-Vardy Codes*](https://doi.org/10.1145/1538902.1538904). Journal of the ACM, 2009. The lossless expanders the source reinterprets as coset graphs.
+- Alekhnovich. [*More on Average Case vs Approximation Complexity*](https://doi.org/10.1109/SFCS.2003.1238204). FOCS 2003. The origin of the belief that expansion implies hardness for noisy $k$-XOR, which the source refutes.
+
+## Proof
+
+View PDF — *no proof written yet* · LaTeX source — *no proof written yet* · Formal proof — *not yet formalized*
+
+Open, with a clean algebraic reformulation as the obvious point of attack.
+
+**The handle.** By Remark 15 the whole question is: given a random subset $S$ of
+the hypercube of size $(1-\varepsilon)M + M^{1-\gamma}$, does a non-zero
+polynomial of degree $\le r$ vanish on all of $S$? A polynomial of degree $\le r$
+is determined by $(1-\varepsilon)M$ coefficients, so $S$ is only $M^{1-\gamma}$
+points larger than the dimension. The conjecture says that small excess already
+forces the zero polynomial, with high probability. That is a statement about the
+distribution of the rank of a random submatrix of the Reed-Muller generator
+matrix, and it is where the difficulty concentrates.
+
+**Why the existing capacity proof does not give it.** The Kudekar et al.
+argument establishes the limit through symmetry and sharp-threshold machinery,
+which by its nature does not track the width of the threshold window. Extracting
+a polynomial rate would need a quantitative version of that argument, or a
+different route entirely — the same problem that separated "polar codes achieve
+capacity" from "polar codes efficiently achieve capacity".
+
+**Checked against the literature, 2026-08-28.** No polynomial gap-to-capacity
+result for Reed-Muller codes found. Targeted check on this line and the sources
+the paper names, not an exhaustive sweep of the coding-theory literature.
+
+## Discussion
+
+**What it buys, and what does not depend on it.** The source refutes the
+widely-held conjecture that expansion of the constraint graph implies hardness of
+noisy $k$-XOR. That refutation is *unconditional*: its Main Theorem 1 gives, for
+every constant $\alpha > 0$, an infinite family of $k$-left-regular constraint
+graphs with $M = 2^{\Theta(\log^2 N)}$, $k = (\log N)^{\Theta(1/\alpha)}$, which
+is $(N^{1-\alpha}, 1-o(1))$-expanding and on which noisy $k$-XOR is solvable in
+$\mathrm{poly}(M)$ time at constant noise rate $\eta = 1/3$.
+
+Under Conjecture 16 — hence under this conjecture — Main Theorem 2 upgrades that
+to $M = N^{\Theta(1)}$, constraints polynomially rather than quasi-polynomially
+related to variables, at noise rate $\eta = N^{-c}$ for any $c > 0$. The source's
+own summary: "To get a result for a polynomial number of equations in the number
+of variables we need much faster rate of convergence to capacity than is
+currently known." So this conjecture strengthens a refutation that already
+stands; it does not carry it.
+
+**A separate question the source leaves open.** Its construction needs the
+constraint graph to be an expander, obtained from the Guruswami–Umans–Vadhan
+lossless expanders reinterpreted as coset graphs. The natural alternative it
+cannot analyse: "we leave open the question of whether a random subspace
+construction of coset graphs is expanding." Not this statement.
+
+**What a reviewer should be suspicious of, in order.** First, whether a claimed
+result gives a *polynomial* gap $1/M^{\gamma}$ or merely a $o_M(1)$ one — the
+latter is the 2016 theorem. Second, whether it covers all $(m,r)$ with the stated
+rate, or only a restricted range. Third, whether it settles Conjecture 14 or the
+weaker Conjecture 16, since only the former is stated here and the latter already
+suffices for the application.
+
+## Open obligations
+
+- [ ] Prove the polynomial gap-to-capacity bound for Reed-Muller codes on the BEC — or refute it.
+- [ ] Or settle the weaker Conjecture 16, which already gives the source's Main Theorem 2.
+- [ ] Equivalently, bound the probability that a non-zero degree-$\le r$ polynomial vanishes on a random $(1-\varepsilon)M + M^{1-\gamma}$-subset of the hypercube.
+- [ ] Formalize the statement in Lean; nothing here has been formalized.
+
+:::

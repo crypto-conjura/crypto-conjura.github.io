@@ -1,0 +1,183 @@
+---
+id: "0100"
+problem: zero-knowledge-batch-verification
+draft: szk-batch-verification
+title: "Batch Verification for Statistical Zero Knowledge"
+short_title: "SZK Batch Verification"
+areas: [zk, proof-systems]
+topics: [batch-verification, randomness-extraction, limited-independence, direct-product-theorems]
+model: standard
+form: characterization
+assumption_class: unconditional
+category: research-open
+revision: 1
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: new-idea
+  by: ai
+  note: "The non-interactive case is now done and the route is fully explicit, which localizes the difficulty precisely: both steps lean on the entropy-approximation structure of the NISZK-complete problems, and SZK's complete problem is statistical difference instead. Whether 4-wise independent hashing preserves the relevant quantities there, and whether the derandomized cascade survives, are concrete questions rather than a blank wall. But no part of the existing argument transfers as written, and the weaker sub-linear-in-k target is also open, which suggests the obstruction is real rather than notational."
+status_summary: "Named by the source as the most pressing open question its work leaves. Its Theorem 1.1 gives the NISZK analogue: communication and CRS length poly(n, log k) for k up to 2^(n^0.01). A poly(n) dependence is unavoidable even at k = 1 under a sub-exponential hardness assumption, so log k is the aggressive part of the bound. The source also offers a weaker fallback target: any sub-linear dependence on k."
+status_updated: 2026-08-28
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Mu, Nassar, Rothblum, Vasudevan, Strong Batching for Non-Interactive Statistical Zero-Knowledge, IACR ePrint 2024/229", url: "https://eprint.iacr.org/2024/229"}
+  - {cite: "Goldreich, Vadhan, Wigderson, On Interactive Proofs with a Laconic Prover, Computational Complexity, 2002", url: "https://doi.org/10.1007/s00037-002-0169-0"}
+  - {cite: "Goldreich, Hastad, On the Complexity of Interactive Proofs with Bounded Communication, Information Processing Letters, 1998", url: "https://doi.org/10.1016/S0020-0190(98)00116-1"}
+  - {cite: "Kaslasi, Rothblum, Rothblum, Sealfon, Vasudevan, Batch Verification for Statistical Zero Knowledge Proofs, TCC 2020", url: "https://doi.org/10.1007/978-3-030-64378-2_6"}
+statement_sha: "3802546b767be4bf8f96d73e1dc22c4078dbacd1c65f0ebee4ca3e4e1f3654b0"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+<!-- topics:start -->
+<div class="cj-tags cj-page-topics"><a class="cj-tag cj-tag-topic" href="/problems/by-topic/batch-verification/">Batch Verification</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/direct-product-theorems/">Direct Product Theorems</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/limited-independence/">Limited Independence</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/randomness-extraction/">Randomness Extraction</a></div>
+<!-- topics:end -->
+
+Proving $k$ statements should cost less than proving each separately. For
+zero-knowledge proofs this is delicate, because the obvious savings — reuse
+randomness, combine instances — are exactly the moves that threaten the
+zero-knowledge property. For the non-interactive class $\mathsf{NISZK}$ the
+source settles it: $k$ instances batch into a single proof whose communication
+grows only logarithmically in $k$. For the interactive class $\mathsf{SZK}$,
+which is larger and where the analogous protocols are the older and better
+studied ones, nobody knows. The source calls it the most pressing question its
+work leaves.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [LaTeX source](latex/main.tex) · Formal statement — *not yet formalized*
+
+**The setting.** Write $\Pi^{\otimes k}$ for the set of $k$-tuples of
+equal-length instances all of which belong to $\Pi$. Batch verification asks for
+a proof for $\Pi^{\otimes k}$ substantially cheaper than $k$ independent
+executions, preserving statistical zero knowledge.
+
+**What is proved (the source's Theorem 1.1).** Suppose $\Pi \in \mathsf{NISZK}$
+and $k = k(n)$ with $k(n) \le 2^{n^{0.01}}$, where $n$ is the length of a single
+instance. Then $\Pi^{\otimes k}$ has an $\mathsf{NISZK}$ protocol in which the
+communication complexity and the length of the common random string are
+$\mathrm{poly}(n, \log k)$, with completeness, soundness and zero-knowledge
+errors all negligible in $n$ and $k$, and verifier running time
+$\mathrm{poly}(n,k)$.
+
+**Conjecture.** For every $\Pi \in \mathsf{SZK}$ there exists an $\mathsf{SZK}$
+proof for $\Pi^{\otimes k}$ with communication $\mathrm{poly}(n, \log k)$.
+
+**How the source states it, and the weaker fallback in the same sentence.**
+Page 12: "The most pressing open question is whether a similar result holds for
+SZK -- namely, for every $\Pi \in \mathsf{SZK}$ does there exist an SZK proof for
+$\Pi^{\otimes k}$ with communication $\mathrm{poly}(n, \log k)$? Or,
+alternatively, one that features less strigent, yet non-trivial, communication
+such as sub-linear dependence on $k$?"
+
+Two targets, and the second is much weaker: *any* sub-linear dependence on $k$
+would already be non-trivial. The statement records the strong form because that
+is the one named first and the one matching the $\mathsf{NISZK}$ theorem. A
+sub-linear-in-$k$ result is genuine progress and should be reported as partial.
+The question is posed as a question; the source predicts nothing, and neither
+does this.
+
+**Why $\log k$ and not something smaller.** A $\mathrm{poly}(n)$ dependence "is
+inevitable, even when $k = 1$, assuming the existence of a sub-exponentially hard
+problem in NISZK", which follows from known limitations on laconic provers. So
+$\mathrm{poly}(n)$ is not slack — $\log k$ is the aggressive part of the bound.
+
+**Why the non-interactive proof does not obviously transfer.** The route is
+specific, and its steps are what an $\mathsf{SZK}$ argument would have to
+replace. The $k$ instances are reduced to $k$ instances of an
+$\mathsf{NISZK}$-complete problem, then those to a single instance of another
+complete problem, using two observations: that hash functions with bounded
+independence — $4$-wise suffices — preserve very specific types of entropies, and
+that a cascade of such hash functions can be derandomized while still preserving
+that behaviour.
+
+Both steps lean on the structure of the $\mathsf{NISZK}$-complete problems, which
+are entropy-approximation problems. $\mathsf{SZK}$ has its own complete problem —
+statistical difference — and whether the same entropy-preserving and
+derandomization machinery applies there is precisely what is not known.
+
+**The range of $k$ is part of the statement.** Theorem 1.1 carries $k(n) \le
+2^{n^{0.01}}$. The conjecture as phrased names no range; a resolution should
+state the range it covers, since a result for $k$ polynomial in $n$ is weaker
+than one matching the $\mathsf{NISZK}$ theorem's reach.
+
+### Sources
+
+- Mu, Nassar, Rothblum and Vasudevan. [*Strong Batching for Non-Interactive Statistical Zero-Knowledge*](https://eprint.iacr.org/2024/229). IACR ePrint 2024/229. The source. Theorem 1.1 is on page 4 and re-proved on page 20; the discussion and open problems are Section 1.3 on page 12.
+- Goldreich, Vadhan and Wigderson. [*On Interactive Proofs with a Laconic Prover*](https://doi.org/10.1007/s00037-002-0169-0). Computational Complexity, 2002. One of the two works cited for the inevitability of the $\mathrm{poly}(n)$ dependence.
+- Goldreich and Håstad. [*On the Complexity of Interactive Proofs with Bounded Communication*](https://doi.org/10.1016/S0020-0190(98)00116-1). Information Processing Letters, 1998. The other.
+- Kaslasi, Rothblum, Rothblum, Sealfon and Vasudevan. [*Batch Verification for Statistical Zero Knowledge Proofs*](https://doi.org/10.1007/978-3-030-64378-2_6). TCC 2020. The prior batch-verification protocols the source simplifies and strengthens.
+
+## Proof
+
+View PDF — *no proof written yet* · LaTeX source — *no proof written yet* · Formal proof — *not yet formalized*
+
+Open, with the obstruction localized in one reduction step.
+
+**The concrete question underneath.** Does $4$-wise independent hashing preserve
+the quantities that matter for the statistical difference problem, the way it
+does for entropy approximation? And does the derandomized cascade survive that
+substitution? Those are answerable questions rather than a blank wall, which is
+what makes this a promising target despite the fallback also being open.
+
+**Why the fallback being open is informative.** If the difficulty were merely
+that the $\mathsf{NISZK}$ machinery is tuned too tightly, one would expect a
+crude version to give *some* sub-linear dependence on $k$ for
+$\mathsf{SZK}$. That nothing of the kind is claimed suggests the obstruction is
+structural rather than a matter of constants.
+
+**Checked against the literature, 2026-08-28.** No $\mathrm{poly}(n,\log k)$
+bound and no sub-linear-in-$k$ bound for all of $\mathsf{SZK}$ found. Targeted
+check on this line, not an exhaustive sweep of the zero-knowledge literature.
+
+## Discussion
+
+**This is not a question with no prior work.** The source positions itself
+against a line including Kaslasi et al. and Kaslasi, Rothblum and Vasudevan on
+batch verification, and notes neighbouring results on zero-knowledge proofs for
+conjunctions and on computationally sound protocols for monotone policies within
+NP. What is absent is a $\mathrm{poly}(n, \log k)$ bound for all of
+$\mathsf{SZK}$.
+
+**Neighbouring questions in the same list, neither of them this.** *Prover
+efficiency*: problems in $\mathsf{SZK} \cap \mathsf{NP}$ have $\mathsf{SZK}$
+protocols with an efficient prover given an NP-witness, but all current batch
+protocols reduce to complete problems and so do not preserve that; is there a
+batch protocol even for $\mathsf{NISZK} \cap \mathsf{NP}$ that does? *Rate*: can
+the multiplicative overhead be a fixed constant — communication $O(c) +
+\mathrm{polylog}(n,k)$ where $c$ is the single-instance communication — and can
+that constant approach $1$? The source notes this "might necessitate avoiding the
+complete problems, since the reduction introduces a polynomial overhead". Both
+trace back to the same reduction-to-complete-problems route, which is why that
+route is the thing to attack.
+
+**What a reviewer should be suspicious of, in order.** First, whether zero
+knowledge is *statistical* and holds for the batched protocol, not just soundness
+— that is the property the obvious savings destroy. Second, which of the two
+targets is claimed: $\mathrm{poly}(n,\log k)$, or merely sub-linear in $k$.
+Third, the range of $k$ covered.
+
+## Open obligations
+
+- [ ] Give an $\mathsf{SZK}$ proof for $\Pi^{\otimes k}$ with communication $\mathrm{poly}(n, \log k)$ for every $\Pi \in \mathsf{SZK}$ — or rule it out.
+- [ ] Failing that, achieve any sub-linear dependence on $k$, the source's stated fallback.
+- [ ] Determine whether $4$-wise independent hashing preserves the relevant quantities for $\mathsf{SZK}$'s complete problem as it does for $\mathsf{NISZK}$'s.
+- [ ] State the range of $k$ covered by any result.
+- [ ] Formalize the statement in Lean; nothing here has been formalized.
+
+:::

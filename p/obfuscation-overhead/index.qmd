@@ -1,0 +1,83 @@
+---
+title: "The size overhead of obfuscation"
+subtitle: "What making a program unintelligible costs in gates, and why the answer runs through meta-complexity"
+---
+
+## Motivation
+
+Indistinguishability obfuscation is usually studied for what it enables. This hub
+is about what it costs. An obfuscator takes a circuit of size $s$ and returns one
+of size $\sigma(\lambda, s)$; the overhead is the difference, and for a primitive
+that shows up as a building block in so many constructions, a linear-versus-
+superlinear answer propagates everywhere downstream.
+
+The question has an unusual structure. If NP is easy, the overhead is zero — an
+optimal iO scheme with no size overhead exists when $\mathsf{NP} \subseteq
+\mathsf{BPP}$, because there is nothing to hide that cannot be recomputed. So any
+lower bound requires a hardness assumption, and $\mathsf{NP} \not\subseteq
+\mathsf{BPP}$ is the weakest one available. A lower bound under exactly that
+assumption is therefore the best possible form of the result, not a compromise.
+
+## Provenance and history
+
+Zhenjian Lu, Noam Mazor, Igor C. Oliveira and Rafael Pass, *Lower Bounds on the
+Overhead of Indistinguishability Obfuscation* ([IACR ePrint
+2024/1524](https://eprint.iacr.org/2024/1524)), prove the first such bound.
+Under $\mathsf{NP} \not\subseteq \mathsf{BPP}$, no efficient iO scheme for
+multi-output circuits $C : \{0,1\}^n \to \{0,1\}^n$ of size $s$ outputs circuits
+of size $s + o(s/\log s)$ — an $\Omega(s/\log s)$ additive overhead is forced.
+
+The proof runs through meta-complexity, and the route is what determines the
+result's reach. Mazor and Pass had shown that iO together with sub-exponentially
+secure one-way functions imply a gap version of MCSP is not NP-hard under Levin
+reductions — a statement they offered as evidence about MCSP. This paper reads it
+backwards: as a way to prove impossibility for iO, provided one has a
+meta-computational problem whose NP-hardness *is* known. Multi-MCSP is such a
+problem, NP-hard under randomized reductions by Ilango, Loff and Oliveira, and the
+paper strengthens that to a gap version under randomized approximate Levin
+reductions.
+
+Choosing Multi-MCSP is what confines the result to multi-output circuits, and it
+is why the single-output case is the first of the paper's named open problems.
+The single-output analogue of the missing ingredient is the NP-hardness of MCSP —
+open for decades. The paper's own intermediate step, retaining Multi-MCSP hardness
+on square functions $F : \{0,1\}^n \to \{0,1\}^n$, it calls "a challenging open
+problem" that "can be seen as an important step towards establishing the
+NP-hardness of MCSP for single-output Boolean functions".
+
+Worth separating from that: one padding obstacle *was* cleared. Going from
+arbitrary multi-output shapes $C : \{0,1\}^\ell \to \{0,1\}^m$ to the square case
+is solved by a padding argument, exploiting that the input to an obfuscator is a
+circuit rather than a truth-table. It is the drop to a single output bit that is
+open, not the shape of the multi-output case.
+
+The paper also proves a single-output result in a different model: it rules out iO
+for single-output *database-aided* circuits at arbitrary polynomial overhead,
+strengthening Goldwasser and Rothblum from exponential-length oracle-accessed
+databases to polynomial-size ones readable in full.
+
+## Parameter lattice
+
+Overhead lower bounds, by circuit type and model.
+
+| Setting | Overhead ruled out | Status |
+|---|---|---|
+| **Multi-output, database-free** | $s + o(s/\log s)$ | proved under $\mathsf{NP} \not\subseteq \mathsf{BPP}$ |
+| **Multi-output, database-free** | $(1+\Omega(1))\cdot s$ | open — encoding-argument bottleneck |
+| **Single-output, database-free** | $s + o(s/\log s)$ | [c/0101](/c/0101/) — open |
+| **Single-output, database-aided** | arbitrary polynomial | proved |
+| **Multi-output, unbounded fan-in size measure** | — | not handled |
+| **Any, if $\mathsf{NP} \subseteq \mathsf{BPP}$** | nothing | zero-overhead scheme exists |
+
+The dependencies that make the open rows open:
+
+| Needed | Status |
+|---|---|
+| Gap Multi-MCSP NP-hard under Levin reductions | proved (this paper, extending ILO20) |
+| Multi-MCSP hard on square functions $F : \{0,1\}^n \to \{0,1\}^n$ | open — "an important step towards" MCSP NP-hardness |
+| MCSP NP-hard (single-output) | open for decades |
+| Additive gap of the form $\Omega(s)$ in the Levin reduction | blocked by the encoding argument |
+
+## Statements in this hub
+
+- [Obfuscation Overhead for Single-Output Circuits](/c/0101/) — open

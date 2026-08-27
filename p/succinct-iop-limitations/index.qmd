@@ -1,0 +1,79 @@
+---
+title: "Limitations of succinct interactive oracle proofs"
+subtitle: "Where the witness-length barrier bites, reduced to a space-time question"
+---
+
+## Motivation
+
+Interactive oracle proofs sit between interactive proofs and PCPs: the verifier
+interacts with the prover but reads only a few bits of each message. They are now
+the backbone of efficient proof systems, so knowing what they cannot do matters as
+much as knowing what they can.
+
+The sharp version of the question is *succinctness*. A succinct proof has
+communication polynomial — or linear — in the original witness, rather than in the
+size of the computation verifying it. For PCPs this is essentially impossible:
+strong lower bounds rule out PCPs whose length is polynomial in the witness. For
+IOPs the situation is better, since NP relations decidable in small space do have
+succinct IOPs. So the boundary runs somewhere, and locating it is the point.
+
+## Provenance and history
+
+Shafik Nassar and Ron D. Rothblum, *Succinct Interactive Oracle Proofs:
+Applications and Limitations* ([IACR ePrint
+2022/281](https://eprint.iacr.org/2022/281)), give both halves.
+
+On the positive side, they compile IOPs into zero-knowledge proofs using one-way
+functions while nearly preserving proof length, complementing the line initiated
+by Ben Sasson et al. that compiles IOPs into super-succinct zero-knowledge
+arguments. Applied to state-of-the-art succinct IOPs, that yields short
+zero-knowledge proofs.
+
+On the negative side, they reduce the limitation question to complexity. The
+observation is that a succinct IOP for circuit satisfiability, with few rounds and
+few queries, can be turned into an algorithm for CSAT that uses little space and
+some preprocessing. So a space lower bound for CSAT becomes an IOP lower bound.
+
+Their Conjecture 1.2 asserts the space lower bound. It is parameterized by a class
+$T$ of preprocessing-time bounds, and their Corollary 1.3 converts each setting of
+$T$ into a limitation on succinct IOPs — larger $T$ giving stronger bounds. They
+attach decreasing confidence as $T$ grows, describing the largest setting only as
+"(arguably) unlikely" to be false.
+
+The calibration in their Appendix A is what makes the conjecture non-trivial.
+CVAL is P-complete under log-space reductions, so it cannot be solved in
+logarithmic space under standard beliefs. But even sub-linear space is largely
+uncharted: the best algorithm is the pebbling approach at $O(n/\log n)$ space, and
+pebbling provably cannot do much better. Since the number of inputs $m$ may be far
+smaller than the circuit size $n$, $\mathrm{poly}(m)$ space is a different regime
+again — and it is the regime the conjecture is about.
+
+They also note what a refutation would cost: an algorithm meeting the conjecture's
+terms would either collapse to a single-phase algorithm, or "yield an interesting
+space-time trade-off for CSAT". Neither direction is cheap.
+
+## Parameter lattice
+
+Conjecture 1.2 is a scale, not a single claim. Each row is a different hypothesis
+with a different consequence and a different level of confidence.
+
+| Preprocessing budget $t(n,m)$ | Ruled out for $\mathcal{R}_{\mathrm{CSAT}}$ | Source's confidence |
+|---|---|---|
+| $\mathrm{poly}(n)$ | constant rounds, $O(\log n)$ queries | highest |
+| $2^{\mathrm{polylog}(m)}\cdot\mathrm{poly}(n)$ | $\mathrm{polylog}(m)$ rounds, $\mathrm{polylog}(m) + O(\log n)$ queries | "even ... would not be sufficient" |
+| $2^{o(m)}\cdot\mathrm{poly}(n)$ | $o(m/\log m)$ rounds, $o(m) + O(\log n)$ queries | "(arguably) unlikely" |
+
+All three are [c/0099](/c/0099/). A resolution must name its $T$.
+
+Space complexity of circuit evaluation, for calibration:
+
+| Bound | Value | Note |
+|---|---|---|
+| **Best algorithm for CVAL** | $O(n/\log n)$ | pebbling |
+| **Lower bound against pebbling** | $\Omega(n/\log n)$ | technique-specific, not general |
+| **Log space for CVAL** | ruled out under $\mathsf{P} \not\subseteq \mathrm{Space}(\log)$ | CVAL is P-complete |
+| **$\mathrm{poly}(m)$ space for CSAT** | [c/0099](/c/0099/) — open | $m$ may be far below $n$ |
+
+## Statements in this hub
+
+- [Circuit Satisfiability Resists Small Space with Preprocessing](/c/0099/) — open

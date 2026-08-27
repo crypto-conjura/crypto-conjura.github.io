@@ -1,0 +1,196 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  Kuehnemann-Polak-Rosen's Conjecture 10: the planted k-Orthogonal
+%  Vectors problem requires n^{k-o(1)} time on average.
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{AVERAGE-CASE HARDNESS OF PLANTED K-OV}
+
+\newcommand{\Om}{\Omega}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\kOV}{k\text{-}\mathrm{OV}}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{Average-Case Hardness of Planted $k$-Orthogonal Vectors}
+\cjsubtitle{A planting that preserves every marginal below $k$, proposed
+  as a basis for fine-grained cryptography}
+\cjstatus{Statement: AI-written from David K\"uhnemann, Adam Polak and
+  Alon Rosen, \emph{The Planted Orthogonal Vectors Problem}, IACR ePrint
+  2025/780. Not yet checked by a human. This is their Conjecture 10, and
+  it is a \emph{newly proposed} average-case assumption rather than a
+  question the literature already asked --- see
+  Remark~\ref{rem:what-kind}. Its worst-case counterpart, that $\kOV$
+  requires $n^{k-o(1)}$ time, is a central conjecture of fine-grained
+  complexity. The structural evidence the source supplies is that the
+  planting preserves all marginals below $k$, and that search reduces to
+  decision.}
+\cjcategory{\emph{Fine-Grained Cryptography}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+Fine-grained complexity has a small stock of worst-case conjectures that
+most of its lower bounds rest on, and $k$-Orthogonal Vectors is one of
+them: given $k$ sets of $n$ binary vectors, pick one from each so that at
+every coordinate some vector is zero, and this is believed to need
+essentially $n^{k}$ time. Cryptography needs average-case hardness, not
+worst-case, and it needs planted instances with a unique known solution.
+The source supplies a planting with an unusual property: look at fewer
+than $k$ of the vectors and you cannot tell a planted instance from a
+purely random one, because the marginals agree exactly. The conjecture is
+that the planted instances are as hard as the worst case.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+In the $k$-Orthogonal Vectors problem one is given $k$ sets, each
+containing $n$ binary vectors of dimension $d = n^{o(1)}$, and must pick
+one vector from each set so that at each coordinate at least one of the
+chosen vectors has a zero. It is a central problem in fine-grained
+complexity, conjectured to require $n^{k-o(1)}$ time in the worst case,
+and a large body of conditional lower bounds rests on that conjecture.
+
+The source's motivation is stated plainly: ``The security of
+cryptographic systems crucially relies on heuristic assumptions about
+average-case hardness of certain computational problems.'' The specific
+target is fine-grained asymmetric cryptography --- ``[a] key goal of
+fine-grained cryptography is to devise an advanced asymmetric
+cryptography scheme -- such as public key encryption -- whose security is
+based on hardness of a well understood problem from fine-grained
+complexity'' --- where the source records that the closest existing work is
+the key exchange protocol of LaVigne, Lincoln and Vassilevska Williams.
+
+The contribution is a way to plant a solution among vectors with
+i.i.d.\ $p$-biased entries, for an appropriately chosen $p$, so that the
+planted solution is the unique one. What makes the planting worth
+studying is a structural property, stated in the source's abstract: ``Our
+planted distribution has the property that any subset of strictly less
+than $k$ vectors has the same marginal distribution as in the model
+distribution, consisting of i.i.d.\ $p$-biased random vectors.''
+
+\section{Notation and parameters}\label{sec:notation}
+
+\begin{itemize}[nosep]
+  \item $k$ is the number of sets; $n$ the number of vectors in each;
+    $d = n^{o(1)}$ the dimension.
+  \item $p$ is the bias: entries are i.i.d.\ $p$-biased, with $p$ chosen
+    so the planted solution is unique.
+  \item $\kOV^{\alpha}_{0}(n)$ is the model distribution and
+    $\kOV^{\alpha}_{1}(n)$ the planted one; $\alpha(n)$ parameterizes the
+    family, and the conjecture is stated for $\alpha(n) = \omega(1)$.
+  \item An algorithm \emph{solves the decision $\kOV^{\alpha}$ problem
+    with success probability $\delta(n)$} if for both $b \in \{0,1\}$ and
+    large enough $n$, $\Pr_{U \sim \kOV^{\alpha}_{b}(n)}[A(U) = b] \ge
+    \delta(n)$.
+\end{itemize}
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{conjecture}[{\cite[Conjecture 10]{KPR25}}]\label{conj:main}
+For any $\alpha(n) = \omega(1)$ and $\eps > 0$, there exists no algorithm
+$A$ that solves the planted decision $\kOV$ problem with any constant
+success probability $\delta > \tfrac{1}{2}$ in time $O(n^{k-\eps})$.
+\end{conjecture}
+
+\begin{remark}[What kind of statement this is]\label{rem:what-kind}
+It is an average-case hardness assumption the source is proposing, not a
+question the literature had already posed, and it is recorded here on
+that footing. Two features distinguish it from a security claim about a
+particular construction, which is why it is published rather than
+declined. First, the underlying object is canonical: $\kOV$ is one of the
+handful of problems fine-grained complexity is organized around, and the
+worst-case conjecture it mirrors is widely studied. Second, the planting
+is principled rather than ad hoc, and the source proves things about it
+(Remarks~\ref{rem:marginals} and~\ref{rem:s2d}) rather than only
+conjecturing. A reader should nonetheless treat it as an assumption
+awaiting cryptanalysis, and the absence of an attack after one paper is
+weak evidence.
+\end{remark}
+
+\begin{remark}[The marginal property, and what it does and does not
+  give]\label{rem:marginals}
+Any subset of strictly fewer than $k$ vectors has the same marginal
+distribution under the planted and model distributions. So no algorithm
+that inspects fewer than $k$ vectors at a time can distinguish them at
+all --- the planting is invisible below its own arity. That rules out a
+natural family of attacks outright, which is more than most freshly
+proposed assumptions come with. It does not rule out algorithms that look
+at $k$ or more vectors, which is where any real attack would live, and it
+says nothing about the $n^{k-\eps}$ running-time threshold.
+\end{remark}
+
+\begin{remark}[Search reduces to decision]\label{rem:s2d}
+The source's Theorem 12: for any $\alpha(n) = \mathrm{polylog}(n)$, if
+there is an algorithm solving the planted decision $\kOV$ problem with
+success probability at least $1 - \delta(n)$ in time $T(n)$, then there
+is one solving the planted \emph{search} problem with success probability
+at least $1 - (13k \cdot \delta(n) - n^{-k})$ in expected time
+$O(T(n) + n\,\mathrm{polylog}(n)\log(1/\delta(n)))$. The reduction is a
+binary search: split a set in two, resample one half, and use
+$(k-1)$-wise independence to argue the resampled instance follows the
+model distribution.
+
+Note the parameter mismatch. The reduction is stated for $\alpha(n) =
+\mathrm{polylog}(n)$; Conjecture~\ref{conj:main} is stated for
+$\alpha(n) = \omega(1)$, which is a weaker constraint. A resolution
+should say which regime of $\alpha$ it addresses.
+\end{remark}
+
+\begin{remark}[Where a refutation would live]\label{rem:refutation}
+In an algorithm exploiting the planting at arity exactly $k$. By
+Remark~\ref{rem:marginals} nothing below that can help, so an attack must
+use the joint structure of $k$-tuples --- which is also what the honest
+solver does. The interesting question for a cryptanalyst is whether the
+uniqueness of the planted solution, which is what makes the problem
+useful, is itself a handle: unique-solution promises have historically
+made problems easier rather than harder.
+\end{remark}
+
+\begin{remark}[The worst-case conjecture is not this
+  one]\label{rem:worstcase}
+That $\kOV$ requires $n^{k-o(1)}$ time in the worst case is a separate,
+older and much better studied conjecture, and it is not what
+Conjecture~\ref{conj:main} asserts. Neither implies the other in any way
+the source claims: worst-case hardness does not give average-case
+hardness for this planting, and a refutation of
+Conjecture~\ref{conj:main} would not touch the worst-case conjecture
+unless the algorithm happened to work on arbitrary instances.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem[KPR25]{KPR25}
+David K\"uhnemann, Adam Polak and Alon Rosen.
+\emph{The planted orthogonal vectors problem}.
+IACR ePrint 2025/780.
+The source. Definition 8 and the search formulation are on pages 10--11,
+Conjecture 10 on page 11, and the search-to-decision reduction
+(Theorem 12) on page 12.
+
+\bibitem[Wil05]{Wil05}
+Ryan Williams.
+\emph{A new algorithm for optimal $2$-constraint satisfaction and its
+implications}.
+Theoretical Computer Science, 2005.
+The origin of the Orthogonal Vectors conjecture in fine-grained
+complexity. [UNVERIFIED] --- not cited under this name in the source's
+reference list as read during this harvest; the attribution here is
+inferred from the standard literature.
+
+\bibitem[LLW19]{LLW19}
+Rio LaVigne, Andrea Lincoln and Virginia Vassilevska Williams.
+\emph{Public-key cryptography in the fine-grained setting}.
+CRYPTO 2019.
+The key exchange protocol the source names as the closest existing work
+toward fine-grained asymmetric cryptography. [UNVERIFIED] --- cited in the
+source by number as [23]; the bibliographic detail here is inferred.
+
+\end{conjurabibliography}
+
+\end{document}

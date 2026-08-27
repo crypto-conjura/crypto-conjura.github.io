@@ -1,0 +1,72 @@
+---
+title: "Planted problems in fine-grained complexity"
+subtitle: "Worst-case conjectures are not enough for cryptography; planting is how you get the rest"
+---
+
+## Motivation
+
+Fine-grained complexity is organized around a few worst-case conjectures — that
+$k$-SAT needs $2^{n}$ time, that $k$-Orthogonal Vectors needs $n^{k}$ — and it
+derives a large body of conditional lower bounds from them. Cryptography cannot
+use those conjectures directly. It needs three things they do not supply:
+average-case hardness rather than worst-case, instances that can be *sampled*
+together with a solution, and a solution that is unique so the sampler knows what
+it planted.
+
+Planting is the standard way to get all three, and the design question is what
+kind of planting leaves the problem hard. A careless planting introduces
+statistical signatures that make the instance easy to recognize long before it is
+easy to solve; a good one is invisible to everything short of an actual solver.
+
+The payoff on offer is fine-grained public-key cryptography. The field has key
+exchange from fine-grained assumptions, due to LaVigne, Lincoln and Vassilevska
+Williams, and not much beyond it.
+
+## Provenance and history
+
+David Kühnemann, Adam Polak and Alon Rosen, *The Planted Orthogonal Vectors
+Problem* ([IACR ePrint 2025/780](https://eprint.iacr.org/2025/780)), propose a
+planting for $k$-OV and conjecture it is hard on average.
+
+The construction plants a solution among vectors with i.i.d. $p$-biased entries,
+for an appropriately chosen $p$, so that the planted solution is the unique one.
+Its distinguishing property is a marginal one: any subset of strictly fewer than
+$k$ vectors has exactly the same distribution as in the unplanted model. The
+planting is invisible below its own arity — not approximately, exactly.
+
+That property is not just cosmetic. It is what powers their search-to-decision
+reduction: split a set in two and resample one half, and by $(k-1)$-wise
+independence the resampled instance follows the model distribution, so a decision
+oracle reveals whether the planted vector survived. Recursing gives binary search
+for the planted solution at a cost of $O(\log n)$ in time and error.
+
+## Parameter lattice
+
+What is conjectured, and at what arity an attack could live.
+
+| Regime | Status |
+|---|---|
+| **Worst-case $k$-OV** | $n^{k-o(1)}$ conjectured; central to fine-grained complexity |
+| **Planted decision $k$-OV, algorithms seeing $< k$ vectors** | provably no advantage — marginals identical |
+| **Planted decision $k$-OV, general** | [c/0098](/c/0098/) — open |
+| **Planted search $k$-OV** | reduces to decision, $O(\log n)$ overhead (Theorem 12) |
+
+Note the parameter mismatch across the two results, which the source does not
+flag: Conjecture 10 is stated for $\alpha(n) = \omega(1)$, while the
+search-to-decision reduction requires $\alpha(n) = \mathrm{polylog}(n)$.
+
+## What kind of assumption this is
+
+Worth being explicit, since the distinction governs whether a statement belongs
+in an archive of open problems at all. This is a *newly proposed* average-case
+assumption, not a question the literature had already posed. It is recorded here
+because the underlying object is canonical and the planting is analysed rather
+than merely asserted — the marginal property and the search-to-decision reduction
+are theorems. It is not recorded as settled evidence of hardness: one paper
+without an attack is weak evidence, and the natural place for an attack is
+whether the uniqueness of the planted solution, which is what makes the planting
+useful, is itself a handle.
+
+## Statements in this hub
+
+- [Average-Case Hardness of Planted k-Orthogonal Vectors](/c/0098/) — open

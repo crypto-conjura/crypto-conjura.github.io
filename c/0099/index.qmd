@@ -1,0 +1,171 @@
+---
+id: "0099"
+problem: succinct-iop-limitations
+draft: csat-space-preprocessing
+title: "Circuit Satisfiability Resists Small Space with Preprocessing"
+short_title: "CSAT with Small Space and Preprocessing"
+areas: [proof-systems, foundations]
+topics: [interactive-oracle-proofs, space-bounded-computation, proof-size-lower-bounds, time-space-tradeoffs]
+model: standard
+form: lower-bound
+assumption_class: unconditional
+category: research-open
+revision: 1
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: barrier
+  by: ai
+  note: "Proving it means a space lower bound for CSAT in poly(m) space where m may be far below the circuit size n -- and even for CVAL, which is P-complete, nothing better than the pebbling bound of Omega(n/log n) is known, with that bound proved only against pebbling. Unconditional space lower bounds of this kind are among the things complexity theory cannot currently do. The compensating structure is that a refutation is forced to be a real space-time result, so neither direction is cheap, and the conjecture is a scale so partial progress at small T is meaningful."
+status_summary: "Conjecture 1.2 of the source, a parameterized family rather than a single claim. Corollary 1.3 turns each parameter setting into a limitation on succinct IOPs. The source attaches decreasing confidence as the class T grows, calling the largest setting only (arguably) unlikely to be false rather than confidently believed."
+status_updated: 2026-08-28
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Nassar, Rothblum, Succinct Interactive Oracle Proofs: Applications and Limitations, IACR ePrint 2022/281", url: "https://eprint.iacr.org/2022/281"}
+  - {cite: "Hopcroft, Paul, Valiant, On Time Versus Space, Journal of the ACM, 1977", url: "https://doi.org/10.1145/321978.321990"}
+  - {cite: "Paul, Tarjan, Celoni, Space Bounds for a Game on Graphs, Mathematical Systems Theory, 1977", url: "https://doi.org/10.1007/BF01683275"}
+  - {cite: "Goldreich, Vadhan, Wigderson, On Interactive Proofs with a Laconic Prover, Computational Complexity, 2002", url: "https://doi.org/10.1007/s00037-002-0169-0"}
+statement_sha: "ad2d0dbfcdf0bac651e994a20d708186b3d6c69252e48229d193577471f4810c"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+<!-- topics:start -->
+<div class="cj-tags cj-page-topics"><a class="cj-tag cj-tag-topic" href="/problems/by-topic/interactive-oracle-proofs/">Interactive Oracle Proofs</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/proof-size-lower-bounds/">Proof Size Lower Bounds</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/space-bounded-computation/">Space Bounded Computation</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/time-space-tradeoffs/">Time Space Tradeoffs</a></div>
+<!-- topics:end -->
+
+Interactive oracle proofs let a verifier be convinced by reading a few bits of
+the prover's messages, and *succinct* ones keep the communication close to the
+size of the witness rather than the size of the computation. Strong impossibility
+results are known for succinct PCPs; for IOPs the picture is better, since
+relations decidable in small space do have them. Where is the limit? The source
+turns the question into one about circuit satisfiability with two resources: how
+much space, and how much time in a preprocessing phase that has not yet seen the
+instance. Its conjecture is that satisfiability cannot be decided in space
+polynomial in the number of *inputs* — which may be far fewer than the number of
+gates — however much preprocessing is allowed within a stated budget.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [LaTeX source](latex/main.tex) · Formal statement — *not yet formalized*
+
+**The asymmetry that makes it interesting.** Write $\mathrm{CSAT}$ for
+satisfiability of a circuit of size $n$ over $m$ input bits. Since $m$ can be
+much smaller than $n$, $\mathrm{poly}(m)$ space can be far less than the circuit
+itself, so this is not a restatement of any standard separation.
+
+**Conjecture (the source's Conjecture 1.2).** For a function class $T$:
+$\mathrm{CSAT}$ for circuits of size $n$ over $m$ input bits cannot be solved by
+an algorithm that uses $\mathrm{poly}(m)$ space and $t(n,m)$-time probabilistic
+preprocessing, for any $t \in T$.
+
+**What it buys (the source's Corollary 1.3).** Assuming the conjecture:
+
+| Preprocessing budget $t(n,m)$ | Ruled out for $\mathcal{R}_{\mathrm{CSAT}}$ |
+|---|---|
+| $\mathrm{poly}(n)$ | succinct IOP with constant rounds and $O(\log n)$ query complexity |
+| $2^{\mathrm{polylog}(m)}\cdot\mathrm{poly}(n)$ | succinct IOP with $\mathrm{polylog}(m)$ rounds and $\mathrm{polylog}(m) + O(\log n)$ queries |
+| $2^{o(m)}\cdot\mathrm{poly}(n)$ | succinct IOP with $o(m/\log m)$ rounds and $o(m) + O(\log n)$ queries |
+
+**It is a family, and the members are not equally safe.** The conjecture is
+stated relative to $T$, so it is a scale of hypotheses. The source orders the
+consequences "from the weakest bound" and attaches decreasing confidence as $T$
+grows: it conjectures "that even probabilistic quasi-polynomial time
+preprocessing would not be sufficient, and taking things to an extreme, it is
+(arguably) unlikely that $(2^{o(m)}\cdot\mathrm{poly}(n))$-time preprocessing is
+sufficient." A resolution in either direction must name its $T$: refuting the
+strongest setting says nothing about the weakest, and proving the weakest leaves
+the interesting IOP bounds untouched.
+
+**Why small space for $\mathrm{CSAT}$ is not already known.** From the source's
+Appendix A: $\mathrm{CVAL}$ is $\mathsf{P}$-complete under log-space reductions,
+so under the widely believed $\mathsf{P} \not\subseteq \mathrm{Space}(\log)$ it
+cannot be solved in logarithmic space. But little is known even in sub-linear
+space — the best algorithm follows the pebbling approach and yields $O(n/\log n)$
+space, and "it was later proved that for general circuits, the pebbling approach
+cannot do much better", an $\Omega(n/\log n)$ bound against that technique.
+Since $m$ can be far below $n$, $\mathrm{poly}(m)$ space is a different regime
+again.
+
+**What a refutation would mean.** The source spells this out, and it is the best
+argument for the conjecture: if a circuit of size $n$ over $m$ variables could be
+solved in $\mathrm{poly}(m)$ space with non-trivial probabilistic preprocessing,
+then "either it can be solved in a single phase; in $\mathrm{poly}(m)$ space or
+non-trivial time, or it would imply a surprising interplay between space and time
+complexities and in particular, yield an interesting space-time trade-off for
+$\mathrm{CSAT}$." A refutation is forced to be a genuine space-time result.
+
+### Sources
+
+- Nassar and Rothblum. [*Succinct Interactive Oracle Proofs: Applications and Limitations*](https://eprint.iacr.org/2022/281). IACR ePrint 2022/281. The source. Conjecture 1.2 and Corollary 1.3 are on page 5; the extended discussion including the $\mathrm{CVAL}$ calibration is Appendix A on page 33.
+- Hopcroft, Paul and Valiant. [*On Time Versus Space*](https://doi.org/10.1145/321978.321990). Journal of the ACM, 1977. The pebbling approach giving the $O(n/\log n)$-space algorithm.
+- Paul, Tarjan and Celoni. [*Space Bounds for a Game on Graphs*](https://doi.org/10.1007/BF01683275). Mathematical Systems Theory, 1977. The $\Omega(n/\log n)$ bound showing pebbling cannot do much better.
+- Goldreich, Vadhan and Wigderson. [*On Interactive Proofs with a Laconic Prover*](https://doi.org/10.1007/s00037-002-0169-0). Computational Complexity, 2002. Limits on the communication complexity of interactive proofs, which the source positions its IOP limitations against.
+
+## Proof
+
+View PDF — *no proof written yet* · LaTeX source — *no proof written yet* · Formal proof — *not yet formalized*
+
+Open, and hard in the direction one would want.
+
+**Toward a proof.** It is an unconditional space lower bound, which is the kind of
+statement complexity theory currently cannot deliver: even for $\mathrm{CVAL}$,
+which is $\mathsf{P}$-complete, nothing better than the pebbling bound is known,
+and that bound is proved only *against pebbling* rather than in general. Adding
+preprocessing makes the target harder, not easier. Realistically, progress would
+come at the small-$T$ end of the scale, and even $t(n,m) = \mathrm{poly}(n)$ is
+not obviously within reach.
+
+**Toward a refutation.** By the source's own argument, an algorithm would either
+collapse into a single-phase algorithm — itself a surprising result — or exhibit a
+genuine space-time trade-off for $\mathrm{CSAT}$. Either outcome would be
+independently interesting, which is why this is worth attacking from the positive
+side even by someone who expects the conjecture to be true.
+
+**Checked against the literature, 2026-08-28.** No resolution at any setting of
+$T$ found. Targeted check on this line and the space-complexity results the
+source cites, not an exhaustive sweep.
+
+## Discussion
+
+**Where succinct IOPs currently stand.** Succinct PCPs — length polynomial in the
+witness — face strong impossibility results. Succinct IOPs exist for the rich
+class of NP relations decidable in small space, which is the positive side, and
+Corollary 1.3 is the negative side conditional on this conjecture. The gap
+between those is what the conjecture would close.
+
+**The paper's positive results run the other way.** Using one-way functions it
+compiles IOPs into zero-knowledge proofs while nearly preserving proof length,
+complementing the line initiated by Ben Sasson et al. that compiles IOPs into
+super-succinct zero-knowledge arguments. Not this statement, and a resolution
+does not bear on it.
+
+**What a reviewer should be suspicious of, in order.** First, which $T$ a claimed
+result is about — without that the claim has no content. Second, whether a claimed
+succinct IOP beats the *pairing* of round count and query complexity in the
+relevant row of Corollary 1.3; loosening either alone does not contradict it.
+Third, whether the space bound is $\mathrm{poly}(m)$ in the input count rather
+than in the circuit size, since the latter is the easy regime.
+
+## Open obligations
+
+- [ ] Prove Conjecture 1.2 for some non-trivial $T$ — starting at $t(n,m) = \mathrm{poly}(n)$ — or refute it.
+- [ ] Either way, name the $T$; the statement has no content without it.
+- [ ] Push the known $\mathrm{CSAT}$ space bounds below the pebbling barrier, or show the pebbling bound extends beyond that technique.
+- [ ] Formalize the statement in Lean; nothing here has been formalized.
+
+:::

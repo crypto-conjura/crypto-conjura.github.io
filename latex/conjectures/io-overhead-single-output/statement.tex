@@ -1,0 +1,239 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  Lu-Mazor-Oliveira-Pass's first named open problem: does the
+%  Omega(s/log s) iO overhead lower bound extend to single-output
+%  Boolean circuits?
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{IO OVERHEAD FOR SINGLE-OUTPUT CIRCUITS}
+
+\newcommand{\Om}{\Omega}
+\newcommand{\bits}{\{0,1\}}
+\newcommand{\iO}{\mathrm{iO}}
+\newcommand{\NP}{\mathsf{NP}}
+\newcommand{\BPP}{\mathsf{BPP}}
+\newcommand{\MCSP}{\mathrm{MCSP}}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{Obfuscation Overhead for Single-Output Circuits}
+\cjsubtitle{Proved for multi-output circuits; blocked on the NP-hardness
+  of single-output circuit minimization}
+\cjstatus{Statement: AI-written from Zhenjian Lu, Noam Mazor, Igor C.\
+  Oliveira and Rafael Pass, \emph{Lower Bounds on the Overhead of
+  Indistinguishability Obfuscation}, IACR ePrint 2024/1524. Not yet
+  checked by a human. Their main theorem gives an $\Om(s/\log s)$
+  additive overhead lower bound for iO on \emph{multi-output} circuits
+  under $\NP \not\subseteq \BPP$. The single-output case is the first of
+  their named ``main open problems'', and the obstruction is precise:
+  their route runs through the NP-hardness of Multi-MCSP, and the
+  single-output analogue is the long-standing MCSP question.}
+\cjcategory{\emph{Obfuscation}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+An obfuscator makes a program unintelligible; the question here is what
+that costs in size. If NP is easy there is no cost at all --- an optimal
+obfuscator with zero overhead exists --- so any lower bound needs a hardness
+assumption, and the weakest sensible one is that NP is hard. Under
+exactly that, the source shows an obfuscator for circuits with many
+output bits must add $\Om(s/\log s)$ gates. Their argument goes through
+the hardness of deciding whether a multi-output function has a small
+circuit. For circuits with a single output bit the corresponding hardness
+question is one of the famous open problems of complexity theory, and the
+overhead question is open with it.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+For a circuit $C$ of size $s$ --- the number of AND/OR/NOT gates --- an
+indistinguishability obfuscator outputs a circuit of some size
+$\sigma(\lambda, s)$, and the \emph{overhead} is how much larger that is
+than $s$. The question is how small the overhead can be.
+
+The hardness assumption cannot be dropped: an optimal iO scheme with no
+circuit size overhead exists if $\NP \subseteq \BPP$. So $\NP
+\not\subseteq \BPP$ is the minimal assumption under which any lower bound
+can hold, and it is the one the source uses.
+
+\begin{theorem}[The multi-output bound, {\cite[Theorem 1]{LMOP24}}]\label{thm:main}
+Under $\NP \not\subseteq \BPP$, there is no efficient indistinguishability
+obfuscation scheme for multi-output circuits $C : \bits^{n} \to
+\bits^{n}$ of size $s$ that outputs circuits of size $s + o(s/\log s)$.
+Equivalently, to be secure, an efficient iO scheme must incur an
+$\Om(s/\log s)$ additive overhead.
+\end{theorem}
+
+The proof reinterprets a connection between obfuscation and
+meta-complexity due to Mazor and Pass --- who showed that iO plus
+sub-exponentially secure one-way functions imply a gap version of $\MCSP$
+is not NP-hard under Levin reductions --- and turns it into a tool for
+proving impossibility. The missing ingredient is a meta-computational
+problem whose NP-hardness \emph{is} known, and the source uses
+Multi-MCSP, NP-hard under randomized reductions by Ilango, Loff and
+Oliveira, strengthening it to a gap version under randomized approximate
+Levin reductions.
+
+That choice is exactly what confines the result to multi-output circuits.
+
+\section{Notation and parameters}\label{sec:notation}
+
+\begin{itemize}[nosep]
+  \item $s$ is the circuit size, counted as the number of AND/OR/NOT
+    gates; $\lambda$ the security parameter; $\sigma(\lambda,s)$ the
+    output size of the obfuscator.
+  \item A circuit is \emph{multi-output} when it computes $C : \bits^{n}
+    \to \bits^{n}$, and \emph{single-output} when $C : \bits^{n} \to
+    \bits$.
+  \item $\MCSP$ is the minimum circuit size problem for single-output
+    Boolean functions; \emph{Multi-MCSP} its multi-output analogue.
+  \item Overhead is \emph{additive}: the target ruled out in
+    Theorem~\ref{thm:main} is $s + o(s/\log s)$.
+\end{itemize}
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{conjecture}[{\cite[\S 1.4]{LMOP24}}]\label{conj:main}
+Theorem~\ref{thm:main} holds for single-output Boolean circuits: under
+$\NP \not\subseteq \BPP$, there is no efficient indistinguishability
+obfuscation scheme for single-output circuits $C : \bits^{n} \to \bits$
+of size $s$ that outputs circuits of size $s + o(s/\log s)$.
+\end{conjecture}
+
+\begin{remark}[How the source states it, and what is being supplied
+  here]\label{rem:framing}
+Page 12: ``As our main open problems, we leave the extension of our
+(database-free) impossibility results to the setting of single-output
+circuits, the investigation of iO for multi-output circuits with output
+size $(1 + \Om(1)) \cdot s$, and understanding the limits of our
+approach.'' And earlier: ``we currently do not know how to establish them
+for single-output Boolean circuits nor for multi-output circuits where we
+allow unbounded fan-in gates when measuring circuit size.''
+
+The source names the direction without restating the bound, so the
+specific form of Conjecture~\ref{conj:main} --- the same $s + o(s/\log s)$
+target, the same assumption --- is this statement's choice, and is the
+natural reading of ``extension of our impossibility results''. A partial
+result at a weaker overhead is progress and should be reported as such.
+\end{remark}
+
+\begin{remark}[The obstruction, which is a named open
+  problem]\label{rem:obstruction}
+The route to Theorem~\ref{thm:main} needs NP-hardness of a gap version of
+Multi-MCSP under randomized Levin reductions. For single-output circuits
+the corresponding statement is the NP-hardness of $\MCSP$, which has been
+open for decades. The source is explicit that its own intermediate step
+is already hard: ``In order to relax the iO assumption from Item 1 to
+circuits $C : \bits^{n} \to \bits^{n}$, it is sufficient to show in Item
+2 above that Multi-MCSP retains its hardness on input functions $F :
+\bits^{n} \to \bits^{n}$. This remains a challenging open problem, and
+can be seen as an important step towards establishing the NP-hardness of
+MCSP for single-output Boolean functions.''
+
+It also names the technical difficulty: the Multi-MCSP instances produced
+by the reduction from Set-Cover have the form $F : \bits^{\ell} \to
+\bits^{m}$ with $m$ of order roughly $2^{\ell}$, and padding the input
+length to $m$ would require printing a truth-table of size $2^{m}$ per
+coordinate --- prohibitively large.
+
+So a proof of Conjecture~\ref{conj:main} by this route would carry a
+major complexity-theoretic result with it. That is the reason to expect
+it to be hard, and also the reason a route avoiding meta-complexity would
+be the interesting outcome.
+\end{remark}
+
+\begin{remark}[One padding obstacle the source did
+  clear]\label{rem:padding}
+Worth separating from the above, because it is easy to conflate. Going
+from arbitrary multi-output circuits $C : \bits^{\ell} \to \bits^{m}$ to
+the square case $C : \bits^{n} \to \bits^{n}$ \emph{is} solved: ``in
+contrast with Multi-MCSP, the input of the iO procedure is a circuit
+instead of a truth-table. This allows us to establish through a simple
+padding argument that the hardness of iO for arbitrary multi-output
+circuits $C : \bits^{\ell} \to \bits^{m}$ implies its hardness for
+circuits of the form $C : \bits^{n} \to \bits^{n}$.'' What remains open is
+the drop to a single output bit, not the shape of the multi-output case.
+\end{remark}
+
+\begin{remark}[The neighbouring parameter question, with its own
+  named bottleneck]\label{rem:neighbour}
+The second of the source's main open problems is iO for multi-output
+circuits with output size $(1 + \Om(1))\cdot s$ --- a constant
+multiplicative overhead rather than the additive $o(s/\log s)$ that
+Theorem~\ref{thm:main} rules out. The source locates the bottleneck
+precisely: ``The bottleneck lies in the proof of Lemma 20, i.e., on the
+gap between positive and negative instances of the NP-hardness of
+Multi-MCSP under Levin reductions. The choice of parameters governing
+this gap are constrained by the encoding argument presented near the end
+of the proof, which does not seem to allow an additive gap of the form
+$\Om(s)$.'' It also notes the overhead in its Theorems 1 and 2 can be
+slightly improved, from $\Om(s/\log s)$ to $\Om(s\log\log s/\log s)$.
+That is a different statement from Conjecture~\ref{conj:main} and is not
+published here.
+\end{remark}
+
+\begin{remark}[What the source does prove for single-output
+  circuits]\label{rem:database}
+Not nothing, but in a different model. It rules out iO for single-output
+\emph{database-aided} circuits with an arbitrary polynomial overhead in
+circuit size, strengthening an impossibility of Goldwasser and Rothblum:
+where they considered circuits with access to an exponential-length
+database that the obfuscator accesses by oracle, the source's result
+holds even for polynomial-size databases and even against obfuscators
+that may run in time polynomial in the database size and so read all of
+it. Conjecture~\ref{conj:main} is the database-free case, which is why
+the source calls it ``the extension of our (database-free) impossibility
+results''.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem[LMOP24]{LMOP24}
+Zhenjian Lu, Noam Mazor, Igor C.\ Oliveira and Rafael Pass.
+\emph{Lower bounds on the overhead of indistinguishability obfuscation}.
+IACR ePrint 2024/1524.
+The source. The main theorem and the database-aided result are in the
+abstract and Section 1; the remark that single-output circuits are not
+covered is on page 5; the Multi-MCSP padding difficulty and the
+single-output MCSP obstruction are on page 8; the list of main open
+problems is on page 12; the bottleneck remark is on page 33.
+
+\bibitem[MP24]{MP24}
+Noam Mazor and Rafael Pass.
+\emph{Gap MCSP is not (Levin) NP-complete in Obfustopia}.
+Computational Complexity Conference (CCC) 2024.
+The connection between obfuscation and meta-complexity the source turns
+on its head to prove impossibility.
+
+\bibitem[ILO20]{ILO20}
+Rahul Ilango, Bruno Loff and Igor C.\ Oliveira.
+\emph{NP-hardness of circuit minimization for multi-output functions}.
+Computational Complexity Conference (CCC) 2020.
+The NP-hardness of Multi-MCSP the source extends to a gap version under
+randomized approximate Levin reductions --- and whose single-output
+analogue is the obstruction.
+
+\bibitem[GR07]{GR07}
+Shafi Goldwasser and Guy N.\ Rothblum.
+\emph{On best-possible obfuscation}.
+TCC 2007.
+The database-aided impossibility the source strengthens. [UNVERIFIED] ---
+cited in the source as [GR07]; the bibliographic detail here is inferred.
+
+\bibitem[KMN+22]{KMN22}
+Cited by the source for the result that, assuming NP is hard, the
+existence of indistinguishability obfuscators for single-output circuits
+with polynomial output size implies one-way functions --- which is what lets
+the source reduce its assumption to worst-case hardness. [UNVERIFIED] ---
+cited in the source as [KMN+ 22]; neither the authors nor the venue were
+recovered during this harvest, and are deliberately not guessed.
+
+\end{conjurabibliography}
+
+\end{document}

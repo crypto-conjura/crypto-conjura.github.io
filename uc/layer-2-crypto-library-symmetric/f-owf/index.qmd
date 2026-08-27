@@ -2,9 +2,37 @@
 title: "F-OWF — One-way function"
 status: "Open"
 layer: 2
-definition: "Not yet written"
+definition: "No canonical definition"
 ---
 
 *F-OWF* (One-way function) is part of *Cryptographic Library and Symmetric Primitives* in the UC functionality encyclopedia. Status: open — no accepted UC formulation exists yet.
 
-This is one of several purely local, hardness-based primitives (alongside *F-PRG*, *F-CRHF*, and *F-MHF*) with no cross-party interface to idealize — the UC composition theorem gives nothing here that a standard hybrid argument doesn't already provide. It's included in this encyclopedia only to record that absence explicitly.
+**There is no ideal functionality for a one-way function, and there is a clean reason why: a one-way function has nothing to withhold.** Its input belongs to the caller, its output is public, and it keeps no state between calls. Every value in sight is already the caller's own. A functionality wrapped around $f$ could do nothing but compute $f$ and hand it back — which is what the caller was going to do anyway — so the ideal and the real world are the same world, and the composition theorem has nothing to say.
+
+This page exists to record that, because "there is no box" is a real finding about the literature and a reader is entitled to it before they go looking.
+
+## Why there is no box
+
+**The evidence is not an absence of searching; it is a positive design decision, made by the people best placed to make it.** Küsters and Tuengerthal's $\mathcal{F}_{\mathsf{crypto}}$ is the most complete ideal cryptographic library in the UC literature, and this site carries it as [*F-crypto*](/uc/layer-2-crypto-library-symmetric/f-crypto/index.qmd) with two of its items broken out as [*F-MAC*](/uc/layer-2-crypto-library-symmetric/f-mac/index.qmd) and [*F-KDF*](/uc/layer-2-crypto-library-symmetric/f-kdf/index.qmd). Its interface, in full: symmetric key generation, public-key requests, nonce generation, pre-shared keys, encryption and decryption under symmetric and public keys, key derivation, MAC computation and verification, signing and verification, store, retrieve, equality test, and corruption requests. Twenty-one items. **No one-way function, no pseudorandom generator, no collision-resistant hash, no memory-hard function.** A paper whose entire purpose is to idealize a crypto library, extending an earlier encryption functionality with key derivation, MACs, signatures and nonces, declined to add any of the four.
+
+**And the reason is visible in its own design.** The paper explains that users of $\mathcal{F}_{\mathsf{crypto}}$ "do not get their hands on the actual symmetric keys, but only on pointers to these keys, since otherwise no security guarantees could be provided". That is what an ideal functionality *is*: a box that can make a guarantee because it withholds something — the key, the plaintext, the randomness — and hands back a handle. Idealization needs a secret to keep.
+
+**The counterexample that proves the rule is on this site already.** [*F-RO*](/uc/layer-0-idealized-setup/f-ro/index.qmd) is a functionality, and a random oracle is about as local and as hardness-flavoured a primitive as exists. What makes it functionality-shaped is not that it is hard but that it is **shared**: every party queries the *same* oracle, the oracle remembers, and consistency across parties is a guarantee no party could give itself. Likewise [*G-RO*](/uc/layer-0-idealized-setup/g-ro/index.qmd), [*F-Rand*](/uc/layer-0-idealized-setup/f-rand/index.qmd) — a source whose draws are shared and erasable — and [*G-GG*](/uc/layer-0-idealized-setup/g-gg/index.qmd). Sharedness is the property that admits idealization. Hardness is not.
+
+**What a one-way function is actually used for, and where the UC statement lives.** A one-way function is a *hypothesis*, and hypotheses appear in UC as assumptions on a realization, not as functionalities in a hybrid model. "$\Pi$ realizes $\mathcal{F}$ assuming one-way functions exist" is a perfectly good UC theorem; "$\Pi$ realizes $\mathcal{F}$ in the $\mathcal{F}_{\mathsf{OWF}}$-hybrid model" is not a theorem anyone needs, because the hybrid would be realizable by the party itself with no interaction.
+
+**This is the same shape of argument as three other entries here**, and the family is worth seeing together: [*F-eqv*](/uc/layer-4-commitments-proofs/f-eqv/index.qmd) — equivocability is a property of a scheme, and what equivocates is the simulator; [*F-NMCOM*](/uc/layer-4-commitments-proofs/f-nmcom/index.qmd) — UC security already implies non-malleability, so the box would assert what [*F-COM*](/uc/layer-4-commitments-proofs/f-com/index.qmd) gives; and `f-snark` — succinctness bounds a proof string's length, and an ideal functionality has no proof strings. In each case a property of a *scheme* was mistaken for an object a functionality could name.
+
+## What would resolve this
+
+1. **A paper that prints one.** If someone writes down $\mathcal{F}_{\mathsf{OWF}}$ and proves something with it, this page becomes an ordinary entry. The bar is the second half: a box nobody hybridizes against is a definition without a use.
+2. **Retire the slot.** The three siblings — [*F-CRHF*](/uc/layer-2-crypto-library-symmetric/f-crhf/index.qmd), [*F-PRG*](/uc/layer-2-crypto-library-symmetric/f-prg/index.qmd), [*F-MHF*](/uc/layer-2-crypto-library-symmetric/f-mhf/index.qmd) — are in the same position, and one page making the argument once might serve a reader better than four making it four times. That is an editorial decision about what the 104 slots are for, and a transcription cannot make it.
+
+## Formal artifacts
+
+No machine-checked formalization yet, and none is possible before there is a definition to formalize.
+
+*References:*
+
+- Küsters and Tuengerthal. [*Ideal key derivation and encryption in simulation-based security*](https://eprint.iacr.org/2010/295). In Topics in Cryptology – CT-RSA 2011, volume 6558 of LNCS, pages 161–179, 2011. **The evidence above**: $\mathcal{F}_{\mathsf{crypto}}$'s twenty-one items are Figures 4–6, pp. 30–32 of revision `20101011:201701`, and none of them is a one-way function. The design principle quoted — that users hold pointers rather than keys, "since otherwise no security guarantees could be provided" — is §3.1, p. 4. **Added to this page's references by this entry**; the page previously cited nothing.
+- Badertscher, Maurer, Tschudi, and Zikas. [*Bitcoin as a transaction ledger: A composable treatment*](https://eprint.iacr.org/2017/149). In Advances in Cryptology – CRYPTO 2017, Part I, 2017. Cited for the contrast: its Figure 3 is the local random-oracle functionality this site carries as [*F-RO*](/uc/layer-0-idealized-setup/f-ro/index.qmd), and it is the worked example of a hardness-flavoured primitive that *does* get a box, because it is shared. **Added by this entry.**

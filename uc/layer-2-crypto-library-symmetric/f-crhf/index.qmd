@@ -2,9 +2,38 @@
 title: "F-CRHF — Collision-resistant hashing"
 status: "Open"
 layer: 2
-definition: "Not yet written"
+definition: "No canonical definition"
 ---
 
 *F-CRHF* (Collision-resistant hashing) is part of *Cryptographic Library and Symmetric Primitives* in the UC functionality encyclopedia. Status: open — no accepted UC formulation exists yet.
 
-This is one of several purely local, hardness-based primitives (alongside *F-OWF*, *F-PRG*, and *F-MHF*) with no cross-party interface to idealize — the UC composition theorem gives nothing here that a standard hybrid argument doesn't already provide. It's included in this encyclopedia only to record that absence explicitly.
+**Collision resistance is the sharpest case in this family, because here the obstruction is not "nothing to withhold" but something stronger: the property is a statement about what *no one* can find, and a functionality can only say what it *does*.** A box that answered hash queries from a lazily-sampled injective table would be a random oracle, not a collision-resistant hash — it would give preimage resistance, unpredictability and indifferentiability for free, all of which real collision-resistant hashing does not have. A box that ran a fixed function $H$ would guarantee nothing, since the caller can run $H$ itself. There is no intermediate object: collision resistance is exactly the gap between those two, and it is a computational statement about an adversary rather than a behaviour a machine can exhibit.
+
+This page exists to record that, because "there is no box" is a real finding about the literature.
+
+## Why there is no box
+
+**The evidence is not an absence of searching; it is a positive design decision, made by the people best placed to make it.** Küsters and Tuengerthal's $\mathcal{F}_{\mathsf{crypto}}$ is the most complete ideal cryptographic library in the UC literature, and this site carries it as [*F-crypto*](/uc/layer-2-crypto-library-symmetric/f-crypto/index.qmd) with two of its items broken out as [*F-MAC*](/uc/layer-2-crypto-library-symmetric/f-mac/index.qmd) and [*F-KDF*](/uc/layer-2-crypto-library-symmetric/f-kdf/index.qmd). Its interface, in full: symmetric key generation, public-key requests, nonce generation, pre-shared keys, encryption and decryption under symmetric and public keys, key derivation, MAC computation and verification, signing and verification, store, retrieve, equality test, and corruption requests. Twenty-one items. **No one-way function, no pseudorandom generator, no collision-resistant hash, no memory-hard function.** A paper whose entire purpose is to idealize a crypto library, extending an earlier encryption functionality with key derivation, MACs, signatures and nonces, declined to add any of the four.
+
+**And the reason is visible in its own design.** The paper explains that users of $\mathcal{F}_{\mathsf{crypto}}$ "do not get their hands on the actual symmetric keys, but only on pointers to these keys, since otherwise no security guarantees could be provided". That is what an ideal functionality *is*: a box that can make a guarantee because it withholds something — the key, the plaintext, the randomness — and hands back a handle. Idealization needs a secret to keep.
+
+**Where an "ideal hash" does appear, it is a random oracle wearing the wrong name.** Papers that need a hash inside an ideal world reach for one of two things: the random oracle — this site's [*F-RO*](/uc/layer-0-idealized-setup/f-ro/index.qmd) and [*G-RO*](/uc/layer-0-idealized-setup/g-ro/index.qmd) — or a deterministic ideal map implemented by a distributed oracle, which as one such treatment puts it "models only collision resistance but no other properties of real hash functions". That caveat is the whole difficulty stated from the other side: an idealization strong enough to be a functionality is strictly stronger than the assumption being idealized, and one weak enough to match the assumption is not a functionality at all.
+
+**The gap is not academic, and this encyclopedia has already met it.** [*F-PIR*](/uc/layer-5-oblivious-transfer/f-pir/index.qmd)'s first realization theorem reads "Let $H$ be a collision-resistant hash function family. The protocol $\Pi_{\mathsf{Triv\text{-}VPIR}}$ UC-realizes $\mathcal{F}_{\mathsf{VPIR}}$…" — a hypothesis on the *realization*, not a hybrid functionality. So does [*F-ORAM*](/uc/layer-5-oblivious-transfer/f-oram/index.qmd)'s Theorem 3. That is where collision resistance lives in a UC statement, and it is a perfectly comfortable place for it to live.
+
+**Same shape as three other entries here.** [*F-eqv*](/uc/layer-4-commitments-proofs/f-eqv/index.qmd), [*F-NMCOM*](/uc/layer-4-commitments-proofs/f-nmcom/index.qmd) and `f-snark` each record a property of a *scheme* being mistaken for an object a functionality could name. [*F-OWF*](/uc/layer-2-crypto-library-symmetric/f-owf/index.qmd), [*F-PRG*](/uc/layer-2-crypto-library-symmetric/f-prg/index.qmd) and [*F-MHF*](/uc/layer-2-crypto-library-symmetric/f-mhf/index.qmd) are this page's immediate siblings.
+
+## What would resolve this
+
+1. **A paper that prints one and uses it** — where "uses it" means a protocol proved in its hybrid model, not a definition stated and set aside. The hard part is exhibiting a box that is weaker than a random oracle and stronger than "run $H$ yourself".
+2. **Retire the slot**, or merge the four siblings into one page. An editorial decision, not a transcription's to make.
+
+## Formal artifacts
+
+No machine-checked formalization yet, and none is possible before there is a definition to formalize.
+
+*References:*
+
+- Küsters and Tuengerthal. [*Ideal key derivation and encryption in simulation-based security*](https://eprint.iacr.org/2010/295). In Topics in Cryptology – CT-RSA 2011, volume 6558 of LNCS, pages 161–179, 2011. **The evidence above**: $\mathcal{F}_{\mathsf{crypto}}$'s twenty-one items are Figures 4–6, pp. 30–32 of revision `20101011:201701`, and none of them is a hash function — although MACs, signatures and key derivation, all of which are built from hashes in practice, are all there. **Added to this page's references by this entry**; the page previously cited nothing.
+- Badertscher, Maurer, Tschudi, and Zikas. [*Bitcoin as a transaction ledger: A composable treatment*](https://eprint.iacr.org/2017/149). In Advances in Cryptology – CRYPTO 2017, Part I, 2017. Cited for the contrast: its Figure 3 is the local random oracle ([*F-RO*](/uc/layer-0-idealized-setup/f-ro/index.qmd)) and its Figure 4 the query-bounding wrapper — the idealization papers actually reach for when they need a hash inside an ideal world. **Added by this entry.**
+- Guskind, Hamlin, Little, Roche, and Varia. [*Single-server verifiable PIR with updates and universally composable security*](https://eprint.iacr.org/2026/1651). 2026. Cited for the worked example of where collision resistance sits in a UC statement — a hypothesis on the realization (its Theorem 1), never a hybrid. Its functionality is on [*F-PIR*](/uc/layer-5-oblivious-transfer/f-pir/index.qmd). **Added by this entry.**

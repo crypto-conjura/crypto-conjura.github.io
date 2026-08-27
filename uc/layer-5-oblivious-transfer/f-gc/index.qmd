@@ -1,10 +1,35 @@
 ---
 title: "F-GC — Garbled circuit"
-status: "Emerging"
+status: "Open"
 layer: 5
-definition: "Not yet written"
+definition: "No canonical definition"
 ---
 
-*F-GC* (Garbled circuit) is part of *Oblivious Transfer and Correlated Randomness* in the UC functionality encyclopedia. Status: an emerging formulation, still an active area of research.
+*F-GC* (Garbled circuit) is part of *Oblivious Transfer and Correlated Randomness* in the UC functionality encyclopedia. Status: open — no accepted UC formulation exists yet. **The stub said "emerging"; corrected by this entry.**
 
-Information about this functionality's precise definition, known realizations, properties, and any formal artifacts has not been added yet.
+**A garbled circuit is a technique for realizing a functionality, not a functionality.** It is a randomized encoding: you garble $f$ and an input, hand both to someone, and they learn $f(x)$ and nothing else. Stated in UC, "they learn $f(x)$ and nothing else" *is* secure function evaluation — and what garbling contributes is a way to build it, in the [*F-OT*](/uc/layer-5-oblivious-transfer/f-ot/index.qmd)-hybrid model, with one round and no interaction after the first message. The ideal object above a garbling scheme is therefore [*F-fairSFE*](/uc/layer-6-secret-sharing-mpc/f-fairsfe/index.qmd) or [*F-MPC*](/uc/layer-6-secret-sharing-mpc/f-mpc/index.qmd); the garbling is inside the protocol.
+
+That is the whole of the argument, and it is the same one this encyclopedia has already made three times.
+
+## Why there is no box
+
+**The property a garbling scheme has is a property of the *encoding*, and a functionality has no encodings.** Bellare, Hoang and Rogaway's treatment names three security notions for garbling schemes — privacy, obliviousness and authenticity — and every one of them is a game about *what the garbled circuit and its input encoding reveal*. An ideal functionality has neither: it computes $f(x)$ and returns it. There is no garbled string for a box to bound the leakage of, because a box does not produce one.
+
+**Compare `f-snark`, which this site records for exactly this reason.** Succinctness bounds the length of a proof string, and an ideal functionality has no proof strings whose length it could bound; that slot carries $\mathcal{F}_{\textsc{weak-nizk}}$ instead, the one genuinely distinct object in its citations. [*F-eqv*](/uc/layer-4-commitments-proofs/f-eqv/index.qmd) makes the same move for equivocability — a commitment box stores the value directly and has no ciphertext to reinterpret, so equivocation is what the *simulator* does — and [*F-NMCOM*](/uc/layer-4-commitments-proofs/f-nmcom/index.qmd) for non-malleability, which UC security already implies. Garbling joins that family: privacy, obliviousness and authenticity are all things the ideal world has for free or cannot state.
+
+**What the search found, and why it is not this.** Ben-Efraim prints a functionality called $\mathcal{F}_{\mathsf{GC}}$, "for Constructing a Multiparty Garbled Circuit". It is a real box and it is genuinely useful — but it is a *preprocessing* functionality tied to one construction: it assigns each party a global offset $\Delta^{i}_{p}$ per prime modulus, a permutation element $\lambda_\omega$ and a zero key $k^{i}_\omega$ per wire, and computes garbled rows "according to the gate equations in Sections 3, 4, and Appendix A". Every one of those is a commitment to a particular mixed-modulus half-gate scheme. Transcribing it under the bare title "Garbled circuit" would be exactly the failure the sourcing discipline here warns against — "a 2024 paper that bends the functionality to fit its own protocol is *less* appropriate than the 2007 restatement everyone builds on" — except that here there is no restatement everyone builds on, because there is nothing general to restate.
+
+## What would resolve this
+
+1. **A general garbling functionality that is not an SFE functionality in disguise.** It would have to expose the garbled circuit as an object — which means committing to a representation, which is the thing garbling schemes vary. Nobody has found a use for that, and the burden is to find one rather than to write it.
+2. **Retitle the slot to name the construction-specific box.** If the encyclopedia wants Ben-Efraim et al.'s $\mathcal{F}_{\mathsf{GC}}$, the page should be called something like "multiparty garbling preprocessing" and say so. That is a naming judgment, of the kind `f-cred` made when it carried a DAA functionality.
+3. **Retire the slot**, on the grounds that the ideal object is [*F-fairSFE*](/uc/layer-6-secret-sharing-mpc/f-fairsfe/index.qmd) and the garbling is protocol machinery.
+
+## Formal artifacts
+
+No machine-checked formalization yet, and none is possible before there is a definition to formalize.
+
+*References:*
+
+- Ben-Efraim. [*On multiparty garbling of arithmetic circuits*](https://eprint.iacr.org/2017/1186). 2017. Prints $\mathcal{F}_{\mathsf{GC}}$ (Figure 1) — the closest printed thing to this page's title, and a preprocessing functionality specific to its own mixed-modulus half-gate construction, as described above. Its garbled circuits are "secure in the semi-honest model", which is a second reason not to put it under a bare title. Recorded as the closest candidate and deliberately not transcribed. **Added to this page's references by this entry**; the page previously cited nothing.
+- Bellare, Hoang, and Rogaway. [*Foundations of garbled circuits*](https://eprint.iacr.org/2012/265). In 19th ACM Conference on Computer and Communications Security (CCS), 2012. The general treatment, and the reason this page has no box. Its first sentence is this entry's argument in the authors' own words: "Garbled circuits, a classical idea rooted in the work of Andrew Yao, have long been understood as a cryptographic technique, not a cryptographic goal." What they cull out is a *scheme*, with a syntax and game-based notions of privacy, obliviousness and authenticity — all properties of the encoding rather than of the computed result — and they note that privacy alone "suffices for two-party secure function evaluation", which is where the ideal object actually sits. **Added by this entry.**

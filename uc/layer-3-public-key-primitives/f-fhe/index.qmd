@@ -1,16 +1,35 @@
 ---
-title: "F-FHE — Threshold FHE decryption"
-status: "Canonical"
+title: "F-FHE — Homomorphic evaluation"
+status: "Open"
 layer: 3
-definition: "Not yet written"
+definition: "No canonical definition"
 ---
 
-*F-FHE* (Threshold FHE decryption) is part of *Public-Key Primitives, Key Exchange, Messaging* in the UC functionality encyclopedia. Status: a canonical, well-established UC functionality.
+*F-FHE* (Homomorphic evaluation) is part of *Public-Key Primitives, Key Exchange, Messaging* in the UC functionality encyclopedia. Status: open — no accepted UC formulation exists yet. **The stub said "canonical"; corrected by this entry, and the correction is the entry's point.**
 
-Until recently this functionality was open; a 2025 paper on high-throughput universally composable threshold FHE decryption moved it from open to canonical, retiring one of the field's longest-standing gaps.
+**This page had already been half-corrected once, and this entry finishes the job.** It used to say that a 2025 paper on threshold FHE decryption "moved it from open to canonical, retiring one of the field's longest-standing gaps". A check on 21 August 2026 established that the cited paper prints two functionalities and that both belong elsewhere — $\mathcal{F}_{\mathsf{ABB}}$ on [*F-ABB*](/uc/layer-6-secret-sharing-mpc/f-abb/index.qmd) and $\mathcal{F}_{\mathsf{Decrypt}}$ on [*F-thdec*](/uc/layer-6-secret-sharing-mpc/f-thdec/index.qmd) — leaving this slot needing "a forward search for a paper that prints an actual FHE-evaluation functionality". That search has now been run, and it did not find one. The status is corrected to *open* and the title to name the thing that is missing: **homomorphic evaluation**, not threshold decryption.
 
-Checked 21 August 2026: the paper below prints two functionalities, and both belong elsewhere. $\mathcal{F}_{\mathsf{ABB}}$ is [*F-ABB*](/uc/layer-6-secret-sharing-mpc/f-abb/index.qmd)'s object (already written); $\mathcal{F}_{\mathsf{Decrypt}}$ (Figure 2) is [*F-thdec*](/uc/layer-6-secret-sharing-mpc/f-thdec/index.qmd)'s (already written, box and all — the two independently converge almost line for line, confirming it's the right home). Neither is a general FHE functionality: $\mathcal{F}_{\mathsf{Decrypt}}$ decrypts one already-computed LWE ciphertext, and says nothing about the homomorphic evaluation that produced it. This slot still needs a forward search for a paper that actually prints an FHE-evaluation functionality, not just threshold decryption of its output; the citation below is kept because it correctly motivates the *decryption* half, but on its own it cannot supply this page's box.
+## Why there is no box
+
+**Decryption got a functionality and evaluation did not, and the asymmetry is not an accident.** Threshold decryption is a *protocol* — several parties hold shares, they interact, a plaintext comes out — so it has the shape a functionality wants: parties, inputs, a guarded output, a corruption model. [*F-thdec*](/uc/layer-6-secret-sharing-mpc/f-thdec/index.qmd) is exactly that, and it is written up here. Homomorphic evaluation is the opposite: **one party, no interaction, no secret.** A server holding ciphertexts computes on them and holds the result. Nothing crosses a trust boundary, nothing is withheld from anyone who did not already lack it, and the correctness statement — that $\mathsf{Eval}(f, \mathsf{Enc}(x))$ decrypts to $f(x)$ — is a property of the *scheme*, checkable without any adversary at all.
+
+**The ideal object above homomorphic evaluation already exists, and it is the arithmetic black box.** [*F-ABB*](/uc/layer-6-secret-sharing-mpc/f-abb/index.qmd) is what "compute on data you cannot see" looks like as a functionality: parties feed in values, ask for operations on handles, and get out what they are entitled to. FHE is one way to *realize* it — as the 2025 paper's own architecture shows, running $\Pi_{\mathsf{Decrypt}}$ in the $\mathcal{F}_{\mathsf{ABB}}$-hybrid model. A separate $\mathcal{F}_{\mathsf{FHE}}$ sitting between them would have no one to serve.
+
+**The composability problem FHE actually has is not a UC problem.** Micciancio's *Fully Composable Homomorphic Encryption* takes up the right question — that the traditional definition of FHE "is not composable, i.e., it does not guarantee that evaluating two (or more) homomorphic computations in a sequence produces correct results" — and answers it with a stronger *game-based* definition of the scheme. Checked directly: the paper contains no ideal functionality and does not work in the UC framework. So the field's own composability repair for FHE was made at the level of the primitive, not the framework, which is further evidence that the functionality is not the missing piece.
+
+**Same shape as three other entries here.** [*F-eqv*](/uc/layer-4-commitments-proofs/f-eqv/index.qmd), [*F-NMCOM*](/uc/layer-4-commitments-proofs/f-nmcom/index.qmd), `f-snark` and [*F-GC*](/uc/layer-5-oblivious-transfer/f-gc/index.qmd) each record a property of a *scheme* being mistaken for an object a functionality could name. Homomorphism joins them.
+
+## What would resolve this
+
+1. **A paper that prints an evaluation functionality and hybridizes against it.** The burden is the second half: it would have to say what its box gives that [*F-ABB*](/uc/layer-6-secret-sharing-mpc/f-abb/index.qmd) does not.
+2. **Retitle the slot to threshold FHE decryption and merge it into [*F-thdec*](/uc/layer-6-secret-sharing-mpc/f-thdec/index.qmd)**, which is where the printed object already lives — the two pages would otherwise carry one box, the duplicate this encyclopedia has rejected before.
+3. **Retire the slot** on the grounds that the ideal object is the arithmetic black box.
+
+## Formal artifacts
+
+No machine-checked formalization yet, and none is possible before there is a definition to formalize.
 
 *References:*
 
-- Zyskind et al. [*High-throughput universally composable threshold FHE decryption*](https://eprint.iacr.org/2025/1781). In ACM Conference on Computer and Communications Security (CCS), 2025. Its $\mathcal{F}_{\mathsf{ABB}}$ and $\mathcal{F}_{\mathsf{Decrypt}}$ belong to F-ABB and F-thdec respectively, not to this page.
+- Zyskind, Zarchy, Leibovich, and Peikert. [*High-throughput universally composable threshold FHE decryption*](https://eprint.iacr.org/2025/1781). In ACM Conference on Computer and Communications Security (CCS), 2025. This page's original citation, kept because it correctly motivates the *decryption* half. Its $\mathcal{F}_{\mathsf{ABB}}$ (Figure 1) is [*F-ABB*](/uc/layer-6-secret-sharing-mpc/f-abb/index.qmd)'s object and its $\mathcal{F}_{\mathsf{Decrypt}}$ (Figure 2) is [*F-thdec*](/uc/layer-6-secret-sharing-mpc/f-thdec/index.qmd)'s — both written up, neither belonging here. $\mathcal{F}_{\mathsf{Decrypt}}$ decrypts one already-computed LWE ciphertext and says nothing about the homomorphic evaluation that produced it.
+- Micciancio. [*Fully composable homomorphic encryption*](https://eprint.iacr.org/2024/1545). IACR Communications in Cryptology, 2(1), 2025. **The forward search's main result, and a negative one for this page.** It addresses FHE's genuine composability problem — that the standard definition does not guarantee correctness under sequential homomorphic evaluation — and does so with a stronger game-based definition of the scheme. Checked directly against the text: no ideal functionality, and no use of the UC framework. **Added to this page's references by this entry.**

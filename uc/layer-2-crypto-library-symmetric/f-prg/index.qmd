@@ -2,9 +2,37 @@
 title: "F-PRG — Pseudorandom generator"
 status: "Open"
 layer: 2
-definition: "Not yet written"
+definition: "No canonical definition"
 ---
 
 *F-PRG* (Pseudorandom generator) is part of *Cryptographic Library and Symmetric Primitives* in the UC functionality encyclopedia. Status: open — no accepted UC formulation exists yet.
 
-This is one of several purely local, hardness-based primitives (alongside *F-OWF*, *F-CRHF*, and *F-MHF*) with no cross-party interface to idealize — the UC composition theorem gives nothing here that a standard hybrid argument doesn't already provide. It's included in this encyclopedia only to record that absence explicitly.
+**A pseudorandom generator is the one member of this family that a functionality could idealize — and the idealization already exists under a different name, which is why this slot stays empty.** A box that takes a seed and returns a stretched string *does* have a secret to keep: the seed. Idealize it properly and the output is uniform, so what you have written down is a source of uniform bits. That is [*F-Rand*](/uc/layer-0-idealized-setup/f-rand/index.qmd) — which this site carries, with an erasure interface — and it is strictly stronger than any generator, because it needs no seed at all. Idealize it improperly, by having the box run a fixed $G$ on the caller's own seed, and it guarantees nothing the caller could not compute alone.
+
+So the slot is squeezed from both sides: the faithful idealization *is* a randomness source, and anything weaker is not a functionality. Pseudorandomness is what you assume when you cannot have [*F-Rand*](/uc/layer-0-idealized-setup/f-rand/index.qmd); it is not a separate ideal object.
+
+## Why there is no box
+
+**The evidence is not an absence of searching; it is a positive design decision, made by the people best placed to make it.** Küsters and Tuengerthal's $\mathcal{F}_{\mathsf{crypto}}$ is the most complete ideal cryptographic library in the UC literature, and this site carries it as [*F-crypto*](/uc/layer-2-crypto-library-symmetric/f-crypto/index.qmd) with two of its items broken out as [*F-MAC*](/uc/layer-2-crypto-library-symmetric/f-mac/index.qmd) and [*F-KDF*](/uc/layer-2-crypto-library-symmetric/f-kdf/index.qmd). Its interface, in full: symmetric key generation, public-key requests, nonce generation, pre-shared keys, encryption and decryption under symmetric and public keys, key derivation, MAC computation and verification, signing and verification, store, retrieve, equality test, and corruption requests. Twenty-one items. **No one-way function, no pseudorandom generator, no collision-resistant hash, no memory-hard function.** A paper whose entire purpose is to idealize a crypto library, extending an earlier encryption functionality with key derivation, MACs, signatures and nonces, declined to add any of the four.
+
+**And the reason is visible in its own design.** The paper explains that users of $\mathcal{F}_{\mathsf{crypto}}$ "do not get their hands on the actual symmetric keys, but only on pointers to these keys, since otherwise no security guarantees could be provided". That is what an ideal functionality *is*: a box that can make a guarantee because it withholds something — the key, the plaintext, the randomness — and hands back a handle. Idealization needs a secret to keep.
+
+**Where a PRG appears in a UC statement, it is a hypothesis on a realization.** The clearest example on this site is in the Signal decomposition: "Assume that PRG is a secure length-doubling pseudorandom generator. Then protocol $\Pi_{\mathsf{mKE}}$ …", the theorem behind [*F-fsAEAD*](/uc/layer-2-crypto-library-symmetric/f-fsaead/index.qmd)'s layer. The generator is an assumption discharged in the proof, and the ideal object above it is a key-exchange functionality. That is the normal arrangement and it works.
+
+**The counterexample that proves the rule.** [*F-RO*](/uc/layer-0-idealized-setup/f-ro/index.qmd) is a functionality and a random oracle is at least as "local" a primitive as a generator. What makes it functionality-shaped is that it is **shared** — every party queries the same oracle and it remembers, which is a guarantee no party can give itself. [*F-Rand*](/uc/layer-0-idealized-setup/f-rand/index.qmd) is shared in the same way: its counter is common to every party the instance serves, so two parties never draw the same entry. Sharedness admits idealization; hardness does not.
+
+**Same shape as its three siblings** — [*F-OWF*](/uc/layer-2-crypto-library-symmetric/f-owf/index.qmd), [*F-CRHF*](/uc/layer-2-crypto-library-symmetric/f-crhf/index.qmd), [*F-MHF*](/uc/layer-2-crypto-library-symmetric/f-mhf/index.qmd) — and as [*F-eqv*](/uc/layer-4-commitments-proofs/f-eqv/index.qmd), [*F-NMCOM*](/uc/layer-4-commitments-proofs/f-nmcom/index.qmd) and `f-snark`, each of which records a property of a scheme mistaken for an object a functionality could name.
+
+## What would resolve this
+
+1. **A paper that prints one and proves a protocol in its hybrid model.** It would have to explain what its box gives that [*F-Rand*](/uc/layer-0-idealized-setup/f-rand/index.qmd) does not, and that is the hard part rather than the writing.
+2. **Retire the slot**, or merge the four siblings into one page. An editorial decision, not a transcription's to make.
+
+## Formal artifacts
+
+No machine-checked formalization yet, and none is possible before there is a definition to formalize.
+
+*References:*
+
+- Küsters and Tuengerthal. [*Ideal key derivation and encryption in simulation-based security*](https://eprint.iacr.org/2010/295). In Topics in Cryptology – CT-RSA 2011, volume 6558 of LNCS, pages 161–179, 2011. **The evidence above**: $\mathcal{F}_{\mathsf{crypto}}$'s twenty-one items are Figures 4–6, pp. 30–32 of revision `20101011:201701`. The design principle quoted — that users hold pointers rather than keys, "since otherwise no security guarantees could be provided" — is §3.1, p. 4. Notably, key *derivation* is there — an operation with the same shape as stretching a seed — and it is a functionality precisely because the derived key stays inside the box as a pointer. **Added to this page's references by this entry**; the page previously cited nothing.
+- Canetti, Jain, Swanberg, and Varia. [*Universally composable end-to-end secure messaging*](https://eprint.iacr.org/2022/376). In Advances in Cryptology – CRYPTO 2022, volume 13508 of LNCS, pages 3–33, 2022. Cited for the worked example of where a PRG sits in a UC statement: its Theorem 5 assumes a length-doubling PRG in order to realize a functionality, and does not hybridize against one. **Added by this entry.**

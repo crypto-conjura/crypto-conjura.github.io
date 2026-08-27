@@ -2,9 +2,40 @@
 title: "F-MHF — Memory-hard function, password hashing"
 status: "Open"
 layer: 2
-definition: "Not yet written"
+definition: "No canonical definition"
 ---
 
 *F-MHF* (Memory-hard function, password hashing) is part of *Cryptographic Library and Symmetric Primitives* in the UC functionality encyclopedia. Status: open — no accepted UC formulation exists yet.
 
-This is one of several purely local, hardness-based primitives (alongside *F-OWF*, *F-PRG*, and *F-CRHF*) with no cross-party interface to idealize — the UC composition theorem gives nothing here that a standard hybrid argument doesn't already provide. It's included in this encyclopedia only to record that absence explicitly. It also sits on its own boundary: a memory-hard function's security statement is a cost lower bound rather than an indistinguishability guarantee, which resists UC formulation for a third, independent reason.
+**This slot is empty for two independent reasons, and the second one is the interesting one.** The first it shares with its siblings [*F-OWF*](/uc/layer-2-crypto-library-symmetric/f-owf/index.qmd), [*F-CRHF*](/uc/layer-2-crypto-library-symmetric/f-crhf/index.qmd) and [*F-PRG*](/uc/layer-2-crypto-library-symmetric/f-prg/index.qmd): a locally computed function has nothing to withhold, so a box around it is the caller's own computation with extra steps.
+
+**The second is that memory-hardness is not a security property of the kind UC can express at all.** Every guarantee in this encyclopedia has the same form — an environment cannot *distinguish* the ideal world from the real one — and a memory-hard function's guarantee is not a distinguishing statement. It is a **cost lower bound**: that any algorithm computing $f$ must pay some amount of memory, or of cumulative memory over time, whatever else it does. UC's machines are polynomial-time and its equivalence is behavioural. Two machines that compute the same function using wildly different memory are *identical* to a UC environment, so the very thing a memory-hard function promises is invisible to the framework that would have to state it.
+
+This is not a gap that a cleverer functionality closes. It is a mismatch between what the primitive claims and what the model can see.
+
+## Why there is no box
+
+**The evidence is not an absence of searching; it is a positive design decision, made by the people best placed to make it.** Küsters and Tuengerthal's $\mathcal{F}_{\mathsf{crypto}}$ is the most complete ideal cryptographic library in the UC literature, and this site carries it as [*F-crypto*](/uc/layer-2-crypto-library-symmetric/f-crypto/index.qmd) with two of its items broken out as [*F-MAC*](/uc/layer-2-crypto-library-symmetric/f-mac/index.qmd) and [*F-KDF*](/uc/layer-2-crypto-library-symmetric/f-kdf/index.qmd). Its interface, in full: symmetric key generation, public-key requests, nonce generation, pre-shared keys, encryption and decryption under symmetric and public keys, key derivation, MAC computation and verification, signing and verification, store, retrieve, equality test, and corruption requests. Twenty-one items. **No one-way function, no pseudorandom generator, no collision-resistant hash, no memory-hard function.** A paper whose entire purpose is to idealize a crypto library, extending an earlier encryption functionality with key derivation, MACs, signatures and nonces, declined to add any of the four.
+
+**And the reason is visible in its own design.** The paper explains that users of $\mathcal{F}_{\mathsf{crypto}}$ "do not get their hands on the actual symmetric keys, but only on pointers to these keys, since otherwise no security guarantees could be provided". That is what an ideal functionality *is*: a box that can make a guarantee because it withholds something — the key, the plaintext, the randomness — and hands back a handle. Idealization needs a secret to keep.
+
+**What the model would need first.** A composable treatment of memory-hardness would have to add a resource account to the execution model — a notion of what a machine *spends*, not just of what it *outputs* — and then define equivalence up to that account. Frameworks with that shape exist in the constructive-cryptography line, and time-and-memory tradeoffs are studied carefully in idealized models such as the random-oracle model with preprocessing. Neither is the UC framework this encyclopedia is written against, and importing one is a change to the model rather than a new entry in it.
+
+**Where memory-hardness does show up on this site, it is a parameter of a protocol, not of a functionality.** Password hashing is the application, and the UC objects around it are password-based: [*F-aPAKE*](/uc/layer-3-public-key-primitives/f-apake/index.qmd), [*F-saPAKE*](/uc/layer-3-public-key-primitives/f-sapake/index.qmd), [*F-OPRF*](/uc/layer-5-oblivious-transfer/f-oprf/index.qmd), [*F-pwKE*](/uc/layer-3-public-key-primitives/f-pwke/index.qmd). Each bounds the adversary by *number of guesses*, which is a counting statement the framework can make; none bounds it by memory, which is not.
+
+**The counting bound is the honest analogue, and it already exists.** [*G-ledger*](/uc/layer-1-channels-agreement-ledgers/g-ledger/index.qmd)'s source needs proof of work and gets it not by idealizing a hard function but by *wrapping* a random oracle so each party may make at most $q$ queries per round. That wrapper is the closest thing in the UC literature to modelling computational cost, and it is worth noticing what it does: it bounds queries, which the framework can count, rather than memory, which it cannot.
+
+## What would resolve this
+
+1. **A composable framework with a cost model**, and a memory-hardness statement inside it. That is research, not transcription, and it would probably not produce a functionality of the kind the other 103 slots hold.
+2. **A wrapper rather than a functionality**, on the model of the query-bounding wrapper above. This is the more likely route and it would sit oddly under a title beginning "F-".
+3. **Retire the slot.** Of the four siblings this is the strongest candidate, because it fails on two counts rather than one.
+
+## Formal artifacts
+
+No machine-checked formalization yet, and none is possible before there is a definition to formalize.
+
+*References:*
+
+- Küsters and Tuengerthal. [*Ideal key derivation and encryption in simulation-based security*](https://eprint.iacr.org/2010/295). In Topics in Cryptology – CT-RSA 2011, volume 6558 of LNCS, pages 161–179, 2011. **The evidence above**: $\mathcal{F}_{\mathsf{crypto}}$'s twenty-one items are Figures 4–6, pp. 30–32 of revision `20101011:201701`. The design principle quoted — that users hold pointers rather than keys, "since otherwise no security guarantees could be provided" — is §3.1, p. 4. **Added to this page's references by this entry**; the page previously cited nothing.
+- Badertscher, Maurer, Tschudi, and Zikas. [*Bitcoin as a transaction ledger: A composable treatment*](https://eprint.iacr.org/2017/149). In Advances in Cryptology – CRYPTO 2017, Part I, 2017. Cited for the query-bounding wrapper $\mathcal{W}^{q}(\mathcal{F}_{\mathsf{RO}})$, Figure 4 — the closest the UC literature comes to modelling computational cost, and an instructive contrast: it bounds a quantity the framework can count. Its ledger is [*G-ledger*](/uc/layer-1-channels-agreement-ledgers/g-ledger/index.qmd). **Added by this entry.**

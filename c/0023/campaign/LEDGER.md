@@ -4,7 +4,7 @@
 **Campaign:** c/0023 — depth 0 — contract: `CONTRACT.md`  
 **Cycle:** 2 (rung R1 reconnaissance) · **Cycle 2 closed:** 2026-08-27  
 **Harness:** `prompts/solve.md` (this repository's HARNESS.md)  
-**First screenful orientation:** Cycle 2 complete: **R1 FROZEN** (ε*_junta(d)=1/(2d), δ(d)=1/(3d), witnesses c₁=1/3, c₂=1; 5/5 blind passes post-triage-clean + blind gate CLEAN). Progress: one rung climbed (R0→R1), five remain (R2–R6). Prover (0023-prover-1) proved lemma chain F1–F4→(M) via Harper edge-isoperimetry; scout R1 micro-sweep killed prior-art candidates; scout deciding-source (KKDWY26) read complete; S5 card written; S3a residual [SOURCE-BLOCKED] lifted. Source queue empty; next gate: HUMAN GATE on frozen proof, then R2 scout→refuter→strategist→prover pipeline.
+**First screenful orientation:** Cycle 2 complete: **R1 FROZEN** (ε*_junta(d)=1/(2d), δ(d)=1/(3d), witnesses c₁=1/3, c₂=1; 5/5 blind passes post-triage-clean + blind gate CLEAN). Progress: one rung climbed (R0→R1), five remain (R2–R6). Prover (0023-prover-1) proved lemma chain F1–F4→(M), with its edge-isoperimetric ingredient **proved inline from scratch, not cited** (the frozen proof cites no external result load-bearingly; its only citation, in Remark 10.1, is non-load-bearing context); scout R1 micro-sweep killed prior-art candidates; scout deciding-source (KKDWY26) read complete; S5 card written; S3a residual [SOURCE-BLOCKED] lifted. Source queue empty; next gate: HUMAN GATE on frozen proof, then R2 scout→refuter→strategist→prover pipeline.
 
 ---
 
@@ -142,6 +142,11 @@ Together: expected profile if ε*(d)=Θ(1/d) and **the conjecture is TRUE with c
 (empty — both strategist requests resolved at [READ] grade on 2026-08-27, and KKDWY26 (the deciding source) fully read on 2026-08-27 cycle 2, resulting in S5 card and S3a residual block lift. Latent, below bar, only if a proof step comes to depend on internal proofs of [Mid04] (quant-ph/0403168) — currently needed only as a single-function lemma cite for S3b.)
 
 **DECLINED:** none.
+
+**Unissued source ids (monotone-id note, §2.2):** **S4 was never issued** — the
+R1 micro-scout (`0023-scout-2`) found nothing that cleared the card bar, so the
+next card took id S5. S4 must never be reused; cycle 3's junta-theorem card is
+S6.
 
 ## RETREAT LOG
 

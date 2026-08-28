@@ -103,37 +103,46 @@ with $c = \tfrac12$. On that summand the lemma is already at the conjectured sha
 On the second it is not, and the obstruction is structural rather than statistical. The family
 $\{h(k,\cdot)\}$ is not universal and cannot be made so --- a universal family on $D$ inputs needs a
 seed of $\Omega(\log D)$ bits, that is $K \ge D^{\Omega(1)}$, whereas this conjecture is of interest
-at $K \approx \log_2 D$ (Vadhan, \emph{Pseudorandomness}, the remark following Theorem~6.18) --- so
-$\gamma$ must be taken over the supports $S$ may pick \emph{after} seeing $H$, and those can be
-chosen to make it large. Fix seeds $k_1,\dots,k_j$ and symbols $r_1,\dots,r_j$ and let $S$ output a
-uniform element of
-\[
-  T \;:=\; \{\, x \in \calD \;:\; H(k_i,x) = r_i \text{ for } i = 1,\dots,j \,\},
-  \qquad |T| \approx D/R^{j} .
-\]
-This is admissible: $S$ reads the whole table, and $\sd$ is drawn only afterwards. On $T$ the $j$
-chosen rows are \emph{constant}, so each contributes its maximum to $\bar c$ and
-$\gamma \ge (R-1)\,j/K$. More generally, confining $j$ rows to a symbol set of size $R/s$ leaves
-$|T| \approx D/s^{j}$ and gives $\gamma \ge (s-1)j/K$; since $(s-1)/\log_2 s$ increases, the best
-choice is $s = \min\{R, D\epsilon\}$. Writing $L := \min\{\log_2 R,\ \log_2 D - \log_2(1/\epsilon)\}$
-for the number of bits that can be pinned per row, the lemma therefore cannot yield better than
-\[
-  \tfrac12\sqrt{\;\epsilon R \;+\; \frac{\bigl(\log_2 D - \log_2(1/\epsilon)\bigr)\bigl(2^{L}-1\bigr)}{L\,K}\;} .
-\]
-The rate in $K$ is the same square root $\delta_{\mathrm{pub}}$ asks for; what the lemma loses is a
-\emph{factor} of about $\sqrt{2^{L}/L}$, which is $L - \log_2 L$ extra bits of seed. For
-$D = 2^{256}$, $R = 2^{64}$ and a source of min-entropy $128$, reaching $\delta = 2^{-32}$ needs
-$\log_2 K \approx 69.5$ under $\delta_{\mathrm{pub}}$ and $127$ by this route.
+at $K \approx \log_2 D$ (Vadhan, \emph{Pseudorandomness}, the remark following Theorem~6.18) --- and
+the source, which reads the whole table before $\sd$ exists, can choose a support on which $\gamma$
+is large. One row suffices, and no probability is needed.
 
-The loss is the Cauchy--Schwarz step $\|v\|_1 \le \sqrt{KR}\,\|v\|_2$ inside the lemma: support
-selection concentrates the deviation $v$ on $j$ of the $K$ rows rather than spreading it over all
-$KR$ cells, and on such a $v$ that step is off by $\sqrt{RK/j}$. For the source above the true
-advantage is $\approx j/K$ while the lemma returns $\approx \tfrac12\sqrt{Rj/K}$. So the conjecture
-is not a corollary of the leftover hash lemma, and its content is the second summand: the price of
-letting the source choose its support after seeing the entire table. The solution note in this
-folder pays that price at the conjectured rate by never passing through a collision probability,
-bounding the $L_1$ distance directly instead. (What is stated here is a limitation --- the lemma
-cannot do better than the displayed bound. Whether it does that well is not claimed.)
+Put $W := \min\{R,\ \lfloor D\epsilon \rfloor\}$ and let $t := \lfloor 1/\epsilon \rfloor$. Fix any
+seed $k_1$ and let $\mathcal{S}$ collect the $R/W$ symbols occurring most often in the row
+$h(k_1,\cdot)$. Those symbols carry at least $D/W \ge t$ of the $D$ inputs, so a set
+$T \subseteq \{x : h(k_1,x) \in \mathcal{S}\}$ with $|T| = t$ exists; let $S$ output a uniform
+element of it, which is $\epsilon$-unpredictable. On $T$ the law of $h(k_1,X)$ is carried by the
+$R/W$ symbols of $\mathcal{S}$, so Cauchy--Schwarz gives $c_{k_1} \ge W/R$, and the same inequality
+gives $c_k \ge 1/R$ for every $k$. Hence
+\[
+  R\bar c - 1 \;\ge\; R\Bigl[\tfrac1K\cdot\tfrac{W}{R} + \tfrac{K-1}{K}\cdot\tfrac1R\Bigr] - 1
+  \;=\; \frac{W-1}{K},
+  \qquad\text{so the lemma returns at least}\quad
+  \frac12\sqrt{\frac{W-1}{K}} .
+\]
+This holds for \emph{every} table, not merely a typical one. Pinning $j$ rows rather than one
+replaces $W-1$ by about $j(W-1)$ and so buys a further $\log_2 j$ bits, usually one or two; the
+one-row form is essentially the whole effect.
+
+The rate in $K$ is therefore the same square root $\delta_{\mathrm{pub}}$ asks for, and what
+separates them is what sits under it: the lemma pays $\sqrt{W}$, a \emph{set size}, where
+$\delta_{\mathrm{pub}}$ pays $\sqrt{\log_2 D}$, a \emph{number of bits}. In seed length that is
+$\log_2 W$ against $\log_2\log_2 D$. For $D = 2^{256}$, $R = 2^{64}$ and a source of min-entropy
+$128$, reaching $\delta = 2^{-32}$ needs $\log_2 K \approx 72$ under $\delta_{\mathrm{pub}}$ and
+$126$ by this route. The gap closes when $W$ does: at $\epsilon = 1/D$ one has $W = 1$ and the bound
+is $0$, correctly, since a source of maximal entropy is uniform on all of $\calD$ and has nothing to
+select; and for a source of min-entropy $254$ over the same $D$ and $R$ the construction shows no
+loss at all.
+
+The cause is the Cauchy--Schwarz step $\|v\|_1 \le \sqrt{KR}\,\|v\|_2$ inside the lemma. Support
+selection concentrates the deviation $v$ on one row out of $K$ rather than spreading it over all
+$KR$ cells, and on such a $v$ that step is off by about $\sqrt{RK}$: for the source above the true
+advantage is $O(1/K)$ while the lemma returns $\tfrac12\sqrt{(W-1)/K}$. So the conjecture is not a
+corollary of the leftover hash lemma, and its content is the second summand: the price of letting
+the source choose its support after seeing the entire table. The solution note in this folder pays
+that price at the conjectured rate by never passing through a collision probability, bounding the
+$L_1$ distance directly instead. (What is stated here is a limitation --- the lemma cannot do better
+than the displayed bound. Whether it does that well is not claimed.)
 \end{remark}
 
 \bigskip

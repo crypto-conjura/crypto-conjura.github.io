@@ -43,14 +43,23 @@ where $\bar\beta$ is the family's mean collision probability on the source's sup
 
 On the **deficiency** term the two routes give the identical estimate. At a flat source on $t = 1/\epsilon$ inputs, $\mathrm{CP} = \epsilon$ and a universal family gives $\tfrac12\sqrt{\epsilon R}$; Lemma 3.2 of the [c/0004](/c/0004/) proof gives $\tfrac12\sqrt{R/t}$, the same quantity. The $1/\sqrt2$ in the theorem is only the floor step $\lfloor 1/\epsilon_{H,z}\rfloor \ge 1/(2\epsilon_{H,z})$ in its assembly. So the leftover hash lemma loses nothing here.
 
-The whole difference is the **selection** term, and the obstruction there is structural rather than statistical. The family $\{H(k,\cdot)\}$ is not universal and cannot be made so, so $\gamma$ must be taken over the supports the source may pick *after* seeing $H$ -- and those can be chosen to make it large. Fix seeds $k_1,\dots,k_j$ and symbols $r_1,\dots,r_j$ and let the source be uniform on
-$$T := \{\, x : H(k_i,x) = r_i,\ i = 1,\dots,j \,\}, \qquad |T| \approx D/R^{j},$$
-which is admissible, since the source reads the whole table and the seed is drawn afterwards. On $T$ those $j$ rows are **constant**, contributing their maximum to the collision probability: $\gamma \ge (R-1)j/K$. Confining $j$ rows to a symbol set of size $R/s$ instead gives $\gamma \ge (s-1)j/K$ with $|T| \approx D/s^j$, and $(s-1)/\log_2 s$ increases, so $s = \min\{R, D\epsilon\}$ is best. With $L := \min\{\log_2 R,\ \log_2 D - \log_2(1/\epsilon)\}$ the lemma cannot yield better than
-$$\tfrac12\sqrt{\;\epsilon R \;+\; \frac{\bigl(\log_2 D - \log_2(1/\epsilon)\bigr)\bigl(2^{L}-1\bigr)}{L\,K}\;}.$$
+The whole difference is the **selection** term, and the obstruction there is structural rather than statistical. The source reads the whole table before the seed exists, so it can pick a support on which $\gamma$ is large -- and one row suffices, with no probability needed anywhere.
 
-**The rate in $K$ is the same square root the conjecture asks for.** What the lemma loses is a *factor* of about $\sqrt{2^L/L}$, which is $L - \log_2 L$ extra bits of seed: for $D = 2^{256}$, $R = 2^{64}$ and a source of min-entropy $128$, reaching $\delta = 2^{-32}$ needs $\log_2 K \approx 69.5$ under the conjectured bound and $127$ by this route. The [Radhakrishnan--Ta-Shma optimum](https://doi.org/10.1137/S0895480197329508) is the former.
+Put $W := \min\{R,\ \lfloor D\epsilon\rfloor\}$ and $t := \lfloor 1/\epsilon\rfloor$. Fix a seed $k_1$ and let $\mathcal{S}$ be the $R/W$ symbols occurring most often in the row $H(k_1,\cdot)$. Those carry at least $D/W \ge t$ inputs, so the source can be taken uniform on a $t$-subset $T$ of them, which is $\epsilon$-unpredictable. On $T$ the law of $H(k_1,X)$ lives on $R/W$ symbols, so Cauchy--Schwarz gives $c_{k_1} \ge W/R$; the same inequality gives $c_k \ge 1/R$ for every $k$. Hence
+$$R\bar c - 1 \;\ge\; R\Bigl[\tfrac1K\tfrac{W}{R} + \tfrac{K-1}{K}\tfrac1R\Bigr] - 1 \;=\; \frac{W-1}{K}, \qquad\text{so the lemma returns at least}\quad \tfrac12\sqrt{\tfrac{W-1}{K}}.$$
+This holds for **every** table, not just a typical one. Pinning $j$ rows instead of one replaces $W-1$ by roughly $j(W-1)$, buying a further $\log_2 j$ bits -- usually one or two, so the one-row form is essentially the whole effect.
 
-The loss is the Cauchy--Schwarz step $\|v\|_1 \le \sqrt{KR}\,\|v\|_2$ inside the lemma. Support selection concentrates the deviation $v$ on $j$ of the $K$ rows -- those rows become point masses -- rather than spreading it over all $KR$ cells, and on such a $v$ that step is off by $\sqrt{RK/j}$: the true advantage for the source above is $\approx j/K$, while the lemma returns $\approx \tfrac12\sqrt{Rj/K}$. That is why the optimal-extractor proofs work in $L_1$ instead, by concentration plus a union bound over flat sources. The [c/0004](/c/0004/) proof takes that route, arriving at it independently. (What is stated here is a limitation: the lemma cannot do better than the displayed bound. Whether it does that well is not claimed.)
+**The rate in $K$ is the same square root the conjecture asks for.** What separates them is what sits under it: the lemma pays $\sqrt{W}$, a *set size*, where the conjecture pays $\sqrt{\log_2 D}$, a *number of bits*. In seed length, $\log_2 W$ against $\log_2\log_2 D$:
+
+| $D$ | $R$ | min-entropy | $\delta$ | $W$ | $\log_2 K$ conjectured | $\log_2 K$ by the lemma |
+|---|---|---|---|---|---|---|
+| $2^{256}$ | $2^{64}$ | 128 | $2^{-32}$ | $2^{64}$ | 72 | 126 |
+| $2^{256}$ | $2^{128}$ | 128 | $2^{-64}$ | $2^{128}$ | 136 | 254 |
+| $2^{256}$ | $2^{64}$ | 254 | $2^{-32}$ | $2^{2}$ | 72 | 63.6 |
+
+The third row is the honest boundary: the loss appears only when $W$ is large, that is when the source has slack *and* the output is long. At $\epsilon = 1/D$ one has $W = 1$ and the bound is $0$ -- correctly, since a source of maximal entropy is uniform on all of $\calD$ and has nothing to select, which is the same phenomenon the [c/0004](/c/0004/) proof records when its own selection term vanishes at $t = D$.
+
+The cause is the Cauchy--Schwarz step $\|v\|_1 \le \sqrt{KR}\,\|v\|_2$ inside the lemma. Support selection concentrates the deviation $v$ on one row out of $K$ instead of spreading it over all $KR$ cells, and there that step is off by about $\sqrt{RK}$: the true advantage for the source above is $O(1/K)$, while the lemma returns $\tfrac12\sqrt{(W-1)/K}$. That is why the optimal-extractor proofs work in $L_1$ instead, by concentration plus a union bound over flat sources; the [c/0004](/c/0004/) proof takes that route, arriving at it independently. (What is stated here is a limitation: the lemma cannot do better than this. Whether it does this well is not claimed.)
 
 ### What is not classical
 

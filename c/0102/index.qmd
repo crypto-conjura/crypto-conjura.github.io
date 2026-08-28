@@ -1,0 +1,189 @@
+---
+id: "0102"
+problem: randomness-complexity-of-mpc
+draft: sources-versus-randomness-blowup
+title: "A Theta(t) Randomness Blowup Is the Price of Minimally Many Random Sources"
+short_title: "Sources vs Randomness Blowup"
+areas: [mpc, information-theoretic]
+topics: [randomness-complexity, random-sources]
+model: standard
+form: tight-bound
+assumption_class: unconditional
+category: research-open
+revision: 1
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: new-idea
+  by: ai
+  note: "The upper-bound half needs a generic transformation turning any randomness-optimal t-private protocol into a t-source one at a factor-t cost, which the source achieves only for the protocols it builds. The lower-bound half is a general randomness lower bound, and the source says plainly that no general characterization of randomness complexity is known and expects this to be of comparable difficulty. The one published intuition for the conjecture is labelled non-rigorous by the source itself."
+status_summary: "Conjecture 13 of the source. Its companion question -- how many parties must be able to toss coins -- is settled exactly by the same paper: t sources for deterministic functionalities, t+1 for randomized ones, even though the adversary may corrupt all of them. What the count costs is not settled. Both halves of the Theta are open."
+status_updated: 2026-08-28
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Couteau, Rosen, Random Sources in Private Computation, IACR ePrint 2023/074, ASIACRYPT 2022", url: "https://eprint.iacr.org/2023/074"}
+  - {cite: "Kushilevitz, Mansour, Randomness in Private Computations, 15th ACM PODC, pages 181-190, 1996"}
+  - {cite: "Chor, Kushilevitz, A Zero-One Law for Boolean Privacy, SIAM Journal on Discrete Mathematics 4(1):36-47, 1991"}
+  - {cite: "Kushilevitz, Ostrovsky, Prouff, Rosen, Thillard, Vergnaud, Lower and Upper Bounds on the Randomness Complexity of Private Computations of AND, TCC 2019, LNCS 11892, pages 386-406"}
+  - {cite: "Ben-Or, Goldwasser, Wigderson, Completeness Theorems for Non-Cryptographic Fault-Tolerant Distributed Computation, 20th ACM STOC, pages 1-10, 1988"}
+statement_sha: "8905b0f4869e89e5f149c3538da1365487ac6b9e1402d373500238af8f40c6a5"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+<!-- topics:start -->
+<div class="cj-tags cj-page-topics"><a class="cj-tag cj-tag-topic" href="/problems/by-topic/random-sources/">Random Sources</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/randomness-complexity/">Randomness Complexity</a></div>
+<!-- topics:end -->
+
+Information-theoretically private multiparty computation needs random coins, and
+a party that can produce good ones needs a well-calibrated physical device. So it
+is worth asking how few of the $n$ parties need one. The source answers that
+exactly — for any deterministic functionality and any $t < n/2$, exactly $t$
+parties need to toss coins, even though the adversary may corrupt all $t$ of
+them — but its protocols pay for the small count, using about $t$ times as many
+coins in total as protocols where everybody may toss. The conjecture is that this
+exchange rate is the true one, for every functionality complex enough to require
+an honest majority: necessary as well as sufficient.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [LaTeX source](latex/main.tex) · Formal statement — *not yet formalized*
+
+**The setting.** Fix $n$ parties computing an $n$-party functionality
+$\mathcal{F}$ over perfectly private authenticated channels, with perfect
+correctness and perfect privacy against a semi-honest, statically chosen
+coalition of at most $t$ parties. Call a party a *source* if it tosses coins;
+the rest are deterministic. Two resources are counted at once: the number of
+sources, and the *randomness complexity*, the total number of coins tossed by
+all parties in the worst case.
+
+**What is settled (the source's Theorem 1 and Table 1).** For every
+deterministic $n$-party functionality and every $t < n/2$ there is a $t$-private
+protocol in which only a fixed set of $t$ parties tosses coins. This matches a
+lower bound of Kushilevitz and Mansour, so $t$ is exact. For randomized
+functionalities the answer is $t+1$, again matching. The surprise is that it
+works at all: with only $t$ sources the adversary can corrupt every party
+capable of generating randomness.
+
+**The two complexity measures.** $R_t$ is the least randomness complexity of a
+$t$-private protocol for $\mathcal{F}$ with no restriction on how many parties
+toss coins. The *$t$-source randomness complexity* is the least randomness
+complexity of a $t$-private protocol that uses at most $t$ sources.
+
+**Conjecture (the source's Conjecture 13, verbatim).** Let $\mathcal{F}$ be an
+$n$-party functionality that cannot be $t$-privately computed for $t \ge n/2$.
+For any $t < n/2$, let $R_t$ be the randomness complexity of $t$-privately
+computing $\mathcal{F}$ (with any number of sources). Then the $t$-source
+randomness complexity of $\mathcal{F}$ is $\Theta(t \cdot R_t)$.
+
+**The hypothesis is a known dividing line.** "Cannot be $t$-privately computed
+for $t \ge n/2$" is the honest-majority side of the Chor–Kushilevitz zero-one
+law, and it is the same line at which BGW's AND-gate sub-protocol needs an honest
+majority. It is a property of the functionality, not of a protocol.
+
+**Where the factor $t$ comes from.** In the source's protocols, an outer GMW
+protocol is combined with an inner BGW protocol so that the $t$ sources appear
+only in sub-computations that touch no input. Every coin a deterministic party
+would have tossed is instead assembled from coins sent by *all* $t$ sources,
+because that party cannot know which of the sources the adversary has corrupted.
+
+**How the source states it.** Page 4: "Our conjecture states that, for such
+functionalities, a $\Theta(t)$ blowup in randomness complexity is necessary and
+sufficient to minimize the number of random sources. We view this conjecture as
+an interesting open question." And page 15: "We view the proof of Conjecture 13
+an interesting open question."
+
+## Proof
+
+View PDF — *no proof written yet* · LaTeX source — *no proof written yet* · Formal proof — *not yet formalized*
+
+Open in both directions, and the two directions are different problems.
+
+**The upper bound $O(t \cdot R_t)$.** The source realises a factor $t$ in the
+protocols it constructs, but not as a generic transformation: what is missing is
+a compiler that takes an arbitrary randomness-optimal $t$-private protocol and
+produces a $t$-source one at $t$ times the coin count. Anyone attacking this
+half should say whether they have the generic statement or only a family.
+
+**The lower bound $\Omega(t \cdot R_t)$.** The harder half, and the source says
+why: "Characterizing the minimal amount of randomness required for securely
+computing a functionality is non-trivial in general, and indeed, no such general
+characterization is known. We expect that relating the randomness complexity to
+the number of sources might be of comparable difficulty in general." A
+randomness lower bound that holds for every functionality on the honest-majority
+side of the dichotomy would be a general result of a kind the literature has
+almost none of.
+
+**The published intuition, and its status.** The source offers a reason to
+expect the factor, prefaced by a warning it means literally: "We warn the reader
+that what follows is a purely intuitive reasoning: our goal here is to develop
+an intuition about which conjecture can reasonably be expected." The reasoning:
+in any protocol for a nonlinear functionality some parties receive messages
+hiding intermediate values behind coins. If the adversary corrupts some sources
+together with such a party, the coins masking a message sent by a deterministic
+party must be uncorrupted and can come only from sources — and the sender cannot
+know which sources are clean, so it appears forced to aggregate from all $t$.
+The argument visibly breaks for linear functionalities, where shares are
+manipulated locally and no such message exists.
+
+**Checked against the literature, 2026-08-28.** The conjecture appears
+unresolved; the nearest follow-up located, *Randomness in Private Sequential
+Stateless Protocols* (ePrint 2024/1448), studies a different restriction on
+protocols rather than on who holds a source. Targeted check on this line, not an
+exhaustive sweep.
+
+## Discussion
+
+**XOR looks like a counterexample and is not.** The best known upper bound on
+the randomness complexity of $t$-private $n$-party XOR, due to Kushilevitz and
+Mansour, is achieved using exactly $t$ sources — minimal sources at no randomness
+cost. The source notes this "seemingly contradicts the intuition that $t$-source
+private computation should require more randomness than private computation
+without limitations on the number of sources". XOR is linear, so it falls
+outside the conjecture's hypothesis, and excluding it is exactly what the
+honest-majority restriction does.
+
+**A positive result at constant $t$, also compatible.** The source gives a
+$1$-private $n$-party AND protocol using a *single* source and $6$ random bits,
+improving the two-source, $8$-bit protocol of Kushilevitz, Ostrovsky, Prouff,
+Rosén, Thillard and Vergnaud in both counts at once. That does not touch the
+conjecture: "Note that $t$ being a constant captures a setting where matching the
+best known randomness complexity would not contradict Conjecture 13." A
+$\Theta(t)$ factor predicts nothing when $t = O(1)$.
+
+**Relation to [c/0087](/c/0087/).** The sibling statement in this hub asks for
+the exact randomness complexity of $t$-secure XOR — one function, no restriction
+on sources. This one asks for the exchange rate between two resources, for a
+whole class of functions, and explicitly excludes XOR. They are independent: a
+resolution of either says nothing about the other.
+
+**What a reviewer should be suspicious of, in order.** First, whether a claimed
+result establishes the upper bound, the lower bound, or both — $\Theta$ hides two
+claims. Second, whether the functionality in question really satisfies the
+hypothesis, since it is a statement about $\mathcal{F}$ and not about a protocol
+for it. Third, whether a claimed lower bound is really about the $t$-source
+measure rather than about randomness complexity as such.
+
+## Open obligations
+
+- [ ] Prove the upper bound: a generic transformation from any $t$-private protocol to a $t$-source one at $O(t)$ times the randomness.
+- [ ] Prove the lower bound: $\Omega(t \cdot R_t)$ for every functionality with no $t$-private protocol at $t \ge n/2$.
+- [ ] Or refute: exhibit one such functionality whose $t$-source randomness complexity is $o(t \cdot R_t)$.
+- [ ] Settle whether adaptive corruption with an efficient simulator is achievable for the source's $t$-source protocols — a separate question it also leaves open.
+- [ ] Formalize the statement in Lean; nothing here has been formalized.
+
+:::

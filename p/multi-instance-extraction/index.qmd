@@ -1,0 +1,87 @@
+---
+title: "Extracting from many correlated blocks at once"
+subtitle: "Independent seeds, one entropy budget shared across the blocks, and a set of good coordinates that only exists after the fact"
+---
+
+## Motivation
+
+A seeded extractor is a settled object: given a source with enough min-entropy and
+a fresh independent seed, the output is close to uniform. The question this hub is
+about is what happens when the same extractor is applied $t$ times, to $t$ blocks
+that may be arbitrarily correlated, with $t$ independent seeds, and the only
+guarantee is on the *joint* entropy of the whole collection.
+
+The naive hope — that an $\alpha$ entropy rate makes roughly $\alpha t$ of the
+outputs uniform — is not even well posed as stated. Take $i^{*}$ uniform in $[t]$,
+set block $i^{*}$ to all zeros and the rest uniform: the joint rate is nearly $1$,
+but every fixed coordinate has min-entropy at most $\log t$. So no coordinate can
+be named in advance, and the guarantee has to quantify over a *random* set of good
+coordinates, correlated with the source. That is the definitional move, and once
+made, the question is whether extraction as such delivers it or only particular
+extractors do.
+
+The answer decides something concrete. Multi-instance extraction is a drop-in
+replacement for ordinary extraction in incompressible encryption, and it is what
+turns single-user schemes into multi-user ones: an adversary storing an $\alpha$
+fraction of all ciphertexts learns something about at most a $\beta \approx \alpha$
+fraction of the messages. If every extractor works, those constructions are free to
+use any; if some extractor fails, the applications depend on a property of the
+extractor rather than on extraction.
+
+## Provenance and history
+
+Jiaxin Guan, Daniel Wichs and Mark Zhandry, *Multi-Instance Randomness Extraction
+and Security against Bounded-Storage Mass Surveillance* ([IACR ePrint
+2023/409](https://eprint.iacr.org/2023/409), TCC 2023), introduce the notion and
+prove it for two extractors: the Hadamard extractor $\langle x, s\rangle$ and a
+Reed-Muller composition with it. The constructions are standard; the analysis is
+not. It rests on list-decodability plus a property they isolate and name
+*hinting* — the extractor's values on a particular exponentially large family of
+pairwise independent seeds compress into a single hint much shorter than the
+source. Hinting is a feature of the local list-decoding algorithms for those two
+codes, and it is what an arbitrary extractor is not known to have.
+
+Concurrent independent work of Itai Dinur, Uri Stemmer, David P. Woodruff and
+Samson Zhou ([IACR ePrint 2023/171](https://eprint.iacr.org/2023/171)) arrives at
+an equivalent notion from a different direction — differential-privacy lower
+bounds with bounded space — and proves it for universal hash functions, by a
+completely different argument. Two techniques, three families, no known failures.
+
+The general question was tried and not settled. The source records the attempt in
+a footnote: "We were initially convinced that the general result does hold and
+invested much effort trying to prove it via some variant of the above approach
+without success. We also mentioned the problem to several experts in the field who
+had a similar initial reaction, but were not able to come up with a proof."
+
+The obstruction is named and is not soft. The natural route reduces to the ordinary
+extractor guarantee via a block-entropy lemma, which gives high min-entropy for
+blocks in a large set *conditioned on the past*. Conditioning on the future is
+impossible — for $X$ uniform subject to $\bigoplus_i X_i = 0$, no block has
+entropy given the rest — and a multi-instance distinguisher sees outputs from every
+block.
+
+## Parameter lattice
+
+Which extractors are known to be multi-instance extracting.
+
+| Extractor family | Seed length | Multi-instance? | Source |
+|---|---|---|---|
+| **Hadamard** | $d = n$ | yes | Guan–Wichs–Zhandry |
+| **Reed-Muller ∘ Hadamard** | $d = O(\lambda \log n)$ | yes | Guan–Wichs–Zhandry |
+| **Universal hashing** | long | yes | Dinur–Stemmer–Woodruff–Zhou |
+| **Any strong seeded extractor** | any | [c/0103](/c/0103/) — open | — |
+| **Some extractor, as counterexample** | — | *unstated* — none known | — |
+
+Three readings of the open row, which a resolution should distinguish:
+
+| Reading | What it asserts |
+|---|---|
+| **Uniform loss** | one loss function $L(n,m,d,t,\varepsilon)$ works for every extractor |
+| **Per-extractor** | every extractor achieves some $\beta = \alpha - o(1)$ |
+| **Qualitative** | no extractor fails at every non-trivial $\beta$ |
+
+A counterexample refutes all three at once.
+
+## Statements in this hub
+
+- [Every Seeded Extractor Is a Multi-Instance Randomness Extractor](/c/0103/) — open

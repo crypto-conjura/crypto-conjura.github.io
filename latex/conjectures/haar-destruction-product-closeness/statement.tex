@@ -1,0 +1,250 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  Behera-Brakerski-Sattath-Shmueli's quantum information-theoretic
+%  conjecture: measuring t copies of one Haar-random state is
+%  statistically indistinguishable from measuring t independent ones.
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{ONE HAAR STATE VERSUS MANY}
+
+\newcommand{\bits}{\{0,1\}}
+\newcommand{\muH}{\mu_{\mathcal{H}_{n}}}
+\newcommand{\A}{\mathcal{A}}
+\newcommand{\TV}{\mathsf{TV}}
+\newcommand{\ket}[1]{\lvert#1\rangle}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{One Haar-Random State Looks Like Many}
+\cjsubtitle{Classical outputs extracted from $t$ copies of a single
+  Haar-random state should be statistically indistinguishable from
+  outputs extracted from $t$ independent ones}
+\cjstatus{Statement: AI-written from Amit Behera, Zvika Brakerski, Or
+  Sattath and Omri Shmueli, \emph{Pseudorandomness with Proof of
+  Destruction and Applications}, IACR ePrint 2023/543, TCC 2023. Not yet
+  checked by a human. The source states this as a conjecture it believes
+  true, says it could neither prove it nor find it formalised anywhere,
+  and proves a strictly weaker pointwise domination bound (its Lemma 2)
+  that suffices for its own applications.}
+\cjcategory{\emph{Quantum information; quantum cryptography}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+Hand an algorithm one copy of a random quantum state and let it print a
+classical string. Do this $t$ times. There are two ways to supply the
+states: draw $t$ independent Haar-random states, or draw one Haar-random
+state and hand out $t$ copies of it. In the second, the $t$ printed
+strings are correlated --- they all come from the same underlying state.
+The conjecture is that no one can tell: for any algorithm and any
+polynomial $t$, the two joint distributions of classical strings are
+within negligible total variation distance. It is an entirely
+information-theoretic statement, with no computational assumption
+anywhere, and the source could neither prove it nor find it in the
+literature.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+Let $\mathcal{H}_{n}$ be the state space of $n$ qubits, of dimension
+$N = 2^{n}$, and let $\muH$ be the Haar measure on its pure states. Let
+$\A$ be any algorithm that takes a single $n$-qubit state and outputs a
+classical string; it may be an arbitrary quantum channel followed by a
+measurement, and it may use ancillae, so it need not be a projective
+measurement on the input register alone.
+
+Two distributions over $t$-tuples of classical strings arise, and the
+conjecture compares them.
+
+\begin{itemize}[nosep]
+  \item The \emph{product} distribution: draw
+    $\ket{\phi_1}, \dots, \ket{\phi_t}$ independently from $\muH$ and
+    output $\A(\ket{\phi_1}) \otimes \cdots \otimes \A(\ket{\phi_t})$.
+  \item The \emph{correlated} distribution: draw a single
+    $\ket{\phi} \sim \muH$, and output
+    $\A(\ket{\phi}) \otimes \cdots \otimes \A(\ket{\phi})$, where $t$
+    independent invocations of $\A$ each receive one copy of the same
+    $\ket{\phi}$.
+\end{itemize}
+
+Why the two might differ is easy to see. If $\A$ measures in the
+computational basis, the correlated experiment draws $t$ samples from one
+Porter-Thomas distribution while the product experiment draws each sample
+from a different one; second moments already separate the two families,
+and the question is whether the separation is visible in total variation
+at polynomial $t$.
+
+\section{Notation and parameters}\label{sec:notation}
+
+\begin{itemize}[nosep]
+  \item $n$ is the number of qubits and $N = 2^{n}$ the dimension;
+    \emph{negligible} is in $n$.
+  \item $t = t(n)$ is any polynomial; the conjecture is not claimed for
+    superpolynomial $t$, and cannot hold for $t$ comparable to $N$.
+  \item $\A$ ranges over \emph{all} algorithms with classical output, not
+    only efficient ones --- the statement is information-theoretic.
+  \item $\TV$ denotes total variation distance between the two
+    distributions over $t$-tuples of classical strings.
+\end{itemize}
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{conjecture}[{\cite[\S 1.3]{BBSS23}}]\label{conj:main}
+For any algorithm $\A$ that outputs a classical string, and any
+polynomial $t = t(n)$,
+\[
+  \TV\!\left(
+    \A(\ket{\phi_1}) \otimes \cdots \otimes \A(\ket{\phi_t}),\;
+    \A(\ket{\phi}) \otimes \cdots \otimes \A(\ket{\phi})
+  \right)
+\]
+is negligible in $n$, where $\ket{\phi_1}, \dots, \ket{\phi_t} \sim \muH$
+are independent and the same $\ket{\phi} \sim \muH$ is used in all the
+invocations on the right.
+\end{conjecture}
+
+\begin{remark}[How the source states it]\label{rem:framing}
+Conjecture~\ref{conj:main} is the source's own sentence, page 10:
+``In some of the applications, we required the following quantum
+information-theoretic conjecture regarding Haar random states that we
+believe is true: For any algorithm $\A$ that outputs a classical string,
+and any polynomial $t = t(n)$, the total variation distance between
+$\A(\ket{\phi_1}) \otimes \cdots \otimes \A(\ket{\phi_t})$, where
+$\ket{\phi_1}, \dots, \ket{\phi_t} \sim \muH$ and
+$\A(\ket{\phi}) \otimes \cdots \otimes \A(\ket{\phi})$, where the same
+state $\ket{\phi} \sim \muH$ is used in all the algorithms, is negligible
+in $n$.''
+
+And on its status: ``We could not prove nor find any previous work in the
+literature that proves or even formalizes this conjecture.'' The
+notation $\A$, $\TV$ and $N$ above is this statement's; the mathematics
+is the source's, unchanged.
+\end{remark}
+
+\begin{theorem}[What is proved instead, {\cite[Lemma 2]{BBSS23}}]\label{thm:lemma2}
+Let $\A$ output $c$-bit strings. For every $t \in \poly(\lambda)$ and all
+$a_1, \dots, a_t \in \bits^{c}$,
+\[
+  \Pr_{\mathrm{corr}}[(f_1,\dots,f_t) = (a_1,\dots,a_t)]
+  \;\le\;
+  \frac{N^{t}}{\binom{N+t-1}{t}} \cdot
+  \Pr_{\mathrm{prod}}[(f_1,\dots,f_t) = (a_1,\dots,a_t)],
+\]
+where $\mathrm{corr}$ and $\mathrm{prod}$ are the correlated and product
+distributions of \S\ref{sec:setting}.
+\end{theorem}
+
+\begin{remark}[Why Theorem~\ref{thm:lemma2} is much weaker than
+  Conjecture~\ref{conj:main}]\label{rem:gap}
+For $t \ll N$ the factor $N^{t} / \binom{N+t-1}{t}$ is about $t$ factorial, so the
+lemma says only that the correlated distribution never exceeds the
+product distribution by more than a factorial factor, pointwise. That is
+enough to transfer a bound of the form ``this bad event has probability
+$\eta$ under the product distribution'' into ``at most $t$ factorial times $\eta$
+under the correlated one'', which is what the source's unforgeability and
+collision-freeness arguments need. It says nothing at all about total
+variation distance, which the factorial factor swamps.
+
+The source is explicit that the lemma is a stand-in: ``We believe that
+the distributions are in fact, statistically close due to the strong
+concentration of the Haar measure, but we have not been able to prove
+it. The lemma is a weaker version of this statement, but it suffices for
+our purposes.''
+
+The proof of Theorem~\ref{thm:lemma2} in the special case where $\A$ is a
+computational-basis measurement is two lines of symmetric-subspace
+counting: for each outcome tuple there is a unique symmetric type
+contributing, giving probability at most $1/\binom{N+t-1}{t}$ under the
+correlated distribution and exactly $N^{-t}$ under the product one. That
+argument gives the ratio and, being pointwise, cannot give more.
+\end{remark}
+
+\begin{remark}[Where the difficulty is]\label{rem:difficulty}
+Three features make this harder than it first looks.
+
+\emph{The algorithm is arbitrary.} $\A$ need not be a projective
+measurement on the input register: it may use ancillae, so the overall
+map on the input is not unitary. The source flags exactly this elsewhere
+--- ``the destruct algorithms may use ancillae qubits, and therefore the
+overall process becomes non-unitary'' --- and non-unitary processing does
+not preserve Haar-randomness of a residual state, which is what a
+reduction to the projective case would want.
+
+\emph{The output may be long.} For a single-bit output, concentration of
+measure settles it quickly. For $c$-bit outputs the correlated
+distribution has a genuinely larger collision probability --- of order
+$2/N$ against $1/N$ for the product distribution --- and any proof must
+show that all such second- and higher-order discrepancies stay below
+negligible in total variation once summed over the
+$\binom{t}{2}$ pairs and beyond.
+
+\emph{The bound must be uniform in $\A$.} The claim quantifies over all
+algorithms with no efficiency restriction, so it is a statement about the
+$t$-copy Haar ensemble itself and not about what a bounded observer can
+do with it.
+\end{remark}
+
+\begin{remark}[Why it is worth settling on its own]\label{rem:why}
+The source's own reason: ``We think this is an interesting open question
+on its own, and if proven, this result can be a useful tool for quantum
+cryptography.'' It is the kind of statement that gets reproved ad hoc,
+in a weaker form each time, wherever a security proof needs to move
+between one shared Haar-random state and many independent ones. A clean
+version with an explicit bound in $t$ and $n$ would replace those.
+
+A refutation would be at least as interesting: it would exhibit an
+algorithm whose classical output distinguishes ``one state, $t$ copies''
+from ``$t$ states'' at polynomial $t$, which is a statement about the
+$t$-copy Haar ensemble that no one currently expects.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem[BBSS23]{BBSS23}
+Amit Behera, Zvika Brakerski, Or Sattath and Omri Shmueli.
+\emph{Pseudorandomness with proof of destruction and applications}.
+IACR ePrint 2023/543; TCC 2023.
+The source. The conjecture and its status are on page 10, in the Open
+Problems section; the correlated and product distributions are
+Definition 3; the pointwise bound is Lemma 2 with its proof sketch and
+footnote on page 18, and the general case in Appendix B.
+
+\bibitem[JLS18]{JLS18}
+Zhengfeng Ji, Yi-Kai Liu and Fang Song.
+\emph{Pseudorandom quantum states}.
+CRYPTO 2018, Part III, LNCS 10993, pages 126--152, Springer, 2018.
+The paper that started the study of pseudorandom states, and the source
+of the earlier Haar-indistinguishability conjecture in this line.
+
+\bibitem[BS20b]{BS20b}
+Zvika Brakerski and Omri Shmueli.
+\emph{Scalable pseudorandom quantum states}.
+CRYPTO 2020, Part II, LNCS 12171, pages 417--440, Springer, 2020.
+Cited by the source for scalable pseudorandom states; the same authors'
+work in this line is where statistical closeness to the Haar ensemble is
+proved for a particular efficiently generated family.
+
+\bibitem[AQY21]{AQY21}
+Prabhanjan Ananth, Luowen Qian and Henry Yuen.
+\emph{Cryptography from pseudorandom quantum states}.
+arXiv:2112.10020, 2021.
+The post-selection construction of short-input function-like states from
+pseudorandom states that the source discusses as not obviously commuting
+with a destruct algorithm.
+
+\bibitem[AGQY22]{AGQY22}
+Prabhanjan Ananth, Aditya Gulati, Luowen Qian and Henry Yuen.
+\emph{Pseudorandom (function-like) quantum state generators: new
+definitions and applications}.
+arXiv:2211.01444, 2022.
+Cited by the source for quantum adaptive pseudorandomness, one of the
+neighbouring open questions in the same list.
+
+\end{conjurabibliography}
+
+\end{document}

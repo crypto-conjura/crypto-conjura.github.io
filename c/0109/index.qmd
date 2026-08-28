@@ -1,0 +1,170 @@
+---
+id: "0109"
+problem: classical-proofs-quantum-attacks
+draft: cpa-pke-post-quantum-insecurity
+title: "A CPA-Secure Public-Key Encryption Scheme That Only a Quantum Attacker Breaks"
+short_title: "CPA PKE, Quantumly Broken"
+areas: [quantum, public-key]
+topics: [learning-with-errors, quantum-cryptography, black-box-separations]
+model: standard
+form: separation
+assumption_class: falsifiable
+category: research-open
+revision: 1
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: new-idea
+  by: ai
+  note: "The source's whole technique is to hide an interactive quantum advantage inside a security game and rely on the classical reduction rewinding. The CPA game for public-key encryption has three rounds and its third is publicly computable, so there is no secret state for the sender of a quantum disclosure of secrets to hold -- the source says exactly this. Two of its other open problems, a three-message stateless QDS and a three-message IPQ from LWE, would each supply the missing ingredient, and neither is known."
+status_summary: "The first item in the source's Open Problems section. It builds counterexamples for PRFs, CPA-secure symmetric-key encryption, MACs, signatures and CCA-2-secure public-key encryption, all classically secure under LWE via black-box reductions and all quantumly broken with two or three classical queries. CPA-secure public-key encryption is the case its technique cannot reach, and it says why."
+status_updated: 2026-08-28
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Lombardi, Mook, Quach, Wichs, Post-Quantum Insecurity from LWE, IACR ePrint 2022/869, TCC 2022", url: "https://eprint.iacr.org/2022/869"}
+  - {cite: "Brakerski, Christiano, Mahadev, Vazirani, Vidick, A Cryptographic Test of Quantumness and Certifiable Randomness from a Single Quantum Device, 59th FOCS, pages 320-331, 2018"}
+  - {cite: "Kalai, Lombardi, Vaikuntanathan, Yang, Quantum Advantage from Any Non-Local Game, IACR ePrint 2022/400", url: "https://eprint.iacr.org/2022/400"}
+  - {cite: "Regev, On Lattices, Learning with Errors, Random Linear Codes, and Cryptography, 37th ACM STOC, pages 84-93, 2005"}
+  - {cite: "Bitansky, Brakerski, Kalai, Constructive Post-Quantum Reductions, Cryptology ePrint Archive, 2022", url: "https://eprint.iacr.org/2022/298"}
+statement_sha: "eccd9e142107af99cd3fcfc60fb1aebee13ec93044061b6d07d862aee798f3e7"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+<!-- topics:start -->
+<div class="cj-tags cj-page-topics"><a class="cj-tag cj-tag-topic" href="/problems/by-topic/black-box-separations/">Black Box Separations</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/learning-with-errors/">Learning With Errors</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/quantum-cryptography/">Quantum Cryptography</a></div>
+<!-- topics:end -->
+
+LWE is believed to resist quantum attack, so it is tempting to think a scheme
+proved classically secure under LWE is automatically safe against quantum
+attackers. The source shows that is false: it builds a PRF, a symmetric-key
+encryption scheme, a MAC, a signature scheme and a CCA-2-secure public-key
+encryption scheme, each proved classically secure under LWE by a black-box
+reduction, each broken by a quantum adversary making two or three ordinary
+classical queries. The trick is that the security *game* is interactive even when
+the scheme is not, so a proof of quantumness can be hidden inside it. One
+primitive resists the trick, and it is the most basic public-key one: CPA-secure
+encryption, whose game has only three rounds with the last publicly computable.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [LaTeX source](latex/main.tex) · Formal statement — *not yet formalized*
+
+**What "post-quantum" means here.** The scheme, the honest parties and all
+communication stay classical; only the adversary is quantum. It keeps internal
+quantum state across the game but queries the cryptosystem on classical inputs.
+
+**The phenomenon.** A stateless, non-interactive primitive still has an
+*interactive* security game. A classical black-box reduction may rewind the
+adversary between rounds; a quantum adversary that has measured cannot be
+rewound. So a primitive can carry a valid classical security proof from LWE and
+still be quantumly broken, provided a source of interactive quantum advantage can
+be embedded in its security game. The source uses two: four-message interactive
+proofs of quantumness from LWE, and a three-message *quantum disclosure of
+secrets* — a classical sender holding $m$, a quantum receiver who learns $m$, a
+classical receiver who learns nothing — which it constructs from LWE.
+
+**What is proved (the source's Section 1.1).** Under LWE: a PRF classically
+secure but broken by a quantum adversary making $3$ classical queries, or $2$ with
+public parameters; a CPA-secure symmetric-key encryption scheme broken with $2$
+encryption queries; a MAC broken with $2$ authentication queries; a signature
+scheme broken with $2$ signing queries; and a public-key encryption scheme that is
+classically CCA-2 secure but broken by a quantum adversary making $2$ decryption
+queries before seeing the challenge ciphertext. A second slate does the same for
+one-time primitives with a single query.
+
+**Conjecture.** There exists a CPA-secure public-key encryption scheme that is
+classically secure under LWE via a black-box reduction, and post-quantum insecure.
+
+**How the source states it, and what this page supplies.** Page 12, under "We
+mention several fascinating open problems left by our work": "Can we construct a
+CPA-secure public-key encryption scheme which is classically secure under LWE but
+post-quantum insecure?" Turning that question into an existential proposition is
+this page's step, and it is the direction the source's programme points — every
+other primitive it attempted, it built. A proof that no such scheme exists would
+be the more surprising outcome and a stronger result, saying that for CPA-secure
+public-key encryption classical security under LWE *does* imply post-quantum
+security, and it settles the question just as well.
+
+## Proof
+
+View PDF — *no proof written yet* · LaTeX source — *no proof written yet* · Formal proof — *not yet formalized*
+
+Open, with the obstruction stated precisely by the source.
+
+**Why the technique stops.** Verbatim, page 12: "The CPA security game for
+public-key encryption consists of 3 rounds, so it may seem like we should be able
+to embed a QDS scheme inside it. But the 3rd round of the CPA security game must
+be publicly computable from the first 2 rounds, while our QDS requires secret
+state to compute the 3rd round."
+
+Unpacked: the QDS is three-message, which fits the three rounds of the CPA game —
+public key, challenge messages, challenge ciphertext — but its sender must retain
+secret state between its first and third messages. In the CPA game the third round
+is the challenge ciphertext, computable by anyone holding $pk$ and $(m_0,m_1)$;
+the challenger holds back only the bit $b$ and its encryption randomness. So the
+QDS sender cannot be the CPA challenger. The CCA-2 case escapes precisely because
+the decryption oracle gives the challenger secret computation to do, which is why
+the source reaches CCA-2 and stops.
+
+**Two routes the source names, both open, neither equivalent to the conjecture.**
+"Can we construct a 3-message stateless/resettable QDS under LWE? This would allow
+us to construct cryptosystems that are classically secure in the standard sense
+under LWE, but fail to be even one-time post-quantum secure." A stateless
+three-message QDS is exactly what the obstruction says is missing. And: "Can we
+construct 3-message (resettably secure) IPQs from LWE?" — known IPQs from LWE take
+four messages, and three-message proofs of quantumness are not known under
+post-quantum assumptions in the plain model, which is why the QDS exists at all.
+
+**Checked against the literature, 2026-08-28.** No construction of a CPA-secure
+public-key counterexample found.
+
+## Discussion
+
+**What is and is not being claimed.** The schemes in this line are deliberately
+contrived, and the source says so in its abstract; none of this is evidence that
+LWE is quantumly easy or that any deployed scheme is at risk. The content is about
+what a classical black-box proof buys. But CPA-secure public-key encryption is the
+primitive most LWE-based deployments are argued under, so a counterexample there
+would move the warning from elaborate primitives to the most basic public-key one.
+The source's framing of why such results matter applies with most force here:
+"Such counterexamples are extremely important and serve as a warning that can
+hopefully prevent us from making such mistakes in the future."
+
+**The rest of the source's open-problems list, not published here.** Whether the
+phenomenon can be reproduced under assumptions other than LWE, ideally generic
+ones such as one-way functions; and two questions about one-way functions that are
+classically secure but post-quantum insecure, with and without quantum auxiliary
+input — the second of which, the source notes, could not have a black-box
+classical security proof at all, since a non-interactive security game leaves no
+rewinding for a reduction to exploit.
+
+**What a reviewer should be suspicious of, in order.** First, CPA versus CCA:
+the whole content is that distinction, and the CCA-2 case is done. Second, whether
+the classical security proof is a black-box reduction from LWE, since the
+statement is about what such a proof guarantees. Third, whether the quantum
+attack uses only classical queries to the scheme; superposition access is a
+different and already-understood setting.
+
+## Open obligations
+
+- [ ] Construct a CPA-secure public-key encryption scheme, classically secure under LWE via a black-box reduction, that a quantum adversary breaks.
+- [ ] Or prove no such scheme exists — that for CPA-secure public-key encryption, classical security under LWE implies post-quantum security.
+- [ ] Or settle one of the two routes: a three-message stateless or resettable QDS from LWE, or a three-message resettably secure IPQ from LWE.
+- [ ] Formalize the statement in Lean; nothing here has been formalized.
+
+:::

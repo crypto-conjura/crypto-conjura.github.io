@@ -1,0 +1,181 @@
+---
+id: "0103"
+problem: multi-instance-extraction
+draft: seeded-extractors-multi-instance
+title: "Every Seeded Extractor Is a Multi-Instance Randomness Extractor"
+short_title: "Seeded Extractors Are Multi-Instance"
+areas: [information-theoretic, foundations]
+topics: [randomness-extraction, incompressible-encryption]
+model: standard
+form: characterization
+assumption_class: unconditional
+category: research-open
+revision: 1
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: new-idea
+  by: ai
+  note: "The only route anyone has tried is provably blocked: the block-entropy lemma gives conditioning on past blocks and cannot give conditioning on future ones, which is what a multi-instance distinguisher needs. The three families that are known to work -- Hadamard, Reed-Muller, universal hashing -- are all linear and all proved by arguments that use structure the general statement cannot assume. The source records that it tried hard and failed, and that several experts it consulted also failed."
+status_summary: "Posed by the source with both answers live. It proves the property for two code-based extractors via a hinting property it isolates; concurrent independent work of Dinur, Stemmer, Woodruff and Zhou proves it for universal hash functions by a different argument. No extractor is known to fail it and no general proof is known."
+status_updated: 2026-08-28
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Guan, Wichs, Zhandry, Multi-Instance Randomness Extraction and Security against Bounded-Storage Mass Surveillance, IACR ePrint 2023/409, TCC 2023", url: "https://eprint.iacr.org/2023/409"}
+  - {cite: "Dodis, Quach, Wichs, Authentication in the Bounded Storage Model, EUROCRYPT 2022, Part III, LNCS 13277, pages 737-766"}
+  - {cite: "Dinur, Stemmer, Woodruff, Zhou, On Differential Privacy and Adaptive Data Analysis with Bounded Space, IACR ePrint 2023/171", url: "https://eprint.iacr.org/2023/171"}
+  - {cite: "Guan, Wichs, Zhandry, Incompressible Cryptography, EUROCRYPT 2022, Part I, LNCS 13275, pages 700-730"}
+  - {cite: "Dziembowski, On Forward-Secure Storage, CRYPTO 2006, LNCS 4117, pages 251-270"}
+statement_sha: "c8fd02603ace9e40ae088f3ba71ed83698931447375e60e6164718134f9b43df"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+<!-- topics:start -->
+<div class="cj-tags cj-page-topics"><a class="cj-tag cj-tag-topic" href="/problems/by-topic/incompressible-encryption/">Incompressible Encryption</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/randomness-extraction/">Randomness Extraction</a></div>
+<!-- topics:end -->
+
+A seeded extractor turns one weak source into uniform bits. Run it $t$ times over
+$t$ blocks that may be arbitrarily correlated, each with its own fresh independent
+seed, and assume only that the blocks *jointly* carry an $\alpha$ fraction of full
+entropy. No single block need have any entropy, so no fixed output can be claimed
+uniform; but one hopes that some $\alpha$-fraction of the outputs — chosen after
+the fact, depending on the source — is jointly indistinguishable from uniform even
+to someone holding all the seeds and all the other outputs. The source proves this
+for two specific code-based extractors. Whether every seeded extractor has the
+property, or some extractor is a counterexample, is open.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [LaTeX source](latex/main.tex) · Formal statement — *not yet formalized*
+
+**Why the guarantee has to be about a random set.** Let $i^{*} \leftarrow [t]$ be
+uniform, set $X_{i^{*}}$ to all zeros and every other block uniform. The joint
+entropy rate is nearly $1$, yet for each fixed $i$ the min-entropy of $X_i$ is at
+most $\log t$ — too little to extract one nearly-unbiased bit. So the set of good
+coordinates must be allowed to depend on the source, and that is what the
+definition does.
+
+**Definition (the source's Definition 3.1).** $\mathsf{Ext} : \{0,1\}^{n} \times
+\{0,1\}^{d} \to \{0,1\}^{m}$ is *$(t,\alpha,\beta,\varepsilon)$-multi-instance
+extracting* if for every $X = (X_1,\dots,X_t)$ with blocks $X_i \in \{0,1\}^n$ and
+$\mathbf{H}_\infty(X) \ge \alpha \cdot t n$ there is a random variable $I_X$,
+jointly distributed with $X$ and supported on sets $I \subseteq [t]$ of size
+$|I| \ge \beta t$, such that
+$$(S_1,\dots,S_t,\mathsf{Ext}(X_1;S_1),\dots,\mathsf{Ext}(X_t;S_t)) \approx_{\varepsilon} (S_1,\dots,S_t,Z_1,\dots,Z_t),$$
+where the $S_i$ are independent uniform seeds and $Z_i$ is independent uniform for
+$i \in I_X$ and equals $\mathsf{Ext}(X_i;S_i)$ otherwise.
+
+**Conjecture.** Every standard strong seeded extractor is also a multi-instance
+randomness extractor, with a loss $\alpha - \beta$ that is bounded by a fixed
+function of $m$, $\log t$ and $\log(1/\varepsilon)$ divided by $n$, independent of
+which extractor.
+
+**How the source states it, and what is this page's step.** Page 7, verbatim: "It
+remains as a fascinating open problem whether every standard seeded extractor is
+also a multi-instance randomness extractor or if there is some counterexample."
+The source attaches no parameters to the general question. The quantitative form
+above is this page's reading, chosen to match what the source proves for its own
+extractors. Two weaker readings are also worth settling and a resolution should
+say which it establishes: that every seeded extractor is multi-instance extracting
+with *some* $\beta = \alpha - o(1)$, with no uniform loss function; and the purely
+qualitative form, that no extractor is a counterexample at any non-trivial
+$\beta$. A counterexample refutes all three.
+
+**What is known (the source's Corollary 3.4).** For any $n,m,t,\varepsilon>0,
+\alpha>0$ there exist extractors that are $(t,\alpha,\beta,\varepsilon)$-multi-instance
+extracting with either seed length $d = n$ and
+$\beta = \alpha - O(m + \log t + \log(1/\varepsilon))/n$, or seed length
+$d = O((\log n)(m + \log\log n + \log t + \log(1/\varepsilon)))$ and
+$\beta = \alpha - O(d)/n$. The two constructions are the Hadamard extractor
+$\mathsf{Ext}(x;s) = \langle x,s\rangle$ and a Reed-Muller composition with it.
+
+**The property that makes those proofs work.** Not extraction, but
+*list-decodability plus hinting*: the values of $\mathsf{Ext}(x;S_i)$ on a
+particular exponentially large family of pairwise independent seeds compress into
+a single hint much shorter than $x$. Hinting is a feature of local list-decoding
+algorithms for these two codes, and it is exactly what an arbitrary seeded
+extractor is not known to have.
+
+## Proof
+
+View PDF — *no proof written yet* · LaTeX source — *no proof written yet* · Formal proof — *not yet formalized*
+
+Open, with the one natural route provably blocked.
+
+**The route, and where it dies.** Reduce to the ordinary extractor guarantee:
+find a large set $I_X$ of blocks with high individual min-entropy, then apply the
+extractor blockwise. The first step exists — the *block-entropy lemma* of Dodis,
+Quach and Wichs, even in the stronger form that $X_i$ for $i \in I_X$ has high
+min-entropy conditioned on all *past* blocks $X_1,\dots,X_{i-1}$. Conditioning on
+the future is impossible, and for a concrete reason: take $X$ uniform subject to
+$\bigoplus_{i=1}^{t} X_i = 0$, where no block has entropy given the rest. A
+multi-instance distinguisher sees extracted outputs from *all* the blocks, so
+that is exactly what would be needed. The source: "Unfortunately, this prevents us
+for using the block-entropy lemma to analyze multi-instance extraction, where the
+adversary sees some extracted outputs from all the blocks."
+
+The route does yield a weak version when $t$ is small enough that one can afford
+to lose $t$ bits of entropy per block. The regime that matters has $t$ far larger
+than the entropy of a block.
+
+**A recorded failure, worth reading first.** Footnote 6 of the source: "We were
+initially convinced that the general result does hold and invested much effort
+trying to prove it via some variant of the above approach without success. We
+also mentioned the problem to several experts in the field who had a similar
+initial reaction, but were not able to come up with a proof."
+
+**Checked against the literature, 2026-08-28.** No proof and no counterexample
+found. Targeted check on the multi-instance extraction and incompressible
+cryptography lines, not an exhaustive sweep of extractor theory.
+
+## Discussion
+
+**Evidence for, from two directions.** The property holds for Hadamard and
+Reed-Muller extractors by the source's hinting argument, and — by a completely
+different argument, in concurrent independent work of Dinur, Stemmer, Woodruff and
+Zhou arriving at an equivalent notion from differential-privacy lower bounds — for
+universal hash functions. Three families, two techniques, no failures known.
+
+**Evidence against, or at least a hint about where to look.** All three families
+are linear, and all three proofs use structure the general statement cannot
+assume. If a counterexample exists it is presumably an extractor built to have no
+compressible description of its behaviour across correlated seeds.
+
+**Why the answer matters outside extractor theory.** Multi-instance extraction is
+a drop-in replacement for ordinary extraction in incompressible encryption, and it
+is what lifts those schemes from one user to many: if an adversary stores an
+$\alpha$ fraction of the total ciphertext size, it learns something about at most
+a $\beta \approx \alpha$ fraction of the messages. A proof would make every such
+construction work with any extractor, including short-seed ones. A counterexample
+would say those applications depend on a property of the extractor rather than on
+extraction as such — arguably the more informative outcome.
+
+**What a reviewer should be suspicious of, in order.** First, which of the three
+readings a claimed proof establishes. Second, whether the claimed $I_X$ is
+allowed to depend on the source, since a proof that fixes the set in advance is
+proving something false. Third, whether the argument survives $t$ much larger
+than the entropy of a block, which is where the weak version already reaches.
+
+## Open obligations
+
+- [ ] Prove that every strong seeded extractor is multi-instance extracting with a uniform loss, or with some $\beta = \alpha - o(1)$, or qualitatively.
+- [ ] Or exhibit a seeded extractor that is not multi-instance extracting at any non-trivial $\beta$.
+- [ ] Either way, say which of the three readings the result settles.
+- [ ] Formalize the definition and the statement in Lean; nothing here has been formalized.
+
+:::

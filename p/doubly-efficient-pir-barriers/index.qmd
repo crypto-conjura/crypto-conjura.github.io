@@ -1,0 +1,88 @@
+---
+title: "Why doubly efficient PIR resists generic cryptography"
+subtitle: "One assumption gives it, nothing generic does, and the reason reduces to a single unproved statement about one-way functions"
+---
+
+## Motivation
+
+A doubly efficient PIR scheme preprocesses a database once and then answers each
+private lookup while touching only a sublinear number of stored positions. It is
+one of the few natural cryptographic notions that cannot be reached from generic
+building blocks. Almost everything else in cryptography can be constructed, however
+inefficiently, from a sufficiently powerful generic primitive — indistinguishability
+obfuscation, functional encryption, a random oracle, a generic multilinear group.
+DEPIR apparently cannot: only Ring-LWE is known to give it, and no standard
+primitive is known to imply it.
+
+That is not just an absence of constructions; it is a theorem waiting on one
+hypothesis. If idealized generic cryptography can always be stripped out of a
+DEPIR and replaced by a one-way function, then the whole class of generic
+approaches collapses to one question — can one-way functions alone do it — and the
+answer is expected to be no.
+
+The consequence, if the picture is right, is a statement about where DEPIR has to
+come from: not from a generic primitive used as a black box, but from the specific
+algebraic structure of a concrete hard problem.
+
+## Provenance and history
+
+Wei-Kai Lin, Ethan Mook and Daniel Wichs, *Black Box Crypto is Useless for Doubly
+Efficient PIR* ([IACR ePrint 2025/552](https://eprint.iacr.org/2025/552),
+EUROCRYPT 2025), prove the stripping theorem and state the remaining hypothesis as
+their own conjecture.
+
+The setting they define is deliberately generous to the constructor, so that the
+negative results are as strong as possible: imperfect correctness allowed, any
+polynomial number of rounds, any polynomial running time, and only the requirement
+that the server read $o(N)$ positions. They also work with secret-key DEPIR, the
+weakest of the three flavours, so that ruling it out rules out public-key and
+unkeyed DEPIR too.
+
+The notion of "generic" is made precise as a *crypto oracle*: a stateless
+deterministic polynomial-time program $B$ with oracle access to a secret random
+function $R$, where schemes and adversaries may call $B^R$ but not $R$. Virtual
+black-box obfuscation for programs with oracle gates and generic multilinear groups
+are both crypto oracles, and the paper proves each. The main theorem converts any
+SK-DEPIR relative to a crypto oracle into one in which the client alone has
+black-box access to a secret random function, preserving rounds, locality,
+correctness and security; a PRF then finishes the job.
+
+The technique is inspired by Dujmovic and Hajiabadi's insight that a server's
+oracle calls can be replaced by client–server communication when there are few
+enough of them, though the result here is different: their work bounds public-key
+operations in ordinary PIR and does not give evidence about DEPIR from ideal
+primitives.
+
+The special case that *is* proved — two-round, passive-server — is
+information-theoretic, and generalises a secret-key-size lower bound of Canetti,
+Holmgren and Richelson. Both restrictions are load-bearing at once: the paper's own
+active-to-passive conversion is round-preserving only in the passive case, so they
+cannot be removed one at a time.
+
+The positive side of the ledger is short. Boyle, Ishai, Pass and Wootters and
+Canetti, Holmgren and Richelson gave the first candidates, from secretly permuted
+Reed-Muller codes, under a non-standard assumption; Lin, Mook and Wichs later built
+unkeyed DEPIR from Ring-LWE. Nothing else.
+
+## Parameter lattice
+
+What is ruled out, and under what.
+
+| Setting | From crypto oracles | From one-way functions |
+|---|---|---|
+| **2-round, passive server** | ruled out (Cor. 5.2) | ruled out (Thm. 5.1) |
+| **Any rounds, active server** | ruled out *if* the OWF case is | [c/0107](/c/0107/) — open, conjectured no |
+| **Public-key, unkeyed DEPIR** | implied by the SK case | implied by the SK case |
+
+And what exists on the positive side.
+
+| Construction | Assumption | Flavour |
+|---|---|---|
+| Boyle–Ishai–Pass–Wootters; Canetti–Holmgren–Richelson | permuted Reed-Muller codes (non-standard) | secret-key |
+| Lin–Mook–Wichs | Ring-LWE | unkeyed |
+| **Anything from LWE, DDH, factoring** | *unstated* — the source's other open question | — |
+| **Anything implied by a standard primitive** | *unstated* — none known in that direction either | — |
+
+## Statements in this hub
+
+- [No Black-Box Secret-Key Doubly Efficient PIR from One-Way Functions](/c/0107/) — open

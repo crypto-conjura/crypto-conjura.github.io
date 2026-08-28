@@ -1,0 +1,88 @@
+---
+title: "When does a classical security proof survive a quantum attacker?"
+subtitle: "A post-quantum assumption and a black-box reduction are not enough, and the counterexamples stop at exactly one primitive"
+---
+
+## Motivation
+
+The working assumption behind post-quantum cryptography is compositional: pick an
+assumption believed to resist quantum attack, prove your scheme secure under it by
+a black-box reduction, and the scheme inherits the resistance. The reasoning is
+that a black-box reduction should be indifferent to the computational model of the
+adversary it is given.
+
+It is not. A classical reduction may rewind its adversary between rounds of the
+security game, and rewinding a quantum adversary that has measured destroys the
+state. That is known to be a problem for interactive protocols. What is less
+obvious is that it is also a problem for primitives that are entirely
+non-interactive and stateless — a PRF, an encryption scheme, a signature — because
+their *security games* are interactive even when they are not. A quantum advantage
+protocol can be hidden inside the game.
+
+So the question is not whether the folklore inference ever fails, but exactly where
+it fails. That is a question with a sharp boundary, and this hub is about where the
+boundary currently sits.
+
+## Provenance and history
+
+Alex Lombardi, Ethan Mook, Willy Quach and Daniel Wichs, *Post-Quantum Insecurity
+from LWE* ([IACR ePrint 2022/869](https://eprint.iacr.org/2022/869), TCC 2022),
+draw the boundary. Under LWE they construct — contrived, and they say so — a PRF
+broken by a quantum adversary with three classical queries, a CPA-secure
+symmetric-key encryption scheme broken with two, a MAC broken with two, a signature
+scheme broken with two, and a CCA-2-secure public-key encryption scheme broken with
+two decryption queries. Every one carries a black-box classical security proof from
+LWE. A second slate does the same for one-time primitives at a single query.
+
+Two ingredients supply the quantum advantage. Four-message interactive proofs of
+quantumness from LWE, due to Brakerski, Christiano, Mahadev, Vazirani and Vidick,
+which the paper observes are also resettably sound against classical provers. And a
+new three-message *quantum disclosure of secrets* protocol — a classical sender
+with a message, a quantum receiver who learns it, a classical receiver who does not
+— built via the Kalai–Lombardi–Vaikuntanathan–Yang compiler. The second exists
+because three-message proofs of quantumness are not known from post-quantum
+assumptions in the plain model, and three rounds is what the shorter security games
+allow.
+
+The boundary falls at CPA-secure public-key encryption, and the reason is
+structural rather than technical taste. Its game has three rounds — public key,
+challenge messages, challenge ciphertext — and the third is publicly computable
+from the first two. The QDS sender needs secret state between its first and third
+messages, and the CPA challenger has none to offer beyond the challenge bit. The
+CCA-2 case escapes because a decryption oracle gives the challenger secret
+computation to do.
+
+The paper places itself in a tradition it names: counterexamples to intuitive but
+incorrect beliefs — the random-oracle heuristic, circular security, selective
+opening, hardness amplification, security under composition. Its own summary of why
+that tradition matters: "Such counterexamples are extremely important and serve as
+a warning that can hopefully prevent us from making such mistakes in the future."
+
+## Parameter lattice
+
+Primitives with a classical black-box LWE proof that fail post-quantum security.
+
+| Primitive | Quantum break | Status |
+|---|---|---|
+| **PRF** | 3 classical queries (2 with public parameters) | proved |
+| **CPA symmetric-key encryption** | 2 encryption queries (1 with public parameters) | proved |
+| **MAC** | 2 authentication queries | proved |
+| **Signatures** | 2 signing queries | proved |
+| **CCA-2 public-key encryption** | 2 decryption queries | proved |
+| **CPA public-key encryption** | — | [c/0109](/c/0109/) — open |
+| **One-way functions, with quantum auxiliary input** | — | *unstated* — open in the source's list |
+| **One-way functions, no auxiliary input** | — | *unstated* — could not have a black-box classical proof |
+
+Ingredients, and which would unblock the open row.
+
+| Ingredient | Status |
+|---|---|
+| 4-message IPQ from LWE | known |
+| 3-message QDS from LWE, stateful sender | known (this paper) |
+| 3-message stateless/resettable QDS from LWE | open — would give the open row, and more |
+| 3-message resettably secure IPQ from LWE | open |
+| IPQ or QDS from assumptions other than LWE | open |
+
+## Statements in this hub
+
+- [A CPA-Secure Public-Key Encryption Scheme That Only a Quantum Attacker Breaks](/c/0109/) — open

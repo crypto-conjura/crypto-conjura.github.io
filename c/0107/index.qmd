@@ -1,0 +1,180 @@
+---
+id: "0107"
+problem: doubly-efficient-pir-barriers
+draft: sk-depir-from-owf-barrier
+title: "No Black-Box Secret-Key Doubly Efficient PIR from One-Way Functions"
+short_title: "SK-DEPIR from One-Way Functions"
+areas: [privacy, impossibility-results]
+topics: [private-information-retrieval, black-box-separations, one-way-functions]
+model: standard
+form: impossibility
+assumption_class: unconditional
+category: research-open
+revision: 1
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: new-idea
+  by: ai
+  note: "The proved case is information-theoretic and uses two features that both disappear in general: with a passive server the client's query is a set of positions, and with two rounds there are no later queries depending on earlier answers. The source's own active-to-passive conversion is round-preserving only in the passive case, so the two restrictions cannot be removed one at a time. What is missing is a compression or counting argument for an adaptive, multi-round client against a secret random function."
+status_summary: "Stated by the source as its own conjecture and proved for two-round passive-server schemes. Its main theorem -- that any crypto oracle can be stripped out of a SK-DEPIR and replaced by a one-way function -- is stated conditionally on this, so the conjecture is the single remaining hypothesis between that compiler and a clean statement that no idealized generic primitive helps."
+status_updated: 2026-08-28
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Lin, Mook, Wichs, Black Box Crypto is Useless for Doubly Efficient PIR, IACR ePrint 2025/552, EUROCRYPT 2025", url: "https://eprint.iacr.org/2025/552"}
+  - {cite: "Lin, Mook, Wichs, Doubly Efficient Private Information Retrieval and Fully Homomorphic RAM Computation from Ring LWE, 55th ACM STOC, pages 595-608, 2023"}
+  - {cite: "Reingold, Trevisan, Vadhan, Notions of Reducibility between Cryptographic Primitives, TCC 2004, LNCS 2951, pages 1-20"}
+  - {cite: "Boyle, Ishai, Pass, Wootters, Can We Access a Database Both Locally and Privately?, TCC 2017, Part II, LNCS 10678, pages 662-693"}
+  - {cite: "Canetti, Holmgren, Richelson, Towards Doubly Efficient Private Information Retrieval, TCC 2017, Part II, LNCS 10678, pages 694-726"}
+statement_sha: "688c95b553db16a8d4d612d23d11ab7c2ac4b661adab7b0fd9c2b3dc955b909f"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+<!-- topics:start -->
+<div class="cj-tags cj-page-topics"><a class="cj-tag cj-tag-topic" href="/problems/by-topic/black-box-separations/">Black Box Separations</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/one-way-functions/">One Way Functions</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/private-information-retrieval/">Private Information Retrieval</a></div>
+<!-- topics:end -->
+
+A doubly efficient private information retrieval scheme lets a server preprocess a
+database once and then answer each private lookup by touching only a sublinear
+number of stored positions. Only one standard assumption is known to give one:
+Ring-LWE. The source explains the scarcity by showing that idealized generic
+cryptography — random oracles, generic multilinear maps, virtual black-box
+obfuscation, and anything else expressible as a deterministic program with access
+to a secret random function — can always be stripped out of such a scheme and
+replaced by a one-way function alone. That reduces the whole question to one
+statement, which the source cannot prove in general: one-way functions do not
+build a secret-key doubly efficient PIR in a black-box way.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [LaTeX source](latex/main.tex) · Formal statement — *not yet formalized*
+
+**The primitive, in the deliberately weak form the source fixes.** A secret-key
+DEPIR consists of $k \leftarrow \mathsf{KeyGen}(1^\lambda)$; a preprocessing
+$\widetilde{\mathsf{DB}} \leftarrow \mathsf{Prep}(1^\lambda, k, \mathsf{DB})$ of a
+database $\mathsf{DB} \in \{0,1\}^N$; and a two-party protocol between the server
+holding $\widetilde{\mathsf{DB}}$ and the client holding $N$, $k$ and an index
+$i$, after which the client outputs a bit. Correctness may be imperfect, the
+protocol may run for any polynomial number of rounds and any polynomial time, and
+the only efficiency requirement is that the server touch $\ell(\lambda,N) = o(N)$
+distinct positions. Security: no non-uniform polynomial-time semi-honest server,
+given $\widetilde{\mathsf{DB}}$ and any polynomial number of honest executions of
+its choice, distinguishes an execution on $i_0$ from one on $i_1$ with more than
+negligible advantage. Every weakening here strengthens the negative results.
+
+**What is proved (the source's Theorem 4.3).** Call $B^{R}$ a *crypto oracle*
+when $B$ is a stateless deterministic polynomial-time function with oracle access
+to a secret random function $R$, and schemes and adversaries may query $B^R$ but
+not $R$. Any SK-DEPIR relative to a crypto oracle converts into one where the
+client alone has black-box access to a secret random function, preserving round
+complexity, locality, correctness and security; replacing that function by a PRF
+gives a SK-DEPIR making only black-box use of one-way functions. Virtual black-box
+obfuscation for programs with oracle gates and generic multilinear groups are both
+crypto oracles, and the source proves it for each.
+
+**Conjecture (the source's own, verbatim on page 4).** "We conjecture that there
+is no black-box construction of SK-DEPIR from just one-way functions. While we do
+not know how to prove this conjecture in its full generality, we do prove it for
+the special case of 2-round passive-server SK-DEPIR."
+
+**Why it is the load-bearing statement.** The source's elimination of generic
+cryptography is stated conditionally on it: "Under the conjecture that there is no
+black-box construction of SK-DEPIR from just one-way functions, this implies that
+there is no black-box construction of SK-DEPIR from any crypto oracle (without
+additional assumptions)." SK-DEPIR is also the *weakest* of the three flavours, so
+ruling it out rules out public-key and unkeyed DEPIR with it.
+
+**Black-box** means the standard fully black-box notion of Reingold, Trevisan and
+Vadhan: a pair of oracle algorithms $(Q,S)$ such that $Q^{P}$ implements the
+primitive for every implementation $P$, and $S^{P,A}$ breaks $P$ whenever $A$
+breaks $Q^{P}$.
+
+## Proof
+
+View PDF — *no proof written yet* · LaTeX source — *no proof written yet* · Formal proof — *not yet formalized*
+
+Open in general; proved in one case.
+
+**The proved case (Theorem 5.1 with Corollary 5.2).** For negligible $\delta$,
+$\varepsilon \le 1/20$ and $\ell(\lambda,N) = o(N) + \mathrm{poly}(\lambda)$, no
+two-round passive-server SK-DEPIR with these parameters exists in the model where
+the client alone holds a secret random function — hence none relative to any
+crypto oracle, and none from one-way functions in a black-box way. The argument is
+information-theoretic, generalising a secret-key-size lower bound of Canetti,
+Holmgren and Richelson.
+
+**Why it does not extend, and why the two restrictions come together.** In the
+passive two-round shape the client's query is a set of positions and a counting
+argument over the secret random function applies. With many rounds the client's
+later queries depend on earlier answers; with an active server the positions read
+are not the ones the client named. The source does convert any DEPIR into a
+passive-server one, but that conversion is round-preserving only in the passive
+case — which is why Theorem 5.1 carries both restrictions rather than one.
+
+**What a proof needs.** A compression or counting argument against an adaptive,
+multi-round client interacting with a secret random function. That is the missing
+technique, and nothing in the source claims a barrier to it.
+
+**What a refutation would be.** A black-box construction of secret-key DEPIR from
+one-way functions — a major positive result, and not what the source expects.
+
+**Checked against the literature, 2026-08-28.** No resolution found. The nearest
+follow-up located, *Black-Box Crypto is Useless for Pseudorandom Codes*
+(arXiv:2506.01854), transplants the technique to a different primitive rather than
+settling this.
+
+## Discussion
+
+**The reading the source itself gives.** "The main interpretation of our result is
+that DEPIR requires concrete hardness assumptions about real-world problems (e.g.,
+hardness of Ring LWE), which cannot be captured by a black-box use of crypto
+oracles." So the conjecture is not that DEPIR is impossible — it is that DEPIR
+cannot be reached generically, and must be built from the specific structure of a
+concrete problem.
+
+**DEPIR's odd position in the crypto universe.** Unkeyed DEPIR implies PIR, hence
+oblivious transfer and collision-resistant hashing. But for the keyed flavours
+"we only know that they imply one-way functions", and in the other direction
+nothing implies them: "Conversely, we do not know of any standard cryptographic
+primitives that would generically imply any flavor of DEPIR." Almost every other
+cryptographic notion can be reached from a sufficiently powerful generic
+primitive; this one apparently cannot, and this conjecture is the formal content
+of that observation.
+
+**Two neighbouring open questions, posed separately by the source and not
+published here.** Constructing any flavour of DEPIR "under any standard assumption
+beyond RingLWE, such as standard LWE, DDH (in bilinear maps), factoring, etc."
+(the misspelling "DPEIR" is the source's); and finding a standard primitive that
+generically implies DEPIR.
+
+**What a reviewer should be suspicious of, in order.** First, whether a claimed
+impossibility is for the source's deliberately weak definition — any $o(N)$
+locality, any polynomial round count, imperfect correctness — since proving it for
+a more restrictive definition settles less. Second, whether "black-box" is the
+fully black-box notion or a weaker one; the source discusses semi-black-box
+separately. Third, whether the model gives the secret random function to the
+client alone, which is what makes the proved case information-theoretic.
+
+## Open obligations
+
+- [ ] Prove there is no black-box construction of SK-DEPIR from one-way functions, in the general multi-round active-server case.
+- [ ] Or extend the proved case one restriction at a time, and say which restriction is being removed.
+- [ ] Or refute it with a black-box construction of SK-DEPIR from one-way functions.
+- [ ] Formalize the definition of SK-DEPIR and the black-box notion in Lean; nothing here has been formalized.
+
+:::

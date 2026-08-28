@@ -46,14 +46,20 @@ the tree, on 2026-08-17:
   * A draft's folder name is never the page's `problem:` slug --
     `split-decomp` vs `split-source-decomposition`, `mirror-theory` vs
     `generalized-mirror-theory`, and so on for every pair.
-  * `problem:` is not unique: `0004`/`0005` share one value and `0008`/`0009`
-    share another, because it names the problem, not the statement.
+  * `problem:` is not unique: it names the problem, not the statement, so two
+    statements about one problem share a value. Measured on 2026-08-17,
+    `0004`/`0005` shared one and `0008`/`0009` shared another; both of the
+    second pages were removed on 2026-08-28, but the field's meaning is
+    unchanged and the next pair will collide the same way.
   * Titles are not unique either, and mislead. `groth16/statement.tex` and
     `split-nilp/statement.tex` are byte-identical, and correspond to two
     different pages.
   * The relation is not 1:1. One draft document can hold several conjectures
     and become several pages: `lhl-public-seed/` is subtitled "Two
-    Leftover-Hash-Lemma Conjectures" and became `c/0004` and `c/0005`.
+    Leftover-Hash-Lemma Conjectures" and became `c/0004` and the secret-seed
+    page then numbered `c/0005`. It still holds two `\begin{conjecture}`
+    environments with only `c/0004` claiming it, which the check permits --
+    it bounds claimants by conjectures, not the other way round.
 
 So the page names its draft, in a `draft:` frontmatter field, and a draft
 names nothing -- the direction that survives one document becoming several

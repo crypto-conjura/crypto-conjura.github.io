@@ -1,0 +1,77 @@
+---
+title: "Immunizing a backdoored generator by combining two of them"
+subtitle: "Which two-input functions repair a sabotaged PRG, and which provably do not"
+---
+
+## Motivation
+
+The Dual EC DRBG episode made the threat concrete: a generator can look
+pseudorandom to everyone while its designer, who chose the public parameters,
+predicts its output. If you cannot audit the parameters, one defence is
+diversification — run two generators from two sources and combine their outputs
+with a fixed function $C$. The question is which $C$ works.
+
+The setting has a feature that makes the older analyses inapplicable. A real
+generator is *stateful*: it produces a stream, updating its state. Immunizers that
+work for one-shot generators need not work here, and one of them fails
+spectacularly — concatenation, which is the obvious construction, is "blatantly
+insecure in our setting, for any value of $k$", because the attacker sees each
+generator's whole output and runs the standard attack on each separately.
+
+There are two settings, and they are not the same question. In the *strong* one
+both generators share public parameters, modelling a single saboteur running its
+generator twice. In the *weak* one the two were designed independently, with
+independent parameters and independent backdoors, and the saboteurs pool their
+knowledge only at attack time — two national standards bodies, say. Strong
+security implies weak security, so counterexamples do not transfer, and it is
+exactly at counterexamples that the two settings come apart.
+
+## Provenance and history
+
+Marshall Ball, Yevgeniy Dodis and Eli Goldin, *Immunizing Backdoored PRGs* ([IACR
+ePrint 2023/1778](https://eprint.iacr.org/2023/1778)), settle almost the whole
+table. The question itself was opened by Dodis, Ganesh, Golovnev, Juels and
+Ristenpart at Eurocrypt 2015, whose seeded 1-immunizers rest on universal
+computational extractors.
+
+On the positive side: a random oracle is a secure 2-immunizer, and remains one in
+the auxiliary-input ROM, where the saboteur may preprocess the oracle without
+bound before choosing its parameters. The proof is more delicate than it looks and
+turns on the fact that two independently initialised generators are unlikely ever
+to query the oracle on each other's outputs.
+
+On the negative side: XOR is not a strong 2-immunizer, under the Alekhnovich
+assumption, because Alekhnovich's LPN-based encryption is XOR-homomorphic with
+itself under a single public key — encrypt zero with the generator's randomness and
+the immunized output decrypts. A bilinear pairing is not a *weak* 2-immunizer under
+SXDH, by the two-key version of the same argument. And no 2-immunizer that is
+"highly dependent on both inputs" — which includes XOR, inner product, and any
+cryptographic hash function — can be *proved* secure by black-box reduction to an
+efficiently falsifiable assumption.
+
+One cell is left open, and this hub is about it: whether XOR immunizes two
+independently keyed generators. The source conjectures it does not, and reduces the
+question to a construction task via a sufficient condition — two pseudorandom
+public-key encryption schemes that are jointly XOR-homomorphic — reporting that it
+suspects such a pair exists and that Alekhnovich's scheme is not one.
+
+## Parameter lattice
+
+Which two-input functions immunize, in which setting.
+
+| $C$ | Strong 2-immunizer | Weak 2-immunizer |
+|---|---|---|
+| **Random oracle** | yes, even in the AI-ROM | yes (strong implies weak) |
+| **XOR** | no, under Alekhnovich | [c/0106](/c/0106/) — open, conjectured no |
+| **Bilinear pairing** | no (implied) | no, under SXDH |
+| **Concatenation** | no, for any arity | no |
+| **Any $C$ highly dependent on both inputs** | no black-box proof from a falsifiable assumption | same |
+| **Some $C$ not highly input-dependent** | *unstated* — the source's other open question | *unstated* |
+
+The last row is a separate open problem the source calls fascinating and this hub
+does not yet hold as a statement: is there any standard-model 2-immunizer whose
+security reduces black-box to an efficiently falsifiable assumption?
+
+## Statements in this hub
+
+- [XOR Is Not a Weak 2-Immunizer for Backdoored Pseudorandom Generators](/c/0106/) — open

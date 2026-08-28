@@ -1,6 +1,6 @@
 ---
 title: "The randomness complexity of secure computation"
-subtitle: "Coins as a counted resource, and the last logarithmic factor for XOR"
+subtitle: "Coins as a counted resource: the last logarithmic factor for XOR, and what it costs to concentrate the coin-tossing in few hands"
 ---
 
 ## Motivation
@@ -73,6 +73,39 @@ With statistical rather than perfect privacy the whole question dissolves at
 $O(n\sigma)$ coins, which is why perfection is part of the statement rather than
 a stylistic choice.
 
+## A second axis: who is allowed to toss
+
+Counting coins is one resource question; counting the *parties* that can produce
+them is another, and the two interact. Producing unbiased untamperable randomness
+needs a well-calibrated device, so a protocol that concentrates the coin-tossing in
+a few hands can include many cheaper participants. Couteau and Rosén,
+*Random Sources in Private Computation* ([IACR ePrint
+2023/074](https://eprint.iacr.org/2023/074), ASIACRYPT 2022), settle the count
+exactly: for every deterministic $n$-party functionality and every $t < n/2$,
+exactly $t$ parties need to toss coins — matching a lower bound of Kushilevitz and
+Mansour — and $t+1$ for randomized functionalities. The surprise is that $t$
+suffices at all, since the adversary may corrupt every party capable of generating
+randomness.
+
+What that count costs is the open part. Their protocols pay about a factor $t$ in
+total randomness, because a deterministic party sending a sensitive message cannot
+know which sources are corrupted and so aggregates coins from all $t$. They
+conjecture the factor is exactly right — necessary as well as sufficient — for
+every functionality that needs an honest majority.
+
+The two axes are independent, and the conjecture is careful to exclude the function
+the rest of this hub is about: XOR is linear, and the best known $t$-private XOR
+protocol already achieves minimal sources at no randomness cost.
+
+| | Randomness complexity | Number of sources |
+|---|---|---|
+| **XOR, $t$-private** | $\Theta(t^2)$ for $t=\Omega(n)$; [c/0087](/c/0087/) below that | $t$, at no extra randomness cost |
+| **Deterministic $\mathcal{F}$, honest majority needed** | $R_t$, uncharacterized in general | $t$ exactly (proved) |
+| **Same, restricted to $t$ sources** | [c/0102](/c/0102/) — conjectured $\Theta(t \cdot R_t)$ | $t$ |
+| **Randomized $\mathcal{F}$** | *unstated* | $t+1$ exactly (proved) |
+| **AND, $1$-private** | $\le 6$ bits (proved), $> 1$ bit | $1$ (proved) |
+
 ## Statements in this hub
 
 - [The Exact Randomness Complexity of t-Secure XOR](/c/0087/) — open
+- [A Theta(t) Randomness Blowup Is the Price of Minimally Many Random Sources](/c/0102/) — open

@@ -1,0 +1,184 @@
+---
+id: "0108"
+problem: pseudorandom-codes
+draft: permuted-codes-conjecture
+title: "The General Permuted Codes Conjecture"
+short_title: "Permuted Codes Conjecture"
+areas: [foundations, information-theoretic]
+topics: [code-based-cryptography, dual-distance, pseudorandom-codes, watermarking]
+model: standard
+form: assumption
+assumption_class: falsifiable
+category: research-open
+revision: 1
+status:
+  statement_informal: ai
+  statement_formal: open
+  statement_match: open
+  proof_informal: open
+  proof_review: ai
+  proof_formal: open
+difficulty:
+  reach: barrier
+  by: ai
+  note: "A proof would establish a computational hardness assumption unconditionally, which is not available; the realistic targets are a reduction from a standard assumption in one direction, or a distinguisher in the other. The refutation direction is genuinely attackable and is what the source asks for: the analogous statements with any one of the three randomizations removed are all false, two of them by known attacks on Reed-Solomon codes, so the space of near-misses is well mapped."
+status_summary: "A new hardness assumption, printed as Conjecture 3.1 of the source and stated in its most general form deliberately, as a target for cryptanalysis rather than as the minimum its applications need. Implied by the older permuted puzzles conjecture; statistically true for O(log n) samples over constant-size alphabets; false if any one of its three randomizations is dropped."
+status_updated: 2026-08-28
+relations: []
+lean:
+  mode: none
+sources:
+  - {cite: "Christ, Golowich, Gunn, Moitra, Wichs, Improved Pseudorandom Codes from Permuted Puzzles, IACR ePrint 2025/2222, STOC 2026", url: "https://eprint.iacr.org/2025/2222"}
+  - {cite: "Boyle, Holmgren, Ma, Weiss, On the Security of Doubly Efficient PIR, IACR ePrint 2021/1113", url: "https://eprint.iacr.org/2021/1113"}
+  - {cite: "Blackwell, Wootters, A Note on the Permuted Puzzles Toy Conjecture, arXiv:2108.07885, 2021", url: "https://arxiv.org/abs/2108.07885"}
+  - {cite: "Boyle, Ishai, Pass, Wootters, Can We Access a Database Both Locally and Privately?, TCC 2017, Part II, pages 662-693"}
+  - {cite: "Christ, Gunn, Pseudorandom Error-Correcting Codes, CRYPTO 2024, Part VI, LNCS 14925, pages 325-347"}
+statement_sha: "5e67e9c951c51249b8bc40aead14093d7bd226aa03e88c94440dcb0876422388"
+status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
+---
+
+<!-- status:start -->
+<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>
+
+*Statement: AI-written, not yet formalized. Proof: open -- no attempt yet.*
+<!-- status:end -->
+
+<!-- topics:start -->
+<div class="cj-tags cj-page-topics"><a class="cj-tag cj-tag-topic" href="/problems/by-topic/code-based-cryptography/">Code Based Cryptography</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/dual-distance/">Dual Distance</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/pseudorandom-codes/">Pseudorandom Codes</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/watermarking/">Watermarking</a></div>
+<!-- topics:end -->
+
+Take any linear code whose dual has large minimum distance. Scramble it in three
+ways at once, once and for all: permute the coordinate positions, permute the
+alphabet independently within each position, and add random substitution noise.
+Now publish as many scrambled noisy codewords as you like. The conjecture is that
+they are computationally indistinguishable from uniformly random strings. It is a
+new assumption, and the source says why it is stated in this generality: it could
+not find a counterexample and wanted to offer cryptanalysts the widest possible
+target. It is not an idle target — drop any one of the three scramblings and the
+statement is provably false.
+
+::: {.panel-tabset}
+
+## Statement
+
+[View PDF](pdf/main.pdf) · [LaTeX source](latex/main.tex) · Formal statement — *not yet formalized*
+
+**The distribution (the source's Definition 3.1).** Fix an alphabet $\Sigma$, a
+block length $n$, a set $C \subseteq \Sigma^n$, and let the substitution channel
+$\mathsf{SC}_\eta$ replace each symbol independently with a uniform symbol with
+probability $\eta$. Sample $\mathcal{D}_{n,\Sigma,C,\eta,T}$ as follows: draw
+alphabet permutations $\pi_1,\dots,\pi_n$ and an index permutation $\sigma$
+uniformly; then repeat $T$ times — sample $c \leftarrow C$, set
+$\hat{c}_i \leftarrow \pi_i(c_{\sigma(i)})$, and output
+$\mathsf{SC}_\eta(\hat{c})$. The permutations are drawn *once* and reused across
+all $T$ samples; the codeword and the noise are fresh each time.
+
+**Conjecture (the source's Conjecture 3.1, verbatim).** Let $\lambda$ be a
+security parameter and $n = n(\lambda)$, $q = q(\lambda)$, $T = T(\lambda)$
+polynomially bounded. If $C = C(\lambda) \subseteq \mathbb{F}_q^{n}$ is any family
+of linear codes with dual distance $d = d(\lambda) = \lambda^{\Omega(1)}$ and
+$\eta = \Omega(1)$ is any constant error rate, then
+$\mathcal{D}_{n,\mathbb{F}_q,C,\eta,T}$ is computationally indistinguishable from
+$\mathrm{Unif}((\mathbb{F}_q^{n})^{T})$.
+
+**Why it is stated this generally.** The applications need much less — the
+source's own constructions need it only for Reed-Solomon codes and folded
+Reed-Solomon codes, which it states separately as Conjectures 3.2 and 5.3. Page 5:
+"We state the general form of the conjecture, since we are unable to find any
+counterexamples, and wish to provide a broad target for cryptanalysis. However,
+for our applications, we will only require the conjecture to hold for specific
+codes $C$."
+
+**A stronger version, also recorded and not published here.** The source believes
+sub-exponential security plausible: for some constant $c > 0$, against
+$T = 2^{O(n^c)}$ samples and time-$O(2^{n^c})$ attackers, with advantage
+$2^{-\omega(n^c)}$. That is the version its headline application actually uses, and
+it is a different statement.
+
+## Proof
+
+View PDF — *no proof written yet* · LaTeX source — *no proof written yet* · Formal proof — *not yet formalized*
+
+Open. A hardness assumption of this kind cannot be proved outright; the two live
+targets are a reduction from a standard assumption, and a distinguisher.
+
+**Evidence, all of it theorems in the source.**
+
+*It follows from an older assumption.* Proposition 3.4: the permuted puzzles
+conjecture of Boyle, Holmgren, Ma and Weiss and of Blackwell and Wootters implies
+this one. Permuted puzzles was introduced in 2017 for an unrelated purpose —
+doubly efficient private information retrieval — and studied since. The source
+also shows the permuted puzzles conjecture is *equivalent* to the variant of this
+one in which the substitution channel is replaced by an erasure channel.
+
+*Statistical evidence at small sample counts.* Corollary 4.3: over a constant-size
+alphabet, for any code of polynomial dual distance, some $T = \Omega(\log n)$
+samples are *statistically* indistinguishable from uniform. The conjecture asks
+for $\mathrm{poly}(n)$ samples and only computational indistinguishability, so
+this is far short — but unconditional.
+
+*Resistance to a class of distinguishers.* "To give further evidence, we show that
+the conjecture holds against a broad class of simple distinguishers, including
+read-once branching programs."
+
+**The refutations of weakened forms, which is what makes this a sharp target.**
+"In fact, it turns out that all three of the randomizations (alphabet permutation,
+index permutation, and noise) are necessary: The permuted codes conjecture would be
+false if any one of these was omitted." Without the permutations, any efficiently
+decodable code breaks it — the decoder is the distinguisher. Without the noise one
+recovers the toy conjecture of Boyle, Ishai, Pass and Wootters, refuted for
+Reed-Solomon codes. Without the alphabet permutations the source's own Theorem 4.5
+refutes it, again for Reed-Solomon codes, from a constant number of samples.
+
+**So a refutation would have to be** a code family with polynomial dual distance,
+a constant error rate, and a polynomial-time distinguisher — in a space where the
+three nearest weakenings are already known to fall.
+
+**Checked against the literature, 2026-08-28.** No cryptanalysis of the conjecture
+located; the paper appears at STOC 2026 and the assumption is new.
+
+## Discussion
+
+**On publishing a hardness assumption as an open problem.** A conjecture that a
+candidate is secure is usually an assumption a paper makes, not a problem it
+poses, and this site has declined several such. Three things make this one
+different, and a reviewer who disagrees should disagree with these. It is a
+statement about a mathematical object — a distribution over strings — not about
+the security of the source's own construction. It is analysed rather than
+asserted: the implication from permuted puzzles, the statistical result and the
+three refutations of weakened forms are all theorems. And the source explicitly
+invites cryptanalysis rather than asking to be believed. The same reasoning was
+recorded for the nearest precedent on this site, [c/0098](/c/0098/), and this
+page draws the same line.
+
+**What rests on it.** A pseudorandom code is an error-correcting code whose
+codewords are computationally indistinguishable from random strings — the object
+that gives watermarks for AI-generated text with strong robustness and
+undetectability. Under the conjecture for a specific efficiently list-decodable
+code, the source obtains pseudorandom codes no other assumption is known to give:
+binary alphabet, strong adaptive robustness to a constant rate of substitutions,
+sub-exponential security, and, for folded Reed-Solomon codes, robustness to a
+constant rate of edits.
+
+**Where the source would rather be, and says so.** "It remains an interesting open
+question to construct sub-exponentially secure pseudorandom codes from more
+standard assumptions than the permuted codes conjecture, such as LPN or LWE or
+variants thereof (sparse LPN, dense–sparse LPN, ring LWE)." A separate question,
+posed separately.
+
+**What a reviewer should be suspicious of, in order.** First, which version is at
+issue: the general conjecture, the Reed-Solomon specialisation, the folded
+Reed-Solomon one, or the sub-exponential strengthening. Second, whether a claimed
+attack uses all three randomizations or is really an attack on one of the known-false
+weakenings. Third, that the general form quantifies over all linear families of
+polynomial dual distance, so a counterexample for an exotic family refutes the
+conjecture as stated without touching the constructions built on it.
+
+## Open obligations
+
+- [ ] Give a polynomial-time distinguisher for some family of linear codes with polynomial dual distance and constant error rate.
+- [ ] Or reduce the conjecture to a standard assumption — LPN, LWE, or a variant.
+- [ ] Say in either case which version is settled: general, Reed-Solomon, folded Reed-Solomon, or sub-exponential.
+- [ ] Formalize the distribution and the statement in Lean; nothing here has been formalized.
+
+:::

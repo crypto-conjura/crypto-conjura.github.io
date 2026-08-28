@@ -1,0 +1,251 @@
+% =====================================================================
+%  CONJURA CONJECTURE STATEMENT
+%  Ball-Dodis-Goldin leave open whether XOR immunizes two independently
+%  keyed backdoored PRGs, and conjecture it does not.
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{IS XOR A WEAK 2-IMMUNIZER?}
+
+\newcommand{\bits}{\{0,1\}}
+\newcommand{\negl}{\mathrm{negl}}
+\newcommand{\Gen}{\mathsf{Gen}}
+\newcommand{\Enc}{\mathsf{Enc}}
+\newcommand{\Dec}{\mathsf{Dec}}
+\newcommand{\out}{\mathrm{out}}
+
+\begin{document}
+
+\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjtitle{Is XOR a Weak 2-Immunizer for Backdoored Generators?}
+\cjsubtitle{Every other case in the source's table is settled; this one
+  is left open, with a conjectured answer and a concrete route to it}
+\cjstatus{Statement: AI-written from Marshall Ball, Yevgeniy Dodis and
+  Eli Goldin, \emph{Immunizing Backdoored PRGs}, IACR ePrint 2023/1778.
+  Not yet checked by a human. The source settles every other entry in its
+  own table --- XOR fails as a \emph{strong} 2-immunizer under the
+  Alekhnovich assumption, a bilinear pairing fails as a \emph{weak} one
+  under SXDH, a random oracle succeeds even with auxiliary input --- and
+  says of this one case that it leaves it open but conjectures it to be
+  true.}
+\cjcategory{\emph{Backdoored primitives; pseudorandom generators}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+A backdoored pseudorandom generator looks random to everyone except the
+saboteur who chose its public parameters. One defence is to run two of
+them and combine their outputs with a fixed function; if the result is
+secure whatever backdoors were planted, the function is an
+\emph{immunizer}. XOR is the obvious candidate, and it demonstrably fails
+when both generators come from the same saboteur. The remaining case is
+the one where two \emph{independent} designers --- say two national
+standards bodies --- each plant their own backdoor, and only afterwards
+pool what they know. The source conjectures XOR fails there too, and
+reduces the question to a concrete construction task: build two
+pseudorandom encryption schemes whose ciphertexts XOR to something
+jointly decryptable.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+A \emph{backdoored PRG} is a pair $(K, G)$ where $K$ outputs a public
+parameter and a matching backdoor $(pk, sk)$, and $G_{pk}$ is a stateful
+generator: on state $s$ it outputs a block and an updated state. Write
+$\out_q(G_{pk}, s)$ for the first $q$ output blocks.
+
+\begin{itemize}[nosep]
+  \item $(K,G)$ is \emph{$(t,q,\delta)$ publicly secure} if
+    $(pk, \out_q(G_{pk}, U_S))$ is $\delta$-indistinguishable from
+    $(pk, U_{qn})$ to distinguishers running in time $t$ --- the public
+    sees a good PRG\@.
+  \item $(K,G)$ is \emph{$(t,q,\delta)$ backdoor secure} if the same holds
+    when the distinguisher is also given $sk$.
+\end{itemize}
+
+An immunizer takes generators that are publicly secure but not backdoor
+secure and makes them backdoor secure. Given $C : \bits^{n} \times
+\bits^{n} \to \bits^{m}$ and two generators, $C(G^{X}, G^{Y})$ runs both
+independently and applies $C$ blockwise to their outputs.
+
+\begin{definition}[{\cite[Def.~2.8]{BDG23}}]\label{def:weak}
+$C$ is a \emph{$(t,q,\delta,\delta')$-secure weak 2-immunizer} if for any
+two $(t,q,\delta)$ publicly secure PRGs $(K^{X}, G^{X})$ and
+$(K^{Y}, G^{Y})$, the PRG $((K^{X},K^{Y}), C(G^{X},G^{Y}))$ is
+$(t,q,\delta')$ backdoor secure.
+\end{definition}
+
+\begin{definition}[{\cite[Def.~2.10]{BDG23}}]\label{def:strong}
+$C$ is a \emph{$(t,q,\delta,\delta')$-secure strong 2-immunizer} if for
+any single $(t,q,\delta)$ publicly secure PRG $(K,G)$, the PRG
+$(K, C(G,G))$ --- two independent seeds, the \emph{same} public parameter
+--- is $(t,q,\delta')$ backdoor secure.
+\end{definition}
+
+Strong implies weak, with a factor $4$ loss in $\delta'$. Weak is the
+setting where the two generators were designed by two independent key
+generation processes, with independent parameters and independent
+backdoors, and the two saboteurs join forces only at attack time.
+
+\section{Notation and parameters}\label{sec:notation}
+
+\begin{itemize}[nosep]
+  \item $\lambda$ is the security parameter; $t$ the distinguisher's
+    running time, $q$ the number of output blocks, $\delta$ and
+    $\delta'$ the public and backdoor advantages.
+  \item The parameter setting at issue throughout is
+    $(\poly(\lambda), 1, \negl(\lambda), \negl(\lambda))$: a single
+    output block, negligible advantages, polynomial-time attackers.
+  \item A public-key encryption scheme is \emph{pseudorandom} if for
+    every message the pair $(pk, \Enc_{pk}(m))$ is computationally
+    indistinguishable from $(pk, U)$ --- strictly stronger than ordinary
+    semantic security, and the notion the source uses throughout.
+  \item Two schemes $(\Gen,\Enc,\Dec)$ and $(\Gen',\Enc',\Dec')$ are
+    \emph{jointly $\oplus$-homomorphic} if there is a function
+    $\Dec^{\oplus}_{sk,sk'}$ with
+    $\Pr[\Dec^{\oplus}_{sk,sk'}(\Enc_{pk}(m;\alpha) \oplus
+    \Enc'_{pk'}(m;\alpha')) = m] \ge 2/3$ for every $m$, over the two key
+    pairs and the two randomness strings.
+\end{itemize}
+
+\section{The conjecture}\label{sec:conjectures}
+
+\begin{conjecture}[{\cite[\S 1.3, \S 3.1]{BDG23}}]\label{conj:main}
+$\oplus$ is not a $(\poly(\lambda), 1, \negl(\lambda),
+\negl(\lambda))$-secure weak 2-immunizer.
+\end{conjecture}
+
+\begin{remark}[How the source states it]\label{rem:framing}
+The source states the direction, twice. Page 8, listing what its results
+do and do not settle: ``The only exception is the explicit counter-example
+to the insecurity of XOR as a weak 2-immunizer, which we leave open (but
+conjecture to be true).'' And page 13, immediately after proving the
+strong case: ``Note that there is no simple way to adapt the public key
+encryption scheme used to prove this theorem to be sufficiently
+homomorphic to prove that XOR is not a weak 2-immunizer. We leave the
+question as to whether XOR is a weak 2-immunizer as an open question.''
+
+The parameter tuple in Conjecture~\ref{conj:main} is the source's own,
+carried over from the theorem it is the missing counterpart to
+(Theorem~\ref{thm:strong}), and the source's Corollary 3.13 states the
+sufficient condition at exactly these parameters.
+\end{remark}
+
+\begin{theorem}[The route the source names, {\cite[Cor.~3.13]{BDG23}}]\label{thm:route}
+If there exist $(\Gen,\Enc,\Dec)$ and $(\Gen',\Enc',\Dec')$ that are
+pseudorandom and jointly $\oplus$-homomorphic, then $\oplus$ is not a
+$(\poly(\lambda), 1, \negl(\lambda), \negl(\lambda))$-secure weak
+2-immunizer.
+\end{theorem}
+
+This is a sufficient condition, not a characterisation: nothing in the
+source says a counterexample must arise this way. But it is the source's
+own suggested route, and it comes with a stated expectation: ``We remark
+that the Alekhnovich PKE is not jointly $\oplus$-homomorphic with itself.
+We leave it as an open question as to whether such a pair of encryption
+schemes exist for XOR, but we suspect that its existence is likely.''
+
+\begin{remark}[Why the strong case does not settle the weak
+  one]\label{rem:strongweak}
+\begin{theorem}[{\cite[Thm.~3.1]{BDG23}}]\label{thm:strong}
+Assuming the Alekhnovich assumption, $\oplus$ is not a
+$(\poly(\lambda), 1, \negl(\lambda), \negl(\lambda))$-secure
+\emph{strong} 2-immunizer.
+\end{theorem}
+The implication between the two notions runs the wrong way. Strong
+security implies weak security, so a counterexample to strong security
+says nothing about weak security --- and the counterexample is exactly
+where the two settings come apart. To break the strong notion one needs a
+single pseudorandom scheme that is $\oplus$-homomorphic \emph{with
+itself}: two ciphertexts under the \emph{same} public key whose XOR
+decrypts. Alekhnovich's LPN-based encryption is, which is what
+Theorem~\ref{thm:strong} uses. To break the weak notion one needs two
+schemes with \emph{independent} keys whose ciphertexts of the same
+message XOR to something decodable from both secret keys, and the source
+states plainly that Alekhnovich's scheme is not jointly
+$\oplus$-homomorphic with itself.
+\end{remark}
+
+\begin{remark}[The evidence on each side]\label{rem:evidence}
+For the conjecture. Every other case the source examines resolves against
+the simple candidates, including one in the weak setting: a bilinear
+pairing $e : \mathbb{G}_X \times \mathbb{G}_Y \to \mathbb{G}_T$ ---
+which, as an operation on two independently keyed sources, ``looks
+similar to XOR'' --- is not a secure weak 2-immunizer under SXDH\@. That is
+a worked instance of the very shape Theorem~\ref{thm:route} asks for,
+built by constructing schemes jointly homomorphic under a related
+operation.
+
+Against it, or at least in the way. The source's black-box separation
+says no 2-immunizer that is ``highly dependent on both inputs'' --- XOR
+included --- can be \emph{proved} secure by reduction to an efficiently
+falsifiable assumption. That rules out one kind of positive answer but
+not the positive answer itself: XOR could still be a weak 2-immunizer
+with no such proof available. So Conjecture~\ref{conj:main} does not
+follow from the separation, and this is the gap the source is pointing at.
+\end{remark}
+
+\begin{remark}[What a resolution looks like]\label{rem:resolution}
+A refutation of Conjecture~\ref{conj:main} --- a proof that XOR
+\emph{is} a weak 2-immunizer --- would, by the separation just described,
+have to be non-black-box or rest on a non-falsifiable assumption, and
+would be the more surprising outcome.
+
+A proof of it is a construction: two pseudorandom public-key encryption
+schemes, jointly $\oplus$-homomorphic, under any assumption at all. The
+source's expectation is that these exist, and the honest reading of the
+open problem is that nobody has yet written one down rather than that
+anything is known to block it.
+\end{remark}
+
+\begin{remark}[The separate question the source calls
+  fascinating]\label{rem:other}
+Not published here, and not to be confused with
+Conjecture~\ref{conj:main}: ``Is there a 2-immunizer $C$ in the standard
+model whose security can be black-box reduced to an efficiently
+falsifiable assumption?'' The source's separation shows such a $C$ cannot
+be highly dependent on both inputs, which excludes every natural
+candidate including cryptographic hash functions, and the source names two
+possible ways round --- a non-black-box reduction from a function like a
+strong two-source extractor, or a non-falsifiable assumption in the
+style of universal computational extractors. That is a different
+statement, posed separately by the source.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{99}
+
+\bibitem[BDG23]{BDG23}
+Marshall Ball, Yevgeniy Dodis and Eli Goldin.
+\emph{Immunizing backdoored PRGs}.
+IACR ePrint 2023/1778.
+The source. The conjecture is stated on page 8 and again on page 13; the
+definitions of weak and strong 2-immunizer are Definitions 2.8 and 2.10;
+joint $\oplus$-homomorphism is Definition 3.11 with Theorem 3.12 and
+Corollary 3.13 on page 17; the strong-case counterexample is Theorem 3.1;
+the pairing counterexample is Theorem 3.3; the black-box separation is
+Theorem 1.4; the random-oracle positive result is Theorem 1.3.
+
+\bibitem[DGGJR15]{DGGJR15}
+Yevgeniy Dodis, Chaya Ganesh, Alexander Golovnev, Ari Juels and
+Thomas Ristenpart.
+\emph{A formal treatment of backdoored pseudorandom generators}.
+EUROCRYPT 2015, Part I, LNCS 9056, pages 101--126, Springer, April 2015.
+The work the source continues: it initiated the question of immunizing
+backdoored PRGs, and its seeded 1-immunizers are built from universal
+computational extractors.
+
+\bibitem[Ale11]{Ale11}
+Michael Alekhnovich.
+\emph{More on average case vs approximation complexity}.
+Computational Complexity, 20(4):755--786, December 2011.
+The LPN-style public-key encryption scheme that is $\oplus$-homomorphic
+with itself, and so refutes XOR as a strong 2-immunizer --- but is not
+jointly $\oplus$-homomorphic with itself, which is why the weak case
+stays open.
+
+\end{conjurabibliography}
+
+\end{document}

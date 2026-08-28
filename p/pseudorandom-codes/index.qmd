@@ -1,0 +1,78 @@
+---
+title: "Codes whose codewords look random"
+subtitle: "The assumption that watermarking rests on, and the three scramblings it cannot do without"
+---
+
+## Motivation
+
+A pseudorandom code is an error-correcting code with a detection key, whose
+codewords are computationally indistinguishable from uniformly random strings to
+anyone without that key. It is the object that gives watermarks for the output of a
+generative model with the two properties that matter: undetectability, so the
+watermark cannot be found and stripped, and robustness, so it survives editing.
+
+Building one is not a matter of assembling standard primitives. Pseudorandomness of
+codewords and efficient decoding pull in opposite directions — an efficient decoder
+is a distinguisher unless something hides the code's structure — so every known
+construction rests on a specific new hardness assumption. This hub is about the
+assumptions themselves.
+
+## Provenance and history
+
+Miranda Christ and Sam Gunn introduced pseudorandom codes at CRYPTO 2024, with an
+LPN-based construction and a second, heuristic one. Surendra Ghentiyala and
+Venkatesan Guruswami gave constructions from a planted hypergraph assumption. Both
+exhibit the same phenomenon: the sparsity that makes decoding possible also gives a
+quasipolynomial-time distinguishing attack that brute-forces the sparse structure.
+
+Miranda Christ, Noah Golowich, Sam Gunn, Ankur Moitra and Daniel Wichs, *Improved
+Pseudorandom Codes from Permuted Puzzles* ([IACR ePrint
+2025/2222](https://eprint.iacr.org/2025/2222), STOC 2026), get past that by
+formalising a different assumption, the *permuted codes conjecture*: scramble a
+linear code of large dual distance by permuting coordinate positions, permuting the
+alphabet independently within each position, and adding substitution noise, and the
+resulting codewords are pseudorandom. Under it they obtain pseudorandom codes with
+properties no other assumption is known to give — binary alphabet, strong adaptive
+robustness to a constant rate of substitutions, sub-exponential security, and, for
+folded Reed-Solomon codes, robustness to a constant rate of edits.
+
+The assumption is not new out of nowhere. It descends from the *permuted puzzles*
+line, introduced by Boyle, Ishai, Pass and Wootters in 2017 for doubly efficient
+private information retrieval and studied since by Boyle, Holmgren and Weiss and by
+Boyle, Holmgren, Ma and Weiss and by Blackwell and Wootters. The source proves the
+permuted codes conjecture is implied by the permuted puzzles conjecture, and is
+equivalent to its own erasure-channel variant.
+
+What makes it a sharp target rather than a wish is that its near-misses are
+refuted. The 2017 "toy conjecture" omitted the noise and is false for Reed-Solomon
+codes. Omitting the permutations is false for any efficiently decodable code, the
+decoder being the distinguisher. Omitting the alphabet permutations is false, again
+for Reed-Solomon codes, by the source's own Theorem 4.5, from a constant number of
+samples. All three randomizations are necessary, and each is necessary for a
+different reason.
+
+## Parameter lattice
+
+Assumptions known to give pseudorandom codes, and what they deliver.
+
+| Assumption | Alphabet | Robustness | Security | Status |
+|---|---|---|---|---|
+| **Sub-exponential LPN** | binary | substitutions | sub-exponential | Christ–Gunn |
+| **Planted hyperloop** | binary | substitutions | quasipolynomial attack known | Ghentiyala–Guruswami |
+| **Permuted codes, Reed-Solomon** | binary | strong adaptive, substitutions | sub-exponential | [c/0108](/c/0108/) — open |
+| **Permuted codes, folded Reed-Solomon** | binary | edits | sub-exponential | [c/0108](/c/0108/) — open |
+| **LPN or LWE, sub-exponentially secure PRCs** | — | — | — | *unstated* — the source's other open question |
+
+Variants of the permuted codes distribution, and what is known about each.
+
+| Randomizations present | Status |
+|---|---|
+| Index permutation + alphabet permutation + noise | the conjecture, open |
+| Index permutation + alphabet permutation + erasures | equivalent to permuted puzzles |
+| Index + alphabet permutation, no noise | false (the 2017 toy conjecture) |
+| Index permutation + noise, no alphabet permutation | false (Theorem 4.5) |
+| Noise only, no permutations | false for any efficiently decodable code |
+
+## Statements in this hub
+
+- [The General Permuted Codes Conjecture](/c/0108/) — open

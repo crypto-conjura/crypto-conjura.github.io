@@ -85,21 +85,49 @@ an empty cell is a research prompt).
   `withdrawn_reason` and a `{kind: superseded-by, target: "<new id>"}`
   relation. Never delete it and never let its id 404.
 
-## Nothing under `c/` is ever deleted
+## Withdrawal is the default; deletion needs a reason and leaves a record
 
-The never-delete rule is absolute, and it covers every page under `c/`,
-including `category: test` scaffolding. A page that has served its purpose is
-**withdrawn**, never removed: set `category: withdrawn`, give it a
-`withdrawn_reason`, and leave it in place. Its URL keeps resolving forever.
+A page that has served its purpose is normally **withdrawn**, not removed: set
+`category: withdrawn`, give it a `withdrawn_reason`, and leave it in place, so
+its URL keeps resolving forever. Reach for withdrawal first, always. Deletion
+is indistinguishable, from outside, from a result being quietly disappeared,
+and an archive whose case rests on keeping the record cannot spend that
+credibility casually.
 
-This is stricter than the rule that stood until 17 August 2026, which let a
-`test` page be deleted outright on the grounds that scaffolding asserts
-nothing. That carve-out is gone. The reason is that deletion is
-indistinguishable, from outside, from a result being quietly disappeared, and
-an archive whose case rests on keeping the record cannot afford a mechanism
-for making pages vanish -- not even one reserved for pages that never claimed
-anything. `c/0006` was deleted under the old rule on 2026-08-16, which is why
-the ids skip it; that is the last such deletion.
+The rule that stood from 17 to 28 August 2026 was absolute: nothing under `c/`
+was ever deleted, not even `category: test` scaffolding. It did not survive
+contact with two redundant pages. On 28 August 2026 `c/0009` and the
+secret-seed LHL page then numbered `c/0005` were both removed, each because it
+duplicated a sibling's LaTeX byte for byte and stated something the sibling's
+own page already carried. Keeping a page that asserts nothing the archive does
+not already assert elsewhere is not preservation, it is a second copy; and an
+absolute rule that forces the second copy to stay is a rule that makes the
+archive harder to read in the name of making it trustworthy.
+
+So the rule is now conditional, and the condition is strict. A page under `c/`
+may be deleted only when **all** of the following hold, and the commit message
+must say which sibling absorbs it:
+
+1. Its mathematical content is preserved somewhere else on the site that a
+   reader can reach -- a sibling statement, or a proof note that reproduces the
+   statement verbatim. Nothing is retracted by a deletion; only a page is.
+2. It is redundant rather than merely inactive. A page nobody has worked on is
+   withdrawn, not deleted. Redundancy means another page already carries the
+   same document or the same claim.
+3. Every reference to it elsewhere on the site is cleaned in the same commit,
+   including relations, hub lattices, blog links, and generated manifests. A
+   dangling `relations:` target fails `check_relations.py` and takes the deploy
+   with it, which is exactly how deleting `c/0005` broke publishing for two
+   hours across roughly twenty-five commits on an earlier attempt.
+4. Dated records -- audits, reports, session logs -- are left as written, since
+   editing them would falsify a record of what was true when it was made. Plain
+   text mentions in them are fine; links are not, so a dated record that links
+   the deleted page needs its link removed and nothing else.
+5. The id is retired, never recycled, exactly as for a withdrawal.
+
+Deletions to date: `c/0006` on 2026-08-16 (test scaffolding, under the rule
+before 17 August), and `c/0009` and the secret-seed LHL page on 2026-08-28
+(redundant duplicates, under this rule). The ids skip all three.
 
 Withdrawal delists rather than erases. `build_index.py` drops withdrawn
 statements from every generated facet view, so a withdrawn page stops

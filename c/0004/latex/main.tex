@@ -4,10 +4,8 @@
 \newcommand{\Adv}{\mathbf{Adv}}
 \newcommand{\Gm}{\mathsf{Game}}
 \newcommand{\Pred}{\mathrm{Pred}}
-\newcommand{\Ext}{\mathrm{Ext}}
 \newcommand{\ExtP}{\mathrm{Ext}\text{-}\mathrm{pub}}
 \newcommand{\pred}{\mathrm{pred}}
-\newcommand{\ext}{\mathrm{ext}}
 \newcommand{\extpub}{\textup{ext-pub}}
 \newcommand{\sd}{\mathit{sd}}
 \renewcommand{\sample}{\stackrel{{\scriptscriptstyle\$}}{\leftarrow}}
@@ -17,14 +15,14 @@
 \newcommand{\calR}{\mathcal{R}}
 \newcommand{\ret}{\textbf{return}\ }
 
-\runninghead{LEFTOVER HASH LEMMA CONJECTURES}
+\runninghead{LEFTOVER HASH LEMMA CONJECTURE, PUBLIC SEED}
 
 \begin{document}
 
 \cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
 \cjtitle{Randomness Extraction from Unpredictable Random-Oracle Sources}
-\cjsubtitle{Two Leftover-Hash-Lemma Conjectures}
-\cjstatus{Statement: human-written, not yet formalized.}
+\cjsubtitle{A Leftover-Hash-Lemma Conjecture, Public Seed}
+\cjstatus{Statement: human-written, formalized in Lean (see \texttt{lean/Statement.lean}).}
 \cjcategory{Information-Theoretic Cryptography.}
 
 \vspace{0.4em}
@@ -35,8 +33,8 @@ $K := |\calK|$, $D := |\calD|$, $R := |\calR|$. Let $\Fun(\calK \times \calD, \c
 all functions $\calK \times \calD \to \calR$, let $\SD(\cdot,\cdot)$ denote statistical distance and
 $U_{\calR}$ the uniform distribution on $\calR$. The source $S$, the predictor $P$ and the
 distinguisher $\mathsf{D}$ of Figure~\ref{fig:games} are computationally unbounded and receive the
-\emph{entire} function table of $H$ as an explicit input. The two extraction games differ only in
-whether the seed $\sd$ is kept secret from $\mathsf{D}$ or given to it.
+\emph{entire} function table of $H$ as an explicit input. The seed $\sd$ is sampled only after $S$
+has terminated, and is given to $\mathsf{D}$: that is what makes this the \emph{public-seed} game.
 
 \begin{figure}[ht]
 \centering
@@ -50,17 +48,6 @@ $\ret (x = x')$
 
 \smallskip
 \fbox{\begin{minipage}[t]{0.85\linewidth}
-\underline{$\Gm\ \Ext^{S}_{\mathsf{D}}$ (secret seed)}\\[2pt]
-$H \sample \Fun(\calK \times \calD, \calR)$;\quad
-$(x,z) \sample S(H)$;\quad $\sd \sample \calK$\\
-$y_0 \leftarrow H(\sd,x)$;\quad $y_1 \sample \calR$;\quad
-$b \sample \{0,1\}$\\
-$b' \sample \mathsf{D}(H, y_b, z)$;\quad
-$\ret (b = b')$
-\end{minipage}}
-
-\smallskip
-\fbox{\begin{minipage}[t]{0.85\linewidth}
 \underline{$\Gm\ \ExtP^{S}_{\mathsf{D}}$ (public seed)}\\[2pt]
 $H \sample \Fun(\calK \times \calD, \calR)$;\quad
 $(x,z) \sample S(H)$;\quad $\sd \sample \calK$\\
@@ -69,34 +56,20 @@ $b \sample \{0,1\}$\\
 $b' \sample \mathsf{D}(H, \sd, y_b, z)$;\quad
 $\ret (b = b')$
 \end{minipage}}
-\caption{Prediction game (top) and the two extraction games: secret seed (middle) and public seed
-(bottom). The first argument of $S$, $P$ and $\mathsf{D}$ is the \emph{full function table} of $H$;
-the games $\Ext$ and $\ExtP$ differ only in whether $\mathsf{D}$ receives $\sd$.}
+\caption{Prediction game (top) and the public-seed extraction game (bottom). The first argument of
+$S$, $P$ and $\mathsf{D}$ is the \emph{full function table} of $H$; the distinguisher additionally
+receives the seed $\sd$.}
 \label{fig:games}
 \end{figure}
 
 \begin{definition}\label{def:games}
 Set $\Adv^{\pred}_{\calK,\calD,\calR,S}(P) := \Pr[\Pred^{S}_{P} \Rightarrow 1]$ and
 \[
-  \Adv^{\ext}_{\calK,\calD,\calR}(S,\mathsf{D}) := 2\Pr[\Ext^{S}_{\mathsf{D}} \Rightarrow 1] - 1 ,
-\]
-\[
   \Adv^{\extpub}_{\calK,\calD,\calR}(S,\mathsf{D}) := 2\Pr[\ExtP^{S}_{\mathsf{D}} \Rightarrow 1] - 1 .
 \]
 A source $S$ is \emph{$\epsilon$-unpredictable} if
 $\Adv^{\pred}_{\calK,\calD,\calR,S}(P) \le \epsilon$ for every unbounded predictor $P$.
 \end{definition}
-
-\begin{conjecture}[Secret seed]\label{conj:main}
-There is a universal constant $c > 0$, independent of $\calK$, $\calD$, $\calR$ and $\epsilon$, such
-that for all nonempty finite $\calK, \calD, \calR$, all $\epsilon \in (0,1]$, every
-$\epsilon$-unpredictable source $S$ and every unbounded distinguisher $\mathsf{D}$,
-\[
-  \Adv^{\ext}_{\calK,\calD,\calR}(S,\mathsf{D})
-  \;\le\; \delta(\epsilon, K, D, R)
-  \;:=\; c \cdot \sqrt{\frac{\epsilon R + \log_2 D}{K}} \; .
-\]
-\end{conjecture}
 
 \begin{conjecture}[Public seed]\label{conj:pub}
 There is a universal constant $c > 0$, independent of $\calK$, $\calD$, $\calR$ and $\epsilon$, such
@@ -108,5 +81,16 @@ $\epsilon$-unpredictable source $S$ and every unbounded distinguisher $\mathsf{D
   \;:=\; c \cdot \Bigl( \sqrt{\epsilon R} + \sqrt{\frac{\log_2 D}{K}} \,\Bigr) .
 \]
 \end{conjecture}
+
+\bigskip
+\noindent\textbf{The secret-seed companion.}
+This note states one conjecture, the one the accompanying page states. There is a companion
+statement in the same setting, differing only in that $\mathsf{D}$ is called as
+$\mathsf{D}(H, y_b, z)$ and never receives $\sd$; it conjectures the bound
+$c\sqrt{(\epsilon R + \log_2 D)/K}$, in which the seed's factor $1/K$ attaches to both summands.
+It is a genuinely different claim, not a restatement: the solution note in this folder proves the
+conjecture above and separately shows that transposing the secret-seed expression verbatim into the
+public-seed game gives a \emph{false} statement. The two were originally posed together in a single
+write-up and were split so that each note states exactly the conjecture its page states.
 
 \end{document}

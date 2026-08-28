@@ -109,8 +109,10 @@ the 2026-08-18 harvest, so they are written down here rather than rediscovered:
   it to `c/<id>/pdf/main.pdf` and delete the `.aux`/`.log`.
 
 One draft may be named by several pages — `lhl-public-seed/` is subtitled
-"Two Leftover-Hash-Lemma Conjectures" and is claimed by both `c/0004` and
-`c/0005` — so the field lives on the page, never on the draft. The check
+"Two Leftover-Hash-Lemma Conjectures" and was claimed by both `c/0004` and the
+secret-seed page then numbered `c/0005`, until that page was removed on
+28 August 2026 and `c/0004` was left claiming it alone — so the field lives on
+the page, never on the draft. The check
 allows that only when the draft really does hold that many `\begin{conjecture}`
 environments; a single-conjecture draft claimed twice is a copy-paste error
 and fails.

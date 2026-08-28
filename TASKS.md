@@ -75,7 +75,7 @@ supplied numbers and several had drifted or were slightly off:
   completable by a busy person in an evening. The review's suggested pairings,
   which match the areas on each statement page:
 
-  - **Groth** — `c/0008` / `c/0009`, the split-NILP and Groth16 optimality pair.
+  - **Groth** — `c/0008`, the split-NILP conjecture (the separate Groth16-optimality page it implied, `c/0009`, was removed on 28 August 2026).
     His own EUROCRYPT 2016 paper posed the 2-element question as its closing
     open problem, which makes this the least presumptuous ask on the list.
   - **Tessaro** — `c/0001` (6-round Feistel indifferentiability) and `c/0002`

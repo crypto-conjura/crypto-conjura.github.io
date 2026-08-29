@@ -190,6 +190,54 @@ Every numerical comparison below uses \eqref{eq:conj} exactly as displayed, with
 constant \texttt{proof.tex} establishes. No other constant from that note is imported and none is
 needed.
 
+\subsection*{Also stated, not proved here: the bounds of Barak et al.}
+
+Section~\ref{sec:compare} and Section~\ref{sec:prior} measure against several bounds
+of~\cite{BDKPPSY11}, so those are listed here with the rest. All are quoted rather than proved, and
+all live in that paper's model, not the game of Section~\ref{sec:setting}: there $\mathrm{Ext}$ is a
+fixed public function, the source is a distribution rather than an algorithm, and the random oracle
+appears in no definition, lemma or theorem. Remark~\ref{rem:roquery} sets the two models side by
+side.
+
+One clash of notation to clear first. In~\cite{BDKPPSY11}, $u$ is the length of the source, $v$ the
+number of extracted bits, $\mu$ the source's min-entropy, $L := \mu - v$ the \emph{entropy loss},
+and $\varepsilon$ the security of the \emph{application} being keyed. That last is not this note's
+$\epsilon$, which is the source's unpredictability and is $2^{-\mu}$ in their units. Otherwise
+$u = \log_2 D$ and $v = \log_2 R$.
+
+\begin{enumerate}
+\item \textbf{Seed length} (their introduction, attributed to Stinson~\cite{Sti94}): a family
+(almost) universal enough for the leftover hash lemma needs
+$n \ge \min\bigl(u-v,\ v + 2\log(1/\varepsilon)\bigr) - O(1)$, ``and must grow with the number of
+extracted bits''. Theorem~\ref{thm:limit} and Proposition~\ref{prop:nouniv} reproduce this, one
+branch each; Section~\ref{sec:prior} makes the identification.
+
+\item \textbf{Entropy loss} (their introduction): the standard lemma needs
+$L \ge 2\log(1/\varepsilon)$.
+
+\item \textbf{Their generalised leftover hash lemma} (Theorem~3.1, applied to particular primitives
+in their Theorems~3.3--3.7): the loss falls to $L = \log(1/\varepsilon)$ for a wide range of
+key-derivation applications, the security degrading from $\varepsilon$ to at most
+$\varepsilon + \sqrt{\varepsilon\,2^{-L}}$.
+
+\item \textbf{Expand-then-extract} (their Section~4): stretching a short public seed with a
+pseudorandom generator and extracting with the result does \emph{not} work in general --- they give
+a DDH-based generator and a perfectly universal hash whose output is distinguishable with
+probability close to $1$ given the short seed --- but it is sound when the number of extracted bits
+is logarithmic in the generator's security, and sound in minicrypt, so any counterexample needs a
+public-key assumption.
+
+\item \textbf{The unsalted random-oracle heuristic} (their Section~3.4, prose rather than theorem):
+$\varepsilon_{\mathrm{RO}} \approx T/2^{\mu} = \varepsilon\,2^{-L}$, for an adversary of running
+time $T \approx \varepsilon 2^{v}$.
+\end{enumerate}
+
+Items 2, 3 and 5 are about \emph{entropy loss} and items 1 and 4 about \emph{seed length}, and the
+two axes are independent. It is worth being explicit about which axis this note is on: the seed
+length. Their entropy-loss improvement, item 3, leaves item 1 exactly where it was; their own
+attempt on item 1 is item 4, and it fails in general. That is the sense in which the seed-length
+limitation is the more stubborn of the two, and it is the one Theorem~\ref{thm:limit} is about.
+
 \subsection*{What the collision route returns}
 
 \begin{proposition}[The bound the lemma returns]\label{prop:lhl}
@@ -477,6 +525,29 @@ the two are the same two ingredients up to constants and differ in exactly one p
 under the second square root. The conjecture pays $\log_2 D$, a number of bits; the collision route
 pays $W$, the size of a set.
 
+
+\subsection*{In entropy-loss units}
+
+The three bounds of Barak et al.\ that share an axis, in that paper's own notation, with
+$L = \mu - v$ the entropy loss and $\varepsilon$ the keyed application's security:
+
+\begin{center}\small
+\begin{tabular}{@{}llll@{}}
+\toprule
+ & security & min-entropy for $O(\varepsilon)$ & family, and status \\
+\midrule
+standard LHL                        & $2^{-L/2}$                    & $\mu = v + 2\log(1/\varepsilon)$ & universal; proved \\
+\cite{BDKPPSY11}, Thm.~3.1          & $\sqrt{\varepsilon\,2^{-L}}$  & $\mu = v + \log(1/\varepsilon)$  & universal; proved \\
+\cite{BDKPPSY11}, \S3.4             & $\varepsilon\,2^{-L}$         & $\mu = v$                        & unsalted RO; heuristic \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+This is a different axis from the table above, and the two should not be read across. That one
+varies the \emph{seed}, holding the family's universality fixed; this one varies the \emph{entropy
+loss}, holding the seed fixed. Nothing in this column improves the seed length, which is the
+quantity Theorem~\ref{thm:limit} constrains and the quantity the conjecture is about; and the last
+row is not salted at all, so it has no seed to improve.
 
 \subsection*{In seed length}
 
@@ -1088,7 +1159,8 @@ gives
   \epsilon_{\mathrm{RO}} \;\approx\; \frac{T}{2^{\mu}} \;=\; \epsilon\,2^{\,v-\mu} \;=\;
   \epsilon\,2^{-L} , \qquad L := \mu - v \ \text{the entropy loss} ,
 \]
-against $\epsilon 2^{-L/2}$ for their generalised LHL and $2^{-L/2}$ for the standard one.
+against $\sqrt{\varepsilon 2^{-L}}$ for their generalised LHL and $2^{-L/2}$ for the standard one
+(the list in Section~\ref{sec:bounds} quotes all three).
 
 \emph{Only one of the two parties is bounded, and the two are not bounded in the same sense.} The
 \emph{distinguisher} is bounded, by the running time $T$, which in particular bounds its oracle
@@ -1195,9 +1267,11 @@ Fran\c{c}ois-Xavier Standaert and Yu Yu.
 \newblock Leftover Hash Lemma, Revisited.
 \newblock In \emph{Advances in Cryptology --- CRYPTO 2011}, LNCS 6841, pages 1--20. Springer, 2011.
 \newblock Cryptology ePrint Archive, Report 2011/088, \url{https://eprint.iacr.org/2011/088}.
-\newblock (The seed-length limitation quoted in Section~\ref{sec:prior} is the second bullet of its
-abstract and is developed on page~1 of the introduction; the query-bounded random-oracle comparison
-is its Section~3.4. Read at first hand.)
+\newblock (Read at first hand, and quoted in Section~\ref{sec:bounds}: the seed-length and
+entropy-loss limitations are the two bullets of its abstract, developed on page~1; the generalised
+leftover hash lemma is its Theorem~3.1, applied in Theorems~3.3--3.7; expand-then-extract is its
+Section~4; the unsalted random-oracle comparison is its Section~3.4, which is prose and carries no
+theorem.)
 
 \bibitem{Sti94}
 Douglas R. Stinson.

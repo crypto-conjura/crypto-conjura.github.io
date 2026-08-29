@@ -485,6 +485,70 @@ be what establishes it, and Remark~\ref{rem:cause} is the reminder that the true
 the witness source is far below either bound. What is being measured here is the reach of a proof
 technique, not the security of a construction.
 
+\section{Is the random oracle worse than universal hashing?}\label{sec:vs}
+
+Proposition~\ref{prop:univ} gives a universal family the bound $\tfrac12\sqrt{\epsilon R}$ with no
+second summand at all, while Theorem~\ref{thm:limit} saddles a random table with a floor of
+$\tfrac12\sqrt{(W-1)/K}$ on top of it. Read quickly, that says the random oracle is the worse
+extractor, which would be a strange thing for a random function to be. It is worth saying exactly
+why the reading is wrong, because the error is a natural one.
+
+\medskip
+\noindent\textbf{The two are not being compared at the same seed length.} By
+Remark~\ref{rem:nouniv} a $2$-universal family on $D$ inputs needs $K \ge D/R$, a salt of
+$n - m$ bits. That is what buys $\gamma \le 0$. The random-oracle question is posed at
+$K \approx c^{2}\log_2 D/\delta^{2}$, a salt of $\log_2 n + 2\log_2(1/\delta)$ bits, which is
+smaller by an exponential factor. Comparing the two bounds without comparing their seeds is
+comparing the price of two objects while looking only at one price tag.
+
+\medskip
+\noindent\textbf{At equal seed length the random oracle matches, and the gap closes completely.}
+Give the random table the salt a universal family requires, $K = D/R$. Then the conjectured second
+summand is
+\[
+  \sqrt{\frac{\log_2 D}{K}} \;=\; \sqrt{\frac{R\log_2 D}{D}} ,
+\]
+which for $D = 2^{2048}$ and $R = 2^{128}$ is $2^{-954.5}$: not small, but absent. Both routes then
+return $\Theta(\sqrt{\epsilon R})$ and there is nothing to choose between them. The second summand
+is not a defect the random oracle carries and universal hashing escapes; it is the price of a
+\emph{short} salt, and universal hashing never pays it only because it never has one.
+
+\medskip
+\noindent\textbf{At the seed length that makes the problem interesting, universal hashing does not
+exist.} At the parameters of Section~\ref{sec:kdf}'s first row --- a Diffie--Hellman element in a
+$2048$-bit group, min-entropy $256$, a $128$-bit key, $\delta = 2^{-32}$ --- the conjectured bound
+does the job with a $77$-bit salt. A universal family needs at least $1920$ bits, twenty-five times
+as long, to do the same job no better: its error there is $\tfrac12\sqrt{\epsilon R} = 2^{-65}$
+against the random oracle's $2^{-63}$ at the same salt. Measured the way extractors are normally
+measured --- error achieved per bit of seed --- universal hashing is the seed-suboptimal
+construction and the random oracle is the optimal one. This is the standard picture, not a novelty
+of this setting: the leftover hash lemma is known to be far from optimal in seed length, and
+\eqref{eq:conj} sits at the information-theoretic optimum, which universal hashing misses by an
+exponential margin.
+
+\medskip
+\noindent\textbf{Why universality is immune to support selection is why it is expensive.} This is
+the part worth keeping. The reason Proposition~\ref{prop:univ} survives a source that reads the
+whole table is visible in its proof: the bound
+$\bar\beta = \sum_{x \ne x'} p_x p_{x'}\Pr_k[h(k,x) = h(k,x')] \le (1-\CP)/R$ holds for
+\emph{every} law $p$, because universality constrains \emph{every} pair $x \ne x'$ separately. A
+worst-case-over-all-pairs hypothesis is automatically robust to an adversary who picks the pairs
+last. But a worst-case-over-all-pairs hypothesis is exactly what Remark~\ref{rem:nouniv}'s counting
+argument charges $D/R$ seeds for. The immunity and the cost are the same property seen twice. A
+random table satisfies only the average-case version, which is why choosing the support after
+seeing $H$ can hurt it at all --- and why $\log_2 n$ bits of salt suffice to stop that, rather than
+$n - m$.
+
+\medskip
+\noindent\textbf{And the floor is about the technique, not the object.} Theorem~\ref{thm:limit}
+bounds what one particular accounting can certify about a random table. It is not a lower bound on
+the advantage, and the random table is in fact better than the floor suggests: \eqref{eq:conj} is
+\emph{true}, proved in \texttt{proof.tex} with $c = 2$, so the random oracle does achieve
+$\sqrt{\epsilon R} + \sqrt{\log_2 D/K}$ at a short salt. What Theorem~\ref{thm:limit} says is that
+the collision route cannot be the proof of it. Remark~\ref{rem:cause} makes the same point
+numerically: against the witness source the true advantage is some $2^{-49}$ where the route
+returns $2^{-6}$.
+
 \section{What is not claimed}\label{sec:not}
 
 Theorem~\ref{thm:limit} is one-sided. It says the collision route cannot return a bound better than

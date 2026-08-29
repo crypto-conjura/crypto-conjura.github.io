@@ -63,11 +63,13 @@ $$\underbrace{\log_2 n + 2\log_2(1/\delta) + 2}_{\text{conjectured}} \qquad\text
 
 with $n = \log_2 D$ the secret's length and $m = \log_2 R$ the key's. They differ in kind, not just in size: **the conjectured salt grows with the logarithm of the secret's length; the collision route's salt grows with the length of the key being derived.** Deriving a 256-bit key instead of a 128-bit one from the same secret costs no extra salt under the conjecture and 128 further bits under the route.
 
-| | secret | min-entropy | key | $\delta$ | salt, conjectured | salt, route | salt, universal |
-|---|---|---|---|---|---|---|---|
-| DH element in a 2048-bit group | $2^{2048}$ | 256 | 128 | $2^{-32}$ | **77** | 190 | 1920 |
-| the same, 256-bit key | $2^{2048}$ | 512 | 256 | $2^{-64}$ | **141** | 382 | 1792 |
-| a 512-bit source | $2^{512}$ | 300 | 128 | $2^{-64}$ | **139** | 254 | 384 |
+| | $\log_2 D$ | min-entropy | key | $\delta$ | conjectured | route | universal | RO † |
+|---|---|---|---|---|---|---|---|---|
+| DH element in a 2048-bit group | 2048 | 256 | 128 | $2^{-32}$ | **77** | 190 | 1920 | 0 |
+| the same, 256-bit key | 2048 | 512 | 256 | $2^{-64}$ | **141** | 382 | 1792 | 0 |
+| a 512-bit source | 512 | 300 | 128 | $2^{-64}$ | **139** | 254 | 384 | 0 |
+
+† The unsalted random-oracle heuristic, $\epsilon_{\mathrm{RO}} \approx T/2^\mu$: no salt at all. That zero is the most informative entry in the row, and it is bought rather than free — the bound holds only against a distinguisher of running time $T \le \delta 2^\mu$, which is $2^{224}$, $2^{448}$ and $2^{236}$ in the three rows, and only for a source independent of $H$. Those ceilings are enormous, which is why the heuristic is attractive in practice; but they are ceilings, and this problem lives above them, where every party reads the whole table and $T/2^\mu$ says nothing.
 
 The three columns scale in three different ways, which is the comparison in one line: $\log_2 n + 2\log_2(1/\delta)$ conjectured, $m + 2\log_2(1/\delta)$ for the collision route, and $n - m$ for universal hashing. The first grows with the logarithm of the secret's length; the second with the length of the derived key; the third with the secret's length outright, *shrinking* as the key grows (1920 bits for a 128-bit key against 1792 for a 256-bit one, since a larger $R$ weakens $K \ge D/R$) and not depending on $\delta$ at all, being a structural requirement rather than an accuracy one. The last column is the salt needed for such a family to *exist*; at it the error is already $2^{-65}$, $2^{-129}$, $2^{-87}$ in the three rows.
 

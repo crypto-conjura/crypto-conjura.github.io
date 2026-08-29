@@ -68,26 +68,20 @@
 \cjresolves{Nothing. This is a companion note to \emph{Randomness Extraction from
 Unpredictable Random-Oracle Sources: A Leftover-Hash-Lemma Conjecture, Public Seed}
 (\texttt{main.tex} in this folder), whose conjecture is proved in \texttt{proof.tex} beside it.
-Its question is a comparison: measured against the bounds already known for extracting from a
-random oracle, what does the conjectured bound buy? The answer is \emph{seed length}, and the
-margin is large. The leftover hash lemma's collision route cannot certify a target $\delta$ at all
-without about $\log_2 R$ bits of seed on top of the $2\log_2(1/\delta)$ both routes pay
-(Theorem~\ref{thm:limit}); a $2$-universal family does not exist below $D/R$ seeds
-(Proposition~\ref{prop:nouniv}); the unsalted random-oracle heuristic of \cite{BDKPPSY11} needs no
-seed at all, but is refuted outright by a source that reads the oracle
-(Proposition~\ref{prop:unsalted}); and pricing the adversary's queries instead costs
-$\log_2 q$ bits (Theorem~\ref{thm:badcell}). Against these the conjecture asks for
-$\log_2\log_2 D + 2\log_2(1/\delta) + 2$ --- $77$ bits where the collision route needs $190$,
-universal hashing $1920$ and the query-bounded route $113$, in the leading example --- and it is the
-only one of them whose seed grows with neither the length of the derived key, nor the length of the
-secret beyond a doubly-logarithmic term, nor the adversary's query budget.
-\par\smallskip\noindent\emph{Shape.} Section~\ref{sec:setting} fixes the game,
-Section~\ref{sec:bounds} states the bounds without proof, Section~\ref{sec:compare} is the
-comparison and is the point of the note, and Section~\ref{sec:not} says what is not claimed. The
-appendices carry the proofs and everything peripheral to the comparison, including
-Appendix~\ref{sec:prior}, which records that the \emph{floor} of Theorem~\ref{thm:limit} is not new
---- it is the leftover hash lemma's known seed-length limitation, attributed by \cite{BDKPPSY11} to
-Stinson. What is being claimed as new here is the comparison, not that floor.}
+It asks one question. Set beside the bounds already known for extraction from a random oracle,
+what does the conjectured bound buy? It buys seed length, and by a wide margin. To certify a target
+$\delta$ the collision route needs about $\log_2 R$ bits of seed beyond the $2\log_2(1/\delta)$
+every route pays. A $2$-universal family needs $D/R$ seeds, so at these lengths none exists. The
+unsalted random-oracle heuristic needs no seed, but a source that reads the oracle defeats it
+outright. Bounding the adversary's queries instead costs $\log_2 q$ bits. The conjecture asks for
+$\log_2\log_2 D + 2\log_2(1/\delta) + 2$, which is $77$ bits in the leading example against $190$,
+$1920$ and $113$. It is also the only one of the four whose seed grows with none of these: the
+derived key's length, the adversary's budget, and the secret's length beyond a doubly-logarithmic
+term.
+\par\smallskip\noindent The first three sections make that comparison. The fourth says what is not
+claimed, and the appendices hold the proofs and the rest. One thing here is not new: the floor the
+collision route runs into is the leftover hash lemma's known seed-length limit, which Barak et al.
+attribute to Stinson. What is new is the comparison.}
 
 \vspace{0.6em}
 \AIDisclosure
@@ -95,23 +89,23 @@ Stinson. What is being claimed as new here is the comparison, not that floor.}
 
 \section{The setting}\label{sec:setting}
 
-The setting is that of \texttt{main.tex}, repeated here so this note stands alone. Fix nonempty
-finite sets $\calK$ (seeds), $\calD$ (inputs), $\calR$ (outputs), and write $K := |\calK|$,
-$D := |\calD|$, $R := |\calR|$. A table $H$ is drawn uniformly from
-$\Fun(\calK \times \calD, \calR)$. A source $S$, given the \emph{entire} table, outputs a pair
-$(x,z) \in \calD \times \{0,1\}^{*}$; a seed $\sd \sample \calK$ is drawn \emph{after} $S$ has
-terminated; and an unbounded distinguisher $\mathsf{D}$, given $(H, \sd, y_b, z)$, is to tell
+The setting is that of \texttt{main.tex}, repeated so this note stands alone. Fix nonempty finite
+sets $\calK$ (seeds), $\calD$ (inputs), $\calR$ (outputs), and write $K := |\calK|$,
+$D := |\calD|$, $R := |\calR|$. Draw a table $H$ uniformly from
+$\Fun(\calK \times \calD, \calR)$. A source $S$ reads the \emph{entire} table and outputs a pair
+$(x,z) \in \calD \times \{0,1\}^{*}$. Only then is a seed $\sd \sample \calK$ drawn, after $S$ has
+stopped. An unbounded distinguisher $\mathsf{D}$ gets $(H, \sd, y_b, z)$ and must tell
 $y_0 = H(\sd,x)$ from a uniform $y_1$. Write $\Adv^{\extpub}(S,\mathsf{D})$ for twice its winning
 probability minus one. The source is \emph{$\epsilon$-unpredictable} if no unbounded predictor given
-$(H,z)$ guesses $x$ with probability more than $\epsilon$; equivalently, if
+$(H,z)$ guesses $x$ with probability more than $\epsilon$, that is if
 $\mathbb{E}_{(H,Z)}[\epsilon_{H,Z}] \le \epsilon$ in the notation below.
 
 \medskip
-\noindent\textbf{Query budgets.} Sections~\ref{sec:bounds} onwards also treat the variant in which
-each party is given oracle access in place of the table: $S^{H}$ makes at most $q_S$ queries before
-returning $(x,z)$, the predictor at most $q_P$, and $\mathsf{D}^{H}(\sd,y_b,z)$ at most $q_D$. The
-seed is still drawn after $S$ terminates. Writing $Q_S \subseteq \calK\times\calD$ for the set of
-cells the source queries, two features of a source govern what follows, and neither is $q_S$:
+\noindent\textbf{Query budgets.} Later sections also treat the variant in which each party gets
+oracle access in place of the table. There $S^{H}$ makes at most $q_S$ queries before returning
+$(x,z)$, the predictor at most $q_P$, and $\mathsf{D}^{H}(\sd,y_b,z)$ at most $q_D$. The seed is
+still drawn after $S$ stops. Write $Q_S \subseteq \calK\times\calD$ for the set of cells the source
+queries. Two features of a source govern what follows, and neither is $q_S$:
 \begin{equation}\label{eq:rs-ss}
   r_S \;:=\; \sum_{k \in \calK} \Pr\bigl[Q_S \cap (\{k\}\times\calD) \neq \emptyset\bigr] ,
   \qquad
@@ -121,10 +115,9 @@ the expected number of \emph{rows} the source touches and the expected number of
 queries \emph{its own output}. Both are at most $\min(q_S,K)$, and both can be far smaller than
 $q_S$.
 
-Unqualified, $\epsilon$ means the strongest of these: the predictor is unbounded and holds the whole
-table. Every bound below is proved under it save Theorem~\ref{thm:badcell}, which needs only a
-predictor as rich as the distinguisher; Appendix~\ref{sec:predictor} shows that hypothesis is forced
-rather than merely convenient.
+Unqualified, $\epsilon$ means the strongest reading: the predictor is unbounded and holds the whole
+table. Every bound below assumes it except Theorem~\ref{thm:badcell}, which needs only a predictor
+as rich as the distinguisher. Appendix~\ref{sec:predictor} shows that hypothesis is forced.
 
 \medskip
 Throughout, condition on a table and an auxiliary output, $(H,Z) = (h,z)$, and write
@@ -137,18 +130,16 @@ The quantities
   \qquad
   \bar c \;:=\; \frac1K \sum_{k \in \calK} c_k ,
 \]
-all depend on $(h,z)$, which the notation suppresses; where they appear inside an expectation over
-$(H,Z)$ they are to be read as the corresponding random variables. Here $X, X'$ are independent
-draws from $p$. Note $\CP \le \epsilon_{h,z}$, since
-$\sum_x p_x^2 \le (\max_x p_x)\sum_x p_x$.
+all depend on $(h,z)$, which the notation suppresses. Inside an expectation over $(H,Z)$ read them
+as the matching random variables. Here $X, X'$ are independent draws from $p$. Note
+$\CP \le \epsilon_{h,z}$, since $\sum_x p_x^2 \le (\max_x p_x)\sum_x p_x$.
 
 \section{The bounds}\label{sec:bounds}
 
-Every bound the comparison of Section~\ref{sec:compare} draws on, stated and not proved; the proofs
-are in Appendix~\ref{sec:proofs}. Two are quoted from elsewhere: the conjecture, proved in
-\texttt{proof.tex} beside this note, and the results of \cite{BDKPPSY11}. Material that does not
-bear on the seed-length comparison --- the collision route's behaviour under query bounds, the
-predictor's own budget, and the longer discussions --- is in the appendices.
+Every bound the comparison uses, stated without proof. The proofs are in
+Appendix~\ref{sec:proofs}. Two bounds are quoted rather than proved anywhere here: the conjecture,
+which \texttt{proof.tex} proves, and the results of \cite{BDKPPSY11}. Whatever does not bear on
+seed length is in the appendices.
 
 \subsection*{The conjecture}
 
@@ -164,16 +155,15 @@ needed.
 
 \subsection*{Also stated, not proved here: the bounds of Barak et al.}
 
-Section~\ref{sec:compare} and Section~\ref{sec:prior} measure against several bounds
-of~\cite{BDKPPSY11}, so those are listed here with the rest. All are quoted rather than proved, and
-all live in that paper's model, not the game of Section~\ref{sec:setting}: there $\mathrm{Ext}$ is a
-fixed public function, the source is a distribution rather than an algorithm, and the random oracle
-appears in no definition, lemma or theorem. Remark~\ref{rem:roquery} sets the two models side by
-side.
+This note measures against several bounds of~\cite{BDKPPSY11}, so they are listed here with the
+rest. All are quoted, not proved. All live in that paper's model rather than the game of
+Section~\ref{sec:setting}: there $\mathrm{Ext}$ is a fixed public function, the source is a
+distribution rather than an algorithm, and the random oracle appears in no definition, lemma or
+theorem. Remark~\ref{rem:roquery} sets the two models side by side.
 
-One clash of notation to clear first. In~\cite{BDKPPSY11}, $u$ is the length of the source, $v$ the
-number of extracted bits, $\mu$ the source's min-entropy, $L := \mu - v$ the \emph{entropy loss},
-and $\varepsilon$ the security of the \emph{application} being keyed. That last is not this note's
+First a clash of notation. In~\cite{BDKPPSY11}, $u$ is the length of the source, $v$ the number of
+extracted bits, $\mu$ the source's min-entropy, $L := \mu - v$ the \emph{entropy loss}, and
+$\varepsilon$ the security of the \emph{application} being keyed. That last is not this note's
 $\epsilon$, which is the source's unpredictability and is $2^{-\mu}$ in their units. Otherwise
 $u = \log_2 D$ and $v = \log_2 R$.
 
@@ -193,22 +183,22 @@ key-derivation applications, the security degrading from $\varepsilon$ to at mos
 $\varepsilon + \sqrt{\varepsilon\,2^{-L}}$.
 
 \item \textbf{Expand-then-extract} (their Section~4): stretching a short public seed with a
-pseudorandom generator and extracting with the result does \emph{not} work in general --- they give
-a DDH-based generator and a perfectly universal hash whose output is distinguishable with
-probability close to $1$ given the short seed --- but it is sound when the number of extracted bits
-is logarithmic in the generator's security, and sound in minicrypt, so any counterexample needs a
-public-key assumption.
+pseudorandom generator and extracting with the result does \emph{not} work in general. They give a
+DDH-based generator and a perfectly universal hash whose output is distinguishable with probability
+close to $1$ given the short seed. It is sound when the number of extracted bits is logarithmic in
+the generator's security, and sound in minicrypt, so any counterexample needs a public-key
+assumption.
 
 \item \textbf{The unsalted random-oracle heuristic} (their Section~3.4, prose rather than theorem):
 $\varepsilon_{\mathrm{RO}} \approx T/2^{\mu} = \varepsilon\,2^{-L}$, for an adversary of running
 time $T \approx \varepsilon 2^{v}$.
 \end{enumerate}
 
-Items 2, 3 and 5 are about \emph{entropy loss} and items 1 and 4 about \emph{seed length}, and the
-two axes are independent. It is worth being explicit about which axis this note is on: the seed
-length. Their entropy-loss improvement, item 3, leaves item 1 exactly where it was; their own
-attempt on item 1 is item 4, and it fails in general. That is the sense in which the seed-length
-limitation is the more stubborn of the two, and it is the one Theorem~\ref{thm:limit} is about.
+Items 2, 3 and 5 are about \emph{entropy loss}; items 1 and 4 about \emph{seed length}. The two
+axes are independent, and this note is on the second. Their entropy-loss improvement, item 3,
+leaves item 1 where it was. Their own attempt on item 1 is item 4, and it fails in general. So the
+seed-length limit is the more stubborn of the two, and it is the one Theorem~\ref{thm:limit} is
+about.
 
 \subsection*{What the collision route returns}
 
@@ -229,13 +219,10 @@ $\bar\beta := \frac1K\sum_k \beta_k$ splits the quantity under the root as
   R \bar c - 1 \;=\; R\cdot\CP \;+\; \gamma ,
   \qquad \gamma \;:=\; R\bar\beta - 1 ,
 \end{equation}
-the first summand carrying the source's entropy deficiency and the second the family's failure to
-be universal on the source's support. Which of the two a lower bound on $R\bar c - 1$ speaks about
-is exactly the question Lemma~\ref{lem:attrib} settles, and it must be settled: a bound on a sum is
-not by itself a bound on either part.
-
-
-Against a universal table the second summand vanishes.
+The first summand carries the source's entropy deficiency. The second carries the family's failure
+to be universal on the source's support. A lower bound on $R\bar c - 1$ bounds only the sum, so
+which summand it speaks about needs settling; Lemma~\ref{lem:attrib} settles it. Against a
+universal table the second summand vanishes.
 
 \begin{proposition}[Universal families]\label{prop:univ}
 Fix a table $h$ and suppose the family $\{h(k,\cdot)\}_{k \in \calK}$ is $2$-universal, that is
@@ -248,17 +235,17 @@ $\epsilon$-unpredictable $S$ and every unbounded $\mathsf{D}$.
 
 The hypothesis is a property of a single table, whereas $H$ in Section~\ref{sec:setting} is uniform
 on all of $\Fun(\calK\times\calD,\calR)$; the second sentence of Proposition~\ref{prop:univ} is
-therefore about a different and more favourable model than the one at issue. It is stated to
-calibrate, not to apply. What it calibrates is this: on the first summand of \eqref{eq:conj} the
-leftover hash lemma gives $\tfrac12\sqrt{\epsilon R}$, which is that summand with $c = \tfrac12$.
-Nothing is lost there, and everything that separates the two routes therefore lies in $\gamma$.
+therefore about a different and easier model than the one at issue. It calibrates rather than
+applies. On the first summand of \eqref{eq:conj} the leftover hash lemma gives
+$\tfrac12\sqrt{\epsilon R}$, which is that summand with $c = \tfrac12$. Nothing is lost there, so
+everything separating the two routes lies in $\gamma$.
 
 
 \subsection*{Why that calibration does not apply, and what stands in its place}
 
-Proposition~\ref{prop:univ} does not apply here. Universality is not merely absent from a typical
-table; at the seed lengths at issue it is unavailable from any table, provided the output is
-shorter than the input.
+Proposition~\ref{prop:univ} does not apply here. Universality is not just absent from a typical
+table. At the seed lengths at issue no table has it, provided the output is shorter than the
+input.
 
 \begin{proposition}[No universal family at small $K$, when $R < D$]\label{prop:nouniv}
 If $\{h(k,\cdot)\}_{k\in\calK}$ is $2$-universal then $D \le RK$, that is $K \ge D/R$. So no
@@ -268,9 +255,9 @@ $2$-universal, with $K = 1$, so no seed-length lower bound holds without a hypot
 to $D$.
 \end{proposition}
 
-So $\gamma$ must be taken over the supports the source may choose after reading $H$, and the theorem
-below says how large those make $R\bar c - 1$. Recall that the source sees the entire table before
-$\sd$ exists, so any support it can name from $H$ is admissible.
+So $\gamma$ must be taken over every support the source may choose after reading $H$, and the next
+theorem says how large those make $R\bar c - 1$. The source sees the whole table before $\sd$
+exists, so any support it can name from $H$ is allowed.
 
 \begin{theorem}[The collision route cannot beat $\sqrt{W/K}$]\label{thm:limit}
 Let $\calK, \calD, \calR$ be nonempty and finite and let $\epsilon \in [1/D, 1]$. Put
@@ -279,22 +266,22 @@ Let $\calK, \calD, \calR$ be nonempty and finite and let $\epsilon \in [1/D, 1]$
   \sigma \;:=\; \lceil Rt/D \rceil , \qquad
   W \;:=\; \lfloor R/\sigma \rfloor .
 \]
-Then $1 \le t \le D$, $1 \le \sigma \le R$ and $1 \le W \le R$, and for \emph{every} table
-$h \in \Fun(\calK\times\calD,\calR)$ there is a source $S$ --- uniform on a set of $t$ inputs, with
-$z = \bot$, and $\epsilon$-unpredictable --- for which
+Then $1 \le t \le D$, $1 \le \sigma \le R$ and $1 \le W \le R$. For \emph{every} table
+$h \in \Fun(\calK\times\calD,\calR)$ there is a source $S$, uniform on a set of $t$ inputs, with
+$z = \bot$ and $\epsilon$-unpredictable, for which
 \[
   R\,\bar c - 1 \;\ge\; \frac{W - 1}{K} ,
   \qquad\text{so that the bound of Proposition~\ref{prop:lhl} is at least}\qquad
   \frac12\sqrt{\frac{W-1}{K}} \, .
 \]
-No randomness is used: this holds for every table, not merely for most. When $R$ and $D/t$ are
-powers of two, as in the parameter ranges of interest, $W = \min\{R,\ D/t\}$ exactly; in general
+No randomness is used, so this holds for every table and not merely for most. When $R$ and $D/t$
+are powers of two, as in the ranges of interest, $W = \min\{R,\ D/t\}$ exactly. In general
 $W > \tfrac12\min\{R,\ D/t\} - 1$.
 \end{theorem}
 
-Theorem~\ref{thm:limit} bounds $R\bar c - 1 = R\cdot\CP + \gamma$ from below, and that is a bound on
-the sum. It carries no information about $\gamma$ unless the floor exceeds what the first summand
-supplies on its own, which for the constructed source is exactly $R\cdot\CP = R/t$.
+Theorem~\ref{thm:limit} bounds the sum $R\bar c - 1 = R\cdot\CP + \gamma$ from below. It says
+nothing about $\gamma$ unless the floor exceeds what the first summand gives on its own, which for
+this source is $R\cdot\CP = R/t$.
 
 \begin{lemma}[Attribution]\label{lem:attrib}
 For the source of Theorem~\ref{thm:limit}, $\CP = 1/t$ exactly, so
@@ -308,20 +295,19 @@ $(W-1)/K - R/t$.
 \end{lemma}
 
 Condition \eqref{eq:side} is not automatic, and the comparison below is stated only where it holds.
-Where it fails --- for instance $R = D$ and $\epsilon = 1/2$, so $t = 2$, $\sigma = 2$,
-$W = \lfloor R/2\rfloor$, and $R/t = R/2$ exceeds $(W-1)/K$ for every $K \ge 1$ --- the theorem is
-consistent with $\gamma \le 0$, that is with a universal family, and says nothing about the second
-summand.
+Take $R = D$ and $\epsilon = 1/2$, so $t = 2$, $\sigma = 2$, $W = \lfloor R/2\rfloor$, and $R/t = R/2$
+exceeds $(W-1)/K$ for every $K \ge 1$. There the theorem is consistent with $\gamma \le 0$, that is
+with a universal family, and says nothing about the second summand.
 
 
 \subsection*{Bounding the queries}
 
 Give the parties oracle access in place of the table. The leftover hash lemma cannot see the
-distinguisher's budget at all --- it bounds a statistical distance, which is by definition the
-supremum over every distinguisher --- so pricing $q_D$ means leaving the lemma. What one gets by
-leaving it is the following, and it is the bound the seed comparison of
-Section~\ref{sec:compare} uses at a bounded budget. (What becomes of the collision route itself
-under query bounds is Appendix~\ref{sec:rowbreadth}, and it does not change the seed comparison.)
+distinguisher's budget at all. It bounds a statistical distance, and that is by definition the
+supremum over every distinguisher, so pricing $q_D$ means leaving the lemma. Leaving it gives the
+bound below, which is the one the seed comparison uses at a bounded budget. What becomes of the
+collision route itself under query bounds is Appendix~\ref{sec:rowbreadth}; it does not change the
+seed comparison.
 
 \begin{theorem}[The bad-cell route]\label{thm:badcell}
 For every $\epsilon$-unpredictable source and every distinguisher making at most $q_D$ queries,
@@ -332,12 +318,12 @@ For every $\epsilon$-unpredictable source and every distinguisher making at most
 \end{theorem}
 
 The first term of Theorem~\ref{thm:badcell} is not slack, and what it measures is the salt. The
-following needs no probability and no queries at all.
+next statement needs no probability and no queries.
 
 \begin{proposition}[What the salt buys, and what its absence costs]\label{prop:unsalted}
-For every table $h$ and every $K \ge 1$ there is a source --- uniform on a set of at least $D/R$
-inputs, hence $\epsilon$-unpredictable with $\epsilon \le R/D$, with $r_S = s_S = 1$ --- and a
-distinguisher making \emph{no} oracle queries whatever, such that
+For every table $h$ and every $K \ge 1$ there is a source, uniform on a set of at least $D/R$
+inputs and so $\epsilon$-unpredictable with $\epsilon \le R/D$, with $r_S = s_S = 1$, and a
+distinguisher making \emph{no} oracle query, such that
 \[
   \Adv^{\extpub}(S,\mathsf{D}) \;=\; \frac{1}{K}\Bigl(1 - \frac1R\Bigr) .
 \]
@@ -346,8 +332,8 @@ the oracle fails outright, and it fails at min-entropy $\log_2 D - \log_2 R$, wh
 minimum any of the settings in Section~\ref{sec:compare} asks for. Since $s_S = 1$ and $q_D = 0$
 here, Theorem~\ref{thm:badcell} returns $1/K$, so its first term is tight to within $1 - 1/R$.
 
-More generally, for $1 \le j \le K$ the source of Proposition~\ref{prop:qtight} --- which pins $j$
-rows at a uniform input and leaks their values --- has $s_S = j$ and is $\epsilon$-unpredictable
+More generally, take $1 \le j \le K$ and the source of Proposition~\ref{prop:qtight}, which pins $j$
+rows at a uniform input and leaks their values. It has $s_S = j$ and is $\epsilon$-unpredictable
 with $\epsilon \le R^{j}/D$, and against it a distinguisher making no oracle query achieves
 \[
   \Adv^{\extpub}(S,\mathsf{D}) \;=\; \frac{j}{K}\Bigl(1 - \frac1R\Bigr) .
@@ -456,16 +442,16 @@ holds with room to spare and Lemma~\ref{lem:attrib} gives $\gamma > 0$. The comp
 $\log_2 K = 74$ under \eqref{eq:conj} against $\log_2 K \ge 126$ for the collision route: a gap of
 $52$ bits.
 
-An earlier version of this note used min-entropy $128$ here, where $c\sqrt{\epsilon R} = 2^{-31}$
-exceeds $\delta = 2^{-32}$, so \eqref{eq:conj} could not certify that $\delta$ at any seed length
-and the comparison was empty. The hypotheses of Corollary~\ref{cor:seed} are not decorative.
+At min-entropy $128$ instead, $c\sqrt{\epsilon R} = 2^{-31}$ exceeds $\delta = 2^{-32}$, so
+\eqref{eq:conj} certifies that $\delta$ at no seed length and the comparison is empty. The
+hypotheses of Corollary~\ref{cor:seed} are not decorative.
 \end{remark}
 
 \subsection*{In key-derivation units}
 
-The game is a key-derivation problem. The input $x$ is a secret with entropy but no uniformity --- a
-Diffie--Hellman element, a biometric reading, the output of a physical source; $\sd$ is a public
-salt; $H$ is a public hash; and $H(\sd,x)$ is the derived key, which must look uniform to an
+The game is a key-derivation problem. The input $x$ is a secret with entropy but no uniformity: a
+Diffie--Hellman element, a biometric reading, the output of a physical source. The seed $\sd$ is a
+public salt, $H$ is a public hash, and $H(\sd,x)$ is the derived key, which must look uniform to an
 adversary who knows $H$ in full and sees $\sd$. In that reading $\log_2 K$ is the \emph{salt length}
 in bits, $m := \log_2 R$ the derived key length, $n := \log_2 D$ the length of the secret's
 encoding, and $\log_2(1/\epsilon)$ its min-entropy.
@@ -478,11 +464,10 @@ one has $W = R$ and the two salt lengths of Corollary~\ref{cor:seed} read
   \underbrace{m + 2\log_2(1/\delta) - 2}_{\text{collision route}} .
 \]
 They differ in the first term, and they differ in kind. The conjectured salt grows with the
-\emph{logarithm of the secret's length}; the collision route's salt grows with \emph{the length of
-the key being derived}. So under the conjecture, deriving a $256$-bit key rather than a $128$-bit
-one from the same secret costs no extra salt whatever, while under the collision route it costs
-$128$ further bits of salt. Concretely, with $c = 2$ and in each row the hypotheses of
-Corollary~\ref{cor:seed} verified:
+\emph{logarithm of the secret's length}. The collision route's grows with \emph{the length of the
+key being derived}. So deriving a $256$-bit key rather than a $128$-bit one from the same secret
+costs no extra salt under the conjecture, and $128$ further bits under the collision route. With
+$c = 2$, and the hypotheses of Corollary~\ref{cor:seed} checked in each row:
 
 \begin{center}\small
 \begin{tabular}{@{}lrrrrrrrr@{}}
@@ -503,35 +488,33 @@ does, and Proposition~\ref{prop:unsalted} says what it becomes otherwise.}
 
 \smallskip
 \noindent$^{\dagger}$ The unsalted random-oracle heuristic of \cite{BDKPPSY11}, Remark~\ref{rem:roquery}:
-$\epsilon_{\mathrm{RO}} \approx T/2^{\mu}$, so no salt is needed at all. It is in the table because
-that zero is the most informative entry in the row, and because it is bought rather than free. Two
-hypotheses buy it. The first is a distinguisher of running time $T \le \delta\,2^{\mu}$ --- that is
-$T \le 2^{224}$, $2^{448}$ and $2^{236}$ in the three rows. Those ceilings are enormous, which is
-why the heuristic is attractive in practice; but they are ceilings, and the whole of
-\texttt{main.tex} lives above them, where every party reads the entire table and $T/2^{\mu}$ says
-nothing.
+$\epsilon_{\mathrm{RO}} \approx T/2^{\mu}$, so it needs no salt. That zero is the most informative
+entry in the row, and it is bought rather than free. Two hypotheses buy it. The first is a
+distinguisher of running time $T \le \delta\,2^{\mu}$, which is $T \le 2^{224}$, $2^{448}$ and
+$2^{236}$ in the three rows. Those ceilings are enormous, which is why the heuristic is attractive
+in practice. But they are ceilings, and all of \texttt{main.tex} lives above them, where every
+party reads the whole table and $T/2^{\mu}$ says nothing.
 
-The second hypothesis is that the source is independent of $H$, and \emph{that} zero does not
-survive dropping it --- not approximately, and not by a little. By
-Proposition~\ref{prop:unsalted}, at $K = 1$ a source that reads $H$ and is uniform on the largest
-fibre of the single row, of min-entropy $\log_2 D - \log_2 R$, is distinguished from uniform with
-advantage $1 - 2^{-m}$ by a distinguisher making \emph{no query at all}. That source is admissible
-in every row of the table --- its min-entropy is $1920$, $1792$ and $384$ against the $256$, $512$
-and $300$ the rows ask for --- and its entropy loss is $L = \mu - v = 1792$, $1536$ and $256$, so
-the heuristic predicts $\epsilon_{\mathrm{RO}} \le 2^{-1792}$, $2^{-1536}$ and $2^{-256}$ where the
-truth is $1 - 2^{-128}$, $1 - 2^{-256}$ and $1 - 2^{-128}$. The estimate is not merely inapplicable
-off its hypothesis; it is wrong by as much as an estimate of a probability can be.
+The second hypothesis is that the source is independent of $H$. That zero does not survive dropping
+it, not approximately and not by a little. By Proposition~\ref{prop:unsalted}, at $K = 1$ a source
+that reads $H$ and is uniform on the largest fibre of the single row, of min-entropy
+$\log_2 D - \log_2 R$, is distinguished from uniform with advantage $1 - 2^{-m}$ by a distinguisher
+making \emph{no query at all}. That source is allowed in every row of the table: its min-entropy is
+$1920$, $1792$ and $384$ against the $256$, $512$ and $300$ the rows ask for. Its entropy loss is
+$L = \mu - v = 1792$, $1536$ and $256$, so the heuristic predicts
+$\epsilon_{\mathrm{RO}} \le 2^{-1792}$, $2^{-1536}$ and $2^{-256}$ where the truth is
+$1 - 2^{-128}$, $1 - 2^{-256}$ and $1 - 2^{-128}$. Off its hypothesis the estimate is not just
+inapplicable. It is wrong by as much as an estimate of a probability can be.
 
 So the first and last salt columns are the same primitive, a random oracle, priced under two
 different assumptions about the source: nothing if it cannot look at $H$, and $77$ bits if it can.
 The whole subject of \texttt{main.tex}, and of this note, is the gap between those two entries.
 
-The last column is universal hashing, at $n - m$ bits from $K \ge D/R$
-(Proposition~\ref{prop:nouniv}), and it is included because it makes the point of Section~\ref{sec:vs}
-concrete: universal hashing does not have a shorter salt than the conjecture, it has a far longer
-one. It is also read slightly differently from the other two. Those are the salt needed to reach the
-stated $\delta$; this is the salt needed for such a family to \emph{exist} at all, the binding
-constraint being existence rather than accuracy --- at that salt the error is
+The \emph{univ.} column is universal hashing, at $n - m$ bits from $K \ge D/R$
+(Proposition~\ref{prop:nouniv}). It makes the point of Appendix~\ref{sec:vs} concrete: universal
+hashing does not have a shorter salt than the conjecture, it has a far longer one. It is also read
+differently from the first two. Those give the salt needed to reach the stated $\delta$; this gives
+the salt needed for such a family to \emph{exist}. At that salt the error is
 $\tfrac12\sqrt{\epsilon R}$, which is $2^{-65}$, $2^{-129}$ and $2^{-87}$ in the three rows, already
 inside $\delta$ in each.
 
@@ -541,30 +524,28 @@ The three columns scale in three different ways, and that is the whole compariso
   \underbrace{m + 2\log_2(1/\delta) - 2}_{\text{collision route}}, \qquad
   \underbrace{n - m}_{\text{universal}} .
 \]
-The conjectured salt grows with the logarithm of the secret's length; the collision route's grows
-with the length of the derived key; universal hashing's grows with the secret's length outright,
-\emph{shrinks} as the derived key gets longer --- $1920$ bits for a $128$-bit key against $1792$ for
-a $256$-bit one, since a larger $R$ weakens the constraint $K \ge D/R$ --- and does not depend on
-$\delta$ at all, because it is a structural requirement rather than an accuracy one. Only the first
-is what one wants of a salt: short, and growing only in the logarithm of anything.
+The conjectured salt grows with the logarithm of the secret's length. The collision route's grows
+with the length of the derived key. Universal hashing's grows with the secret's length outright, and
+\emph{shrinks} as the derived key grows: $1920$ bits for a $128$-bit key against $1792$ for a
+$256$-bit one, since a larger $R$ weakens the constraint $K \ge D/R$. It does not depend on $\delta$
+at all, being a requirement for existence rather than for accuracy. Only the first is what one wants
+of a salt: short, and growing only in the logarithm of anything.
 
-Read the other way --- at a fixed salt rather than a fixed error --- the same gap says the route
-certifies almost nothing at the salt length the conjecture licenses. Substituting
+Read the other way, at a fixed salt rather than a fixed error, the same gap says the route
+certifies almost nothing at the salt the conjecture licenses. Substituting
 $K = c^{2}\log_2 D/\delta^{2}$ into Theorem~\ref{thm:limit}'s floor gives
 \[
   \frac12\sqrt{\frac{W-1}{K}} \;\approx\; \frac{\delta}{2c}\sqrt{\frac{W}{\log_2 D}} ,
 \]
 so the error the route can certify exceeds $\delta$ by a factor of about
-$\sqrt{W/\log_2 D}\,/\,(2c)$ --- roughly $(m - \log_2 n)/2$ bits of security, over half the derived
-key's length. In the first row of the table that factor is $2^{56.5}$, so at a $77$-bit salt the
-route certifies $2^{24.5}$: larger than $1$, hence nothing at all. In the third row it certifies
-$2^{-6.5}$ at a $139$-bit salt --- not vacuous, but six bits of security where sixty-four were
-wanted.
+$\sqrt{W/\log_2 D}\,/\,(2c)$, roughly $(m - \log_2 n)/2$ bits of security, over half the derived
+key's length. In the first row that factor is $2^{56.5}$, so at a $77$-bit salt the route certifies
+$2^{24.5}$, which is larger than $1$ and so says nothing. In the third row it certifies $2^{-6.5}$
+at a $139$-bit salt: six bits of security where sixty-four were wanted.
 
 Neither reading says that salting with $77$ bits is unsafe. Both say that the collision route cannot
 be what establishes it, and Remark~\ref{rem:cause} is the reminder that the true advantage against
-the witness source is far below either bound. What is being measured here is the reach of a proof
-technique, not the security of a construction.
+the witness source is far below either bound.
 
 \subsection*{At a bounded query budget}
 
@@ -597,24 +578,23 @@ a 512-bit source           & $105$ & $129$ & $145$ & $193$ & $139$ \\
 Two things to read off. The first is that the last column is \emph{flat}: the conjectured salt is
 $\log_2\log_2 D + 2\log_2(1/\delta) + 2$ whatever the adversary's budget, and it holds against an
 unbounded one, whereas \eqref{eq:qsalt} grows one bit for every doubling of the budget. They cross
-at $n = 44$, $76$ and $74$ in the three rows. So at $2^{80}$ --- the budget one would actually
-quote --- bounding the queries buys nothing here: it asks for $113$ bits where the conjecture asks
-for $77$, and for $145$ against $141$ and $139$. The query bound helps only for adversaries weaker
-than $2^{44}$ or so, and the reason is visible in the two exponents: the bad-cell route pays
-$\log_2 q$ where the conjecture pays $\log_2\log_2 D$, and only halves the $\delta$ term in exchange.
+at $n = 44$, $76$ and $74$ in the three rows. So at $2^{80}$, the budget one would actually quote,
+bounding the queries buys nothing: it asks for $113$ bits where the conjecture asks for $77$, and
+for $145$ against $141$ and $139$. The query bound helps only against adversaries weaker than about
+$2^{44}$. The reason is in the two exponents: the bad-cell route pays $\log_2 q$ where the
+conjecture pays $\log_2\log_2 D$, and only halves the $\delta$ term in exchange.
 
 The second is that \eqref{eq:qsalt} is an upper bound on what is needed, and a generous one, because
 $s_S \le 2^{n}$ is not achievable at these min-entropies. By Proposition~\ref{prop:unsalted} the
-advantage $s_S/K$ is attained by pinning $s_S$ rows at the source's own output --- but each pinned
-row costs $\log_2 R$ bits of min-entropy, so the three rows admit only
+advantage $s_S/K$ is attained by pinning $s_S$ rows at the source's own output. But each pinned row
+costs $\log_2 R$ bits of min-entropy, so the three rows admit only
 $j \le (\log_2 D - \mu)/\log_2 R = 14$, $6$ and $1$ pinned rows. Against the best attack known the
 salt actually forced is $\log_2 j + \log_2(1/\delta) = 36$, $67$ and $64$ bits, and
 Proposition~\ref{prop:unsalted} on its own already forces $\log_2(1/\delta) = 32$, $64$ and $64$. So
 for the query-bounded route the truth lies in $[36,113]$, $[67,145]$ and $[64,145]$, and the
 conjectured $77$, $141$ and $139$ sit inside all three.
 
-Where the slack comes from is worth naming, since it says what a sharper theorem would have to do. A
-source may query $(k,x)$ at its own output for a great many $k$ and simply \emph{ignore} the
+The slack has a source. A source may query $(k,x)$ at its own output for a great many $k$ and simply \emph{ignore} the
 answers: that costs it no entropy and gains it no advantage, yet it inflates $s_S$ to the query
 budget, and Theorem~\ref{thm:badcell} charges for it. A bound that charged only for queries whose
 answers reach the distinguisher would close most of the gap; the note does not prove one.
@@ -630,17 +610,17 @@ matching ceiling for sources of bounded row breadth, and Remark~\ref{rem:window}
 to a factor of two on the witness itself; for sources that touch many rows the paragraph below still
 stands.
 
-The remaining window is wide and should not be papered over. Certifying $\gamma$ for a random table
-by a bounded-differences argument --- $\bar\beta$ has bounded-differences constant $2/(Kt)$ in the
-$Kt$ table entries above a support of size $t$, and a union bound over the $\binom{D}{t}$ supports
-of that size costs $e^{t(1+\ln D)}$ --- yields, for sources uniform on a support,
-$\gamma \le R\sqrt{2(1+\ln D)/K}$ with high probability, hence an upper bound of
+The remaining window is wide. One can certify $\gamma$ for a random table by a bounded-differences
+argument: $\bar\beta$ has bounded-differences constant $2/(Kt)$ in the $Kt$ table entries above a
+support of size $t$, and a union bound over the $\binom{D}{t}$ supports of that size costs
+$e^{t(1+\ln D)}$. For sources uniform on a support that yields $\gamma \le R\sqrt{2(1+\ln D)/K}$
+with high probability, hence an upper bound of
 $\tfrac12\sqrt{\epsilon R} + \tfrac12\sqrt R\,(2(1+\ln D)/K)^{1/4}$. Two gaps in that sketch are
-worth naming: it covers sources uniform on a support only, and a general source needs a further
-argument reducing to those; and the resulting ceiling exceeds Theorem~\ref{thm:limit}'s floor by a
-factor of order $\sqrt{R/W}\,(K\ln D)^{1/4}$, which in the instance of Remark~\ref{rem:numbers} is
-about $2^{21}$. So for a source of unrestricted row breadth the truth for this route lies somewhere
-in that window, and locating it is not attempted.
+worth naming. It covers sources uniform on a support only, and a general source needs a further
+argument reducing to those. And the resulting ceiling exceeds Theorem~\ref{thm:limit}'s floor by a
+factor of order $\sqrt{R/W}\,(K\ln D)^{1/4}$, about $2^{21}$ in the instance of
+Remark~\ref{rem:numbers}. So for a source of unrestricted row breadth the truth lies somewhere in
+that window, and locating it is not attempted.
 
 Nor is the bound one would most like in the query-bounded setting of Section~\ref{sec:bounds}, namely
 $s_S/K + \tfrac12\sqrt{\epsilon R}$: the pinned cells charged once each, and the leftover hash lemma
@@ -657,9 +637,9 @@ Corollary~\ref{cor:which} takes their minimum instead of their better parts.
 What the floor alone does establish, in the regime where \eqref{eq:side} holds and the deficiency
 term is not binding, is that the route cannot reach \eqref{eq:conj} there: it needs at least
 $\log_2(W-1) - 2\log_2 c - \log_2\log_2 D - 2$ further bits of seed, which is $52$ in the instance
-of Remark~\ref{rem:numbers}. Outside that regime nothing is claimed, and Remark~\ref{rem:cause}
-exhibits parameters --- min-entropy $254$ over the same $D$ and $R$ --- where the construction shows
-no loss whatever.
+of Remark~\ref{rem:numbers}. Outside that regime nothing is claimed. Remark~\ref{rem:cause} gives
+parameters where the construction shows no loss at all: min-entropy $254$ over the same $D$ and
+$R$.
 
 Finally, the scope is one technique, not one lemma. Theorem~\ref{thm:limit} constrains the
 particular functional $\tfrac12\sqrt{R\bar c - 1}$ of Proposition~\ref{prop:lhl}, arrived at by
@@ -729,8 +709,8 @@ valid for every $p$ because the hypothesis is a statement about every pair $x \n
 $\gamma \le 1 - \CP - 1 = -\CP$. By \eqref{eq:split} the conditional bound is at most
 $\tfrac12\sqrt{R\cdot\CP - \CP} \le \tfrac12\sqrt{R\,\epsilon_{h,z}}$, using $\CP \le
 \epsilon_{h,z}$. For the last claim, average over $(H,Z)$ and apply Jensen's inequality to the
-concave nondecreasing $\sqrt{\cdot}$ --- legitimate although $p$ depends on $H$, since the
-conditional bound holds pointwise in $(h,z)$ --- together with
+concave nondecreasing $\sqrt{\cdot}$. This is legitimate although $p$ depends on $H$, since the
+conditional bound holds pointwise in $(h,z)$. Combine it with
 $\mathbb{E}[\epsilon_{H,Z}] \le \epsilon$.
 \end{proof}
 \begin{proof}[Proof of Proposition~\ref{prop:nouniv}]
@@ -851,7 +831,7 @@ is $j/K$; under $b = 1$ it is $j/(KR)$. The entropy remark is $\log_2(R^{j}/D) \
 \section{The collision route under query bounds}\label{sec:rowbreadth}
 
 Give the parties the budgets of Section~\ref{sec:setting} instead of the table. The collision route
-survives, in a form governed by row breadth rather than by query count --- the source of
+survives, in a form governed by row breadth rather than by query count. The source of
 Theorem~\ref{thm:limit} reads an entire row, so $q_S = D$, yet $r_S = s_S = 1$.
 \begin{theorem}[The collision route, query-bounded]\label{thm:qlhl}
 For every source that is $\epsilon$-unpredictable and every unbounded distinguisher,
@@ -905,9 +885,8 @@ the bad-cell route is the smaller whenever
 
 That threshold is not a close call. In the instance of Remark~\ref{rem:numbers} it is
 $q_D \le 2^{111}$; for a $128$-bit derived key from a source of min-entropy $128$ it is
-$q_D \le 2^{127}$. Below it --- which is to say, in every parameter regime anyone would deploy ---
-the leftover hash lemma is simply the wrong instrument for this game, and the gap is not marginal:
-on the witness of Theorem~\ref{thm:limit} in that instance, against a distinguisher making
+$q_D \le 2^{127}$. Below it, which is every parameter regime anyone would deploy, the leftover hash
+lemma is the wrong instrument for this game. The gap is not marginal: on the witness of Theorem~\ref{thm:limit} in that instance, against a distinguisher making
 $q_D = 2^{80}$ queries, Theorem~\ref{thm:badcell} returns $2^{-74} + 2^{-80} \approx 2^{-74}$ where
 Theorem~\ref{thm:qlhl} returns $2^{-5.5}$.
 
@@ -944,8 +923,8 @@ Since $\Pr[H=h,Z=z]\,p^{-}_{x} = \Pr[H=h,Z=z,X=x,\neg A_k]$, the expectation in 
   \sum_{h,z} \frac{1}{\Pr[h,z]} \sum_{x \neq x'}
     \Pr[h,z,x,\neg A_k]\,\Pr[h,z,x',\neg A_k]\,\mathbf{1}[h(k,x) = h(k,x')] ,
 \]
-and substituting the two displays above --- the lower bound on $\Pr[h,z]$ in the denominator, which
-is the direction an upper bound needs --- makes it at most
+Substituting the two displays above, with the lower bound on $\Pr[h,z]$ in the denominator, which
+is the direction an upper bound needs, makes it at most
 \[
   \sum_{h_{-k}} \Pr[h_{-k}] \sum_{h_k} \Pr[h_k] \sum_{z} \frac{1}{A(z,h_{-k})}
     \sum_{x \neq x'} a(x,z,h_{-k})\,a(x',z,h_{-k})\,\mathbf{1}[h_k(x) = h_k(x')] .
@@ -1006,8 +985,8 @@ on squaring, $r_S \le RK/2$, which holds because $r_S \le K$ and $R \ge 2$.
 \label{rem:window}
 Theorem~\ref{thm:limit} is a floor and Section~\ref{sec:not} names no matching ceiling; the one
 sketched there exceeds the floor by a factor of about $2^{21}$ in the instance of
-Remark~\ref{rem:numbers}. For a source of row breadth $r_S$ the two now meet. In that instance ---
-$D = 2^{256}$, $R = 2^{64}$, min-entropy $160$, $K = 2^{74}$, where $W = R$ --- the witness of
+Remark~\ref{rem:numbers}. For a source of row breadth $r_S$ the two now meet. Take that instance,
+$D = 2^{256}$, $R = 2^{64}$, min-entropy $160$, $K = 2^{74}$, where $W = R$. The witness of
 Theorem~\ref{thm:limit} has $r_S = 1$, and
 \[
   \frac{W-1}{K} \;\approx\; 2^{-10}
@@ -1015,16 +994,16 @@ Theorem~\ref{thm:limit} has $r_S = 1$, and
   \epsilon R + \frac{2R}{K} \;=\; 2^{-96} + 2^{-9} \;\approx\; 2^{-9} :
 \]
 a window of a factor $2$ in the radicand, so the route returns between $2^{-6}$ and $2^{-5.5}$. The
-hypotheses differ --- Section~\ref{sec:not}'s sketch asks the source to be uniform on a support and
-bounds no queries, Theorem~\ref{thm:qlhl} bounds $r_S$ and asks nothing about the shape --- but the
-witness satisfies both, and on it the query-bounded ceiling is the sharper by some twenty orders of
+hypotheses differ. Section~\ref{sec:not}'s sketch asks the source to be uniform on a support and
+bounds no queries; Theorem~\ref{thm:qlhl} bounds $r_S$ and asks nothing about the shape. But the
+witness satisfies both, and on it the query-bounded ceiling is sharper by some twenty orders of
 magnitude.
 \end{remark}
 
 \section{The predictor's budget}\label{sec:predictor}
 
 The third party has a budget too, and it is not free to choose. Bounding the predictor
-\emph{weakens} the hypothesis --- a predictor that cannot read the table is easier to defeat --- so
+\emph{weakens} the hypothesis, since a predictor that cannot read the table is easier to defeat. So
 the question is how weak the hypothesis may be made before the conclusions fail.
 \begin{definition}[Unpredictability at a budget]\label{def:epsq}
 For $q \in \{0,1,2,\dots\} \cup \{\infty\}$ let $\epsilon_q$ be the least $\epsilon$ such that
@@ -1086,10 +1065,9 @@ The two halves of that proposition say the same thing about different routes. Re
 \emph{the predictor must be granted at least what the distinguisher is granted, and granting it
 exactly that is enough.} For the bad-cell route the budget is pinned to $q_D$ within a single query,
 $q_P \ge q_D$ sufficing and $q_P \le q_D - 2$ failing. For the collision route the distinguisher is
-unbounded by construction --- Remark~\ref{rem:qd} --- so the predictor must be unbounded too, and
-\emph{that} is why every bound of this note other than Theorem~\ref{thm:badcell} is stated against
-a predictor holding the whole table. It is not a stylistic choice of the strongest hypothesis; it is forced by the
-technique.
+unbounded by construction, by Remark~\ref{rem:qd}, so the predictor must be unbounded too. That is
+why every bound of this note other than Theorem~\ref{thm:badcell} is stated against a predictor
+holding the whole table. It is not a preference for the strongest hypothesis. It is forced.
 
 \medskip\noindent\emph{Proofs for this appendix.}
 
@@ -1149,9 +1127,9 @@ sets $\calS_1,\dots,\calS_j$ independently and uniformly among the subsets of $\
 $R/\sigma$, each input survives all $j$ constraints with probability $\sigma^{-j}$, so the expected
 number of survivors is $D\sigma^{-j}$ and some choice attains it; the constraint is
 $D\sigma^{-j} \ge t$, that is $j \le \log_\sigma(D/t)$. The gain is a factor $\sqrt{j}$ in the
-bound, hence $\log_2 j$ further bits of seed in the comparison of Section~\ref{sec:compare} ---
-one or two in the parameter ranges of interest --- so the one-row construction of Theorem~\ref{thm:limit} is essentially the
-whole effect.
+bound, hence $\log_2 j$ further bits of seed in the comparison of Section~\ref{sec:compare}, one or
+two in the ranges of interest. So the one-row construction of Theorem~\ref{thm:limit} is
+essentially the whole effect.
 
 The averaging is the point. Choosing each $\calS_i$ greedily, as the $\sigma$ commonest symbols of
 its row, does \emph{not} work for a worst-case table, since the $j$ greedy sets may have a small or
@@ -1170,7 +1148,7 @@ $\SD(Q,U) = \frac1K\sum_k \SD(\mathrm{law}\,h(k,X), U_\calR)$, the pinned row $k
 $1/K$, but the other $K-1$ rows are \emph{not} uniform. On a typical table each is $t$ draws into
 $R$ bins and contributes $\Theta(\sqrt{R/t})$, so the true advantage is
 $\Theta(\sqrt{R/t}) + \Theta(1/K)$, dominated by the \emph{unpinned} rows in the regime of
-Remark~\ref{rem:numbers}; and on an adversarial table --- every row constant, say --- it is close to
+Remark~\ref{rem:numbers}. On an adversarial table, every row constant say, it is close to
 $1$. So the overshoot of the lemma over the truth is neither $\sqrt{RK}$ nor uniform in the
 parameters. In the instance of Remark~\ref{rem:numbers}, at the seed length \eqref{eq:conj}
 requires, the lemma returns $\tfrac12\sqrt{(W-1)/K} = 2^{-6}$ against a true advantage of about
@@ -1192,9 +1170,8 @@ $K-1$ unpinned ones, and notes that the first dominates. Theorem~\ref{thm:badcel
 first comes from: it is an artefact of the distinguisher being unbounded. Against a $q_D$-bounded
 distinguisher the unpinned rows contribute at most $q_D\epsilon = q_D/t$ in place of
 $\sqrt{R/t}$, which is smaller exactly when $q_D \le \sqrt{Rt} = \sqrt{R/\epsilon}$, the threshold
-of Corollary~\ref{cor:which} up to its factor of two --- while the pinned row still contributes its
-$s_S/K = 1/K$. So the
-reading that the advantage against this source is $\Theta(1/K)$ is correct precisely in the
+of Corollary~\ref{cor:which} up to its factor of two, while the pinned row still contributes its
+$s_S/K = 1/K$. So the reading that the advantage against this source is $\Theta(1/K)$ is correct precisely in the
 query-bounded model and false outside it, which is what Remark~\ref{rem:cause} found the hard way.
 \end{remark}
 
@@ -1203,8 +1180,7 @@ query-bounded model and false outside it, which is what Remark~\ref{rem:cause} f
 Proposition~\ref{prop:univ} gives a universal family the bound $\tfrac12\sqrt{\epsilon R}$ with no
 second summand at all, while Theorem~\ref{thm:limit} saddles a random table with a floor of
 $\tfrac12\sqrt{(W-1)/K}$ on top of it. Read quickly, that says the random oracle is the worse
-extractor, which would be a strange thing for a random function to be. It is worth saying exactly
-why the reading is wrong, because the error is a natural one.
+extractor. The reading is wrong, and the error is a natural one.
 
 \medskip
 \noindent\textbf{The two are not being compared at the same seed length.} By
@@ -1222,52 +1198,49 @@ summand is
   \sqrt{\frac{\log_2 D}{K}} \;=\; \sqrt{\frac{R\log_2 D}{D}} ,
 \]
 which for $D = 2^{2048}$ and $R = 2^{128}$ is $2^{-954.5}$: not small, but absent. Both routes then
-return $\Theta(\sqrt{\epsilon R})$ and there is nothing to choose between them. The second summand
-is not a defect the random oracle carries and universal hashing escapes; it is the price of a
-\emph{short} salt, and universal hashing never pays it only because it never has one.
+return $\Theta(\sqrt{\epsilon R})$, so there is nothing to choose between them. The second summand
+is the price of a \emph{short} salt, not a defect of the random oracle. Universal hashing never
+pays it only because it never has one.
 
 \medskip
 \noindent\textbf{At the seed length that makes the problem interesting, universal hashing does not
-exist.} At the parameters of Section~\ref{sec:compare}'s first row --- a Diffie--Hellman element in a
-$2048$-bit group, min-entropy $256$, a $128$-bit key, $\delta = 2^{-32}$ --- the conjectured bound
+exist.} Take the first row of Section~\ref{sec:compare}'s table: a Diffie--Hellman element in a
+$2048$-bit group, min-entropy $256$, a $128$-bit key, $\delta = 2^{-32}$. The conjectured bound
 does the job with a $77$-bit salt. A universal family needs at least $1920$ bits, twenty-five times
 as long, to do the same job no better: its error there is $\tfrac12\sqrt{\epsilon R} = 2^{-65}$
-against the random oracle's $2^{-63}$ at the same salt. Measured the way extractors are normally
-measured --- error achieved per bit of seed --- universal hashing is the seed-suboptimal
-construction and the random oracle is the optimal one. This is the standard picture, not a novelty
-of this setting: the leftover hash lemma is known to be far from optimal in seed length, and
+against the random oracle's $2^{-63}$ at the same salt. Measured by error per bit of seed, then,
+universal hashing is the suboptimal construction and the random oracle the optimal one. This is
+the standard picture. The leftover hash lemma is known to be far from optimal in seed length, and
 \eqref{eq:conj} sits at the information-theoretic optimum, which universal hashing misses by an
 exponential margin.
 
 \medskip
-\noindent\textbf{Why universality is immune to support selection is why it is expensive.} This is
-the part worth keeping. The reason Proposition~\ref{prop:univ} survives a source that reads the
-whole table is visible in its proof: the bound
+\noindent\textbf{Why universality is immune to support selection is why it is expensive.}
+Proposition~\ref{prop:univ} survives a source that reads the whole table, and its proof shows why:
+the bound
 $\bar\beta = \sum_{x \ne x'} p_x p_{x'}\Pr_k[h(k,x) = h(k,x')] \le (1-\CP)/R$ holds for
 \emph{every} law $p$, because universality constrains \emph{every} pair $x \ne x'$ separately. A
 worst-case-over-all-pairs hypothesis is automatically robust to an adversary who picks the pairs
 last. But a worst-case-over-all-pairs hypothesis is exactly what Proposition~\ref{prop:nouniv}'s counting
 argument charges $D/R$ seeds for. The immunity and the cost are the same property seen twice. A
 random table satisfies only the average-case version, which is why choosing the support after
-seeing $H$ can hurt it at all --- and why $\log_2 n$ bits of salt suffice to stop that, rather than
+seeing $H$ can hurt it at all, and why $\log_2 n$ bits of salt suffice to stop that rather than
 $n - m$.
 
 \medskip
 \noindent\textbf{And the floor is about the technique, not the object.} Theorem~\ref{thm:limit}
-bounds what one particular accounting can certify about a random table. It is not a lower bound on
-the advantage, and the random table is in fact better than the floor suggests: \eqref{eq:conj} is
+bounds what one accounting can certify about a random table. It is not a lower bound on the
+advantage, and the random table is better than the floor suggests: \eqref{eq:conj} is
 \emph{true}, proved in \texttt{proof.tex} with $c = 2$, so the random oracle does achieve
-$\sqrt{\epsilon R} + \sqrt{\log_2 D/K}$ at a short salt. What Theorem~\ref{thm:limit} says is that
-the collision route cannot be the proof of it. Remark~\ref{rem:cause} makes the same point
-numerically: against the witness source the true advantage is some $2^{-49}$ where the route
-returns $2^{-6}$.
+$\sqrt{\epsilon R} + \sqrt{\log_2 D/K}$ at a short salt. Theorem~\ref{thm:limit} says only that the
+collision route cannot prove it. Remark~\ref{rem:cause} says the same numerically: against the
+witness source the true advantage is some $2^{-49}$ where the route returns $2^{-6}$.
 
 
 
 \section{Prior art: the floor is Stinson's}\label{sec:prior}
 
-Theorem~\ref{thm:limit} is not new, and this section says so precisely, because the rest of the note
-would otherwise read as though it were.
+Theorem~\ref{thm:limit} is not new. This section says so precisely.
 
 Barak, Dodis, Krawczyk, Pereira, Pietrzak, Standaert and Yu~\cite{BDKPPSY11} open by naming two
 limitations of the leftover hash lemma. The first is entropy loss. The second is the one at issue
@@ -1279,28 +1252,26 @@ where $u$ is the length of the source and $v$ the number of extracted bits, ``an
 with the number of extracted bits''. They attribute it to Stinson~\cite{Sti94}, and record
 separately that Stinson showed perfectly universal families need a seed linear in $u$.
 
-Translating --- $u = \log_2 D$, $v = \log_2 R = m$, $\varepsilon = \delta$, and the seed length is
-$\log_2 K$ --- that bound reads $\log_2 K \ge \min(\log_2 D - m,\ m + 2\log_2(1/\delta)) - O(1)$.
+Translate: $u = \log_2 D$, $v = \log_2 R = m$, $\varepsilon = \delta$, and the seed length is
+$\log_2 K$. That bound reads $\log_2 K \ge \min(\log_2 D - m,\ m + 2\log_2(1/\delta)) - O(1)$.
 Corollary~\ref{cor:seed} gives $\log_2 K \ge \log_2(W-1) - 2 + 2\log_2(1/\delta)$, and in the
 principal regime $W = R$ that is $m + 2\log_2(1/\delta) - 2$: the second branch. The first branch is
 Proposition~\ref{prop:nouniv}'s $K \ge D/R$, which is Stinson's linear-in-$u$ result reached by another
 route. So the two salt columns of Section~\ref{sec:compare}'s table are the two branches of one bound
-that has been known since 1994, and Section~\ref{sec:vs}'s reading --- that universal hashing has
-the longer salt, not the shorter --- is that bound's own reading. What this note adds is not the
+that has been known since 1994. And Appendix~\ref{sec:vs}'s reading, that universal hashing has the
+longer salt rather than the shorter, is that bound's own reading. What this note adds is not the
 number.
 
-What it does add is three things, none of them a new bound. First, a self-contained derivation of
-the relevant branch from a pigeonhole and two applications of Cauchy--Schwarz, with no probability
-in it, so the statement holds for every table rather than a typical one. Second, that derivation
-instantiated in the game of \texttt{main.tex}: Theorem~\ref{thm:limit} exhibits a witness source per
-table, so the obstruction appears as an attack one can write down rather than as a counting bound on
-families. Third, Lemma~\ref{lem:attrib}, which separates the cases where the floor speaks about
-$\gamma$ from those where the entropy deficiency already explains it. Whether any of the three is
-also in Stinson's papers I do not know: the attribution above is~\cite{BDKPPSY11}'s, and I have not
-read~\cite{Sti94} at first hand.
+It adds three things, none of them a new bound. First, a derivation of the relevant branch from a
+pigeonhole and two applications of Cauchy--Schwarz, with no probability in it, so the statement
+holds for every table. Second, that derivation put into the game of \texttt{main.tex}:
+Theorem~\ref{thm:limit} gives a witness source per table, so the obstruction is an attack one can
+write down rather than a counting bound on families. Third, Lemma~\ref{lem:attrib}, which separates
+the cases where the floor speaks about $\gamma$ from those where the entropy deficiency explains it.
+Whether any of the three is also in Stinson's papers I do not know: the attribution above
+is~\cite{BDKPPSY11}'s, and I have not read~\cite{Sti94} at first hand.
 
-Two things in the game of \texttt{main.tex} that literature does \emph{not} cover, and they are why
-the question is not simply closed by it.
+Two things in the game of \texttt{main.tex} that literature does \emph{not} cover.
 
 \begin{itemize}
 \item \textbf{The independence hypothesis is \emph{not} weakened here, and it is worth being exact
@@ -1311,9 +1282,9 @@ source there may already depend on the \emph{family}; what it must not depend on
 \emph{seed}. The game of \texttt{main.tex} asks no more than that: $\sd$ is drawn after $S$ has
 terminated, so its source is independent of the seed too. Nothing in the adversary model is
 weakened, and Theorem~\ref{thm:limit}'s witness uses no freedom the leftover-hash setting withholds.
-What differs is the \emph{family} --- a uniformly random table in place of a universal one --- and
-the content of Theorem~\ref{thm:limit} is that this substitution alone, with seed-independence
-fully intact, already costs the seed length. (That paper's remark about not making ``the source $X$
+What differs is the \emph{family}: a uniformly random table in place of a universal one. The
+content of Theorem~\ref{thm:limit} is that this substitution alone, with seed-independence fully
+intact, already costs the seed length. (That paper's remark about not making ``the source $X$
 dependent on the seed'' is about a different scenario, fixing one public seed and reusing it
 indefinitely, and does not bear on this.)
 
@@ -1328,10 +1299,10 @@ obtained by modelling a cryptographic hash as a random oracle. Its construction 
 the derived key is $H(X)$, with no seed anywhere in the argument. The reasoning is that $H(X)$ is
 distinguishable from uniform only if the attacker queries the oracle at $X$; as $X$ has min-entropy
 $\mu$, that happens with probability at most $T/2^{\mu}$, where $T$ bounds the adversary's running
-time. Calibrating $T$ against the application's own security --- a primitive $P$ that is
+time. Now calibrate $T$ against the application's own security. A primitive $P$ that is
 $\epsilon$-secure against complexity $T$ must satisfy $\epsilon \le T/2^{v}$, since exhaustive
-search over a $v$-bit key must not succeed better than $\epsilon$, so $T \approx \epsilon 2^{v}$ ---
-gives
+search over a $v$-bit key must not succeed better than $\epsilon$, so $T \approx \epsilon 2^{v}$.
+That gives
 \[
   \epsilon_{\mathrm{RO}} \;\approx\; \frac{T}{2^{\mu}} \;=\; \epsilon\,2^{\,v-\mu} \;=\;
   \epsilon\,2^{-L} , \qquad L := \mu - v \ \text{the entropy loss} ,
@@ -1341,8 +1312,8 @@ against $\sqrt{\varepsilon 2^{-L}}$ for their generalised LHL and $2^{-L/2}$ for
 
 \emph{Only one of the two parties is bounded, and the two are not bounded in the same sense.} The
 \emph{distinguisher} is bounded, by the running time $T$, which in particular bounds its oracle
-queries. The \emph{source} is not bounded --- because it is not a query-making object at all. There
-$X$ is a distribution of min-entropy $\mu$, fixed independently of $H$; no source algorithm with
+queries. The \emph{source} is not bounded, because it is not a query-making object at all. There
+$X$ is a distribution of min-entropy $\mu$, fixed independently of $H$. No source algorithm with
 oracle access appears in the model, so there is nothing about it to bound. Searching
 \cite{BDKPPSY11} for query counts finds only the distinguisher's $T$ and the query budgets of the
 \emph{applications} being keyed (encryption, MAC and PRF queries); the source never makes a query.
@@ -1351,15 +1322,15 @@ That asymmetry is exactly what the argument rests on, and it is not incidental. 
 distinguishable only if the attacker queried at $X$'' is false the moment $X$ may depend on $H$, and
 Proposition~\ref{prop:unsalted} is how false: a source that reads $H$ and returns a uniform element
 of its largest fibre is distinguished with advantage $1 - 1/R$ by an adversary making no query at
-all, at a min-entropy of $\log_2 D - \log_2 R$. So this comparison needs the source independent of $H$ \emph{itself} --- a strictly
-stronger hypothesis than the leftover-hash half of the same paper needs, where the source must be
-independent only of the seed and may know the family. Being unsalted, it has no seed to fall back
+all, at a min-entropy of $\log_2 D - \log_2 R$. So this comparison needs the source independent of
+$H$ \emph{itself}. That is strictly stronger than the leftover-hash half of the same paper needs,
+where the source must be independent only of the seed and may know the family. Being unsalted, it has no seed to fall back
 on, so independence from $H$ is the only thing holding it up. That is the hypothesis
 \texttt{main.tex} does drop, and the salt is what it puts in its place.
 
 There is also no formal random-oracle model to appeal to here: \cite{BDKPPSY11}'s Section~3.4 is
-prose --- ``it is instructive to compare\ldots the heuristic `dream' bound\ldots we claim'' --- and
-the random oracle appears in no definition, lemma or theorem of that paper. Its formal
+prose, reading ``it is instructive to compare\ldots the heuristic `dream' bound\ldots we claim'',
+and the random oracle appears in no definition, lemma or theorem of that paper. Its formal
 Definition~2.1 has $\mathrm{Ext}$ a plain function and $X$ a distribution quantified over, with no
 oracle anywhere. So the question of how many oracle queries the source may make has no answer
 there, not because the answer is zero but because the object is a distribution rather than an
@@ -1394,7 +1365,7 @@ bound          & $\epsilon\,2^{-L}$                      & $c(\sqrt{\epsilon R} 
 Boaz Barak, Yevgeniy Dodis, Hugo Krawczyk, Olivier Pereira, Krzysztof Pietrzak,
 Fran\c{c}ois-Xavier Standaert and Yu Yu.
 \newblock Leftover Hash Lemma, Revisited.
-\newblock In \emph{Advances in Cryptology --- CRYPTO 2011}, LNCS 6841, pages 1--20. Springer, 2011.
+\newblock In \emph{Advances in Cryptology -- CRYPTO 2011}, LNCS 6841, pages 1--20. Springer, 2011.
 \newblock Cryptology ePrint Archive, Report 2011/088, \url{https://eprint.iacr.org/2011/088}.
 \newblock (Read at first hand, and quoted in Section~\ref{sec:bounds}: the seed-length and
 entropy-loss limitations are the two bullets of its abstract, developed on page~1; the generalised

@@ -406,6 +406,16 @@ In particular at $K = 1$ the advantage is $1 - 1/R$: unsalted extraction from a 
 the oracle fails outright, and it fails at min-entropy $\log_2 D - \log_2 R$, which is far above the
 minimum any of the settings in Section~\ref{sec:compare} asks for. Since $s_S = 1$ and $q_D = 0$
 here, Theorem~\ref{thm:badcell} returns $1/K$, so its first term is tight to within $1 - 1/R$.
+
+More generally, for $1 \le j \le K$ the source of Proposition~\ref{prop:qtight} --- which pins $j$
+rows at a uniform input and leaks their values --- has $s_S = j$ and is $\epsilon$-unpredictable
+with $\epsilon \le R^{j}/D$, and against it a distinguisher making no oracle query achieves
+\[
+  \Adv^{\extpub}(S,\mathsf{D}) \;=\; \frac{j}{K}\Bigl(1 - \frac1R\Bigr) .
+\]
+So the first term of Theorem~\ref{thm:badcell} is attained at every value of $s_S$, not only at
+$s_S = 1$; but each pinned row costs $\log_2 R$ bits of min-entropy, so a source required to retain
+min-entropy $\mu$ can afford only $j \le (\log_2 D - \mu)/\log_2 R$ of them.
 \end{proposition}
 
 \begin{corollary}[Which route to use]\label{cor:which}
@@ -703,6 +713,59 @@ be what establishes it, and Remark~\ref{rem:cause} is the reminder that the true
 the witness source is far below either bound. What is being measured here is the reach of a proof
 technique, not the security of a construction.
 
+\subsection*{At a bounded query budget}
+
+Suppose the source and the distinguisher each make at most $2^{n}$ oracle queries. Then
+Theorem~\ref{thm:badcell} certifies $\delta$ once $s_S/K \le \delta/2$ and $q_D\epsilon \le \delta/2$,
+and in the worst case over $2^{n}$-query sources $s_S \le 2^{n}$, so
+\begin{equation}\label{eq:qsalt}
+  \log_2 K \;\ge\; n + \log_2(1/\delta) + 1 ,
+  \qquad\text{feasible only if}\qquad
+  n \;\le\; \mu - \log_2(1/\delta) - 1 ,
+\end{equation}
+the second condition being about the source's min-entropy $\mu$ and not about the salt: no seed
+length repairs a budget that already exceeds it. The three settings of the table above, alongside
+the conjectured salt, which does not depend on $n$:
+
+\begin{center}\small
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+ & \multicolumn{4}{c}{salt (bits) at $q_S = q_D = 2^{n}$} & conjectured \\
+\cmidrule(lr){2-5}\cmidrule(l){6-6}
+ & $n = 40$ & $n = 64$ & $n = 80$ & $n = 128$ & any $n$ \\
+\midrule
+DH element, 2048-bit group & $73$  & $97$  & $113$ & $161$ & $77$  \\
+the same, 256-bit key      & $105$ & $129$ & $145$ & $193$ & $141$ \\
+a 512-bit source           & $105$ & $129$ & $145$ & $193$ & $139$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Two things to read off. The first is that the last column is \emph{flat}: the conjectured salt is
+$\log_2\log_2 D + 2\log_2(1/\delta) + 2$ whatever the adversary's budget, and it holds against an
+unbounded one, whereas \eqref{eq:qsalt} grows one bit for every doubling of the budget. They cross
+at $n = 44$, $76$ and $74$ in the three rows. So at $2^{80}$ --- the budget one would actually
+quote --- bounding the queries buys nothing here: it asks for $113$ bits where the conjecture asks
+for $77$, and for $145$ against $141$ and $139$. The query bound helps only for adversaries weaker
+than $2^{44}$ or so, and the reason is visible in the two exponents: the bad-cell route pays
+$\log_2 q$ where the conjecture pays $\log_2\log_2 D$, and only halves the $\delta$ term in exchange.
+
+The second is that \eqref{eq:qsalt} is an upper bound on what is needed, and a generous one, because
+$s_S \le 2^{n}$ is not achievable at these min-entropies. By Proposition~\ref{prop:unsalted} the
+advantage $s_S/K$ is attained by pinning $s_S$ rows at the source's own output --- but each pinned
+row costs $\log_2 R$ bits of min-entropy, so the three rows admit only
+$j \le (\log_2 D - \mu)/\log_2 R = 14$, $6$ and $1$ pinned rows. Against the best attack known the
+salt actually forced is $\log_2 j + \log_2(1/\delta) = 36$, $67$ and $64$ bits, and
+Proposition~\ref{prop:unsalted} on its own already forces $\log_2(1/\delta) = 32$, $64$ and $64$. So
+for the query-bounded route the truth lies in $[36,113]$, $[67,145]$ and $[64,145]$, and the
+conjectured $77$, $141$ and $139$ sit inside all three.
+
+Where the slack comes from is worth naming, since it says what a sharper theorem would have to do. A
+source may query $(k,x)$ at its own output for a great many $k$ and simply \emph{ignore} the
+answers: that costs it no entropy and gains it no advantage, yet it inflates $s_S$ to the query
+budget, and Theorem~\ref{thm:badcell} charges for it. A bound that charged only for queries whose
+answers reach the distinguisher would close most of the gap; the note does not prove one.
+
 \section{Proofs}\label{sec:proofs}
 
 In the order the statements appear in Section~\ref{sec:bounds}. Theorem~\ref{thm:qlhl}'s proof needs
@@ -943,6 +1006,13 @@ $b = 0$ we have $y_0 = h(\sd,x)$, and when $\sd = 1$ every $x \in T$ gives $h(1,
 $\Pr[\mathsf{D} \Rightarrow 1 \mid b=0] = 1/K$. Under $b = 1$ the value $y_1$ is uniform on $\calR$
 and independent of $z$, so $\Pr[\mathsf{D} \Rightarrow 1 \mid b=1] = 1/(KR)$. The advantage is the
 difference, $(1 - 1/R)/K$.
+
+For the general case, let $S$ draw $x \sample \calD$, query $(k,x)$ for $k < j$ and output
+$\bigl(x, z = (H(0,x),\dots,H(j-1,x))\bigr)$; Proposition~\ref{prop:qtight} gives
+$\epsilon \le R^{j}/D$ and $s_S = j$, the latter because the source queries its own output in
+exactly those $j$ rows. Let $\mathsf{D}$ make no query and return $1$ exactly when $\sd < j$ and
+$y_b = z_{\sd}$. Under $b = 0$, $y_0 = H(\sd,x) = z_{\sd}$ whenever $\sd < j$, so the probability
+is $j/K$; under $b = 1$ it is $j/(KR)$. The entropy remark is $\log_2(R^{j}/D) \le -\mu$ rearranged.
 \end{proof}
 
 \begin{proof}[Proof of Corollary~\ref{cor:which}]

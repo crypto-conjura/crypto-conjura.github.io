@@ -622,14 +622,62 @@ exists, and Theorem~\ref{thm:limit}'s witness uses that freedom to choose its su
 coincide with the known bound, but the hypotheses do not, so this is not literally an instance of a
 result proved under independence.
 
-\item \textbf{Their random-oracle comparison is query-bounded.} \cite{BDKPPSY11} compares the LHL
-against the ``dream'' bound of a cryptographic hash modelled as a random oracle by arguing that
-$H(X)$ is distinguishable from uniform only if the attacker queried the oracle at $X$, which for an
-attacker of running time $T$ against a source of min-entropy $\mu$ happens with probability at most
-$T/2^{\mu}$. In \texttt{main.tex} every party is handed $H$ in full, so there is no query budget to
-argue against and that comparison does not reach this setting. The same is true of the
-random-oracle extraction literature generally.
+\item \textbf{Their random-oracle comparison bounds one party only, and it is unsalted.} This is
+set out in full in Remark~\ref{rem:roquery} below, because the asymmetry is the whole of why that
+comparison does not reach this setting.
 \end{itemize}
+
+\begin{remark}[The query model of the random-oracle comparison]\label{rem:roquery}
+Section~3.4 of \cite{BDKPPSY11} compares the leftover hash lemma against the ``dream'' bound
+obtained by modelling a cryptographic hash as a random oracle. Its construction is \emph{unsalted}:
+the derived key is $H(X)$, with no seed anywhere in the argument. The reasoning is that $H(X)$ is
+distinguishable from uniform only if the attacker queries the oracle at $X$; as $X$ has min-entropy
+$\mu$, that happens with probability at most $T/2^{\mu}$, where $T$ bounds the adversary's running
+time. Calibrating $T$ against the application's own security --- a primitive $P$ that is
+$\epsilon$-secure against complexity $T$ must satisfy $\epsilon \le T/2^{v}$, since exhaustive
+search over a $v$-bit key must not succeed better than $\epsilon$, so $T \approx \epsilon 2^{v}$ ---
+gives
+\[
+  \epsilon_{\mathrm{RO}} \;\approx\; \frac{T}{2^{\mu}} \;=\; \epsilon\,2^{\,v-\mu} \;=\;
+  \epsilon\,2^{-L} , \qquad L := \mu - v \ \text{the entropy loss} ,
+\]
+against $\epsilon 2^{-L/2}$ for their generalised LHL and $2^{-L/2}$ for the standard one.
+
+\emph{Only one of the two parties is bounded, and the two are not bounded in the same sense.} The
+\emph{distinguisher} is bounded, by the running time $T$, which in particular bounds its oracle
+queries. The \emph{source} is not bounded --- because it is not a query-making object at all. There
+$X$ is a distribution of min-entropy $\mu$, fixed independently of $H$; no source algorithm with
+oracle access appears in the model, so there is nothing about it to bound. Searching
+\cite{BDKPPSY11} for query counts finds only the distinguisher's $T$ and the query budgets of the
+\emph{applications} being keyed (encryption, MAC and PRF queries); the source never makes a query.
+
+That asymmetry is exactly what the argument rests on, and it is not incidental. ``$H(X)$ is
+distinguishable only if the attacker queried at $X$'' is false the moment $X$ may depend on $H$: a
+source that reads $H$ and returns an $x$ whose image has a fixed first bit is distinguished with no
+query at all. So the random-oracle comparison presupposes source--hash independence just as the
+leftover-hash half of that paper does.
+
+It is also why that comparison needs no salt while \texttt{main.tex} does. Once the distinguisher is
+unbounded the estimate $T/2^{\mu}$ is vacuous: in the game of \texttt{main.tex} every party holds
+all $KD$ entries of the table, so $T$ is effectively $KD$ and $T/2^{\mu} = KD\epsilon$ exceeds $1$
+for every interesting $\epsilon$. Unsalted extraction against an unbounded distinguisher simply
+fails, and this note's own arithmetic agrees: at $K = 1$ the bound \eqref{eq:conj} reads
+$c(\sqrt{\epsilon R} + \sqrt{\log_2 D})$, which is vacuous for every $D \ge 2$. The salt is what
+rescues it, and the salt is what the question is about. Summarising the two models:
+\begin{center}\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+ & \cite{BDKPPSY11}, Section~3.4 & \texttt{main.tex} \\
+\midrule
+construction   & $H(X)$, unsalted                        & $H(\sd,x)$, salted \\
+source         & a distribution, independent of $H$;     & an algorithm reading all of $H$; \\
+               & makes no queries                        & unbounded \\
+distinguisher  & running time $\le T$                    & unbounded; holds all of $H$ \\
+bound          & $\epsilon\,2^{-L}$                      & $c(\sqrt{\epsilon R} + \sqrt{\log_2 D / K})$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{remark}
 
 \section{What is not claimed}\label{sec:not}
 

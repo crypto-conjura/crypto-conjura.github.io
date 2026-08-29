@@ -369,9 +369,10 @@ of \eqref{eq:conj} below $\delta$ requires $K \ge c^{2}\log_2 D/\delta^{2}$, whe
 Theorem~\ref{thm:limit} the leftover-hash route cannot certify $\delta$ at all unless
 $K \ge (W-1)/(4\delta^{2})$. In bits,
 \[
-  \log_2 K \;=\; 2\log_2 c + \log_2\log_2 D + 2\log_2(1/\delta)
-  \qquad\text{against}\qquad
-  \log_2 K \;\ge\; \log_2(W-1) - 2 + 2\log_2(1/\delta) .
+  \begin{aligned}
+    \log_2 K \;&=\;    2\log_2 c + \log_2\log_2 D + 2\log_2(1/\delta) && \text{(conjectured)}, \\
+    \log_2 K \;&\ge\;  \log_2(W-1) - 2 + 2\log_2(1/\delta)            && \text{(collision route)} .
+  \end{aligned}
 \]
 Both carry $2\log_2(1/\delta)$; they differ in the first term, $\log_2 W$ against
 $\log_2\log_2 D$.
@@ -453,19 +454,41 @@ one from the same secret costs no extra salt whatever, while under the collision
 $128$ further bits of salt. Concretely, with $c = 2$ and in each row the hypotheses of
 Corollary~\ref{cor:seed} verified:
 
-\begin{center}
-\begin{tabular}{@{}lrrrrr@{}}
+\begin{center}\small
+\begin{tabular}{@{}lrrrrrrr@{}}
 \toprule
- & secret & min-ent. & key & \multicolumn{2}{c}{salt needed (bits)} \\
-\cmidrule(l){5-6}
- & $D$ & bits & bits & conjectured & route \\
+ & secret & min-ent. & key & error & \multicolumn{3}{c}{salt needed (bits)} \\
+\cmidrule(l){6-8}
+ & $D$ & bits & bits & $\delta$ & conj. & route & univ. \\
 \midrule
-DH element in a 2048-bit group, $\delta = 2^{-32}$ & $2^{2048}$ & $256$ & $128$ & $77$  & $190$ \\
-the same, at a 256-bit key, $\delta = 2^{-64}$      & $2^{2048}$ & $512$ & $256$ & $141$ & $382$ \\
-a 512-bit source, $\delta = 2^{-64}$                & $2^{512}$  & $300$ & $128$ & $139$ & $254$ \\
+DH element, 2048-bit group & $2^{2048}$ & $256$ & $128$ & $2^{-32}$ & $77$  & $190$ & $1920$ \\
+the same, 256-bit key      & $2^{2048}$ & $512$ & $256$ & $2^{-64}$ & $141$ & $382$ & $1792$ \\
+a 512-bit source           & $2^{512}$  & $300$ & $128$ & $2^{-64}$ & $139$ & $254$ & $384$  \\
 \bottomrule
 \end{tabular}
 \end{center}
+
+The last column is universal hashing, at $n - m$ bits from $K \ge D/R$
+(Remark~\ref{rem:nouniv}), and it is included because it makes the point of Section~\ref{sec:vs}
+concrete: universal hashing does not have a shorter salt than the conjecture, it has a far longer
+one. It is also read slightly differently from the other two. Those are the salt needed to reach the
+stated $\delta$; this is the salt needed for such a family to \emph{exist} at all, the binding
+constraint being existence rather than accuracy --- at that salt the error is
+$\tfrac12\sqrt{\epsilon R}$, which is $2^{-65}$, $2^{-129}$ and $2^{-87}$ in the three rows, already
+inside $\delta$ in each.
+
+The three columns scale in three different ways, and that is the whole comparison in one place:
+\[
+  \underbrace{\log_2 n + 2\log_2(1/\delta) + 2}_{\text{conjectured}}, \qquad
+  \underbrace{m + 2\log_2(1/\delta) - 2}_{\text{collision route}}, \qquad
+  \underbrace{n - m}_{\text{universal}} .
+\]
+The conjectured salt grows with the logarithm of the secret's length; the collision route's grows
+with the length of the derived key; universal hashing's grows with the secret's length outright,
+\emph{shrinks} as the derived key gets longer --- $1920$ bits for a $128$-bit key against $1792$ for
+a $256$-bit one, since a larger $R$ weakens the constraint $K \ge D/R$ --- and does not depend on
+$\delta$ at all, because it is a structural requirement rather than an accuracy one. Only the first
+is what one wants of a salt: short, and growing only in the logarithm of anything.
 
 Read the other way --- at a fixed salt rather than a fixed error --- the same gap says the route
 certifies almost nothing at the salt length the conjecture licenses. Substituting

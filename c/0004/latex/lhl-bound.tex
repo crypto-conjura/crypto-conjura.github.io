@@ -8,8 +8,9 @@
 %  discussion.  A reader who wants only the results needs the first
 %  three sections.
 %
-%  Three things a later revision must not quietly do, each of which a
-%  blind referee caught in the first version of this file:
+%  Seven things a later revision must not quietly do.  The first three
+%  a blind referee caught in the first version of this file; the rest
+%  came out of a proof audit of the revised one.
 %
 %   (1) Do not upgrade Theorem 1 to an equality.  It lower-bounds what
 %       the technique returns.  "What is not claimed" is the
@@ -23,6 +24,21 @@
 %       unpinned rows dominate on a typical table.  It IS O(1/K) once
 %       the distinguisher is query-bounded.  See the notes on the
 %       bounds, which state this correctly.
+%   (4) Do not compare the two routes of Corollary "which" one summand
+%       at a time.  sqrt(a)+sqrt(b) >= sqrt(a+b), so termwise
+%       domination does not give domination of the sums, and the
+%       conclusion is false at R=2 with r_S=s_S=K.  The side
+%       hypothesis 2 s_S/K + 2 sqrt(eps R) <= R is what repairs it.
+%   (5) In the multi-row remark, the j symbol sets have size sigma,
+%       not R/sigma.  With R/sigma the per-row gain is sigma rather
+%       than W, and the constraint reads log_sigma(D/t), which is
+%       undefined at sigma = 1 -- the regime the whole note lives in.
+%   (6) The Plotkin bound's equality case is |C| <= 2qn, not qn (qn
+%       holds for q=2 only).  The sharp K >= D/R is Stinson's AU
+%       bound, not Plotkin's; keep the attribution straight.
+%   (7) Driving the conjecture's SECOND summand below delta is not
+%       certifying delta.  Corollary "seed" carries the eta term for
+%       that reason; do not silently drop it from the statement.
 %
 %  Built on conjura-solution.cls, like proof.tex, for the page width.
 %  \cjresolves is that class's one required piece of front matter; it
@@ -161,9 +177,11 @@ Section~\ref{sec:setting}: there $\mathrm{Ext}$ is a fixed public function, the 
 distribution rather than an algorithm, and the random oracle appears in no definition, lemma or
 theorem. Remark~\ref{rem:roquery} sets the two models side by side.
 
-First a clash of notation. In~\cite{BDKPPSY11}, $u$ is the length of the source, $v$ the number of
-extracted bits, $\mu$ the source's min-entropy, $L := \mu - v$ the \emph{entropy loss}, and
-$\varepsilon$ the security of the \emph{application} being keyed. That last is not this note's
+First a clash of notation. In~\cite{BDKPPSY11}, $v$ is the number of extracted bits, $m$ the
+source's min-entropy, $L := m - v$ the \emph{entropy loss}, and $\varepsilon$ the security of the
+\emph{application} being keyed; the source's length is written $|X|$. This note writes $u$ for
+that length and $\mu$ for their $m$, since $m$ is needed below for $\log_2 R$; the renaming is
+this note's and not theirs. That last is not this note's
 $\epsilon$, which is the source's unpredictability and is $2^{-\mu}$ in their units. Otherwise
 $u = \log_2 D$ and $v = \log_2 R$.
 
@@ -248,7 +266,8 @@ table. At the seed lengths at issue no table has it, provided the output is shor
 input.
 
 \begin{proposition}[No universal family at small $K$, when $R < D$]\label{prop:nouniv}
-If $\{h(k,\cdot)\}_{k\in\calK}$ is $2$-universal then $D \le RK$, that is $K \ge D/R$. So no
+If $\{h(k,\cdot)\}_{k\in\calK}$ is $2$-universal then $D \le 2RK$; and, by Stinson's bound for
+almost-universal families quoted in the proof, $D \le RK$, that is $K \ge D/R$. So no
 $2$-universal family exists once $K < D/R$, which at $D = 2^{256}$ and $R = 2^{64}$ holds for every
 $K < 2^{192}$. The proviso $R < D$ matters: for $R \ge D$ a single injective row is already
 $2$-universal, with $K = 1$, so no seed-length lower bound holds without a hypothesis relating $R$
@@ -339,8 +358,9 @@ with $\epsilon \le R^{j}/D$, and against it a distinguisher making no oracle que
   \Adv^{\extpub}(S,\mathsf{D}) \;=\; \frac{j}{K}\Bigl(1 - \frac1R\Bigr) .
 \]
 So the first term of Theorem~\ref{thm:badcell} is attained at every value of $s_S$, not only at
-$s_S = 1$; but each pinned row costs $\log_2 R$ bits of min-entropy, so a source required to retain
-min-entropy $\mu$ can afford only $j \le (\log_2 D - \mu)/\log_2 R$ of them.
+$s_S = 1$; and each pinned row costs $\log_2 R$ bits of min-entropy, exactly and not merely at
+most, so a source required to retain min-entropy $\mu$ can afford only
+$j \le (\log_2 D - \mu)/\log_2 R$ of them.
 \end{proposition}
 
 \section{The comparison}\label{sec:compare}
@@ -365,6 +385,11 @@ Thm.~\ref{thm:badcell}              & $s_S$ cells  & $q_P \ge q_D$  & $q_D$ quer
 \end{tabular}
 \end{center}
 
+\noindent In the second row $\gamma$ stands for $\mathbb{E}_{(H,Z)}[\gamma]$; the pointwise
+statement is $\tfrac12\sqrt{R\cdot\CP + \gamma}$, and the displayed form is what Jensen's
+inequality returns from it.
+
+\smallskip
 \noindent$^{\ast}$ On a \emph{fixed} $2$-universal table, which by Proposition~\ref{prop:nouniv}
 needs $K \ge D/R$; the uniform $H$ of Section~\ref{sec:setting} is not one. Theorem~\ref{thm:qlhl}
 and Corollary~\ref{cor:which} are stated and proved in Appendix~\ref{sec:rowbreadth}; they refine
@@ -375,8 +400,8 @@ Three readings of the table. The first two rows differ only in $\gamma$ against 
 Theorem~\ref{thm:limit} is what forbids $\gamma$ from being small enough to close that. The fifth
 row is the fourth's matching ceiling for sources of bounded row breadth. And the last row is the
 only one in which the distinguisher's budget appears at all, for the reason
-Remark~\ref{rem:qd} gives; by Corollary~\ref{cor:which} it is the smallest of them whenever
-$q_D \le \tfrac12\sqrt{R/\epsilon}$.
+Remark~\ref{rem:qd} gives; by Corollary~\ref{cor:which}, and at any $R$ these tables use, it is the
+smallest of them whenever $q_D \le \tfrac12\sqrt{R/\epsilon}$.
 
 Side by side, and this is the whole comparison in one line:
 \begin{equation}\label{eq:sidebyside}
@@ -418,19 +443,27 @@ row is not salted at all, so it has no seed to improve.
 
 \begin{corollary}[The comparison, in seed length]\label{cor:seed}
 Fix a target error $\delta \in (0,1)$ and parameters for which \eqref{eq:side} holds and the entropy
-deficiency is not itself binding, that is $c\sqrt{\epsilon R} < \delta$. Driving the second summand
-of \eqref{eq:conj} below $\delta$ requires $K \ge c^{2}\log_2 D/\delta^{2}$, whereas by
+deficiency is not itself binding, that is $c\sqrt{\epsilon R} \le \eta\,\delta$ for some
+$\eta \in (0,1)$. Then \eqref{eq:conj} certifies $\delta$ once
+$K \ge c^{2}\log_2 D/\bigl((1-\eta)\delta\bigr)^{2}$, whereas by
 Theorem~\ref{thm:limit} the leftover-hash route cannot certify $\delta$ at all unless
 $K \ge (W-1)/(4\delta^{2})$. In bits,
 \[
   \begin{aligned}
-    \log_2 K \;&=\;    2\log_2 c + \log_2\log_2 D + 2\log_2(1/\delta) && \text{(conjectured)}, \\
+    \log_2 K \;&=\;    2\log_2 c + \log_2\log_2 D + 2\log_2(1/\delta)
+                       + 2\log_2\tfrac{1}{1-\eta}                     && \text{(conjectured)}, \\
     \log_2 K \;&\ge\;  \log_2(W-1) - 2 + 2\log_2(1/\delta)            && \text{(collision route)} .
   \end{aligned}
 \]
 Both carry $2\log_2(1/\delta)$; they differ in the first term, $\log_2 W$ against
 $\log_2\log_2 D$.
 \end{corollary}
+
+The last term of the first line is what the entropy deficiency costs the conjectured salt, and it
+is the one place where the two lines are not the same kind of quantity: the second is a necessary
+condition on $K$, the first a sufficient one, and driving \eqref{eq:conj}'s \emph{second} summand
+alone below $\delta$ would not certify $\delta$. Everywhere below $\eta \le 2^{-15}$, so the term
+is under $10^{-4}$ bits and the tables drop it.
 
 \begin{remark}[A worked instance]\label{rem:numbers}
 Take $D = 2^{256}$, $R = 2^{64}$, a source of min-entropy $160$ (so $\epsilon = 2^{-160}$ and
@@ -538,8 +571,8 @@ $K = c^{2}\log_2 D/\delta^{2}$ into Theorem~\ref{thm:limit}'s floor gives
   \frac12\sqrt{\frac{W-1}{K}} \;\approx\; \frac{\delta}{2c}\sqrt{\frac{W}{\log_2 D}} ,
 \]
 so the error the route can certify exceeds $\delta$ by a factor of about
-$\sqrt{W/\log_2 D}\,/\,(2c)$, roughly $(m - \log_2 n)/2$ bits of security, over half the derived
-key's length. In the first row that factor is $2^{56.5}$, so at a $77$-bit salt the route certifies
+$\sqrt{W/\log_2 D}\,/\,(2c)$, roughly $(m - \log_2 n)/2$ bits of security, just under half the
+derived key's length. In the first row that factor is $2^{56.5}$, so at a $77$-bit salt the route certifies
 $2^{24.5}$, which is larger than $1$ and so says nothing. In the third row it certifies $2^{-6.5}$
 at a $139$-bit salt: six bits of security where sixty-four were wanted.
 
@@ -716,11 +749,22 @@ $\mathbb{E}[\epsilon_{H,Z}] \le \epsilon$.
 \begin{proof}[Proof of Proposition~\ref{prop:nouniv}]
 Viewing each input $x$ as the column vector $(h(k,x))_{k \in \calK} \in \calR^{K}$, two distinct
 columns agree in at most $K/R$ coordinates, so the $D$ columns form a code of length $K$ over an
-alphabet of size $R$ with minimum distance at least $(1 - 1/R)K$. The Plotkin bound, in the form
-``$d = (1-1/q)n$ implies $|C| \le qn$'', gives $D \le RK$. For the proviso, if $R \ge D$ take
+alphabet of size $R$ with minimum distance at least $(1 - 1/R)K$. The Plotkin bound in its
+equality case, ``$d = (1-1/q)n$ implies $|C| \le 2qn$'', gives $D \le 2RK$.
+
+The factor of two belongs to that route rather than to the truth. Stinson's lower bound for
+$\varepsilon$-almost-universal families~\cite{Sti94},
+$K \ge D(R-1)/\bigl(\varepsilon R(D-R) + R^{2} - D\bigr)$, reads $K \ge D/R$ at
+$\varepsilon = 1/R$, and that is the constant Section~\ref{sec:compare} uses. It is attained: over
+$\mathbb{F}_q$ the family $h(k,(a,b)) = ak+b$ has $D = q^{2}$ and $R = K = q$. Reading the
+elementary $D \le 2RK$ instead would shorten the \emph{univ.}\ column of
+Section~\ref{sec:compare} by one bit and change nothing else.
+
+For the proviso, if $R \ge D$ take
 $K = 1$ and any injection $\calD \to \calR$: no two distinct inputs collide, so the family is
 $2$-universal. (An earlier version of this note asserted $K \ge D^{\Omega(1)}$ unconditionally,
-which that example refutes.)
+which that example refutes; and quoted the Plotkin bound in the sharper form $|C| \le qn$, which
+holds for $q = 2$ but is not the general statement.)
 \end{proof}
 \begin{proof}[Proof of Theorem~\ref{thm:limit}]
 \emph{The parameters are in range.} From $\epsilon \le 1$ we get $t \ge 1$, and from
@@ -794,7 +838,8 @@ the source can place at most $q_S$ queries and there are only $K$ rows.
 
 For the second, build a predictor. Given $(H,z)$, let $P$ draw $\sd \sample \calK$ and
 $y \sample \calR$, run $\mathsf{D}^{H}(\sd, y, z)$ answering its queries from $H$, pick
-$i \sample \{1,\dots,q_D\}$ and return the input component of the $i$-th query. Under $b = 1$ the
+$i \sample \{1,\dots,q_D\}$ and return the input component of the $i$-th query. (At $q_D = 0$
+the distinguisher queries nothing, the term is $0$, and no predictor is needed.) Under $b = 1$ the
 challenge is a uniform value independent of everything else, so $P$'s simulation is exact; and if
 $\mathsf{D}$ queries $(\sd,x)$ then some query has input component $x$, which $P$ selects with
 probability at least $1/q_D$. So $\Pr[\mathsf{D}\text{ queries }(\sd,x)] \le q_D \cdot
@@ -820,12 +865,21 @@ $\Pr[\mathsf{D} \Rightarrow 1 \mid b=0] = 1/K$. Under $b = 1$ the value $y_1$ is
 and independent of $z$, so $\Pr[\mathsf{D} \Rightarrow 1 \mid b=1] = 1/(KR)$. The advantage is the
 difference, $(1 - 1/R)/K$.
 
-For the general case, let $S$ draw $x \sample \calD$, query $(k,x)$ for $k < j$ and output
-$\bigl(x, z = (H(0,x),\dots,H(j-1,x))\bigr)$; Proposition~\ref{prop:qtight} gives
+For the general case, let $S$ draw $x \sample \calD$, query $(k,x)$ for $1 \le k \le j$ and output
+$\bigl(x, z = (H(1,x),\dots,H(j,x))\bigr)$; Proposition~\ref{prop:qtight} gives
 $\epsilon \le R^{j}/D$ and $s_S = j$, the latter because the source queries its own output in
-exactly those $j$ rows. Let $\mathsf{D}$ make no query and return $1$ exactly when $\sd < j$ and
-$y_b = z_{\sd}$. Under $b = 0$, $y_0 = H(\sd,x) = z_{\sd}$ whenever $\sd < j$, so the probability
-is $j/K$; under $b = 1$ it is $j/(KR)$. The entropy remark is $\log_2(R^{j}/D) \le -\mu$ rearranged.
+exactly those $j$ rows. Let $\mathsf{D}$ make no query and return $1$ exactly when $\sd \le j$ and
+$y_b = z_{\sd}$. Under $b = 0$, $y_0 = H(\sd,x) = z_{\sd}$ whenever $\sd \le j$, so the probability
+is $j/K$; under $b = 1$ it is $j/(KR)$.
+
+The entropy remark needs the bound $\epsilon \le R^{j}/D$ in both directions, so the upper bound
+alone will not do. Proposition~\ref{prop:qtight}'s proof gives the equality
+$\epsilon = \mathbb{E}_{H}\bigl[\#\{z : T_z \neq \emptyset\}\bigr]/D$; and a uniform $H$ leaves a
+given one of the $R^{j}$ fibres empty with probability $(1-R^{-j})^{D} \le e^{-D/R^{j}}$, so all
+$R^{j}$ are nonempty except with probability $R^{j}e^{-D/R^{j}}$, which is negligible whenever
+$D/R^{j}$ comfortably exceeds $j\ln R$ --- it is $2^{256}$ against $1792\ln 2$ in the first row of
+Section~\ref{sec:compare}, and larger in the other two. There $\epsilon = (1-o(1))R^{j}/D$, and
+$\epsilon \le 2^{-\mu}$ rearranges to the stated ceiling on $j$.
 \end{proof}
 
 \section{The collision route under query bounds}\label{sec:rowbreadth}
@@ -850,8 +904,8 @@ Proposition~\ref{prop:univ}: a source that never queries is independent of the t
 table is universal in expectation.
 
 \begin{proposition}[The dependence on $r_S$ is exact up to a factor of two]\label{prop:qtight}
-Fix $j \le K$ and let the source draw $x \sample \calD$, query $(k,x)$ for $k < j$, and output
-$\bigl(x, z = (H(0,x),\dots,H(j-1,x))\bigr)$. It makes $j$ queries and has $r_S = s_S = j$; it is
+Fix $j \le K$ and let the source draw $x \sample \calD$, query $(k,x)$ for $1 \le k \le j$, and output
+$\bigl(x, z = (H(1,x),\dots,H(j,x))\bigr)$. It makes $j$ queries and has $r_S = s_S = j$; it is
 $\epsilon$-unpredictable with $\epsilon \le R^{j}/D$; and for \emph{every} table
 \[
   R\bar c - 1 \;\ge\; \frac{(R-1)\,j}{K} .
@@ -859,7 +913,7 @@ $\epsilon$-unpredictable with $\epsilon \le R^{j}/D$; and for \emph{every} table
 \end{proposition}
 
 So the term $2R\,r_S/K$ of Theorem~\ref{thm:qlhl} cannot be improved below $(R-1)r_S/K$: the
-constant is off by at most a factor of two and the shape is right. At $j = K$ the proposition
+constant is off by $2R/(R-1)$, which is two in the ranges of interest, and the shape is right. At $j = K$ the proposition
 returns $R - 1$, and the theorem is vacuous, as it must be.
 
 \begin{remark}[No bound proved through Proposition~\ref{prop:lhl} can mention $q_D$]\label{rem:qd}
@@ -876,14 +930,15 @@ Under the hypotheses of both,
   \min\Bigl\{\; \frac{s_S}{K} + q_D\epsilon , \;\;
     \frac12\sqrt{\epsilon R + \frac{2R\,r_S}{K}} \;\Bigr\} ,
 \]
-and since $s_S/K \le \tfrac12\sqrt{2R\,r_S/K}$ always, the two entropy terms decide between them:
-the bad-cell route is the smaller whenever
+and if moreover $2s_S/K + 2\sqrt{\epsilon R} \le R$, the bad-cell route is the smaller whenever
 \[
   q_D \;\le\; \tfrac12\sqrt{R/\epsilon} .
 \]
 \end{corollary}
 
-That threshold is not a close call. In the instance of Remark~\ref{rem:numbers} it is
+The side hypothesis is not a real restriction: at $R \ge 2^{64}$, with $s_S \le K$ and
+$\epsilon R \le 1$, its left-hand side is at most $4$. The threshold itself is not a close call
+either. In the instance of Remark~\ref{rem:numbers} it is
 $q_D \le 2^{111}$; for a $128$-bit derived key from a source of min-entropy $128$ it is
 $q_D \le 2^{127}$. Below it, which is every parameter regime anyone would deploy, the leftover hash
 lemma is the wrong instrument for this game. The gap is not marginal: on the witness of Theorem~\ref{thm:limit} in that instance, against a distinguisher making
@@ -965,20 +1020,31 @@ Fact~\ref{fact:cs}, so this is legitimate.
 \end{proof}
 \begin{proof}[Proof of Proposition~\ref{prop:qtight}]
 Given $(h,z)$ the conditional law is uniform on the joint fibre
-$T_z := \{x' : h(k,x') = z_k \text{ for all } k < j\}$, so $\epsilon_{h,z} = 1/|T_z|$, and since
+$T_z := \{x' : h(k,x') = z_k \text{ for all } k \le j\}$, so $\epsilon_{h,z} = 1/|T_z|$, and since
 $\Pr[Z = z] = |T_z|/D$ the average $\mathbb{E}[\epsilon_{H,Z}]$ is the number of nonempty fibres
 divided by $D$, at most $R^{j}/D$. Every element of $T_z$ has the same image in each pinned row, so
-$c_k = 1$ for $k < j$; for the remaining rows $c_k \ge 1/R$ by \eqref{eq:cs-collide}. Hence
+$c_k = 1$ for $k \le j$; for the remaining rows $c_k \ge 1/R$ by \eqref{eq:cs-collide}. Hence
 \[
   R\bar c - 1 \;\ge\; R\Bigl[\frac{j}{K}\cdot 1 + \frac{K-j}{K}\cdot\frac1R\Bigr] - 1
   \;=\; \frac{Rj}{K} - \frac{j}{K} \;=\; \frac{(R-1)j}{K} . \qedhere
 \]
 \end{proof}
 \begin{proof}[Proof of Corollary~\ref{cor:which}]
-Both bounds are proved above; the comparison of entropy terms is
-$q_D\epsilon \le \tfrac12\sqrt{\epsilon R}$, which is $q_D \le \tfrac12\sqrt{R/\epsilon}$. For the
-aside: querying $(k,X)$ touches row $k$, so $s_S \le r_S$; and $r_S/K \le \tfrac12\sqrt{2Rr_S/K}$ is,
-on squaring, $r_S \le RK/2$, which holds because $r_S \le K$ and $R \ge 2$.
+Both bounds are proved above. Write $a := \epsilon R$, $\theta_s := s_S/K$ and
+$\theta_r := r_S/K$, and note $\theta_s \le \theta_r$ because querying $(k,X)$ touches row $k$. At
+$q_D \le \tfrac12\sqrt{R/\epsilon}$ one has $q_D\epsilon \le \tfrac12\sqrt a$, so it is enough that
+$2\theta_s + \sqrt a \le \sqrt{a + 2R\theta_r}$. Squaring, that reads
+$4\theta_s^{2} + 4\theta_s\sqrt a \le 2R\theta_r$, and $\theta_s \le \theta_r$ reduces it to
+$4\theta_s + 4\sqrt a \le 2R$ when $\theta_s > 0$, which is the hypothesis; at $\theta_s = 0$ it is
+immediate.
+
+The two summands may \emph{not} be compared one at a time. It is true that
+$s_S/K \le \tfrac12\sqrt{2Rr_S/K}$ always --- on squaring, $r_S \le RK/2$, which holds because
+$r_S \le K$ and $R \ge 2$ --- but $\sqrt a + \sqrt b \ge \sqrt{a+b}$, so two termwise comparisons
+do not add up to a comparison of the sums, and without a hypothesis the conclusion is false: at
+$R = 2$, $r_S = s_S = K$, $\epsilon = 2^{-K}$ and $q_D = \tfrac12\sqrt{R/\epsilon}$ the bad-cell
+bound is $1 + 2^{-(K+1)/2}$ against the collision route's $1 + 2^{-K-2}$ or so. An earlier version
+of this note argued termwise.
 \end{proof}
 
 \begin{remark}[Theorem~\ref{thm:qlhl} closes the window of Section~\ref{sec:not}, for these sources]%
@@ -996,8 +1062,8 @@ Theorem~\ref{thm:limit} has $r_S = 1$, and
 a window of a factor $2$ in the radicand, so the route returns between $2^{-6}$ and $2^{-5.5}$. The
 hypotheses differ. Section~\ref{sec:not}'s sketch asks the source to be uniform on a support and
 bounds no queries; Theorem~\ref{thm:qlhl} bounds $r_S$ and asks nothing about the shape. But the
-witness satisfies both, and on it the query-bounded ceiling is sharper by some twenty orders of
-magnitude.
+witness satisfies both, and on it the query-bounded ceiling is sharper by a factor of about
+$2^{20}$.
 \end{remark}
 
 \section{The predictor's budget}\label{sec:predictor}
@@ -1124,12 +1190,14 @@ Three readings that belong to particular statements above rather than to the com
 Confining $j$ rows rather than one, each to $\sigma$ symbols, gives $R\bar c - 1 \ge j(W-1)/K$ by
 the same averaging, provided a common support of size $t$ survives. It does: choosing the $j$ symbol
 sets $\calS_1,\dots,\calS_j$ independently and uniformly among the subsets of $\calR$ of size
-$R/\sigma$, each input survives all $j$ constraints with probability $\sigma^{-j}$, so the expected
-number of survivors is $D\sigma^{-j}$ and some choice attains it; the constraint is
-$D\sigma^{-j} \ge t$, that is $j \le \log_\sigma(D/t)$. The gain is a factor $\sqrt{j}$ in the
-bound, hence $\log_2 j$ further bits of seed in the comparison of Section~\ref{sec:compare}, one or
-two in the ranges of interest. So the one-row construction of Theorem~\ref{thm:limit} is
-essentially the whole effect.
+$\sigma$, each input survives all $j$ constraints with probability $(\sigma/R)^{j}$, so the expected
+number of survivors is $D(\sigma/R)^{j}$ and some choice attains it; the constraint is
+$D(\sigma/R)^{j} \ge t$, that is $j \le \log_{R/\sigma}(D/t)$. In the principal regime
+$\sigma = 1$, $W = R$ that reads $j \le \log_R(D\epsilon)$, which is $14$, $6$ and $1$ in the three
+rows of Section~\ref{sec:compare}. The gain is a factor $\sqrt{j}$ in the
+bound, hence $\log_2 j$ further bits of seed in that comparison: at those three values of $j$,
+between none and four. So the one-row construction of Theorem~\ref{thm:limit} carries most of the
+effect, and none of it in the third row.
 
 The averaging is the point. Choosing each $\calS_i$ greedily, as the $\sigma$ commonest symbols of
 its row, does \emph{not} work for a worst-case table, since the $j$ greedy sets may have a small or
@@ -1256,8 +1324,8 @@ Translate: $u = \log_2 D$, $v = \log_2 R = m$, $\varepsilon = \delta$, and the s
 $\log_2 K$. That bound reads $\log_2 K \ge \min(\log_2 D - m,\ m + 2\log_2(1/\delta)) - O(1)$.
 Corollary~\ref{cor:seed} gives $\log_2 K \ge \log_2(W-1) - 2 + 2\log_2(1/\delta)$, and in the
 principal regime $W = R$ that is $m + 2\log_2(1/\delta) - 2$: the second branch. The first branch is
-Proposition~\ref{prop:nouniv}'s $K \ge D/R$, which is Stinson's linear-in-$u$ result reached by another
-route. So the two salt columns of Section~\ref{sec:compare}'s table are the two branches of one bound
+Proposition~\ref{prop:nouniv}'s $K \ge D/R$, which is Stinson's linear-in-$u$ result; the elementary
+route given there reaches it only up to a factor of two, and the constant is Stinson's own. So the two salt columns of Section~\ref{sec:compare}'s table are the two branches of one bound
 that has been known since 1994. And Appendix~\ref{sec:vs}'s reading, that universal hashing has the
 longer salt rather than the shorter, is that bound's own reading. What this note adds is not the
 number.
@@ -1377,8 +1445,13 @@ theorem.)
 Douglas R. Stinson.
 \newblock Universal hashing and authentication codes.
 \newblock \emph{Designs, Codes and Cryptography}, 4(4):369--380, 1994.
-\newblock (Cited by~\cite{BDKPPSY11} as the source of that seed-length bound. \emph{Not} read at
-first hand for this note; the attribution is theirs.)
+\newblock (Cited by~\cite{BDKPPSY11} as the source of that seed-length bound, and quoted in the
+proof of Proposition~\ref{prop:nouniv} for the $\varepsilon$-almost-universal lower bound
+$K \ge D(R-1)/\bigl(\varepsilon R(D-R) + R^{2} - D\bigr)$. \emph{Not} read at first hand for this
+note: the attribution is~\cite{BDKPPSY11}'s and the formula is taken from a secondary restatement.
+Its special case $K \ge D/R$ at $\varepsilon = 1/R$ was checked independently here --- it is
+attained by $h(k,(a,b)) = ak+b$ over $\mathbb{F}_q$, and a randomised search over $R \le 5$,
+$K \le 9$ found no family beating it.)
 
 \bibitem{Vad12}
 Salil P. Vadhan.
@@ -1391,7 +1464,9 @@ Theorem~6.18 is the seed length of universal hashing. Read at first hand.)
 Jaikumar Radhakrishnan and Amnon Ta-Shma.
 \newblock Bounds for dispersers, extractors, and depth-two superconcentrators.
 \newblock \emph{SIAM Journal on Discrete Mathematics}, 13(1):2--24, 2000.
-\newblock (The optimum $d \ge \log(n-k) + 2\log(1/\epsilon) - O(1)$ that \eqref{eq:conj} meets.
+\newblock (The optimum $d \ge \log(n-k) + 2\log(1/\epsilon) - O(1)$ that \eqref{eq:conj} meets up
+to $\log\frac{n}{n-k}$, since it pays $\log n$ where the optimum pays $\log(n-k)$; that is $0.2$
+bits in the first row of Section~\ref{sec:compare}.
 Read at first hand.)
 
 \end{conjurabibliography}

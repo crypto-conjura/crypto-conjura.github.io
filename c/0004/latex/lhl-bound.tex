@@ -705,13 +705,258 @@ bound          & $\epsilon\,2^{-L}$                      & $c(\sqrt{\epsilon R} 
 \end{center}
 \end{remark}
 
+\section{The query-bounded model}\label{sec:query}
+
+Remark~\ref{rem:roquery} sets two models side by side but examines only one. This section examines
+the other: the game of Section~\ref{sec:setting} with each party given oracle access in place of the
+table. Formally $S^{H}$ makes at most $q_S$ queries before returning $(x,z)$; the seed
+$\sd \sample \calK$ is drawn afterwards, as before; and $\mathsf{D}^{H}(\sd, y_b, z)$ makes at most
+$q_D$ queries. Nothing else changes. In particular the \emph{predictor} is left unbounded and still
+receives the whole table, so $\epsilon$-unpredictability is the same hypothesis as in
+Section~\ref{sec:setting}, the most demanding of the three, and every bound below is proved under
+it.
+
+Two features of a source govern what follows, and neither is $q_S$. Writing
+$Q_S \subseteq \calK \times \calD$ for the set of cells the source queries, put
+\[
+  r_S \;:=\; \sum_{k \in \calK} \Pr\bigl[Q_S \cap (\{k\}\times\calD) \neq \emptyset\bigr] ,
+  \qquad
+  s_S \;:=\; \sum_{k \in \calK} \Pr\bigl[(k,X) \in Q_S\bigr] ,
+\]
+the expected number of \emph{rows} the source touches and the expected number of seeds at which it
+queries \emph{its own output}. Both are at most $\min(q_S, K)$ and both can be far smaller: the
+source of Theorem~\ref{thm:limit} reads an entire row, so $q_S = D$, yet $r_S = s_S = 1$.
+
+\subsection*{What the collision route gives}
+
+\begin{lemma}[An untouched row stays fresh]\label{lem:fresh}
+Fix $k \in \calK$, let $A_k$ be the event that the source queries some cell of row $k$, and write
+$p^{-}_{x} := \Pr[X = x \wedge \neg A_k \mid H, Z]$. Then
+\[
+  \mathbb{E}_{(H,Z)}\Bigl[\;\sum_{x \neq x'} p^{-}_{x}\,p^{-}_{x'}\,
+    \mathbf{1}[H(k,x) = H(k,x')]\Bigr] \;\le\; \frac1R .
+\]
+\end{lemma}
+
+\begin{proof}
+Split the table as $H = (H_k, H_{-k})$, row $k$ against the rest; the two are independent and $H_k$
+is uniform on $\Fun(\calD,\calR)$. Take $S$ deterministic given coins $\rho$, with $\rho$
+independent of $H$.
+
+Run $S$ on $(\rho, h)$. Its transcript up to its first query into row $k$ is a function of
+$(\rho, h_{-k})$ alone; hence so is the indicator of $\neg A_k$, and on $\neg A_k$ so is the whole
+transcript, and therefore $(X,Z)$. Write
+\[
+  a(x,z,h_{-k}) := \Pr_{\rho}[X = x \wedge Z = z \wedge \neg A_k \mid h_{-k}] ,
+  \qquad
+  A(z,h_{-k}) := \sum_{x} a(x,z,h_{-k}) ,
+\]
+so that $\Pr[H = h, Z = z, X = x, \neg A_k] = \Pr[h_{-k}]\Pr[h_k]\,a(x,z,h_{-k})$ and
+\[
+  \Pr[H = h, Z = z] \;=\; \Pr[h_{-k}]\Pr[h_k]\Pr_\rho[Z = z \mid h]
+  \;\ge\; \Pr[h_{-k}]\Pr[h_k]\,A(z,h_{-k}) .
+\]
+Since $\Pr[H=h,Z=z]\,p^{-}_{x} = \Pr[H=h,Z=z,X=x,\neg A_k]$, the expectation in question is
+\[
+  \sum_{h,z} \frac{1}{\Pr[h,z]} \sum_{x \neq x'}
+    \Pr[h,z,x,\neg A_k]\,\Pr[h,z,x',\neg A_k]\,\mathbf{1}[h(k,x) = h(k,x')] ,
+\]
+and substituting the two displays above --- the lower bound on $\Pr[h,z]$ in the denominator, which
+is the direction an upper bound needs --- makes it at most
+\[
+  \sum_{h_{-k}} \Pr[h_{-k}] \sum_{h_k} \Pr[h_k] \sum_{z} \frac{1}{A(z,h_{-k})}
+    \sum_{x \neq x'} a(x,z,h_{-k})\,a(x',z,h_{-k})\,\mathbf{1}[h_k(x) = h_k(x')] .
+\]
+Neither $a$ nor $A$ depends on $h_k$, so the sum over $h_k$ may be performed first, and for
+$x \neq x'$ it gives $\sum_{h_k}\Pr[h_k]\mathbf{1}[h_k(x) = h_k(x')] = 1/R$ exactly. What remains is
+at most
+\[
+  \frac1R \sum_{h_{-k}}\Pr[h_{-k}] \sum_z \frac{A(z,h_{-k})^2}{A(z,h_{-k})}
+  \;=\; \frac1R \sum_{h_{-k}}\Pr[h_{-k}]\,\Pr_\rho[\neg A_k \mid h_{-k}] \;\le\; \frac1R ,
+\]
+using $\sum_{x\neq x'} a\,a' \le (\sum_x a)^2 = A^2$ and $\sum_z A(z,h_{-k}) =
+\Pr_\rho[\neg A_k \mid h_{-k}]$. Terms with $A(z,h_{-k}) = 0$ have vanishing numerator and are read
+as $0$.
+\end{proof}
+
+\begin{theorem}[The collision route, query-bounded]\label{thm:qlhl}
+For every source that is $\epsilon$-unpredictable and every unbounded distinguisher,
+\[
+  \Adv^{\extpub}(S,\mathsf{D}) \;\le\; \frac12\sqrt{\;\epsilon R \;+\; \frac{2R\,r_S}{K}\;}
+  \;\le\; \frac12\sqrt{\;\epsilon R \;+\; \frac{2R\min(q_S,K)}{K}\;} \, .
+\]
+\end{theorem}
+
+\begin{proof}
+Fix $(h,z)$ and $k$, write $u_k := \Pr[A_k \mid h,z]$ and split $p = p^{+} + p^{-}$ into its parts on
+$A_k$ and $\neg A_k$. Of the four terms of $c_k = \sum_{x,x'}p_x p_{x'}\mathbf{1}[h(k,x)=h(k,x')]$,
+the three meeting $p^{+}$ contribute at most
+$\sum_x p^{+}_x \sum_{x'} p_{x'} + \sum_{x'} p^{+}_{x'} = 2u_k$, the indicator being at most $1$.
+Hence
+\[
+  c_k \;\le\; 2u_k \;+\; \sum_{x}(p^{-}_{x})^2 \;+\;
+    \sum_{x \neq x'} p^{-}_{x}\,p^{-}_{x'}\,\mathbf{1}[h(k,x)=h(k,x')] ,
+\]
+and $p^{-} \le p$ pointwise makes the middle sum at most $\CP$. Average over $k$ and take the expectation over $(H,Z)$. For the first term,
+$\mathbb{E}\bigl[\sum_k u_k\bigr] = \sum_k \Pr[A_k] = r_S$; for the second,
+$\mathbb{E}[\CP] \le \mathbb{E}[\epsilon_{H,Z}] \le \epsilon$; for the third,
+Lemma~\ref{lem:fresh} gives at most $1/R$ for each of the $K$ rows. So
+\[
+  \mathbb{E}[\,R\bar c - 1\,] \;\le\; \frac{2R\,r_S}{K} + \epsilon R + R\cdot\frac1R - 1
+  \;=\; \epsilon R + \frac{2R\,r_S}{K} .
+\]
+By Proposition~\ref{prop:lhl} the advantage is at most
+$\mathbb{E}\bigl[\tfrac12\sqrt{R\bar c - 1}\bigr]$, and $\sqrt{\cdot}$ is concave, so Jensen's
+inequality moves the expectation inside the root. The radicand is nonnegative pointwise by
+Fact~\ref{fact:cs}, so this is legitimate.
+\end{proof}
+
+Three readings of Theorem~\ref{thm:qlhl} are worth separating. It is a statement about \emph{row
+breadth}, not query count: a source may spend $D$ queries inside one row and remain capped at
+$\epsilon R + 2R/K$, while $K$ queries placed one per row exhaust the bound. It degrades to nothing
+at $r_S = K$, correctly, since a source that pins every row leaves $\bar c = 1$. And at $r_S = 0$ it
+returns $\tfrac12\sqrt{\epsilon R}$, the universal-family answer of
+Proposition~\ref{prop:univ}: a source that never queries is independent of the table, and a random
+table is universal in expectation.
+
+\begin{proposition}[The dependence on $r_S$ is exact up to a factor of two]\label{prop:qtight}
+Fix $j \le K$ and let the source draw $x \sample \calD$, query $(k,x)$ for $k < j$, and output
+$\bigl(x, z = (H(0,x),\dots,H(j-1,x))\bigr)$. It makes $j$ queries and has $r_S = s_S = j$; it is
+$\epsilon$-unpredictable with $\epsilon \le R^{j}/D$; and for \emph{every} table
+\[
+  R\bar c - 1 \;\ge\; \frac{(R-1)\,j}{K} .
+\]
+\end{proposition}
+
+\begin{proof}
+Given $(h,z)$ the conditional law is uniform on the joint fibre
+$T_z := \{x' : h(k,x') = z_k \text{ for all } k < j\}$, so $\epsilon_{h,z} = 1/|T_z|$, and since
+$\Pr[Z = z] = |T_z|/D$ the average $\mathbb{E}[\epsilon_{H,Z}]$ is the number of nonempty fibres
+divided by $D$, at most $R^{j}/D$. Every element of $T_z$ has the same image in each pinned row, so
+$c_k = 1$ for $k < j$; for the remaining rows $c_k \ge 1/R$ by \eqref{eq:cs-collide}. Hence
+\[
+  R\bar c - 1 \;\ge\; R\Bigl[\frac{j}{K}\cdot 1 + \frac{K-j}{K}\cdot\frac1R\Bigr] - 1
+  \;=\; \frac{Rj}{K} - \frac{j}{K} \;=\; \frac{(R-1)j}{K} . \qedhere
+\]
+\end{proof}
+
+So the term $2R\,r_S/K$ of Theorem~\ref{thm:qlhl} cannot be improved below $(R-1)r_S/K$: the
+constant is off by at most a factor of two and the shape is right. At $j = K$ the proposition
+returns $R - 1$, and the theorem is vacuous, as it must be.
+
+\begin{remark}[Theorem~\ref{thm:qlhl} closes the window of Section~\ref{sec:not}, for these sources]%
+\label{rem:window}
+Theorem~\ref{thm:limit} is a floor and Section~\ref{sec:not} names no matching ceiling; the one
+sketched there exceeds the floor by a factor of about $2^{21}$ in the instance of
+Remark~\ref{rem:numbers}. For a source of row breadth $r_S$ the two now meet. In that instance ---
+$D = 2^{256}$, $R = 2^{64}$, min-entropy $160$, $K = 2^{74}$, where $W = R$ --- the witness of
+Theorem~\ref{thm:limit} has $r_S = 1$, and
+\[
+  \frac{W-1}{K} \;\approx\; 2^{-10}
+  \qquad\le\qquad R\bar c - 1 \qquad\le\qquad
+  \epsilon R + \frac{2R}{K} \;=\; 2^{-96} + 2^{-9} \;\approx\; 2^{-9} :
+\]
+a window of a factor $2$ in the radicand, so the route returns between $2^{-6}$ and $2^{-5.5}$. The
+hypotheses differ --- Section~\ref{sec:not}'s sketch asks the source to be uniform on a support and
+bounds no queries, Theorem~\ref{thm:qlhl} bounds $r_S$ and asks nothing about the shape --- but the
+witness satisfies both, and on it the query-bounded ceiling is the sharper by some twenty orders of
+magnitude.
+\end{remark}
+
+\subsection*{Where $q_D$ enters, and where it cannot}
+
+\begin{remark}[No bound proved through Proposition~\ref{prop:lhl} can mention $q_D$]\label{rem:qd}
+Proposition~\ref{prop:lhl} passes through $\SD(Q,U)$, and statistical distance \emph{is} the
+supremum of the advantage over all distinguishers whatever. A bound obtained that way holds for the
+unbounded distinguisher and can therefore never improve as $q_D$ falls. This is not a defect of the
+present derivation but of the route: to let the distinguisher's budget count one must leave the
+leftover hash lemma, and Theorem~\ref{thm:badcell} is what one gets by doing so.
+\end{remark}
+
+\begin{theorem}[The bad-cell route]\label{thm:badcell}
+For every $\epsilon$-unpredictable source and every distinguisher making at most $q_D$ queries,
+\[
+  \Adv^{\extpub}(S,\mathsf{D}) \;\le\; \frac{s_S}{K} \;+\; q_D\,\epsilon
+  \;\le\; \frac{\min(q_S,K)}{K} \;+\; q_D\,\epsilon .
+\]
+\end{theorem}
+
+\begin{proof}
+Write the advantage as $|\Pr[b' = 1 \mid b = 0] - \Pr[b' = 1 \mid b = 1]|$ and couple the two worlds
+by sampling $H$ lazily, with the same coins for $S$ and $\mathsf{D}$ in both. They differ only in
+the challenge: the cell $H(\sd,x)$ under $b = 0$, an independent uniform value under $b = 1$. Let
+$\mathrm{BAD}$ be the event that the cell $(\sd,x)$ is queried, by the source or by the
+distinguisher. Off $\mathrm{BAD}$ that cell is never read by anyone, so the two executions coincide
+step for step: they can first diverge only at a query to $(\sd,x)$, whence $\mathrm{BAD}$ occurs in
+one world exactly when it occurs in the other and the two views agree off it. The advantage is
+therefore at most $\Pr[\mathrm{BAD}]$, which we may compute in the $b = 1$ world, and by a union
+bound at most
+$\Pr[(\sd,x) \in Q_S] + \Pr[\mathsf{D} \text{ queries } (\sd,x)]$.
+
+For the first, $\sd$ is uniform on $\calK$ and independent of the source's run, so
+$\Pr[(\sd,X) \in Q_S] = \frac1K\sum_k \Pr[(k,X) \in Q_S] = s_S/K$, and $s_S \le \min(q_S,K)$ because
+the source can place at most $q_S$ queries and there are only $K$ rows.
+
+For the second, build a predictor. Given $(H,z)$, let $P$ draw $\sd \sample \calK$ and
+$y \sample \calR$, run $\mathsf{D}^{H}(\sd, y, z)$ answering its queries from $H$, pick
+$i \sample \{1,\dots,q_D\}$ and return the input component of the $i$-th query. Under $b = 1$ the
+challenge is a uniform value independent of everything else, so $P$'s simulation is exact; and if
+$\mathsf{D}$ queries $(\sd,x)$ then some query has input component $x$, which $P$ selects with
+probability at least $1/q_D$. So $\Pr[\mathsf{D}\text{ queries }(\sd,x)] \le q_D \cdot
+\Adv^{\mathrm{pred}}(P) \le q_D\epsilon$.
+\end{proof}
+
+\begin{corollary}[Which route to use]\label{cor:which}
+Under the hypotheses of both,
+\[
+  \Adv^{\extpub}(S,\mathsf{D}) \;\le\;
+  \min\Bigl\{\; \frac{s_S}{K} + q_D\epsilon , \;\;
+    \frac12\sqrt{\epsilon R + \frac{2R\,r_S}{K}} \;\Bigr\} ,
+\]
+and since $s_S/K \le \tfrac12\sqrt{2R\,r_S/K}$ always, the two entropy terms decide between them:
+the bad-cell route is the smaller whenever
+\[
+  q_D \;\le\; \tfrac12\sqrt{R/\epsilon} .
+\]
+\end{corollary}
+
+\begin{proof}
+Both bounds are proved above; the comparison of entropy terms is
+$q_D\epsilon \le \tfrac12\sqrt{\epsilon R}$, which is $q_D \le \tfrac12\sqrt{R/\epsilon}$. For the
+aside: querying $(k,X)$ touches row $k$, so $s_S \le r_S$; and $r_S/K \le \tfrac12\sqrt{2Rr_S/K}$ is,
+on squaring, $r_S \le RK/2$, which holds because $r_S \le K$ and $R \ge 2$.
+\end{proof}
+
+That threshold is not a close call. In the instance of Remark~\ref{rem:numbers} it is
+$q_D \le 2^{111}$; for a $128$-bit derived key from a source of min-entropy $128$ it is
+$q_D \le 2^{127}$. Below it --- which is to say, in every parameter regime anyone would deploy ---
+the leftover hash lemma is simply the wrong instrument for this game, and the gap is not marginal:
+on the witness of Theorem~\ref{thm:limit} in that instance, against a distinguisher making
+$q_D = 2^{80}$ queries, Theorem~\ref{thm:badcell} returns $2^{-74} + 2^{-80} \approx 2^{-74}$ where
+Theorem~\ref{thm:qlhl} returns $2^{-5.5}$.
+
+\begin{remark}[What this settles about the witness]\label{rem:qwitness}
+Remark~\ref{rem:cause} decomposes the true advantage against that witness as
+$\Theta(\sqrt{R/t}) + \Theta(1/K)$, the second summand from the pinned row and the first from the
+$K-1$ unpinned ones, and notes that the first dominates. Theorem~\ref{thm:badcell} says where the
+first comes from: it is an artefact of the distinguisher being unbounded. Against a $q_D$-bounded
+distinguisher the unpinned rows contribute at most $q_D\epsilon = q_D/t$ in place of
+$\sqrt{R/t}$, which is smaller exactly when $q_D \le \sqrt{Rt} = \sqrt{R/\epsilon}$, the threshold
+of Corollary~\ref{cor:which} up to its factor of two --- while the pinned row still contributes its
+$s_S/K = 1/K$. So the
+reading that the advantage against this source is $\Theta(1/K)$ is correct precisely in the
+query-bounded model and false outside it, which is what Remark~\ref{rem:cause} found the hard way.
+\end{remark}
+
 \section{What is not claimed}\label{sec:not}
 
 Theorem~\ref{thm:limit} is one-sided. It says the collision route cannot return a bound better than
-$\tfrac12\sqrt{(W-1)/K}$; it does \emph{not} say the route attains that, and no matching upper bound
-is proved here. Every statement in this note about the route's cost is therefore a necessary
-condition on $K$, never the cost itself, and Corollary~\ref{cor:seed} is phrased that way
-deliberately.
+$\tfrac12\sqrt{(W-1)/K}$; it does \emph{not} say the route attains that. Every statement in this
+note about the route's cost is therefore a necessary condition on $K$, never the cost itself, and
+Corollary~\ref{cor:seed} is phrased that way deliberately. Theorem~\ref{thm:qlhl} supplies a
+matching ceiling for sources of bounded row breadth, and Remark~\ref{rem:window} closes the window
+to a factor of two on the witness itself; for sources that touch many rows the paragraph below still
+stands.
 
 The remaining window is wide and should not be papered over. Certifying $\gamma$ for a random table
 by a bounded-differences argument --- $\bar\beta$ has bounded-differences constant $2/(Kt)$ in the
@@ -722,8 +967,20 @@ $\tfrac12\sqrt{\epsilon R} + \tfrac12\sqrt R\,(2(1+\ln D)/K)^{1/4}$. Two gaps in
 worth naming: it covers sources uniform on a support only, and a general source needs a further
 argument reducing to those; and the resulting ceiling exceeds Theorem~\ref{thm:limit}'s floor by a
 factor of order $\sqrt{R/W}\,(K\ln D)^{1/4}$, which in the instance of Remark~\ref{rem:numbers} is
-about $2^{21}$. So the truth for this route lies somewhere in that window, and locating it is not
-attempted.
+about $2^{21}$. So for a source of unrestricted row breadth the truth for this route lies somewhere
+in that window, and locating it is not attempted.
+
+Nor is the bound one would most like in the query-bounded model of Section~\ref{sec:query}, namely
+$s_S/K + \tfrac12\sqrt{\epsilon R}$: the pinned cells charged once each, and the leftover hash lemma
+applied to what is left as though it were universal. That would match the true advantage against the
+witness of Theorem~\ref{thm:limit} in both summands, and it is what one expects, since a row the
+source touched away from its own output is a row it has learnt nothing exploitable about. Proving it
+needs Lemma~\ref{lem:fresh} refined from ``row $k$ untouched'' to ``the single cell $(k,X)$
+untouched'', and that refinement is not available by the argument given: the freshness of one cell
+survives conditioning on the table only through the row-versus-rest factorisation the lemma uses,
+and two runs of the source may query in each other's output columns. Theorem~\ref{thm:qlhl} and
+Theorem~\ref{thm:badcell} therefore stand as two separate bounds rather than one combined one, and
+Corollary~\ref{cor:which} takes their minimum instead of their better parts.
 
 What the floor alone does establish, in the regime where \eqref{eq:side} holds and the deficiency
 term is not binding, is that the route cannot reach \eqref{eq:conj} there: it needs at least

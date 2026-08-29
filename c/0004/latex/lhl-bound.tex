@@ -713,8 +713,10 @@ table. Formally $S^{H}$ makes at most $q_S$ queries before returning $(x,z)$; th
 $\sd \sample \calK$ is drawn afterwards, as before; and $\mathsf{D}^{H}(\sd, y_b, z)$ makes at most
 $q_D$ queries. Nothing else changes. In particular the \emph{predictor} is left unbounded and still
 receives the whole table, so $\epsilon$-unpredictability is the same hypothesis as in
-Section~\ref{sec:setting}, the most demanding of the three, and every bound below is proved under
-it.
+Section~\ref{sec:setting}, the most demanding of the three, and the first two results below are
+proved under it. Whether it may be relaxed --- whether the predictor has a budget of its own that
+the bounds can be stated against --- is the subject of the third subsection, and the answer turns
+out to tie it to the distinguisher's.
 
 Two features of a source govern what follows, and neither is $q_S$. Writing
 $Q_S \subseteq \calK \times \calD$ for the set of cells the source queries, put
@@ -946,6 +948,126 @@ of Corollary~\ref{cor:which} up to its factor of two --- while the pinned row st
 $s_S/K = 1/K$. So the
 reading that the advantage against this source is $\Theta(1/K)$ is correct precisely in the
 query-bounded model and false outside it, which is what Remark~\ref{rem:cause} found the hard way.
+\end{remark}
+
+\subsection*{The predictor's budget}
+
+The third party has a budget too, and it is not free to choose. Bounding the predictor
+\emph{weakens} the hypothesis --- a predictor that cannot read the table is easier to defeat --- so
+the question is how weak the hypothesis may be made before the conclusions fail.
+
+\begin{definition}[Unpredictability at a budget]\label{def:epsq}
+For $q \in \{0,1,2,\dots\} \cup \{\infty\}$ let $\epsilon_q$ be the least $\epsilon$ such that
+$\Pr[P^{H}(z) = X] \le \epsilon$ for every predictor $P$ making at most $q$ oracle queries. Then
+$\epsilon_0 \le \epsilon_1 \le \cdots \le \epsilon_\infty$, and $\epsilon_\infty = \epsilon_{KD}$ is
+the notion used everywhere above: a predictor allowed $KD$ queries may read the whole table, so
+$\epsilon_\infty = \mathbb{E}_{(H,Z)}[\epsilon_{H,Z}]$.
+\end{definition}
+
+The two routes answer the question differently, and the difference is exactly the difference between
+them. Note first that the reduction inside Theorem~\ref{thm:badcell} is query-preserving: the
+predictor built there runs $\mathsf{D}$ and forwards each of its oracle queries, drawing $\sd$ and
+$y$ itself, so it makes \emph{exactly} $q_D$ queries and never more. Its proof therefore establishes
+the following without alteration.
+
+\begin{theorem}[Three budgets]\label{thm:three}
+Let $S$ make at most $q_S$ oracle queries, let $\mathsf{D}$ make at most $q_D$, and let the source
+be $\epsilon$-unpredictable against predictors making at most $q_P$ queries. If $q_P \ge q_D$ then
+\begin{equation}\label{eq:three-badcell}
+  \Adv^{\extpub}(S,\mathsf{D}) \;\le\; \frac{s_S}{K} \;+\; q_D\,\epsilon
+  \qquad\text{with}\qquad s_S \le \min(q_S,K) ,
+\end{equation}
+and if $q_P = \infty$ then also
+\begin{equation}\label{eq:three-lhl}
+  \Adv^{\extpub}(S,\mathsf{D}) \;\le\; \frac12\sqrt{\;\epsilon R + \frac{2R\,r_S}{K}\;}
+  \qquad\text{with}\qquad r_S \le \min(q_S,K) .
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+For \eqref{eq:three-badcell}: $q_P \ge q_D$ gives $\epsilon \ge \epsilon_{q_P} \ge \epsilon_{q_D}$,
+and the predictor of Theorem~\ref{thm:badcell} makes $q_D$ queries, so the bad event there is at
+most $q_D\epsilon_{q_D} \le q_D\epsilon$. For \eqref{eq:three-lhl}, $q_P = \infty$ makes $\epsilon$
+an upper bound for $\mathbb{E}[\epsilon_{H,Z}]$, which is the only use Theorem~\ref{thm:qlhl} makes
+of the hypothesis.
+\end{proof}
+
+So all three budgets appear, and they appear in different places: $q_S$ through $r_S$ and $s_S$,
+$q_D$ as a multiplier, and $q_P$ as a side condition on which bound may be invoked. Neither side
+condition can be dropped, and one witness settles both.
+
+\begin{proposition}[The predictor may not be cheaper than the distinguisher]\label{prop:qp}
+Fix $R \le D/2$ and $1 \le m \le D/2$. Reserve the inputs $w_1,\dots,w_m$ from the upper half of
+$\calD$ and identify $\calR$ with the lower half. Let the source query $(1,w_1),\dots,(1,w_m)$ and
+output
+\[
+  x \;:=\; \Bigl(\sum_{j=1}^{m} H(1,w_j)\Bigr) \bmod R , \qquad z := \bot .
+\]
+Then $q_S = m$, $r_S = 1$ and $s_S = 0$; and
+\begin{enumerate}
+\item $\epsilon_q = 1/R$ for every $q < m$, while $\epsilon_q = 1$ for every $q \ge m$;
+\item given $(H,Z)$ the source's law is a point mass, so $\CP = 1$, $c_k = 1$ for every $k$, and
+      $R\bar c - 1 = R-1$;
+\item an unbounded distinguisher, and equally one making $m+1$ queries, achieves advantage
+      $1 - 1/R$.
+\end{enumerate}
+Consequently:
+\begin{enumerate}
+\item[(a)] In \eqref{eq:three-lhl} the hypothesis $q_P = \infty$ cannot be weakened to any finite
+      budget. Taking $m = q_P + 1$ and $K \ge 2R$, the bound asserted with $\epsilon_{q_P}$ would be
+      $\tfrac12\sqrt{1 + 2R/K} \le \tfrac12\sqrt2$, against a true advantage of $1 - 1/R$, which is
+      larger for every $R \ge 4$.
+\item[(b)] In \eqref{eq:three-badcell} the hypothesis $q_P \ge q_D$ cannot be weakened to
+      $q_P \le q_D - 2$. Taking $m = q_D - 1$, the bound asserted with $\epsilon_{q_D-2}$ would be
+      $q_D/R$, against a true advantage of $1 - 1/R$, which is larger whenever $R > q_D + 1$.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+The source queries only row $1$, so $r_S = 1$; its output lies in the lower half of $\calD$ and its
+queries in the upper, so $(k,x) \notin Q_S$ for every $k$ and $s_S = 0$.
+
+For (1), a predictor making $q < m$ queries leaves some $(1,w_i)$ unqueried, and conditioned on any
+transcript that cell is uniform on $\calR$ and independent of the predictor's view; a sum modulo $R$
+one of whose summands is uniform and independent is itself uniform, so $x$ is uniform on $\calR$
+given that view and no guess does better than $1/R$. A predictor making $m$ queries reads the $m$
+cells, which are fixed by the source's code, and computes $x$ outright.
+
+For (2), $x$ is a function of $H$ alone, so the conditional law given $(H,Z)$ is a point mass:
+$\CP = 1$ and $h(k,X) = h(k,X')$ always.
+
+For (3), a distinguisher holding the table, or one spending $m$ queries on the reserved cells and
+one more on $(\sd, x)$, computes $H(\sd,x)$ and returns $1$ exactly when $y_b$ equals it. Under
+$b = 0$ it always returns $1$; under $b = 1$ it does so with probability $1/R$.
+
+For (a), $m = q_P+1$ gives $\epsilon_{q_P} = 1/R$ by (1), so $\epsilon_{q_P}R = 1$; with $r_S = 1$
+and $K \ge 2R$ the asserted radicand is at most $2$. For (b), $m = q_D - 1$ gives
+$\epsilon_{q_D-2} = \epsilon_{m-1} = 1/R$ by (1), while a distinguisher making $m+1 = q_D$ queries
+achieves $1 - 1/R$ by (3); the asserted bound is $s_S/K + q_D/R = q_D/R$.
+\end{proof}
+
+The two halves of that proposition say the same thing about different routes. Reading them together:
+\emph{the predictor must be granted at least what the distinguisher is granted, and granting it
+exactly that is enough.} For the bad-cell route the budget is pinned to $q_D$ within a single query,
+$q_P \ge q_D$ sufficing and $q_P \le q_D - 2$ failing. For the collision route the distinguisher is
+unbounded by construction --- Remark~\ref{rem:qd} --- so the predictor must be unbounded too, and
+\emph{that} is why every bound before Section~\ref{sec:query} is stated against a predictor holding
+the whole table. It is not a stylistic choice of the strongest hypothesis; it is forced by the
+technique.
+
+The witness also shows how little room there is between the two conditions. Its $x$ is a
+deterministic function of $H$, so it is perfectly extractable-looking to any predictor poorer than
+the source and worthless against any predictor as rich, with nothing in between: $\epsilon_q$ jumps
+from $1/R$ to $1$ at $q = m$. The general form of that observation is worth recording.
+
+\begin{remark}[Deterministic sources]\label{rem:det}
+If $S$ is deterministic then $\epsilon_{q_S} = 1$, since a predictor with $q_S$ queries simply reruns
+it. So for a deterministic source \eqref{eq:three-badcell} is vacuous once $q_D \ge q_S$, and
+\eqref{eq:three-lhl} is vacuous outright. Extraction from such a source can only be secure against
+distinguishers strictly poorer than the source itself, and the seed does not change that: a
+distinguisher that can afford the source's own computation recovers $x$ and tests it with one
+further query, whatever $K$ may be. Whatever entropy is being extracted has to sit in the source's
+coins, not in the oracle it reads.
 \end{remark}
 
 \section{What is not claimed}\label{sec:not}

@@ -392,6 +392,22 @@ For every $\epsilon$-unpredictable source and every distinguisher making at most
 \]
 \end{theorem}
 
+The first term of Theorem~\ref{thm:badcell} is not slack, and what it measures is the salt. The
+following needs no probability and no queries at all.
+
+\begin{proposition}[What the salt buys, and what its absence costs]\label{prop:unsalted}
+For every table $h$ and every $K \ge 1$ there is a source --- uniform on a set of at least $D/R$
+inputs, hence $\epsilon$-unpredictable with $\epsilon \le R/D$, with $r_S = s_S = 1$ --- and a
+distinguisher making \emph{no} oracle queries whatever, such that
+\[
+  \Adv^{\extpub}(S,\mathsf{D}) \;=\; \frac{1}{K}\Bigl(1 - \frac1R\Bigr) .
+\]
+In particular at $K = 1$ the advantage is $1 - 1/R$: unsalted extraction from a source that reads
+the oracle fails outright, and it fails at min-entropy $\log_2 D - \log_2 R$, which is far above the
+minimum any of the settings in Section~\ref{sec:compare} asks for. Since $s_S = 1$ and $q_D = 0$
+here, Theorem~\ref{thm:badcell} returns $1/K$, so its first term is tight to within $1 - 1/R$.
+\end{proposition}
+
 \begin{corollary}[Which route to use]\label{cor:which}
 Under the hypotheses of both,
 \[
@@ -619,14 +635,33 @@ a 512-bit source           & $512$  & $300$ & $128$ & $2^{-64}$ & $139$ & $254$ 
 \end{tabular}
 \end{center}
 
+\noindent\emph{The last column assumes the source is independent of $H$. It is the only column that
+does, and Proposition~\ref{prop:unsalted} says what it becomes otherwise.}
+
+\smallskip
 \noindent$^{\dagger}$ The unsalted random-oracle heuristic of \cite{BDKPPSY11}, Remark~\ref{rem:roquery}:
 $\epsilon_{\mathrm{RO}} \approx T/2^{\mu}$, so no salt is needed at all. It is in the table because
-that zero is the most informative entry in the row, and because it is bought rather than free. The
-bound holds only against a distinguisher of running time $T \le \delta\,2^{\mu}$ --- that is
-$T \le 2^{224}$, $2^{448}$ and $2^{236}$ in the three rows --- and only for a source independent of
-$H$. Those ceilings are enormous, which is why the heuristic is attractive in practice; but they are
-ceilings, and the whole of \texttt{main.tex} lives above them, where every party reads the entire
-table and $T/2^{\mu}$ says nothing.
+that zero is the most informative entry in the row, and because it is bought rather than free. Two
+hypotheses buy it. The first is a distinguisher of running time $T \le \delta\,2^{\mu}$ --- that is
+$T \le 2^{224}$, $2^{448}$ and $2^{236}$ in the three rows. Those ceilings are enormous, which is
+why the heuristic is attractive in practice; but they are ceilings, and the whole of
+\texttt{main.tex} lives above them, where every party reads the entire table and $T/2^{\mu}$ says
+nothing.
+
+The second hypothesis is that the source is independent of $H$, and \emph{that} zero does not
+survive dropping it --- not approximately, and not by a little. By
+Proposition~\ref{prop:unsalted}, at $K = 1$ a source that reads $H$ and is uniform on the largest
+fibre of the single row, of min-entropy $\log_2 D - \log_2 R$, is distinguished from uniform with
+advantage $1 - 2^{-m}$ by a distinguisher making \emph{no query at all}. That source is admissible
+in every row of the table --- its min-entropy is $1920$, $1792$ and $384$ against the $256$, $512$
+and $300$ the rows ask for --- and its entropy loss is $L = \mu - v = 1792$, $1536$ and $256$, so
+the heuristic predicts $\epsilon_{\mathrm{RO}} \le 2^{-1792}$, $2^{-1536}$ and $2^{-256}$ where the
+truth is $1 - 2^{-128}$, $1 - 2^{-256}$ and $1 - 2^{-128}$. The estimate is not merely inapplicable
+off its hypothesis; it is wrong by as much as an estimate of a probability can be.
+
+So the first and last salt columns are the same primitive, a random oracle, priced under two
+different assumptions about the source: nothing if it cannot look at $H$, and $77$ bits if it can.
+The whole subject of \texttt{main.tex}, and of this note, is the gap between those two entries.
 
 The last column is universal hashing, at $n - m$ bits from $K \ge D/R$
 (Proposition~\ref{prop:nouniv}), and it is included because it makes the point of Section~\ref{sec:vs}
@@ -887,6 +922,27 @@ challenge is a uniform value independent of everything else, so $P$'s simulation
 $\mathsf{D}$ queries $(\sd,x)$ then some query has input component $x$, which $P$ selects with
 probability at least $1/q_D$. So $\Pr[\mathsf{D}\text{ queries }(\sd,x)] \le q_D \cdot
 \Adv^{\mathrm{pred}}(P) \le q_D\epsilon$.
+\end{proof}
+
+\begin{proof}[Proof of Proposition~\ref{prop:unsalted}]
+Fix the seed $k_1 = 1$. Among the $R$ symbols, let $r^{*}$ be one maximising
+$|h(1,\cdot)^{-1}(r^{*})|$, ties broken by index; the $D$ inputs are distributed among $R$ symbols,
+so $T := h(1,\cdot)^{-1}(r^{*})$ has $|T| \ge D/R$ by pigeonhole. This is a counting fact about an
+arbitrary map and uses no property of $h$. Let $S(h)$ read row $1$, compute $r^{*}$, and output
+$x \sample T$ together with $z \leftarrow r^{*}$.
+
+The source is admissible: $T$ is computed from $h$, which $S$ receives, and $\sd$ is drawn only
+after $S$ terminates. Given $(h,z)$ its law is uniform on $T$, so
+$\epsilon_{h,z} = 1/|T| \le R/D$ for every table, whence $\mathbb{E}[\epsilon_{H,Z}] \le R/D$.
+Leaking $r^{*}$ costs nothing, since $z$ is a function of $h$ and the conditioning in
+$\epsilon_{h,z}$ already fixes $h$. It queries only row $1$, and its output lies in that row's
+queried cells, so $r_S = s_S = 1$.
+
+Let $\mathsf{D}$ make no oracle query and return $1$ exactly when $\sd = 1$ and $y_b = z$. Under
+$b = 0$ we have $y_0 = h(\sd,x)$, and when $\sd = 1$ every $x \in T$ gives $h(1,x) = r^{*} = z$, so
+$\Pr[\mathsf{D} \Rightarrow 1 \mid b=0] = 1/K$. Under $b = 1$ the value $y_1$ is uniform on $\calR$
+and independent of $z$, so $\Pr[\mathsf{D} \Rightarrow 1 \mid b=1] = 1/(KR)$. The advantage is the
+difference, $(1 - 1/R)/K$.
 \end{proof}
 
 \begin{proof}[Proof of Corollary~\ref{cor:which}]
@@ -1171,9 +1227,10 @@ oracle access appears in the model, so there is nothing about it to bound. Searc
 \emph{applications} being keyed (encryption, MAC and PRF queries); the source never makes a query.
 
 That asymmetry is exactly what the argument rests on, and it is not incidental. ``$H(X)$ is
-distinguishable only if the attacker queried at $X$'' is false the moment $X$ may depend on $H$: a
-source that reads $H$ and returns an $x$ whose image has a fixed first bit is distinguished with no
-query at all. So this comparison needs the source independent of $H$ \emph{itself} --- a strictly
+distinguishable only if the attacker queried at $X$'' is false the moment $X$ may depend on $H$, and
+Proposition~\ref{prop:unsalted} is how false: a source that reads $H$ and returns a uniform element
+of its largest fibre is distinguished with advantage $1 - 1/R$ by an adversary making no query at
+all, at a min-entropy of $\log_2 D - \log_2 R$. So this comparison needs the source independent of $H$ \emph{itself} --- a strictly
 stronger hypothesis than the leftover-hash half of the same paper needs, where the source must be
 independent only of the seed and may know the family. Being unsalted, it has no seed to fall back
 on, so independence from $H$ is the only thing holding it up. That is the hypothesis

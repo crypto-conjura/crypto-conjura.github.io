@@ -82,6 +82,9 @@ seed lengths at issue is universal, and on the tables that are available the lem
 Theorem~\ref{thm:limit} and is of order $\min\{R, D\epsilon\}$; under the side condition of
 Lemma~\ref{lem:attrib} that floor is a statement about the conjecture's \emph{second} summand, where
 it costs $\log_2 W$ bits of seed against the conjectured $\log_2\log_2 D$.
+Section~\ref{sec:prior} records that the resulting bound is \emph{not new} --- it is the
+seed-length limitation of the leftover hash lemma, known since Stinson and stated as such
+by Barak et al.~\cite{BDKPPSY11} --- and says what the note adds instead.
 Section~\ref{sec:not} says what is \emph{not} claimed, and in particular that no matching upper
 bound is proved: the floor is one-sided.}
 
@@ -572,6 +575,62 @@ the collision route cannot be the proof of it. Remark~\ref{rem:cause} makes the 
 numerically: against the witness source the true advantage is some $2^{-49}$ where the route
 returns $2^{-6}$.
 
+\section{Prior art: the bound is Stinson's}\label{sec:prior}
+
+Theorem~\ref{thm:limit} is not new, and this section says so precisely, because the rest of the note
+would otherwise read as though it were.
+
+Barak, Dodis, Krawczyk, Pereira, Pietrzak, Standaert and Yu~\cite{BDKPPSY11} open by naming two
+limitations of the leftover hash lemma. The first is entropy loss. The second is the one at issue
+here: for an (almost) universal family good enough for the LHL, the seed length must be at least
+\[
+  \min\bigl(u - v,\; v + 2\log(1/\varepsilon)\bigr) - O(1) ,
+\]
+where $u$ is the length of the source and $v$ the number of extracted bits, ``and, thus, must grow
+with the number of extracted bits''. They attribute it to Stinson~\cite{Sti94}, and record
+separately that Stinson showed perfectly universal families need a seed linear in $u$.
+
+Translating --- $u = \log_2 D$, $v = \log_2 R = m$, $\varepsilon = \delta$, and the seed length is
+$\log_2 K$ --- that bound reads $\log_2 K \ge \min(\log_2 D - m,\ m + 2\log_2(1/\delta)) - O(1)$.
+Corollary~\ref{cor:seed} gives $\log_2 K \ge \log_2(W-1) - 2 + 2\log_2(1/\delta)$, and in the
+principal regime $W = R$ that is $m + 2\log_2(1/\delta) - 2$: the second branch. The first branch is
+Remark~\ref{rem:nouniv}'s $K \ge D/R$, which is Stinson's linear-in-$u$ result reached by another
+route. So the two salt columns of Section~\ref{sec:kdf}'s table are the two branches of one bound
+that has been known since 1994, and Section~\ref{sec:vs}'s reading --- that universal hashing has
+the longer salt, not the shorter --- is that bound's own reading. What this note adds is not the
+number.
+
+What it does add is three things, none of them a new bound. First, a self-contained derivation of
+the relevant branch from a pigeonhole and two applications of Cauchy--Schwarz, with no probability
+in it, so the statement holds for every table rather than a typical one. Second, that derivation
+instantiated in the game of \texttt{main.tex}: Theorem~\ref{thm:limit} exhibits a witness source per
+table, so the obstruction appears as an attack one can write down rather than as a counting bound on
+families. Third, Lemma~\ref{lem:attrib}, which separates the cases where the floor speaks about
+$\gamma$ from those where the entropy deficiency already explains it. Whether any of the three is
+also in Stinson's papers I do not know: the attribution above is~\cite{BDKPPSY11}'s, and I have not
+read~\cite{Sti94} at first hand.
+
+Two things in the game of \texttt{main.tex} that literature does \emph{not} cover, and they are why
+the question is not simply closed by it.
+
+\begin{itemize}
+\item \textbf{The source may depend on the hash.} \cite{BDKPPSY11} restricts to settings ``where the
+attacker is assumed to be sufficiently limited as to not make the source $X$ dependent on the
+seed'', instancing biometrics, physical measurements and Diffie--Hellman key exchange. The game of
+\texttt{main.tex} drops exactly that hypothesis: the source reads the entire table before $\sd$
+exists, and Theorem~\ref{thm:limit}'s witness uses that freedom to choose its support. The numbers
+coincide with the known bound, but the hypotheses do not, so this is not literally an instance of a
+result proved under independence.
+
+\item \textbf{Their random-oracle comparison is query-bounded.} \cite{BDKPPSY11} compares the LHL
+against the ``dream'' bound of a cryptographic hash modelled as a random oracle by arguing that
+$H(X)$ is distinguishable from uniform only if the attacker queried the oracle at $X$, which for an
+attacker of running time $T$ against a source of min-entropy $\mu$ happens with probability at most
+$T/2^{\mu}$. In \texttt{main.tex} every party is handed $H$ in full, so there is no query budget to
+argue against and that comparison does not reach this setting. The same is true of the
+random-oracle extraction literature generally.
+\end{itemize}
+
 \section{What is not claimed}\label{sec:not}
 
 Theorem~\ref{thm:limit} is one-sided. It says the collision route cannot return a bound better than
@@ -606,5 +665,40 @@ bounding the collision probability of $(\sd, h(\sd,X))$ and passing to statistic
 of the headline is that \eqref{eq:conj} is not a corollary of \emph{that route}. Nothing here is a
 statement about \eqref{eq:conj} itself, which is true: \texttt{proof.tex} proves it with $c = 2$, by
 bounding the $L_1$ distance directly and never forming a collision probability at all.
+
+\begin{conjurabibliography}{9}
+
+\bibitem{BDKPPSY11}
+Boaz Barak, Yevgeniy Dodis, Hugo Krawczyk, Olivier Pereira, Krzysztof Pietrzak,
+Fran\c{c}ois-Xavier Standaert and Yu Yu.
+\newblock Leftover Hash Lemma, Revisited.
+\newblock In \emph{Advances in Cryptology --- CRYPTO 2011}, LNCS 6841, pages 1--20. Springer, 2011.
+\newblock Cryptology ePrint Archive, Report 2011/088, \url{https://eprint.iacr.org/2011/088}.
+\newblock (The seed-length limitation quoted in Section~\ref{sec:prior} is the second bullet of its
+abstract and is developed on page~1 of the introduction; the query-bounded random-oracle comparison
+is its Section~3.4. Read at first hand.)
+
+\bibitem{Sti94}
+Douglas R. Stinson.
+\newblock Universal hashing and authentication codes.
+\newblock \emph{Designs, Codes and Cryptography}, 4(4):369--380, 1994.
+\newblock (Cited by~\cite{BDKPPSY11} as the source of that seed-length bound. \emph{Not} read at
+first hand for this note; the attribution is theirs.)
+
+\bibitem{Vad12}
+Salil P. Vadhan.
+\newblock \emph{Pseudorandomness}.
+\newblock Foundations and Trends in Theoretical Computer Science. Chapter 6, Randomness Extractors.
+\newblock (Theorem~6.17 is \eqref{eq:conj} in extractor parameters; the remark following
+Theorem~6.18 is the seed length of universal hashing. Read at first hand.)
+
+\bibitem{RT00}
+Jaikumar Radhakrishnan and Amnon Ta-Shma.
+\newblock Bounds for dispersers, extractors, and depth-two superconcentrators.
+\newblock \emph{SIAM Journal on Discrete Mathematics}, 13(1):2--24, 2000.
+\newblock (The optimum $d \ge \log(n-k) + 2\log(1/\epsilon) - O(1)$ that \eqref{eq:conj} meets.
+Read at first hand.)
+
+\end{conjurabibliography}
 
 \end{document}

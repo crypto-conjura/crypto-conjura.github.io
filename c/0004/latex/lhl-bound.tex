@@ -377,7 +377,15 @@ Both carry $2\log_2(1/\delta)$; they differ in the first term, $\log_2 W$ agains
 $\log_2\log_2 D$.
 \end{corollary}
 
-The two bounds therefore have the same shape and the same rate in $K$, and differ in what stands
+Side by side, and this is the whole comparison in one line:
+\begin{equation}\label{eq:sidebyside}
+  \underbrace{c\Bigl(\sqrt{\epsilon R} \;+\; \sqrt{\tfrac{\log_2 D}{K}}\Bigr)}_{\text{conjectured, and proved in \texttt{proof.tex}}}
+  \qquad\text{against}\qquad
+  \underbrace{\tfrac12\sqrt{\;\epsilon R \;+\; \tfrac{W-1}{K}\;}}_{\text{the least the collision route can return}} .
+\end{equation}
+Since $\sqrt{a+b} \ge (\sqrt a + \sqrt b)/\sqrt2$ by the arithmetic--geometric mean inequality, the
+right-hand side is at least $\tfrac{1}{2\sqrt2}\bigl(\sqrt{\epsilon R} + \sqrt{(W-1)/K}\bigr)$, so
+the two are the same two ingredients up to constants and differ in exactly one place: what stands
 under the second square root. The conjecture pays $\log_2 D$, a number of bits; the collision route
 pays $W$, the size of a set.
 
@@ -421,6 +429,61 @@ $\calD$ and has no support to select. More generally $W$ is small whenever the s
 is close to $\log_2 D$ or the output is short: for $D = 2^{256}$, $R = 2^{64}$ and min-entropy $254$
 one has $t = 2^{254}$, $\sigma = 2^{62}$, $W = 4$, and the theorem exhibits no loss at all.
 \end{remark}
+
+\section{Reading the difference as key derivation}\label{sec:kdf}
+
+The game is a key-derivation problem. The input $x$ is a secret with entropy but no uniformity --- a
+Diffie--Hellman element, a biometric reading, the output of a physical source; $\sd$ is a public
+salt; $H$ is a public hash; and $H(\sd,x)$ is the derived key, which must look uniform to an
+adversary who knows $H$ in full and sees $\sd$. In that reading $\log_2 K$ is the \emph{salt length}
+in bits, $m := \log_2 R$ the derived key length, $n := \log_2 D$ the length of the secret's
+encoding, and $\log_2(1/\epsilon)$ its min-entropy.
+
+Whenever the derived key is no longer than the source's entropy gap, that is $m \le n - \log_2(1/\epsilon)$,
+one has $W = R$ and the two salt lengths of Corollary~\ref{cor:seed} read
+\[
+  \underbrace{\log_2 n + 2\log_2(1/\delta) + 2}_{\text{conjectured}}
+  \qquad\text{against}\qquad
+  \underbrace{m + 2\log_2(1/\delta) - 2}_{\text{collision route}} .
+\]
+They differ in the first term, and they differ in kind. The conjectured salt grows with the
+\emph{logarithm of the secret's length}; the collision route's salt grows with \emph{the length of
+the key being derived}. So under the conjecture, deriving a $256$-bit key rather than a $128$-bit
+one from the same secret costs no extra salt whatever, while under the collision route it costs
+$128$ further bits of salt. Concretely, with $c = 2$ and in each row the hypotheses of
+Corollary~\ref{cor:seed} verified:
+
+\begin{center}
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+ & secret & min-ent. & key & \multicolumn{2}{c}{salt needed (bits)} \\
+\cmidrule(l){5-6}
+ & $D$ & bits & bits & conjectured & route \\
+\midrule
+DH element in a 2048-bit group, $\delta = 2^{-32}$ & $2^{2048}$ & $256$ & $128$ & $77$  & $190$ \\
+the same, at a 256-bit key, $\delta = 2^{-64}$      & $2^{2048}$ & $512$ & $256$ & $141$ & $382$ \\
+a 512-bit source, $\delta = 2^{-64}$                & $2^{512}$  & $300$ & $128$ & $139$ & $254$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Read the other way --- at a fixed salt rather than a fixed error --- the same gap says the route
+certifies almost nothing at the salt length the conjecture licenses. Substituting
+$K = c^{2}\log_2 D/\delta^{2}$ into Theorem~\ref{thm:limit}'s floor gives
+\[
+  \frac12\sqrt{\frac{W-1}{K}} \;\approx\; \frac{\delta}{2c}\sqrt{\frac{W}{\log_2 D}} ,
+\]
+so the error the route can certify exceeds $\delta$ by a factor of about
+$\sqrt{W/\log_2 D}\,/\,(2c)$ --- roughly $(m - \log_2 n)/2$ bits of security, over half the derived
+key's length. In the first row of the table that factor is $2^{56.5}$, so at a $77$-bit salt the
+route certifies $2^{24.5}$: larger than $1$, hence nothing at all. In the third row it certifies
+$2^{-6.5}$ at a $139$-bit salt --- not vacuous, but six bits of security where sixty-four were
+wanted.
+
+Neither reading says that salting with $77$ bits is unsafe. Both say that the collision route cannot
+be what establishes it, and Remark~\ref{rem:cause} is the reminder that the true advantage against
+the witness source is far below either bound. What is being measured here is the reach of a proof
+technique, not the security of a construction.
 
 \section{What is not claimed}\label{sec:not}
 

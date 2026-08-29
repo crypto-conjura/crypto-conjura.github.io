@@ -623,13 +623,19 @@ Two things in the game of \texttt{main.tex} that literature does \emph{not} cove
 the question is not simply closed by it.
 
 \begin{itemize}
-\item \textbf{The source may depend on the hash.} \cite{BDKPPSY11} restricts to settings ``where the
-attacker is assumed to be sufficiently limited as to not make the source $X$ dependent on the
-seed'', instancing biometrics, physical measurements and Diffie--Hellman key exchange. The game of
-\texttt{main.tex} drops exactly that hypothesis: the source reads the entire table before $\sd$
-exists, and Theorem~\ref{thm:limit}'s witness uses that freedom to choose its support. The numbers
-coincide with the known bound, but the hypotheses do not, so this is not literally an instance of a
-result proved under independence.
+\item \textbf{The independence hypothesis is \emph{not} weakened here, and it is worth being exact
+about that, because the natural summary is wrong.} Definition~2.1 of \cite{BDKPPSY11} quantifies
+over all distributions $X$ with $\tilde H_\infty(X \mid Z) \ge m$, with the seed $S$ drawn
+independently as the coins of a function $\mathrm{Ext}$ that is fixed beforehand and public. So a
+source there may already depend on the \emph{family}; what it must not depend on is the
+\emph{seed}. The game of \texttt{main.tex} asks no more than that: $\sd$ is drawn after $S$ has
+terminated, so its source is independent of the seed too. Nothing in the adversary model is
+weakened, and Theorem~\ref{thm:limit}'s witness uses no freedom the leftover-hash setting withholds.
+What differs is the \emph{family} --- a uniformly random table in place of a universal one --- and
+the content of Theorem~\ref{thm:limit} is that this substitution alone, with seed-independence
+fully intact, already costs the seed length. (That paper's remark about not making ``the source $X$
+dependent on the seed'' is about a different scenario, fixing one public seed and reusing it
+indefinitely, and does not bear on this.)
 
 \item \textbf{Their random-oracle comparison bounds one party only, and it is unsalted.} This is
 set out in full in Remark~\ref{rem:roquery} below, because the asymmetry is the whole of why that
@@ -663,8 +669,19 @@ oracle access appears in the model, so there is nothing about it to bound. Searc
 That asymmetry is exactly what the argument rests on, and it is not incidental. ``$H(X)$ is
 distinguishable only if the attacker queried at $X$'' is false the moment $X$ may depend on $H$: a
 source that reads $H$ and returns an $x$ whose image has a fixed first bit is distinguished with no
-query at all. So the random-oracle comparison presupposes source--hash independence just as the
-leftover-hash half of that paper does.
+query at all. So this comparison needs the source independent of $H$ \emph{itself} --- a strictly
+stronger hypothesis than the leftover-hash half of the same paper needs, where the source must be
+independent only of the seed and may know the family. Being unsalted, it has no seed to fall back
+on, so independence from $H$ is the only thing holding it up. That is the hypothesis
+\texttt{main.tex} does drop, and the salt is what it puts in its place.
+
+There is also no formal random-oracle model to appeal to here: \cite{BDKPPSY11}'s Section~3.4 is
+prose --- ``it is instructive to compare\ldots the heuristic `dream' bound\ldots we claim'' --- and
+the random oracle appears in no definition, lemma or theorem of that paper. Its formal
+Definition~2.1 has $\mathrm{Ext}$ a plain function and $X$ a distribution quantified over, with no
+oracle anywhere. So the question of how many oracle queries the source may make has no answer
+there, not because the answer is zero but because the object is a distribution rather than an
+algorithm.
 
 It is also why that comparison needs no salt while \texttt{main.tex} does. Once the distinguisher is
 unbounded the estimate $T/2^{\mu}$ is vacuous: in the game of \texttt{main.tex} every party holds

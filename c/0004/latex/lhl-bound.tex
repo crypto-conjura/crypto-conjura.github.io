@@ -3,25 +3,33 @@
 %  public-seed extraction problem of main.tex in this folder, and what
 %  it cannot give.
 %
-%  This note resolves nothing.  It records one calibration and one
-%  limitation:
+%  This note resolves nothing.  It records:
 %
-%    * Proposition 1 is the leftover-hash step itself, so that the
-%      route is written down rather than gestured at.
-%    * Proposition 2 calibrates it: on a universal family the lemma
-%      returns exactly the conjecture's first summand, so nothing is
-%      lost there.
-%    * Theorem 1 is the limitation, and is the point of the note.  For
-%      EVERY table there is an admissible source on which the lemma
-%      returns at least (1/2)sqrt((W-1)/K), W ~ min{R, D eps}.
-%      The proof is two applications of Cauchy--Schwarz and a
-%      pigeonhole; no probability appears in it, which is why the
-%      statement is about every table and not a typical one.
+%    * Proposition 1, the leftover-hash step itself;
+%    * Proposition 2, a calibration on a FIXED universal table (the
+%      hypothesis is a property of one table, not of the uniform H of
+%      Section 1 -- keep it conditional, an earlier draft did not);
+%    * Theorem 1, the point of the note.  For EVERY table there is an
+%      admissible source with R cbar - 1 >= (W-1)/K.  Two applications
+%      of Cauchy--Schwarz and a pigeonhole; no probability, which is
+%      why it is every table and not a typical one.
+%    * Lemma 1 and Corollary 1, which say WHEN that floor is a
+%      statement about the second summand rather than about the sum.
 %
-%  Section 5 says plainly what is NOT proved here: that the lemma
-%  attains that bound.  The certification in Remark 3 is cruder, so
-%  the truth lies between them.  Do not let a later revision quietly
-%  upgrade Theorem 1 into an equality.
+%  Three things a later revision must not quietly do, each of which a
+%  blind referee caught in the first version of this file:
+%
+%   (1) Do not upgrade Theorem 1 to an equality.  It lower-bounds what
+%       the technique returns.  Section 6 is the disclaimer; the
+%       abstract must agree with it, and once did not.
+%   (2) Do not attribute the floor to gamma without Lemma 1's side
+%       condition.  Theorem 1 bounds R*CP + gamma, and at some
+%       parameters the first summand explains all of it.
+%   (3) Do not say the true advantage against the Theorem 1 source is
+%       O(1/K).  It is not: the K-1 UNPINNED rows dominate on a
+%       typical table, giving Theta(sqrt(eps' R)), and on an
+%       adversarial table the advantage can be close to 1.  See
+%       Remark 4, which states this correctly.
 %
 %  Built on conjura-solution.cls, like proof.tex, for the page width.
 %  \cjresolves is that class's one required piece of front matter; it
@@ -31,12 +39,8 @@
 
 \newcommand{\Fun}{\mathsf{Fun}}
 \newcommand{\Adv}{\mathbf{Adv}}
-\newcommand{\Gm}{\mathsf{Game}}
-\newcommand{\Pred}{\mathrm{Pred}}
-\newcommand{\ExtP}{\mathrm{Ext}\text{-}\mathrm{pub}}
-\newcommand{\pred}{\mathrm{pred}}
-\newcommand{\extpub}{\textup{ext-pub}}
 \newcommand{\sd}{\mathit{sd}}
+\newcommand{\extpub}{\textup{ext-pub}}
 \renewcommand{\sample}{\stackrel{{\scriptscriptstyle\$}}{\leftarrow}}
 \newcommand{\SD}{\mathrm{SD}}
 \newcommand{\calK}{\mathcal{K}}
@@ -50,7 +54,7 @@
 
 \newcommand{\AIModelsUsed}{Claude Opus 5 (Anthropic)}
 \newcommand{\PromptedBy}{Pooya Farshim}
-\newcommand{\ReviewedBy}{Nobody}
+\newcommand{\ReviewedBy}{Two blind adversarial referees (AI); no human}
 \newcommand{\PaperDate}{29 August 2026}
 \newcommand{\AIDisclosure}{%
   \begingroup\small\centering
@@ -71,11 +75,15 @@
 \cjresolves{Nothing. This is a companion note to \emph{Randomness Extraction from
 Unpredictable Random-Oracle Sources: A Leftover-Hash-Lemma Conjecture, Public Seed}
 (\texttt{main.tex} in this folder), whose conjecture is proved in \texttt{proof.tex} beside it.
-What is recorded here is one calibration (Proposition~\ref{prop:univ}) and one limitation
-(Theorem~\ref{thm:limit}): the leftover hash lemma matches the conjectured bound on its first
-summand exactly, and on its second it falls short of it by a factor of order
-$\sqrt{W/\log_2 D}$, where $W \approx \min\{R,\ D\epsilon\}$ is defined precisely in
-Theorem~\ref{thm:limit}. Section~\ref{sec:not} says what is \emph{not} claimed.}
+Two things are recorded. On a fixed universal table the leftover hash lemma returns the
+conjectured bound's first summand exactly (Proposition~\ref{prop:univ}). No table available at the
+seed lengths at issue is universal, and on the tables that are available the lemma returns
+\emph{at least} $\tfrac12\sqrt{(W-1)/K}$ for a source it cannot exclude, where $W$ is defined in
+Theorem~\ref{thm:limit} and is of order $\min\{R, D\epsilon\}$; under the side condition of
+Lemma~\ref{lem:attrib} that floor is a statement about the conjecture's \emph{second} summand, where
+it costs $\log_2 W$ bits of seed against the conjectured $\log_2\log_2 D$.
+Section~\ref{sec:not} says what is \emph{not} claimed, and in particular that no matching upper
+bound is proved: the floor is one-sided.}
 
 \vspace{0.6em}
 \AIDisclosure
@@ -88,19 +96,23 @@ finite sets $\calK$ (seeds), $\calD$ (inputs), $\calR$ (outputs), and write $K :
 $D := |\calD|$, $R := |\calR|$. A table $H$ is drawn uniformly from
 $\Fun(\calK \times \calD, \calR)$. A source $S$, given the \emph{entire} table, outputs a pair
 $(x,z) \in \calD \times \{0,1\}^{*}$; a seed $\sd \sample \calK$ is drawn \emph{after} $S$ has
-terminated; and an unbounded distinguisher, given $(H, \sd, y_b, z)$, is to tell $y_0 = H(\sd,x)$
-from a uniform $y_1$. Write $\Adv^{\extpub}(S,\mathsf{D})$ for twice its winning probability minus
-one. The source is \emph{$\epsilon$-unpredictable} if no unbounded predictor given $(H,z)$ guesses
-$x$ with probability more than $\epsilon$. Conjecture~1 of \texttt{main.tex} asserts a universal
-constant $c$ with
+terminated; and an unbounded distinguisher $\mathsf{D}$, given $(H, \sd, y_b, z)$, is to tell
+$y_0 = H(\sd,x)$ from a uniform $y_1$. Write $\Adv^{\extpub}(S,\mathsf{D})$ for twice its winning
+probability minus one. The source is \emph{$\epsilon$-unpredictable} if no unbounded predictor given
+$(H,z)$ guesses $x$ with probability more than $\epsilon$; equivalently, if
+$\mathbb{E}_{(H,Z)}[\epsilon_{H,Z}] \le \epsilon$ in the notation below. Conjecture~1 of
+\texttt{main.tex} asserts a universal constant $c$ such that, for every $\epsilon$-unpredictable $S$
+and every unbounded $\mathsf{D}$,
 \begin{equation}\label{eq:conj}
-  \Adv^{\extpub}(S,\mathsf{D}) \;\le\; c\Bigl(\sqrt{\epsilon R} + \sqrt{\tfrac{\log_2 D}{K}}\Bigr) ,
+  \Adv^{\extpub}(S,\mathsf{D}) \;\le\; c\Bigl(\sqrt{\epsilon R} + \sqrt{\tfrac{\log_2 D}{K}}\Bigr) .
 \end{equation}
-and \texttt{proof.tex} proves it with $c = 2$.
+Every numerical comparison below uses \eqref{eq:conj} exactly as displayed, with $c = 2$, the
+constant \texttt{proof.tex} establishes. No other constant from that note is imported and none is
+needed.
 
 Throughout, condition on a table and an auxiliary output, $(H,Z) = (h,z)$, and write
-$p_x := \Pr[X = x \mid h, z]$ for the source's conditional law, $\epsilon_{h,z} := \max_x p_x$,
-and
+$p_x := \Pr[X = x \mid h, z]$ for the source's conditional law and $\epsilon_{h,z} := \max_x p_x$.
+The quantities
 \[
   \CP \;:=\; \sum_{x \in \calD} p_x^2 ,
   \qquad
@@ -108,9 +120,10 @@ and
   \qquad
   \bar c \;:=\; \frac1K \sum_{k \in \calK} c_k ,
 \]
-where $X, X'$ are independent draws from $p$. Note $\CP \le \epsilon_{h,z}$, since
-$\sum_x p_x^2 \le (\max_x p_x)\sum_x p_x$. Two elementary facts are used repeatedly and are
-recorded once.
+all depend on $(h,z)$, which the notation suppresses; where they appear inside an expectation over
+$(H,Z)$ they are to be read as the corresponding random variables. Here $X, X'$ are independent
+draws from $p$. Note $\CP \le \epsilon_{h,z}$, since
+$\sum_x p_x^2 \le (\max_x p_x)\sum_x p_x$.
 
 \begin{fact}[Cauchy--Schwarz, two forms]\label{fact:cs}
 Let $q$ be a probability distribution on a finite set $\Omega$ and let $A \subseteq \Omega$ carry
@@ -141,7 +154,7 @@ For every table $h$ and every view $z$ of positive probability,
   \max_{\mathsf{D}} \; \bigl(2\Pr[\mathsf{D} \text{ wins} \mid h,z] - 1\bigr)
   \;\le\; \tfrac12\sqrt{R\,\bar c - 1} \, ,
 \]
-and consequently
+and consequently, for every unbounded $\mathsf{D}$,
 $\Adv^{\extpub}(S,\mathsf{D}) \le \mathbb{E}_{(H,Z)}\bigl[\tfrac12\sqrt{R\,\bar c - 1}\bigr]$.
 \end{proposition}
 
@@ -163,7 +176,8 @@ Now $|\calK \times \calR| = KR$ and
 the middle equality because $\sd,\sd'$ are independent and uniform, so both equal a given $k$ with
 probability $1/K^2$, and given $\sd = \sd' = k$ the outputs collide with probability $c_k$. Feeding
 this into \eqref{eq:cs-l1l2} gives
-$\SD(Q,U) \le \tfrac12\sqrt{KR \cdot \bar c/K - 1} = \tfrac12\sqrt{R\bar c - 1}$. Averaging over
+$\SD(Q,U) \le \tfrac12\sqrt{KR \cdot \bar c/K - 1} = \tfrac12\sqrt{R\bar c - 1}$, the radicand being
+nonnegative by \eqref{eq:cs-collide} applied to $Q$ with $A = \calK\times\calR$. Averaging over
 $(H,Z)$ gives the second claim.
 \end{proof}
 
@@ -175,79 +189,103 @@ $\bar\beta := \frac1K\sum_k \beta_k$ splits the quantity under the root as
   \qquad \gamma \;:=\; R\bar\beta - 1 ,
 \end{equation}
 the first summand carrying the source's entropy deficiency and the second the family's failure to
-be universal on the source's support.
+be universal on the source's support. Which of the two a lower bound on $R\bar c - 1$ speaks about
+is exactly the question Lemma~\ref{lem:attrib} settles, and it must be settled: a bound on a sum is
+not by itself a bound on either part.
 
-\section{Calibration: the lemma is sharp on the first summand}\label{sec:calib}
+\section{Calibration: on a universal table the lemma is sharp}\label{sec:calib}
 
 \begin{proposition}[Universal families]\label{prop:univ}
-Suppose the family $\{h(k,\cdot)\}_{k \in \calK}$ is $2$-universal, that is
-$\Pr_{k}[h(k,x) = h(k,x')] \le 1/R$ for all $x \neq x'$. Then $\gamma \le 0$ and, for every
-$\epsilon$-unpredictable source,
-\[
-  \Adv^{\extpub}(S,\mathsf{D}) \;\le\; \tfrac12\sqrt{\epsilon R} \, .
-\]
+Fix a table $h$ and suppose the family $\{h(k,\cdot)\}_{k \in \calK}$ is $2$-universal, that is
+$\Pr_{k}[h(k,x) = h(k,x')] \le 1/R$ for all $x \neq x'$. Then $\gamma \le -\CP \le 0$ for every
+source law $p$, and the conditional bound of Proposition~\ref{prop:lhl} is at most
+$\tfrac12\sqrt{R\,\epsilon_{h,z}}$. Consequently, if \emph{every} table in the support of $H$ has
+this property, then $\Adv^{\extpub}(S,\mathsf{D}) \le \tfrac12\sqrt{\epsilon R}$ for every
+$\epsilon$-unpredictable $S$ and every unbounded $\mathsf{D}$.
 \end{proposition}
 
 \begin{proof}
 Exchanging the order of summation,
-$\bar\beta = \sum_{x \neq x'} p_x p_{x'} \Pr_k[h(k,x) = h(k,x')] \le (1 - \CP)/R$, so
-$\gamma \le 1 - \CP - 1 = -\CP \le 0$. By \eqref{eq:split} and Proposition~\ref{prop:lhl} the
-conditional bound is at most $\tfrac12\sqrt{R\cdot\CP} \le \tfrac12\sqrt{R\,\epsilon_{h,z}}$, using
-$\CP \le \epsilon_{h,z}$. Averaging over $(H,Z)$ and applying Jensen's inequality to the concave
-nondecreasing $\sqrt{\cdot}$, together with
-$\mathbb{E}[\epsilon_{H,Z}] \le \epsilon$, gives the claim.
+$\bar\beta = \sum_{x \neq x'} p_x p_{x'} \Pr_k[h(k,x) = h(k,x')] \le (1 - \CP)/R$, valid for every
+$p$ because the hypothesis is a statement about every pair $x \neq x'$; so
+$\gamma \le 1 - \CP - 1 = -\CP$. By \eqref{eq:split} the conditional bound is at most
+$\tfrac12\sqrt{R\cdot\CP - \CP} \le \tfrac12\sqrt{R\,\epsilon_{h,z}}$, using $\CP \le
+\epsilon_{h,z}$. For the last claim, average over $(H,Z)$ and apply Jensen's inequality to the
+concave nondecreasing $\sqrt{\cdot}$ --- legitimate although $p$ depends on $H$, since the
+conditional bound holds pointwise in $(h,z)$ --- together with
+$\mathbb{E}[\epsilon_{H,Z}] \le \epsilon$.
 \end{proof}
 
-So on the first summand of \eqref{eq:conj} the leftover hash lemma loses nothing: it delivers that
-summand with $c = \tfrac12$, and the proof in \texttt{proof.tex} delivers it with
-$c = 1/\sqrt2$, the difference being only that note's passage from $\epsilon_{h,z}$ to the integer
-$\lfloor 1/\epsilon_{h,z}\rfloor$. Everything that separates the two routes lies in $\gamma$.
+The hypothesis is a property of a single table, whereas $H$ in Section~\ref{sec:setting} is uniform
+on all of $\Fun(\calK\times\calD,\calR)$; the second sentence of Proposition~\ref{prop:univ} is
+therefore about a different and more favourable model than the one at issue. It is stated to
+calibrate, not to apply. What it calibrates is this: on the first summand of \eqref{eq:conj} the
+leftover hash lemma gives $\tfrac12\sqrt{\epsilon R}$, which is that summand with $c = \tfrac12$.
+Nothing is lost there, and everything that separates the two routes therefore lies in $\gamma$.
 
 \section{The limitation}\label{sec:limit}
 
-Proposition~\ref{prop:univ} does not apply here, and cannot be made to. A $2$-universal family on
-$D$ inputs needs $\Omega(\log D)$ bits of seed, that is $K \ge D^{\Omega(1)}$, whereas
-\eqref{eq:conj} is of interest at $K \approx \log_2 D$; at that seed length no universal family
-exists at all, for any table. So $\gamma$ must be taken over the supports the source may choose
-after reading $H$, and the theorem below says how large those make it. Recall that the source sees
-the entire table before $\sd$ exists, so any support it can name from $H$ is admissible.
+Proposition~\ref{prop:univ} does not apply here. Universality is not merely absent from a typical
+table; at the seed lengths at issue it is unavailable from any table, provided the output is
+shorter than the input.
+
+\begin{remark}[No universal family at small $K$, when $R < D$]\label{rem:nouniv}
+If $\{h(k,\cdot)\}_{k\in\calK}$ is $2$-universal then, viewing each input $x$ as the column vector
+$(h(k,x))_{k \in \calK} \in \calR^{K}$, two distinct columns agree in at most $K/R$ coordinates, so
+the $D$ columns form a code of length $K$ over an alphabet of size $R$ with minimum distance at
+least $(1 - 1/R)K$. The Plotkin bound, in the form ``$d = (1-1/q)n$ implies $|C| \le qn$'', gives
+$D \le RK$, that is $K \ge D/R$. So no $2$-universal family exists once $K < D/R$, which at
+$D = 2^{256}$ and $R = 2^{64}$ holds for every $K < 2^{192}$.
+
+The proviso matters. For $R \ge D$ a single injective row is already $2$-universal, with $K = 1$, so
+no seed-length lower bound holds without a hypothesis relating $R$ to $D$. An earlier version of
+this note asserted $K \ge D^{\Omega(1)}$ unconditionally, which that example refutes.
+\end{remark}
+
+So $\gamma$ must be taken over the supports the source may choose after reading $H$, and the theorem
+below says how large those make $R\bar c - 1$. Recall that the source sees the entire table before
+$\sd$ exists, so any support it can name from $H$ is admissible.
 
 \begin{theorem}[The collision route cannot beat $\sqrt{W/K}$]\label{thm:limit}
 Let $\calK, \calD, \calR$ be nonempty and finite and let $\epsilon \in [1/D, 1]$. Put
 \[
   t \;:=\; \lceil 1/\epsilon \rceil , \qquad
   \sigma \;:=\; \lceil Rt/D \rceil , \qquad
-  W \;:=\; \lfloor R/\sigma \rfloor ,
+  W \;:=\; \lfloor R/\sigma \rfloor .
 \]
-so that $1 \le t \le D$, $1 \le \sigma \le R$ and $1 \le W \le R$. Then for \emph{every} table
-$h \in \Fun(\calK\times\calD,\calR)$ there is an $\epsilon$-unpredictable source $S$ --- uniform on
-a set of $t$ inputs, with $z = \bot$ --- for which
+Then $1 \le t \le D$, $1 \le \sigma \le R$ and $1 \le W \le R$, and for \emph{every} table
+$h \in \Fun(\calK\times\calD,\calR)$ there is a source $S$ --- uniform on a set of $t$ inputs, with
+$z = \bot$, and $\epsilon$-unpredictable --- for which
 \[
   R\,\bar c - 1 \;\ge\; \frac{W - 1}{K} ,
   \qquad\text{so that the bound of Proposition~\ref{prop:lhl} is at least}\qquad
   \frac12\sqrt{\frac{W-1}{K}} \, .
 \]
 No randomness is used: this holds for every table, not merely for most. When $R$ and $D/t$ are
-powers of two, as they are in the parameter ranges of interest, $W = \min\{R,\ D/t\}$ exactly; in
-general $W \ge \tfrac12\min\{R,\ D/t\} - 1$.
+powers of two, as in the parameter ranges of interest, $W = \min\{R,\ D/t\}$ exactly; in general
+$W > \tfrac12\min\{R,\ D/t\} - 1$.
 \end{theorem}
 
 \begin{proof}
-\emph{The parameters are in range.} From $\epsilon \ge 1/D$ we get $t = \lceil 1/\epsilon\rceil \le
-D$, hence $Rt/D \le R$ and $\sigma \le R$; and $\sigma \ge 1$, so $W = \lfloor R/\sigma\rfloor \ge
-1$ and $W \le R$. If $W = 1$ the claimed inequality is vacuous, so assume $W \ge 2$.
+\emph{The parameters are in range.} From $\epsilon \le 1$ we get $t \ge 1$, and from
+$\epsilon \ge 1/D$ that $t = \lceil 1/\epsilon\rceil \le D$; hence $Rt/D \le R$ and, $R$ being an
+integer, $\sigma = \lceil Rt/D\rceil \le R$, while $\sigma \ge 1$ because $Rt/D > 0$. From
+$\sigma \le R$ we get $W = \lfloor R/\sigma\rfloor \ge 1$, and from $\sigma \ge 1$ that $W \le R$.
 
 \emph{The support.} Fix any seed $k_1 \in \calK$ and let $\calS \subseteq \calR$ consist of
 $\sigma$ symbols $r$ maximising $|\{x \in \calD : h(k_1,x) = r\}|$. The $D$ inputs are distributed
 among the $R$ symbols, so the $\sigma$ most popular of them carry at least a $\sigma/R$ fraction of
 the total, that is at least $D\sigma/R$ inputs; and $\sigma \ge Rt/D$ gives $D\sigma/R \ge t$. So
 $\{x : h(k_1,x) \in \calS\}$ has at least $t$ elements; let $T$ be any $t$ of them and let $S(h)$
-output $x \sample T$ together with $z \leftarrow \bot$.
+output $x \sample T$ together with $z \leftarrow \bot$. This is a counting fact about an arbitrary
+map $\calD \to \calR$; no property of $h$ beyond being a function is used.
 
 \emph{Admissibility.} $T$ is computed from $h$, which $S$ receives in full, and $\sd$ is drawn only
-after $S$ terminates, so $S$ is a legitimate source for the game. Its conditional law is uniform on
-$T$, so $\epsilon_{h,z} = 1/t = 1/\lceil 1/\epsilon\rceil \le \epsilon$, and $S$ is
-$\epsilon$-unpredictable.
+after $S$ terminates, so nothing in the construction depends on the seed and $S$ is a legitimate
+source for the game. Its conditional law is uniform on $T$, so
+$\epsilon_{h,\bot} = 1/t = 1/\lceil 1/\epsilon\rceil \le \epsilon$; since this holds for every
+table, $\mathbb{E}[\epsilon_{H,Z}] \le \epsilon$ and $S$ is $\epsilon$-unpredictable in the sense of
+Section~\ref{sec:setting}.
 
 \emph{The two collision bounds.} For every $k$ the law of $h(k,X)$ is a distribution on $\calR$, so
 \eqref{eq:cs-collide} with $A = \calR$ gives $c_k \ge 1/R$. For $k = k_1$ every $x \in T$ has
@@ -268,78 +306,155 @@ $\tfrac12\sqrt{R\bar c - 1} \ge \tfrac12\sqrt{(W-1)/K}$.
 
 \emph{The two forms of $W$.} If $R = 2^{m}$ and $D/t = 2^{\ell}$ then $Rt/D = 2^{m-\ell}$, so
 $\sigma = \max\{1, 2^{m-\ell}\}$ and $W = \lfloor R/\sigma\rfloor = \min\{2^{m}, 2^{\ell}\}
-= \min\{R, D/t\}$. In general $\sigma \le Rt/D + 1$, so
-$R/\sigma \ge R/(Rt/D + 1) = \min\{R, D/t\} \cdot \frac{\max\{R, D/t\}}{Rt/D + 1}
-\ge \tfrac12 \min\{R, D/t\}$, using $Rt/D + 1 \le 2\max\{Rt/D, 1\}$; hence
-$W \ge \tfrac12\min\{R, D/t\} - 1$.
+= \min\{R, D/t\}$. In general $\sigma < Rt/D + 1$, so, writing $a := R$ and $b := D/t$,
+\[
+  \frac{R}{\sigma} \;>\; \frac{a}{a/b + 1} \;=\; \frac{ab}{a+b}
+  \;=\; \frac{\min\{a,b\}\cdot\max\{a,b\}}{a+b}
+  \;\ge\; \tfrac12\min\{a,b\} ,
+\]
+the last step because $a + b \le 2\max\{a,b\}$; hence
+$W > R/\sigma - 1 > \tfrac12\min\{R, D/t\} - 1$.
 \end{proof}
 
 \begin{remark}[Pinning more than one row]\label{rem:multi}
-Confining $j$ rows rather than one, each to $\sigma$ symbols, leaves at least $D(\sigma/R)^{j}$
-inputs and replaces $W-1$ by about $j(W-1)$; the constraint is that this stay at least $t$, so
-$j \le \log_{W}(D/t)$. The gain is a factor $\sqrt{j}$ in the bound, that is $\log_2 j$ further
-bits of seed in the comparison below --- one or two in the parameter ranges of interest. The
-one-row construction of Theorem~\ref{thm:limit} is therefore essentially the whole effect, and is
-what the statement records.
+Confining $j$ rows rather than one, each to $\sigma$ symbols, gives $R\bar c - 1 \ge j(W-1)/K$ by
+the same averaging, provided a common support of size $t$ survives. It does: choosing the $j$ symbol
+sets $\calS_1,\dots,\calS_j$ independently and uniformly among the subsets of $\calR$ of size
+$R/\sigma$, each input survives all $j$ constraints with probability $\sigma^{-j}$, so the expected
+number of survivors is $D\sigma^{-j}$ and some choice attains it; the constraint is
+$D\sigma^{-j} \ge t$, that is $j \le \log_\sigma(D/t)$. The gain is a factor $\sqrt{j}$ in the
+bound, hence $\log_2 j$ further bits of seed in the comparison below --- one or two in the parameter
+ranges of interest --- so the one-row construction of Theorem~\ref{thm:limit} is essentially the
+whole effect.
+
+The averaging is the point. Choosing each $\calS_i$ greedily, as the $\sigma$ commonest symbols of
+its row, does \emph{not} work for a worst-case table, since the $j$ greedy sets may have a small or
+even empty common preimage; an earlier version of this note asserted the greedy version. Only the
+one-row case survives greedily, and that is the case Theorem~\ref{thm:limit} uses.
 \end{remark}
 
+\section{When the floor is a statement about $\gamma$}\label{sec:attrib}
+
+Theorem~\ref{thm:limit} bounds $R\bar c - 1 = R\cdot\CP + \gamma$ from below, and that is a bound on
+the sum. It carries no information about $\gamma$ unless the floor exceeds what the first summand
+supplies on its own, which for the constructed source is exactly $R\cdot\CP = R/t$.
+
+\begin{lemma}[Attribution]\label{lem:attrib}
+For the source of Theorem~\ref{thm:limit}, $\CP = 1/t$ exactly, so
+$\gamma \ge (W-1)/K - R/t$. In particular, if
+\begin{equation}\label{eq:side}
+  \frac{W-1}{K} \;>\; \frac{R}{t} ,
+\end{equation}
+then the floor of Theorem~\ref{thm:limit} is not explained by the entropy deficiency, and
+$\gamma > 0$: the family is genuinely non-universal on that support, by a margin of at least
+$(W-1)/K - R/t$.
+\end{lemma}
+
+\begin{proof}
+The source is uniform on $T$ with $|T| = t$, so $\CP = \sum_{x\in T} t^{-2} = 1/t$. Substituting
+into \eqref{eq:split} and rearranging Theorem~\ref{thm:limit}'s conclusion gives
+$\gamma = R\bar c - 1 - R/t \ge (W-1)/K - R/t$, and \eqref{eq:side} makes it positive.
+\end{proof}
+
+Condition \eqref{eq:side} is not automatic, and the comparison below is stated only where it holds.
+Where it fails --- for instance $R = D$ and $\epsilon = 1/2$, so $t = 2$, $\sigma = 2$,
+$W = \lfloor R/2\rfloor$, and $R/t = R/2$ exceeds $(W-1)/K$ for every $K \ge 1$ --- the theorem is
+consistent with $\gamma \le 0$, that is with a universal family, and says nothing about the second
+summand.
+
 \begin{corollary}[The comparison, in seed length]\label{cor:seed}
-Fix a target error $\delta \in (0,1)$ and suppose the entropy deficiency is not the binding
-constraint, so that attention is on the second summand of \eqref{eq:conj}. Driving that summand
-below $\delta$ requires, by \eqref{eq:conj} with the constant $c = \tfrac65$ of \texttt{proof.tex},
-a seed space of size $K \ge \tfrac{36}{25}(1+\ln D)/\delta^{2}$; whereas by
-Theorem~\ref{thm:limit} the leftover-hash route requires $K \ge (W-1)/(4\delta^{2})$. In bits,
+Fix a target error $\delta \in (0,1)$ and parameters for which \eqref{eq:side} holds and the entropy
+deficiency is not itself binding, that is $c\sqrt{\epsilon R} < \delta$. Driving the second summand
+of \eqref{eq:conj} below $\delta$ requires $K \ge c^{2}\log_2 D/\delta^{2}$, whereas by
+Theorem~\ref{thm:limit} the leftover-hash route cannot certify $\delta$ at all unless
+$K \ge (W-1)/(4\delta^{2})$. In bits,
 \[
-  \log_2 K \;=\; \log_2\log_2 D + 2\log_2(1/\delta) + O(1)
+  \log_2 K \;=\; 2\log_2 c + \log_2\log_2 D + 2\log_2(1/\delta)
   \qquad\text{against}\qquad
-  \log_2 K \;=\; \log_2 W + 2\log_2(1/\delta) - 2 .
+  \log_2 K \;\ge\; \log_2(W-1) - 2 + 2\log_2(1/\delta) .
 \]
-Both are $2\log_2(1/\delta)$ in the error; they differ in the first term, and there by
-$\log_2 W$ against $\log_2\log_2 D$.
+Both carry $2\log_2(1/\delta)$; they differ in the first term, $\log_2 W$ against
+$\log_2\log_2 D$.
 \end{corollary}
 
-The two bounds therefore have the same shape and the same rate in $K$, and differ in one symbol:
-what stands under the second square root. The conjecture pays $\log_2 D$, a number of bits; the
-lemma pays $W$, the size of a set. At $D = 2^{256}$, $R = 2^{64}$ and a source of min-entropy
-$128$, reaching $\delta = 2^{-32}$ needs $\log_2 K \approx 72$ under \eqref{eq:conj} and $126$ by
-this route.
+The two bounds therefore have the same shape and the same rate in $K$, and differ in what stands
+under the second square root. The conjecture pays $\log_2 D$, a number of bits; the collision route
+pays $W$, the size of a set.
+
+\begin{remark}[A worked instance]\label{rem:numbers}
+Take $D = 2^{256}$, $R = 2^{64}$, a source of min-entropy $160$ (so $\epsilon = 2^{-160}$ and
+$t = 2^{160}$), $\delta = 2^{-32}$ and $c = 2$. Then $\sigma = \lceil 2^{-32}\rceil = 1$ and
+$W = R = 2^{64}$. Both hypotheses of Corollary~\ref{cor:seed} hold: the deficiency term is
+$c\sqrt{\epsilon R} = 2^{-47} \ll \delta$; and at the seed length \eqref{eq:conj} requires,
+$K = 2^{74}$, the floor is $(W-1)/K \approx 2^{-10}$ against $R/t = 2^{-96}$, so \eqref{eq:side}
+holds with room to spare and Lemma~\ref{lem:attrib} gives $\gamma > 0$. The comparison is then
+$\log_2 K = 74$ under \eqref{eq:conj} against $\log_2 K \ge 126$ for the collision route: a gap of
+$52$ bits.
+
+An earlier version of this note used min-entropy $128$ here, where $c\sqrt{\epsilon R} = 2^{-31}$
+exceeds $\delta = 2^{-32}$, so \eqref{eq:conj} could not certify that $\delta$ at any seed length
+and the comparison was empty. The hypotheses of Corollary~\ref{cor:seed} are not decorative.
+\end{remark}
 
 \begin{remark}[Where the loss comes from, and when it vanishes]\label{rem:cause}
 The loss is the step \eqref{eq:cs-l1l2}, $\|v\|_1 \le \sqrt{KR}\,\|v\|_2$, which is tight only when
-$v$ is spread evenly over all $KR$ cells. The source of Theorem~\ref{thm:limit} makes it as far
-from that as possible: its deviation is concentrated on one row out of $K$, where the step is off by
-about $\sqrt{RK}$. Indeed the true advantage against that source is $O(1/K)$ --- one row of the $K$
-is biased and the rest are not --- while the lemma returns $\tfrac12\sqrt{(W-1)/K}$.
+$v$ is spread evenly over all $KR$ cells; the source of Theorem~\ref{thm:limit} makes it far from
+that, its deviation on the pinned row being a single concentrated lump.
 
-The gap closes exactly when $W$ does. At $\epsilon = 1/D$ one has $W = \min\{R,1\} = 1$ and
-Theorem~\ref{thm:limit} is vacuous, correctly: a source of maximal entropy is uniform on all of
-$\calD$ and has no support to select. This is the same boundary \texttt{proof.tex} records when its
-own selection term $\tfrac1t\ln\binom{D}{t}$ vanishes at $t = D$. More generally $W$ is small
-whenever the source's min-entropy is close to $\log_2 D$ or the output is short, and in those
-regimes the route loses little or nothing: for $D = 2^{256}$, $R = 2^{64}$ and min-entropy $254$
-one has $W = 4$ and Theorem~\ref{thm:limit} exhibits no loss at all.
+The true advantage against that source should not be mis-stated, and an earlier version of this note
+did mis-state it as $O(1/K)$. Since
+$\SD(Q,U) = \frac1K\sum_k \SD(\mathrm{law}\,h(k,X), U_\calR)$, the pinned row $k_1$ contributes about
+$1/K$, but the other $K-1$ rows are \emph{not} uniform. On a typical table each is $t$ draws into
+$R$ bins and contributes $\Theta(\sqrt{R/t})$, so the true advantage is
+$\Theta(\sqrt{R/t}) + \Theta(1/K)$, dominated by the \emph{unpinned} rows in the regime of
+Remark~\ref{rem:numbers}; and on an adversarial table --- every row constant, say --- it is close to
+$1$. So the overshoot of the lemma over the truth is neither $\sqrt{RK}$ nor uniform in the
+parameters. In the instance of Remark~\ref{rem:numbers}, at the seed length \eqref{eq:conj}
+requires, the lemma returns $\tfrac12\sqrt{(W-1)/K} = 2^{-6}$ against a true advantage of about
+$0.4\sqrt{R/t} = 2^{-49.3}$; at the much larger seed length the lemma itself requires, the two come
+within a small factor of one another. The floor is a statement about what the technique can certify,
+not about how weak the source is.
+
+The gap closes when $W$ does. At $\epsilon = 1/D$ one has $t = D$, $\sigma = R$, $W = 1$ and
+Theorem~\ref{thm:limit} is trivial, correctly: a source of maximal entropy is uniform on all of
+$\calD$ and has no support to select. More generally $W$ is small whenever the source's min-entropy
+is close to $\log_2 D$ or the output is short: for $D = 2^{256}$, $R = 2^{64}$ and min-entropy $254$
+one has $t = 2^{254}$, $\sigma = 2^{62}$, $W = 4$, and the theorem exhibits no loss at all.
 \end{remark}
 
 \section{What is not claimed}\label{sec:not}
 
-Theorem~\ref{thm:limit} is a limitation and only that: it says the collision route cannot return a
-bound better than $\tfrac12\sqrt{(W-1)/K}$ on its second summand. It does \emph{not} say the route
-attains that, and this note does not prove a matching upper bound.
+Theorem~\ref{thm:limit} is one-sided. It says the collision route cannot return a bound better than
+$\tfrac12\sqrt{(W-1)/K}$; it does \emph{not} say the route attains that, and no matching upper bound
+is proved here. Every statement in this note about the route's cost is therefore a necessary
+condition on $K$, never the cost itself, and Corollary~\ref{cor:seed} is phrased that way
+deliberately.
 
-The gap is real and should not be papered over. Certifying $\gamma$ for a random table by the same
-bounded-differences argument \texttt{proof.tex} uses --- $\bar\beta$ has bounded-differences
-constant $2/(Kt)$ in the $Kt$ table entries above a support of size $t$, and a union bound over the
-$\binom{D}{t}$ supports of every size costs $e^{t(1+\ln D)}$ --- yields only
+The remaining window is wide and should not be papered over. Certifying $\gamma$ for a random table
+by a bounded-differences argument --- $\bar\beta$ has bounded-differences constant $2/(Kt)$ in the
+$Kt$ table entries above a support of size $t$, and a union bound over the $\binom{D}{t}$ supports
+of that size costs $e^{t(1+\ln D)}$ --- yields, for sources uniform on a support,
 $\gamma \le R\sqrt{2(1+\ln D)/K}$ with high probability, hence an upper bound of
-$\tfrac12\sqrt{\epsilon R} + \tfrac12\sqrt R\,(2(1+\ln D)/K)^{1/4}$. That is larger than
-Theorem~\ref{thm:limit}'s floor by a factor of order $(K\ln D)^{1/4}$, so the truth for this route
-lies somewhere between, and locating it is not attempted here. What the two together do establish
-is that the route cannot reach \eqref{eq:conj}: the floor alone already exceeds it by
-$\log_2 W - \log_2\log_2 D$ bits of seed.
+$\tfrac12\sqrt{\epsilon R} + \tfrac12\sqrt R\,(2(1+\ln D)/K)^{1/4}$. Two gaps in that sketch are
+worth naming: it covers sources uniform on a support only, and a general source needs a further
+argument reducing to those; and the resulting ceiling exceeds Theorem~\ref{thm:limit}'s floor by a
+factor of order $\sqrt{R/W}\,(K\ln D)^{1/4}$, which in the instance of Remark~\ref{rem:numbers} is
+about $2^{21}$. So the truth for this route lies somewhere in that window, and locating it is not
+attempted.
 
-Nor is anything here a statement about the conjecture. \eqref{eq:conj} is true --- \texttt{proof.tex}
-proves it with $c = 2$ --- and what this note adds is only that it is not a corollary of the
-leftover hash lemma, and that its content is the second summand: the price of letting the source
-choose its support after seeing the entire table.
+What the floor alone does establish, in the regime where \eqref{eq:side} holds and the deficiency
+term is not binding, is that the route cannot reach \eqref{eq:conj} there: it needs at least
+$\log_2(W-1) - 2\log_2 c - \log_2\log_2 D - 2$ further bits of seed, which is $52$ in the instance
+of Remark~\ref{rem:numbers}. Outside that regime nothing is claimed, and Remark~\ref{rem:cause}
+exhibits parameters --- min-entropy $254$ over the same $D$ and $R$ --- where the construction shows
+no loss whatever.
+
+Finally, the scope is one technique, not one lemma. Theorem~\ref{thm:limit} constrains the
+particular functional $\tfrac12\sqrt{R\bar c - 1}$ of Proposition~\ref{prop:lhl}, arrived at by
+bounding the collision probability of $(\sd, h(\sd,X))$ and passing to statistical distance through
+\eqref{eq:cs-l1l2}. It says nothing about other uses of the leftover hash lemma, and the honest form
+of the headline is that \eqref{eq:conj} is not a corollary of \emph{that route}. Nothing here is a
+statement about \eqref{eq:conj} itself, which is true: \texttt{proof.tex} proves it with $c = 2$, by
+bounding the $L_1$ distance directly and never forming a collision probability at all.
 
 \end{document}

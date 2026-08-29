@@ -49,17 +49,15 @@ Put $W := \min\{R,\ \lfloor D\epsilon\rfloor\}$ and $t := \lfloor 1/\epsilon\rfl
 $$R\bar c - 1 \;\ge\; R\Bigl[\tfrac1K\tfrac{W}{R} + \tfrac{K-1}{K}\tfrac1R\Bigr] - 1 \;=\; \frac{W-1}{K}, \qquad\text{so the lemma returns at least}\quad \tfrac12\sqrt{\tfrac{W-1}{K}}.$$
 This holds for **every** table, not just a typical one. Pinning $j$ rows instead of one replaces $W-1$ by roughly $j(W-1)$, buying a further $\log_2 j$ bits -- usually one or two, so the one-row form is essentially the whole effect.
 
-**The rate in $K$ is the same square root the conjecture asks for.** What separates them is what sits under it: the lemma pays $\sqrt{W}$, a *set size*, where the conjecture pays $\sqrt{\log_2 D}$, a *number of bits*. In seed length, $\log_2 W$ against $\log_2\log_2 D$:
+**The rate in $K$ is the same square root the conjecture asks for**, and what separates them is what sits under it: the lemma pays $\sqrt{W}$, a *set size*, where the conjecture pays $\sqrt{\log_2 D}$, a *number of bits*. Two conditions have to hold before that comparison means anything, and both are easy to lose. The floor is a bound on $R\bar c - 1 = R\cdot\mathrm{CP} + \gamma$, so it says something about the *second* summand only when $(W-1)/K > R/t$; and the conjectured bound can only certify an error $\delta$ at all when its own first summand $c\sqrt{\epsilon R}$ is below $\delta$. Where both hold:
 
-| $D$ | $R$ | min-entropy | $\delta$ | $W$ | $\log_2 K$ conjectured | $\log_2 K$ by the lemma |
+| $D$ | $R$ | min-entropy | $\delta$ | $W$ | $\log_2 K$ conjectured | $\log_2 K$ needed by the lemma |
 |---|---|---|---|---|---|---|
-| $2^{256}$ | $2^{64}$ | 128 | $2^{-32}$ | $2^{64}$ | 72 | 126 |
-| $2^{256}$ | $2^{128}$ | 128 | $2^{-64}$ | $2^{128}$ | 136 | 254 |
-| $2^{256}$ | $2^{64}$ | 254 | $2^{-32}$ | $2^{2}$ | 72 | 63.6 |
+| $2^{256}$ | $2^{64}$ | 160 | $2^{-32}$ | $2^{64}$ | 74 | at least 126 |
 
-The third row is the honest boundary: the loss appears only when $W$ is large, that is when the source has slack *and* the output is long. At $\epsilon = 1/D$ one has $W = 1$ and the bound is $0$ -- correctly, since a source of maximal entropy is uniform on all of $\calD$ and has nothing to select, which is the same phenomenon the [c/0004](/c/0004/) proof records when its own selection term vanishes at $t = D$.
+a gap of 52 bits. Outside that regime the construction shows nothing: at min-entropy 254 over the same $D$ and $R$ one gets $W = 4$ and no loss at all, and at $\epsilon = 1/D$ one gets $W = 1$ and a trivial bound -- correctly, since a maximal-entropy source is uniform on all of $\mathcal{D}$ and has nothing to select. That is the same boundary the [c/0004](/c/0004/) proof records when its own selection term vanishes at $t = D$.
 
-The cause is the Cauchy--Schwarz step $\|v\|_1 \le \sqrt{KR}\,\|v\|_2$ inside the lemma. Support selection concentrates the deviation $v$ on one row out of $K$ instead of spreading it over all $KR$ cells, and there that step is off by about $\sqrt{RK}$: the true advantage for the source above is $O(1/K)$, while the lemma returns $\tfrac12\sqrt{(W-1)/K}$. That is why the optimal-extractor proofs work in $L_1$ instead, by concentration plus a union bound over flat sources; the [c/0004](/c/0004/) proof takes that route, arriving at it independently. (What is stated here is a limitation: the lemma cannot do better than this. Whether it does this well is not claimed.)
+The loss is the Cauchy--Schwarz step $\|v\|_1 \le \sqrt{KR}\,\|v\|_2$ inside the lemma, which is tight only when $v$ is spread evenly over all $KR$ cells; support selection puts a concentrated lump on one row instead. It is worth being careful about what that does *not* say: the true advantage against the constructed source is **not** $O(1/K)$, because the $K-1$ unpinned rows are not uniform either and contribute $\Theta(\sqrt{R/t})$, which dominates. The floor is a statement about what the technique can certify, not about how weak the source is. That is why the optimal-extractor proofs work in $L_1$ instead, by concentration plus a union bound over flat sources; the [c/0004](/c/0004/) proof takes that route, arriving at it independently. (One-sided throughout: the lemma cannot do better than this. Whether it does this well is not claimed — the certified ceiling is some $2^{21}$ above the floor.)
 
 ### What is not classical
 

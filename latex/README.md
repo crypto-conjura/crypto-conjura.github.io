@@ -81,6 +81,21 @@ never the `problem:` slug, `problem:` is shared by sibling statements, and
 belong to different pages. Without it, `scripts/draft_status.py` reports the
 draft as unpromoted forever.
 
+**The draft already carries an attackability score, and promotion is where it
+reaches the site.** Since 30 August 2026 `harvest_conjectures.py` scores every
+conjecture it keeps and writes `attackability.json` beside the draft, with the
+row for `problems/attackability/index.qmd` pre-rendered and the statement id
+left as `c/XXXX`. It is left as a placeholder because a draft has no id: ids are
+allocated when a draft is promoted, which is this step. Fill it in and paste the
+row into the table, in score order, and set its `Pass` column from the score's
+own date. Two things to know before you do. The score is stamped
+`harvest-inline`, meaning it was produced one conjecture at a time with no
+neighbours to calibrate against, where the rubric is written for batches of ten
+with the anchors re-read each time; treat it as a first opinion and re-score in a
+batch if the ordering matters. And the score is deliberately *not* a field on the
+`c/` page: attackability stays a dated snapshot rather than a live per-statement
+field, which is what the attackability page's own provenance section says.
+
 **Two steps that are not optional and that nothing tells you about until the
 pre-commit hook refuses the commit.** Both were tripped twice while promoting
 the 2026-08-18 harvest, so they are written down here rather than rediscovered:

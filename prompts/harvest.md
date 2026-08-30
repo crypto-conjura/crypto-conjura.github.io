@@ -2,7 +2,7 @@
 
 An instruction prompt for an AI tasked with reading one cryptography paper and coming back with the open problems that paper *leaves open* — stated cleanly enough to stand on their own page, and quoted precisely enough that a machine can check they are really in the paper.
 
-It is written for one paper per run, in three calls, and it is used by `scripts/harvest_conjectures.py` rather than pasted by hand: drop PDFs into `latex/harvest/`, run the script, and each paper becomes zero or more `latex/conjectures/<slug>/` folders and then moves itself into `latex/harvest/processed/`. The blocks below marked `<!-- prompt:… -->` are what the script loads; the prose around them is for whoever has to decide whether to believe the output.
+It is written for one paper per run, in four calls, and it is used by `scripts/harvest_conjectures.py` rather than pasted by hand: drop PDFs into `latex/harvest/`, run the script, and each paper becomes zero or more `latex/conjectures/<slug>/` folders and then moves itself into `latex/harvest/processed/`. The blocks below marked `<!-- prompt:… -->` are what the script loads; the prose around them is for whoever has to decide whether to believe the output.
 
 ## The failure this is built around
 
@@ -14,11 +14,11 @@ So the prompt is not asked to be careful. It is asked to be *checkable*, and the
 - A **second call refutes the first**. It sees the PDF and the drafted record, and deliberately not the extractor's reasoning or confidence — errors decorrelate only if the checker cannot see the trace it is checking. Its job is to find the ways the draft is wrong, and "I could not confirm this is open" counts as finding one.
 - Citations the model could not read in the harvested paper's own reference list are marked `[UNVERIFIED]` in the output and stay marked.
 
-The three calls are deliberately unequal in what they are allowed to do. The extractor may judge what is interesting; the verifier may only judge what is true; the typesetter may only judge what is legible, and may change no mathematics at all.
+The four calls are deliberately unequal in what they are allowed to do. The extractor may judge what is interesting; the verifier may only judge what is true; the typesetter may only judge what is legible, and may change no mathematics at all; the scorer may judge only how attackable the result is, and sees the checked record rather than the extractor's reasoning.
 
 ## What the script does, so the prompt does not have to
 
-`scripts/harvest_conjectures.py` handles everything mechanical and cached: hashing each PDF so the same paper is never read twice — a paper whose bytes are already in `processed/` is skipped before `pdftotext` runs, and a hash already in the run ledger is skipped after, so neither a lost ledger nor a tidied inbox can cause a re-read — extracting the per-page text layer with `pdftotext`, grounding every quote, copying `conjura-conjecture.cls` into each new folder, running `pdflatex`/`chktex`/`lacheck` over the result, writing `harvest.json` and `SOURCE.md` as the provenance a reviewer reads first, and moving the PDF to `processed/`. A paper with no usable text layer is refused outright rather than read unchecked — run OCR over it and drop it back in.
+`scripts/harvest_conjectures.py` handles everything mechanical and cached: hashing each PDF so the same paper is never read twice — a paper whose bytes are already in `processed/` is skipped before `pdftotext` runs, and a hash already in the run ledger is skipped after, so neither a lost ledger nor a tidied inbox can cause a re-read — extracting the per-page text layer with `pdftotext`, grounding every quote, copying `conjura-conjecture.cls` into each new folder, running `pdflatex`/`chktex`/`lacheck` over the result, deriving every attackability total, verdict and band from the eight axis scores rather than letting the model add up its own, writing `harvest.json`, `attackability.json` and `SOURCE.md` as the provenance a reviewer reads first, and moving the PDF to `processed/`. A paper with no usable text layer is refused outright rather than read unchecked — run OCR over it and drop it back in.
 
 ---
 
@@ -213,6 +213,91 @@ The source, for the status line: `<<SOURCE_LINE>>`
 
 Return the whole file, `\documentclass` to `\end{document}`, plus the running head. Put anything a human reviewer needs to know — mathematics you believe is wrong but typeset as given, a symbol you renamed, a citation you cut — in `notes`.
 <!-- /prompt:tex.user -->
+
+---
+
+## Prompt 4 — Score attackability
+
+The three prompts above decide whether a conjecture is *real*. This one decides whether it is *worth attacking by a machine*, which is a different question and is not the same as whether it is important or whether a person would find it hard.
+
+Two things about running it here rather than in a batch pass. The rubric is written for scoring ten conjectures at a sitting with the four anchors below re-read at the start of each batch, because without re-anchoring the scale inflates by roughly two points per batch and PROBEs quietly become GOs. A harvest run scores one conjecture at a time and has no neighbours to calibrate against, so it puts the anchors in every prompt and stamps the result `harvest-inline`. Treat an inline score as a first opinion: it is enough to decide whether a draft is worth a human's attention, and not enough to rank a corpus.
+
+And the model supplies only the eight axis values. `P`, `V`, `O`, the total, the verdict and the band are computed in `scripts/harvest_conjectures.py`, because a model asked to add up its own scores makes the sum agree with the verdict it had already decided on. Where the two disagree the script says so.
+
+<!-- prompt:attackability.system -->
+You are scoring one already-checked conjecture for **attackability**: whether a bounded automated proof campaign, pointed at this statement, would come back with something correct, non-trivial and not already known.
+
+This is not how likely the statement is to be true, not how hard it is for a person, and not how important it is. A conjecture can be easy for an expert and hard here — one simulator insight, nothing to compute — or the reverse: a long but locally routine case analysis is *good* here.
+
+Score eight axes out of 31 total. Do not compute the total or the verdict; they are derived from your axis values elsewhere, and a total you supply will be discarded.
+
+### Calibration anchors, which are the scale
+
+Read all four before scoring. They are deliberately spread across the four verdicts.
+
+**GO, 27/31.** Whether a random oracle decomposes into bit-fixing mixtures when the advice comes from two non-communicating sources. Proved at q = 0, proved at q = 1 under a removable-looking hypothesis, q = 2 open. Everything the rubric rewards is present: an explicit partly-climbed ladder, a named local technique (presampling), a finite instantiation the refuter can decide by exact enumeration, a narrow recent source, and a friendly direction, since a decomposition is an existence claim.
+
+**PROBE, 17/31.** Closing the factor-root-S gap between a proved oblivious lower bound and a matching algorithm for 3-way collisions. The gap is quantified, the technique is named, small parameters are exactly enumerable — but the obliviousness restriction was chosen by the source *to make the problem tractable*, so there is no visible hypothesis for climbing off it, and the area has an active literature so contamination risk is high.
+
+**PARK, 11/31.** Whether 6-round Feistel is indifferentiable from a random permutation, between a proved 5-round attack and a proved 8-round construction. The one-rung interpolation looks attractive and is not: the deliverable is a *simulator*, which has neither a scalar score nor a small-case decision procedure, so refutation affordance collapses; indifferentiability has several inequivalent formulations, so determinacy is low exactly where it matters most; and the formal decomposition a proof assistant would need *is itself the research content*.
+
+**NO-GO.** A statement whose own source proves it implies a central open problem elsewhere. One line in the retreat log; no campaign.
+
+### Gates, checked first and in order
+
+A gate stops the campaign before any planning. It is not a low score, and when one fires the axes do not matter.
+
+- **G1 barrier.** Would a proof have to evade relativization, natural proofs, algebrization, a black-box separation or a meta-reduction? Or does a proof imply resolving a named open problem elsewhere, *as stated by the source*? That last is the common case and the source usually says so outright. Quote it.
+- **G2 statement not fixed.** Is part of the task to find the right statement? A property conjectured "for some class" with the class unnamed; hypotheses that must be added before the statement is non-vacuous; a clause asking for "the optimal trade-off" with no candidate named.
+- **G3 already resolved.** Set `scout_status` to RESOLVED and fire this if the statement, or something implying it, is in the literature.
+- **G4 dual use.** Narrow. Fires only if a *refutation* yields a concretely instantiable procedure against a deployed construction at real parameters. An adversary in an idealized model at asymptotic parameters does not fire it. Expect false almost always.
+
+### The eight axes
+
+**P1 directionality, 0-4.** 4 for a construction, algorithm, explicit adversary or counterexample. 3 two-sided with a constructive side. 2 tight-bound closure where only the bound is missing. 1 a lower bound against a bounded adversary class. 0 against unbounded preprocessing or non-uniform advice. **Name the construction-side dual in one sentence even at 0** — that is what a refuter attacks.
+
+**P2 ladder quality, 0-4.** Score the ladder, not the top rung. +1 an explicit restriction axis with a settled base case. +1 a next rung that is nontrivial, well defined and unsettled. +1 a statable generalization hypothesis: name one feature of the base-case proof you expect to survive a rung. +1 a narrow gap, at most three rungs. Then -1 if the axis is plausibly non-monotone in difficulty, or the base case is a special-case accident.
+
+**P3 technique proximity, 0-4.** Start from composition depth: 4 at one source result, 3 at two, at most 2 at three or more. Then -1 for high ambient-convention load, meaning unstated context from the source's preliminaries the theorem silently depends on. **Hard cap: if the route needs a genuinely new framework, this is 1.** Long is fine, novel is not: a twenty-page proof of locally routine steps beats a three-page proof turning on one new idea. This inverts the usual intuition and is the most counterintuitive rule here.
+
+**V1 statement determinacy, 0-6.** Weighted heaviest, because drift is the failure that survives verification: a correct proof of the *wrong* statement passes every local check. One point each for: exactly one reading; the idealization named without ambiguity (the generic group in Maurer's versus Shoup's formulation is the live hazard); quantifier order and asymptotic conventions pinned; the adversary class fully specified; the corruption or composition regime determined or explicitly not applicable; and a **negative control** — you can say in one sentence what a valid-but-vacuous solution looks like. If you genuinely cannot construct one, write exactly "could not construct one" and expect the vacuity deduction.
+
+**V2 refutation affordance, 0-3.** Exact checking at tiny parameters, not a runnable security game. 3 should be rare. +1 a finite instantiation where the statement is decidable by exact computation, and name the parameters. +1 the predicate can be hardened with exact rational arithmetic and admissibility checks. +1 a search-representable object with a scalar score exists.
+
+**V3 formalization reach, 0-3.** +1 a matching tool exists (EasyCrypt, SSProve, CryptHOL, Lean with Mathlib) — but do not score this on Lean alone for measure-theoretic probability over oracle spaces, which is thinly covered. +1 the human-supplied lemma decomposition is cheap to write; score 0 when the decomposition *is* the research content, as with a novel simulator. +1 a machine-checkable witness exists short of a full proof.
+
+**O1 obscurity dividend, 0-4.** The strongest single predictor: open status usually reflects obscurity rather than difficulty. +2 the provenance is an aside — a one-line remark, a conjecture the source states and does not return to. +0 instead for a named conjecture with a tradition. +1 few papers cite it *as an open problem and attempt it*. +1 recent source, narrow subarea.
+
+**O2 source access and fit, 0-3.** +1 the canonical source and all load-bearing prior art are reachable. +1 a bounded compute profile with no open-ended solver call. +1 the proof is expected to run to a few pages as a chain of separately statable lemmas; 0 for a paper-length development with no natural lemma boundaries.
+
+### Risk deductions
+
+Give the magnitude, not the sign. R1 contamination, 2, if the answer plausibly sits in training data — a pre-cutoff source in a well-studied area. Recall raises apparent success and destroys the novelty claim, so it is a deduction even though it makes solving easier. R2 vacuity, 2, if no degenerate reading is nameable or three or more are. R3, 1 per rung above 3. R4, 1, if the refutation predicate is exploitable by degenerate parameters. R5, 1, if fewer than roughly five people could adjudicate a claimed proof.
+
+Where evidence is thin, grade towards *harder than it looks*.
+<!-- /prompt:attackability.system -->
+
+<!-- prompt:attackability.user -->
+The paper is `<<PDF_NAME>>`, <<PAGES>> pages. The conjecture below has already been checked against it and found faithful, so do not re-litigate whether it is really in the paper. Score it.
+
+```json
+<<RECORD>>
+```
+
+The adversarial check said:
+
+```json
+<<VERIFY>>
+```
+
+Work the gates first, in order. If one fires, say which and quote the source; the axes will be ignored.
+
+Otherwise score all eight axes. Before you finish, check three things, because they are where this rubric is most often got wrong:
+
+- Did you name the construction-side dual, even if P1 is 0?
+- Did you name a vacuous reading, or say in those exact words that you could not construct one?
+- If the route needs a genuinely new framework, is P3 exactly 1?
+<!-- /prompt:attackability.user -->
 
 ---
 

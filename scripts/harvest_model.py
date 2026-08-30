@@ -297,6 +297,172 @@ TEX_SCHEMA = _obj({
 })
 
 
+# An attackability score, in the shape scripts/harvest_conjectures.py's
+# derive_attackability() consumes. Eight axes, four gates, five risk
+# deductions. The model supplies only the axis values and the reasoning; P, V,
+# O, the total, the verdict and the band are derived in Python, because a model
+# asked to add up its own scores will make the sum say what it wanted the
+# verdict to be. The rubric these values mean anything against is in
+# prompts/harvest.md, not here.
+
+def _axis(maximum, what, extra=None):
+    props = {
+        "value": {
+            "type": "integer",
+            "description": f"0 to {maximum} inclusive. {what}",
+        },
+        "justification": {
+            "type": "string",
+            "description": "One or two sentences naming what earned or cost each point.",
+        },
+    }
+    props.update(extra or {})
+    return _obj(props)
+
+
+_GATE = _obj({
+    "fires": {"type": "boolean"},
+    "reason": {
+        "type": "string",
+        "description": (
+            "Empty when the gate does not fire. When it does, the reason, "
+            "quoting the source's own words where the source says it."
+        ),
+    },
+})
+
+ATTACKABILITY_SCHEMA = _obj({
+    "statement_paraphrase": {
+        "type": "string",
+        "description": "One sentence: what is being conjectured, in your own words.",
+    },
+    "scout_status": {
+        "type": "string",
+        "enum": ["OPEN", "RESOLVED", "UNCLEAR"],
+        "description": (
+            "Whether the statement, or something implying it, is already in "
+            "the literature. RESOLVED fires the G3 gate."
+        ),
+    },
+    "scout_evidence": {
+        "type": "array",
+        "description": (
+            "What you actually consulted, each tagged READ, RESTATED, BLOCKED "
+            "or MEMORY. Never dress MEMORY as READ. May be empty if the "
+            "harvested paper is the only source you had."
+        ),
+        "items": _obj({
+            "claim": {"type": "string"},
+            "citation": {"type": "string", "description": "Or empty."},
+            "retrieval": {
+                "type": "string",
+                "enum": ["READ", "RESTATED", "BLOCKED", "MEMORY"],
+            },
+        }),
+    },
+    "gates": _obj({
+        "G1_barrier": _GATE,
+        "G2_statement_not_fixed": _GATE,
+        "G3_already_resolved": _GATE,
+        "G4_dual_use": _GATE,
+    }),
+    "P1": _axis(4, "Directionality: is the machine-friendly side the side being asked for?", {
+        "target_side": {"type": "string"},
+        "construction_side_dual": {
+            "type": "string",
+            "description": (
+                "REQUIRED even when the value is 0: one sentence naming the "
+                "object a refuter would build. A lower-bound archive is "
+                "attacked through its duals or not at all."
+            ),
+        },
+    }),
+    "P2": _axis(4, "Ladder quality: settled base case, next rung, generalization hypothesis, short gap.", {
+        "restriction_axis": {"type": "string"},
+        "settled_base_case": {"type": "string", "description": "Or 'none'."},
+        "next_rung": {"type": "string"},
+        "generalization_hypothesis": {
+            "type": "string",
+            "description": "One feature of the base-case proof you expect to survive a rung, or 'none'.",
+        },
+        "rungs_to_target": {"type": "integer"},
+    }),
+    "P3": _axis(4, "Technique proximity and composition depth. Hard cap of 1 if a new framework is needed.", {
+        "candidate_technique": {"type": "string"},
+        "composition_depth": {
+            "type": "integer",
+            "description": "How many source results must be combined. 1 is best.",
+        },
+        "new_framework_required": {"type": "boolean"},
+    }),
+    "V1": _axis(6, "Statement determinacy. Weighted heaviest: drift survives verification.", {
+        "idealization": {
+            "type": "string",
+            "description": (
+                "standard, ROM, QROM, AI-ROM, ideal cipher, AGM, or the "
+                "generic group in Maurer's or Shoup's formulation, named. "
+                "The unnamed generic group variant is the live hazard."
+            ),
+        },
+        "vacuous_reading": {
+            "type": "string",
+            "description": (
+                "One sentence describing a valid-but-vacuous solution. If you "
+                "genuinely cannot construct one, say so in these words: "
+                "'could not construct one'."
+            ),
+        },
+    }),
+    "V2": _axis(3, "Refutation affordance: exact checking at tiny parameters. 3 should be rare.", {
+        "finite_instantiation": {
+            "type": "string",
+            "description": "The parameters at which the statement is exactly decidable, or 'none'.",
+        },
+    }),
+    "V3": _axis(3, "Formalization and adjudication reach.", {
+        "tool": {"type": "string", "description": "EasyCrypt, SSProve, Lean with Mathlib, or 'none adequate'."},
+    }),
+    "O1": _axis(4, "Obscurity dividend. Open status usually reflects obscurity rather than difficulty.", {
+        "provenance_shape": {
+            "type": "string",
+            "description": "An aside in a conclusions section, or a named conjecture with a tradition.",
+        },
+        "source_year": {"type": "integer"},
+    }),
+    "O2": _axis(3, "Source access and campaign fit.", {
+        "expected_proof_pages": {"type": "integer"},
+    }),
+    "risks": _obj({
+        "R1_contamination": {
+            "type": "integer",
+            "description": "0 or 2. The magnitude, not the sign. Pre-cutoff source in a well-studied area.",
+        },
+        "R2_vacuity": {
+            "type": "integer",
+            "description": "0 or 2. No degenerate reading nameable, or three or more.",
+        },
+        "R3_ladder_length": {"type": "integer", "description": "1 per rung above 3, else 0."},
+        "R4_predicate_exploitability": {"type": "integer", "description": "0 or 1."},
+        "R5_expert_scarcity": {
+            "type": "integer",
+            "description": "0 or 1. Fewer than about five people could adjudicate a claimed proof.",
+        },
+        "reasons": {"type": "array", "items": {"type": "string"}},
+    }),
+    "entry_rung": {
+        "type": "string",
+        "description": "Where a campaign would start, in one line. Empty if a gate fires.",
+    },
+    "falsifiable_milestone": {
+        "type": "string",
+        "description": (
+            "Something provable or refutable in under two pages that would "
+            "tell you whether to continue. Empty if a gate fires."
+        ),
+    },
+})
+
+
 class ModelError(RuntimeError):
     """A model call failed in a way the pipeline should record, not crash on."""
 

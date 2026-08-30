@@ -54,6 +54,16 @@ another model:
                   statement that does not build is marked, not shipped
                   quietly.
 
+  6. Score        A fourth call rates how attackable the statement is by an
+                  automated proof campaign, on the eight-axis rubric in
+                  prompts/harvest.md. The model supplies only the axis
+                  values; the total, the verdict and the band are computed
+                  here, because a model asked to add up its own scores makes
+                  the sum agree with the verdict it already had. Written to
+                  attackability.json beside the draft, never into a c/ page:
+                  a draft has no statement id yet, and allocating one is a
+                  separate editorial act. --no-attackability skips it.
+
 Everything the run believed is written next to the output as `harvest.json`
 and `SOURCE.md`: the quotes, their pages, whether each grounded exactly or
 fuzzily, the verifier's checks, and every citation the model could not find
@@ -82,6 +92,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from harvest_model import (  # noqa: E402
+    ATTACKABILITY_SCHEMA,
     EXTRACT_SCHEMA,
     TEX_SCHEMA,
     VERIFY_SCHEMA,
@@ -324,6 +335,183 @@ def fill(template, **fields):
 
 
 # --------------------------------------------------------------------------
+# Attackability
+#
+# The eight axes are judgement and come from the model. Everything derived
+# from them is computed here, for the reason the rubric gives: a model asked
+# to total its own scores will make the sum agree with the verdict it already
+# had in mind. So P, V, O, the total, the verdict and the band are arithmetic,
+# and a disagreement between the model's own guess and this function is a
+# signal worth printing rather than a discrepancy to smooth over.
+#
+# The rubric lives in prompts/harvest.md and the numbers mean nothing without
+# it. It is duplicated there rather than imported from the conjecture-triage
+# skill on purpose: that skill sits under .claude/, which is gitignored, so a
+# fresh clone has the script and not the skill. A scoring pipeline that only
+# works on the machine that happens to have the skill installed is not a
+# pipeline.
+#
+# One caveat that belongs next to the code rather than in a commit message.
+# The rubric is written for scoring in batches of ten with the calibration
+# anchors re-read at the start of each batch, because the scale inflates by
+# about two points per batch otherwise. A harvest run scores one conjecture at
+# a time and cannot re-anchor against its neighbours, so these scores are
+# systematically less comparable than a batch pass over the same corpus. The
+# anchors go into every prompt, which is the only mitigation available here,
+# and the record is stamped `pass: harvest-inline` so it can be told apart
+# from a batch pass afterwards.
+# --------------------------------------------------------------------------
+
+ATTACKABILITY_PASS = "harvest-inline"
+
+# score -> band, reading the same number as difficulty for this harness.
+_BANDS = (
+    (26, "prime"),
+    (22, "reachable"),
+    (18, "stretch"),
+    (15, "hard"),
+    (8, "very hard"),
+    (0, "out of reach"),
+)
+
+
+def _band(total):
+    for floor, name in _BANDS:
+        if total >= floor:
+            return name
+    return "out of reach"
+
+
+def derive_attackability(scored):
+    """Turn one model-supplied axis set into a verdict. Never raises.
+
+    Returns a record with the axes as given, the derived totals, the verdict,
+    the band, and a `flags` list naming every place the input had to be
+    corrected or disbelieved.
+    """
+    flags = []
+
+    def axis(name, maximum):
+        raw = (scored.get(name) or {}).get("value")
+        try:
+            v = int(raw)
+        except (TypeError, ValueError):
+            flags.append(f"{name}: no usable value, read as 0")
+            return 0
+        if v < 0 or v > maximum:
+            flags.append(f"{name}: {v} is outside 0..{maximum}, clamped")
+            return max(0, min(maximum, v))
+        return v
+
+    p1, p2, p3 = axis("P1", 4), axis("P2", 4), axis("P3", 4)
+    v1, v2, v3 = axis("V1", 6), axis("V2", 3), axis("V3", 3)
+    o1, o2 = axis("O1", 4), axis("O2", 3)
+
+    # The hard cap the rubric states in bold: a route needing a genuinely new
+    # framework scores 1 on technique proximity, whatever else is true of it.
+    # Long is fine, novel is not.
+    if (scored.get("P3") or {}).get("new_framework_required") and p3 > 1:
+        flags.append(f"P3: new_framework_required is set, so {p3} is capped to 1")
+        p3 = 1
+
+    # A P1 of 0 with no construction-side dual is the cheat the rubric names
+    # first: a lower-bound archive is attacked through its duals or not at all.
+    if not ((scored.get("P1") or {}).get("construction_side_dual") or "").strip():
+        flags.append("P1: no construction-side dual supplied, which the rubric requires at every value")
+
+    raw_risks = scored.get("risks") or {}
+    risks, deduction = {}, 0
+    for key in ("R1_contamination", "R2_vacuity", "R3_ladder_length",
+                "R4_predicate_exploitability", "R5_expert_scarcity"):
+        try:
+            magnitude = abs(int(raw_risks.get(key) or 0))
+        except (TypeError, ValueError):
+            magnitude = 0
+            flags.append(f"{key}: no usable value, read as 0")
+        risks[key] = -magnitude
+        deduction -= magnitude
+
+    # The vacuity deduction is not optional when no degenerate reading was
+    # nameable: the reading exists and the scorer did not find it.
+    vac = ((scored.get("V1") or {}).get("vacuous_reading") or "").strip().lower()
+    if vac in ("", "could not construct one") and risks["R2_vacuity"] == 0:
+        flags.append("R2: no vacuous reading was named, so the -2 vacuity deduction is applied")
+        risks["R2_vacuity"] = -2
+        deduction -= 2
+
+    p, v, o = p1 + p2 + p3, v1 + v2 + v3, o1 + o2
+    total = p + v + o + deduction
+
+    gates = scored.get("gates") or {}
+
+    def fires(name):
+        return bool((gates.get(name) or {}).get("fires"))
+
+    override = None
+    if fires("G1_barrier") or fires("G4_dual_use"):
+        verdict, band = "NO_GO", "gated"
+    elif fires("G2_statement_not_fixed"):
+        verdict, band = "CONTRACT_REPAIR", "gated"
+    elif fires("G3_already_resolved") or scored.get("scout_status") == "RESOLVED":
+        verdict, band = "SCOUT_ONLY", "gated"
+    else:
+        if total >= 22 and p >= 7 and v >= 7:
+            verdict = "GO"
+        elif total >= 15:
+            verdict = "PROBE"
+        else:
+            verdict = "PARK"
+        if v1 <= 2 and verdict == "GO":
+            verdict, override = "PROBE", "V1 <= 2 caps the verdict at PROBE"
+        if verdict == "PARK" and v2 == 3:
+            verdict, override = "PROBE", "V2 = 3 promotes PARK to PROBE"
+        band = _band(total)
+
+    return {
+        "pass": ATTACKABILITY_PASS,
+        "scored_at": now(),
+        "axes": {"P1": p1, "P2": p2, "P3": p3, "V1": v1, "V2": v2, "V3": v3,
+                 "O1": o1, "O2": o2},
+        "detail": {k: scored.get(k) for k in
+                   ("P1", "P2", "P3", "V1", "V2", "V3", "O1", "O2")},
+        "risks": {**risks, "reasons": raw_risks.get("reasons") or [],
+                  "total_deduction": deduction},
+        "totals": {"P": p, "V": v, "O": o, "TOTAL": total},
+        "verdict": verdict,
+        "band": band,
+        "override_applied": override,
+        "gates": gates,
+        "scout": {"status": scored.get("scout_status") or "UNCLEAR",
+                  "evidence": scored.get("scout_evidence") or []},
+        "statement_paraphrase": scored.get("statement_paraphrase") or "",
+        "entry_rung": scored.get("entry_rung") or "",
+        "falsifiable_milestone": scored.get("falsifiable_milestone") or "",
+        "flags": flags,
+    }
+
+
+def attackability_row(record, slug):
+    """The row this draft would contribute to problems/attackability/index.qmd.
+
+    Pre-rendered here rather than at promotion time, so that promoting a draft
+    is a copy-paste rather than a re-derivation. The statement id is left as a
+    placeholder because a draft has no `c/` id yet: ids are allocated when a
+    draft is promoted, which is a separate editorial act.
+    """
+    a = record["attackability"]
+    title = record["candidate"].get("title") or slug
+    if a["band"] == "gated":
+        cells = ["n/a", "gated", "--", "--", "--", "--"]
+    else:
+        t = a["totals"]
+        cells = [str(t["TOTAL"]), a["band"], str(t["P"]), str(t["V"]), str(t["O"]),
+                 str(a["risks"]["total_deduction"])]
+    verdict = a["verdict"].lower().replace("_", " ")
+    return (f"| [c/XXXX](/c/XXXX/) {title} | " + " | ".join(cells)
+            + f" | {verdict} | {a['scored_at'][:10]} |")
+
+
+# --------------------------------------------------------------------------
 # Checking a candidate
 # --------------------------------------------------------------------------
 
@@ -558,6 +746,71 @@ def write_source_note(folder, record):
         ]
         lines.append("")
 
+    attack = record.get("attackability")
+    if attack:
+        lines += ["## Attackability", ""]
+        if attack.get("error"):
+            lines += [
+                f"Scoring failed: `{attack['error']}`. The draft is unscored; "
+                "everything above it is unaffected.",
+                "",
+            ]
+        else:
+            gated = attack["band"] == "gated"
+            head = ("**Gated: " + attack["verdict"] + "**") if gated else (
+                f"**{attack['totals']['TOTAL']}/31, {attack['band']}, "
+                f"{attack['verdict'].lower().replace('_', ' ')}**")
+            lines += [
+                head,
+                "",
+                "How attackable this is by a bounded automated proof campaign. Not how",
+                "likely it is to be true, not how hard it is for a person, and not how",
+                "important it is. The rubric is in `prompts/harvest.md`; the axis values",
+                "are the model's judgement and everything derived from them is arithmetic",
+                "done by the script.",
+                "",
+                f"Scored `{attack['pass']}`, which matters: the rubric is written for",
+                "batches of ten with the calibration anchors re-read each time, because",
+                "the scale inflates by about two points per batch otherwise. A harvest",
+                "run scores one conjecture with no neighbours to calibrate against, so",
+                "read this as a first opinion rather than a rank.",
+                "",
+            ]
+            if not gated:
+                a_ = attack["axes"]
+                lines += [
+                    "| P1 | P2 | P3 | V1 | V2 | V3 | O1 | O2 | P | V | O | Risk | Total |",
+                    "| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+                    "| " + " | ".join(str(x) for x in (
+                        a_["P1"], a_["P2"], a_["P3"], a_["V1"], a_["V2"], a_["V3"],
+                        a_["O1"], a_["O2"], attack["totals"]["P"], attack["totals"]["V"],
+                        attack["totals"]["O"], attack["risks"]["total_deduction"],
+                        attack["totals"]["TOTAL"])) + " |",
+                    "",
+                ]
+            for name, gate in (attack.get("gates") or {}).items():
+                if gate.get("fires"):
+                    lines += [f"- **{name} fires.** {gate.get('reason', '')}", ""]
+            if attack.get("override_applied"):
+                lines += [f"- Override: {attack['override_applied']}", ""]
+            if attack.get("entry_rung"):
+                lines += [f"- Entry rung: {attack['entry_rung']}", ""]
+            if attack.get("falsifiable_milestone"):
+                lines += [f"- First milestone: {attack['falsifiable_milestone']}", ""]
+            if attack.get("flags"):
+                lines += ["The script corrected or disbelieved the following:", ""]
+                lines += [f"- {f}" for f in attack["flags"]] + [""]
+            if attack.get("table_row"):
+                lines += [
+                    "If this draft is promoted, this is its row for",
+                    "`problems/attackability/index.qmd`, with the statement id filled in:",
+                    "",
+                    "```",
+                    attack["table_row"],
+                    "```",
+                    "",
+                ]
+
     build = record.get("build") or {}
     lines += [
         "## Build",
@@ -740,7 +993,7 @@ def process(pdf_path, backend, prompts, args, ledger):
         return [], "dry-run", doc.sha256
 
     # --- 1. extract -------------------------------------------------------
-    print("  [1/5] reading for open problems...")
+    print("  [1/6] reading for open problems...")
     extracted = backend.complete(
         system=prompts["extract.system"],
         prompt=fill(
@@ -763,7 +1016,7 @@ def process(pdf_path, backend, prompts, args, ledger):
     for r in extracted.get("rejected") or []:
         print(f"          - passed over: {r.get('what', '')[:70]} -- {r.get('why', '')[:70]}")
 
-    written, dropped = [], []
+    written, dropped, scores_written = [], [], []
     run_meta = {"at": now(), "backend": backend.name, "effort": args.effort}
     considered = candidates[: args.max_conjectures]
     over_cap = len(candidates) - len(considered)
@@ -775,7 +1028,7 @@ def process(pdf_path, backend, prompts, args, ledger):
         # --- 2. ground ----------------------------------------------------
         ok, grounding, reasons = check_candidate(cand, doc, strict=not args.lenient)
         exact = sum(1 for g in grounding if g["status"] == "exact")
-        print(f"     [2/5] quotes: {exact}/{len(grounding)} verbatim in the PDF")
+        print(f"     [2/6] quotes: {exact}/{len(grounding)} verbatim in the PDF")
         for g in grounding:
             if g["status"] != "exact":
                 print(f"           {g['status']} ({g['coverage']:.0%}) "
@@ -788,7 +1041,7 @@ def process(pdf_path, backend, prompts, args, ledger):
             continue
 
         # --- 3. verify ----------------------------------------------------
-        print("     [3/5] adversarial check...")
+        print("     [3/6] adversarial check...")
         draft = {k: cand[k] for k in cand if k not in ("why_interesting", "why_clean", "risks")}
         verify = backend.complete(
             system=prompts["verify.system"],
@@ -816,7 +1069,7 @@ def process(pdf_path, backend, prompts, args, ledger):
             continue
 
         # --- 4. typeset ---------------------------------------------------
-        print("     [4/5] writing statement.tex...")
+        print("     [4/6] writing statement.tex...")
         rendered = backend.complete(
             system=prompts["tex.system"],
             prompt=fill(
@@ -855,13 +1108,54 @@ def process(pdf_path, backend, prompts, args, ledger):
         (folder / "statement.tex").write_text(tex + "\n", encoding="utf-8")
 
         # --- 5. compile ---------------------------------------------------
-        print("     [5/5] pdflatex, chktex, lacheck...")
+        print("     [5/6] pdflatex, chktex, lacheck...")
         build = compile_check(folder, no_compile=args.no_compile)
         if build["compiled"] is False:
             print("           ! does not compile -- flagged in SOURCE.md, folder kept")
         elif build["compiled"]:
             noise = len(build.get("chktex") or []) + len(build.get("lacheck") or [])
             print(f"           compiles; {noise} lint warning(s)")
+
+        # --- 6. score attackability ---------------------------------------
+        # Deliberately last: it scores the statement that survived grounding
+        # and the adversarial check, not the one the extractor first drafted.
+        attack = None
+        if not args.no_attackability:
+            print("     [6/6] attackability...")
+            try:
+                scored = backend.complete(
+                    system=prompts["attackability.system"],
+                    prompt=fill(
+                        prompts["attackability.user"],
+                        PDF_NAME=pdf_path.name,
+                        PAGES=doc.pages,
+                        RECORD=json.dumps(cand, indent=2, ensure_ascii=False),
+                        VERIFY=json.dumps(verify, indent=2, ensure_ascii=False),
+                    ),
+                    schema=ATTACKABILITY_SCHEMA,
+                    pdf=doc,
+                    max_tokens=16000,
+                    effort=args.effort,
+                    label="attackability",
+                )
+            except ModelError as exc:
+                # A scoring failure must not cost the conjecture. Everything
+                # above it is already on disk and is the part that matters.
+                print(f"           ! scoring failed ({exc}); draft kept unscored")
+                attack = {"pass": ATTACKABILITY_PASS, "scored_at": now(),
+                          "error": str(exc), "verdict": None}
+            else:
+                attack = derive_attackability(scored)
+                if attack["band"] == "gated":
+                    print(f"           {attack['verdict']} (gated)")
+                else:
+                    tot = attack["totals"]
+                    print(f"           {tot['TOTAL']}/31 {attack['band']}, "
+                          f"{attack['verdict']} "
+                          f"(P {tot['P']} V {tot['V']} O {tot['O']} "
+                          f"R {attack['risks']['total_deduction']})")
+                for flag in attack["flags"]:
+                    print(f"           ! {flag}")
 
         record = {
             "pdf": {"name": pdf_path.name, "sha256": doc.sha256, "pages": doc.pages},
@@ -871,12 +1165,32 @@ def process(pdf_path, backend, prompts, args, ledger):
             "grounding": grounding,
             "verify": verify,
             "build": build,
+            "attackability": attack,
         }
+        if attack is not None:
+            # Injected into `attack` itself rather than into a copy, so that
+            # SOURCE.md and attackability.json show the same row.
+            if attack.get("verdict"):
+                attack["table_row"] = attackability_row(record, folder.name)
+            attack["draft"] = folder.name
+            attack["source"] = {"pdf": pdf_path.name, "sha256": doc.sha256}
+            (folder / "attackability.json").write_text(
+                json.dumps(attack, indent=2, ensure_ascii=False) + "\n",
+                encoding="utf-8",
+            )
         (folder / "harvest.json").write_text(
             json.dumps(record, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
         )
         write_source_note(folder, record)
         written.append(folder)
+        if attack is not None and attack.get("verdict"):
+            scores_written.append({
+                "draft": folder.name,
+                "total": attack["totals"]["TOTAL"],
+                "band": attack["band"],
+                "verdict": attack["verdict"],
+                "pass": attack["pass"],
+            })
         print(f"     -> {folder.relative_to(ROOT)}")
 
     report_verdict(pdf_path, candidates, written, dropped, over_cap)
@@ -889,6 +1203,9 @@ def process(pdf_path, backend, prompts, args, ledger):
         "backend": backend.name,
         "candidates_found": len(candidates),
         "conjectures_written": [str(f.relative_to(ROOT)) for f in written],
+        # One line per kept conjecture, so --report can show the score without
+        # opening every draft folder. None when scoring was skipped or failed.
+        "attackability": scores_written,
         "dropped": [{"title": t, "why": w} for t, w in dropped],
         # The leads the extractor looked at and never promoted, in full. The
         # console line is clipped to fit a terminal, and a paper that yields
@@ -955,8 +1272,16 @@ def do_report():
             print(f"    {found} candidate(s) -> "
                   f"{len(written)} conjecture(s) kept"
                   + ("" if written else "  (NONE CREATED)"))
+        # Score by draft folder name, so a paper that produced several
+        # conjectures shows which one got which rating.
+        scores = {s.get("draft"): s for s in (rec.get("attackability") or [])}
         for w in written:
-            print(f"      created: {w}")
+            s = scores.get(Path(w).name)
+            if s:
+                print(f"      created: {w}  [{s['total']}/31 {s['band']}, "
+                      f"{str(s['verdict']).lower().replace('_', ' ')}]")
+            else:
+                print(f"      created: {w}")
         for d in rec.get("dropped") or []:
             print(f"      dropped: {str(d.get('title'))[:60]} -- {str(d.get('why'))[:80]}")
     waiting = sorted(p for p in HARVEST.glob("*.pdf"))
@@ -989,6 +1314,8 @@ def main():
     ap.add_argument("--keep-unfaithful", action="store_true",
                     help="write folders the adversarial check rejected (marked as such)")
     ap.add_argument("--no-compile", action="store_true", help="skip pdflatex and the linters")
+    ap.add_argument("--no-attackability", action="store_true",
+                    help="skip the attackability score (one model call per kept conjecture)")
     ap.add_argument("--keep", action="store_true",
                     help="leave processed PDFs in latex/harvest/ instead of moving them")
     ap.add_argument("--force", action="store_true",

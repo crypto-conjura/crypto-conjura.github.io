@@ -82,6 +82,39 @@ $\epsilon$-unpredictable source $S$ and every unbounded distinguisher $\mathsf{D
 \]
 \end{conjecture}
 
+\bigskip
+\noindent\textbf{Why this is worth asking, and what in it is new.}
+The bound's \emph{shape} is classical. Writing $n := \log_2 D$, $k := \log_2(1/\epsilon)$,
+$m := \log_2 R$ and $d := \log_2 K$ and balancing each summand against a target error $\delta$
+gives $m = k - 2\log_2(1/\delta)$ and $d = \log_2 n + 2\log_2(1/\delta)$: the parameters of
+Theorem~6.17 of Vadhan's \emph{Pseudorandomness}, which Radhakrishnan and Ta-Shma showed are
+optimal. What is new is the \emph{hypothesis}. Here $\epsilon$-unpredictability bounds
+$\mathbb{E}_{(H,Z)}\bigl[\max_x \Pr[X = x \mid H,Z]\bigr]$, an average over $H$, so the source may
+have no entropy at all on an $\epsilon$-fraction of oracles; and $z$ may be $H$ itself. Classical
+statements quantify per source and conclude with high probability over the extractor, which is not
+the same thing, and the average-min-entropy leftover hash lemma of Dodis, Ostrovsky, Reyzin and
+Smith does not close the gap, since there the side information must be independent of the hash key.
+That the source sees the whole table is not itself the novelty: a union bound over flat sources
+already runs before the source is fixed.
+
+\medskip
+\noindent
+The interest is what the seed costs. Read the game as key derivation --- $x$ a secret with entropy
+but no uniformity, $\sd$ a public salt, $H(\sd,x)$ the derived key --- and three prices are on
+offer, scaling in three different ways. An unsalted random oracle needs no salt, but only because
+it assumes the source cannot look at $H$; drop that and it fails outright, a source returning a
+uniform element of the largest fibre of a single row being distinguished with advantage $1 - 1/R$
+by an adversary making \emph{no query at all}. A $2$-universal family survives such a source, but
+needs $K \ge D/R$, a salt of $n - m$ bits --- Stinson's 1994 seed-length limitation, the second of
+the two that Barak et al.\ open with. This conjecture asks for
+$\log_2 n + 2\log_2(1/\delta) + O(1)$: the second's robustness at essentially the first's price,
+and against an \emph{unbounded} distinguisher, where bounding the adversary's queries instead would
+cost $\log_2 q$ bits. For a Diffie--Hellman element in a $2048$-bit group, min-entropy $256$, a
+$128$-bit derived key and $\delta = 2^{-32}$, that is $77$ bits of salt against $1920$ for a
+universal family, $190$ for the leftover hash lemma's own collision route, and $113$ at a query
+budget of $2^{80}$. The companion note \texttt{lhl-bound.tex} in this folder proves the obstruction
+and works the comparison out.
+
 \begin{remark}[What the leftover hash lemma gives]\label{rem:lhl}
 Condition on the table and the auxiliary output, $(H,Z) = (h,z)$, and write
 $p_x := \Pr[X = x \mid h,z]$. Because $\sd$ is drawn only after $S$ has terminated it is uniform on

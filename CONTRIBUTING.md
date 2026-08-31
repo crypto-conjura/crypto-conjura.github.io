@@ -35,7 +35,9 @@ or relations, so `build_index.py` and `check_relations.py` do not apply.
 
 Every `.tex` here has generated output committed beside it: the statement
 PDFs under `c/<id>/pdf/`, the paper under `projects/uber-groups-rsr/`, and the
-UC book's PDF and its 59-page HTML edition. `scripts/artifact_manifest.py`
+UC book's PDF and its 59-page HTML edition. The same applies to the Lean
+packages, whose syntax-highlighted reading copies live at
+`c/<id>/lean/html/`. `scripts/artifact_manifest.py`
 records the hash of each artifact's inputs beside the hash of its outputs, and
 `--check` fails when they diverge, in either direction: a source edited
 without a rebuild, or a generated file edited by hand.
@@ -50,6 +52,21 @@ When a `.tex` changes, rebuild the artifact and re-baseline:
 scripts/build_uc_html.sh                          # for the UC edition, ~4 min
 python3 scripts/artifact_manifest.py --update     # then record the new hashes
 ```
+
+When a `.lean` file changes, the reading copy of its package is what goes
+stale, and rebuilding it takes a second:
+
+```
+python3 scripts/build_lean_html.py c/0004/lean    # needs pygments, see below
+python3 scripts/artifact_manifest.py --update
+```
+
+Pygments is the one dependency here that the site build does not have, on
+purpose -- nothing renders these pages at deploy time, they are committed. Get
+it with `python3 -m venv /tmp/cvenv && /tmp/cvenv/bin/pip install pygments` and
+run the script with that interpreter. The script's own header says why this is
+Pygments and not doc-gen4, which would mean building the whole of Mathlib's
+documentation to render 767 lines.
 
 The check never builds anything. CI has no TeX, and `build_uc_html.sh` needs
 TeX Live, `make4ht` and TeX Live's own `dvisvgm`, so it only ever reports that

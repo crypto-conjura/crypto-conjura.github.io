@@ -32,6 +32,7 @@ gate that cannot run locally is a gate that only fails in CI.
 import argparse
 import hashlib
 import json
+import os
 import pathlib
 import re
 import sys
@@ -43,8 +44,10 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 MANIFEST = ROOT / "artifacts.json"
 
 # Source suffixes that actually change a build's output. A stray .log or .aux
-# in a latex/ folder is build litter, not an input.
-SOURCE_SUFFIXES = {".tex", ".cls", ".sty", ".bib", ".bst"}
+# in a latex/ folder is build litter, not an input. `.lean` and `.toml` are
+# here for the Lean reading copies below, and add nothing to the LaTeX
+# artifacts: no `.lean` or `.toml` file lies under any of their input globs.
+SOURCE_SUFFIXES = {".tex", ".cls", ".sty", ".bib", ".bst", ".lean", ".toml"}
 
 
 def artifacts():
@@ -78,6 +81,16 @@ def artifacts():
         ["projects/uber-groups-rsr/pdf/*.pdf", "projects/uber-groups-rsr/latex/**/*"],
         "cd latex/papers/uber-groups-rsr && pdflatex main.tex, then copy source and PDF into projects/uber-groups-rsr/",
     ))
+    for d in sorted((ROOT / "c").glob("0*")):
+        page = d / "lean" / "html" / "index.html"
+        if not page.exists():
+            continue
+        out.append((
+            f"c/{d.name}/lean/html",
+            lean_inputs(d / "lean"),
+            [f"c/{d.name}/lean/html/*"],
+            f"python3 scripts/build_lean_html.py c/{d.name}/lean   # needs pygments",
+        ))
     book = book_inputs()
     out.append((
         "surveys/uc-for-gamers/pdf",
@@ -92,6 +105,34 @@ def artifacts():
         "scripts/build_uc_html.sh   # ~4 minutes; needs TeX Live, make4ht, TeX Live's dvisvgm",
     ))
     return out
+
+
+def lean_inputs(pkg):
+    """Globs for the files a Lean package's HTML reading copy is built from.
+
+    Explicit paths rather than `c/<id>/lean/**/*.lean`, because `**` in
+    pathlib walks dot-directories: `.lake/` is ~7 GB of fetched Mathlib, and
+    hashing it on every run of a CI gate is not a thing to do by accident.
+
+    `lakefile.toml` is watched along with the sources because the page's header
+    quotes the pinned Mathlib revision. `lean-toolchain` is not, having no
+    suffix to match; in practice it never moves alone, since
+    `mathlib-update-action` bumps the revision in both files together.
+    """
+    rel = pkg.relative_to(ROOT).as_posix()
+    globs = []
+    for dirpath, dirnames, filenames in os.walk(pkg):
+        # Pruned in place: filtering after an rglob would still have walked
+        # every one of Mathlib's ~8,300 files first.
+        dirnames[:] = [d for d in dirnames if not d.startswith(".")]
+        here = pathlib.Path(dirpath).relative_to(pkg)
+        for f in sorted(filenames):
+            if f.endswith(".lean"):
+                globs.append(f"{rel}/{(here / f).as_posix()}")
+    globs.sort()
+    if (pkg / "lakefile.toml").exists():
+        globs.append(f"{rel}/lakefile.toml")
+    return globs
 
 
 def book_inputs():

@@ -2,8 +2,8 @@
 id: "0010"
 problem: split-source-decomposition
 draft: split-decomp
-title: "Decomposition into Bit-Fixing Mixtures for Two Split Unpredictable Random-Oracle Sources"
-short_title: "Split-source decomposition"
+title: "Parallel Presampling: From Split Auxiliary Input to Split Bit-Fixing"
+short_title: "Parallel presampling"
 areas: [idealized-models, information-theoretic, foundations]
 topics: [randomness-extraction, multi-source-extractors, random-oracle-model]
 model: rom
@@ -21,8 +21,8 @@ difficulty:
   reach: new-idea
   by: ai
   note: "Presampling is a single-preprocessing-stage technique and no published argument runs it across parties that read the oracle independently; the paper raising the question reaches its bounds by compression instead, and compression is what stalls on the constructions the decomposition is wanted for."
-status_summary: "Open for a query budget of two or more: whether a random oracle decomposes into bit-fixing mixtures when the advice is produced by two sources that never communicate. Proved and tight at q = 0, and proved at q = 1 under an extra hypothesis."
-status_updated: 2026-08-19
+status_summary: "Open at every ell >= 2: whether each of ell parallel preprocessing stages can mark its own short list of oracle points, using the whole oracle but only its own leakage and coins, so that the union is indistinguishable from the real oracle to the online adversary. Two consequences are proved from it here -- any ordinary bit-fixing bound transfers to parallel preprocessing, and a random oracle extracts from ell independent unpredictable sources. The deterministic case is immediate; the content is in the private coins."
+status_updated: 2026-09-01
 relations: []
 lean:
   mode: none
@@ -31,8 +31,8 @@ sources:
   - {cite: "Coretti, Dodis, Guo, Steinberger, Random Oracles and Non-Uniformity, EUROCRYPT 2018, pp. 227-258", url: "https://eprint.iacr.org/2017/937"}
   - {cite: "Dodis, Guo, Katz, Fixing Cracks in the Concrete: Random Oracles with Auxiliary Input, Revisited, EUROCRYPT 2017, pp. 473-495", url: "https://doi.org/10.1007/978-3-319-56614-6_16"}
   - {cite: "Unruh, Random Oracles and Auxiliary Input, CRYPTO 2007, pp. 205-223", url: "https://doi.org/10.1007/978-3-540-74143-5_12"}
-revision: 2
-statement_sha: "d1225bdb3f14f264b00dac8ed16e85ac1c61eef980fa3dd03ef5eb4580261fdc"
+revision: 6
+statement_sha: "218a195abd32c1659b2a07d422747a36574f1ca7f9644ed271673319b434727c"
 status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-legend/index.html#status-legend' class='cj-status-link' aria-label='Statement: AI-written, not yet formalized. Proof: open -- no attempt yet. Click for the status badge legend.'><svg class='cj-status-badge' viewBox='0 0 32 32' width='28' height='28' xmlns='http://www.w3.org/2000/svg' role='img'><circle cx='16' cy='16' r='13' fill='none' stroke-width='4' class='cj-ring-0' stroke-dasharray='1,3'/><circle cx='16' cy='16' r='8' class='cj-disc-0'/><text x='16' y='17' text-anchor='middle' dominant-baseline='central' class='cj-glyph' font-size='9'>–</text></svg></a>"
 ---
 
@@ -46,7 +46,7 @@ status_badge: "<a href='https://crypto-conjura.github.io/open-problems/status-le
 <div class="cj-tags cj-page-topics"><a class="cj-tag cj-tag-topic" href="/problems/by-topic/multi-source-extractors/">Multi Source Extractors</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/random-oracle-model/">Random Oracle Model</a><a class="cj-tag cj-tag-topic" href="/problems/by-topic/randomness-extraction/">Randomness Extraction</a></div>
 <!-- topics:end -->
 
-Two parties each read an entire random function and each output one input point, together with a little leakage about the function. They never communicate, and neither party's point can be guessed by anyone who sees all of the leakage and the whole function. The conjecture says that, given the leakage, the random function is then close to a mixture of functions fixed in advance on a short list of points, where the list is chosen without any knowledge of the two parties' points.
+Several parties read an entire random function, without communicating and on independent coins, and each writes down a short string. An online adversary is then given all the strings and a bounded number of queries to the function. The conjecture says that each party can, on its own, mark a short list of points of the function, so that the online adversary cannot tell the real function from one fixed in advance on all the lists together and fresh everywhere else. Because the parties mark points of the same function, no two lists disagree where they overlap, so no arbitration is needed.
 
 ::: {.panel-tabset}
 
@@ -54,20 +54,31 @@ Two parties each read an entire random function and each output one input point,
 
 [View PDF](pdf/main.pdf) · [LaTeX source](latex/main.tex) · Formal statement — *not yet formalized*
 
-Fix $N, M \in \mathbb{N}$ and let $\mathsf{Fun} := \{f : [N] \times [N] \to [M]\}$, with $H \gets_{\$} \mathsf{Fun}$. The oracle's domain is a pair of coordinates, one produced by each source. Write $\sigma_1, \sigma_2$ for bounds on the leakage each source outputs, $\sigma := \sigma_1 + \sigma_2$, and $\sigma' := \sigma + 2\log N$. Let $\delta \in (0,1]$ be the unpredictability parameter, $q$ the observer's query budget and $q^{+} := q + 1$, $P$ the number of points a mixture may fix, and $\gamma \in (0,1)$ an additive slack. All algorithms are computationally unbounded; only queries are counted.
+The statement below is the conjecture and its prerequisites, and nothing else. The development (the two models, both consequences with proofs, the conflicting-list variants, the entropy bookkeeping, and the comparison with the compression bound) is a separate document: [parallel-presampling.pdf](pdf/parallel-presampling.pdf) · [LaTeX source](latex/parallel-presampling.tex).
 
-A pair $(S_1, S_2)$ is **split** when the two sources use independent coins and neither sees the other's output, and **$\delta$-unpredictable** when no predictor given $H$ and the whole leakage vector guesses either point with probability more than $\delta$.
+Fix $\ell \geq 2$ and $N, M \in \mathbb{N}$, and let $\mathsf{Fun} := \{f : [N] \to [M]\}$. Write $S_i$ for the advice length of stage $i$, $P_i$ for its presampling budget, $P := \sum_i P_i$, and $\gamma \in (0,1)$ for an additive slack. All algorithms are computationally unbounded; only queries are counted.
 
-**Conjecture.** There are absolute constants $c, C$ such that for all $N$ and $M$, every split $\delta$-unpredictable pair $(S_1, S_2)$ with leakage bounded by $\sigma_1, \sigma_2$, every $P \in \mathbb{N}$ and every $\gamma \in (0,1)$, there is a family
-$$\mathcal{Y} = \{Y_{f,\zeta}\}, \qquad f \in \mathsf{Fun}, \quad \zeta \in \{0,1\}^{*} \times \{0,1\}^{*},$$
-depending only on $S_1$, $S_2$, $P$ and $\gamma$, in which every $Y_{f,\zeta}$ is a $P$-mixture consistent with $f$, such that for every $q \in \mathbb{N} \cup \{0\}$ and every $q$-query challenge-oblivious observer $D$,
-$$\mathsf{Adv}_{\mathcal{Y},D} \;\leq\; \frac{c(\sigma' + \log \gamma^{-1})\, q^{+}}{P} \;+\; C\sqrt{\sigma'\, q^{+}\, \delta} \;+\; \gamma.$$
+A **split preprocessing** is a tuple of randomized maps $f_i : \mathsf{Fun} \times \mathcal{R}_i \to \{0,1\}^{S_i}$, written $z_i = f_i(F; r_i)$. Each stage reads the whole of $F$ and draws its own coins; the coins are mutually independent, and no stage sees another's coins or output. This is the preprocessing of a split attacker against the **split auxiliary-input** oracle, which hands $F$ separately to each of the $\ell$ parties and answers online by $F$ itself; the conjecture's purpose is to replace it by the **split bit-fixing** oracle, which instead accepts from party $i$ a list of at most $P_i$ query/answer pairs and answers online from the merged lists where defined and from a fresh table elsewhere.
 
-Three parts of the quantification are the statement rather than decoration.
+A **split selector tuple** is a tuple of maps $\Lambda_i(F, z_i, r_i) = (I_i, a_i)$ with $|I_i| \leq P_i$, each reading the whole oracle but only stage $i$'s own leakage and coins. It is **consistent** when $a_i = F|_{I_i}$. Write $Y[\Lambda]$ for the function fixed to those values on $I := \bigcup_i I_i$ and independently uniform elsewhere.
 
-- **The family is indexed by the oracle as well as the leakage.** This is the one departure from the classical single-source lemma, where it is indexed by the advice alone, and it is what permits a single *joint* decomposition rather than one per source. It may not be chosen using the sources' points, which is why the index set is $\mathsf{Fun} \times (\{0,1\}^{*})^{2}$ and nothing larger.
-- **The family is chosen before $q$.** It comes after $P$ and $\gamma$ but before the observer's budget, so no part of it may be tuned to that budget. Relaxing this makes the statement easier in a way the intended applications cannot use.
-- **Consistency with $f$ is essential.** It keeps the fixed values compatible with the leakage the observer already holds.
+**Conjecture.** There is an absolute constant $c$ such that for all $\ell \geq 2$, all $N$ and $M$, all split preprocessings $f_1, \dots, f_\ell$ with output lengths $S_1, \dots, S_\ell$, all $P_1, \dots, P_\ell$ and all $\gamma \in (0,1)$, there is a consistent split selector tuple depending only on those data such that, writing
+$$\Delta(T) \;:=\; c\,T \sum_{i=1}^{\ell} \frac{S_i + \log \gamma^{-1}}{P_i},$$
+for every $T$ and every distinguisher $D$ taking a tuple of strings and making at most $T$ queries, drawing $X \gets_{\$} \mathsf{Fun}$, then the coins, setting $z_i := f_i(X; r_i)$, and drawing $Y[\Lambda]$ without resampling $X$, $\mathbf{z}$ or $\mathbf{r}$:
+$$\bigl| \Pr[D^{X}(\mathbf{z}) = 1] - \Pr[D^{Y[\Lambda]}(\mathbf{z}) = 1] \bigr| \;\leq\; \Delta(T) + \gamma,$$
+and $\Pr[D^{X}(\mathbf{z}) = 1] \leq 2^{\Delta^{+}(T)} \Pr[D^{Y[\Lambda]}(\mathbf{z}) = 1] + 2\gamma$, where $\Delta^{+}$ doubles each $\log \gamma^{-1}$.
+
+Five parts of the quantification are the statement rather than decoration.
+
+- **The selectors are split.** Each reads the whole oracle but only its own leakage and its own coins. Running the single-source selector on each $z_i$ separately and taking the union provably fails, so a proof must do something the parallel structure does not hand it.
+- **Randomization is the whole content.** If the stages were deterministic there would be nothing to prove: one stage could recompute the others' advice from the oracle and invoke the single-source reduction. Unpredictable advice strengthens the challenge rather than easing it, which is why no unpredictability hypothesis is assumed.
+- **The tuple is chosen before $T$ and before $D$.** It comes after the budgets and $\gamma$, so no part of it may be tuned to the query budget.
+- **Consistency.** Each selector fixes its points to the values the oracle actually takes there. That is what makes the lists compatible where they overlap, so no arbitration rule is needed and the statement is symmetric in the stages.
+- **The shape of the error term is extrapolated.** That the stages contribute a sum of per-stage terms, each of the single-source shape, is what one gets by charging nothing for the interaction between them. Nothing establishes it beyond $\ell = 1$, and a different true form would leave the consequences structurally intact while changing every bound they produce.
+
+**What follows from it,** proved in the development document: any application secure in the **ordinary** bit-fixing model at budget $P$ against $(S, T, p)$-attackers is secure against split attackers in the split auxiliary-input model, at an additive cost $2\Delta(T^{\mathrm{comb}}) + 2\gamma$, so existing bit-fixing bounds transfer with no new analysis; and, running that transfer on one application, a random oracle extracts from $\ell$ independent unpredictable sources, with advantage $O(\ell\sqrt{S q^{+} \nu})$ for a $q$-query observer. That second consequence is the application the decomposition question was raised for; it is known unconditionally by compression, with an incomparable bound, and what is new is the route.
+
+**A different statement for the same setting.** Through revision 3 this page carried a *joint mixture* conjecture: the parties output points, the mixture is chosen with every leakage in hand but forbidden the points, and the observer is challenge-oblivious. Neither statement is known to imply the other, and they differ in three places at once. The campaign recorded beside this page attacks that one, where the query-free case is proved and tight at $\ell = 2$ and the one-query case is proved under an extra hypothesis; it is set out in the development document. Nothing is proved of the conjecture above.
 
 ### Sources
 

@@ -1,5 +1,17 @@
 # c/0010 — split-decomposition campaign: what is proved, and what is left
 
+> **Scope note, 1 September 2026.** The page's statement was replaced that day (revision 4).
+> It now carries the **parallel form** of the conjecture, in which each stage marks its own list
+> from the whole oracle but only its own leakage and coins, whose consequences are a transfer to
+> the ordinary bit-fixing model and, from there, multi-source extraction. **This campaign is
+> not about that statement.** Everything below concerns the **mixture form**, the joint
+> `P`-mixture indexed by the oracle and the leakages but forbidden the points, against a
+> challenge-oblivious observer, which the page carried through revision 3 and which is now
+> recorded in §7 of the statement. The two are not known to imply one another and differ in
+> three places at once, so nothing below transfers to the new headline conjecture and nothing
+> below is invalidated by the change. Everything below is additionally the `ell = 2` case: no
+> result on record has been re-derived for `ell >= 3`.
+
 State as of 27 August 2026, at `e50629a` plus the `kappa-4` arm landing with this file.
 Assembled from a six-lens repo-wide audit (55 items, each adversarially re-checked against the
 files, plus 8 from a completeness critic) and from the three blind-verification passes on record.

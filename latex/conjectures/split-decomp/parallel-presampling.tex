@@ -1,0 +1,1309 @@
+% =====================================================================
+%  CONJURA WORKING DOCUMENT
+%  Parallel presampling: the conjecture, the transfer to the ordinary
+%  bit-fixing model, and multi-source extraction from it. ell stages.
+%  Supersedes parallel-ai-bf.tex and extraction-from-parallel.tex.
+%  Requires conjura-conjecture.cls in the same directory.
+% =====================================================================
+\documentclass{conjura-conjecture}
+
+\runninghead{PARALLEL PRESAMPLING}
+
+\newcommand{\Fun}{\mathsf{Fun}}
+\newcommand{\Adv}{\mathsf{Adv}}
+\newcommand{\Succ}{\mathrm{Succ}}
+\newcommand{\Prob}[1]{\Pr\!\left[#1\right]}
+\newcommand{\Exp}{\mathbb{E}}
+\newcommand{\bits}{\{0,1\}}
+\newcommand{\vz}{\mathbf{z}}
+\newcommand{\vr}{\mathbf{r}}
+\newcommand{\vx}{\mathbf{x}}
+\newcommand{\vl}{\boldsymbol{\ell}}
+\newcommand{\SAI}{\mathsf{SAI\text{-}RO}}
+\newcommand{\SBF}{\mathsf{SBF\text{-}RO}}
+\newcommand{\BF}{\mathsf{BF\text{-}RO}}
+\newcommand{\pre}{\mathsf{pre}}
+\newcommand{\main}{\mathsf{main}}
+\newcommand{\Hmin}{H_{\infty}}
+\newcommand{\Real}{\mathsf{Real}}
+\newcommand{\Dec}{\mathsf{Dec}}
+\newcommand{\Tcomb}{T^{\mathsf{comb}}_{G}}
+\newcommand{\merge}{\mathbin{\triangleright}}
+\newcommand{\Ext}{\mathsf{Ext}}
+
+\begin{document}
+
+\cjkicker{CONJURA WORKING DOCUMENT}
+\cjtitle{Parallel Presampling}
+\cjsubtitle{The conjecture, the transfer to the ordinary bit-fixing
+  model, and multi-source extraction}
+\cjstatus{The conjecture of Section~\ref{sec:lemma} is open at every
+  $\ell \ge 2$ and is stated on its own in \texttt{statement.tex} beside
+  this file, which is the canonical statement; this document is the
+  development. Everything else here is proved from it. The case of
+  deterministic preprocessing is immediate from~\cite{CDGS}
+  (Remark~\ref{rem:det}), so the whole content lies in the private coins.
+  Theorem~\ref{thm:ext} is not a new statement:~\cite[Thm.~3]{CFHS}
+  proves it unconditionally by compression, with an incomparable bound
+  (Remark~\ref{rem:priorart}); what is derived here is the route.}
+\cjcategory{\emph{Idealized Models \& Non-Uniformity}.}
+
+\vspace{0.4em}
+
+\begin{informalconjecture}
+Several parties read an entire random function, without communicating and
+on independent coins, and each writes down a short string. An online
+adversary is then given all the strings and a bounded number of queries to
+the function. The conjecture says that each party can, on its own, mark a
+short list of points of the function, so that the online adversary cannot
+tell the real function from one fixed in advance on all the lists together
+and fresh everywhere else. Because the parties mark points of the
+\emph{same} function, no two lists disagree where they overlap, so no
+arbitration is needed. Two things follow: any bound already proved in the
+ordinary bit-fixing model applies verbatim against parallel preprocessing,
+and a random oracle extracts randomness from any number of independent
+unpredictable sources.
+\end{informalconjecture}
+
+\section{The setting}\label{sec:setting}
+
+Presampling is the standard route to non-uniform security in idealized
+models. A random oracle together with $S$ bits of oracle-dependent advice
+is close to a mixture of oracles fixed on $P$ points and uniform
+elsewhere, at a cost of roughly $ST/P$ against $T$-query
+adversaries~\cite{Unruh,DGK,CDGS}. The technique assumes a \emph{single}
+preprocessing stage, and the reduction carrying a bit-fixing bound back to
+the auxiliary-input model~\cite[Thm.~5]{CDGS} exploits that assumption
+directly: the bit-fixing attacker simulates the one preprocessor
+internally, on a table it samples itself, and can therefore inspect the
+whole of that table together with the whole of the advice before deciding
+which points to fix.
+
+This document asks for the analogue with $\ell \ge 2$ preprocessing stages
+running in parallel: they read the same oracle, use independent private
+coins, and never communicate. The obstruction is not that any one leakage
+is long. It is that no bit-fixing preprocessor can see the other stages'
+leakage, because that leakage depends on private coins it does not hold,
+and the points needing to be fixed are in general a function of all of
+them. If the stages were deterministic there would be nothing to prove,
+since any one of them could recompute the others' outputs from the oracle
+and invoke the single-source reduction (Remark~\ref{rem:det}).
+Randomization is what makes the question a question.
+
+Two consequences are developed, and they are what the conjecture is for.
+Section~\ref{sec:theorem} carries any bound proved in the \emph{ordinary}
+bit-fixing model over to parallel preprocessing, so that existing bounds
+transfer without being reproved. Section~\ref{sec:ext} runs that transfer
+on one application and obtains multi-source extraction: the value of the
+oracle at a tuple of unpredictable points is indistinguishable from
+uniform. That is the application of~\cite[\S1.4]{CFHS}, which raises the
+decomposition question and reaches its own bounds by compression instead
+--- compression being what stalls for non-monolithic constructions such as
+Merkle--Damg\aa{}rd and sponge, and hence the reason to want a
+decomposition route at all.
+
+Two features of the intended statement are worth naming at the outset,
+because both are choices and both could have gone otherwise. First, each
+preprocessor is allowed to choose its list of points using the
+\emph{entire} oracle, not merely its own leakage; this is what lets it fix
+those points to the values the oracle actually takes there, and hence what
+makes the lists automatically compatible
+(Proposition~\ref{prop:noconflict}). Second, the transfer is stated
+against the ordinary bit-fixing model rather than a split one, which is
+legitimate because a split bit-fixing attacker collapses into an ordinary
+one (Proposition~\ref{prop:merge}) and is what makes it useful. Not every
+application can afford that collapse, and extraction is one that cannot
+(Remark~\ref{rem:nomerge}).
+
+\section{Notation and parameters}\label{sec:notation}
+
+For $n \in \mathbb{N}$ write $[n] := \{1,\dots,n\}$, and let $\bits^{*}$
+denote the set of finite binary strings. All logarithms are base two. For
+a finite set $\mathcal{X}$ we write $x \sample \mathcal{X}$ for a uniform
+draw, independent of all others unless stated otherwise. For a random
+variable $W$, $\Hmin(W) := -\log\max_w \Prob{W = w}$ and $H(W)$ is Shannon
+entropy.
+
+An algorithm written $A^{f}$ has adaptive oracle access to $f$ and learns
+nothing about $f$ except through queries. Algorithms are computationally
+unbounded and may be randomized, so that ``algorithm'' may be read
+throughout as ``arbitrary, possibly randomized, function''; only query
+counts are ever bounded. An \emph{absolute constant} does not depend on
+any parameter below. Indices $i$ and $j$ range over $[\ell]$.
+
+Fix throughout:
+\begin{itemize}
+\item $\ell \in \mathbb{N}$ with $\ell \ge 2$, the number of parallel
+  preprocessing stages.
+\item $N, M \in \mathbb{N}$, and $\Fun := \{\, f : [N] \to [M] \,\}$, a
+  function being identified with its table.
+\item $S_1,\dots,S_\ell \in \mathbb{N}$, the advice lengths, and
+  $S := \sum_i S_i$.
+\item $T \in \mathbb{N}$, the online query budget.
+\item $P_1,\dots,P_\ell \in \mathbb{N}$, the presampling budgets, and
+  $P := \sum_i P_i$.
+\item $\gamma \in (0,1)$, an additive slack, and
+  $A_i := S_i + \log\gamma^{-1}$.
+\item $\mathcal{R}_1,\dots,\mathcal{R}_\ell$, the private coin spaces.
+\end{itemize}
+
+\section{The models}\label{sec:models}
+
+An oracle $\mathcal{O}$ has two interfaces, $\mathcal{O}.\pre$ and
+$\mathcal{O}.\main$, the first accessible only before any call to the
+second. We follow~\cite[\S2.2.1]{CDGS} except that $\pre$ is accessed by
+$\ell$ parties.
+
+\begin{definition}[the two oracles]\label{def:oracles}
+\emph{Split auxiliary-input random oracle} $\SAI(N,M)$: samples
+$F \sample \Fun$; outputs $F$ at $\pre$, separately to each of the $\ell$
+parties that query it; answers $x \in [N]$ at $\main$ by $F[x]$.
+
+\emph{Split bit-fixing random oracle} $\SBF(P_1,\dots,P_\ell,N,M)$:
+samples $F \sample \Fun$; accepts at $\pre$, from party $i$, a list $L_i$
+of at most $P_i$ query/answer pairs with distinct queries; answers
+$x \in [N]$ at $\main$ by $(L_1 \merge \cdots \merge L_\ell)[x]$ if $x$
+lies in the domain of some $L_i$, and by $F[x]$ otherwise, where the
+\emph{priority merge} $L_1 \merge \cdots \merge L_\ell$ takes at a point
+$u$ the value $L_i[u]$ for the least $i$ whose list covers $u$.
+
+The merge is used only so that $\main$ is defined on every input. Under
+Conjecture~\ref{conj:main} no two lists disagree and the choice is
+immaterial; Section~\ref{sec:conflict} treats the case where they may.
+\end{definition}
+
+\begin{definition}[split attackers]\label{def:attackers}
+An \emph{$(S_1,\dots,S_\ell,T,p)$-split attacker} is a tuple
+$A = (A^{0}_1,\dots,A^{0}_\ell,A^{1})$ in which
+\begin{itemize}
+\item $A^{0}_i$ interacts with $\mathcal{O}.\pre$, draws private coins
+  $r_i \sample \mathcal{R}_i$, and outputs $z_i \in \bits^{S_i}$; the
+  stages run on \emph{mutually independent} coins and do not communicate;
+\item $A^{1}$ takes $\vz := (z_1,\dots,z_\ell)$, makes at most $T$ queries
+  to $\mathcal{O}.\main$, and meets whatever further restrictions $p$
+  imposes.
+\end{itemize}
+Write $f_i(F;r_i) := z_i$ for the randomized leakage map computed by
+$A^{0}_i$. Taking $S_j = 0$ and $A^{0}_j$ trivial for every $j \ge 2$
+recovers the $(S,T,p)$-attackers of~\cite[Def.~2]{CDGS}.
+\end{definition}
+
+\begin{definition}[applications, advantage, advice restriction]
+\label{def:app}
+Fix maps $\pi_i : \bits^{S_i} \to \bits^{*}$ and put
+$\pi(\vz) := (\pi_1(z_1),\dots,\pi_\ell(z_\ell))$. A
+\emph{$\pi$-restricted application} $G$ in the $\mathcal{O}$-model is
+given by a challenger $\mathsf{C}$ with access to $\mathcal{O}.\main$ that
+receives $\vz$ and interacts with $A^{1}$, which receives $\pi(\vz)$ in
+place of $\vz$; $\mathsf{C}$ outputs a bit and
+\[
+  \Succ_{G,\mathcal{O}}(A) \;:=\;
+  \Prob{\bigl(A^{1}\bigr)^{\mathcal{O}.\main}\!\bigl(\pi(\vz)\bigr)
+  \leftrightarrow \mathsf{C}^{\mathcal{O}.\main}(\vz) = 1} ,
+\]
+the probability over every draw involved, including $F$, the coins $\vr$
+and those of $A^{1}$ and $\mathsf{C}$. For an
+\emph{indistinguishability} application $\Adv_{G,\mathcal{O}}(A) :=
+2|\Succ_{G,\mathcal{O}}(A) - \tfrac12|$; for an \emph{unpredictability}
+application $\Adv_{G,\mathcal{O}}(A) := \Succ_{G,\mathcal{O}}(A)$. $G$ is
+$\bigl((S_1,\dots,S_\ell,T,p),\varepsilon\bigr)$-secure in the
+$\mathcal{O}$-model if $\Adv_{G,\mathcal{O}}(A) \le \varepsilon$ for every
+$(S_1,\dots,S_\ell,T,p)$-split attacker $A$.
+
+The \emph{combination} of $A$ and $\mathsf{C}$ is the single oracle
+algorithm $D$ that takes $\vz$, runs $A^{1}(\pi(\vz)) \leftrightarrow
+\mathsf{C}(\vz)$ forwarding all oracle queries, and outputs $\mathsf{C}$'s
+bit; $\Tcomb$ denotes an upper bound on its query count, the
+\emph{combined query complexity}.
+
+Taking $\pi$ the identity and $\mathsf{C}$ ignoring its input gives the
+ordinary notion, in which the advice goes to the online stage and to
+nobody else. The restriction is carried from the start because one
+application below needs it in both directions at once
+(Remark~\ref{rem:whypi}), and because it costs nothing: only the
+combination $D$ ever appears in a proof, and $D$ reads $\vz$ either way.
+\end{definition}
+
+\section{The parallel decomposition lemma}\label{sec:lemma}
+
+The object the conjecture asks for is a tuple of \emph{selectors}, one per
+preprocessing stage, each reading the whole oracle but only its own
+leakage and its own coins.
+
+\begin{definition}[split selector tuples]\label{def:selector}
+A \emph{split selector tuple} with budgets $(P_1,\dots,P_\ell)$ is a tuple
+of maps
+\[
+\begin{aligned}
+  \Lambda_i &\;:\; \Fun \times \bits^{S_i} \times \mathcal{R}_i
+  \;\longrightarrow\; 2^{[N]} \times [M]^{*}, \\
+  \Lambda_i(F,z_i,r_i) &\;=\; (I_i, a_i),
+\end{aligned}
+\]
+for $i \in [\ell]$, with $|I_i| \le P_i$ and $a_i : I_i \to [M]$. The
+tuple is \emph{consistent} if $a_i = F|_{I_i}$ for every $i$ and all
+inputs, that is, if each selector fixes its points to the values the
+oracle actually takes there.
+
+Given $F$, $\vz$ and $\vr := (r_1,\dots,r_\ell)$, write
+$I := \bigcup_i I_i$ and let $Y[\Lambda]$ denote the random function
+taking the value $(a_1 \merge \cdots \merge a_\ell)[u]$ at each $u \in I$
+and an independent uniform value of $[M]$ at each $u \notin I$. Once
+$(F,\vz,\vr)$ is fixed, $Y[\Lambda]$ is a $P$-bit-fixing source, and
+$|I| \le P$ always.
+\end{definition}
+
+\begin{conjecture}[parallel decomposition]\label{conj:main}
+There is an absolute constant $c$ such that the following holds for all
+$\ell \ge 2$, all $N$ and $M$, all randomized leakage maps
+$f_1,\dots,f_\ell$ with output lengths $S_1,\dots,S_\ell$ and mutually
+independent coins, all $P_1,\dots,P_\ell \in \mathbb{N}$ and all
+$\gamma \in (0,1)$. There is a \emph{consistent} split selector tuple
+$(\Lambda_1,\dots,\Lambda_\ell)$ with budgets $(P_1,\dots,P_\ell)$,
+depending only on $f_1,\dots,f_\ell$, $P_1,\dots,P_\ell$ and $\gamma$,
+such that, writing
+\[
+  \Delta(T) \;:=\; c\,T\sum_{i=1}^{\ell}\frac{A_i}{P_i}
+  \;=\; c\,T\sum_{i=1}^{\ell}\frac{S_i + \log\gamma^{-1}}{P_i} ,
+\]
+the following two bounds hold for every $T \in \mathbb{N}$ and every
+distinguisher $D$ that takes a tuple of strings and makes at most $T$
+oracle queries. Draw $X \sample \Fun$, then $r_1,\dots,r_\ell$
+independently, set $z_i := f_i(X;r_i)$, and draw $Y[\Lambda]$ as in
+Definition~\ref{def:selector} \emph{without} resampling $X$, $\vz$ or
+$\vr$. Then
+\[
+  \Bigl|\, \Prob{D^{X}(\vz) = 1} - \Prob{D^{Y[\Lambda]}(\vz) = 1}\,\Bigr|
+  \;\le\; \Delta(T) + \gamma ,
+\]
+and, with $\Delta^{+}(T)$ denoting $\Delta(T)$ with each
+$\log\gamma^{-1}$ replaced by $2\log\gamma^{-1}$,
+\[
+  \Prob{D^{X}(\vz) = 1}
+  \;\le\; 2^{\Delta^{+}(T)}\cdot\Prob{D^{Y[\Lambda]}(\vz) = 1} + 2\gamma .
+\]
+\end{conjecture}
+
+\begin{remark}[reduction to the known case]\label{rem:reduces}
+Taking $f_j$ constant, so $S_j = 0$, and $P_j = 1$, for every $j \ge 2$,
+the statement is Lemma~1 of~\cite{CDGS} up to the constant $c$, with the
+single difference that $f_1$ is permitted to be randomized. That
+difference is free: Lemma~\ref{lem:randleak} below shows that the entropy
+bookkeeping on which the single-source proof rests survives randomized
+leakage verbatim. The entire content of Conjecture~\ref{conj:main} is
+therefore that the fixed set may be presented as a union
+$I_1 \cup \cdots \cup I_\ell$ whose parts are chosen without reference to
+one another's leakage.
+\end{remark}
+
+\begin{remark}[quantifier order]\label{rem:order}
+The selector tuple is chosen after $P_1,\dots,P_\ell$ and $\gamma$ but
+\emph{before} $T$ and before $D$. Relaxing this makes the statement easier
+in a way neither consequence can use: both fix their query budget only
+after the attacker, and Theorem~\ref{thm:ext} moreover needs one tuple to
+serve two distinguishers at two different budgets.
+\end{remark}
+
+\begin{remark}[why the selectors read the whole oracle]\label{rem:allofF}
+$\Lambda_i$ is given $F$ in full, and not merely $z_i$. This is what makes
+consistency achievable: a selector that knows the table can fix its points
+to the values they actually take. Consistency in turn is what makes the
+lists compatible, which is the whole of
+Proposition~\ref{prop:noconflict}. It is also what the single-source
+construction already does, where the bit-fixing preprocessor picks the
+component of the decomposition containing the table it sampled. The
+selectors are \emph{not} given the other stages' leakage or coins, and
+that restriction, not the input $F$, is where the difficulty lies.
+\end{remark}
+
+\begin{remark}[separate decomposition is not enough, and what replaces it]
+\label{rem:separate}
+The obvious construction --- run the single-source selector on each $z_i$
+separately and take the union --- fails already at $\ell = 2$. Identify
+$[M]$ with $\mathbb{Z}_M$, let $f_1$ draw $u \sample [N]$ and output
+$z_1 := \bigl(u, \sum_{x \ne u} X(x)\bigr)$, let $f_2$ draw
+$v \sample [N]$ and output $z_2 := \bigl(v, \sum_{x \ne v} X(x)\bigr)$,
+both sums in $\mathbb{Z}_M$, and take $f_j$ constant for $j \ge 3$. Each
+leakage constrains $X$ by a single linear equation on $N-1$ coordinates,
+so each conditional source is $(1-\delta)$-dense for $\delta = 1/(N-1)$ ---
+the binding subset is $[N]\setminus\{u\}$, on which the min-entropy is
+$(N-2)\log M$ --- and the single-source selector fixes nothing at all. But
+conditioned on both, and on $u \ne v$, the two equations differ by
+$X(v)-X(u)$, so the two-query $D$ that reads the oracle at $u$ and at $v$,
+both of which its input names, and compares $X(v)-X(u)$ against the
+difference of the leaked sums distinguishes with advantage $1-1/M$ from
+any source uniform on $\{u,v\}$. This is the attack
+of~\cite[\S1.4]{CFHS}.
+
+The example does not contradict the conjecture; it locates what the
+selectors have to do. Setting $I_1 := \{u\}$ and $I_2 := \{v\}$, each
+computable from its own leakage alone, leaves both equations saying the
+same thing about the remaining coordinates, namely a single linear
+constraint on $N-2$ of them, which is $(1-\delta)$-dense for
+$\delta = 1/(N-2)$. Each stage fixes the coordinate its \emph{own} coins
+point at, and the joint structure takes care of itself. Whether that is a
+general phenomenon is exactly what is open.
+\end{remark}
+
+\begin{remark}[the shape of the error term is a guess]\label{rem:shape}
+The single-source lemma of~\cite{CDGS} fixes $\Delta(T)$ only for
+$\ell = 1$. Everything beyond that --- in particular that the $\ell$
+stages contribute a \emph{sum} $\sum_i A_i/P_i$, one term per stage, each
+of the single-source shape --- is extrapolation. It is the form one gets
+by imagining that each stage pays for its own leakage against its own
+budget and that nothing is paid for the interaction between them, and it
+is what makes Theorem~\ref{thm:aibf} degrade by a factor $\ell$ rather
+than worse (Remark~\ref{rem:payoff}). No evidence offered here fixes it. A
+true statement with $\Delta(T) = c\,T\,\phi(\ell)\sum_i A_i/P_i$ for some
+growing $\phi$, or one in which the budgets enter through $\min_i P_i$
+rather than one by one, would leave the structure of every proof below
+intact and change every bound they produce. Readers should treat the
+constant $c$ as the only thing this document is casual about, and the
+functional form as a second thing.
+\end{remark}
+
+\section{The parallel reduction}\label{sec:theorem}
+
+Two elementary facts do the work. The first is why no arbitration between
+the lists is needed; the second is why the hypothesis may be stated in the
+ordinary bit-fixing model, so that no bound has to be reproved.
+
+\begin{proposition}[consistent lists never conflict]\label{prop:noconflict}
+Let $(\Lambda_1,\dots,\Lambda_\ell)$ be consistent, and for a table $F$
+put $L_i := \{(u,a_i(u)) : u \in I_i\}$. Then $L_i$ and $L_j$ agree at
+every point of $I_i \cap I_j$, for every $i$ and $j$, so $\bigcup_i L_i$
+is a well-defined list of at most $P$ query/answer pairs and
+$L_1 \merge \cdots \merge L_\ell = \bigcup_i L_i$.
+\end{proposition}
+
+\begin{proof}
+For $u \in I_i \cap I_j$ consistency gives $a_i(u) = F(u) = a_j(u)$. The
+size bound is $\bigl|\bigcup_i I_i\bigr| \le \sum_i |I_i| \le \sum_i P_i =
+P$.
+\end{proof}
+
+The next proposition is the transfer proper, and it is stated at the level
+of the \emph{split} bit-fixing model, because that is the level at which
+it is true of every application. Only after it does
+Proposition~\ref{prop:merge} collapse $\SBF$ into $\BF$, and
+Section~\ref{sec:ext} is an application for which that last step is
+unavailable.
+
+\begin{proposition}[split auxiliary input to split bit-fixing]
+\label{prop:sbf}
+Assume Conjecture~\ref{conj:main} with constant $c$. Let $G$ be a
+$\pi$-restricted application with combined query complexity $\Tcomb$ and
+let $A = (A^{0}_1,\dots,A^{0}_\ell,A^{1})$ be an
+$(S_1,\dots,S_\ell,T,p)$-split attacker against it, with leakage maps
+$f_1,\dots,f_\ell$, and let $(\Lambda_1,\dots,\Lambda_\ell)$ be the
+consistent selector tuple the conjecture supplies for
+$f_1,\dots,f_\ell,P_1,\dots,P_\ell,\gamma$. Define
+$B = (B^{0}_1,\dots,B^{0}_\ell,B^{1})$ against
+$\SBF(P_1,\dots,P_\ell)$: the preprocessing stages share a table
+$F \sample \Fun$, stage $B^{0}_i$ draws $r_i \sample \mathcal{R}_i$,
+computes $z_i := f_i(F;r_i)$ and $(I_i,a_i) := \Lambda_i(F,z_i,r_i)$,
+presets $L_i := \{(u,F(u)) : u \in I_i\}$ and outputs $z_i$; and
+$B^{1} := A^{1}$. Then
+\[
+  \bigl|\Succ_{G,\SAI}(A) - \Succ_{G,\SBF}(B)\bigr|
+  \;\le\; \Delta(\Tcomb) + \gamma ,
+\]
+\[
+  \Succ_{G,\SAI}(A)
+  \;\le\; 2^{\Delta^{+}(\Tcomb)}\,\Succ_{G,\SBF}(B) + 2\gamma .
+\]
+\end{proposition}
+
+\begin{proof}
+The selector tuple may be used because it depends only on
+$f_1,\dots,f_\ell,P_1,\dots,P_\ell,\gamma$, all of which are determined by
+$A$, and not on $T$, on $\mathsf{C}$ or on $G$ (Remark~\ref{rem:order}).
+$B$ respects the presampling budgets, since $|I_i| \le P_i$, and its online
+stage is $A^{1}$ unchanged, so it meets $T$, the restrictions $p$, and the
+advice restriction $\pi$, all of which constrain the online stage only.
+Its stages share the table $F$, which Definition~\ref{def:attackers} does
+not permit; Proposition~\ref{prop:derand} removes the sharing, and
+Remark~\ref{rem:derandcost} says when that repair may be used and when it
+may not.
+
+\emph{The oracle $B^{1}$ sees is $Y[\Lambda]$.} By
+Proposition~\ref{prop:noconflict} the lists agree where they meet, so the
+preset is $\bigcup_i L_i$, of size at most $P$, and it fixes the oracle to
+$F$'s own values on $I$. Off $I$ the $\SBF$ oracle answers with its own
+internally sampled table, uniform, independent across points and
+independent of $F$, since $F$ enters the experiment only through $\vz$ and
+the lists. Hence, jointly with $\vz$, the oracle offered at $\main$ is
+distributed exactly as $Y[\Lambda]$ with $X := F$. In the $\SAI$-model, by
+contrast, the oracle at $\main$ is the same table the preprocessors read,
+so it is distributed exactly as $X$ with $z_i = f_i(X;r_i)$.
+
+\emph{Applying the conjecture.} Let $D$ be the combination of $A^{1}$ and
+$\mathsf{C}$: it takes $\vz$, makes at most $\Tcomb$ oracle queries and
+outputs a bit. That the challenger reads $\vz$ and the online stage reads
+only $\pi(\vz)$ is immaterial here, and is the only point at which the
+advice restriction could have entered: $D$ is a single oracle algorithm
+taking the tuple $\vz$, which is all Conjecture~\ref{conj:main} requires of
+a distinguisher, and whether $\vz$ reaches it through one part or the other
+does not change the object. The two paragraphs above identify
+\[
+\begin{aligned}
+  \Succ_{G,\SAI}(A) &= \Prob{D^{X}(\vz) = 1}, \\
+  \Succ_{G,\SBF}(B) &= \Prob{D^{Y[\Lambda]}(\vz) = 1} ,
+\end{aligned}
+\]
+and the two bounds of the conjecture at $T := \Tcomb$ are the two claims.
+\end{proof}
+
+\begin{proposition}[a split bit-fixing attacker is a bit-fixing attacker]
+\label{prop:merge}
+Let $B$ be an $(S_1,\dots,S_\ell,T,p)$-split attacker in the
+$\SBF(P_1,\dots,P_\ell)$-model whose preprocessing stages may share
+randomness. There is an $(S,T,p)$-attacker $\widehat{B}$ in the
+$\BF(P)$-model of~\cite[\S2.2.1]{CDGS} with
+$\Succ_{G,\BF}(\widehat{B}) = \Succ_{G,\SBF}(B)$ for every application $G$.
+\end{proposition}
+
+\begin{proof}
+$\widehat{B}^{0}$ draws the shared randomness and all private coin
+strings, runs $B^{0}_1,\dots,B^{0}_\ell$ internally, presets the oracle
+with $L_1 \merge \cdots \merge L_\ell$, which has at most $P$ pairs, and
+outputs $z := z_1\|\cdots\|z_\ell$, of length $S$. $\widehat{B}^{1}$
+parses $z$ and runs $B^{1}$. All stages are computationally unbounded, so
+the internal simulation is free, and every distribution in the two
+experiments coincides. The online stage is unchanged, so $p$ and $T$ are
+met.
+\end{proof}
+
+\begin{theorem}[parallel auxiliary-input to bit-fixing]\label{thm:aibf}
+Assume Conjecture~\ref{conj:main}, with constant $c$. Let
+$P_1,\dots,P_\ell \in \mathbb{N}$ and $\gamma \in (0,1)$, and let $G$ be a
+$\pi$-restricted application with combined query complexity $\Tcomb$.
+\begin{enumerate}
+\item If $G$ is $\bigl((S,T,p),\varepsilon'\bigr)$-secure in the
+  $\BF(P)$-model, then $G$ is
+  $\bigl((S_1,\dots,S_\ell,T,p),\varepsilon\bigr)$-secure in the
+  $\SAI$-model for
+  \[
+    \varepsilon \;\le\; \varepsilon'
+    \;+\; 2c\,\Tcomb\sum_{i=1}^{\ell}\frac{S_i+\log\gamma^{-1}}{P_i}
+    \;+\; 2\gamma .
+  \]
+\item If moreover $G$ is an unpredictability application and
+  $P_i \ge \ell\,c\,(S_i + 2\log\gamma^{-1})\,\Tcomb$ for every $i$, then
+  $\varepsilon \le 2\varepsilon' + 2\gamma$.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+Fix a split attacker $A$ and let $B$ be as in
+Proposition~\ref{prop:sbf}. For an unpredictability application the
+advantage is the success probability, so its first bound gives
+$\Adv_{G,\SAI}(A) \le \Adv_{G,\SBF}(B) + \Delta(\Tcomb) + \gamma$; for an
+indistinguishability application, $2|s-\tfrac12| \le 2|s'-\tfrac12| +
+2|s-s'|$ applied to $s := \Succ_{G,\SAI}(A)$ and $s' := \Succ_{G,\SBF}(B)$
+gives $\Adv_{G,\SAI}(A) \le \Adv_{G,\SBF}(B) + 2\Delta(\Tcomb) + 2\gamma$.
+The larger of the two covers both. By Proposition~\ref{prop:merge} there
+is an $(S,T,p)$-attacker $\widehat{B}$ against $\BF(P)$ with the same
+success probability, hence the same advantage, and security in that model
+gives $\Adv_{G,\SBF}(B) = \Adv_{G,\BF}(\widehat{B}) \le \varepsilon'$.
+That is part~(1).
+
+For part~(2) use the second bound of Proposition~\ref{prop:sbf}. The
+hypothesis makes each of the $\ell$ summands of $\Delta^{+}(\Tcomb)$ at
+most $1/\ell$, so $\Delta^{+}(\Tcomb) \le 1$ and
+$2^{\Delta^{+}(\Tcomb)} \le 2$, whence $\Succ_{G,\SAI}(A) \le
+2\Succ_{G,\SBF}(B) + 2\gamma$, which for an unpredictability application
+is $\Adv_{G,\SAI}(A) \le 2\varepsilon' + 2\gamma$.
+\end{proof}
+
+\begin{proposition}[the shared table is removable]\label{prop:derand}
+Let $B$ be the split attacker built in Proposition~\ref{prop:sbf}, whose
+stages share the table $F$. There is a split attacker $B^{*}$ whose stages
+share nothing, are individually randomized, and satisfy
+$\Succ_{G,\SBF}(B^{*}) \ge \Succ_{G,\SBF}(B)$.
+\end{proposition}
+
+\begin{proof}
+For $F \in \Fun$ let $B_F$ be $B$ with the shared table hardwired into all
+stages, so that $B_F$'s stages share nothing and draw only
+$r_1,\dots,r_\ell$, independently. Then $\Succ_{G,\SBF}(B) =
+\Exp_{F \sample \Fun}[\Succ_{G,\SBF}(B_F)]$, so some $F^{*}$ attains at
+least the mean; take $B^{*} := B_{F^{*}}$. Preprocessing stages are
+computationally unbounded and non-uniform, so hardwiring a table is free.
+\end{proof}
+
+\begin{remark}[hardwiring conditions on a chosen table]\label{rem:derandcost}
+Proposition~\ref{prop:derand} is innocuous for a restriction $p$ that
+constrains only the online stage, which is the case throughout
+Section~\ref{sec:theorem} and in the applications
+of~\cite[\S\S3--4]{CDGS}. It is not innocuous in general: the hardwired
+$F^{*}$ is chosen to \emph{maximise} success, and the stages' outputs are
+thereafter conditioned on that table, so a restriction asserting something
+about the \emph{distribution} of the advice --- unpredictability, say ---
+need not survive. Section~\ref{sec:ext} is exactly such a case, and uses
+the shared-table $B$ directly, which Proposition~\ref{prop:merge} already
+tolerates. Nothing there needs $B$ to be admissible: only the
+identification of the $\SBF$ oracle with $Y[\Lambda]$ is used, and the
+bit-fixing bound is proved on the probability space directly, without
+quantifying over attackers.
+\end{remark}
+
+\begin{remark}[what the theorem buys]\label{rem:payoff}
+The hypothesis of Theorem~\ref{thm:aibf} is security in the
+\emph{ordinary} bit-fixing model, so every bound already proved there
+transfers to $\ell$ parallel preprocessing stages with no new analysis:
+one instantiates $\varepsilon'$ from the existing proof and pays the
+additive term. Applied to the applications of~\cite[\S\S3--4]{CDGS} ---
+one-way functions, pseudorandom generators and functions,
+message-authentication codes, and collision resistance of
+Merkle--Damg\aa{}rd --- it yields the corresponding statements against
+split advice at $S$ and $P$, the additive term degrading by at most a
+factor of $\ell$ relative to the single-stage bound when all
+$P_i = P/\ell$ and all $S_i$ are equal. Not every application enjoys this:
+one whose security depends on a restriction that the collapse of
+Proposition~\ref{prop:merge} destroys must stop at
+Proposition~\ref{prop:sbf} and prove its bit-fixing bound in the split
+model. Extraction is such an application (Remark~\ref{rem:nomerge}).
+\end{remark}
+
+\section{Conflicting lists}\label{sec:conflict}
+
+Consistency is what removes arbitration, and it is worth recording what
+happens without it, since a weaker decomposition lemma may be easier to
+prove. Call a split selector tuple \emph{free} if the $a_i$ are
+unrestricted, and let $\mathsf{Conf}$ be the event that $a_i$ and $a_j$
+disagree at some point of $I_i \cap I_j$, for some $i \ne j$.
+
+\begin{proposition}[conflict accounting]\label{prop:conflict}
+Suppose $(\Lambda_1,\dots,\Lambda_\ell)$ is a free split selector tuple
+satisfying $\Prob{\mathsf{Conf}} \le \eta$ together with the conclusion of
+Conjecture~\ref{conj:main} for $Y[\Lambda]$ conditioned on
+$\overline{\mathsf{Conf}}$. Then Theorem~\ref{thm:aibf} holds with $2\eta$
+added to the bound of part~(1) and $\eta$ to that of part~(2), under any
+merge rule.
+\end{proposition}
+
+\begin{proof}
+Build $B$ as in Proposition~\ref{prop:sbf} but with
+$L_i := \{(u,a_i(u)) : u \in I_i\}$. On $\overline{\mathsf{Conf}}$ the
+merged list is $\bigcup_i L_i$ regardless of the rule, and the oracle at
+$\main$ is $Y[\Lambda]$ conditioned on that event, so the argument runs
+unchanged. Two probabilities that agree on an event of probability at
+least $1-\eta$ differ by at most $\eta$, which for an
+indistinguishability application enters the advantage doubled.
+\end{proof}
+
+\begin{remark}[the three rules, and which to aim for]\label{rem:rules}
+Three regimes are worth distinguishing.
+\begin{itemize}
+\item \emph{Consistency.} $a_i = F|_{I_i}$. Then $\eta = 0$ by
+  Proposition~\ref{prop:noconflict}, the merge rule is irrelevant, and the
+  statement is symmetric in the stages. This is what
+  Conjecture~\ref{conj:main} asks for, and what the single-source
+  decomposition of~\cite{CDGS} already delivers.
+\item \emph{Rare conflict.} A free tuple with $\Prob{\mathsf{Conf}} \le
+  \eta$, costing $2\eta$. This is the right form for a proof that
+  establishes a symmetric statement first and then bounds the overlaps,
+  and it is strictly weaker than consistency.
+\item \emph{Priority.} A free tuple with no bound on $\mathsf{Conf}$, the
+  lemma being stated directly for the priority-merged source. No extra
+  term is incurred, but the price is real and easy to overlook: on
+  $\mathsf{Conf}$ the merged oracle contradicts some $L_j$, hence
+  contradicts the advice $z_j$ was computed against, and it is precisely
+  such contradictions between advice and oracle that an online adversary
+  is built to detect. A lemma proved in this form must already account for
+  that detection inside its own bound; nothing in
+  Section~\ref{sec:theorem} does it for free. The statement also ceases to
+  be symmetric under permutation of the stages.
+\end{itemize}
+Consistency is the one to aim for. It is no harder to ask for in any
+construction where the selectors read the whole oracle
+(Remark~\ref{rem:allofF}), and it is the only one of the three under which
+the conclusion does not depend on an arbitrary tie-break. Some
+applications are indifferent: Section~\ref{sec:ext} goes through under the
+priority rule with no extra term, because its argument never compares the
+oracle against the advice (Remark~\ref{rem:noconsistency}).
+\end{remark}
+
+\section{The role of unpredictable advice}\label{sec:unpred}
+
+It is natural to require that no $z_i$ be guessable from the oracle alone,
+since that is what forces the private coins to matter. The requirement is
+recorded here, together with what it does and does not do.
+
+\begin{definition}[unpredictable advice]\label{def:unpred}
+The tuple $(A^{0}_1,\dots,A^{0}_\ell)$ is \emph{$\delta$-unpredictable} if
+for every predictor $\mathsf{P}$ with unrestricted access to the whole
+table, $\Prob{\mathsf{P}(F) = z_i} \le \delta$ for every $i$, the
+probability being over $F$, the coins of $A^{0}_i$ and those of
+$\mathsf{P}$. Equivalently
+$\Exp_{F}\bigl[\max_z \Prob{z_i = z \mid F}\bigr] \le \delta$.
+\end{definition}
+
+\begin{remark}[the hypothesis is not needed, and marks the hard case]
+\label{rem:det}
+Conjecture~\ref{conj:main} and Theorem~\ref{thm:aibf} are stated without
+it, deliberately. At the opposite extreme, if each $z_i$ is a
+deterministic function of the table --- the case $\delta = 1$ --- the
+theorem is immediate from~\cite{CDGS} and needs no conjecture: stage
+$B^{0}_1$, which reads $F$, recomputes $z_j = f_j(F)$ for every $j \ge 2$
+by itself, applies the single-source selector of~\cite[Lem.~1]{CDGS} to
+$z_1\|\cdots\|z_\ell$ with budget $P_1 := P$, and presets it; every other
+stage outputs $z_j = f_j(F)$ and presets nothing. Small $\delta$ therefore
+\emph{strengthens} the challenge rather than easing it: it is exactly the
+regime in which no stage can reconstruct another's advice. Adding
+Definition~\ref{def:unpred} as a hypothesis would weaken
+Theorem~\ref{thm:aibf} without shortening any step of its proof.
+Section~\ref{sec:ext} supplies its own hypothesis for its own reasons, and
+it is about the \emph{points} the advice encodes
+(Definition~\ref{def:nu}), not about the advice itself.
+\end{remark}
+
+The bookkeeping the single-source proof rests on is unaffected by
+randomized leakage, which is what confines the difficulty to splitness.
+
+\begin{lemma}[entropy bookkeeping for randomized leakage]\label{lem:randleak}
+Let $X \sample [M]^{N}$ and let $Z$ be any random variable on $\bits^{S}$
+jointly distributed with $X$; in particular $Z$ may be $f(X;r)$ for a
+randomized $f$. Put $S_z := N\log M - \Hmin(X \mid Z = z)$. Then
+\[
+\begin{aligned}
+  \Exp_{z \sample Z}\bigl[S_z\bigr] &\;\le\; H(Z) \;\le\; S , \\
+  \Prob{S_Z > S + \log \gamma^{-1}} &\;\le\; \gamma
+  \quad\text{for every } \gamma \in (0,1).
+\end{aligned}
+\]
+\end{lemma}
+
+\begin{proof}
+Since $X$ is uniform,
+\[
+  \Prob{X = x \mid Z = z} \;=\;
+  \frac{M^{-N}\,\Prob{Z = z \mid X = x}}{\Prob{Z = z}}
+\]
+for every $z$ in the support of $Z$, so taking the maximum over $x$,
+\begin{equation}\label{eq:Sz}
+  S_z \;=\; \log \max_{x} \Prob{Z = z \mid X = x} \;-\; \log \Prob{Z = z}.
+\end{equation}
+Each first term is at most $0$, so averaging \eqref{eq:Sz} over
+$z \sample Z$ gives $\Exp_z[S_z] \le -\sum_z \Prob{Z = z}\log\Prob{Z = z}
+= H(Z) \le S$, the last step because $Z$ takes at most $2^{S}$ values. For
+the tail, \eqref{eq:Sz} rearranges to $\Prob{Z = z} = 2^{-S_z}\max_x
+\Prob{Z = z \mid X = x} \le 2^{-S_z}$, whence
+\begin{align*}
+  \Prob{S_Z > S + \log\gamma^{-1}}
+  &\;=\; \sum_{z\,:\,S_z > S + \log\gamma^{-1}} \Prob{Z = z} \\
+  &\;\le\; 2^{S}\cdot 2^{-(S + \log\gamma^{-1})} \;=\; \gamma . \qedhere
+\end{align*}
+\end{proof}
+
+\begin{remark}[deterministic leakage as the equality case]\label{rem:claim4}
+For deterministic $f$ one has $\max_x \Prob{Z = z \mid X = x} = 1$, so
+\eqref{eq:Sz} reduces to $\Prob{Z = z} = 2^{-S_z}$ and both parts of
+Lemma~\ref{lem:randleak} become Claim~4 of~\cite{CDGS}. The lemma is the
+statement that randomization can only help, and it is why
+Remark~\ref{rem:reduces} may assert that the single-source case of
+Conjecture~\ref{conj:main} is known.
+\end{remark}
+
+\begin{remark}[a refinement that fails]\label{rem:effective}
+It is tempting to expect $\delta$-unpredictability to buy a smaller
+budget, on the ground that private coins dilute the advice: if $z$ costs
+$S$ bits of which $\log(1/\delta)$ are the predictor's uncertainty, the
+\emph{effective} leakage should be $S - \log(1/\delta)$, and $P_i$ should
+scale with that rather than with $S_i$. The bookkeeping does not support
+this. Let $X \sample [4]$ and let $Z$ be one bit with
+$\Prob{Z = 0 \mid X = 1} = 1$, $\Prob{Z = 1 \mid X = 2} = 1$ and
+$\Prob{Z = 0 \mid X = 3} = \Prob{Z = 0 \mid X = 4} = \tfrac12$. Then
+$\Prob{Z = 0} = \Prob{Z = 1} = \tfrac12$ and
+$\max_x \Prob{X = x \mid Z = z} = \tfrac12$ for both $z$, so $S_z = 1$ for
+both and $\Exp_z[S_z] = 1 = S$, while
+$\delta = \tfrac14(1+1+\tfrac12+\tfrac12) = \tfrac34$ and
+$S - \log(1/\delta) = 1 - \log\tfrac43 \approx 0.585 < 1$. The average
+min-entropy deficiency is not bounded by the effective leakage, so any
+refinement along these lines needs a different functional of $\delta$, or
+a different argument.
+\end{remark}
+
+\section{Multi-source extraction}\label{sec:ext}
+
+Now let the domain factor as $[N] = [N_1]\times\cdots\times[N_\ell]$, so
+$N = \prod_i N_i$. Stage $i$ outputs
+$z_i = (x_i,\ell_i) \in [N_i]\times\bits^{\sigma_i}$, so that
+$S_i = \lceil\log N_i\rceil + \sigma_i$ and $\sigma := \sum_i \sigma_i$;
+write $\vx := (x_1,\dots,x_\ell)$ and $\vl := (\ell_1,\dots,\ell_\ell)$,
+and take $\pi(\vz) := \vl$. Such a tuple of stages is a \emph{split source
+tuple}: each reads the whole oracle, they run on mutually independent
+coins and never communicate. The extractor is the oracle itself at the
+tuple of points, $F(\vx)$, and the observer sees $\vl$ and a challenge
+value but never $\vx$.
+
+\subsection{Guessing probabilities}\label{sec:delta}
+
+\begin{definition}[single-coordinate guessing probabilities]
+\label{def:delta}
+For $i \in [\ell]$ put
+\[
+  \delta^{\ast}_i \;:=\; \sup_{\mathsf{P}} \Prob{\mathsf{P}(F) = x_i},
+  \qquad
+  \delta_i \;:=\; \sup_{\mathsf{P}} \Prob{\mathsf{P}(F,\ell_i) = x_i},
+\]
+the suprema over all predictors, the probabilities over $F \sample \Fun$,
+the coins $\vr$ and those of $\mathsf{P}$. Both predictors hold the
+\emph{entire} table, so neither is granted or denied oracle queries; only
+the leakage distinguishes them. Write
+$\delta^{\ast} := \max_i \delta^{\ast}_i$ and $\delta := \max_i \delta_i$.
+\end{definition}
+
+The parameter $\delta^{\ast}_i$ is the hypothesis in its informal reading:
+no predictor given access to the full random oracle can guess a source's
+output.
+
+\begin{lemma}[the leakage costs at most its length]\label{lem:leak}
+$\delta^{\ast}_i \le \delta_i \le 2^{\sigma_i}\delta^{\ast}_i$, and
+$\delta_i = \delta^{\ast}_i$ when $\sigma_i = 0$.
+\end{lemma}
+
+\begin{proof}
+The first inequality holds because a predictor may ignore $\ell_i$. For
+the second, write
+\[
+  \delta_i \;=\; \Exp_{F}\Bigl[\, \sum_{\ell} \Prob{\ell_i = \ell \mid F}
+  \;\max_u \Prob{x_i = u \mid F, \ell_i = \ell} \Bigr] .
+\]
+Each summand is at most $\max_u \Prob{x_i = u \mid F}$, since
+\begin{align*}
+  \Prob{\ell_i = \ell \mid F}\,\Prob{x_i = u \mid F,\ell_i=\ell}
+  &\;=\; \Prob{x_i = u,\ \ell_i = \ell \mid F} \\
+  &\;\le\; \Prob{x_i = u \mid F} ,
+\end{align*}
+and there are at most $2^{\sigma_i}$ summands, while $\delta^{\ast}_i$ is
+the expectation over $F$ of that same maximum.
+\end{proof}
+
+\begin{lemma}[the siblings' views are free]\label{lem:sibling}
+For every $i$ and every predictor $\mathsf{P}$, writing
+$W_{-i} := (z_j,r_j)_{j \ne i}$,
+\[
+  \Prob{\mathsf{P}(F,\ell_i,W_{-i}) = x_i} \le \delta_i ,
+  \qquad
+  \Prob{\mathsf{P}(F,W_{-i}) = x_i} \le \delta^{\ast}_i .
+\]
+\end{lemma}
+
+\begin{proof}
+Conditioned on $F$, each pair $(z_j,r_j)$ is a function of $r_j$ alone and
+the $r_j$ are mutually independent, so $(z_i,r_i) \perp W_{-i} \mid F$.
+Conditioning further on $\ell_i$, a function of $(F,r_i)$, preserves this,
+so $x_i \perp W_{-i} \mid (F,\ell_i)$. A predictor's optimal success
+probability against a target is unchanged by extra inputs conditionally
+independent of the target given what it already holds, since the optimum
+is $\Exp[\max_u \Prob{x_i = u \mid \text{inputs}}]$ and the conditional
+law does not move.
+\end{proof}
+
+What the proof actually charges for is not a single coordinate but a
+tuple: a selector must complete the challenge point, and an observer must
+name all of it.
+
+\begin{definition}[tuple guessing probabilities]\label{def:nu}
+\begin{align*}
+  \nu &\;:=\; \max_{i}\ \sup_{\mathsf{P}}
+  \Prob{\mathsf{P}(F,z_i,r_i) = (x_j)_{j \ne i}} , \\
+  \nu^{+} &\;:=\; \sup_{\mathsf{P}} \Prob{\mathsf{P}(F,\vl) = \vx} .
+\end{align*}
+The first is the chance of completing the challenge point from one
+source's \emph{entire} view; the second, of naming all of it from the
+oracle and every leakage.
+\end{definition}
+
+\begin{lemma}[what the tuple parameters are worth]\label{lem:nu}
+$\nu \le \delta^{\ast}_{(2)}$, the second smallest of the
+$\delta^{\ast}_j$, and $\nu^{+} \le \min_j \delta_j$. At $\ell = 2$ these
+read $\nu \le \delta^{\ast}$ and $\nu^{+} \le \min_j \delta_j$. The
+optimal predictor in the first supremum achieves
+$\Exp_F\bigl[\prod_{j \ne i}\max_u \Prob{x_j = u \mid F}\bigr]$.
+\end{lemma}
+
+\begin{proof}
+A predictor may discard all but the $j$-th coordinate of its output, so
+the $i$-th supremum is at most $\min_{j \ne i}\delta^{\ast}_j$ by the
+second part of Lemma~\ref{lem:sibling}; maximising over $i$ gives the
+second smallest, since $\min_{j \ne i}\delta^{\ast}_j$ is the smallest for
+every $i$ except the argmin and the second smallest for that one.
+Likewise $\nu^{+} \le \delta_j$ for each $j$ by the first part, whose
+input vector contains $(F,\vl)$. For the last claim, conditioned on $F$
+the variables $x_j$, $j \ne i$, are mutually independent and independent
+of $(z_i,r_i)$, so the optimal predictor names each coordinate's
+conditional mode.
+\end{proof}
+
+\begin{remark}[$\nu$ is not the product of the $\delta^{\ast}_j$]
+\label{rem:notproduct}
+The expression in Lemma~\ref{lem:nu} is an expectation of a product, where
+$\prod_{j \ne i}\delta^{\ast}_j$ is a product of expectations, and the two
+are not ordered. If the sources are jointly predictable on half the tables
+and jointly unpredictable on the other half, the expectation of the
+product is about $\tfrac12$ while the product of expectations is
+$2^{-(\ell-1)}$. So $\nu = \Theta(\delta^{\ell-1})$ holds when the
+per-table guessing profiles are uncorrelated across the oracle, and $\nu$
+can be as large as $\delta^{\ast}_{(2)}$ when they are not.
+Remark~\ref{rem:ell} takes this up.
+\end{remark}
+
+\subsection{The game, and why the model needs both restrictions}
+\label{sec:game}
+
+\begin{definition}[the extraction application and its experiments]
+\label{def:games}
+$G^{\Ext}$ is the $\pi$-restricted indistinguishability application, for
+$\pi(\vz) = \vl$, in which $\mathsf{C}(\vz)$ draws $b \sample \bits$, sets
+$y := \mathcal{O}.\main(\vx)$ if $b = 1$ and $y \sample [M]$ if $b = 0$,
+sends $y$ to the online stage, receives a bit $b'$ and outputs
+$\llbracket b' = b\rrbracket$. The online stage is an \emph{observer} $D$
+making at most $q$ queries, so $\Tcomb = q+1 =: q^{+}$.
+
+On one probability space --- $X \sample \Fun$ and $\vr$ drawn once,
+$z_i := f_i(X;r_i)$, never resampled --- and for a split selector tuple
+with $Y[\Lambda]$, $I$ as in Definition~\ref{def:selector}, define
+\begin{itemize}
+\item $\Real$: $y := X(\vx)$; output $D^{X}(\vl,y)$;
+\item $\Real_0$: as $\Real$ but $y \sample [M]$;
+\item $\Dec$: $y := Y[\Lambda](\vx)$; output $D^{Y[\Lambda]}(\vl,y)$;
+\item $\Dec_0$: as $\Dec$ but $y \sample [M]$.
+\end{itemize}
+The \emph{extraction advantage} is
+$\kappa(q) := \sup_{D} |\Prob{\Real = 1} - \Prob{\Real_0 = 1}|$, the
+supremum over $q$-query observers; it refers to $\Real$ and $\Real_0$
+only, so it does not depend on $\Lambda$. Writing
+$A := (\Sigma_1,\dots,\Sigma_\ell,D)$ for the split attacker whose
+preprocessing is the sources and whose online stage is $D$, and $B$ for
+the split bit-fixing attacker of Proposition~\ref{prop:sbf}, the identity
+$2|\Succ - \tfrac12| = |\Prob{b'{=}1 \mid b{=}1} - \Prob{b'{=}1 \mid
+b{=}0}|$ gives
+\begin{equation}\label{eq:kappa-is-adv}
+\begin{aligned}
+  \Adv_{G^{\Ext},\SAI}(A)
+  &= \bigl|\Prob{\Real = 1} - \Prob{\Real_0 = 1}\bigr| , \\
+  \Adv_{G^{\Ext},\SBF}(B)
+  &= \bigl|\Prob{\Dec = 1} - \Prob{\Dec_0 = 1}\bigr| .
+\end{aligned}
+\end{equation}
+\end{definition}
+
+\begin{remark}[why the online stage must be restricted]\label{rem:whypi}
+The challenger must know $\vx$ to evaluate the extractor and the observer
+must not, which is why Definition~\ref{def:app} carries $\pi$. Nothing
+would be gained by taking $\pi$ the identity and hoping the restriction is
+harmless: an online stage given $\vx$ queries the oracle there and
+compares, winning with probability $1-1/M$ in the $\SAI$-model \emph{and}
+in the $\SBF$-model, where the challenge is again
+$\mathcal{O}.\main(\vx)$, so the transfer would be true and empty. The
+content of extraction is precisely the gap between what the challenger
+must know and what the adversary may know.
+\end{remark}
+
+\begin{remark}[the split bit-fixing model may not be collapsed]
+\label{rem:nomerge}
+$G^{\Ext}$ is \emph{insecure} in the ordinary bit-fixing model at every
+parameter setting: a single preprocessing stage that produces the advice
+knows every coordinate of $\vx$, so it may fix $\vx$ and preset the oracle
+there to a constant $v$ written into its own description; the online
+stage, equally non-uniform, holds $v$ and outputs
+$\llbracket y = v\rrbracket$, distinguishing with probability $1-1/M$ and
+no queries at all. No leakage is needed for this, so the failure covers
+Corollary~\ref{cor:noleak} as well, and no restriction on the advice
+distribution repairs it, since the offending stage's own view determines
+$\vx$. So Proposition~\ref{prop:merge} and hence
+Theorem~\ref{thm:aibf} are unavailable here: the derivation stops at
+Proposition~\ref{prop:sbf} and proves its bit-fixing bound directly. That
+bound is short, and it is where the independence of the stages is spent.
+Note also, per Remark~\ref{rem:derandcost}, that
+Proposition~\ref{prop:derand} must not be applied: hardwiring a table
+chosen to maximise success leaves $\nu$ unconstrained, and
+Lemmas~\ref{lem:hit}--\ref{lem:bfext} would fail of the derandomized
+attacker. Nothing here needs $B$ to be admissible.
+\end{remark}
+
+\subsection{The three bounds in the bit-fixing world}\label{sec:bf}
+
+Throughout, $(\Lambda_1,\dots,\Lambda_\ell)$ is the selector tuple
+Conjecture~\ref{conj:main} supplies for
+$f_1,\dots,f_\ell,P_1,\dots,P_\ell,\gamma$, and $I_i := I_i(X,z_i,r_i)$,
+$I = \bigcup_i I_i$ are its fixed sets on the probability space of
+Definition~\ref{def:games}.
+
+\begin{lemma}[the fixed set misses the challenge]\label{lem:hit}
+$\Prob{\vx \in I} \le \sum_i P_i\nu = P\nu$.
+\end{lemma}
+
+\begin{proof}
+Fix $i$. Let $\mathsf{P}$ receive $(X,z_i,r_i)$, compute
+$(I_i,a_i) := \Lambda_i(X,z_i,r_i)$ --- it can, since $\Lambda_i$ depends
+only on $f_1,\dots,f_\ell,P_1,\dots,P_\ell,\gamma$ and those three inputs
+--- and output the coordinates $j \ne i$ of a uniformly chosen element of
+$I_i$, or an arbitrary tuple if $I_i$ is empty. If $\vx \in I_i$ then that
+element is $\vx$ with probability at least $1/|I_i| \ge 1/P_i$, and its
+coordinates $j \ne i$ are then $(x_j)_{j \ne i}$, so
+$\Prob{\mathsf{P}(X,z_i,r_i) = (x_j)_{j\ne i}} \ge \Prob{\vx \in I_i}/P_i$,
+which is at most $\nu$ by Definition~\ref{def:nu}. Sum over $i$.
+\end{proof}
+
+\begin{remark}[this is where splitness is spent]\label{rem:onesource}
+Lemma~\ref{lem:hit} is the only step that uses the stages' independence in
+an essential way, and it uses it in a form that has no single-source
+analogue. The selector $\Lambda_i$ is allowed to read $z_i$, hence $x_i$,
+so it knows one coordinate of the challenge point exactly; what it cannot
+do is complete the tuple, and $P_i\nu$ is the cost of the completion. At
+$\ell = 1$ the complementary tuple is empty, so $\nu = 1$ and the lemma is
+vacuous --- the right answer, since extraction from one source is false: a
+source that queries $F$ at its own output point and leaks one bit of the
+answer defeats every admissible family.
+\end{remark}
+
+\begin{lemma}[the observer misses the challenge]\label{lem:query}
+Let $Q$ be the set of points the observer queries. Then
+$\Prob{\vx \in Q} \le q\nu^{+}$ in $\Real_0$, and
+$\Prob{\vx \in Q} \le q\nu^{+} + \Delta(q) + \gamma$ in $\Dec_0$. Both
+hold trivially at $q = 0$, where $Q$ is empty.
+\end{lemma}
+
+\begin{proof}
+In $\Real_0$: let $\mathsf{P}$ receive $(X,\vl)$, draw $y \sample [M]$ and
+the observer's coins, run $D^{X}(\vl,y)$ recording its queries, and output
+a uniformly chosen one. It can run $D$ faithfully because the oracle in
+$\Real_0$ \emph{is} $X$, which it holds in full, and because the challenge
+there is uniform and independent of everything else, so its own draw of
+$y$ has the right law; its execution therefore has the law of the one in
+$\Real_0$ conditioned on $(X,\vx,\vz)$. As $|Q| \le q$,
+$\Prob{\mathsf{P}(X,\vl) = \vx} \ge \Prob{\vx \in Q}/q$, which is at most
+$\nu^{+}$.
+
+In $\Dec_0$ the oracle is $Y[\Lambda]$, whose fixed set depends on $\vr$,
+and a predictor holding only $(X,\vl)$ cannot reconstruct it; the
+conjecture bridges the gap. Let $D'$ take the tuple $\vz$, parse it as
+$(\vx,\vl)$, draw $y \sample [M]$ and the observer's coins, run
+$D(\vl,y)$ forwarding its at most $q$ oracle queries, and output $1$ if
+one of those queries equals $\vx$. It is a $q$-query distinguisher taking
+a tuple of advice strings, which is what Conjecture~\ref{conj:main}
+quantifies over --- that it reads the private part of the advice is
+permitted there, and is the same latitude Proposition~\ref{prop:sbf} uses.
+By construction $\Prob{D'^{X}(\vz)=1}$ and
+$\Prob{D'^{Y[\Lambda]}(\vz)=1}$ are the two probabilities in question, and
+the first bound of the conjecture at $T := q$, with the \emph{same}
+selector tuple --- legitimate because it is fixed before $T$ and before
+the distinguisher (Remark~\ref{rem:order}) --- separates them by at most
+$\Delta(q)+\gamma$.
+\end{proof}
+
+\begin{lemma}[extraction in the split bit-fixing model]\label{lem:bfext}
+Writing $Q$ for the set of points the observer queries in $\Dec_0$,
+\[
+  \bigl|\Prob{\Dec = 1} - \Prob{\Dec_0 = 1}\bigr|
+  \;\le\; \Prob{\vx \in I} + \Prob{\vx \in Q} .
+\]
+\end{lemma}
+
+\begin{proof}
+Condition on $(X,\vz,\vr)$, which fixes $\vx$, $\vl$, the fixed set $I$
+and the fixed values; the two experiments differ only in the challenge. On
+the event $\vx \in I$ bound the difference by $1$; this contributes
+$\Prob{\vx \in I}$. Assume $\vx \notin I$. By
+Definition~\ref{def:selector} the values of $Y[\Lambda]$ off $I$ are
+uniform on $[M]$ and independent across points and of the conditioning, so
+$Y[\Lambda](\vx)$ is uniform and independent of both
+$(Y[\Lambda](u))_{u \ne \vx}$ and $\vl$.
+
+Couple as follows. Draw $Y[\Lambda]$ and an independent $U \sample [M]$,
+and let $\widetilde{Y}$ agree with $Y[\Lambda]$ except that
+$\widetilde{Y}(\vx) := U$. Since the value at $\vx$ is uniform and
+independent of the rest, $\widetilde{Y}$ has the same law as $Y[\Lambda]$
+given the conditioning, so running the observer on $(\widetilde{Y},U)$
+reproduces $\Dec$, whose challenge is the oracle's own value at $\vx$, and
+running it on $(Y[\Lambda],U)$ reproduces $\Dec_0$, whose challenge is an
+independent uniform value. The two executions receive the same input
+$(\vl,U)$ and the same coins, and the two oracles differ only at $\vx$;
+hence they proceed identically up to and including the step before a first
+query at $\vx$, so that event has the same probability in both, and on its
+complement the two outputs agree. Bounding it in $\Dec_0$ and averaging
+over the conditioning gives the claim.
+\end{proof}
+
+\begin{remark}[consistency is not needed]\label{rem:noconsistency}
+Lemma~\ref{lem:bfext} uses only that $|I| \le P$ and that $Y[\Lambda]$ is
+uniform and independent off $I$; the fixed \emph{values} never appear. The
+same is true of Lemmas~\ref{lem:hit} and~\ref{lem:query}, which speak of
+the fixed sets alone. Everything in this section therefore follows from
+the weakening of Conjecture~\ref{conj:main} in which the selector tuple is
+\emph{free} (Section~\ref{sec:conflict}), with no bound whatever on the
+conflict probability and under any merge rule --- the priority regime of
+Remark~\ref{rem:rules}, whose hidden cost is the possibility that the
+merged oracle contradicts the advice. That cost is real for a general
+application; for $G^{\Ext}$ it is not incurred, because the observer's
+only handle on the advice is $\vl$ and the argument never compares the
+oracle against it.
+\end{remark}
+
+\subsection{The extraction theorem}\label{sec:extthm}
+
+\begin{theorem}[multi-source extraction from parallel presampling]
+\label{thm:ext}
+Assume Conjecture~\ref{conj:main} with constant $c$. Let
+$(\Sigma_1,\dots,\Sigma_\ell)$ be a split source tuple with advice lengths
+$S_1,\dots,S_\ell$ and tuple guessing probabilities $\nu, \nu^{+}$. Then
+for every $q \in \mathbb{N}\cup\{0\}$, every $P_1,\dots,P_\ell$ and every
+$\gamma \in (0,1)$,
+\[
+  \kappa(q) \;\le\; 3c\,q^{+}\sum_{i=1}^{\ell}\frac{S_i+\log\gamma^{-1}}{P_i}
+  \;+\; P\nu \;+\; q\nu^{+} \;+\; 3\gamma ,
+\]
+and, optimising, with $C_\ell := 2\sqrt{3c\,\ell(\ell+1)} + \ell + 3$,
+\[
+  \kappa(q) \;\le\; C_\ell\sqrt{S\,q^{+}\,\nu} \;+\; q\nu^{+}
+  \;=\; O\!\left(\ell\sqrt{S\,q^{+}\,\nu}\right)
+\]
+whenever the bound is below one.
+\end{theorem}
+
+\begin{proof}
+Fix a $q$-query observer $D$, so that $\Tcomb = q^{+}$, and let $A$ and
+$B$ be as in Definition~\ref{def:games}. Applying the first bound of
+Proposition~\ref{prop:sbf} to the indistinguishability application
+$G^{\Ext}$, as in the proof of Theorem~\ref{thm:aibf} but without its
+appeal to Proposition~\ref{prop:merge}, and using
+\eqref{eq:kappa-is-adv},
+\[
+\begin{aligned}
+  \bigl|\Prob{\Real{=}1}-\Prob{\Real_0{=}1}\bigr|
+  \;\le\;& \bigl|\Prob{\Dec{=}1}-\Prob{\Dec_0{=}1}\bigr| \\
+  &+\; 2\Delta(q^{+}) + 2\gamma ,
+\end{aligned}
+\]
+and Lemmas~\ref{lem:bfext},~\ref{lem:hit} and~\ref{lem:query} bound the
+first term on the right by $P\nu + q\nu^{+} + \Delta(q) + \gamma$. Since
+$\Delta$ is increasing in $T$ and $q \le q^{+}$, adding gives
+$\kappa(q) \le 3\Delta(q^{+}) + P\nu + q\nu^{+} + 3\gamma$, which is the
+first display.
+
+For the second, choose $P_i := \lceil\sqrt{3cq^{+}A_i/\nu}\,\rceil$, which
+is legitimate even though it depends on $q$: the conjecture supplies a
+tuple for \emph{every} $(P_1,\dots,P_\ell,\gamma)$ and we instantiate it
+at one of them. What Remark~\ref{rem:order} forbids is a tuple depending
+on $T$ or on the distinguisher, and the two applications made above --- at
+$T = q^{+}$ in Proposition~\ref{prop:sbf} and at $T = q$ in
+Lemma~\ref{lem:query} --- use the same tuple. From
+$P_i \ge \sqrt{3cq^{+}A_i/\nu}$,
+\[
+  \frac{3cq^{+}A_i}{P_i} \le \sqrt{3cq^{+}A_i\nu},
+  \qquad
+  P_i\nu \le \sqrt{3cq^{+}A_i\nu} + \nu ,
+\]
+so the first two terms of the first display total at most
+\[
+  2\sqrt{3cq^{+}\nu}\,\sum_i \sqrt{A_i} \;+\; \ell\nu ,
+\]
+and $\sum_i\sqrt{A_i} \le \sqrt{\ell A}$ by Cauchy--Schwarz, where
+$A := \sum_i A_i = S + \ell\log\gamma^{-1}$.
+
+Now put $\gamma := N^{-1} = (\prod_i N_i)^{-1}$. Then
+$\log\gamma^{-1} = \sum_i \log N_i \le S$, so $A \le (\ell+1)S$; and
+$\gamma \le \nu$, because a predictor guessing the complementary tuple
+uniformly already achieves $\prod_{j\ne i}N_j^{-1} \ge \gamma$.
+Collecting,
+\[
+  \kappa(q) \;\le\; 2\sqrt{3c\,\ell(\ell+1)\,Sq^{+}\nu}
+  + (\ell+3)\nu + q\nu^{+} ,
+\]
+and $\nu \le \sqrt{Sq^{+}\nu}$ because $\nu \le 1 \le Sq^{+}$.
+\end{proof}
+
+\begin{corollary}[two sources]\label{cor:two}
+At $\ell = 2$, Lemma~\ref{lem:nu} gives $\nu \le \delta^{\ast}$ and
+$\nu^{+} \le \delta$, so
+$\kappa(q) \le \bigl(6\sqrt{2c}+5\bigr)\sqrt{S q^{+}\delta^{\ast}} +
+q\delta$.
+\end{corollary}
+
+\begin{corollary}[the leakage-free case]\label{cor:noleak}
+If the sources output no public leakage, so that every $\sigma_i = 0$ and
+the observer sees only the challenge value, then
+$\delta_i = \delta^{\ast}_i$ by Lemma~\ref{lem:leak},
+$\nu^{+} \le \min_j\delta^{\ast}_j$ and $\nu \le \delta^{\ast}_{(2)}$,
+whence
+\[
+  \kappa(q) \;\le\; C_\ell
+  \sqrt{\textstyle\bigl(\sum_i \lceil\log N_i\rceil\bigr)\,q^{+}\,
+  \delta^{\ast}_{(2)}} \;+\; q\min_j \delta^{\ast}_j .
+\]
+This is the statement in its plainest form: if no $x_i$ can be guessed
+from the entire random oracle, then $F(x_1,\dots,x_\ell)$ is
+indistinguishable from uniform against $q$ queries.
+\end{corollary}
+
+\begin{remark}[where each hypothesis is used]\label{rem:uses}
+The main term carries $\nu$, controlled by unpredictability given the
+oracle \emph{alone}; the leakage-conditioned parameter enters only through
+$\nu^{+}$ in the additive $q\nu^{+}$, which is unavoidable, since an
+observer holding $\vl$ and $q$ queries can spend them on its best guesses
+at $\vx$. By Lemma~\ref{lem:leak} the two can differ by $2^{\sigma}$, so
+the distinction is not cosmetic once the leakage is long. Of the
+conjecture, only the first (additive) bound is used; the multiplicative
+one has no role, extraction being an indistinguishability application. Of
+the selector tuple, only the budgets $|I_i| \le P_i$, the splitness of the
+selectors (Lemma~\ref{lem:hit}), and the quantifier order, which lets one
+tuple serve two distinguishers at two different query budgets.
+\end{remark}
+
+\section{Discussion}\label{sec:discussion}
+
+\begin{remark}[the statement is known; the route is what is new]
+\label{rem:priorart}
+Theorem~\ref{thm:ext} is not a new statement. \cite[Thm.~3]{CFHS} proves
+multi-source extraction for the monolithic random oracle
+\emph{unconditionally}, for $\ell \ge 2$ arbitrary sources with unbounded
+oracle access that are $\delta$-unpredictable in exactly the sense of
+Definition~\ref{def:delta} --- their predictor reads the whole table and
+holds the source's own leakage --- against a $q_D$-query distinguisher, by
+a compression argument in the manner of~\cite{DGK} combined with the flat
+decomposition of high-min-entropy sources. Their bound is
+\[
+  O\!\left(\sqrt{\ell^{\,\ell+1}\log M\,(\sigma+\ell N_1)\,q_D\,
+  \delta^{\ell}}\right) ,
+\]
+where $N_1$ is the size of a single coordinate's domain, against
+$O(\ell\sqrt{Sq^{+}\nu})$ here, and the two are incomparable. Ours is
+logarithmic in the domain size where theirs carries $\sqrt{N_1}$, and
+carries no $\ell^{\ell}$; theirs is linear in $\delta$ at $\ell = 2$ and
+improves as $\delta^{\ell/2}$, where ours stays a square root of a single
+guessing probability at every $\ell$ (Remark~\ref{rem:ell}).
+
+At $\ell = 2$ the comparison favours the bound here almost everywhere.
+Ours is the smaller once $Sq^{+}\delta^{\ast} \lesssim N_1\log M\,q\delta^{2}$,
+that is, once $\delta \gtrsim S/(N_1\log M)$, and since $\delta \ge 1/N_1$
+always, that threshold sits at or below the floor whenever
+$\log M \gtrsim S$: for short leakage and an output range no smaller than
+the advice, there is no $\delta$ at which theirs is better. Theirs wins
+where the leakage is long or $M$ is small, and, for $\ell \ge 3$, over a
+range that widens with $\ell$.
+
+What is derived here is therefore the \emph{route}, not the conclusion.
+\cite[\S1.4]{CFHS} records that decomposition ``turns out not to be the
+case, at least when these techniques are applied directly in parallel'',
+gives the counterexample of Remark~\ref{rem:separate}, and conjectures
+that ``parallel decomposition is possible under appropriate
+restrictions''. Theorem~\ref{thm:ext} is the first half of what that would
+buy: it confirms that Conjecture~\ref{conj:main}, if true, does deliver
+the extraction bound, and it exhibits the places where splitness has to be
+spent to get it (Lemma~\ref{lem:hit} and Remark~\ref{rem:nomerge}). The
+reason~\cite{CFHS} wants the route in the first place is the \emph{second}
+half --- non-monolithic constructions, where compression stalls --- and
+that is exactly what Remark~\ref{rem:construction} does not cover. Until
+it is covered, the conjecture buys, for extraction, no unconditional
+statement that is not already in~\cite{CFHS}.
+\end{remark}
+
+\begin{remark}[the route does not profit from extra sources]\label{rem:ell}
+The main term is $\sqrt{Sq^{+}\nu}$ at every $\ell$: a square root, of a
+single guessing probability, no matter how many sources there are, with
+only the $O(\ell)$ in $C_\ell$ recording their number.
+\cite[Thm.~3]{CFHS} by contrast reaches $\delta^{\ell/2}$, improving with
+each additional source. The gap is not an artefact of the bookkeeping but
+of what the two proofs charge for. Presampling charges twice, once for the
+fixed set and once for the observer's queries, and each charge is a single
+guessing event; adding sources makes that event harder only through $\nu$,
+and by Remark~\ref{rem:notproduct} that is $\Theta(\delta^{\ell-1})$ only
+when the per-table guessing profiles are uncorrelated across the oracle.
+Even in that best case the bound reads
+$O(\ell\,\delta^{(\ell-1)/2}\sqrt{Sq^{+}})$, still one half-power of
+$\delta$ behind~\cite[Thm.~3]{CFHS}. Whether that half-power is the price
+of the route or of this particular argument, we do not know.
+\end{remark}
+
+\begin{remark}[non-monolithic extractors]\label{rem:construction}
+The motivation in~\cite[\S1.4]{CFHS} for wanting a decomposition route at
+all is that compression stalls for constructions such as
+Merkle--Damg\aa{}rd and sponge, where the extractor is not a single oracle
+call. Theorem~\ref{thm:ext} is proved for the monolithic extractor
+$F(\vx)$ and does not by itself cover those. The obstruction is localised:
+for an extractor $\mathsf{C}^{F}(\vx)$ making $t$ queries one would take
+$\Tcomb = q+t$, and Lemma~\ref{lem:bfext} would need the whole of
+$\mathsf{C}$'s query set, not merely $\vx$, to avoid the fixed set and the
+observer's queries. The first blocks queried are unpredictable for the
+same reason $\vx$ is; the later ones are determined by the answers to the
+earlier ones, and bounding their collision with $I$ needs an argument this
+document does not make. We record this as the natural next step rather
+than as a corollary.
+\end{remark}
+
+\begin{remark}[the companion mixture statement]\label{rem:mixture}
+A different decomposition statement for the same setting is worth
+recording, both because the Conjura page carried it through revision~3 and
+because it is what the campaign in that repository attacks. There the
+parties output \emph{points} $x_i$ together with leakage $z_i$; the object
+asked for is a single \emph{joint} $P$-mixture $Y_{f,\zeta}$, indexed by
+the oracle and all the leakages but \emph{not} by the points, every
+component consistent with $f$; and the observer is
+\emph{challenge-oblivious} by fiat, seeing the leakage and the value
+$H(\vx)$ but never $\vx$. Its conjectured bound, for
+$\sigma' := \sigma + \ell\log N_1$, is
+$c(\sigma'+\log\gamma^{-1})q^{+}/P + C\sqrt{\sigma'q^{+}\delta} + \gamma$,
+and its consequence is extraction of the same shape as
+Theorem~\ref{thm:ext}.
+
+Neither is known to imply the other, and they differ in three places at
+once. The mixture there is joint, chosen with every leakage in hand, where
+the selectors here are split; but it is forbidden the points, where
+$\Lambda_i$ may read its own $x_i$ --- which is why Lemma~\ref{lem:hit}
+must spend splitness to pay $P\nu$ where the mixture form pays $P\delta$
+by that prohibition instead. And its observer is challenge-oblivious by
+definition, where here the restriction belongs to the application
+(Definition~\ref{def:app}) and the conjecture's own distinguisher reads
+everything. What is proved of each also differs: nothing is proved of
+Conjecture~\ref{conj:main}, whereas at $\ell = 2$ the mixture form's
+query-free case is proved and tight and its one-query case is proved up to
+polylogarithmic factors under an extra hypothesis. Those results attach to
+the mixture form, not to Conjecture~\ref{conj:main}.
+\end{remark}
+
+\begin{remark}[what is not claimed]\label{rem:notclaimed}
+Everything after Section~\ref{sec:lemma} is conditional on
+Conjecture~\ref{conj:main}, which is open; the deterministic-preprocessing
+case of that conjecture is immediate from~\cite{CDGS} but is also, by
+Remark~\ref{rem:det}, the case in which the hypothesis of
+Section~\ref{sec:ext} is vacuous, since a source whose output is a
+deterministic function of the oracle has $\delta^{\ast}_i = 1$, and then
+$\nu = 1$ as soon as two sources are deterministic. The interesting regime
+for extraction is therefore exactly the regime in which the conjecture is
+open, and Theorem~\ref{thm:ext} should be read as locating the extraction
+question inside the presampling one, not as settling it.
+\end{remark}
+
+\section{Bibliography}
+
+\begin{conjurabibliography}{9}
+
+\bibitem[CDGS]{CDGS}
+S. Coretti, Y. Dodis, S. Guo, J. Steinberger.
+\emph{Random Oracles and Non-Uniformity}.
+EUROCRYPT 2018; ePrint 2017/937.
+
+\bibitem[CFHS]{CFHS}
+S. Coretti, P. Farshim, P. Harasser, K. Southern.
+\emph{Multi-Source Randomness Extraction and Generation in the
+Random-Oracle Model}.
+ITC 2025, LIPIcs 343, art. 10; ePrint 2025/1258.
+
+\bibitem[DGK]{DGK}
+Y. Dodis, S. Guo, J. Katz.
+\emph{Fixing Cracks in the Concrete: Random Oracles with Auxiliary Input,
+Revisited}.
+EUROCRYPT 2017.
+
+\bibitem[Unruh]{Unruh}
+D. Unruh.
+\emph{Random Oracles and Auxiliary Input}.
+CRYPTO 2007.
+
+\end{conjurabibliography}
+
+\end{document}

@@ -91,13 +91,15 @@ Five parts of the quantification are the statement rather than decoration.
 
 View PDF — *no proof written yet* · LaTeX source — *no proof written yet* · Formal proof — *not yet formalized*
 
-Open for $q \geq 2$. The case $q = 0$ is proved and tight, and $q = 1$ is proved under an extra hypothesis.
+Nothing is proved of the conjecture. It is open at every $\ell \geq 2$, and no case of it, however special, has been settled.
 
-**A single source will not do.** The conjecture is false with one source, and the counterexample is explicit. Take $M$ even, let $S$ draw $x \gets_{\$} [N]$, query $H$ at $x$, and output $x$ together with the one-bit leakage $z := \mathbb{1}[H(x) \leq M/2]$; let $D$ be the $0$-query observer returning $\mathbb{1}[\mathbb{1}[y \leq M/2] = z]$. Then $S$ is $\delta$-unpredictable with $\delta \leq 2/N$, the real experiment outputs $1$ always, and any fixed set of size $P \ll N$ leaves the decomposed experiment near $1/2$.
+**Two consequences are proved from it,** and they are what the conjecture is for. Both are in the [development document](pdf/parallel-presampling.pdf). The first transfers any bound proved in the ordinary bit-fixing model to $\ell$ parallel preprocessing stages, at an additive cost $2\Delta(T^{\mathrm{comb}}) + 2\gamma$. The second runs that transfer on one application and gives multi-source extraction, $\kappa(q) = O(\ell\sqrt{S q^{+} \nu})$. Only the hypothesis is missing in each case.
 
-That fixes what a proof must do. It has to fail visibly when the two sources are replaced by one, and it cannot draw its use of their independence solely from a bound on the probability that the fixed set contains the challenge, since such bounds hold for a single source as well.
+**The deterministic case is not the hard case.** If every stage's advice were a deterministic function of the table, one stage could recompute the others' advice and invoke the single-source reduction, and no conjecture would be needed. That is why unpredictable advice strengthens rather than eases the problem, and why the content sits entirely in the private coins.
 
-**What it would buy.** Conditional on the conjecture, extraction for split unpredictable sources follows: $\kappa(q) \leq (4c + 2C + 4)\sqrt{\sigma'\, q^{+}\, \delta} + q\delta$, so $\kappa(q) = O(\sqrt{\sigma'\, q^{+}\, \delta})$. That implication is proved; only its hypothesis is missing.
+**What a proof has to do.** Running the single-source selector on each stage's leakage separately and taking the union provably fails, by an explicit counterexample due to Coretti, Farshim, Harasser and Southern: two leakages that are individually harmless and jointly reveal a coordinate. A proof must therefore use the parallel structure for something the separate construction does not give it, and the repair in that example, each stage fixing the coordinate its own coins point at, is what suggests the split-selector form the conjecture takes.
+
+**Proof material on record concerns a different statement.** The `campaign/` directory beside this page, its chain of intermediates and its blind-verification passes attack the joint-mixture conjecture this page carried through revision 3, which is set out in §7 of the development document. Neither statement is known to imply the other. None of that work bears on the conjecture above, and none of it is invalidated by the change; the partial solutions themselves were removed from the working tree when the statement was replaced, and survive in git history.
 
 ## Discussion
 
@@ -107,9 +109,10 @@ Presampling assumes a single preprocessing stage. Running it across parties that
 
 ## Open obligations
 
-- [ ] Settle the case $q \geq 2$, or refute it. The two proved cases, $q = 0$ tight and $q = 1$ under an extra hypothesis, are the evidence such as it is.
-- [ ] Discharge the extra hypothesis the $q = 1$ case currently assumes, or show it cannot be dropped.
-- [ ] Formalize the statement in Lean. Nothing exists yet: the split and unpredictability definitions, the $P$-mixture and consistency notions, and the challenge-oblivious observer all need writing before the conjecture itself can be stated.
-- [ ] Check whether the single-source counterexample generalizes to any weakening of the quantifier order, which would say the order is not merely convenient but forced.
+- [ ] Prove or refute the conjecture, at any $\ell \geq 2$. Nothing of it is settled, including no special case of the query budget.
+- [ ] Settle the functional form of the error term for $\ell \geq 2$ stages. That it is a sum of per-stage costs, each of the single-source shape, is extrapolated from $\ell = 1$ and is not established; a different truth would change every bound the consequences produce.
+- [ ] Extend the extraction consequence to non-monolithic extractors (Merkle-Damgård, sponge), which is the half that would buy something the compression route cannot already give. The obstruction is localised: the construction's later query points are determined by the answers to its earlier ones, and bounding their collision with the fixed set is unresolved.
+- [ ] Decide whether the parallel form and the joint-mixture form of §7 imply one another. The extraction bound derived here is at least as strong as the one the mixture form yields, which bears on one direction.
+- [ ] Formalize the statement in Lean. Nothing exists yet: the split preprocessing, the selector tuples and the bit-fixing source all need writing before the conjecture itself can be stated.
 
 :::

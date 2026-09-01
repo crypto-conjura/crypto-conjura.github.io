@@ -63,7 +63,8 @@ nowhere in it — and live only for prose quoting CFHS's rate.
 
 **S2-B. `[CFHS, Lemma 4.3]` does not exist.** It is Lemma 4, item 3, of a three-item lemma titled
 "Numeric inequalities", p. 9. Every citation in that form is unresolvable. This had propagated into
-`c/0010/latex/capping.tex`'s Assumption 4 and is fixed there.
+`c/0010/latex/capping.tex`'s Assumption 4 and was fixed there. That file was removed from the
+working tree on 1 September 2026 and survives only in git history.
 
 **S2-C. The reference number differs between versions.** Lemma 3 cites `[33]` in the ePrint and
 `[34]` in LIPIcs, where `[33]` is **Unruh, CRYPTO 2007** — a different paper, separately

@@ -11,6 +11,17 @@
 > three places at once, so nothing below transfers to the new headline conjecture and nothing
 > below is invalidated by the change. Everything below is additionally the `ell = 2` case: no
 > result on record has been re-derived for `ell >= 3`.
+>
+> **What was removed with it.** Three files went at the same time, for the same reason: they were
+> solutions of a statement the page no longer makes. `latex/solution.tex` was a partial solution
+> proving three unconditional extraction bounds outright, one of them free of the query budget and
+> tight in its dependence on `M`, plus the mixture conjecture itself on a region of `P`, `q` and
+> `M`. `latex/capping.tex` was a self-contained note removing the conjecture's hypothesis on `P` on
+> the region (H2), at the cost of letting the mixture family depend on `q`: a relaxation, not the
+> conjecture. Its final arm had six independent blind referee passes. `revision/` held a
+> prose-revision of `solution.tex` that was never adopted, with its report, concerns and deferred
+> logs. All three are in git history and nowhere else. None of them bore on the parallel form; all
+> of them bore on the mixture form, which is still stated, in §7 of the statement document.
 
 State as of 27 August 2026, at `e50629a` plus the `kappa-4` arm landing with this file.
 Assembled from a six-lens repo-wide audit (55 items, each adversarially re-checked against the
@@ -384,9 +395,13 @@ None of these is a mathematical error; all of them will mislead a reader.
 - The Contract's status line and Progress paragraph, and the public page repeating them, index the
   open region by query budget (`q=0` done, `q=1` conditional, `q≥2` open). The campaign's own
   results are indexed by `P` and `M`.
-- The typeset write-up `c/0010/latex/solution.tex` and its Review-status section: states Theorem E
-  in its superseded form and does not reconcile with the tallies it summarises. The prose-revision
-  deliverable in `c/0010/revision/` was never adopted; `solution.tex` has been edited twice since.
+- The typeset write-up `c/0010/latex/solution.tex`, its prose-revision deliverable in
+  `c/0010/revision/`, and the self-contained note `c/0010/latex/capping.tex` were **removed from
+  the working tree on 1 September 2026**, when the page's statement was replaced and they ceased to
+  be solutions of anything it asserts. They are in git history and nowhere else; recover with
+  `git show <commit>^:c/0010/latex/solution.tex`. What they contained is recorded in the scope
+  note at the head of this file. The discrepancy they carried (Theorem E stated in its superseded form, not reconciled with
+  the tallies it summarised) is therefore moot.
 - The staged referee package `kappa-2-audit-files/` holds a pre-`#140` artifact and omits r3.
   **Do not reuse it** — build packages fresh, as the last two passes did.
 - Public page: proof score `0` while a typeset partial solution exists; the Proof tab states

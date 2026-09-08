@@ -38,7 +38,7 @@ import re
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-# Repo root, beside conjura.json, and committed: _generated/ is gitignored
+# Repo root, beside aicr.json, and committed: _generated/ is gitignored
 # because everything in it is rebuilt at deploy time, whereas this file *is*
 # the baseline. A manifest CI regenerates before checking proves nothing.
 MANIFEST = ROOT / "artifacts.json"

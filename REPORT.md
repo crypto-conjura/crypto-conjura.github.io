@@ -64,7 +64,7 @@ is not in the prompt's list because it did not exist when the prompt was written
 $ python3 scripts/status_badge.py --check c
 0 file(s) would be updated out of 8 scanned
 $ python3 scripts/build_index.py
-wrote conjura.json (8 statements) / wrote _generated/areas/ (19 files) / 8 leaf/leaves scanned, schema OK
+wrote aicr.json (8 statements) / wrote _generated/areas/ (19 files) / 8 leaf/leaves scanned, schema OK
 $ python3 scripts/check_relations.py
 8 leaf/leaves, relations consistent
 $ python3 scripts/gen_interface.py --check
@@ -498,7 +498,7 @@ for the remaining lemmas, that is a cheap follow-up from this branch.
 
 **Branch** `overnight/09a-license-draft`, 1 commit `d890d70`.
 
-`LICENSE-CODE` (MIT, "Copyright (c) 2026 the Conjura contributors") and
+`LICENSE-CODE` (MIT, "Copyright (c) 2026 the AICR contributors") and
 `LICENSE-CONTENT` (CC BY 4.0), plus a Licensing section in README scoping each.
 Lean artifacts are scoped as code.
 
@@ -508,7 +508,7 @@ first line, and no per-page footer notices were added.
 **This one needs the operator before it can merge.** The last section of
 `LICENSE-CONTENT` says it: imported `.tex` and PDFs under `c/*/latex/`,
 `papers/*/latex/`, `surveys/*/latex/` and `latex/` came from co-authored and
-published work and may carry third-party rights the Conjura contributors
+published work and may carry third-party rights the AICR contributors
 cannot relicense. Nothing in this run can settle that.
 
 ---
@@ -645,7 +645,7 @@ No other integration breakage. Nothing was fixed beyond the conflict itself.
 $ python3 scripts/status_badge.py --check c papers
 0 file(s) would be updated out of 12 scanned
 $ python3 scripts/build_index.py
-wrote conjura.json (9 statements) / wrote _generated/areas/ (19 files) / 9 leaf/leaves scanned, schema OK
+wrote aicr.json (9 statements) / wrote _generated/areas/ (19 files) / 9 leaf/leaves scanned, schema OK
 $ python3 scripts/check_relations.py
 9 leaf/leaves, relations consistent
 $ python3 scripts/gen_interface.py --check
@@ -811,7 +811,7 @@ can do them, and this one did not try.
 
 ### Decisions only you can make
 
-- [ ] **T9a licensing.** Confirm whether the Conjura contributors can license
+- [ ] **T9a licensing.** Confirm whether the AICR contributors can license
       the imported LaTeX under `c/*/latex/`, `papers/*/latex/`,
       `surveys/*/latex/` and `latex/`, or whether those need carving out. The
       draft is written to be safe either way but says "not in force" until you

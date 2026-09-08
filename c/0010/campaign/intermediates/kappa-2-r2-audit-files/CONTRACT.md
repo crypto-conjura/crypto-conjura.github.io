@@ -1,5 +1,5 @@
 % =====================================================================
-%  CONJURA CONJECTURE STATEMENT
+%  AICR CONJECTURE STATEMENT
 %  Decomposition for two split unpredictable sources, arbitrary q.
 %  Requires conjura-conjecture.cls in the same directory.
 % =====================================================================
@@ -20,7 +20,7 @@
 
 \begin{document}
 
-\cjkicker{CONJURA OPEN PROBLEM}
+\cjkicker{AICR OPEN PROBLEM}
 \cjtitle{Decomposition for Split Unpredictable Sources}
 \cjsubtitle{Two sources, arbitrary query budget}
 \cjstatus{Statement: AI-written, not yet formalized. The case $q = 0$ is

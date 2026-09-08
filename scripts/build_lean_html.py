@@ -35,7 +35,7 @@ were checked on 31 August 2026 before this file was written:
 Pygments 2.21's `Lean4Lexer` tokenizes these files with zero `Error` tokens,
 and -- the reason it is enough for this job -- it reports `sorry` as
 `Generic.Error` and `/-- ... -/` as `String.Doc`, so the two things a reader
-of a Conjura statement actually needs to see are distinguishable in the
+of a AICR statement actually needs to see are distinguishable in the
 markup rather than guessed at by eye.
 
 Pygments is not a dependency of the site build. Install it where it is needed:
@@ -589,7 +589,7 @@ pre.lean {{
   color: var(--lean-prose); font-family: var(--cj-serif); font-style: italic;
   font-size: 1.08em;
 }}
-/* The one thing a reader of a Conjura statement must not miss. */
+/* The one thing a reader of a AICR statement must not miss. */
 .lean-src .gr, .lean-src .ge {{
   color: var(--lean-sorry); background: var(--lean-sorry-bg);
   padding: 0 0.2em; border-radius: 0.15em; font-weight: 600;

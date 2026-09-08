@@ -1,6 +1,6 @@
 # Contributing
 
-Conjura has three content layers: **problems** (hubs, under `p/`), **statements**
+AICR has three content layers: **problems** (hubs, under `p/`), **statements**
 (leaves, under `c/`), and **facets** (generated listing pages under
 `problems/`, never hand-authored). See `/schema/` for the full frontmatter
 contract; this file covers the editorial rules and the day-to-day workflow.
@@ -10,7 +10,7 @@ contract; this file covers the editorial rules and the day-to-day workflow.
 1. Pick (or create) its hub under `p/<slug>/` -- see "Adding a new problem"
    below if none fits.
 2. Find the next free id: the highest `c/<id>/` directory plus one, or check
-   `conjura.json` after running `build_index.py`. Ids are sequential,
+   `aicr.json` after running `build_index.py`. Ids are sequential,
    zero-padded to four digits, allocated once, and never reused -- if a
    statement is later withdrawn, its id keeps a tombstone page rather than
    going back into a pool.
@@ -322,7 +322,7 @@ pip install -r requirements.txt
 git config core.hooksPath .githooks           # once per clone: run the checks pre-commit
 python3 scripts/status_badge.py --self-test   # grading logic sanity check
 python3 scripts/status_badge.py               # regenerate badges + statement_sha
-python3 scripts/build_index.py                # validate schema, emit _generated/ + conjura.json
+python3 scripts/build_index.py                # validate schema, emit _generated/ + aicr.json
 python3 scripts/check_relations.py            # validate the relation graph
 python3 scripts/gen_interface.py              # regenerate the UC functionality boxes
 quarto preview                                # facet listings need build_index.py to have run first

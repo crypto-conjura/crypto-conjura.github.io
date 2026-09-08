@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Walks c/*/index.qmd, validates each leaf's frontmatter against the Conjura
+Walks c/*/index.qmd, validates each leaf's frontmatter against the AICR
 statement schema (see /schema/), and emits:
 
   - _generated/areas/<slug>.yml   one per the 19 fixed area slugs (always,
@@ -9,11 +9,11 @@ statement schema (see /schema/), and emits:
     _generated/assumption/<value>.yml   only for values actually in use
   - _generated/problems/<slug>.yml   the leaves belonging to each hub
   - _generated/all.yml   every browsable statement, for the global listing
-  - conjura.json   the full index, keyed by 4-digit identifier
+  - aicr.json   the full index, keyed by 4-digit identifier
 
 Withdrawn statements are excluded from the browsable facet/all listings (they
 stay directly addressable at their own /c/<id>/ URL as a tombstone) but are
-still included in conjura.json and in relation cross-checks.
+still included in aicr.json and in relation cross-checks.
 
 Requires PyYAML (see requirements.txt) -- status_badge.py deliberately stays
 dependency-free since it only ever needs a handful of scalar fields, but this
@@ -43,7 +43,7 @@ ROOT = Path(__file__).resolve().parent.parent
 STATEMENTS_DIR = ROOT / "c"
 PROBLEMS_DIR = ROOT / "p"
 GENERATED_DIR = ROOT / "_generated"
-CONJURA_JSON = ROOT / "conjura.json"
+AICR_JSON = ROOT / "aicr.json"
 
 # Kept in sync with _quarto.yml's sidebar. Do not silently rename or merge.
 AREA_SLUGS = [
@@ -446,8 +446,8 @@ def emit(leaves):
             "sources": fm.get("sources", []),
             "path": f"/c/{lid}/",
         }
-    CONJURA_JSON.write_text(json.dumps(index, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    print(f"wrote {CONJURA_JSON.relative_to(ROOT)} ({len(index)} statements)")
+    AICR_JSON.write_text(json.dumps(index, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    print(f"wrote {AICR_JSON.relative_to(ROOT)} ({len(index)} statements)")
 
     for sub, count in (
         ("_generated/areas", len(AREA_SLUGS)),

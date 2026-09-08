@@ -60,9 +60,9 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
 UC = REPO / "uc"
-CACHE = Path(os.environ.get("CONJURA_CACHE",
+CACHE = Path(os.environ.get("AICR_CACHE",
                             Path.home() / ".cache" / "conjura-uc-sources"))
-UA = "conjura-uc-source/1.0 (+https://crypto-conjura.github.io)"
+UA = "aicr-uc-source/1.0 (+https://crypto-conjura.github.io)"
 TIMEOUT = 60
 
 # A reference bullet on a stub page. The link text is the title, the URL is

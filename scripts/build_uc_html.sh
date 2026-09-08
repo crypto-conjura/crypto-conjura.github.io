@@ -323,7 +323,7 @@ for f in pages:
     # navigation lives; this edition is otherwise a dead end with no way back.
     nav = (f"<nav class='ucnav' id='ucnav' aria-label='Contents'>"
            f"<div class='ucnav-head'>"
-           f"<a class='ucnav-up' href='../'>&#8592; Conjura</a>"
+           f"<a class='ucnav-up' href='../'>&#8592; AICR</a>"
            f"<a class='ucnav-book' href='main.html'>UC for Gamers</a>"
            f"{THEME_BTN}"
            f"</div><ul>{items}</ul></nav>")

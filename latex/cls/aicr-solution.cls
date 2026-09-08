@@ -1,8 +1,8 @@
 % =====================================================================
-%  conjura-solution.cls
+%  aicr-solution.cls
 %
-%  House LaTeX class for Conjura solution/proof documents.  Inherits
-%  the Conjura visual identity from conjura-conjecture.cls (fonts,
+%  House LaTeX class for AICR solution/proof documents.  Inherits
+%  the AICR visual identity from aicr-conjecture.cls (fonts,
 %  colors, theorem environments, running heads) but widens the page:
 %  a solution is unbounded in length and typically carries long
 %  derivations that the statement class's narrow 5x8in page cannot
@@ -14,8 +14,8 @@
 %  theorem/lemma/proof environments, or appendices the proof needs.
 % =====================================================================
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesClass{conjura-solution}[2026/08/15 v1.0 Conjura solution document class]
-\LoadClass{conjura-conjecture}
+\ProvidesClass{aicr-solution}[2026/08/15 v1.0 AICR solution document class]
+\LoadClass{aicr-conjecture}
 
 % wider, book-trim page -- proofs run long and need room for display
 % math that the statement class's narrow screen page cannot give them

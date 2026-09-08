@@ -1,9 +1,9 @@
 % =====================================================================
 %  AICR CONJECTURE STATEMENT
 %  Decomposition for two split unpredictable sources, arbitrary q.
-%  Requires conjura-conjecture.cls in the same directory.
+%  Requires aicr-conjecture.cls in the same directory.
 % =====================================================================
-\documentclass{conjura-conjecture}
+\documentclass{aicr-conjecture}
 
 \runninghead{DECOMPOSITION FOR SPLIT SOURCES}
 
@@ -429,7 +429,7 @@ open problem, distinct from bounding $\kappa(q)$.
 
 \section{Bibliography}
 
-\begin{conjurabibliography}{9}
+\begin{aicrbibliography}{9}
 
 \bibitem[CDGS]{CDGS}
 S. Coretti, Y. Dodis, S. Guo, J. Steinberger.
@@ -453,6 +453,6 @@ D. Unruh.
 \emph{Random Oracles and Auxiliary Input}.
 CRYPTO 2007.
 
-\end{conjurabibliography}
+\end{aicrbibliography}
 
 \end{document}

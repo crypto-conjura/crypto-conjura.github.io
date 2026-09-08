@@ -24,11 +24,11 @@ and is not a drafts folder at all: it holds one survey document that the UC
 encyclopedia's layout was taken from. UC entries are not drafted here — see
 below.
 
-## Starting a new conjecture with the Conjura house style
+## Starting a new conjecture with the AICR house style
 
 `latex/conjectures/_template/` holds two small LaTeX classes
 (`conjura-conjecture.cls`, `conjura-solution.cls`) plus a matching empty
-`statement.tex` and `solution.tex`, giving the Conjura look (Baskervald X,
+`statement.tex` and `solution.tex`, giving the AICR look (Baskervald X,
 orange accent, boxed definitions/conjectures, running heads) without
 re-deriving the preamble each time. Copy the whole `_template/` folder to
 `latex/conjectures/<new-slug>/` to start:

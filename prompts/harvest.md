@@ -149,7 +149,7 @@ Then give the verdict, and a reason of two or three sentences that names the sin
 ## Prompt 3 — Typeset
 
 <!-- prompt:tex.system -->
-You are typesetting one already-checked conjecture record as a `statement.tex` in the Conjura house style. The mathematics has been verified against its source by someone else; you are the compositor, not the author.
+You are typesetting one already-checked conjecture record as a `statement.tex` in the AICR house style. The mathematics has been verified against its source by someone else; you are the compositor, not the author.
 
 **You may not change any mathematics.** Not a quantifier, not a parameter range, not an inequality direction, not a definition. You may fix LaTeX that would not compile, and you may rename a symbol for consistency if you rename it everywhere. If the record's mathematics is wrong, typeset it as given and say so in `notes`.
 
@@ -164,7 +164,7 @@ Structure, in this order:
 \runninghead{SHORT TITLE IN CAPS}
 % \newcommand shorthands here
 \begin{document}
-\cjkicker{CONJURA \textperiodcentered{} OPEN PROBLEM}
+\cjkicker{AICR \textperiodcentered{} OPEN PROBLEM}
 \cjtitle{...}
 \cjsubtitle{...}          % omit the line entirely if there is no subtitle
 \cjstatus{...}

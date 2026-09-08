@@ -1,4 +1,4 @@
-# Conjura
+# AICR
 
 [![Publish site](https://github.com/crypto-conjura/crypto-conjura.github.io/actions/workflows/publish.yml/badge.svg?branch=main)](https://github.com/crypto-conjura/crypto-conjura.github.io/actions/workflows/publish.yml)
 
@@ -23,7 +23,7 @@ latex/                       working drafts, staged here before they become a si
 scripts/                     the four CI gates: badges, facet index, relation graph, UC boxes
 _templates/                  copy-paste skeletons for a new statement or problem
 _listing-templates/          the table template the statement listings render through
-_generated/, conjura.json    build_index.py output; gitignored, rebuilt by CI before every render
+_generated/, aicr.json    build_index.py output; gitignored, rebuilt by CI before every render
 .githooks/, .github/         the pre-commit hook, and the publish and checks workflows
 ```
 
@@ -60,7 +60,7 @@ Lean artifacts under `c/<id>/lean/` are code, so MIT.
 `c/<id>/latex/`, `c/<id>/pdf/`, `papers/<slug>/latex/`, `papers/<slug>/pdf/`,
 `surveys/<slug>/latex/`, `surveys/<slug>/pdf/` and `latex/` came from work with
 co-authors or from published papers, and may carry third-party rights the
-Conjura contributors cannot grant. Where that is so, the imported file's own
+AICR contributors cannot grant. Where that is so, the imported file's own
 terms govern and `LICENSE-CONTENT` does not apply to it. See the final section
 of that file. If you want to reuse something under one of those paths and it
 is not obvious who holds the rights, ask first.
@@ -81,7 +81,7 @@ See `CONTRIBUTING.md` for the full workflow (identifier allocation, the same-id-
 pip install -r requirements.txt
 git config core.hooksPath .githooks  # once per clone: run the checks below pre-commit
 python3 scripts/status_badge.py     # regenerate badges + statement_sha
-python3 scripts/build_index.py      # validate schema, emit _generated/ + conjura.json
+python3 scripts/build_index.py      # validate schema, emit _generated/ + aicr.json
 python3 scripts/check_relations.py  # validate the relation graph
 python3 scripts/gen_interface.py    # regenerate the UC functionality boxes
 quarto preview                      # facet listings need build_index.py to have run first

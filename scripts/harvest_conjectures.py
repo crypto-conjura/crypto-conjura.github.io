@@ -3,7 +3,7 @@
 
 Drop papers into `latex/harvest/`, run this, and each one is read for the
 open problems it actually poses, each promoted problem is written out as a
-`latex/conjectures/<slug>/statement.tex` in the Conjura house style, and the
+`latex/conjectures/<slug>/statement.tex` in the AICR house style, and the
 PDF is moved to `latex/harvest/processed/`:
 
     python3 scripts/harvest_conjectures.py                # everything waiting

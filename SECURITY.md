@@ -1,6 +1,6 @@
 # Reporting a vulnerability
 
-Most of what is on Conjura cannot be exploited. The site is largely conjectures,
+Most of what is on AICR cannot be exploited. The site is largely conjectures,
 lower bounds, impossibility results and asymptotic statements in idealized
 models, and for that material there is nothing deployed to attack and nothing
 to disclose. Publishing is the normal path, and it stays the normal path.
@@ -58,7 +58,7 @@ than a summary.
 
 ## What we do in return
 
-- **Acknowledge within 5 working days.** Conjura is a small project, not a
+- **Acknowledge within 5 working days.** AICR is a small project, not a
   vendor security team, and we would rather state a modest commitment we can
   keep than a fast one we cannot.
 - **Assess and reply within 30 days** with our reading of the impact, whether
@@ -103,7 +103,7 @@ good intentions.
 
 ## Why this page exists at all, given everything else here is public
 
-Conjura's default is to work in the open: prompts published, attribution
+AICR's default is to work in the open: prompts published, attribution
 recorded per artifact, partial progress shared as it happens rather than at the
 end. That default is stated on the [Philosophy page](https://crypto-conjura.github.io/philosophy/)
 and it is meant seriously.

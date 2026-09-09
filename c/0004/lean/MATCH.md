@@ -10,7 +10,7 @@ here substitutes for that.
 (revision 1). If that hash moves, this table is stale by construction and
 `scripts/status_badge.py` forces `statement_match` back to `open`.
 
-**Formal source:** `Statement.lean`, theorem `Conjura0004.lhl_public_seed`,
+**Formal source:** `Statement.lean`, theorem `AICR0004.lhl_public_seed`,
 built against Mathlib `v4.33.0` (`db584cd6d46c92f209a44c0f1c829460d327499d`)
 on `leanprover/lean4:v4.33.0`.
 

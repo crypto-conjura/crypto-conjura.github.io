@@ -382,13 +382,13 @@ $ lake build
 warning: Statement.lean:122:8: declaration uses `sorry`
 Build completed successfully (2597 jobs).          # exactly one sorry, the conjecture
 $ lake env lean Audit.lean
-'Conjura0004.lhl_public_seed'                depends on axioms: [propext, sorryAx, Classical.choice, Quot.sound]
-'Conjura0004.predAdv_nonneg'                 depends on axioms: [propext, Classical.choice, Quot.sound]
-'Conjura0004.predAdv_le_one'                 depends on axioms: [propext, Classical.choice, Quot.sound]
-'Conjura0004.predAdv_mem_unitInterval'       depends on axioms: [propext, Classical.choice, Quot.sound]
-'Conjura0004.extAdv_le_one'                  depends on axioms: [propext, Classical.choice, Quot.sound]
-'Conjura0004.neg_one_le_extAdv'              depends on axioms: [propext, Classical.choice, Quot.sound]
-'Conjura0004.extAdv_eq_zero_of_subsingleton' depends on axioms: [propext, Classical.choice, Quot.sound]
+'AICR0004.lhl_public_seed'                depends on axioms: [propext, sorryAx, Classical.choice, Quot.sound]
+'AICR0004.predAdv_nonneg'                 depends on axioms: [propext, Classical.choice, Quot.sound]
+'AICR0004.predAdv_le_one'                 depends on axioms: [propext, Classical.choice, Quot.sound]
+'AICR0004.predAdv_mem_unitInterval'       depends on axioms: [propext, Classical.choice, Quot.sound]
+'AICR0004.extAdv_le_one'                  depends on axioms: [propext, Classical.choice, Quot.sound]
+'AICR0004.neg_one_le_extAdv'              depends on axioms: [propext, Classical.choice, Quot.sound]
+'AICR0004.extAdv_eq_zero_of_subsingleton' depends on axioms: [propext, Classical.choice, Quot.sound]
 ```
 
 Six sanity lemmas, `sorry`-free. The load-bearing one is

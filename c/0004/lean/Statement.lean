@@ -1,6 +1,6 @@
 /-
 Leftover Hash Lemma extraction bound for unpredictable random-oracle sources,
-public seed.  Conjura statement c/0004.
+public seed.  AICR statement c/0004.
 
 This file states the conjecture.  It does not prove it: `lhl_public_seed`
 below is the one `sorry` in the file.
@@ -36,7 +36,7 @@ import Mathlib.Probability.Distributions.Uniform
 import Mathlib.Analysis.SpecialFunctions.Log.Base
 import Mathlib.Analysis.Real.Sqrt
 
-namespace Conjura0004
+namespace AICR0004
 
 open scoped ENNReal
 
@@ -240,4 +240,4 @@ theorem extAdv_eq_zero_of_subsingleton
 
 end Sanity
 
-end Conjura0004
+end AICR0004

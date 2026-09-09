@@ -93,84 +93,34 @@ supplied numbers and several had drifted or were slightly off:
 
 ## Website and repository
 
-- [ ] **Rebrand the whole site from Conjura to AICR (~6h — uncertain; plus manual steps outside the repo: a domain, a GitHub org owner, the Zulip realm)**
+- [ ] **Finish the tail of the AICR rebrand (~1h, plus two owner-only steps)**
 
-  Requested 9 September 2026: "I want to rebrand the whole website as AICR
-  (instead of conjura)." Placed first in this section rather than by difficulty,
-  on the same leverage-and-risk logic the section already uses: the brand is in
-  every part of the tree, so every page added while this waits accrues the old
-  name and enlarges the job.
+  The rebrand itself landed 9 September 2026 in #244 (site identity, domain,
+  aicr.json), #245 (the LaTeX class dedupe and a full 230-paper recompile) and
+  the Lean namespace change that followed. What is left is deliberate, not
+  forgotten:
 
-  **Blocked on three decisions the request does not settle. Ask before starting.**
-
-  1. *What AICR expands to.* It has to appear in the site title and description
-     and in the licence lines, and nothing in the repo can supply it. Note the
-     collision before committing to it: AICR is most prominently the **American
-     Institute for Cancer Research**, a charity founded in 1982 that holds
-     `aicr.org` — so the expansion, and any domain built on the acronym, are
-     deliberate choices rather than defaults.
-  2. *The domain.* `CNAME` is `conjura.org` and `_quarto.yml:39` sets
-     `site-url: "https://conjura.org"`. Either the site moves (register the new
-     domain, point DNS, set the Pages custom domain, and keep `conjura.org`
-     redirecting so existing links and the 7 in-repo references survive), or it
-     keeps `conjura.org` under the new name. The second is much cheaper and is
-     what the last rename did.
-  3. *The external identities.* The GitHub org and repo are still literally
-     `crypto-conjura/crypto-conjura.github.io` — **304 references** in tracked
-     files — and chat is `conjura.zulipchat.com` (3). Renaming the org breaks
-     git remotes and the Pages URL and needs an org owner. Precedent: the site
-     was renamed from "Crypto-Conjura" to "Conjura" on 14 August 2026 and the
-     org/repo were deliberately left alone; the same split is available here.
-
-  **Footprint, measured 9 September 2026 at `4ff5829`:** 682 tracked files and
-  3,312 case-insensitive hits for "conjura". By type: `.cls` 1354, `.tex` 1322,
-  `.qmd` 244, `.json` 118, `.md` 99, `.html` 99, `.lean` 31, `.py` 20, `.yml`
-  11, `.jsonl` 5, licences 2, `.txt` 1.
-
-  **This is not a `sed -i` over the tree.** The hits fall into classes that need
-  different handling:
-
-  - *Visible chrome.* `_quarto.yml:33` title, `:34` description, `:59` navbar
-    title, `:83`/`:86` Zulip and GitHub aria-labels; the `aria-label="Conjura"`
-    inside `assets/favicon.svg`.
-  - *Licences — handle separately.* `LICENSE-CODE:3` and `LICENSE-CONTENT:3`
-    say "Copyright (c) 2026 the Conjura contributors", and `LICENSE-CONTENT:48`
-    names them as the rights holders. That is a copyright-holder identity, not
-    chrome; fold it into the legal-review item rather than rewriting it in a
-    bulk pass.
-  - *The LaTeX class, the biggest mechanical piece.* 236 `.tex` files carry
-    `\documentclass{conjura-conjecture}`, and roughly 230 copies of
-    `conjura-conjecture.cls` / `conjura-solution.cls` are tracked — one per
-    `c/NNNN/latex/` and per `latex/conjectures/*/`. Renaming the class means
-    `git mv` on ~230 files, edits to 236 `\documentclass` lines, and the
-    `\ProvidesClass` line plus header comments in every copy. Because the class
-    is duplicated per page rather than shared, the copies can drift — worth
-    deciding whether this is the moment to centralize it instead.
-  - *Published data identity.* `conjura.json` is the site's published data file,
-    documented in `README.md`, `CONTRIBUTING.md` and `schema/index.qmd`, served
-    at the site root, and referenced 17 times. Renaming the file breaks any
-    external consumer, so decide explicitly: rename with an alias at the old
-    path, or keep the filename and rebrand only its documentation.
-  - *Frozen artifacts.* PDFs under `c/*/pdf/` and `c/*/latex/` carry the old
-    class's rendered branding. Rebranding the `.cls` does not touch them unless
-    every paper is recompiled, which then moves the hashes recorded in
-    `artifacts.json` (113 hits).
-  - *Lean and generated HTML.* `c/0004/lean/{Audit,AuditProof}.lean` (31 `.lean`
-    hits) and the generated `c/0004/lean/html/index.html` (40).
-  - *Prose.* 244 `.qmd` hits across the site's own pages, plus `REPORT.md` (25)
-    and this file (12).
-
-  **Sequencing, and the CI trap.** `.github/workflows/publish.yml` runs four
-  Python gates before `quarto render` — `status_badge.py`, `build_index.py`,
-  `check_relations.py`, `gen_topics.py --check` — and one unregenerated file
-  blocks the deploy for everyone, on every later push, with a failure that
-  points at innocent commits. `scripts/build_index.py` itself has 6 hits. So do
-  this in stages, each its own PR, running all four gates before pushing: (1)
-  settle the decisions above; (2) config, visible chrome, favicon; (3) prose;
-  (4) the class rename with its 236 `\documentclass` edits, recompiling affected
-  PDFs and refreshing `artifacts.json`; (5) the out-of-repo identities. Do not
-  spot-check with `quarto render <single-file>.qmd` — it scatters build output
-  across the whole tree.
+  - **A `conjura.org` -> `aicr.info` redirect at Cloudflare.** `CNAME` now holds
+    `aicr.info`, so Pages serves only that name and every link ever shared on
+    the old domain is dead until this exists. It also repairs the five
+    `conjura.org` URLs inside `audits/*.jsonl`, which were left untouched
+    on purpose: they are a dated record of what was checked and when, and
+    rewriting evidence to match a later rename is not a thing to do quietly.
+  - **HTTPS enforcement is off** on the new domain (`https_enforced: false`,
+    certificate state `approved`). Turning it on is one API call, but the
+    domain sits behind Cloudflare nameservers, and Pages enforcement combined
+    with a Cloudflare "Flexible" SSL mode produces a redirect loop -- so check
+    the Cloudflare SSL mode is Full (strict) first.
+  - **Not renamed, each for a reason:** the `crypto-conjura` GitHub org and
+    repo (304 references, needs an org owner, breaks git remotes and the Pages
+    URL); the `conjura.zulipchat.com` realm, per the 9 September request; the
+    `~/.cache/conjura-uc-sources` harvester cache, whose rename silently
+    refetches the corpus; and the captured banner in
+    `c/0048/campaign/report/out.txt`, which is program output, not prose.
+  - **`aicr.json` has no alias at the old path.** Nothing known consumes
+    `conjura.json`, so it was renamed outright rather than dual-published. If
+    an outside consumer turns up, emitting both from `build_index.py` is a
+    one-line change.
 
 - [ ] **Revisit "Supporting the project" against the project roadmap (~0.5h)**
 

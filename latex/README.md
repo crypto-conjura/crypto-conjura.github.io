@@ -27,7 +27,7 @@ below.
 ## Starting a new conjecture with the AICR house style
 
 `latex/conjectures/_template/` holds two small LaTeX classes
-(`conjura-conjecture.cls`, `conjura-solution.cls`) plus a matching empty
+(`aicr-conjecture.cls`, `aicr-solution.cls`) plus a matching empty
 `statement.tex` and `solution.tex`, giving the AICR look (Baskervald X,
 orange accent, boxed definitions/conjectures, running heads) without
 re-deriving the preamble each time. Copy the whole `_template/` folder to

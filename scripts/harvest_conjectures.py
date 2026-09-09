@@ -48,7 +48,7 @@ another model:
                   checking, which is why the draft arrives stripped.
 
   4. Typeset      A third call renders the surviving record as statement.tex
-                  against the conjura-conjecture class.
+                  against the aicr-conjecture class.
 
   5. Compile      Not a model call. pdflatex, then chktex and lacheck. A
                   statement that does not build is marked, not shipped
@@ -105,6 +105,7 @@ HARVEST = ROOT / "latex" / "harvest"
 PROCESSED = HARVEST / "processed"
 CONJECTURES = ROOT / "latex" / "conjectures"
 TEMPLATE = CONJECTURES / "_template"
+CLS_DIR = ROOT / "latex" / "cls"   # the two house classes, kept once
 PROMPTS = ROOT / "prompts" / "harvest.md"
 LEDGER = PROCESSED / "harvest-log.json"
 
@@ -587,14 +588,29 @@ def unverified_citations(cand):
 # Writing the folder
 # --------------------------------------------------------------------------
 
-def find_class_files():
-    cls = TEMPLATE / "conjura-conjecture.cls"
+def find_chktexrc():
+    """The linter config to drop beside a new statement.
+
+    It used to also copy `aicr-conjecture.cls` into every folder it created,
+    which is how the repository came to hold 227 copies of one class file,
+    three of which had drifted apart by September 2026. The class now lives
+    once in `latex/cls/` and is found through TEXINPUTS -- see
+    `scripts/build_paper.sh` and `texinputs_env()` below.
+    """
+    cls = CLS_DIR / "aicr-conjecture.cls"
     if not cls.exists():
-        raise SystemExit(f"missing {cls.relative_to(ROOT)}; cannot start a conjecture folder")
+        raise SystemExit(f"missing {cls.relative_to(ROOT)}; cannot typeset a conjecture")
     rc = TEMPLATE / ".chktexrc"
     if not rc.exists():
         rc = next(CONJECTURES.glob("*/.chktexrc"), None)
-    return cls, rc
+    return rc
+
+
+def texinputs_env():
+    """Environment for a pdflatex run that has to find the shared classes."""
+    env = dict(os.environ)
+    env["TEXINPUTS"] = f"{CLS_DIR}:{env.get('TEXINPUTS', '')}"
+    return env
 
 
 def claim_folder(slug):
@@ -625,6 +641,7 @@ def compile_check(folder, no_compile=False):
         proc = subprocess.run(
             ["pdflatex", "-interaction=nonstopmode", "-halt-on-error", tex.name],
             cwd=folder, capture_output=True, text=True, errors="replace",
+            env=texinputs_env(),
         )
     result["compiled"] = proc.returncode == 0
     if proc.returncode != 0:
@@ -1095,14 +1112,13 @@ def process(pdf_path, backend, prompts, args, ledger):
             label="typeset",
         )
         tex = (rendered.get("tex") or "").strip()
-        if "\\documentclass{conjura-conjecture}" not in tex or "\\end{document}" not in tex:
+        if "\\documentclass{aicr-conjecture}" not in tex or "\\end{document}" not in tex:
             print("     DROPPED -- rendered statement.tex is not a complete document")
             dropped.append((title, "typeset output was not a complete document"))
             continue
 
         folder = claim_folder(cand["slug"])
-        cls, rc = find_class_files()
-        shutil.copy2(cls, folder / cls.name)
+        rc = find_chktexrc()
         if rc:
             shutil.copy2(rc, folder / ".chktexrc")
         (folder / "statement.tex").write_text(tex + "\n", encoding="utf-8")

@@ -63,7 +63,7 @@ species and yield to the same treatment.
 
 ### D5. One shared theorem counter, or double numbering by section [GOL-NUM]
 
-`conjura-conjecture.cls` declares `theorem`, `lemma`, `proposition`, `corollary`,
+`aicr-conjecture.cls` declares `theorem`, `lemma`, `proposition`, `corollary`,
 `definition` and `remark` on six independent counters, so the document runs
 Lemma 1, Lemma 2, Remark 1, Lemma 3, Definition 1, Lemma 4, … and the reader
 cannot binary-search for an item by number. `\newtheorem{lemma}[theorem]{Lemma}`

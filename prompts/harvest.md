@@ -18,7 +18,7 @@ The four calls are deliberately unequal in what they are allowed to do. The extr
 
 ## What the script does, so the prompt does not have to
 
-`scripts/harvest_conjectures.py` handles everything mechanical and cached: hashing each PDF so the same paper is never read twice — a paper whose bytes are already in `processed/` is skipped before `pdftotext` runs, and a hash already in the run ledger is skipped after, so neither a lost ledger nor a tidied inbox can cause a re-read — extracting the per-page text layer with `pdftotext`, grounding every quote, copying `conjura-conjecture.cls` into each new folder, running `pdflatex`/`chktex`/`lacheck` over the result, deriving every attackability total, verdict and band from the eight axis scores rather than letting the model add up its own, writing `harvest.json`, `attackability.json` and `SOURCE.md` as the provenance a reviewer reads first, and moving the PDF to `processed/`. A paper with no usable text layer is refused outright rather than read unchecked — run OCR over it and drop it back in.
+`scripts/harvest_conjectures.py` handles everything mechanical and cached: hashing each PDF so the same paper is never read twice — a paper whose bytes are already in `processed/` is skipped before `pdftotext` runs, and a hash already in the run ledger is skipped after, so neither a lost ledger nor a tidied inbox can cause a re-read — extracting the per-page text layer with `pdftotext`, grounding every quote, copying `aicr-conjecture.cls` into each new folder, running `pdflatex`/`chktex`/`lacheck` over the result, deriving every attackability total, verdict and band from the eight axis scores rather than letting the model add up its own, writing `harvest.json`, `attackability.json` and `SOURCE.md` as the provenance a reviewer reads first, and moving the PDF to `processed/`. A paper with no usable text layer is refused outright rather than read unchecked — run OCR over it and drop it back in.
 
 ---
 
@@ -155,12 +155,12 @@ You are typesetting one already-checked conjecture record as a `statement.tex` i
 
 ### The document
 
-`\documentclass{conjura-conjecture}`, and that class is already in the folder. It provides `amsmath`, `amsthm`, `enumitem`, `booktabs`, `tabularx`, `xcolor` and `tcolorbox`; the environments `conjecture`, `theorem`, `lemma`, `proposition`, `corollary`, `definition`, `remark`, `proof`, `informalconjecture` and `conjurabibliography`; the front-matter commands `\runninghead`, `\cjkicker`, `\cjtitle`, `\cjsubtitle`, `\cjstatus`, `\cjcategory`; and `\poly` and `\sample`. Do not `\usepackage` anything — the class loads what the house style has settled on, and a statement that pulls in its own packages is the beginning of ten statements that each look slightly different. Define any other shorthand you need with `\newcommand` after `\documentclass`, before `\begin{document}`.
+`\documentclass{aicr-conjecture}`, and that class is already in the folder. It provides `amsmath`, `amsthm`, `enumitem`, `booktabs`, `tabularx`, `xcolor` and `tcolorbox`; the environments `conjecture`, `theorem`, `lemma`, `proposition`, `corollary`, `definition`, `remark`, `proof`, `informalconjecture` and `aicrbibliography`; the front-matter commands `\runninghead`, `\cjkicker`, `\cjtitle`, `\cjsubtitle`, `\cjstatus`, `\cjcategory`; and `\poly` and `\sample`. Do not `\usepackage` anything — the class loads what the house style has settled on, and a statement that pulls in its own packages is the beginning of ten statements that each look slightly different. Define any other shorthand you need with `\newcommand` after `\documentclass`, before `\begin{document}`.
 
 Structure, in this order:
 
 ```latex
-\documentclass{conjura-conjecture}
+\documentclass{aicr-conjecture}
 \runninghead{SHORT TITLE IN CAPS}
 % \newcommand shorthands here
 \begin{document}
@@ -175,7 +175,7 @@ Structure, in this order:
 \section{Notation and parameters}\label{sec:notation}   % omit if the statement needs no notation section
 \section{The conjecture}\label{sec:conjectures}
 \section{Bibliography}
-\begin{conjurabibliography}{99} ... \end{conjurabibliography}
+\begin{aicrbibliography}{99} ... \end{aicrbibliography}
 \end{document}
 ```
 

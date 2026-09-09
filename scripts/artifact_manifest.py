@@ -49,6 +49,13 @@ MANIFEST = ROOT / "artifacts.json"
 # artifacts: no `.lean` or `.toml` file lies under any of their input globs.
 SOURCE_SUFFIXES = {".tex", ".cls", ".sty", ".bib", ".bst", ".lean", ".toml"}
 
+# The house classes live once in latex/cls/ instead of as a copy beside every
+# document. They are an input to every LaTeX artifact here, so they are listed
+# as one: without this, editing a class would leave 110 PDFs stale and nothing
+# would say so -- the exact drift this file exists to catch. The cost is that a
+# class edit correctly invalidates all of them at once.
+SHARED_CLASSES = ["latex/cls/*.cls"]
+
 
 def artifacts():
     """(name, input globs, output globs, how to rebuild it).
@@ -71,15 +78,15 @@ def artifacts():
         if (d / "latex").is_dir() and (d / "pdf").is_dir():
             out.append((
                 f"c/{d.name}",
-                [f"c/{d.name}/latex/**/*"],
+                [f"c/{d.name}/latex/**/*"] + SHARED_CLASSES,
                 [f"c/{d.name}/pdf/*.pdf"],
-                f"cd c/{d.name}/latex && pdflatex main.tex   # and any other .tex beside it",
+                f"scripts/build_paper.sh c/{d.name}/latex   # and any other .tex beside it",
             ))
     out.append((
         "projects/uber-groups-rsr",
-        ["latex/papers/uber-groups-rsr/**/*"],
+        ["latex/papers/uber-groups-rsr/**/*"] + SHARED_CLASSES,
         ["projects/uber-groups-rsr/pdf/*.pdf", "projects/uber-groups-rsr/latex/**/*"],
-        "cd latex/papers/uber-groups-rsr && pdflatex main.tex, then copy source and PDF into projects/uber-groups-rsr/",
+        "scripts/build_paper.sh latex/papers/uber-groups-rsr, then copy source and PDF into projects/uber-groups-rsr/",
     ))
     for d in sorted((ROOT / "c").glob("0*")):
         page = d / "lean" / "html" / "index.html"

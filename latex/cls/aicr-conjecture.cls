@@ -1,16 +1,16 @@
 % =====================================================================
-%  conjura-conjecture.cls
+%  aicr-conjecture.cls
 %
-%  House LaTeX class for Conjura conjecture-statement documents.
+%  House LaTeX class for AICR conjecture-statement documents.
 %  Carries the shared look and feel (fonts, page geometry, colors,
 %  running heads, theorem-style environments) so that an individual
 %  statement.tex only has to supply front-matter text and content.
 %
-%  Companion class: conjura-solution.cls, which \LoadClass{}es this
+%  Companion class: aicr-solution.cls, which \LoadClass{}es this
 %  one and widens the page for long, unbounded proofs.
 % =====================================================================
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesClass{conjura-conjecture}[2026/08/15 v1.0 Conjura conjecture statement class]
+\ProvidesClass{aicr-conjecture}[2026/08/15 v1.0 AICR conjecture statement class]
 \LoadClass[10pt]{article}
 
 % ---- fonts: Baskervald X text + matching math, Helvetica-like sans
@@ -101,7 +101,7 @@
 
 % ---- bibliography: a numbered "Bibliography" \section heading with
 % no duplicate \refname heading from thebibliography itself
-\newenvironment{conjurabibliography}[1]{%
+\newenvironment{aicrbibliography}[1]{%
   \begingroup\small\renewcommand{\section}[2]{}%
   \begin{thebibliography}{#1}%
 }{%
@@ -120,7 +120,7 @@
 \newcommand{\cjkeywords}[1]{\smallskip\noindent{\small\textbf{Keywords.}
   #1}\par}
 
-% ---- small conveniences used across Conjura conjecture write-ups
+% ---- small conveniences used across AICR conjecture write-ups
 \newcommand{\poly}{\mathrm{poly}}
 \newcommand{\sample}{\leftarrow}
 

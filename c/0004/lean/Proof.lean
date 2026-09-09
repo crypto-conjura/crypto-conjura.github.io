@@ -1,5 +1,5 @@
 /-
-Toward a formal proof of `Conjura0004.lhl_public_seed`.
+Toward a formal proof of `AICR0004.lhl_public_seed`.
 
 This file is a **partial** formalization. It is not the proof, and it does not
 claim to be: `c/0004`'s `proof_formal` stays `open` until the main theorem
@@ -22,7 +22,7 @@ above it can be formalized until it is.
 import Statement
 import Mathlib.Analysis.MeanInequalities
 
-namespace Conjura0004
+namespace AICR0004
 
 open scoped ENNReal BigOperators
 
@@ -473,4 +473,4 @@ theorem predAdv_le_maxMass (S : Source K D R Z) (P : Predictor K D R Z) :
 
 end Bridge
 
-end Conjura0004
+end AICR0004

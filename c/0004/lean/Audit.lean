@@ -10,12 +10,12 @@ Expected: `sorryAx` appears on the first line and on no other.
 -/
 import Statement
 
-open Conjura0004
+open AICR0004
 
-#print axioms Conjura0004.lhl_public_seed
-#print axioms Conjura0004.predAdv_nonneg
-#print axioms Conjura0004.predAdv_le_one
-#print axioms Conjura0004.predAdv_mem_unitInterval
-#print axioms Conjura0004.extAdv_le_one
-#print axioms Conjura0004.neg_one_le_extAdv
-#print axioms Conjura0004.extAdv_eq_zero_of_subsingleton
+#print axioms AICR0004.lhl_public_seed
+#print axioms AICR0004.predAdv_nonneg
+#print axioms AICR0004.predAdv_le_one
+#print axioms AICR0004.predAdv_mem_unitInterval
+#print axioms AICR0004.extAdv_le_one
+#print axioms AICR0004.neg_one_le_extAdv
+#print axioms AICR0004.extAdv_eq_zero_of_subsingleton

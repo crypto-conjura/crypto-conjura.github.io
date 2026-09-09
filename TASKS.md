@@ -100,19 +100,6 @@ supplied numbers and several had drifted or were slightly off:
   the Lean namespace change that followed. What is left is deliberate, not
   forgotten:
 
-  - **Fix the `conjura.org` redirect at Cloudflare -- it exists and it is
-    broken.** Checked 9 September 2026 right after the domain flip:
-    `conjura.org` no longer resolves to the GitHub Pages addresses but to
-    Cloudflare's proxy (172.67.183.147, 104.21.51.180), and a redirect rule
-    there answers **every** path with `301 -> https://aicr.info/s`, a literal
-    `/s` that 404s. Both `https://conjura.org/` and
-    `https://conjura.org/c/0004/` produce exactly that. So the old domain is
-    not merely dead, it is actively sending traffic to a broken URL; the rule
-    presumably meant to forward the path (`/$1` or the "preserve path
-    suffix" option) and lost it. Fixing it also repairs the five
-    `conjura.org` URLs inside `audits/*.jsonl`, which were left untouched
-    on purpose: they are a dated record of what was checked and when, and
-    rewriting evidence to match a later rename is not a thing to do quietly.
   - **HTTPS enforcement is off** on the new domain (`https_enforced: false`,
     certificate state `approved`). Turning it on is one API call, but the
     domain sits behind Cloudflare nameservers, and Pages enforcement combined

@@ -1,17 +1,29 @@
 #!/usr/bin/env python3
-"""Layer-2 audit of the built site against CHECKS.md IDs. Findings are
-hypotheses until confirmed in a browser (layer 3)."""
-import collections, html, json, pathlib, re, sys, urllib.parse
+"""Audit rendered HTML. Use --check-links to fail on broken internal links.
 
-ROOT = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else "_site")
-SITE_URL = "https://crypto-conjura.github.io"
+Other findings remain advisory and need browser confirmation.
+Usage: python3 scripts/audit_static.py [_site] [report.json] [--check-links]
+"""
+import argparse, collections, html, json, pathlib, re, sys, urllib.parse
+from html.parser import HTMLParser
+
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("site", nargs="?", default="_site")
+parser.add_argument("report", nargs="?", default="/tmp/audit.json")
+parser.add_argument("--check-links", action="store_true")
+args = parser.parse_args()
+# Link targets and the ID index must use the same absolute path convention.
+ROOT = pathlib.Path(args.site).resolve()
+SITE_URL = "https://aicr.info"
 pages = sorted(ROOT.rglob("*.html"))
+if not pages:
+    parser.error(f"no HTML pages found in {ROOT}; render the site first")
 text = {}
 for p in pages:
     try:
-        text[p] = p.read_text(errors="ignore")
-    except Exception:
-        pass
+        text[p] = p.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        parser.error(f"cannot read {p}: {exc}")
 
 F = collections.defaultdict(list)          # id -> [detail, ...]
 def add(cid, detail):
@@ -26,27 +38,161 @@ def attrs(s):
     d.update(re.findall(r"(\w[\w:-]*)\s*=\s*'([^']*)'", s))
     return d
 
-# id set per page, for fragment resolution
+# Parse navigation with the HTML parser so quoting, character references,
+# legacy named anchors and anchor-like text inside scripts are handled correctly.
+class Navigation(HTMLParser):
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.ids = set()
+        self.named_anchors = set()
+        self.links = []
+        self.scripts = []
+        self.script = None
+
+    def handle_starttag(self, tag, attributes):
+        a = dict(attributes)
+        if tag == "script":
+            self.script = []
+        if a.get("id") is not None:
+            self.ids.add(a["id"])
+        if tag == "a":
+            if a.get("name") is not None:
+                self.named_anchors.add(a["name"])
+            if a.get("href") is not None:
+                self.links.append(a["href"])
+
+    handle_startendtag = handle_starttag
+
+    def handle_data(self, data):
+        if self.script is not None:
+            self.script.append(data)
+
+    def handle_endtag(self, tag):
+        if tag == "script" and self.script is not None:
+            self.scripts.append("".join(self.script))
+            self.script = None
+
+
+def quarto_redirect(scripts):
+    """Read the JSON map in Quarto's known alias stub; never execute scripts."""
+    for script in scripts:
+        if ('window.location.replace(redirect);' not in script or
+                'redirects[hash] || redirects[""] || "/"' not in script):
+            continue
+        match = re.search(r'var redirects = (\{[^\n]*\});', script)
+        if match:
+            try:
+                mapping = json.loads(match[1])
+            except ValueError:
+                continue
+            if isinstance(mapping, dict) and all(isinstance(v, str) for v in mapping.values()):
+                return mapping
+    return None
+
 ids = {}
+fragment_targets = {}
+links = {}
+redirects = {}
 for p, h in text.items():
-    ids[p] = set(re.findall(r'\bid="([^"]+)"', h)) | set(re.findall(r"\bid='([^']+)'", h))
+    navigation = Navigation()
+    navigation.feed(h)
+    ids[p] = navigation.ids
+    fragment_targets[p] = navigation.ids | navigation.named_anchors
+    links[p] = navigation.links
+    redirect = quarto_redirect(navigation.scripts)
+    if redirect is not None:
+        redirects[p] = redirect
 
 # ---------------------------------------------------------------- LNK ----
+def decode_dot_segments(path):
+    segments = []
+    for segment in path.split("/"):
+        dots = re.sub("%2e", ".", segment, flags=re.I)
+        segments.append(dots if dots in (".", "..") else segment)
+    return "/".join(segments)
+
+
+def normalize_url_path(path):
+    """Remove literal/percent-encoded dot segments, retaining a final slash."""
+    segments = decode_dot_segments(path).split("/")[1:]
+    normalized = []
+    for i, segment in enumerate(segments):
+        if segment in (".", ".."):
+            if segment == ".." and normalized:
+                normalized.pop()
+            if i == len(segments) - 1:
+                normalized.append("")
+        else:
+            normalized.append(segment)
+    return "/" + "/".join(normalized)
+
+
 def resolve(src, href):
     """Return (path, frag) inside ROOT, or None if external/unresolvable."""
-    if href.startswith(("http://", "https://", "mailto:", "data:", "javascript:", "#")):
+    # Resolve ordinary relative/root-relative URLs, then handle encoded dot
+    # segments before percent-decoding into filesystem paths.
+    base = SITE_URL + "/" + urllib.parse.quote(src.relative_to(ROOT).as_posix())
+    reference = urllib.parse.urlsplit(href)
+    # Decode dot segments before urljoin processes literal '..', so mixed
+    # paths such as a/%2e%2e/../index.html are shortened in the right order.
+    reference = reference._replace(path=decode_dot_segments(reference.path))
+    u = urllib.parse.urlsplit(urllib.parse.urljoin(base, urllib.parse.urlunsplit(reference)))
+    default_port = {"http": 80, "https": 443}.get(u.scheme)
+    if (default_port is None or u.hostname != urllib.parse.urlsplit(SITE_URL).hostname
+            or u.port not in (None, default_port)):
         return None
-    u = urllib.parse.urlparse(href)
-    if u.scheme or u.netloc:
-        return None
-    target = u.path
-    if not target:
-        return (src, u.fragment)
-    base = ROOT if target.startswith("/") else src.parent
-    q = (base / target.lstrip("/")).resolve()
-    if q.is_dir():
+    path = normalize_url_path(u.path)
+    q = (ROOT / urllib.parse.unquote(path).lstrip("/")).resolve()
+    # A slash denotes a directory even if the slash-free path is a file.
+    if path.endswith("/") or q.is_dir():
         q = q / "index.html"
     return (q, u.fragment)
+
+
+def resolve_navigation(src, href):
+    """Follow at most 20 recognized Quarto redirects, preserving their hashes."""
+    target = resolve(src, href)
+    seen = set()
+    for hops in range(21):
+        if target is None or target[0] not in redirects:
+            return target
+        if target in seen:
+            raise ValueError("redirect cycle")
+        if hops == 20:
+            raise ValueError("redirect limit exceeded (20 hops)")
+        seen.add(target)
+        page, fragment = target
+        mapping = redirects[page]
+        destination = mapping.get(fragment) or mapping.get("") or "/"
+        # Quarto replaces explicitly mapped hashes, and carries other hashes
+        # onto the default destination. Queries do not affect static targets.
+        if not mapping.get(fragment) and fragment:
+            destination += "#" + fragment
+        target = resolve(page, destination)
+
+
+# These are the deterministic checks used by CI. Fragments on PDFs and other
+# non-HTML assets have their own semantics, so only check their file exists.
+for p, hrefs in links.items():
+    for href in hrefs:
+        if href in ("", "#"):
+            continue  # Quarto UI controls, reported separately as advisory.
+        try:
+            r = resolve_navigation(p, href)
+        except ValueError as exc:
+            add("LNK-01", f"{rel(p)}: -> {href} ({exc})")
+            continue
+        if r is None:
+            continue
+        q, frag = r
+        if not q.is_relative_to(ROOT) or not q.is_file():
+            add("LNK-01", f"{rel(p)}: -> {href} (no such file)")
+            if q.suffix in (".pdf", ".lean", ".tex", ".json", ".bib"):
+                add("LNK-10", f"{rel(p)}: missing asset {href}")
+            continue
+        fr = urllib.parse.unquote(frag.split(":~:", 1)[0])
+        if fr and fr.lower() != "top" and q in fragment_targets and fr not in fragment_targets[q]:
+            add("LNK-02", f"{rel(p)}: -> {href} (no such anchor)")
 
 ext_urls = collections.Counter()
 for p, h in text.items():
@@ -72,27 +218,8 @@ for p, h in text.items():
                 add("LNK-09", f"{rel(p)}: empty/# href, text={label[:40]!r}")
             continue
 
-        r = resolve(p, href)
-        if r is None:
-            continue
-        q, frag = r
-        if not q.exists():
-            add("LNK-01", f"{rel(p)}: -> {href} (no such file)")
-            continue
-        if frag:
-            fr = urllib.parse.unquote(frag)
-            if q in ids and fr not in ids[q] and frag not in ids[q]:
-                add("LNK-02", f"{rel(p)}: -> {href} (no such anchor)")
-
         if label.lower() in ("here", "this", "link", "click here", "read more"):
             add("A11Y-08", f"{rel(p)}: non-descriptive link text {label!r}")
-
-# non-HTML assets referenced (LNK-10)
-for p, h in text.items():
-    for href in re.findall(r'href="([^"]+\.(?:pdf|lean|tex|json|bib))"', h):
-        r = resolve(p, html.unescape(href))
-        if r and not r[0].exists():
-            add("LNK-10", f"{rel(p)}: missing asset {href}")
 
 # ---------------------------------------------------------------- SEM ----
 for p, h in text.items():
@@ -193,21 +320,29 @@ for p, h in text.items():
 # ---------------------------------------------------------------- CNT ----
 # CNT-04 orphan pages: reachable by URL but not linked from anywhere
 linked = set()
-for p, h in text.items():
-    for href in re.findall(r'href="([^"]+)"', h):
-        r = resolve(p, html.unescape(href))
-        if r and r[0].exists() and r[0].suffix == ".html":
+for p, hrefs in links.items():
+    for href in hrefs:
+        r = resolve(p, href)
+        if r and r[0] != p and r[0].exists() and r[0].suffix == ".html":
             linked.add(r[0])
 pages_resolved = {p.resolve(): p for p in pages}
 for rp, p in pages_resolved.items():
     if rp not in linked and rel(p) not in ("index.html",):
         add("CNT-04", f"orphan: {rel(p)}")
 
-print(json.dumps({k: v for k, v in sorted(F.items())}, indent=1)[:200])
-summary = sorted(((len(v), k) for k, v in F.items()), reverse=True)
-print("\n=== layer-2 findings by check id ===")
-for n, k in summary:
-    print(f"  {k:9} {n:5}   e.g. {F[k][0][:96]}")
-pathlib.Path(sys.argv[2] if len(sys.argv) > 2 else "/tmp/audit.json").write_text(
-    json.dumps({k: v for k, v in sorted(F.items())}, indent=1))
+if not args.check_links:
+    summary = sorted(((len(v), k) for k, v in F.items()), reverse=True)
+    print("=== layer-2 findings by check id ===")
+    for n, k in summary:
+        print(f"  {k:9} {n:5}   e.g. {F[k][0][:96]}")
+pathlib.Path(args.report).write_text(
+    json.dumps({k: v for k, v in sorted(F.items())}, indent=1), encoding="utf-8")
 print(f"\npages audited: {len(pages)}; external urls seen: {len(ext_urls)}")
+print(f"full audit report: {args.report}")
+if args.check_links:
+    # LNK-10 is a subset of LNK-01; count each missing target only once.
+    failures = [finding for code in ("LNK-01", "LNK-02") for finding in F[code]]
+    for finding in failures:
+        print(f"FAIL {finding}", file=sys.stderr)
+    print(f"internal link check: {len(failures)} failure(s)")
+    sys.exit(bool(failures))

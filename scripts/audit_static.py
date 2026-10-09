@@ -44,41 +44,132 @@ class Navigation(HTMLParser):
     def __init__(self):
         super().__init__(convert_charrefs=True)
         self.ids = set()
+        self.named_anchors = set()
         self.links = []
+        self.scripts = []
+        self.script = None
 
     def handle_starttag(self, tag, attributes):
         a = dict(attributes)
+        if tag == "script":
+            self.script = []
         if a.get("id") is not None:
             self.ids.add(a["id"])
         if tag == "a":
             if a.get("name") is not None:
-                self.ids.add(a["name"])
+                self.named_anchors.add(a["name"])
             if a.get("href") is not None:
                 self.links.append(a["href"])
 
     handle_startendtag = handle_starttag
 
+    def handle_data(self, data):
+        if self.script is not None:
+            self.script.append(data)
+
+    def handle_endtag(self, tag):
+        if tag == "script" and self.script is not None:
+            self.scripts.append("".join(self.script))
+            self.script = None
+
+
+def quarto_redirect(scripts):
+    """Read the JSON map in Quarto's known alias stub; never execute scripts."""
+    for script in scripts:
+        if ('window.location.replace(redirect);' not in script or
+                'redirects[hash] || redirects[""] || "/"' not in script):
+            continue
+        match = re.search(r'var redirects = (\{[^\n]*\});', script)
+        if match:
+            try:
+                mapping = json.loads(match[1])
+            except ValueError:
+                continue
+            if isinstance(mapping, dict) and all(isinstance(v, str) for v in mapping.values()):
+                return mapping
+    return None
+
 ids = {}
+fragment_targets = {}
 links = {}
+redirects = {}
 for p, h in text.items():
     navigation = Navigation()
     navigation.feed(h)
     ids[p] = navigation.ids
+    fragment_targets[p] = navigation.ids | navigation.named_anchors
     links[p] = navigation.links
+    redirect = quarto_redirect(navigation.scripts)
+    if redirect is not None:
+        redirects[p] = redirect
 
 # ---------------------------------------------------------------- LNK ----
+def decode_dot_segments(path):
+    segments = []
+    for segment in path.split("/"):
+        dots = re.sub("%2e", ".", segment, flags=re.I)
+        segments.append(dots if dots in (".", "..") else segment)
+    return "/".join(segments)
+
+
+def normalize_url_path(path):
+    """Remove literal/percent-encoded dot segments, retaining a final slash."""
+    segments = decode_dot_segments(path).split("/")[1:]
+    normalized = []
+    for i, segment in enumerate(segments):
+        if segment in (".", ".."):
+            if segment == ".." and normalized:
+                normalized.pop()
+            if i == len(segments) - 1:
+                normalized.append("")
+        else:
+            normalized.append(segment)
+    return "/" + "/".join(normalized)
+
+
 def resolve(src, href):
     """Return (path, frag) inside ROOT, or None if external/unresolvable."""
-    # URL resolution also handles root-relative paths and dot segments like
-    # a browser, including links that would otherwise escape the output root.
-    base = SITE_URL + "/" + src.relative_to(ROOT).as_posix()
-    u = urllib.parse.urlsplit(urllib.parse.urljoin(base, href))
-    if u.scheme not in ("http", "https") or u.netloc != urllib.parse.urlsplit(SITE_URL).netloc:
+    # Resolve ordinary relative/root-relative URLs, then handle encoded dot
+    # segments before percent-decoding into filesystem paths.
+    base = SITE_URL + "/" + urllib.parse.quote(src.relative_to(ROOT).as_posix())
+    reference = urllib.parse.urlsplit(href)
+    # Decode dot segments before urljoin processes literal '..', so mixed
+    # paths such as a/%2e%2e/../index.html are shortened in the right order.
+    reference = reference._replace(path=decode_dot_segments(reference.path))
+    u = urllib.parse.urlsplit(urllib.parse.urljoin(base, urllib.parse.urlunsplit(reference)))
+    default_port = {"http": 80, "https": 443}.get(u.scheme)
+    if (default_port is None or u.hostname != urllib.parse.urlsplit(SITE_URL).hostname
+            or u.port not in (None, default_port)):
         return None
-    q = (ROOT / urllib.parse.unquote(u.path).lstrip("/")).resolve()
-    if q.is_dir():
+    path = normalize_url_path(u.path)
+    q = (ROOT / urllib.parse.unquote(path).lstrip("/")).resolve()
+    # A slash denotes a directory even if the slash-free path is a file.
+    if path.endswith("/") or q.is_dir():
         q = q / "index.html"
     return (q, u.fragment)
+
+
+def resolve_navigation(src, href):
+    """Follow at most 20 recognized Quarto redirects, preserving their hashes."""
+    target = resolve(src, href)
+    seen = set()
+    for hops in range(21):
+        if target is None or target[0] not in redirects:
+            return target
+        if target in seen:
+            raise ValueError("redirect cycle")
+        if hops == 20:
+            raise ValueError("redirect limit exceeded (20 hops)")
+        seen.add(target)
+        page, fragment = target
+        mapping = redirects[page]
+        destination = mapping.get(fragment) or mapping.get("") or "/"
+        # Quarto replaces explicitly mapped hashes, and carries other hashes
+        # onto the default destination. Queries do not affect static targets.
+        if not mapping.get(fragment) and fragment:
+            destination += "#" + fragment
+        target = resolve(page, destination)
+
 
 # These are the deterministic checks used by CI. Fragments on PDFs and other
 # non-HTML assets have their own semantics, so only check their file exists.
@@ -86,7 +177,11 @@ for p, hrefs in links.items():
     for href in hrefs:
         if href in ("", "#"):
             continue  # Quarto UI controls, reported separately as advisory.
-        r = resolve(p, href)
+        try:
+            r = resolve_navigation(p, href)
+        except ValueError as exc:
+            add("LNK-01", f"{rel(p)}: -> {href} ({exc})")
+            continue
         if r is None:
             continue
         q, frag = r
@@ -96,7 +191,7 @@ for p, hrefs in links.items():
                 add("LNK-10", f"{rel(p)}: missing asset {href}")
             continue
         fr = urllib.parse.unquote(frag.split(":~:", 1)[0])
-        if fr and fr.lower() != "top" and q in ids and fr not in ids[q]:
+        if fr and fr.lower() != "top" and q in fragment_targets and fr not in fragment_targets[q]:
             add("LNK-02", f"{rel(p)}: -> {href} (no such anchor)")
 
 ext_urls = collections.Counter()

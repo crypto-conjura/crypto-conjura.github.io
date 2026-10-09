@@ -9,6 +9,20 @@ import unittest
 
 SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "audit_static.py"
 
+# The alias stub emitted by the pinned Quarto version. The map varies by page.
+QUARTO_REDIRECT = '''<html><head><title>Redirect</title>
+<script type="text/javascript">
+    var redirects = MAP;
+    var hash = window.location.hash.startsWith('#') ? window.location.hash.slice(1) : window.location.hash;
+    var redirect = redirects[hash] || redirects[""] || "/";
+    window.document.title = 'Redirect to  ' +  redirect;
+    if (!redirects[hash]) {
+      redirect = redirect + window.location.hash;
+    }
+    redirect = redirect + window.location.search;
+    window.location.replace(redirect);
+</script></head><body></body></html>'''
+
 
 class LinkAuditTests(unittest.TestCase):
     def setUp(self):
@@ -23,6 +37,9 @@ class LinkAuditTests(unittest.TestCase):
         target = self.site / path
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(body, encoding="utf-8")
+
+    def redirect(self, path, mapping):
+        self.write(path, QUARTO_REDIRECT.replace("MAP", json.dumps(mapping)))
 
     def run_audit(self, absolute=False, gate=True, default_root=False):
         args = [sys.executable, str(SCRIPT)]
@@ -102,6 +119,88 @@ class LinkAuditTests(unittest.TestCase):
         self.write("nested/index.html", '<a href="../#home">Home</a>')
         result, _ = self.run_audit()
         self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_quarto_redirect_preserves_and_remaps_fragments(self):
+        self.write("index.html", '<a href="/old/#difficulty-legend">Old URL</a>'
+                   '<a href="/old/#renamed">Renamed section</a>')
+        self.redirect("old/index.html", {"": "../middle/index.html",
+                                       "renamed": "../current/index.html#new"})
+        self.redirect("middle/index.html", {"": "../current/index.html"})
+        self.write("current/index.html", '<h1 id="difficulty-legend">Difficulty</h1>'
+                   '<h2 id="new">New</h2>')
+        result, _ = self.run_audit()
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_redirect_does_not_hide_missing_target_or_section(self):
+        self.write("index.html", '<a href="/old/#missing">Missing section</a>'
+                   '<a href="/gone/">Missing page</a>')
+        self.redirect("old/index.html", {"": "../current/index.html"})
+        self.redirect("gone/index.html", {"": "../missing.html"})
+        self.write("current/index.html", "<h1>Current</h1>")
+        result, findings = self.run_audit()
+        self.assertEqual(result.returncode, 1)
+        self.assertEqual(len(findings.get("LNK-01", [])), 1)
+        self.assertEqual(len(findings.get("LNK-02", [])), 1)
+
+    def test_redirect_cycles_and_excessive_chains_fail(self):
+        self.write("index.html", '<a href="a.html">Cycle</a><a href="hop0.html">Long chain</a>')
+        self.redirect("a.html", {"": "b.html"})
+        self.redirect("b.html", {"": "a.html"})
+        for i in range(21):
+            self.redirect(f"hop{i}.html", {"": f"hop{i+1}.html"})
+        self.write("hop21.html", "<h1>End</h1>")
+        result, findings = self.run_audit()
+        self.assertEqual(result.returncode, 1)
+        self.assertEqual(len(findings.get("LNK-01", [])), 2)
+        self.assertIn("redirect cycle", result.stderr)
+        self.assertIn("redirect limit exceeded", result.stderr)
+
+    def test_default_ports_and_case_do_not_bypass_internal_checking(self):
+        self.write("index.html", '''
+            <a href="https://AICR.info/missing.html">Case</a>
+            <a href="https://aicr.info:443/missing.html">Default HTTPS port</a>
+            <a href="http://AICR.info:80/missing.html">Default HTTP port</a>
+            <a href="https://AICR.info:443/index.html#present">Valid</a>
+            <a href="https://aicr.info:8443/missing.html">Other service</a>
+            <h1 id="present">Present</h1>
+        ''')
+        result, findings = self.run_audit()
+        self.assertEqual(result.returncode, 1)
+        self.assertEqual(len(findings.get("LNK-01", [])), 3)
+
+    def test_encoded_dot_segments_cannot_escape_the_url_root(self):
+        self.write("index.html", '''
+            <a href="%2e%2e/index.html#home">Parent of root</a>
+            <a href="a/%2E%2e/../index.html#home">Mixed dots</a>
+            <a href="a/.%2E/index.html#home">Mixed dot encoding</a>
+            <a href="https://aicr.info/a/%2e./index.html#home">Absolute URL</a>
+            <a href="a/%2e%2e/#home">Directory target</a>
+            <h1 id="home">Home</h1>
+        ''')
+        result, _ = self.run_audit()
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_trailing_slash_cannot_turn_a_file_into_a_directory(self):
+        self.write("index.html", '<a href="paper.pdf/">Wrong</a>'
+                   '<a href="paper.pdf/%2e">Also wrong</a>'
+                   '<a href="paper.pdf#page=1">Valid</a>')
+        self.write("paper.pdf", "fixture")
+        result, findings = self.run_audit()
+        self.assertEqual(result.returncode, 1)
+        self.assertEqual(len(findings.get("LNK-01", [])), 2)
+
+    def test_named_anchor_is_a_fragment_target_but_not_an_aria_id(self):
+        self.write("index.html", '''
+            <a name="legacy"></a><a href="#legacy">Valid fragment</a>
+            <div aria-labelledby="legacy">Invalid label reference</div>
+            <h1 id="real-id">Real label</h1>
+            <div aria-labelledby="real-id">Valid label reference</div>
+        ''')
+        result, findings = self.run_audit()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse(findings.get("LNK-02"))
+        self.assertEqual(len(findings.get("A11Y-11", [])), 1)
+        self.assertIn("'legacy'", findings["A11Y-11"][0])
 
     def test_missing_or_empty_render_fails(self):
         for exists in (True, False):

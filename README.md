@@ -104,9 +104,13 @@ quarto render
 python3 scripts/audit_static.py --check-links
 ```
 
-Both PR and publishing workflows run this link gate. It checks linked files
-and HTML section anchors, including absolute links to `aicr.info`, against the
-rendered output. External websites are not fetched. Missing or empty render
+Both PR and publishing workflows run this link gate. It checks parsed `<a href>`
+navigation against the rendered output: linked files and HTML section anchors,
+including absolute links to `aicr.info` on default HTTP/HTTPS ports. Recognized
+Quarto aliases are followed for up to 20 hops, preserving or remapping fragments
+as their redirect stubs specify. Hostname case and explicit default ports do not
+bypass checking. External websites, including the legacy GitHub Pages hostname,
+are not fetched or mapped to local files. Missing or empty render
 directories fail rather than report success. The JSON report defaults to
 `/tmp/audit.json`; pass a site directory and report path to override them.
 Other audit findings remain advisory; omit `--check-links` for report-only use.

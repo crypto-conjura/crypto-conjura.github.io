@@ -49,7 +49,7 @@ isn't a problem, a statement, or a tag at all.
 | `revision` | integer | Bumped automatically when `statement_sha` changes. |
 | `status` | map | Six graded fields: `statement_informal`, `statement_formal`, `statement_match`, `proof_informal`, `proof_review`, `proof_formal`. Plus `proof_direction` (`proves` \| `refutes`), optional, defaulting to `proves`: which way the work points. It is not a grade and never enters σ or π; `refutes` requires `proof_informal != open`. See [the status legend](/reviews/status-badge/index.qmd). |
 | `status_badge` | string | Generated. Never hand-edit. |
-| `status_summary` | string | One required sentence, rendered next to the badge in listing tables. |
+| `status_summary` | string | One required sentence, rendered next to the badge in listing tables. Supports inline math with `$...$`; see the convention below. |
 | `status_updated` | date | |
 | `relations` | list of map | `{kind, target, note?}`. `kind` is one of `generalizes`, `specializes`, `implies`, `implied-by`, `equivalent-to`, `strengthens` (same claim, better quantitative bound), `variant-of`, `refutes`, `refuted-by`, `superseded-by`. `target` is a four-digit id. `note` is required on an `equivalent-to` edge whose proof grades disagree. |
 | `lean` | map | `mode` (`in-repo` \| `external-lean4` \| `other-system` \| `none`), plus `repo`/`commit`/`path`/`decl`/`toolchain` as applicable. `commit` is required once `status.statement_formal != open` when `mode: external-lean4`. |
@@ -93,6 +93,7 @@ silently -- see `CONTRIBUTING.md`.
    missing sanity lemmas). The open count feeds a listing column.
 
 There is no rendered Status, Sessions, or Changelog section on the page.
+
 `status_summary` is still a required frontmatter field (it's what shows next
 to the badge in listing tables), it's just not restated in page prose --
 the badge's own caption is the brief explanation shown on the page itself.
@@ -105,6 +106,35 @@ by `revision`/`statement_sha` and by the commit that changed them -- see
 misformalization classification belongs.
 
 See `_templates/statement.qmd` for a fully commented skeleton.
+
+### Mathematics in summaries
+
+Write mathematical expressions in `status_summary` as inline LaTeX inside
+`$...$`, just as in the main text. Use a folded YAML scalar (`>-`) so that
+backslashes are preserved and source lines can wrap without adding line breaks:
+
+```yaml
+status_summary: >-
+  Known constructions use $O(\tau)$ bits; the target is $\tau + o(\tau)$.
+```
+
+Put complete expressions inside the delimiters, including Greek letters,
+subscripts, powers, inequalities and asymptotic notation. For example, use
+`$\tilde{O}(n^{1/2})$` instead of `O~(n^{1/2})`. Leave prose outside math and
+use inline math only, without spaces immediately inside the dollar delimiters.
+Do not infer or change a claim while converting its notation.
+
+`build_index.py` rejects malformed delimiters, unbalanced TeX braces, decoded line
+breaks and control characters, and warns about likely unmarked notation. Folded
+YAML `>-` joins source lines into a single paragraph; literal line breaks in a
+parsed summary can instead indicate a corrupted TeX escape. Warnings require editorial
+judgment and do not block the build. After rendering, `summary_math.py --site
+_site` requires every configured listing page, checks its rows against the
+generated index, and requires exactly one summary per row. The all-statements
+index must also match the browsable source statements. It checks that listing
+formulas preserve the source TeX and that MathJax is included. It does not check
+the truth of the mathematics or replace browser
+checks of typesetting and pagination.
 
 ## What the badge gate scans
 

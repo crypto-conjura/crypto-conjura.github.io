@@ -31,6 +31,14 @@ written, not generated. Run `python3 scripts/status_badge.py` afterwards to
 populate `statement_sha` and the badge. A paper carries no id, hub, areas
 or relations, so `build_index.py` and `check_relations.py` do not apply.
 
+## Mathematics in summaries
+
+For `status_summary`, keep prose outside math and put each mathematical expression
+inside `$...$`, including Greek letters and asymptotic notation. Use YAML `>-`
+for summaries containing TeX backslashes. See [the summary convention](/schema/#mathematics-in-summaries)
+for examples. The index check warns about likely unmarked notation; inspect each
+warning rather than applying automatic replacements.
+
 ## Rebuilding a generated artifact
 
 Every `.tex` here has generated output committed beside it: the statement

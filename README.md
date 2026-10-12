@@ -95,3 +95,22 @@ its own. Editing prose inside a `## Statement` block is enough to cause this --
 the block is hashed. Bypass a single commit with `git commit --no-verify`.
 
 requires the [Quarto CLI](https://quarto.org/docs/get-started/) installed locally.
+
+After rendering, check internal links before proposing an update:
+
+```sh
+python3 -m unittest discover -s tests -p 'test_*.py'
+quarto render
+python3 scripts/audit_static.py --check-links
+```
+
+Both PR and publishing workflows run this link gate. It checks parsed `<a href>`
+navigation against the rendered output: linked files and HTML section anchors,
+including absolute links to `aicr.info` on default HTTP/HTTPS ports. Recognized
+Quarto aliases are followed for up to 20 hops, preserving or remapping fragments
+as their redirect stubs specify. Hostname case and explicit default ports do not
+bypass checking. External websites, including the legacy GitHub Pages hostname,
+are not fetched or mapped to local files. Missing or empty render
+directories fail rather than report success. The JSON report defaults to
+`/tmp/audit.json`; pass a site directory and report path to override them.
+Other audit findings remain advisory; omit `--check-links` for report-only use.

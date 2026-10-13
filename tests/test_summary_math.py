@@ -1,4 +1,5 @@
 """Regression cases for source markup and rendered catalogue math."""
+import json
 from pathlib import Path
 import sys
 import tempfile
@@ -7,7 +8,9 @@ import unittest
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-from summary_math import audit_site, check_summary, parse_summary, rendered_errors
+from summary_math import (audit_site, check_statement_math, check_summary, parse_summary,
+                          rendered_errors, rendered_title_errors)
+from plain_search_titles import update_search_titles
 
 
 class SummaryMathTests(unittest.TestCase):
@@ -120,7 +123,10 @@ See <a href="/c/0002/">another statement</a> for <span class="math inline">\(n\)
             for leaf in ('0001', '0002'):
                 path = root / 'c' / leaf / 'index.qmd'
                 path.parent.mkdir(parents=True)
-                path.write_text('---\nstatus_summary: Open.\n---\n')
+                path.write_text('---\ntitle: Title\nstatus_summary: Open.\n---\n')
+                page = site / 'c' / leaf / 'index.html'
+                page.parent.mkdir(parents=True)
+                page.write_text('<h1 class="title">Title</h1>')
             source = root / 'problems/all/index.qmd'
             source.parent.mkdir(parents=True)
             source.write_text('---\nlisting:\n  template: ../../_listing-templates/statement-table.ejs.md\n  contents: ../../_generated/all.yml\n---\n')
@@ -152,6 +158,127 @@ See <a href="/c/0002/">another statement</a> for <span class="math inline">\(n\)
             self.assertTrue(any('rendered listing missing' in error for error in audit_site(root, site)[0]))
             index.unlink()
             self.assertTrue(any('generated listing index missing' in error for error in audit_site(root, site)[0]))
+
+
+    def test_title_source_validation_and_short_title_fallback(self):
+        fm = {'title': 'Plain title', 'status_summary': 'Open.'}
+        self.assertEqual(check_statement_math(fm), ([], []))
+        for field in ('title', 'short_title'):
+            for value in (None, '', 2, '$n', '$$n$$', '$n^{2$', 'Title\nline'):
+                with self.subTest(field=field, value=value):
+                    errors, _ = check_statement_math({**fm, field: value})
+                    self.assertTrue(any(field in e for e in errors))
+            errors, warnings = check_statement_math({**fm, field: 'AES 2^-128-close'})
+            self.assertFalse(errors)
+            self.assertTrue(any(field in w for w in warnings))
+        for title, plain in (('AES $2^{-128}$-close', 'AES 2^(-128)-close'),
+                             ('Tight $k$-collision tradeoff', 'Tight k-collision tradeoff')):
+            self.assertEqual(check_statement_math({**fm, 'title': title, 'pagetitle': plain}), ([], []))
+            self.assertTrue(check_statement_math({**fm, 'title': title})[0])
+        for plain in (None, '', '$k$', r'\(k\)', r'\tau', '<b>k</b>', 'k\n'):
+            self.assertTrue(check_statement_math({**fm, 'title': '$k$', 'pagetitle': plain})[0])
+
+    def test_title_yaml_escape_corruption_is_rejected_by_index(self):
+        from build_index import validate_leaf
+        for field in ('title', 'short_title'):
+            fm = yaml.safe_load(field + r': "Use $\tau$"')
+            errors = []
+            validate_leaf(fm, Path('c/0001/index.qmd'), errors)
+            self.assertTrue(any(field in e and 'control character' in e for e in errors))
+
+    def test_rendered_title_math_and_plain_metadata(self):
+        html = r'''<title>AES 2^(-128)-close – AICR</title>
+<meta property="og:title" content="AES 2^(-128)-close">
+<meta name="twitter:title" content="AES 2^(-128)-close">
+<script src="/assets/mathjax/tex-chtml-full.js"></script>
+<h1 class="title">AES <span class="math inline">\(2^{-128}\)</span>-close</h1>'''
+        def check(value):
+            return rendered_title_errors(value, 'AES $2^{-128}$-close', 'AES 2^(-128)-close', 'AICR')
+        self.assertEqual(check(html), [])
+        for broken in (
+            html.replace(r'\(2^{-128}\)', r'\(2^{-12}\)'),
+            html.replace('math inline', 'plain'),
+            html.replace('<script src="/assets/mathjax/tex-chtml-full.js"></script>', ''),
+            html.replace('<h1 class="title">', '<h1 class="other">'),
+            html + '<h1 class="title">Another</h1>',
+            html.replace('content="AES 2^(-128)-close"', r'content="AES \(2^{-128}\)-close"'),
+            html.replace(' – AICR</title>', r' \(k\)</title>'),
+            html.replace('<meta name="twitter:title" content="AES 2^(-128)-close">', ''),
+        ):
+            with self.subTest(broken=broken):
+                self.assertTrue(check(broken))
+        # Formulae in body content must not substitute for lost title math.
+        broken = html.replace('math inline', 'plain') + r'<p><span class="math inline">\(2^{-128}\)</span></p>'
+        self.assertTrue(check(broken))
+        self.assertTrue(rendered_title_errors(html, 'Plain title'))
+        self.assertEqual(rendered_title_errors('<h1 class="title">Plain</h1>', 'Plain'), [])
+
+    def test_listing_title_math_is_separate_from_summary_and_other_links(self):
+        html = r'''<script src="/assets/mathjax/tex-chtml-full.js"></script>
+<table class="cj-statement-table"><tr><td class="listing-title">
+<a href="/c/0003/">Tight <span class="math inline">\(k\)</span>-collisions</a>
+<span class="cj-status-summary">Open <a href="/c/0002/"><span class="math inline">\(n\)</span></a></span>
+</td><td><a href="/c/0002/"><span class="math inline">\(m\)</span></a></td></tr></table>'''
+        def check(value, title='Tight $k$-collisions'):
+            return rendered_errors(value, {'0003': 'Open $n$'}, ['0003'], {'0003': title})
+        self.assertEqual(check(html), ([], 1))
+        for broken in (html.replace(r'\(k\)', r'\(n\)'),
+                       html.replace('<span class="math inline">\\(k\\)</span>', 'k'),
+                       html.replace('<script src="/assets/mathjax/tex-chtml-full.js"></script>', '')):
+            self.assertTrue(check(broken)[0])
+        self.assertTrue(check(html, 'Plain title')[0])
+        # A title alone, even with a plain summary, still needs MathJax.
+        title_only = '<table class="cj-statement-table"><tr><td class="listing-title"><a href="/c/0003/"><span class="math inline">\\(k\\)</span></a><span class="cj-status-summary">Open.</span></td></tr></table>'
+        self.assertTrue(any('no MathJax' in e for e in rendered_errors(title_only, {'0003': 'Open.'}, ['0003'], {'0003': '$k$'})[0]))
+
+    def test_site_title_fallback_metadata_and_search_gate(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            site = root / '_site'
+            source = root / 'c/0001/index.qmd'
+            source.parent.mkdir(parents=True)
+            fm = {'title': 'Tight $k$-collisions', 'pagetitle': 'Tight k-collisions', 'status_summary': 'Open.'}
+            source.write_text('---\n' + yaml.safe_dump(fm) + '---\n')
+            listing = root / 'problems/all/index.qmd'
+            listing.parent.mkdir(parents=True)
+            listing.write_text('---\nlisting:\n  template: ../../_listing-templates/statement-table.ejs.md\n  contents: ../../_generated/all.yml\n---\n')
+            index = root / '_generated/all.yml'
+            index.parent.mkdir()
+            index.write_text('- id: "0001"\n')
+            page = site / 'c/0001/index.html'
+            page.parent.mkdir(parents=True)
+            header = '<script src="/mathjax/tex.js"></script><h1 class="title">Tight <span class="math inline">\\(k\\)</span>-collisions</h1><title>Tight k-collisions</title><meta property="og:title" content="Tight k-collisions"><meta name="twitter:title" content="Tight k-collisions">'
+            page.write_text(header)
+            output = site / 'problems/all/index.html'
+            output.parent.mkdir(parents=True)
+            output.write_text('<script src="/mathjax/tex.js"></script><table class="cj-statement-table"><tr><td class="listing-title"><a href="/c/0001/">Tight <span class="math inline">\\(k\\)</span>-collisions</a><span class="cj-status-summary">Open.</span></td></tr></table>')
+            entries = [{'href': 'c/0001/index.html' + suffix, 'title': r'Tight \\(k\\)-collisions', 'text': 'Unchanged body', 'section': suffix} for suffix in ('', '#proof')]
+            entries.append({'href': 'unrelated.html', 'title': 'Unrelated'})
+            search = site / 'search.json'
+            search.write_text(json.dumps(entries))
+            self.assertTrue(any('search title differs' in e for e in audit_site(root, site)[0]))
+            self.assertEqual(update_search_titles(root, site), 2)
+            self.assertEqual(update_search_titles(root, site), 0)
+            fixed = json.loads(search.read_text())
+            self.assertEqual(fixed[-1], entries[-1])
+            self.assertEqual(fixed[0]['text'], entries[0]['text'])
+            self.assertEqual(fixed[1]['section'], entries[1]['section'])
+            self.assertEqual(audit_site(root, site), ([], [], 1, 1))
+            # An explicit short title changes which formula the listing must carry.
+            fm['short_title'] = 'Plain short title'
+            source.write_text('---\n' + yaml.safe_dump(fm) + '---\n')
+            self.assertTrue(any('listing title' in e for e in audit_site(root, site)[0]))
+            del fm['short_title']
+            source.write_text('---\n' + yaml.safe_dump(fm) + '---\n')
+            page.unlink()
+            self.assertTrue(any('statement page missing' in e for e in audit_site(root, site)[0]))
+            page.write_text('<h1 class="title">Math was lost</h1>')
+            self.assertTrue(any('title: rendered math differs' in e for e in audit_site(root, site)[0]))
+            page.write_text(header)
+            search.write_text('[]')
+            self.assertTrue(any('no search entry' in e for e in audit_site(root, site)[0]))
+            search.unlink()
+            self.assertTrue(any('search index missing' in e for e in audit_site(root, site)[0]))
 
 
 

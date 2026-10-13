@@ -38,8 +38,9 @@ isn't a problem, a statement, or a tag at all.
 |---|---|---|
 | `id` | string | Four-digit zero-padded, matches the `c/<id>/` directory name. |
 | `problem` | string | Exactly one hub slug under `p/`. |
-| `title` | string | Precise, fully-quantified. |
-| `short_title` | string | For listing-table columns; falls back to `title`. |
+| `title` | string | Precise, fully-quantified. Supports inline math with `$...$`. |
+| `short_title` | string | For listing-table columns; falls back to `title`. Supports inline math with `$...$`. |
+| `pagetitle` | string | Required when `title` contains math: its readable plain-text equivalent for browser tabs, search results and social previews. No TeX or HTML. |
 | `areas` | list of string | Subset of the 19 fixed area slugs below. First entry is primary, display only -- never a home directory. |
 | `model` | enum | `rom` \| `prom` \| `icm` \| `ggm` \| `qrom` \| `standard` \| `other` |
 | `form` | enum | `separation` \| `lower-bound` \| `tight-bound` \| `equivalence` \| `impossibility` \| `assumption` \| `characterization` |
@@ -107,16 +108,27 @@ misformalization classification belongs.
 
 See `_templates/statement.qmd` for a fully commented skeleton.
 
-### Mathematics in summaries
+### Mathematics in titles and summaries {#mathematics-in-summaries}
 
-Write mathematical expressions in `status_summary` as inline LaTeX inside
-`$...$`, just as in the main text. Use a folded YAML scalar (`>-`) so that
+Write mathematical expressions in `title`, `short_title` and `status_summary`
+as inline LaTeX inside `$...$`, just as in the main text. Use a folded YAML scalar (`>-`) so that
 backslashes are preserved and source lines can wrap without adding line breaks:
 
 ```yaml
+title: >-
+  A Protocol Using $O(\tau)$ Bits
+short_title: >-
+  $O(\tau)$-Bit Protocol
+pagetitle: "A Protocol Using O(tau) Bits"
 status_summary: >-
   Known constructions use $O(\tau)$ bits; the target is $\tau + o(\tau)$.
 ```
+
+When the full `title` contains math, provide `pagetitle` as a readable plain-text
+equivalent. It supplies browser and social metadata; a post-render step also
+uses it for search-result titles. For powers, write `$2^{-128}$` in `title`
+and `2^(-128)` in `pagetitle`. This avoids raw TeX in places that cannot typeset it.
+If only `short_title` contains math, `pagetitle` is optional.
 
 Put complete expressions inside the delimiters, including Greek letters,
 subscripts, powers, inequalities and asymptotic notation. For example, use
@@ -127,12 +139,16 @@ Do not infer or change a claim while converting its notation.
 `build_index.py` rejects malformed delimiters, unbalanced TeX braces, decoded line
 breaks and control characters, and warns about likely unmarked notation. Folded
 YAML `>-` joins source lines into a single paragraph; literal line breaks in a
-parsed summary can instead indicate a corrupted TeX escape. Warnings require editorial
+parsed field can instead indicate a corrupted TeX escape. Warnings require editorial
 judgment and do not block the build. After rendering, `summary_math.py --site
 _site` requires every configured listing page, checks its rows against the
 generated index, and requires exactly one summary per row. The all-statements
-index must also match the browsable source statements. It checks that listing
-formulas preserve the source TeX and that MathJax is included. It does not check
+index must also match the browsable source statements. It checks that summary
+and listing-title formulas preserve the source TeX, that each statement page has
+exactly one title heading with the expected formulas, and that MathJax is included
+where needed. When `pagetitle` is supplied, browser/social metadata and all matching
+search-result titles must agree with it (with the site name added to browser tabs).
+It does not check
 the truth of the mathematics or replace browser
 checks of typesetting and pagination.
 

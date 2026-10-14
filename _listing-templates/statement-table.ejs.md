@@ -25,7 +25,7 @@
 <thead>
 <tr>
 <th class="sortable sort" data-sort="listing-badge_sigma">Status</th>
-<th class="sortable sort" data-sort="listing-title">Statement</th>
+<th class="sortable sort" data-sort="listing-title">Problem</th>
 <th class="sortable sort" data-sort="listing-category">Tags</th>
 </tr>
 </thead>

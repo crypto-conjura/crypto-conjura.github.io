@@ -93,6 +93,11 @@ supplied numbers and several had drifted or were slightly off:
 
 ## Website and repository
 
+- [ ] **Offer activity-based problem sorting.** Deferred on 14 October 2026. Consider Recent activity, Newest problems and Title A–Z, with Recent activity as a candidate default. Record meaningful dated events (new problem, solution submitted, substantive statement/proof update) and show what changed. Formatting, navigation and bulk maintenance must not move every problem to the top. Distinguish solution submission from verified resolution; establish reliable dates before changing the default order. Current listings sort by full title while displaying short titles, which can make the order look inconsistent.
+- [ ] **Review problem-list text and its relationship to page abstracts.** Deferred on 13 October 2026; keep this separate from the current navigation/contribution update. Decide how titles, abstracts and status summaries should relate, reuse existing abstracts where available, and review any newly written summaries before adopting them. The local shared-abstract experiment is paused, not approved content.
+- [ ] **Use readable, mathematically appropriate tag names.** Raised 13 October 2026: the displayed label `T Wise Independence` should preserve the conventional `t-wise independence` spelling. Review other automatically generated labels for lost hyphens, acronym casing and mathematical notation; keep stable tag URLs unless a redirect is provided.
+- [ ] **Make tag behaviour consistent and understandable.** Raised 13 October 2026: topic tags are clickable, while similar-looking labels such as `tight-bound` are not. Decide which labels should link to filtered problem lists, and visually distinguish descriptive labels from navigation. Existing model/form/category distinctions should remain understandable.
+
 - [ ] **Finish the tail of the AICR rebrand (~1h, plus two owner-only steps)**
 
   The rebrand itself landed 9 September 2026 in #244 (site identity, domain,

@@ -83,7 +83,11 @@ jobs:
         with:
           version: "1.10.18"
 
-      - name: Test internal link checker
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Test site checks
         run: python3 -m unittest discover -s tests -p 'test_*.py'
 
       - name: Render site
@@ -91,6 +95,9 @@ jobs:
 
       - name: Check rendered internal links
         run: python3 scripts/audit_static.py --check-links
+
+      - name: Check legacy Problems bookmarks
+        run: python3 scripts/problem_redirects.py --check
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

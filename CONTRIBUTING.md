@@ -334,6 +334,8 @@ output. Keep changes reviewable: one logical change per commit.
 
 ## Local setup
 
+Install Node.js 22 to run the legacy Problems redirect execution tests.
+
 ```
 pip install -r requirements.txt
 git config core.hooksPath .githooks           # once per clone: run the checks pre-commit
@@ -365,6 +367,14 @@ it, not just its own, and the site stops deploying until someone notices. If
 PyYAML is missing the hook still runs the `status_badge.py` and
 `gen_interface.py` gates (both stdlib-only) and reports that it skipped the
 other two. Bypass a single commit with `git commit --no-verify`.
+
+After a full site render, check internal links and historical Problems bookmarks:
+
+```sh
+python3 -m unittest discover -s tests -p 'test_*.py'
+python3 scripts/audit_static.py --check-links
+python3 scripts/problem_redirects.py --check
+```
 
 ## Does a UC entry have a definition?
 

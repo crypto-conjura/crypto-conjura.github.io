@@ -96,12 +96,13 @@ the block is hashed. Bypass a single commit with `git commit --no-verify`.
 
 requires the [Quarto CLI](https://quarto.org/docs/get-started/) installed locally.
 
-After rendering, check internal links before proposing an update:
+Check internal links and summary math before proposing an update:
 
 ```sh
 python3 -m unittest discover -s tests -p 'test_*.py'
 quarto render
 python3 scripts/audit_static.py --check-links
+python3 scripts/summary_math.py --site _site
 ```
 
 Both PR and publishing workflows run this link gate. It checks parsed `<a href>`

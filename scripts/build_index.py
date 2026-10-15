@@ -28,6 +28,7 @@ from pathlib import Path
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from summary_math import check_statement_math  # noqa: E402
 from status_badge import (  # noqa: E402
     compute_sigma,
     compute_pi,
@@ -215,6 +216,12 @@ def validate_leaf(fm, path, errors):
     for field in REQUIRED_FIELDS:
         if field not in fm:
             err(f"missing required field '{field}'")
+
+    math_errors, math_warnings = check_statement_math(fm)
+    for message in math_errors:
+        err(message)
+    for message in math_warnings:
+        print(f"WARNING: {path}: {message}", file=sys.stderr)
 
     leaf_id = str(fm.get("id", path.parent.name))
     if not ID_RE.match(leaf_id):

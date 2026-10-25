@@ -38,8 +38,9 @@ isn't a problem, a statement, or a tag at all.
 |---|---|---|
 | `id` | string | Four-digit zero-padded, matches the `c/<id>/` directory name. |
 | `problem` | string | Exactly one hub slug under `p/`. |
-| `title` | string | Precise, fully-quantified. |
-| `short_title` | string | For listing-table columns; falls back to `title`. |
+| `title` | string | Precise, fully-quantified. Supports inline math with `$...$`. |
+| `short_title` | string | For listing-table columns; falls back to `title`. Supports inline math with `$...$`. |
+| `pagetitle` | string | Required when `title` contains math: its readable plain-text equivalent for browser tabs, search results and social previews. No TeX or HTML. |
 | `areas` | list of string | Subset of the 19 fixed area slugs below. First entry is primary, display only -- never a home directory. |
 | `model` | enum | `rom` \| `prom` \| `icm` \| `ggm` \| `qrom` \| `standard` \| `other` |
 | `form` | enum | `separation` \| `lower-bound` \| `tight-bound` \| `equivalence` \| `impossibility` \| `assumption` \| `characterization` |
@@ -49,7 +50,7 @@ isn't a problem, a statement, or a tag at all.
 | `revision` | integer | Bumped automatically when `statement_sha` changes. |
 | `status` | map | Six graded fields: `statement_informal`, `statement_formal`, `statement_match`, `proof_informal`, `proof_review`, `proof_formal`. Plus `proof_direction` (`proves` \| `refutes`), optional, defaulting to `proves`: which way the work points. It is not a grade and never enters σ or π; `refutes` requires `proof_informal != open`. See [the status legend](/reviews/status-badge/index.qmd). |
 | `status_badge` | string | Generated. Never hand-edit. |
-| `status_summary` | string | One required sentence, rendered next to the badge in listing tables. |
+| `status_summary` | string | One required sentence, rendered next to the badge in listing tables. Supports inline math with `$...$`; see the convention below. |
 | `status_updated` | date | |
 | `relations` | list of map | `{kind, target, note?}`. `kind` is one of `generalizes`, `specializes`, `implies`, `implied-by`, `equivalent-to`, `strengthens` (same claim, better quantitative bound), `variant-of`, `refutes`, `refuted-by`, `superseded-by`. `target` is a four-digit id. `note` is required on an `equivalent-to` edge whose proof grades disagree. |
 | `lean` | map | `mode` (`in-repo` \| `external-lean4` \| `other-system` \| `none`), plus `repo`/`commit`/`path`/`decl`/`toolchain` as applicable. `commit` is required once `status.statement_formal != open` when `mode: external-lean4`. |
@@ -93,6 +94,7 @@ silently -- see `CONTRIBUTING.md`.
    missing sanity lemmas). The open count feeds a listing column.
 
 There is no rendered Status, Sessions, or Changelog section on the page.
+
 `status_summary` is still a required frontmatter field (it's what shows next
 to the badge in listing tables), it's just not restated in page prose --
 the badge's own caption is the brief explanation shown on the page itself.
@@ -105,6 +107,50 @@ by `revision`/`statement_sha` and by the commit that changed them -- see
 misformalization classification belongs.
 
 See `_templates/statement.qmd` for a fully commented skeleton.
+
+### Mathematics in titles and summaries {#mathematics-in-summaries}
+
+Write mathematical expressions in `title`, `short_title` and `status_summary`
+as inline LaTeX inside `$...$`, just as in the main text. Use a folded YAML scalar (`>-`) so that
+backslashes are preserved and source lines can wrap without adding line breaks:
+
+```yaml
+title: >-
+  A Protocol Using $O(\tau)$ Bits
+short_title: >-
+  $O(\tau)$-Bit Protocol
+pagetitle: "A Protocol Using O(tau) Bits"
+status_summary: >-
+  Known constructions use $O(\tau)$ bits; the target is $\tau + o(\tau)$.
+```
+
+When the full `title` contains math, provide `pagetitle` as a readable plain-text
+equivalent. It supplies browser and social metadata; a post-render step also
+uses it for search-result titles. For powers, write `$2^{-128}$` in `title`
+and `2^(-128)` in `pagetitle`. This avoids raw TeX in places that cannot typeset it.
+If only `short_title` contains math, `pagetitle` is optional.
+
+Put complete expressions inside the delimiters, including Greek letters,
+subscripts, powers, inequalities and asymptotic notation. For example, use
+`$\tilde{O}(n^{1/2})$` instead of `O~(n^{1/2})`. Leave prose outside math and
+use inline math only, without spaces immediately inside the dollar delimiters.
+Do not infer or change a claim while converting its notation.
+
+`build_index.py` rejects malformed delimiters, unbalanced TeX braces, decoded line
+breaks and control characters, and warns about likely unmarked notation. Folded
+YAML `>-` joins source lines into a single paragraph; literal line breaks in a
+parsed field can instead indicate a corrupted TeX escape. Warnings require editorial
+judgment and do not block the build. After rendering, `summary_math.py --site
+_site` requires every configured listing page, checks its rows against the
+generated index, and requires exactly one summary per row. The all-statements
+index must also match the browsable source statements. It checks that summary
+and listing-title formulas preserve the source TeX, that each statement page has
+exactly one title heading with the expected formulas, and that MathJax is included
+where needed. When `pagetitle` is supplied, browser/social metadata and all matching
+search-result titles must agree with it (with the site name added to browser tabs).
+It does not check
+the truth of the mathematics or replace browser
+checks of typesetting and pagination.
 
 ## What the badge gate scans
 

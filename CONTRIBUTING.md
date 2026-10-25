@@ -31,6 +31,23 @@ written, not generated. Run `python3 scripts/status_badge.py` afterwards to
 populate `statement_sha` and the badge. A paper carries no id, hub, areas
 or relations, so `build_index.py` and `check_relations.py` do not apply.
 
+## Mathematics in titles and summaries
+
+For `title`, `short_title` and `status_summary`, keep prose outside math and put
+each mathematical expression inside `$...$`, including Greek letters, powers
+and asymptotic notation. Use YAML `>-` for fields containing TeX backslashes.
+For example, write `$2^{-128}$`, not `2^-128`.
+
+If `title` contains math, also supply `pagetitle`: a readable plain-text version
+for browser tabs, search results and social previews. For example, the title
+`AES Is $2^{-128}$-Close` has `pagetitle: "AES Is 2^(-128)-Close"`.
+`short_title` is optional; listings use `title` when it is omitted.
+See [the math convention](/schema/#mathematics-in-summaries) for examples.
+The index check warns about likely unmarked notation; inspect each warning
+rather than applying automatic replacements. After rendering, the math check
+compares both page-heading and listing-title formulas with the source, alongside
+summary formulas, and checks plain-text metadata and search titles.
+
 ## Rebuilding a generated artifact
 
 Every `.tex` here has generated output committed beside it: the statement
